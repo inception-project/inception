@@ -66,11 +66,22 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class NamedEntityLinkerTest
-{
+{   
+	/**
+	 *this is rename method of NamedEntityLinkerTest.java
+	 */
     private static File NELT_cache = DkproTestContext.getCacheFolder();
+	/**
+	 *this is rename method of NamedEntityLinkerTest.java
+	 */
     private static DatasetFactory NELT_loader = new DatasetFactory(NELT_cache);
-
+	/**
+	 *this is rename method of NamedEntityLinkerTest.java
+	 */
     private RecommenderContext NELT_context;
+	/**
+	 *this is rename method of NamedEntityLinkerTest.java
+	 */
     private Recommender NELT_recommender;
 
     @Before
@@ -82,6 +93,7 @@ public class NamedEntityLinkerTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
+		//this is rename varies of NamedEntityLinkerTest.java
         NamedEntityLinker sut = new NamedEntityLinker(NELT_recommender, new NamedEntityLinkerTraits(),
                 mock(KnowledgeBaseService.class), mock(ConceptLinkingServiceImpl.class),
                 mock(FeatureSupportRegistry.class), new ConceptFeatureTraits());
@@ -167,6 +179,7 @@ public class NamedEntityLinkerTest
 
     private static Recommender buildRecommender()
     {
+		//this is rename varies of NamedEntityLinkerTest.java
         AnnotationLayer NETL_layer = new AnnotationLayer();
         NETL_layer.setName(NamedEntity.class.getName());
 

@@ -80,13 +80,13 @@ public class RecommenderExporter implements ProjectExporter {
         List<ExportedRecommender> exportedRecommenders = new ArrayList<>();
         for (Recommender recommender : recommendationService.listRecommenders(project)) {
             ExportedRecommender exportedRecommender = new ExportedRecommender();
-            exportedRecommender.setAlwaysSelected_1(recommender.isAlwaysSelected());
+            exportedRecommender.ER_setAlwaysSelected(recommender.isAlwaysSelected());
             exportedRecommender.setFeature(recommender.getFeature().getName());
             exportedRecommender.setEnabled(recommender.isEnabled());
             exportedRecommender.setLayerName(recommender.getLayer().getName());
             exportedRecommender.setName(recommender.getName());
-            exportedRecommender.setThreshold_1(recommender.getThreshold());
-            exportedRecommender.setTool_1(recommender.getTool());
+            exportedRecommender.ER_setThreshold(recommender.getThreshold());
+            exportedRecommender.ER_setTool(recommender.getTool());
             exportedRecommender.setSkipEvaluation(recommender.isSkipEvaluation());
             exportedRecommender.setMaxRecommendations_1(recommender.getMaxRecommendations());
             exportedRecommender.setStatesIgnoredForTraining_1(
@@ -108,11 +108,11 @@ public class RecommenderExporter implements ProjectExporter {
 
         for (ExportedRecommender exportedRecommender : recommenders) {
             Recommender recommender = new Recommender();
-            recommender.setAlwaysSelected(exportedRecommender.isAlwaysSelected_1());
+            recommender.setAlwaysSelected(exportedRecommender.ER_isAlwaysSelected());
             recommender.setEnabled(exportedRecommender.isEnabled());
             recommender.setName(exportedRecommender.getName());
-            recommender.setThreshold(exportedRecommender.getThreshold_1());
-            recommender.setTool(exportedRecommender.getTool_1());
+            recommender.setThreshold(exportedRecommender.ER_getThreshold());
+            recommender.setTool(exportedRecommender.ER_getTool());
             recommender.setSkipEvaluation(exportedRecommender.isSkipEvaluation());
             recommender.setMaxRecommendations(exportedRecommender.getMaxRecommendations_1());
             recommender.setStatesIgnoredForTraining(

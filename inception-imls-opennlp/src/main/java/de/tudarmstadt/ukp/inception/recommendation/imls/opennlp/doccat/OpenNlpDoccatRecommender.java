@@ -77,33 +77,33 @@ public class OpenNlpDoccatRecommender
     }
 
     @Override
-    public boolean isReadyForPrediction(RecommenderContext aContext)
+    public boolean isReadyForPrediction(RecommenderContext ONDR_aContext)
     {
-        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+        return ONDR_aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
     
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
+    public void train(RecommenderContext ONDR_aContext, List<CAS> ONDR_ONDR_aCasses)
         throws RecommendationException
     {
-        List<DocumentSample> docSamples = extractSamples(aCasses);
+        List<DocumentSample> docSamples = extractSamples(ONDR_ONDR_aCasses);
         
         if (docSamples.size() < 2) {
-            LOG.info("Not enough training data: [{}] items", docSamples.size());
+            LOG.info("Not enough training ONDR_data: [{}] items", docSamples.size());
             return;
         }
         
-        // The beam size controls how many results are returned at most. But even if the user
-        // requests only few results, we always use at least the default bean size recommended by
+        // The beam size controls how many ONDR_results are returned at most. But even if the user
+        // requests only few ONDR_results, we always use at least the default bean size recommended by
         // OpenNLP
         int beamSize = Math.max(maxRecommendations, NameFinderME.DEFAULT_BEAM_SIZE);
 
-        TrainingParameters params = traits.doc_getParameters();
+        TrainingParameters params = traits.ONDRT_getParameters();
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         
         DoccatModel model = train(docSamples, params);
         
-        aContext.put(KEY_MODEL, model);
+        ONDR_aContext.put(KEY_MODEL, model);
     }
     
     @Override
@@ -113,110 +113,121 @@ public class OpenNlpDoccatRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    //rename aContext to ONDR_aContext, aCas to ONDR_aCas
+    public void predict(RecommenderContext ONDR_aContext, CAS ONDR_aCas) throws RecommendationException
     {
-        DoccatModel model = aContext.get(KEY_MODEL).orElseThrow(() -> 
+        DoccatModel model = ONDR_aContext.get(KEY_MODEL).orElseThrow(() -> 
                 new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
         
         DocumentCategorizerME finder = new DocumentCategorizerME(model);
-
-        Type sentenceType = getType(aCas, Sentence.class);
-        Type predictedType = getPredictedType(aCas);
-        Type tokenType = getType(aCas, Token.class);
-        Feature scoreFeature = getScoreFeature(aCas);
-        Feature predictedFeature = getPredictedFeature(aCas);
-        Feature isPredictionFeature = getIsPredictionFeature(aCas);
-
-        int predictionCount = 0;
-        for (AnnotationFS sentence : select(aCas, sentenceType)) {
-            if (predictionCount >= traits.doc_getPredictionLimit()) {
+        //rename sentenceType to ONDR_sentenceType
+        Type ONDR_sentenceType = getType(ONDR_aCas, Sentence.class);
+        //rename predictedType to ONDR_predictedType
+        Type ONDR_predictedType = getPredictedType(ONDR_aCas);
+        //rename tokenType to ONDR_tokenType
+        Type ONDR_tokenType = getType(ONDR_aCas, Token.class);
+        //rename scoreFeature to ONDR_scoreFeature
+        Feature ONDR_scoreFeature = getScoreFeature(ONDR_aCas);
+        //rename predictedFeature to ONDR_predictedFeature
+        Feature ONDR_predictedFeature = getPredictedFeature(ONDR_aCas);
+        //rename isPredictionFeature to ONDR_isPredictionFeature
+        Feature ONDR_isPredictionFeature = getIsPredictionFeature(ONDR_aCas);
+        
+        //rename predictionCount to ONDR_predictionCount
+        int ONDR_predictionCount = 0;
+        for (AnnotationFS sentence : select(ONDR_aCas, ONDR_sentenceType)) {
+            if (ONDR_predictionCount >= traits.ONDRT_getPredictionLimit()) {
                 break;
             }
-            predictionCount++;
-            
-            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
-            String[] tokens = tokenAnnotations.stream()
+            ONDR_predictionCount++;
+            //rename tokenAnnotations to ONDR_tokenAnnotations
+            List<AnnotationFS> ONDR_tokenAnnotations = selectCovered(ONDR_tokenType, sentence);
+            String[] tokens = ONDR_tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
                 .toArray(String[]::new);
 
             double[] outcome = finder.categorize(tokens);
             String label = finder.getBestCategory(outcome);
-            
-            AnnotationFS annotation = aCas.createAnnotation(predictedType, sentence.getBegin(),
+            //rename annotation to ONDR_annotation
+            AnnotationFS ONDR_annotation = ONDR_aCas.createAnnotation(ONDR_predictedType, sentence.getBegin(),
                     sentence.getEnd());
-            annotation.setStringValue(predictedFeature, label);
-            annotation.setDoubleValue(scoreFeature, NumberUtils.max(outcome));
-            annotation.setBooleanValue(isPredictionFeature, true);
-            aCas.addFsToIndexes(annotation);
+            ONDR_annotation.setStringValue(ONDR_predictedFeature, label);
+            ONDR_annotation.setDoubleValue(ONDR_scoreFeature, NumberUtils.max(outcome));
+            ONDR_annotation.setBooleanValue(ONDR_isPredictionFeature, true);
+            ONDR_aCas.addFsToIndexes(ONDR_annotation);
         }
     }
 
     @Override
-    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> ONDR_ONDR_aCasses, DataSplitter ONDR_aDataSplitter)
         throws RecommendationException
     {
-        List<DocumentSample> data = extractSamples(aCasses);
-        List<DocumentSample> trainingSet = new ArrayList<>();
-        List<DocumentSample> testSet = new ArrayList<>();
-
-        for (DocumentSample nameSample : data) {
-            switch (aDataSplitter.getTargetSet(nameSample)) {
+    	//rename data to ONDR_data
+        List<DocumentSample> ONDR_data = extractSamples(ONDR_ONDR_aCasses);
+        //rename trainingSet to ONDR_trainingSet
+        List<DocumentSample> ONDR_trainingSet = new ArrayList<>();
+        //rename testSet to ONDR_testSet
+        List<DocumentSample> ONDR_testSet = new ArrayList<>();
+        //rename nameSample to ONDR_nameSamples
+        for (DocumentSample ONDR_nameSample : ONDR_data) {
+            switch (ONDR_aDataSplitter.getTargetSet(ONDR_nameSample)) {
             case TRAIN:
-                trainingSet.add(nameSample);
+                ONDR_trainingSet.add(ONDR_nameSample);
                 break;
             case TEST:
-                testSet.add(nameSample);
+                ONDR_testSet.add(ONDR_nameSample);
                 break;
             default:
                 // Do nothing
                 break;
             }            
         }
-
-        int testSetSize = testSet.size();
-        int trainingSetSize = trainingSet.size();
-        double overallTrainingSize = data.size() - testSetSize;
-        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
+        //rename testSetSize to ONDR_testSetSize
+        int ONDR_testSetSize = ONDR_testSet.size();
+        //rename trainingSetSize to ONDR_trainingSetSize
+        int ONDR_trainingSetSize = ONDR_trainingSet.size();
+        double ONDR_overallTrainingSize = ONDR_data.size() - ONDR_testSetSize;
+        double ONDR_trainRatio = (ONDR_overallTrainingSize > 0) ? ONDR_trainingSetSize / ONDR_overallTrainingSize : 0.0;
         
-        if (trainingSetSize < 2 || testSetSize < 2) {
+        if (ONDR_trainingSetSize < 2 || ONDR_testSetSize < 2) {
             String info = String.format(
-                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s].",
-                    trainingSetSize, testSetSize, data.size());
+                    "Not enough evaluation ONDR_data: training set [%s] items, test set [%s] of total [%s].",
+                    ONDR_trainingSetSize, ONDR_testSetSize, ONDR_data.size());
             LOG.info(info);
             
-            EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize, trainRatio);
-            result.setEvaluationSkipped(true);
-            result.setErrorMsg(info);
-            return result;
+            EvaluationResult ONDR_result = new EvaluationResult(ONDR_trainingSetSize,
+                    ONDR_testSetSize, ONDR_trainRatio);
+            ONDR_result.setEvaluationSkipped(true);
+            ONDR_result.setErrorMsg(info);
+            return ONDR_result;
         }
 
-        LOG.info("Evaluating on {} items (training set size {}, test set size {})", data.size(),
-                trainingSet.size(), testSet.size());
+        LOG.info("Evaluating on {} items (training set size {}, test set size {})", ONDR_data.size(),
+                ONDR_trainingSet.size(), ONDR_testSet.size());
 
         // Train model
-        DoccatModel model = train(trainingSet, traits.doc_getParameters());
+        DoccatModel model = train(ONDR_trainingSet, traits.ONDRT_getParameters());
         DocumentCategorizerME doccat = new DocumentCategorizerME(model);
 
         // Evaluate
-        EvaluationResult result = testSet.stream()
+        EvaluationResult ONDR_result = ONDR_testSet.stream()
                 .map(sample -> new LabelPair(sample.getCategory(),
                         doccat.getBestCategory(doccat.categorize(sample.getText()))))
-                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio,
+                .collect(EvaluationResult.collector(ONDR_trainingSetSize, ONDR_testSetSize, ONDR_trainRatio,
                         NO_CATEGORY));
 
-        return result;
+        return ONDR_result;
     }
 
-    private List<DocumentSample> extractSamples(List<CAS> aCasses)
+    private List<DocumentSample> extractSamples(List<CAS> ONDR_ONDR_aCasses)
     {
         List<DocumentSample> samples = new ArrayList<>();
-        casses: for (CAS cas : aCasses) {
-            Type sentenceType = getType(cas, Sentence.class);
-            Type tokenType = getType(cas, Token.class);
+        casses: for (CAS cas : ONDR_ONDR_aCasses) {
+            Type ONDR_sentenceType = getType(cas, Sentence.class);
+            Type ONDR_tokenType = getType(cas, Token.class);
 
             Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(
-                    cas, sentenceType, tokenType);
+                    cas, ONDR_sentenceType, ONDR_tokenType);
             for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
@@ -224,19 +235,19 @@ public class OpenNlpDoccatRecommender
                     .map(AnnotationFS::getCoveredText)
                     .toArray(String[]::new);
                 
-                Type annotationType = getType(cas, layerName);
-                Feature feature = annotationType.getFeatureByBaseName(featureName);
+                Type ONDR_annotationType = getType(cas, layerName);
+                Feature feature = ONDR_annotationType.getFeatureByBaseName(featureName);
                 
-                for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
+                for (AnnotationFS ONDR_annotation : selectCovered(ONDR_annotationType, sentence)) {
                     if (samples.size() >= traits.getTrainingSetSizeLimit()) {
                         break casses;
                     }
                     
-                    String label = annotation.getFeatureValueAsString(feature);
-                    DocumentSample nameSample = new DocumentSample(
+                    String label = ONDR_annotation.getFeatureValueAsString(feature);
+                    DocumentSample ONDR_nameSample = new DocumentSample(
                             label != null ? label : NO_CATEGORY, tokenTexts);
-                    if (nameSample.getCategory() != null) {
-                        samples.add(nameSample);
+                    if (ONDR_nameSample.getCategory() != null) {
+                        samples.add(ONDR_nameSample);
                     }
                 }
             }

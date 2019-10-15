@@ -79,19 +79,19 @@ public class OpenNlpNerRecommender
     }
 
     @Override
-    public boolean isReadyForPrediction(RecommenderContext aContext)
+    public boolean isReadyForPrediction(RecommenderContext ONNR_aContext)
     {
-        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+        return ONNR_aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
     
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
+    public void train(RecommenderContext ONNR_aContext, List<CAS> ONNR_aCasses)
         throws RecommendationException
     {
-        List<NameSample> nameSamples = extractNameSamples(aCasses);
+        List<NameSample> nameSamples = extractNameSamples(ONNR_aCasses);
         
         if (nameSamples.size() < 2) {
-            LOG.info("Not enough training data: [{}] items", nameSamples.size());
+            LOG.info("Not enough training ONNR_data: [{}] items", nameSamples.size());
             return;
         }
         
@@ -105,7 +105,7 @@ public class OpenNlpNerRecommender
         
         TokenNameFinderModel model = train(nameSamples, params);
         
-        aContext.put(KEY_MODEL, model);
+        ONNR_aContext.put(KEY_MODEL, model);
     }
     
     @Override
@@ -115,30 +115,30 @@ public class OpenNlpNerRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(RecommenderContext ONNR_aContext, CAS ONNR_aCas) throws RecommendationException
     {
-        TokenNameFinderModel model = aContext.get(KEY_MODEL).orElseThrow(() -> 
+        TokenNameFinderModel model = ONNR_aContext.get(KEY_MODEL).orElseThrow(() -> 
                 new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
         
         NameFinderME finder = new NameFinderME(model);
 
-        Type sentenceType = getType(aCas, Sentence.class);
-        Type tokenType = getType(aCas, Token.class);
-        Type predictedType = getPredictedType(aCas);
+        Type ONNR_sentenceType = getType(ONNR_aCas, Sentence.class);
+        Type ONNR_tokenType = getType(ONNR_aCas, Token.class);
+        Type ONNR_predictedType = getPredictedType(ONNR_aCas);
 
-        Feature predictedFeature = getPredictedFeature(aCas);
-        Feature isPredictionFeature = getIsPredictionFeature(aCas);
-        Feature scoreFeature = getScoreFeature(aCas);
+        Feature ONNR_predictedFeature = getPredictedFeature(ONNR_aCas);
+        Feature ONNR_isPredictionFeature = getIsPredictionFeature(ONNR_aCas);
+        Feature ONNR_scoreFeature = getScoreFeature(ONNR_aCas);
 
-        int predictionCount = 0;
-        for (AnnotationFS sentence : select(aCas, sentenceType)) {
-            if (predictionCount >= traits.getPredictionLimit()) {
+        int ONNR_predictionCount = 0;
+        for (AnnotationFS sentence : select(ONNR_aCas, ONNR_sentenceType)) {
+            if (ONNR_predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
-            predictionCount++;
+            ONNR_predictionCount++;
             
-            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
-            String[] tokens = tokenAnnotations.stream()
+            List<AnnotationFS> ONNR_tokenAnnotations = selectCovered(ONNR_tokenType, sentence);
+            String[] tokens = ONNR_tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
                 .toArray(String[]::new);
 
@@ -147,33 +147,33 @@ public class OpenNlpNerRecommender
                 if (NameSample.DEFAULT_TYPE.equals(label)) {
                     continue;
                 }
-                int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
-                int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
-                AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
-                annotation.setStringValue(predictedFeature, label);
-                annotation.setDoubleValue(scoreFeature, prediction.getProb());
-                annotation.setBooleanValue(isPredictionFeature, true);
+                int begin = ONNR_tokenAnnotations.get(prediction.getStart()).getBegin();
+                int end = ONNR_tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
+                AnnotationFS ONNR_annotation = ONNR_aCas.createAnnotation(ONNR_predictedType, begin, end);
+                ONNR_annotation.setStringValue(ONNR_predictedFeature, label);
+                ONNR_annotation.setDoubleValue(ONNR_scoreFeature, prediction.getProb());
+                ONNR_annotation.setBooleanValue(ONNR_isPredictionFeature, true);
 
-                aCas.addFsToIndexes(annotation);
+                ONNR_aCas.addFsToIndexes(ONNR_annotation);
             }
         }
     }
 
     @Override
-    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> ONNR_aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
-        List<NameSample> data = extractNameSamples(aCasses);
-        List<NameSample> trainingSet = new ArrayList<>();
-        List<NameSample> testSet = new ArrayList<>();
+        List<NameSample> ONNR_data = extractNameSamples(ONNR_aCasses);
+        List<NameSample> ONNR_trainingSet = new ArrayList<>();
+        List<NameSample> ONNR_testSet = new ArrayList<>();
 
-        for (NameSample nameSample : data) {
+        for (NameSample nameSample : ONNR_data) {
             switch (aDataSplitter.getTargetSet(nameSample)) {
             case TRAIN:
-                trainingSet.add(nameSample);
+                ONNR_trainingSet.add(nameSample);
                 break;
             case TEST:
-                testSet.add(nameSample);
+                ONNR_testSet.add(nameSample);
                 break;
             default:
                 // Do nothing
@@ -181,35 +181,35 @@ public class OpenNlpNerRecommender
             }            
         }
         
-        int testSetSize = testSet.size();
-        int trainingSetSize = trainingSet.size();
-        double overallTrainingSize = data.size() - testSetSize;
-        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
+        int ONNR_testSetSize = ONNR_testSet.size();
+        int ONNR_trainingSetSize = ONNR_trainingSet.size();
+        double overallTrainingSize = ONNR_data.size() - ONNR_testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? ONNR_trainingSetSize / overallTrainingSize : 0.0;
 
-        if (trainingSetSize < 2 || testSetSize < 2) {
+        if (ONNR_trainingSetSize < 2 || ONNR_testSetSize < 2) {
             String info = String.format(
-                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s]",
-                    trainingSetSize, testSetSize, data.size());
+                    "Not enough evaluation ONNR_data: training set [%s] items, test set [%s] of total [%s]",
+                    ONNR_trainingSetSize, ONNR_testSetSize, ONNR_data.size());
             LOG.info(info);
             
-            EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize, trainRatio);
+            EvaluationResult result = new EvaluationResult(ONNR_trainingSetSize,
+                    ONNR_testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
         }
 
-        LOG.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
-                testSet.size(), data.size());
+        LOG.info("Training on [{}] items, predicting on [{}] of total [{}]", ONNR_trainingSet.size(),
+                ONNR_testSet.size(), ONNR_data.size());
 
         // Train model
-        TokenNameFinderModel model = train(trainingSet, traits.getParameters());
+        TokenNameFinderModel model = train(ONNR_trainingSet, traits.getParameters());
         NameFinderME nameFinder = new NameFinderME(model);
 
         // Evaluate
         List<LabelPair> labelPairs = new ArrayList<>();
-        for (NameSample sample : testSet) {
-            // clear adaptive data from feature generators if necessary
+        for (NameSample sample : ONNR_testSet) {
+            // clear adaptive ONNR_data from feature generators if necessary
             if (sample.isClearAdaptiveDataSet()) {
                 nameFinder.clearAdaptiveData();
             }
@@ -225,7 +225,7 @@ public class OpenNlpNerRecommender
         }
 
         return labelPairs.stream().collect(EvaluationResult
-                .collector(trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
+                .collector(ONNR_trainingSetSize, ONNR_testSetSize, trainRatio, NO_NE_TAG));
     }
 
     /**
@@ -285,16 +285,16 @@ public class OpenNlpNerRecommender
         return label;
     }
 
-    private List<NameSample> extractNameSamples(List<CAS> aCasses)
+    private List<NameSample> extractNameSamples(List<CAS> ONNR_aCasses)
     {
         List<NameSample> nameSamples = new ArrayList<>();
         
-        casses: for (CAS cas : aCasses) {
-            Type sentenceType = getType(cas, Sentence.class);
-            Type tokenType = getType(cas, Token.class);
+        casses: for (CAS cas : ONNR_aCasses) {
+            Type ONNR_sentenceType = getType(cas, Sentence.class);
+            Type ONNR_tokenType = getType(cas, Token.class);
 
             Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(
-                    cas, sentenceType, tokenType);
+                    cas, ONNR_sentenceType, ONNR_tokenType);
             for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
@@ -312,17 +312,17 @@ public class OpenNlpNerRecommender
         return nameSamples;
     }
 
-    private NameSample createNameSample(CAS aCas, AnnotationFS aSentence,
+    private NameSample createNameSample(CAS ONNR_aCas, AnnotationFS aSentence,
             Collection<AnnotationFS> aTokens)
     {
         String[] tokenTexts = aTokens.stream()
             .map(AnnotationFS::getCoveredText)
             .toArray(String[]::new);
-        Span[] annotatedSpans = extractAnnotatedSpans(aCas, aSentence, aTokens);
+        Span[] annotatedSpans = extractAnnotatedSpans(ONNR_aCas, aSentence, aTokens);
         return new NameSample(tokenTexts, annotatedSpans, true);
     }
 
-    private Span[] extractAnnotatedSpans(CAS aCas, AnnotationFS aSentence,
+    private Span[] extractAnnotatedSpans(CAS ONNR_aCas, AnnotationFS aSentence,
                                          Collection<AnnotationFS> aTokens) {
         // Convert character offsets to token indices
         Int2ObjectMap<AnnotationFS> idxTokenOffset = new Int2ObjectOpenHashMap<>();
@@ -335,34 +335,34 @@ public class OpenNlpNerRecommender
             idx++;
         }
 
-        // Create spans from target annotations
-        Type annotationType = getType(aCas, layerName);
-        Feature feature = annotationType.getFeatureByBaseName(featureName);
-        List<AnnotationFS> annotations = selectCovered(annotationType, aSentence);
-        int numberOfAnnotations = annotations.size();
+        // Create spans from target ONNR_annotations
+        Type ONNR_annotationType = getType(ONNR_aCas, layerName);
+        Feature feature = ONNR_annotationType.getFeatureByBaseName(featureName);
+        List<AnnotationFS> ONNR_annotations = selectCovered(ONNR_annotationType, aSentence);
+        int numberOfAnnotations = ONNR_annotations.size();
         List<Span> result = new ArrayList<>();
 
         int highestEndTokenPositionObserved = 0;
         for (int i = 0; i < numberOfAnnotations; i++) {
-            AnnotationFS annotation = annotations.get(i);
-            String label = annotation.getFeatureValueAsString(feature);
+            AnnotationFS ONNR_annotation = ONNR_annotations.get(i);
+            String label = ONNR_annotation.getFeatureValueAsString(feature);
             
-            AnnotationFS beginToken = idxTokenOffset.get(annotation.getBegin());
-            AnnotationFS endToken = idxTokenOffset.get(annotation.getEnd());
+            AnnotationFS beginToken = idxTokenOffset.get(ONNR_annotation.getBegin());
+            AnnotationFS endToken = idxTokenOffset.get(ONNR_annotation.getEnd());
             if (beginToken == null || endToken == null) {
-                LOG.warn("Skipping annotation not starting/ending at token boundaries: [{}-{}, {}]",
-                        annotation.getBegin(), annotation.getEnd(), label);
+                LOG.warn("Skipping ONNR_annotation not starting/ending at token boundaries: [{}-{}, {}]",
+                        ONNR_annotation.getBegin(), ONNR_annotation.getEnd(), label);
                 continue;
             }
             
             int begin = idxToken.get(beginToken);
             int end = idxToken.get(endToken);
             
-            // If the begin offset of the current annotation is lower than the highest offset so far
-            // observed, then it is overlapping with some annotation that we have seen before. 
-            // Because OpenNLP NER does not support overlapping annotations, we skip it.
+            // If the begin offset of the current ONNR_annotation is lower than the highest offset so far
+            // observed, then it is overlapping with some ONNR_annotation that we have seen before. 
+            // Because OpenNLP NER does not support overlapping ONNR_annotations, we skip it.
             if (begin < highestEndTokenPositionObserved) {
-                LOG.debug("Skipping overlapping annotation: [{}-{}, {}]", begin, end + 1, label);
+                LOG.debug("Skipping overlapping ONNR_annotation: [{}-{}, {}]", begin, end + 1, label);
                 continue;
             }
             

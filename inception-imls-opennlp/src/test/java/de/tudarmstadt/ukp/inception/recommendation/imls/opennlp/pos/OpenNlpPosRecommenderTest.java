@@ -64,9 +64,9 @@ public class OpenNlpPosRecommenderTest
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new OpenNlpPosRecommenderTraits();
-        traits.setNumThreads(2);
-        traits.setTrainingSetSizeLimit(250);
-        traits.setPredictionLimit(250);
+        traits.ONPRT_setNumThreads(2);
+        traits.ONPRT_setTrainingSetSizeLimit(250);
+        traits.ONPRT_setPredictionLimit(250);
     }
 
     @Test
@@ -180,11 +180,11 @@ public class OpenNlpPosRecommenderTest
         AnnotationFeature ONPRT_feature = new AnnotationFeature();
         ONPRT_feature.setName("PosValue");
         
-        Recommender recommender = new Recommender();
-        recommender.setLayer(ONPRT_layer);
-        recommender.setFeature(ONPRT_feature);
-        recommender.setMaxRecommendations(3);
+        Recommender ONPRT_recommender = new Recommender();
+        ONPRT_recommender.setLayer(ONPRT_layer);
+        ONPRT_recommender.setFeature(ONPRT_feature);
+        ONPRT_recommender.setMaxRecommendations(3);
 
-        return recommender;
+        return ONPRT_recommender;
     }
 }

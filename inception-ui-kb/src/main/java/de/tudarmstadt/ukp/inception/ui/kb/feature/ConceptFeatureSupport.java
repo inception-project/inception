@@ -79,12 +79,14 @@ public class ConceptFeatureSupport
 
     private final KnowledgeBaseService kbService;
     
+	//rename labelCache to CFS_labelCache
     private LoadingCache<Key, KBHandle> CFS_labelCache = Caffeine.newBuilder()
         .maximumSize(10_000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .refreshAfterWrite(1, TimeUnit.MINUTES)
         .build(key -> loadLabelValue(key));
     
+	//rename featureSupportId to CFS_featureSupportId
     private String CFS_featureSupportId;
 
     @Autowired
@@ -327,7 +329,9 @@ public class ConceptFeatureSupport
 
     private class Key
     {
+		//rename feature to CFS_feature
         private final AnnotationFeature CFS_feature;
+		//rename label to CFS_label
         private final String CFS_label;
         
         public Key(AnnotationFeature aFeature, String aLabel)

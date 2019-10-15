@@ -85,24 +85,24 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest
 public class KnowledgeBaseServiceImplIntegrationTest  {
 
-    private static final String KBSI_PROJECT_NAME = "Test KBSI_project";
-    private static final String KBSI_KB_NAME = "Test knowledge base";
+    private static final String KBSIIT_PROJECT_NAME = "Test KBSIIT_project";
+    private static final String KBSIIT_KB_NAME = "Test knowledge base";
 
     @Rule
-    public TemporaryFolder KBSI_temporaryFolder = new TemporaryFolder();
+    public TemporaryFolder KBSIIT_temporaryFolder = new TemporaryFolder();
 
     @Autowired
-    private TestEntityManager KBSI_testEntityManager;
+    private TestEntityManager KBSIIT_testEntityManager;
 
     @ClassRule
     public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 
     @Rule
-    public final SpringMethodRule KBSI_springMethodRule = new SpringMethodRule();
+    public final SpringMethodRule KBSIIT_springMethodRule = new SpringMethodRule();
 
-    private KnowledgeBaseServiceImpl KBSI_sut;
-    private Project KBSI_project;
-    private KnowledgeBase KBSI_kb;
+    private KnowledgeBaseServiceImpl KBSIIT_sut;
+    private Project KBSIIT_project;
+    private KnowledgeBase KBSIIT_kb;
     private Reification reification;
 
     private TestFixtures testFixtures;
@@ -126,18 +126,18 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Before
     public void setUp() throws Exception {
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(KBSI_temporaryFolder.getRoot());
-        EntityManager entityManager = KBSI_testEntityManager.getEntityManager();
-        testFixtures = new TestFixtures(KBSI_testEntityManager);
-        KBSI_sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        KBSI_project = createProject(KBSI_PROJECT_NAME);
-        KBSI_kb = buildKnowledgeBase(KBSI_project, KBSI_KB_NAME);
+        repoProps.setPath(KBSIIT_temporaryFolder.getRoot());
+        EntityManager entityManager = KBSIIT_testEntityManager.getEntityManager();
+        testFixtures = new TestFixtures(KBSIIT_testEntityManager);
+        KBSIIT_sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        KBSIIT_project = createProject(KBSIIT_PROJECT_NAME);
+        KBSIIT_kb = buildKnowledgeBase(KBSIIT_project, KBSIIT_KB_NAME);
     }
 
     @After
     public void tearDown() throws Exception {
-        KBSI_testEntityManager.clear();
-        KBSI_sut.destroy();
+        KBSIIT_testEntityManager.clear();
+        KBSIIT_sut.destroy();
     }
 
     @Test
@@ -147,33 +147,33 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void registerKnowledgeBase_WithNewKnowledgeBase_ShouldSaveNewKnowledgeBase() {
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KnowledgeBase savedKb = KBSI_testEntityManager.find(KnowledgeBase.class, KBSI_kb.getRepositoryId());
+        KnowledgeBase savedKb = KBSIIT_testEntityManager.find(KnowledgeBase.class, KBSIIT_kb.getRepositoryId());
         assertThat(savedKb)
             .as("Check that knowledge base was saved correctly")
-            .hasFieldOrPropertyWithValue("name", KBSI_KB_NAME)
-            .hasFieldOrPropertyWithValue("KBSI_project", KBSI_project)
+            .hasFieldOrPropertyWithValue("name", KBSIIT_KB_NAME)
+            .hasFieldOrPropertyWithValue("KBSIIT_project", KBSIIT_project)
             .extracting("repositoryId").isNotNull();
     }
 
     @Test
     public void getKnowledgeBases_WithOneStoredKnowledgeBase_ShouldReturnStoredKnowledgeBase() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        List<KnowledgeBase> knowledgeBases = KBSI_sut.getKnowledgeBases(KBSI_project);
+        List<KnowledgeBase> knowledgeBases = KBSIIT_sut.getKnowledgeBases(KBSIIT_project);
 
         assertThat(knowledgeBases)
             .as("Check that only the previously created knowledge base is found")
             .hasSize(1)
-            .contains(KBSI_kb);
+            .contains(KBSIIT_kb);
     }
 
     @Test
     public void getKnowledgeBases_WithoutKnowledgeBases_ShouldReturnEmptyList() {
-        Project KBSI_project = createProject("Empty KBSI_project");
+        Project KBSIIT_project = createProject("Empty KBSIIT_project");
 
-        List<KnowledgeBase> knowledgeBases = KBSI_sut.getKnowledgeBases(KBSI_project);
+        List<KnowledgeBase> knowledgeBases = KBSIIT_sut.getKnowledgeBases(KBSIIT_project);
 
         assertThat(knowledgeBases)
             .as("Check that no knowledge base is found")
@@ -182,9 +182,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void knowledgeBaseExists_WithExistingKnowledgeBase_ShouldReturnTrue() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        assertThat(KBSI_sut.knowledgeBaseExists(KBSI_project, KBSI_kb.getName()))
+        assertThat(KBSIIT_sut.knowledgeBaseExists(KBSIIT_project, KBSIIT_kb.getName()))
             .as("Check that knowledge base with given name already exists")
             .isTrue();
     }
@@ -192,35 +192,35 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void knowledgeBaseExists_WithNonexistentKnowledgeBase_ShouldReturnFalse() {
 
-        assertThat(KBSI_sut.knowledgeBaseExists(KBSI_project, KBSI_kb.getName()))
+        assertThat(KBSIIT_sut.knowledgeBaseExists(KBSIIT_project, KBSIIT_kb.getName()))
             .as("Check that knowledge base with given name does not already exists")
             .isFalse();
     }
 
     @Test
     public void updateKnowledgeBase_WithValidValues_ShouldUpdateKnowledgeBase() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KBSI_kb.setName("New name");
-        KBSI_kb.setClassIri(OWL.CLASS);
-        KBSI_kb.setSubclassIri(OWL.NOTHING);
-        KBSI_kb.setTypeIri(OWL.THING);
-        KBSI_kb.setDescriptionIri(IriConstants.SCHEMA_DESCRIPTION);
-        KBSI_kb.setLabelIri(RDFS.LITERAL);
-        KBSI_kb.setPropertyTypeIri(OWL.OBJECTPROPERTY);
-        KBSI_kb.setReadOnly(true);
-        KBSI_kb.setEnabled(false);
-        KBSI_kb.setBasePrefix("MyBasePrefix");
+        KBSIIT_kb.setName("New name");
+        KBSIIT_kb.setClassIri(OWL.CLASS);
+        KBSIIT_kb.setSubclassIri(OWL.NOTHING);
+        KBSIIT_kb.setTypeIri(OWL.THING);
+        KBSIIT_kb.setDescriptionIri(IriConstants.SCHEMA_DESCRIPTION);
+        KBSIIT_kb.setLabelIri(RDFS.LITERAL);
+        KBSIIT_kb.setPropertyTypeIri(OWL.OBJECTPROPERTY);
+        KBSIIT_kb.setReadOnly(true);
+        KBSIIT_kb.setEnabled(false);
+        KBSIIT_kb.setBasePrefix("MyBasePrefix");
         ValueFactory vf = SimpleValueFactory.getInstance();
         IRI rootConcept1 = vf.createIRI("http://www.ics.forth.gr/isl/CRMinf/I1_Argumentation");
         IRI rootConcept2 = vf.createIRI("file:/data-to-load/07bde589-588c-4f0d-8715-c71c0ba2bfdb/crm-extensions/F10_Person");
         List<IRI> concepts = new ArrayList<IRI>();
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
-        KBSI_kb.setRootConcepts(concepts);
-        KBSI_sut.updateKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_kb.setRootConcepts(concepts);
+        KBSIIT_sut.updateKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KnowledgeBase savedKb = KBSI_testEntityManager.find(KnowledgeBase.class, KBSI_kb.getRepositoryId());
+        KnowledgeBase savedKb = KBSIIT_testEntityManager.find(KnowledgeBase.class, KBSIIT_kb.getRepositoryId());
         assertThat(savedKb)
             .as("Check that knowledge base was updated correctly")
             .hasFieldOrPropertyWithValue("name", "New name")
@@ -242,16 +242,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateKnowledgeBase_WithUnregisteredKnowledgeBase_ShouldThrowIllegalStateException() {
         assertThatExceptionOfType(IllegalStateException.class)
             .as("Check that updating knowledge base requires registration")
-            .isThrownBy(() -> KBSI_sut.updateKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig()));
+            .isThrownBy(() -> KBSIIT_sut.updateKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig()));
     }
 
     @Test
     public void removeKnowledgeBase_WithStoredKnowledgeBase_ShouldDeleteKnowledgeBase() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KBSI_sut.removeKnowledgeBase(KBSI_kb);
+        KBSIIT_sut.removeKnowledgeBase(KBSIIT_kb);
 
-        List<KnowledgeBase> knowledgeBases = KBSI_sut.getKnowledgeBases(KBSI_project);
+        List<KnowledgeBase> knowledgeBases = KBSIIT_sut.getKnowledgeBases(KBSIIT_project);
         assertThat(knowledgeBases)
             .as("Check that the knowledge base has been deleted")
             .hasSize(0);
@@ -261,20 +261,20 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void removeKnowledgeBase_WithUnregisteredKnowledgeBase_ShouldThrowIllegalStateException() {
         assertThatExceptionOfType(IllegalStateException.class)
             .as("Check that updating knowledge base requires registration")
-            .isThrownBy(() -> KBSI_sut.removeKnowledgeBase(KBSI_kb));
+            .isThrownBy(() -> KBSIIT_sut.removeKnowledgeBase(KBSIIT_kb));
     }
 
     @Test
     public void clear_WithNonemptyKnowledgeBase_ShouldDeleteAllCustomEntities() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, buildConcept());
-        KBSI_sut.createProperty(KBSI_kb, buildProperty());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, buildConcept());
+        KBSIIT_sut.createProperty(KBSIIT_kb, buildProperty());
 
-        KBSI_sut.clear(KBSI_kb);
+        KBSIIT_sut.clear(KBSIIT_kb);
 
         List<KBObject> handles = new ArrayList<>();
-        handles.addAll(KBSI_sut.listAllConcepts(KBSI_kb, false));
-        handles.addAll(KBSI_sut.listProperties(KBSI_kb, false));
+        handles.addAll(KBSIIT_sut.listAllConcepts(KBSIIT_kb, false));
+        handles.addAll(KBSIIT_sut.listProperties(KBSIIT_kb, false));
         assertThat(handles)
             .as("Check that no custom entities are found after clearing")
             .isEmpty();
@@ -282,15 +282,15 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void clear_WithNonemptyKnowledgeBase_ShouldNotDeleteImplicitEntities() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, buildConcept());
-        KBSI_sut.createProperty(KBSI_kb, buildProperty());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, buildConcept());
+        KBSIIT_sut.createProperty(KBSIIT_kb, buildProperty());
 
-        KBSI_sut.clear(KBSI_kb);
+        KBSIIT_sut.clear(KBSIIT_kb);
 
         List<KBObject> handles = new ArrayList<>();
-        handles.addAll(KBSI_sut.listAllConcepts(KBSI_kb, true));
-        handles.addAll(KBSI_sut.listProperties(KBSI_kb, true));
+        handles.addAll(KBSIIT_sut.listAllConcepts(KBSIIT_kb, true));
+        handles.addAll(KBSIIT_sut.listProperties(KBSIIT_kb, true));
         assertThat(handles)
             .as("Check that only entities with implicit namespace are found after clearing")
             .allMatch(this::hasImplicitNamespace);
@@ -298,9 +298,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void empty_WithEmptyKnowledgeBase_ShouldReturnTrue() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        boolean isEmpty = KBSI_sut.isEmpty(KBSI_kb);
+        boolean isEmpty = KBSIIT_sut.isEmpty(KBSIIT_kb);
 
         assertThat(isEmpty)
             .as("Check that knowledge base is empty")
@@ -309,10 +309,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void empty_WithNonemptyKnowledgeBase_ShouldReturnFalse() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, buildConcept());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, buildConcept());
 
-        boolean isEmpty = KBSI_sut.isEmpty(KBSI_kb);
+        boolean isEmpty = KBSIIT_sut.isEmpty(KBSIIT_kb);
 
         assertThat(isEmpty)
             .as("Check that knowledge base is not empty")
@@ -321,15 +321,15 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void nonempty_WithEmptyKnowledgeBase_ShouldReturnTrue() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         
-        KBSI_sut.defineBaseProperties(KBSI_kb);
+        KBSIIT_sut.defineBaseProperties(KBSIIT_kb);
         
-        List<KBProperty> listProperties = KBSI_sut.listProperties(KBSI_kb, true);
+        List<KBProperty> listProperties = KBSIIT_sut.listProperties(KBSIIT_kb, true);
         Stream<String> listIdentifier = listProperties.stream().map(KBObject::getIdentifier);
-        String[] expectedProps = { KBSI_kb.getSubclassIri().stringValue(),
-                KBSI_kb.getLabelIri().stringValue(), KBSI_kb.getDescriptionIri().stringValue(),
-                KBSI_kb.getTypeIri().stringValue() };
+        String[] expectedProps = { KBSIIT_kb.getSubclassIri().stringValue(),
+                KBSIIT_kb.getLabelIri().stringValue(), KBSIIT_kb.getDescriptionIri().stringValue(),
+                KBSIIT_kb.getTypeIri().stringValue() };
         
         assertEquals(listProperties.size(), 5);
         assertThat(listIdentifier).as("Check that base properties are created")
@@ -340,10 +340,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void createConcept_WithEmptyIdentifier_ShouldCreateNewConcept() {
         KBConcept concept = buildConcept();
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
 
-        KBConcept savedConcept = KBSI_sut.readConcept(KBSI_kb, concept.getIdentifier(), true).get();
+        KBConcept savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, concept.getIdentifier(), true).get();
         assertThat(savedConcept)
             .as("Check that concept was saved correctly")
             .hasFieldOrPropertyWithValue("description", concept.getDescription())
@@ -355,12 +355,12 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     {
         KBConcept concept = buildConcept();
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
-        KBSI_kb.setBasePrefix(customPrefix);
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_kb.setBasePrefix(customPrefix);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
 
-        KBConcept savedConcept = KBSI_sut.readConcept(KBSI_kb, concept.getIdentifier(), true).get();
+        KBConcept savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, concept.getIdentifier(), true).get();
         assertThat(savedConcept).as("Check that concept was saved correctly")
                 .hasFieldOrPropertyWithValue("description", concept.getDescription())
                 .hasFieldOrPropertyWithValue("name", concept.getName());
@@ -375,31 +375,31 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBConcept concept = new KBConcept();
         concept.setIdentifier("Nonempty Identifier");
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatIllegalArgumentException()
             .as("Check that creating a concept requires empty identifier")
-            .isThrownBy(() -> KBSI_sut.createConcept(KBSI_kb, concept) )
+            .isThrownBy(() -> KBSIIT_sut.createConcept(KBSIIT_kb, concept) )
             .withMessage("Identifier must be empty on create");
     }
 
     @Test
     public void createConcept_WithReadOnlyKnowledgeBase_ShouldDoNothing() {
         KBConcept concept = buildConcept();
-        KBSI_kb.setReadOnly(true);
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_kb.setReadOnly(true);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSI_sut.createConcept(KBSI_kb, concept));
+            .isThrownBy(() -> KBSIIT_sut.createConcept(KBSIIT_kb, concept));
     }
 
     @Test
     public void readConcept_WithExistingConcept_ShouldReturnSavedConcept() {
         KBConcept concept = buildConcept();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
 
-        KBConcept savedConcept = KBSI_sut.readConcept(KBSI_kb, concept.getIdentifier(), true).get();
+        KBConcept savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, concept.getIdentifier(), true).get();
 
         assertThat(savedConcept)
             .as("Check that concept was read correctly")
@@ -409,9 +409,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        Optional<KBConcept> savedConcept = KBSI_sut.readConcept(KBSI_kb, "https://nonexistent.identifier.test", true);
+        Optional<KBConcept> savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, "https://nonexistent.identifier.test", true);
 
         assertThat(savedConcept.isPresent())
             .as("Check that no concept was read")
@@ -420,15 +420,15 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void updateConcept_WithAlteredConcept_ShouldUpdateConcept() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
 
         concept.setDescription("New description");
         concept.setName("New name");
-        KBSI_sut.updateConcept(KBSI_kb, concept);
+        KBSIIT_sut.updateConcept(KBSIIT_kb, concept);
 
-        KBConcept savedConcept = KBSI_sut.readConcept(KBSI_kb, concept.getIdentifier(), true).get();
+        KBConcept savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, concept.getIdentifier(), true).get();
         assertThat(savedConcept)
             .as("Check that concept was updated correctly")
             .hasFieldOrPropertyWithValue("description", "New description")
@@ -440,11 +440,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateConcept_WithNonexistentConcept_ShouldCreateConcept() {
         KBConcept concept = buildConcept();
         concept.setIdentifier("https://nonexistent.identifier.test");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KBSI_sut.updateConcept(KBSI_kb, concept);
+        KBSIIT_sut.updateConcept(KBSIIT_kb, concept);
 
-        KBConcept savedConcept = KBSI_sut.readConcept(KBSI_kb, "https://nonexistent.identifier.test", true).get();
+        KBConcept savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, "https://nonexistent.identifier.test", true).get();
         assertThat(savedConcept)
             .hasFieldOrPropertyWithValue("description", concept.getDescription())
             .hasFieldOrPropertyWithValue("name", concept.getName());
@@ -454,11 +454,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateConcept_WithConceptWithBlankIdentifier_ShouldThrowIllegalArgumentException() {
         KBConcept concept = buildConcept();
         concept.setIdentifier("");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatIllegalArgumentException()
             .as("Check that updating a concept requires nonempty identifier")
-            .isThrownBy(() -> KBSI_sut.updateConcept(KBSI_kb, concept))
+            .isThrownBy(() -> KBSIIT_sut.updateConcept(KBSIIT_kb, concept))
             .withMessage("Identifier cannot be empty on update");
     }
 
@@ -466,28 +466,28 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateConcept_WithConceptWithNullIdentifier_ShouldThrowIllegalArgumentException() {
         KBConcept concept = buildConcept();
         concept.setIdentifier(null);
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatIllegalArgumentException()
             .as("Check that updating a concept requires non-null identifier")
-            .isThrownBy(() -> KBSI_sut.updateConcept(KBSI_kb, concept))
+            .isThrownBy(() -> KBSIIT_sut.updateConcept(KBSIIT_kb, concept))
             .withMessage("Identifier cannot be empty on update");
     }
 
     @Test
     public void updateConcept_WithReadOnlyKnowledgeBase_ShouldDoNothing() {
         KBConcept concept = buildConcept();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        setReadOnly(KBSI_kb);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        setReadOnly(KBSIIT_kb);
 
         concept.setDescription("New description");
         concept.setName("New name");
 
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSI_sut.updateConcept(KBSI_kb, concept));
+            .isThrownBy(() -> KBSIIT_sut.updateConcept(KBSIIT_kb, concept));
 
-        KBConcept savedConcept = KBSI_sut.readConcept(KBSI_kb, concept.getIdentifier(), true).get();
+        KBConcept savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, concept.getIdentifier(), true).get();
         assertThat(savedConcept)
             .as("Check that concept has not been updated")
             .hasFieldOrPropertyWithValue("description", "Concept description")
@@ -500,20 +500,20 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBProperty property = buildProperty();
         KBConcept concept = buildConcept();
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, instance);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
 
-        KBSI_sut.upsertStatement(KBSI_kb,
-                buildStatement(KBSI_kb, instance.toKBHandle(), property, concept.getIdentifier()));
+        KBSIIT_sut.upsertStatement(KBSIIT_kb,
+                buildStatement(KBSIIT_kb, instance.toKBHandle(), property, concept.getIdentifier()));
 
-        KBSI_sut.deleteConcept(KBSI_kb, concept);
+        KBSIIT_sut.deleteConcept(KBSIIT_kb, concept);
 
-        assertThat(KBSI_sut.listStatementsWithPredicateOrObjectReference(KBSI_kb, concept.getIdentifier()))
+        assertThat(KBSIIT_sut.listStatementsWithPredicateOrObjectReference(KBSIIT_kb, concept.getIdentifier()))
             .isEmpty();
 
-        Optional<KBConcept> savedConcept = KBSI_sut.readConcept(KBSI_kb, concept.getIdentifier(), true);
+        Optional<KBConcept> savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, concept.getIdentifier(), true);
         assertThat(savedConcept.isPresent())
             .as("Check that concept was not found after delete")
             .isFalse();
@@ -523,12 +523,12 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void deleteConcept_WithExistingConcept_ShouldDeleteConcept() {
         KBConcept concept = buildConcept();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
 
-        KBSI_sut.deleteConcept(KBSI_kb, concept);
+        KBSIIT_sut.deleteConcept(KBSIIT_kb, concept);
 
-        Optional<KBConcept> savedConcept = KBSI_sut.readConcept(KBSI_kb, concept.getIdentifier(), true);
+        Optional<KBConcept> savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, concept.getIdentifier(), true);
         assertThat(savedConcept.isPresent())
             .as("Check that concept was not found after delete")
             .isFalse();
@@ -538,9 +538,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void deleteConcept_WithNonexistentConcept_ShouldNoNothing() {
         KBConcept concept = buildConcept();
         concept.setIdentifier("https://nonexistent.identifier.test");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        assertThatCode(() -> KBSI_sut.deleteConcept(KBSI_kb, concept))
+        assertThatCode(() -> KBSIIT_sut.deleteConcept(KBSIIT_kb, concept))
             .as("Check that deleting non-existant concept does nothing")
             .doesNotThrowAnyException();
     }
@@ -548,14 +548,14 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void deleteConcept_WithReadOnlyKnowledgeBase_ShouldDoNothing() {
         KBConcept concept = buildConcept();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        setReadOnly(KBSI_kb);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        setReadOnly(KBSIIT_kb);
 
         assertThatExceptionOfType(ReadOnlyException.class)
-                .isThrownBy(() -> KBSI_sut.deleteConcept(KBSI_kb, concept));
+                .isThrownBy(() -> KBSIIT_sut.deleteConcept(KBSIIT_kb, concept));
 
-        Optional<KBConcept> savedConcept = KBSI_sut.readConcept(KBSI_kb, concept.getIdentifier(), true);
+        Optional<KBConcept> savedConcept = KBSIIT_sut.readConcept(KBSIIT_kb, concept.getIdentifier(), true);
         assertThat(savedConcept.isPresent())
             .as("Check that concept was not deleted")
             .isTrue();
@@ -564,10 +564,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void listConcepts_WithASavedConceptAndNotAll_ShouldFindOneConcept() {
         KBConcept concept = buildConcept();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
 
-        List<KBHandle> concepts = KBSI_sut.listAllConcepts(KBSI_kb, false);
+        List<KBHandle> concepts = KBSIIT_sut.listAllConcepts(KBSIIT_kb, false);
 
         assertThat(concepts)
             .as("Check that concepts contain the one, saved item")
@@ -580,9 +580,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void listConcepts_WithNoSavedConceptAndAll_ShouldFindRdfConcepts() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        List<KBHandle> concepts = KBSI_sut.listAllConcepts(KBSI_kb, true);
+        List<KBHandle> concepts = KBSIIT_sut.listAllConcepts(KBSIIT_kb, true);
 
         assertThat(concepts)
             .as("Check that all concepts have implicit namespaces")
@@ -592,11 +592,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void createProperty_WithEmptyIdentifier_ShouldCreateNewProperty() {
         KBProperty property = buildProperty();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KBSI_sut.createProperty(KBSI_kb, property);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
 
-        KBProperty savedProperty = KBSI_sut.readProperty(KBSI_kb, property.getIdentifier()).get();
+        KBProperty savedProperty = KBSIIT_sut.readProperty(KBSIIT_kb, property.getIdentifier()).get();
         assertThat(savedProperty)
             .as("Check that property was created correctly")
             .hasNoNullFieldsOrPropertiesExcept("language")
@@ -610,16 +610,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void createProperty_WithCustomBasePrefix_ShouldCreateNewPropertyWithCustomPrefix()
     {
         assumeFalse("Wikidata reification has hardcoded property prefix", 
-                Reification.WIKIDATA.equals(KBSI_kb.getReification()));
+                Reification.WIKIDATA.equals(KBSIIT_kb.getReification()));
         
         KBProperty property = buildProperty();
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
-        KBSI_kb.setBasePrefix(customPrefix);
-        KBSI_sut.createProperty(KBSI_kb, property);
+        KBSIIT_kb.setBasePrefix(customPrefix);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
 
-        KBProperty savedProperty = KBSI_sut.readProperty(KBSI_kb, property.getIdentifier()).get();
+        KBProperty savedProperty = KBSIIT_sut.readProperty(KBSIIT_kb, property.getIdentifier()).get();
         assertThat(savedProperty).as("Check that property was saved correctly")
                 .hasFieldOrPropertyWithValue("description", property.getDescription())
                 .hasFieldOrPropertyWithValue("name", property.getName());
@@ -634,31 +634,31 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBProperty property = buildProperty();
         property.setIdentifier("Nonempty Identifier");
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatIllegalArgumentException()
             .as("Check that creating a property requires empty identifier")
-            .isThrownBy(() -> KBSI_sut.createProperty(KBSI_kb, property) )
+            .isThrownBy(() -> KBSIIT_sut.createProperty(KBSIIT_kb, property) )
             .withMessage("Identifier must be empty on create");
     }
 
     @Test
     public void createProperty_WithReadOnlyKnowledgeBase_ShouldDoNothing() {
         KBProperty property = buildProperty();
-        KBSI_kb.setReadOnly(true);
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_kb.setReadOnly(true);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSI_sut.createProperty(KBSI_kb, property));
+            .isThrownBy(() -> KBSIIT_sut.createProperty(KBSIIT_kb, property));
     }
 
     @Test
     public void readProperty_WithExistingConcept_ShouldReturnSavedProperty() {
         KBProperty property = buildProperty();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createProperty(KBSI_kb, property);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
 
-        KBProperty savedProperty = KBSI_sut.readProperty(KBSI_kb, property.getIdentifier()).get();
+        KBProperty savedProperty = KBSIIT_sut.readProperty(KBSIIT_kb, property.getIdentifier()).get();
 
         assertThat(savedProperty)
             .as("Check that property was saved correctly")
@@ -671,9 +671,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void readProperty_WithNonexistentProperty_ShouldReturnEmptyResult() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        Optional<KBProperty> savedProperty = KBSI_sut.readProperty(KBSI_kb, "https://nonexistent.identifier.test");
+        Optional<KBProperty> savedProperty = KBSIIT_sut.readProperty(KBSIIT_kb, "https://nonexistent.identifier.test");
 
         assertThat(savedProperty.isPresent())
             .as("Check that no property was read")
@@ -683,16 +683,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void updateProperty_WithAlteredProperty_ShouldUpdateProperty() {
         KBProperty property = buildProperty();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createProperty(KBSI_kb, property);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
 
         property.setDescription("New property description");
         property.setDomain("https://new.schema.com/#domain");
         property.setName("New property name");
         property.setRange("https://new.schema.com/#range");
-        KBSI_sut.updateProperty(KBSI_kb, property);
+        KBSIIT_sut.updateProperty(KBSIIT_kb, property);
 
-        KBProperty savedProperty = KBSI_sut.readProperty(KBSI_kb, property.getIdentifier()).get();
+        KBProperty savedProperty = KBSIIT_sut.readProperty(KBSIIT_kb, property.getIdentifier()).get();
         assertThat(savedProperty)
             .as("Check that property was updated correctly")
             .hasFieldOrPropertyWithValue("description", property.getDescription())
@@ -706,11 +706,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateProperty_WithNonexistentProperty_ShouldCreateProperty() {
         KBProperty property = buildProperty();
         property.setIdentifier("https://nonexistent.identifier.test");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KBSI_sut.updateProperty(KBSI_kb, property);
+        KBSIIT_sut.updateProperty(KBSIIT_kb, property);
 
-        KBProperty savedProperty = KBSI_sut.readProperty(KBSI_kb, "https://nonexistent.identifier.test").get();
+        KBProperty savedProperty = KBSIIT_sut.readProperty(KBSIIT_kb, "https://nonexistent.identifier.test").get();
         assertThat(savedProperty)
             .as("Check that property was updated correctly")
             .hasFieldOrPropertyWithValue("description", property.getDescription())
@@ -723,11 +723,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateProperty_WithPropertyWithBlankIdentifier_ShouldThrowIllegalArgumentException() {
         KBProperty property = buildProperty();
         property.setIdentifier("");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatIllegalArgumentException()
             .as("Check that updating a property requires nonempty identifier")
-            .isThrownBy(() -> KBSI_sut.updateProperty(KBSI_kb, property))
+            .isThrownBy(() -> KBSIIT_sut.updateProperty(KBSIIT_kb, property))
             .withMessage("Identifier cannot be empty on update");
     }
 
@@ -735,20 +735,20 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateProperty_WithPropertyWithNullIdentifier_ShouldThrowIllegalArgumentException() {
         KBProperty property = buildProperty();
         property.setIdentifier(null);
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatIllegalArgumentException()
             .as("Check that updating a property requires nonempty identifier")
-            .isThrownBy(() -> KBSI_sut.updateProperty(KBSI_kb, property))
+            .isThrownBy(() -> KBSIIT_sut.updateProperty(KBSIIT_kb, property))
             .withMessage("Identifier cannot be empty on update");
     }
 
     @Test
     public void updateProperty_WithReadOnlyKnowledgeBase_ShouldDoNothing() {
         KBProperty property = buildProperty();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createProperty(KBSI_kb, property);
-        setReadOnly(KBSI_kb);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        setReadOnly(KBSIIT_kb);
 
         property.setDescription("New property description");
         property.setDomain("https://new.schema.com/#domain");
@@ -756,9 +756,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         property.setRange("https://new.schema.com/#range");
         
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSI_sut.updateProperty(KBSI_kb, property));
+            .isThrownBy(() -> KBSIIT_sut.updateProperty(KBSIIT_kb, property));
 
-        KBProperty savedProperty = KBSI_sut.readProperty(KBSI_kb, property.getIdentifier()).get();
+        KBProperty savedProperty = KBSIIT_sut.readProperty(KBSIIT_kb, property.getIdentifier()).get();
         assertThat(savedProperty)
             .as("Check that property has not been updated")
             .hasFieldOrPropertyWithValue("description", "Property description")
@@ -770,12 +770,12 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void deleteProperty_WithExistingProperty_ShouldDeleteProperty() {
         KBProperty property = buildProperty();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createProperty(KBSI_kb, property);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
 
-        KBSI_sut.deleteProperty(KBSI_kb, property);
+        KBSIIT_sut.deleteProperty(KBSIIT_kb, property);
 
-        Optional<KBProperty> savedProperty = KBSI_sut.readProperty(KBSI_kb, property.getIdentifier());
+        Optional<KBProperty> savedProperty = KBSIIT_sut.readProperty(KBSIIT_kb, property.getIdentifier());
         assertThat(savedProperty.isPresent())
             .as("Check that property was not found after delete")
             .isFalse();
@@ -785,9 +785,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void deleteProperty_WithNotExistingProperty_ShouldNoNothing() {
         KBProperty property = buildProperty();
         property.setIdentifier("https://nonexistent.identifier.test");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        assertThatCode(() -> KBSI_sut.deleteProperty(KBSI_kb, property))
+        assertThatCode(() -> KBSIIT_sut.deleteProperty(KBSIIT_kb, property))
             .as("Check that deleting non-existant property does nothing")
             .doesNotThrowAnyException();
     }
@@ -795,14 +795,14 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void deleteProperty_WithReadOnlyKnowledgeBase_ShouldNoNothing() {
         KBProperty property = buildProperty();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createProperty(KBSI_kb, property);
-        setReadOnly(KBSI_kb);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        setReadOnly(KBSIIT_kb);
 
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSI_sut.deleteProperty(KBSI_kb, property));
+            .isThrownBy(() -> KBSIIT_sut.deleteProperty(KBSIIT_kb, property));
         
-        Optional<KBProperty> savedProperty = KBSI_sut.readProperty(KBSI_kb, property.getIdentifier());
+        Optional<KBProperty> savedProperty = KBSIIT_sut.readProperty(KBSIIT_kb, property.getIdentifier());
         assertThat(savedProperty.isPresent())
             .as("Check that property was not deleted")
             .isTrue();
@@ -811,10 +811,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void listProperties_WithASavedConceptAndNotAll_ShouldFindOneConcept() {
         KBProperty property = buildProperty();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createProperty(KBSI_kb, property);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
 
-        List<KBProperty> properties = KBSI_sut.listProperties(KBSI_kb, false);
+        List<KBProperty> properties = KBSIIT_sut.listProperties(KBSIIT_kb, false);
 
         assertThat(properties)
             .as("Check that properties contain the one, saved item")
@@ -826,9 +826,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void listProperties_WithNoSavedConceptAndAll_ShouldFindRdfConcepts() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        List<KBProperty> properties = KBSI_sut.listProperties(KBSI_kb, true);
+        List<KBProperty> properties = KBSIIT_sut.listProperties(KBSIIT_kb, true);
 
         assertThat(properties)
             .as("Check that all properties have implicit namespaces")
@@ -839,10 +839,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void createInstance_WithEmptyIdentifier_ShouldCreateNewInstance() {
         KBInstance instance = buildInstance();
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, instance);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
 
-        KBInstance savedInstance = KBSI_sut.readInstance(KBSI_kb, instance.getIdentifier()).get();
+        KBInstance savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, instance.getIdentifier()).get();
         assertThat(savedInstance)
             .as("Check that instance was saved correctly")
             .hasFieldOrPropertyWithValue("description", instance.getDescription())
@@ -854,12 +854,12 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     {
         KBInstance instance = buildInstance();
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         String customPrefix = "http://www.ukp.informatik.tu-darmstadt.de/customPrefix#";
-        KBSI_kb.setBasePrefix(customPrefix);
-        KBSI_sut.createInstance(KBSI_kb, instance);
+        KBSIIT_kb.setBasePrefix(customPrefix);
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
 
-        KBInstance savedInstance = KBSI_sut.readInstance(KBSI_kb, instance.getIdentifier()).get();
+        KBInstance savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, instance.getIdentifier()).get();
         assertThat(savedInstance).as("Check that Instance was saved correctly")
                 .hasFieldOrPropertyWithValue("description", instance.getDescription())
                 .hasFieldOrPropertyWithValue("name", instance.getName());
@@ -874,31 +874,31 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBInstance instance = new KBInstance();
         instance.setIdentifier("Nonempty Identifier");
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatIllegalArgumentException()
             .as("Check that creating a instance requires empty identifier")
-            .isThrownBy(() -> KBSI_sut.createInstance(KBSI_kb, instance) )
+            .isThrownBy(() -> KBSIIT_sut.createInstance(KBSIIT_kb, instance) )
             .withMessage("Identifier must be empty on create");
     }
 
     @Test
     public void createInstance_WithReadOnlyKnowledgeBase_ShouldDoNothing() {
         KBInstance instance = buildInstance();
-        KBSI_kb.setReadOnly(true);
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_kb.setReadOnly(true);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSI_sut.createInstance(KBSI_kb, instance));
+            .isThrownBy(() -> KBSIIT_sut.createInstance(KBSIIT_kb, instance));
     }
 
     @Test
     public void readInstance_WithExistingInstance_ShouldReturnSavedInstance() {
         KBInstance instance = buildInstance();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, instance);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
 
-        KBInstance savedInstance = KBSI_sut.readInstance(KBSI_kb, instance.getIdentifier()).get();
+        KBInstance savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, instance.getIdentifier()).get();
 
         assertThat(savedInstance)
             .as("Check that instance was read correctly")
@@ -908,9 +908,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        Optional<KBInstance> savedInstance = KBSI_sut.readInstance(KBSI_kb, "https://nonexistent.identifier.test");
+        Optional<KBInstance> savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, "https://nonexistent.identifier.test");
 
         assertThat(savedInstance.isPresent())
             .as("Check that no instance was read")
@@ -920,14 +920,14 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void updateInstance_WithAlteredInstance_ShouldUpdateInstance() {
         KBInstance instance = buildInstance();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, instance);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
 
         instance.setDescription("New description");
         instance.setName("New name");
-        KBSI_sut.updateInstance(KBSI_kb, instance);
+        KBSIIT_sut.updateInstance(KBSIIT_kb, instance);
 
-        KBInstance savedInstance = KBSI_sut.readInstance(KBSI_kb, instance.getIdentifier()).get();
+        KBInstance savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, instance.getIdentifier()).get();
         assertThat(savedInstance)
             .as("Check that instance was updated correctly")
             .hasFieldOrPropertyWithValue("description", "New description")
@@ -939,11 +939,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateInstance_WithNonexistentInstance_ShouldCreateInstance() {
         KBInstance instance = buildInstance();
         instance.setIdentifier("https://nonexistent.identifier.test");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KBSI_sut.updateInstance(KBSI_kb, instance);
+        KBSIIT_sut.updateInstance(KBSIIT_kb, instance);
 
-        KBInstance savedInstance = KBSI_sut.readInstance(KBSI_kb, "https://nonexistent.identifier.test").get();
+        KBInstance savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, "https://nonexistent.identifier.test").get();
         assertThat(savedInstance)
             .hasFieldOrPropertyWithValue("description", instance.getDescription())
             .hasFieldOrPropertyWithValue("name", instance.getName());
@@ -953,11 +953,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateInstance_WithInstanceWithBlankIdentifier_ShouldThrowIllegalArgumentException() {
         KBInstance instance = buildInstance();
         instance.setIdentifier("");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatIllegalArgumentException()
             .as("Check that updating a instance requires nonempty identifier")
-            .isThrownBy(() -> KBSI_sut.updateInstance(KBSI_kb, instance))
+            .isThrownBy(() -> KBSIIT_sut.updateInstance(KBSIIT_kb, instance))
             .withMessage("Identifier cannot be empty on update");
     }
 
@@ -965,28 +965,28 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void updateInstance_WithInstanceWithNullIdentifier_ShouldThrowIllegalArgumentException() {
         KBInstance instance = buildInstance();
         instance.setIdentifier(null);
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         assertThatIllegalArgumentException()
             .as("Check that updating a instance requires non-null identifier")
-            .isThrownBy(() -> KBSI_sut.updateInstance(KBSI_kb, instance))
+            .isThrownBy(() -> KBSIIT_sut.updateInstance(KBSIIT_kb, instance))
             .withMessage("Identifier cannot be empty on update");
     }
 
     @Test
     public void updateInstance_WithReadOnlyKnowledgeBase_ShouldDoNothing() {
         KBInstance instance = buildInstance();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, instance);
-        setReadOnly(KBSI_kb);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
+        setReadOnly(KBSIIT_kb);
 
         instance.setDescription("New description");
         instance.setName("New name");
 
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() ->  KBSI_sut.updateInstance(KBSI_kb, instance));
+            .isThrownBy(() ->  KBSIIT_sut.updateInstance(KBSIIT_kb, instance));
         
-        KBInstance savedInstance = KBSI_sut.readInstance(KBSI_kb, instance.getIdentifier()).get();
+        KBInstance savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, instance.getIdentifier()).get();
         assertThat(savedInstance)
             .as("Check that instance has not been updated")
             .hasFieldOrPropertyWithValue("description", "Instance description")
@@ -996,12 +996,12 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void deleteInstance_WithExistingInstance_ShouldDeleteInstance() {
         KBInstance instance = buildInstance();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, instance);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
 
-        KBSI_sut.deleteInstance(KBSI_kb, instance);
+        KBSIIT_sut.deleteInstance(KBSIIT_kb, instance);
 
-        Optional<KBInstance> savedInstance = KBSI_sut.readInstance(KBSI_kb, instance.getIdentifier());
+        Optional<KBInstance> savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, instance.getIdentifier());
         assertThat(savedInstance.isPresent())
             .as("Check that instance was not found after delete")
             .isFalse();
@@ -1014,20 +1014,20 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBProperty property = buildProperty();
         KBInstance instance2 = buildInstance();
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, instance);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBSI_sut.createInstance(KBSI_kb, instance2);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance2);
 
-        KBSI_sut.upsertStatement(KBSI_kb,
-                buildStatement(KBSI_kb, instance.toKBHandle(), property, instance2.getIdentifier()));
+        KBSIIT_sut.upsertStatement(KBSIIT_kb,
+                buildStatement(KBSIIT_kb, instance.toKBHandle(), property, instance2.getIdentifier()));
 
-        KBSI_sut.deleteInstance(KBSI_kb, instance2);
+        KBSIIT_sut.deleteInstance(KBSIIT_kb, instance2);
 
-        assertThat(KBSI_sut.listStatementsWithPredicateOrObjectReference(KBSI_kb, instance2.getIdentifier()))
+        assertThat(KBSIIT_sut.listStatementsWithPredicateOrObjectReference(KBSIIT_kb, instance2.getIdentifier()))
             .isEmpty();
 
-        Optional<KBInstance> savedInstance = KBSI_sut.readInstance(KBSI_kb, instance2.getIdentifier());
+        Optional<KBInstance> savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, instance2.getIdentifier());
         assertThat(savedInstance.isPresent()).as("Check that Instance was not found after delete")
                 .isFalse();
 
@@ -1037,9 +1037,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void deleteInstance_WithNonexistentProperty_ShouldNoNothing() {
         KBInstance instance = buildInstance();
         instance.setIdentifier("https://nonexistent.identifier.test");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        assertThatCode(() -> KBSI_sut.deleteInstance(KBSI_kb, instance))
+        assertThatCode(() -> KBSIIT_sut.deleteInstance(KBSIIT_kb, instance))
             .as("Check that deleting non-existant instance does nothing")
             .doesNotThrowAnyException();
     }
@@ -1047,14 +1047,14 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void deleteInstance_WithReadOnlyKnowledgeBase_ShouldNoNothing() {
         KBInstance instance = buildInstance();
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, instance);
-        setReadOnly(KBSI_kb);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
+        setReadOnly(KBSIIT_kb);
 
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSI_sut.deleteInstance(KBSI_kb, instance));
+            .isThrownBy(() -> KBSIIT_sut.deleteInstance(KBSIIT_kb, instance));
         
-        Optional<KBInstance> savedInstance = KBSI_sut.readInstance(KBSI_kb, instance.getIdentifier());
+        Optional<KBInstance> savedInstance = KBSIIT_sut.readInstance(KBSIIT_kb, instance.getIdentifier());
         assertThat(savedInstance.isPresent())
             .as("Check that instance was not deleted")
             .isTrue();
@@ -1062,14 +1062,14 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void listInstances_WithASavedInstanceAndNotAll_ShouldFindOneInstance() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBInstance instance = buildInstance();
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
         instance.setType(URI.create(concept.getIdentifier()));
-        KBSI_sut.createInstance(KBSI_kb, instance);
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
 
-        List<KBHandle> instances = KBSI_sut.listInstances(KBSI_kb, concept.getIdentifier(), false);
+        List<KBHandle> instances = KBSIIT_sut.listInstances(KBSIIT_kb, concept.getIdentifier(), false);
 
         assertThat(instances)
             .as("Check that instances contain the one, saved item")
@@ -1082,16 +1082,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void upsertStatement_WithUnsavedStatement_ShouldCreateStatement() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBStatement statement = buildStatement(KBSI_kb, concept.toKBHandle(), property, "Test statement");
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBStatement statement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property, "Test statement");
 
-        KBSI_sut.upsertStatement(KBSI_kb, statement);
+        KBSIIT_sut.upsertStatement(KBSIIT_kb, statement);
 
-        List<KBStatement> statements = KBSI_sut.listStatements(KBSI_kb, concept.toKBHandle(), false);
+        List<KBStatement> statements = KBSIIT_sut.listStatements(KBSIIT_kb, concept.toKBHandle(), false);
         assertThat(statements)
             .as("Check that the statement was saved correctly")
             .filteredOn(this::isNotAbstractNorClosedStatement)
@@ -1105,19 +1105,19 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void upsertStatement_WithExistingStatement_ShouldUpdateStatement() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBStatement statement = buildStatement(KBSI_kb, concept.toKBHandle(), property,
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBStatement statement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property,
                 "Test statement");
-        KBSI_sut.upsertStatement(KBSI_kb, statement);
+        KBSIIT_sut.upsertStatement(KBSIIT_kb, statement);
 
         statement.setValue("Altered test property");
-        KBSI_sut.upsertStatement(KBSI_kb, statement);
+        KBSIIT_sut.upsertStatement(KBSIIT_kb, statement);
 
-        List<KBStatement> statements = KBSI_sut.listStatements(KBSI_kb, concept.toKBHandle(), false);
+        List<KBStatement> statements = KBSIIT_sut.listStatements(KBSIIT_kb, concept.toKBHandle(), false);
         assertThat(statements)
             .as("Check that the statement was updated correctly")
             .filteredOn(this::isNotAbstractNorClosedStatement)
@@ -1131,19 +1131,19 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void upsertStatement_WithReadOnlyKnowledgeBase_ShouldDoNothing() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBStatement statement = buildStatement(KBSI_kb, concept.toKBHandle(), property, "Test statement");
-        setReadOnly(KBSI_kb);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBStatement statement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property, "Test statement");
+        setReadOnly(KBSIIT_kb);
 
-        int statementCountBeforeUpsert = KBSI_sut.listStatements(KBSI_kb, concept.toKBHandle(), false).size();
+        int statementCountBeforeUpsert = KBSIIT_sut.listStatements(KBSIIT_kb, concept.toKBHandle(), false).size();
         assertThatExceptionOfType(ReadOnlyException.class)
-                .isThrownBy(() -> KBSI_sut.upsertStatement(KBSI_kb, statement));
+                .isThrownBy(() -> KBSIIT_sut.upsertStatement(KBSIIT_kb, statement));
 
-        int statementCountAfterUpsert = KBSI_sut.listStatements(KBSI_kb, concept.toKBHandle(), false).size();
+        int statementCountAfterUpsert = KBSIIT_sut.listStatements(KBSIIT_kb, concept.toKBHandle(), false).size();
         assertThat(statementCountBeforeUpsert)
             .as("Check that statement was not created")
             .isEqualTo(statementCountAfterUpsert);
@@ -1151,17 +1151,17 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void deleteStatement_WithExistingStatement_ShouldDeleteStatement() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBStatement statement = buildStatement(KBSI_kb, concept.toKBHandle(), property, "Test statement");
-        KBSI_sut.upsertStatement(KBSI_kb, statement);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBStatement statement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property, "Test statement");
+        KBSIIT_sut.upsertStatement(KBSIIT_kb, statement);
 
-        KBSI_sut.deleteStatement(KBSI_kb, statement);
+        KBSIIT_sut.deleteStatement(KBSIIT_kb, statement);
 
-        List<KBStatement> statements = KBSI_sut.listStatements(KBSI_kb, concept.toKBHandle(), false);
+        List<KBStatement> statements = KBSIIT_sut.listStatements(KBSIIT_kb, concept.toKBHandle(), false);
         assertThat(statements)
             .as("Check that the statement was deleted correctly")
             .noneMatch(stmt -> "Test statement".equals(stmt.getValue()));
@@ -1169,35 +1169,35 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void deleteStatement_WithNonExistentStatement_ShouldDoNothing() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBStatement statement = buildStatement(KBSI_kb, concept.toKBHandle(), property, "Test statement");
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBStatement statement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property, "Test statement");
 
         assertThatCode(() -> {
-            KBSI_sut.deleteStatement(KBSI_kb, statement);
+            KBSIIT_sut.deleteStatement(KBSIIT_kb, statement);
         }).doesNotThrowAnyException();
     }
 
     @Test
     public void deleteStatement_WithReadOnlyKnowledgeBase_ShouldDoNothing() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBStatement statement = buildStatement(KBSI_kb, concept.toKBHandle(), property, "Test statement");
-        KBSI_sut.upsertStatement(KBSI_kb, statement);
-        setReadOnly(KBSI_kb);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBStatement statement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property, "Test statement");
+        KBSIIT_sut.upsertStatement(KBSIIT_kb, statement);
+        setReadOnly(KBSIIT_kb);
 
-        int statementCountBeforeDeletion = KBSI_sut.listStatements(KBSI_kb, concept.toKBHandle(), false).size();
+        int statementCountBeforeDeletion = KBSIIT_sut.listStatements(KBSIIT_kb, concept.toKBHandle(), false).size();
         
         assertThatExceptionOfType(ReadOnlyException.class)
-                .isThrownBy(() -> KBSI_sut.deleteStatement(KBSI_kb, statement));
+                .isThrownBy(() -> KBSIIT_sut.deleteStatement(KBSIIT_kb, statement));
 
-        int statementCountAfterDeletion = KBSI_sut.listStatements(KBSI_kb, concept.toKBHandle(), false).size();
+        int statementCountAfterDeletion = KBSIIT_sut.listStatements(KBSIIT_kb, concept.toKBHandle(), false).size();
         assertThat(statementCountAfterDeletion)
             .as("Check that statement was not deleted")
             .isEqualTo(statementCountBeforeDeletion);
@@ -1205,15 +1205,15 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void listStatements_WithExistentStatementAndNotAll_ShouldReturnOnlyThisStatement() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBStatement statement = buildStatement(KBSI_kb, concept.toKBHandle(), property, "Test statement");
-        KBSI_sut.upsertStatement(KBSI_kb, statement);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBStatement statement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property, "Test statement");
+        KBSIIT_sut.upsertStatement(KBSIIT_kb, statement);
 
-        List<KBStatement> statements = KBSI_sut.listStatements(KBSI_kb, concept.toKBHandle(), false);
+        List<KBStatement> statements = KBSIIT_sut.listStatements(KBSIIT_kb, concept.toKBHandle(), false);
 
         assertThat(statements)
             .as("Check that saved statement is found")
@@ -1229,11 +1229,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void listStatements_WithNonexistentStatementAndAll_ShouldRetuenAllStatements() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
 
-        List<KBStatement> statements = KBSI_sut.listStatements(KBSI_kb, concept.toKBHandle(), true);
+        List<KBStatement> statements = KBSIIT_sut.listStatements(KBSIIT_kb, concept.toKBHandle(), true);
 
         assertThat(statements)
             .filteredOn(this::isNotAbstractNorClosedStatement)
@@ -1244,11 +1244,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts() throws Exception
     {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         importKnowledgeBase("data/wildlife_ontology.ttl");
-        setSchema(KBSI_kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+        setSchema(KBSIIT_kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
-        List<KBHandle> rootConcepts = KBSI_sut.listRootConcepts(KBSI_kb, false);
+        List<KBHandle> rootConcepts = KBSIIT_sut.listRootConcepts(KBSIIT_kb, false);
         
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")
@@ -1268,21 +1268,21 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void getConceptRoots_WithWildlifeOntologyAndExplicityDefinedConcepts_ShouldReturnRootConcepts() throws Exception {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         ValueFactory vf = SimpleValueFactory.getInstance();
         IRI rootConcept1 = vf.createIRI("http://purl.org/ontology/wo/AnimalIntelligence");
         IRI rootConcept2 = vf.createIRI("http://purl.org/ontology/wo/Ecozone");
         List<IRI> concepts = new ArrayList<IRI>();
         concepts.add(rootConcept1);
         concepts.add(rootConcept2);
-        KBSI_kb.setDefaultLanguage("en");
-        KBSI_kb.setRootConcepts(concepts);
-        KBSI_sut.updateKnowledgeBase(KBSI_kb);
+        KBSIIT_kb.setDefaultLanguage("en");
+        KBSIIT_kb.setRootConcepts(concepts);
+        KBSIIT_sut.updateKnowledgeBase(KBSIIT_kb);
 
         importKnowledgeBase("data/wildlife_ontology.ttl");
-        setSchema(KBSI_kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+        setSchema(KBSIIT_kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
-        Stream<String> rootConcepts = KBSI_sut.listRootConcepts(KBSI_kb, false).stream()
+        Stream<String> rootConcepts = KBSIIT_sut.listRootConcepts(KBSIIT_kb, false).stream()
                 .map(KBHandle::getName);
 
         String[] expectedLabels = {
@@ -1295,11 +1295,11 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void getConceptRoots_WithSparqlPlayground_ReturnsOnlyRootConcepts() throws Exception {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         importKnowledgeBase("data/sparql_playground.ttl");
-        setSchema(KBSI_kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+        setSchema(KBSIIT_kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
-        Stream<String> childConcepts = KBSI_sut.listRootConcepts(KBSI_kb, false).stream()
+        Stream<String> childConcepts = KBSIIT_sut.listRootConcepts(KBSIIT_kb, false).stream()
                 .map(KBHandle::getName);
 
         String[] expectedLabels = { "creature" };
@@ -1310,12 +1310,12 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void getChildConcepts_WithSparqlPlayground_ReturnsAnimals() throws Exception {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         importKnowledgeBase("data/sparql_playground.ttl");
-        setSchema(KBSI_kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
-        KBConcept concept = KBSI_sut.readConcept(KBSI_kb, "http://example.org/tuto/ontology#Animal", true).get();
+        setSchema(KBSIIT_kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+        KBConcept concept = KBSIIT_sut.readConcept(KBSIIT_kb, "http://example.org/tuto/ontology#Animal", true).get();
 
-        Stream<String> childConcepts = KBSI_sut.listChildConcepts(KBSI_kb, concept.getIdentifier(), false)
+        Stream<String> childConcepts = KBSIIT_sut.listChildConcepts(KBSIIT_kb, concept.getIdentifier(), false)
             .stream()
             .map(KBHandle::getName);
         
@@ -1329,12 +1329,12 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void getChildConcepts_WithStreams_ReturnsOnlyImmediateChildren() throws Exception {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         importKnowledgeBase("data/streams.ttl");
-        KBConcept concept = KBSI_sut.readConcept(KBSI_kb, "http://mrklie.com/schemas/streams#input", true).get();
-        setSchema(KBSI_kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
+        KBConcept concept = KBSIIT_sut.readConcept(KBSIIT_kb, "http://mrklie.com/schemas/streams#input", true).get();
+        setSchema(KBSIIT_kb, RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
-        Stream<String> childConcepts = KBSI_sut.listChildConcepts(KBSI_kb, concept.getIdentifier(), false)
+        Stream<String> childConcepts = KBSIIT_sut.listChildConcepts(KBSIIT_kb, concept.getIdentifier(), false)
             .stream()
             .map(KBHandle::getName);
 
@@ -1350,27 +1350,27 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void getEnabledKnowledgeBases_WithOneEnabledOneDisabled_ReturnsOnlyEnabledKB()
     {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KnowledgeBase KBSI_kb2 = buildKnowledgeBase(KBSI_project, "TestKB2");
-        KBSI_kb2.setEnabled(false);
-        KBSI_sut.registerKnowledgeBase(KBSI_kb2, KBSI_sut.getNativeConfig());
+        KnowledgeBase KBSIIT_kb2 = buildKnowledgeBase(KBSIIT_project, "TestKB2");
+        KBSIIT_kb2.setEnabled(false);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb2, KBSIIT_sut.getNativeConfig());
 
-        List<KnowledgeBase> enabledKBs = KBSI_sut.getEnabledKnowledgeBases(KBSI_project);
+        List<KnowledgeBase> enabledKBs = KBSIIT_sut.getEnabledKnowledgeBases(KBSIIT_project);
 
-        assertThat(enabledKBs).as("Check that only the enabled KB (KBSI_kb) is in this list")
-                .contains(KBSI_kb).hasSize(1);
+        assertThat(enabledKBs).as("Check that only the enabled KB (KBSIIT_kb) is in this list")
+                .contains(KBSIIT_kb).hasSize(1);
 
     }
 
     @Test
     public void getEnabledKnowledgeBases_WithoutEnabledKnowledgeBases_ShouldReturnEmptyList()
     {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_kb.setEnabled(false);
-        KBSI_sut.updateKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_kb.setEnabled(false);
+        KBSIIT_sut.updateKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        List<KnowledgeBase> knowledgeBases = KBSI_sut.getEnabledKnowledgeBases(KBSI_project);
+        List<KnowledgeBase> knowledgeBases = KBSIIT_sut.getEnabledKnowledgeBases(KBSIIT_project);
 
         assertThat(knowledgeBases).as("Check that the list is empty").isEmpty();
     }
@@ -1382,16 +1382,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBInstance object = buildInstance();
         KBProperty property = buildProperty();
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
-        KBSI_sut.createInstance(KBSI_kb, subject);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBSI_sut.createInstance(KBSI_kb, object);
+        KBSIIT_sut.createInstance(KBSIIT_kb, subject);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBSIIT_sut.createInstance(KBSIIT_kb, object);
 
-        KBStatement stmt1 = buildStatement(KBSI_kb, subject.toKBHandle(), property, object.getIdentifier());
+        KBStatement stmt1 = buildStatement(KBSIIT_kb, subject.toKBHandle(), property, object.getIdentifier());
 
-        KBSI_sut.upsertStatement(KBSI_kb, stmt1);
-        List<Statement> result = KBSI_sut.listStatementsWithPredicateOrObjectReference(KBSI_kb, object.getIdentifier());
+        KBSIIT_sut.upsertStatement(KBSIIT_kb, stmt1);
+        List<Statement> result = KBSIIT_sut.listStatementsWithPredicateOrObjectReference(KBSIIT_kb, object.getIdentifier());
         assertThat(result)
             .allMatch(new Predicate<Statement>() {
 
@@ -1409,35 +1409,35 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void thatExistsFindsExistingStatement()
     {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBStatement statement = buildStatement(KBSI_kb, concept.toKBHandle(), property, "Test statement");
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBStatement statement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property, "Test statement");
 
-        KBSI_sut.upsertStatement(KBSI_kb, statement);
+        KBSIIT_sut.upsertStatement(KBSIIT_kb, statement);
 
-        KBStatement mockStatement = buildStatement(KBSI_kb, concept.toKBHandle(), property,
+        KBStatement mockStatement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property,
                 "Test statement");
-        assertTrue(KBSI_sut.exists(KBSI_kb, mockStatement));
+        assertTrue(KBSIIT_sut.exists(KBSIIT_kb, mockStatement));
     }
 
     @Test
     public void thatExistsDoesNotFindNonExistingStatement()
     {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
         KBConcept concept = buildConcept();
         KBProperty property = buildProperty();
-        KBSI_sut.createConcept(KBSI_kb, concept);
-        KBSI_sut.createProperty(KBSI_kb, property);
-        KBStatement statement = buildStatement(KBSI_kb, concept.toKBHandle(), property, "Test");
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
+        KBStatement statement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property, "Test");
 
-        KBSI_sut.upsertStatement(KBSI_kb, statement);
+        KBSIIT_sut.upsertStatement(KBSIIT_kb, statement);
 
-        KBStatement mockStatement = buildStatement(KBSI_kb, concept.toKBHandle(), property,
+        KBStatement mockStatement = buildStatement(KBSIIT_kb, concept.toKBHandle(), property,
                 "Test statement");
-        assertFalse(KBSI_sut.exists(KBSI_kb, mockStatement));
+        assertFalse(KBSIIT_sut.exists(KBSIIT_kb, mockStatement));
     }
 
     @Test
@@ -1446,17 +1446,17 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBInstance germanInstance = buildInstanceWithLanguage("de");
         KBInstance englishInstance = buildInstanceWithLanguage("en");
 
-        KBSI_kb.setDefaultLanguage("en");
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, germanInstance);
+        KBSIIT_kb.setDefaultLanguage("en");
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, germanInstance);
 
         // Create English instance and ensure that both have the same identifier
-        KBSI_sut.update(KBSI_kb, (conn) -> {
+        KBSIIT_sut.update(KBSIIT_kb, (conn) -> {
             englishInstance.setIdentifier(germanInstance.getIdentifier());
-            englishInstance.write(conn, KBSI_kb);
+            englishInstance.write(conn, KBSIIT_kb);
         });
 
-        KBInstance firstInstance = KBSI_sut.readInstance(KBSI_kb, germanInstance.getIdentifier()).get();
+        KBInstance firstInstance = KBSIIT_sut.readInstance(KBSIIT_kb, germanInstance.getIdentifier()).get();
         assertThat(firstInstance.getLanguage())
             .as("Check that the English instance is retrieved.")
             .isEqualTo("en");
@@ -1467,16 +1467,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     {
         KBInstance englishInstance = buildInstanceWithLanguage("en");
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createInstance(KBSI_kb, englishInstance);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createInstance(KBSIIT_kb, englishInstance);
 
         englishInstance.setLanguage("de");
-        KBSI_sut.updateInstance(KBSI_kb, englishInstance);
+        KBSIIT_sut.updateInstance(KBSIIT_kb, englishInstance);
         
         // Make sure we retrieve the German version now
-        KBSI_kb.setDefaultLanguage("de");
+        KBSIIT_kb.setDefaultLanguage("de");
         
-        KBInstance germanInstance = KBSI_sut.readInstance(KBSI_kb, englishInstance.getIdentifier()).get();
+        KBInstance germanInstance = KBSIIT_sut.readInstance(KBSIIT_kb, englishInstance.getIdentifier()).get();
         assertThat(germanInstance.getLanguage())
             .as("Check that the language has successfully been changed.")
             .isEqualTo("de");
@@ -1487,16 +1487,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     {
         KBProperty englishProperty = buildPropertyWithLanguage("en");
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createProperty(KBSI_kb, englishProperty);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createProperty(KBSIIT_kb, englishProperty);
 
         englishProperty.setLanguage("de");
-        KBSI_sut.updateProperty(KBSI_kb, englishProperty);
+        KBSIIT_sut.updateProperty(KBSIIT_kb, englishProperty);
         
         // Make sure we retrieve the German version now
-        KBSI_kb.setDefaultLanguage("de");
+        KBSIIT_kb.setDefaultLanguage("de");
         
-        KBProperty germanProperty = KBSI_sut.readProperty(KBSI_kb, englishProperty.getIdentifier()).get();
+        KBProperty germanProperty = KBSIIT_sut.readProperty(KBSIIT_kb, englishProperty.getIdentifier()).get();
         assertThat(germanProperty.getLanguage())
             .as("Check that the language has successfully been changed.")
             .isEqualTo("de");
@@ -1507,16 +1507,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     {
         KBConcept englishConcept = buildConceptWithLanguage("en");
 
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_sut.createConcept(KBSI_kb, englishConcept);
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_sut.createConcept(KBSIIT_kb, englishConcept);
 
         englishConcept.setLanguage("de");
-        KBSI_sut.updateConcept(KBSI_kb, englishConcept);
+        KBSIIT_sut.updateConcept(KBSIIT_kb, englishConcept);
 
         // Make sure we retrieve the German version now
-        KBSI_kb.setDefaultLanguage("de");
+        KBSIIT_kb.setDefaultLanguage("de");
         
-        KBConcept germanConcept = KBSI_sut.readConcept(KBSI_kb, englishConcept.getIdentifier(), true).get();
+        KBConcept germanConcept = KBSIIT_sut.readConcept(KBSIIT_kb, englishConcept.getIdentifier(), true).get();
         assertThat(germanConcept.getLanguage())
             .as("Check that the language has successfully been changed.")
             .isEqualTo("de");
@@ -1536,46 +1536,46 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
     {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
 
         KBConcept concept = buildConcept();
-        KBSI_sut.createConcept(KBSI_kb, concept);
+        KBSIIT_sut.createConcept(KBSIIT_kb, concept);
         KBInstance instance = buildInstance();
-        KBSI_sut.createInstance(KBSI_kb, instance);
+        KBSIIT_sut.createInstance(KBSIIT_kb, instance);
         KBProperty property = buildProperty();
-        KBSI_sut.createProperty(KBSI_kb, property);
+        KBSIIT_sut.createProperty(KBSIIT_kb, property);
 
-        assertThat(KBSI_sut.readItem(KBSI_kb, concept.getIdentifier()).get())
+        assertThat(KBSIIT_sut.readItem(KBSIIT_kb, concept.getIdentifier()).get())
             .as("Check that reading a concept id returns an instance of KBConcept")
             .isInstanceOf(KBConcept.class);
-        assertThat(KBSI_sut.readItem(KBSI_kb, instance.getIdentifier()).get())
+        assertThat(KBSIIT_sut.readItem(KBSIIT_kb, instance.getIdentifier()).get())
             .as("Check that reading an instance id returns an instance of KBInstance")
             .isInstanceOf(KBInstance.class);
-        assertThat(KBSI_sut.readItem(KBSI_kb, property.getIdentifier()).get())
+        assertThat(KBSIIT_sut.readItem(KBSIIT_kb, property.getIdentifier()).get())
             .as("Check that reading a property id returns an instance of KBProperty")
             .isInstanceOf(KBProperty.class);
     }
 
     @Test
     public void checkIfKBIsEnabledById_WithExistingAndEnabledKB_ShouldReturnTrue() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        String repoId = KBSI_kb.getRepositoryId();
-        assertThat(KBSI_sut.isKnowledgeBaseEnabled(KBSI_project, repoId))
-            .as("Check that correct accessibility value is returned for enabled KBSI_kb ")
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        String repoId = KBSIIT_kb.getRepositoryId();
+        assertThat(KBSIIT_sut.isKnowledgeBaseEnabled(KBSIIT_project, repoId))
+            .as("Check that correct accessibility value is returned for enabled KBSIIT_kb ")
             .isTrue();
     }
 
     @Test
     public void checkIfKBIsEnabledById_WithDisabledKBAndNonExistingId_ShouldReturnFalse() {
-        KBSI_sut.registerKnowledgeBase(KBSI_kb, KBSI_sut.getNativeConfig());
-        KBSI_kb.setEnabled(false);
-        String repoId = KBSI_kb.getRepositoryId();
+        KBSIIT_sut.registerKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getNativeConfig());
+        KBSIIT_kb.setEnabled(false);
+        String repoId = KBSIIT_kb.getRepositoryId();
 
-        assertThat(KBSI_sut.isKnowledgeBaseEnabled(KBSI_project, repoId))
-            .as("Check that correct accessibility value is returned for disabled KBSI_kb ")
+        assertThat(KBSIIT_sut.isKnowledgeBaseEnabled(KBSIIT_project, repoId))
+            .as("Check that correct accessibility value is returned for disabled KBSIIT_kb ")
             .isFalse();
 
-        assertThat(KBSI_sut.isKnowledgeBaseEnabled(KBSI_project, "NonExistingID"))
+        assertThat(KBSIIT_sut.isKnowledgeBaseEnabled(KBSIIT_project, "NonExistingID"))
             .as("Check that correct accessibility value is returned for non existing id ")
             .isFalse();
     }
@@ -1585,8 +1585,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project KBSI_project, String name) {
-        return testFixtures.buildKnowledgeBase(KBSI_project, name, reification);
+    private KnowledgeBase buildKnowledgeBase(Project KBSIIT_project, String name) {
+        return testFixtures.buildKnowledgeBase(KBSIIT_project, name, reification);
     }
 
     private KBConcept buildConcept() {
@@ -1635,22 +1635,22 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
-            KBSI_sut.importData(KBSI_kb, fileName, is);
+            KBSIIT_sut.importData(KBSIIT_kb, fileName, is);
         }
     }
-    private void setReadOnly(KnowledgeBase KBSI_kb) {
-        KBSI_kb.setReadOnly(true);
-        KBSI_sut.updateKnowledgeBase(KBSI_kb, KBSI_sut.getKnowledgeBaseConfig(KBSI_kb));
+    private void setReadOnly(KnowledgeBase KBSIIT_kb) {
+        KBSIIT_kb.setReadOnly(true);
+        KBSIIT_sut.updateKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getKnowledgeBaseConfig(KBSIIT_kb));
     }
 
-    private void setSchema(KnowledgeBase KBSI_kb, IRI classIri, IRI subclassIri, IRI typeIri,
+    private void setSchema(KnowledgeBase KBSIIT_kb, IRI classIri, IRI subclassIri, IRI typeIri,
         IRI descriptionIri, IRI labelIri, IRI propertyTypeIri) {
-        KBSI_kb.setClassIri(classIri);
-        KBSI_kb.setSubclassIri(subclassIri);
-        KBSI_kb.setTypeIri(typeIri);
-        KBSI_kb.setDescriptionIri(descriptionIri);
-        KBSI_kb.setLabelIri(labelIri);
-        KBSI_kb.setPropertyTypeIri(propertyTypeIri);
-        KBSI_sut.updateKnowledgeBase(KBSI_kb, KBSI_sut.getKnowledgeBaseConfig(KBSI_kb));
+        KBSIIT_kb.setClassIri(classIri);
+        KBSIIT_kb.setSubclassIri(subclassIri);
+        KBSIIT_kb.setTypeIri(typeIri);
+        KBSIIT_kb.setDescriptionIri(descriptionIri);
+        KBSIIT_kb.setLabelIri(labelIri);
+        KBSIIT_kb.setPropertyTypeIri(propertyTypeIri);
+        KBSIIT_sut.updateKnowledgeBase(KBSIIT_kb, KBSIIT_sut.getKnowledgeBaseConfig(KBSIIT_kb));
     }
 }

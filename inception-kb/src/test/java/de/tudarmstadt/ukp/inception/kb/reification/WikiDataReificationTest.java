@@ -82,10 +82,25 @@ public class WikiDataReificationTest
     @Before
     public void setUp()
     {
+		/**
+		 *this is rename method of WikiDataReificationTest.java
+		 */
         WDRT_kb = new KnowledgeBase();
+		/**
+		 *this is rename method of WikiDataReificationTest.java
+		 */
         WDRT_kb.setDefaultLanguage("en");
+		/**
+		 *this is rename method of WikiDataReificationTest.java
+		 */
         WDRT_kb.setType(RepositoryType.LOCAL);
+		/**
+		 *this is rename method of WikiDataReificationTest.java
+		 */
         WDRT_kb.setFullTextSearchIri(null);
+		/**
+		 *this is rename method of WikiDataReificationTest.java
+		 */
         WDRT_kb.setMaxResults(1000);
         
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -175,6 +190,7 @@ public class WikiDataReificationTest
     
     private void importData(RDFFormat aFormat, InputStream aIS) throws IOException
     {
+		//this is rename varies of WikiDataReificationTest.java
         try (RepositoryConnection conn = rdf4jLocalRepo.getConnection()) {
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured

@@ -64,32 +64,32 @@ public class PropertyFeatureEditor
 {
     private static final long serialVersionUID = -4649541419448384970L;
     private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureEditor.class);
-    private Component focusComponent3;
-    private IModel<AnnotatorState> stateModel3;
-    private AnnotationActionHandler actionHandler3;
-    private Project project3;
-    private ConceptFeatureTraits traits3;
+    private Component PFE_focusComponent;
+    private IModel<AnnotatorState> PFE_stateModel;
+    private AnnotationActionHandler PFE_actionHandler;
+    private Project PFE_project;
+    private ConceptFeatureTraits PFE_traits;
     private boolean existStatements = false;
 
-    private @SpringBean AnnotationSchemaService annotationService3;
-    private @SpringBean KnowledgeBaseService kbService3;
-    private @SpringBean FactLinkingService factService3;
-    private @SpringBean FeatureSupportRegistry featureSupportRegistry3;
+    private @SpringBean AnnotationSchemaService PFE_annotationService;
+    private @SpringBean KnowledgeBaseService PFE_kbService;
+    private @SpringBean FactLinkingService PFE_factService;
+    private @SpringBean FeatureSupportRegistry PFE_featureSupportRegistry;
 
     public PropertyFeatureEditor(String aId, MarkupContainer aOwner,
         AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
         IModel<FeatureState> aFeatureStateModel)
     {
         super(aId, aOwner, new CompoundPropertyModel<>(aFeatureStateModel));
-        stateModel3 = aStateModel;
-        actionHandler3 = aHandler;
-        project3 = this.getModelObject().feature.getProject();
-        traits3 = factService3.getFeatureTraits(project3);
-        add(focusComponent3 = createAutoCompleteTextField());
+        PFE_stateModel = aStateModel;
+        PFE_actionHandler = aHandler;
+        PFE_project = this.getModelObject().feature.getProject();
+        PFE_traits = PFE_factService.getFeatureTraits(PFE_project);
+        add(PFE_focusComponent = createAutoCompleteTextField());
         add(createStatementIndicatorLabel());
         add(createNoStatementLabel());
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature),
-            Model.of(traits3)));
+            Model.of(PFE_traits)));
     }
 
     @Override
@@ -110,11 +110,11 @@ public class PropertyFeatureEditor
 
             @Override protected List<KBProperty> getChoices(String input)
             {
-                String repoId = traits3.getRepositoryId();
-                if (!(repoId == null || kbService3.isKnowledgeBaseEnabled(project3, repoId))) {
+                String repoId = PFE_traits.getRepositoryId();
+                if (!(repoId == null || PFE_kbService.isKnowledgeBaseEnabled(PFE_project, repoId))) {
                     return Collections.emptyList();
                 }
-                return factService3.listProperties(project3, traits3);
+                return PFE_factService.listProperties(PFE_project, PFE_traits);
             }
 
             @Override
@@ -162,7 +162,7 @@ public class PropertyFeatureEditor
     @Override
     public Component getFocusComponent()
     {
-        return focusComponent3;
+        return PFE_focusComponent;
     }
 
     @Override
@@ -179,23 +179,23 @@ public class PropertyFeatureEditor
         else {
             KBStatement mockStatement = new KBStatement(subject, predicate);
             mockStatement.setValue(object.getUiLabel());
-            KnowledgeBase kb = factService3.findKnowledgeBaseContainingProperty(predicate, project3,
-                    traits3);
-            existStatements = kbService3.exists(kb, mockStatement);
+            KnowledgeBase kb = PFE_factService.findKnowledgeBaseContainingProperty(predicate, PFE_project,
+                    PFE_traits);
+            existStatements = PFE_kbService.exists(kb, mockStatement);
         }
     }
 
     private KBHandle getHandle(String name)
     {
-        return getLinkedSubjectObjectKBHandle(name, actionHandler3, stateModel3.getObject());
+        return getLinkedSubjectObjectKBHandle(name, PFE_actionHandler, PFE_stateModel.getObject());
     }
 
     public KBHandle getLinkedSubjectObjectKBHandle(String featureName,
-        AnnotationActionHandler actionHandler3, AnnotatorState aState)
+        AnnotationActionHandler PFE_actionHandler, AnnotatorState aState)
     {
-        AnnotationLayer factLayer = annotationService3.findLayer(aState.getProject(), FACT_LAYER);
+        AnnotationLayer factLayer = PFE_annotationService.findLayer(aState.getProject(), FACT_LAYER);
         KBHandle kbHandle = null;
-        AnnotationFeature annotationFeature = annotationService3.getFeature(featureName, factLayer);
+        AnnotationFeature annotationFeature = PFE_annotationService.getFeature(featureName, factLayer);
         List<LinkWithRoleModel> featureValue = (List<LinkWithRoleModel>) aState
             .getFeatureState(annotationFeature).value;
         if (!featureValue.isEmpty()) {
@@ -203,9 +203,9 @@ public class PropertyFeatureEditor
             if (targetAddress != -1) {
                 CAS cas;
                 try {
-                    cas = actionHandler3.getEditorCas();
-                    kbHandle = factService3
-                        .getKBHandleFromCasByAddr(cas, targetAddress, aState.getProject(), traits3);
+                    cas = PFE_actionHandler.getEditorCas();
+                    kbHandle = PFE_factService
+                        .getKBHandleFromCasByAddr(cas, targetAddress, aState.getProject(), PFE_traits);
                 }
                 catch (Exception e) {
                     LOG.error("Error: " + e.getMessage(), e);

@@ -72,7 +72,7 @@ public class LappsRecommenderIntegrationTest
         String url = server.url("/").toString();
         traits.setUrl(url);
 
-        sut = new LappsGridRecommender(buildRecommender(), null);
+        sut = new LappsGridRecommender(LRIT_buildRecommender(), null);
     }
 
     @After
@@ -97,7 +97,7 @@ public class LappsRecommenderIntegrationTest
     }
 
 
-    private static Recommender buildRecommender()
+    private static Recommender LRIT_buildRecommender()
     {
         AnnotationLayer LRIT_layer = new AnnotationLayer();
         LRIT_layer.setName(POS.class.getName());
@@ -105,12 +105,12 @@ public class LappsRecommenderIntegrationTest
         AnnotationFeature LRIT_feature = new AnnotationFeature();
         LRIT_feature.setName("PosValue");
 
-        Recommender recommender = new Recommender();
-        recommender.setLayer(LRIT_layer);
-        recommender.setFeature(LRIT_feature);
-        recommender.setMaxRecommendations(3);
+        Recommender LRIT_recommender = new Recommender();
+        LRIT_recommender.setLayer(LRIT_layer);
+        LRIT_recommender.setFeature(LRIT_feature);
+        LRIT_recommender.setMaxRecommendations(3);
 
-        return recommender;
+        return LRIT_recommender;
     }
 
     private Dispatcher buildDispatcher()

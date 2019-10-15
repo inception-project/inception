@@ -81,10 +81,25 @@ public class NoReificationTest
     @Before
     public void setUp()
     {
+	    /**
+		 *this is rename method of NamedEntityLinkerTest.java
+		 */
         NRT_kb = new KnowledgeBase();
+		/**
+		 *this is rename method of NamedEntityLinkerTest.java
+		 */
         NRT_kb.setDefaultLanguage("en");
+		/**
+		 *this is rename method of NamedEntityLinkerTest.java
+		 */
         NRT_kb.setType(RepositoryType.LOCAL);
+		/**
+		 *this is rename method of NamedEntityLinkerTest.java
+		 */
         NRT_kb.setFullTextSearchIri(null);
+		/**
+		 *this is rename method of NamedEntityLinkerTest.java
+		 */
         NRT_kb.setMaxResults(1000);
         
         initRdfsMapping();
@@ -156,7 +171,7 @@ public class NoReificationTest
     private void initRdfsMapping()
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        
+        //this is rename varies of NoReificationTest.java
         NRT_kb.setClassIri(RDFS.CLASS);
         NRT_kb.setSubclassIri(RDFS.SUBCLASSOF);
         NRT_kb.setTypeIri(RDF.TYPE);

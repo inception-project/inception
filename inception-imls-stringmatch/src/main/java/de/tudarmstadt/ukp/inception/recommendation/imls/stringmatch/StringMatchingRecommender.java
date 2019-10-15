@@ -229,18 +229,22 @@ public class StringMatchingRecommender
             }
         }
 
-        int trainingSetSize = trainingSet.size();
-        int testSetSize = testSet.size();
-        double overallTrainingSize = data.size() - testSetSize;
-        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
+		//rename trainingSetSize to SMR_trainingSetSize
+        int SMR_trainingSetSize = trainingSet.size();
+		//rename testSetSize to SMR_testSetSize
+        int SMR_testSetSize = testSet.size();
+		//rename overallTrainingSize to SMR_overallTrainingSize
+        double SMR_overallTrainingSize = data.size() - SMR_testSetSize;
+		//rename trainRatio to SMR_trainRatio
+        double SMR_trainRatio = (SMR_overallTrainingSize > 0) ? SMR_trainingSetSize / SMR_overallTrainingSize : 0.0;
 
-        if (trainingSetSize < 2 || testSetSize < 2) {
+        if (SMR_trainingSetSize < 2 || SMR_testSetSize < 2) {
             String info = String.format(
                     "Not enough training data: training set [%s] items, test set [%s] of total [%s].",
-                    trainingSetSize, testSetSize, data.size());
+                    SMR_trainingSetSize, SMR_testSetSize, data.size());
             log.info(info);
-            EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize, trainRatio);
+            EvaluationResult result = new EvaluationResult(SMR_trainingSetSize,
+                    SMR_testSetSize, SMR_trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
@@ -285,7 +289,7 @@ public class StringMatchingRecommender
         }
 
         return labelPairs.stream().collect(EvaluationResult
-                .collector(trainingSetSize, testSetSize, trainRatio, NO_LABEL));
+                .collector(SMR_trainingSetSize, SMR_testSetSize, SMR_trainRatio, NO_LABEL));
     }
 
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel)

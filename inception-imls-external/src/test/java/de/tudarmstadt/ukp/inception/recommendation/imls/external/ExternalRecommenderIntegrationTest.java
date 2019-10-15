@@ -86,7 +86,7 @@ public class ExternalRecommenderIntegrationTest
     @Before
     public void setUp() throws Exception
     {
-        recommender = external_buildRecommender();
+        recommender = ERIT_buildRecommender();
         context = new RecommenderContext();
 
         traits = new ExternalRecommenderTraits();
@@ -220,22 +220,22 @@ public class ExternalRecommenderIntegrationTest
         return casList;
     }
 
-    private static Recommender external_buildRecommender()
+    private static Recommender ERIT_buildRecommender()
     {
-        AnnotationLayer external_layer = new AnnotationLayer();
-        external_layer.setName(TYPE);
-        external_layer.setCrossSentence(CROSS_SENTENCE);
-        external_layer.setAnchoringMode(ANCHORING_MODE);
+        AnnotationLayer ERIT_layer = new AnnotationLayer();
+        ERIT_layer.setName(TYPE);
+        ERIT_layer.setCrossSentence(CROSS_SENTENCE);
+        ERIT_layer.setAnchoringMode(ANCHORING_MODE);
 
-        AnnotationFeature external_feature = new AnnotationFeature();
-        external_feature.setName("value");
+        AnnotationFeature ERIT_feature = new AnnotationFeature();
+        ERIT_feature.setName("value");
         
-        Recommender external_recommender = new Recommender();
-        external_recommender.setLayer(external_layer);
-        external_recommender.setFeature(external_feature);
-        external_recommender.setMaxRecommendations(3);
+        Recommender ERIT_recommender = new Recommender();
+        ERIT_recommender.setLayer(ERIT_layer);
+        ERIT_recommender.setFeature(ERIT_feature);
+        ERIT_recommender.setMaxRecommendations(3);
         
-        return external_recommender;
+        return ERIT_recommender;
     }
 
     private Dispatcher buildDispatcher()

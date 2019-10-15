@@ -64,8 +64,6 @@ public class DL4JSequenceRecommenderTest
 
     private RecommenderContext context;
     private DL4JSequenceRecommenderTraits traits;
-    private JCas jcas1;
-    private NamedEntity ne1;
 
     @Before
     public void setUp()
@@ -85,56 +83,51 @@ public class DL4JSequenceRecommenderTest
         traits.setPredictionLimit(250);
         traits.setBatchSize(50);
     }
-    private void jcas() throws Exception{
-    	jcas1 = JCasFactory.createJCas();
-        jcas1.setDocumentText("a b b c c c abbccc");
-        
-        new Token(jcas1,  0,  1).addToIndexes(); // a
-        new Token(jcas1,  2,  3).addToIndexes(); // b
-        new Token(jcas1,  4,  5).addToIndexes(); // b
-        new Token(jcas1,  6,  7).addToIndexes(); // c
-        new Token(jcas1,  8,  9).addToIndexes(); // c
-        new Token(jcas1, 10, 11).addToIndexes(); // c
-        new Token(jcas1, 12, 13).addToIndexes(); // a
-        new Token(jcas1, 13, 14).addToIndexes(); // b
-        new Token(jcas1, 14, 15).addToIndexes(); // b
-        new Token(jcas1, 15, 16).addToIndexes(); // c
-        new Token(jcas1, 16, 17).addToIndexes(); // c
-        new Token(jcas1, 17, 18).addToIndexes(); // c
-    }
-    private void ne() {
-    	 ne1 = new NamedEntity(jcas1,  0,  1); // a
-         ne1.setValue("A");
-         ne1.addToIndexes();
-         ne1 = new NamedEntity(jcas1,  2,  5); // b b
-         ne1.setValue("B");
-         ne1.addToIndexes();
-         ne1 = new NamedEntity(jcas1,  6, 11); // c c c
-         ne1.setValue("C");
-         ne1.addToIndexes();
-         ne1 = new NamedEntity(jcas1, 12, 13); // a
-         ne1.setValue("A");
-         ne1.addToIndexes();
-         ne1 = new NamedEntity(jcas1, 13, 15); // bb
-         ne1.setValue("B");
-         ne1.addToIndexes();
-         ne1 = new NamedEntity(jcas1, 15, 18); // ccc
-         ne1.setValue("C");
-         ne1.addToIndexes();
-    }
 
     @Test
     public void testExtractDenseLabels() throws Exception
     {
-        jcas();
+        JCas jcas = JCasFactory.createJCas();
+        jcas.setDocumentText("a b b c c c abbccc");
+        
+        new Token(jcas,  0,  1).addToIndexes(); // a
+        new Token(jcas,  2,  3).addToIndexes(); // b
+        new Token(jcas,  4,  5).addToIndexes(); // b
+        new Token(jcas,  6,  7).addToIndexes(); // c
+        new Token(jcas,  8,  9).addToIndexes(); // c
+        new Token(jcas, 10, 11).addToIndexes(); // c
+        new Token(jcas, 12, 13).addToIndexes(); // a
+        new Token(jcas, 13, 14).addToIndexes(); // b
+        new Token(jcas, 14, 15).addToIndexes(); // b
+        new Token(jcas, 15, 16).addToIndexes(); // c
+        new Token(jcas, 16, 17).addToIndexes(); // c
+        new Token(jcas, 17, 18).addToIndexes(); // c
+        
         NamedEntity ne;
-       
+        ne = new NamedEntity(jcas,  0,  1); // a
+        ne.setValue("A");
+        ne.addToIndexes();
+        ne = new NamedEntity(jcas,  2,  5); // b b
+        ne.setValue("B");
+        ne.addToIndexes();
+        ne = new NamedEntity(jcas,  6, 11); // c c c
+        ne.setValue("C");
+        ne.addToIndexes();
+        ne = new NamedEntity(jcas, 12, 13); // a
+        ne.setValue("A");
+        ne.addToIndexes();
+        ne = new NamedEntity(jcas, 13, 15); // bb
+        ne.setValue("B");
+        ne.addToIndexes();
+        ne = new NamedEntity(jcas, 15, 18); // ccc
+        ne.setValue("C");
+        ne.addToIndexes();
         
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
-                new ArrayList<>(select(jcas1, Token.class)), 
-                new ArrayList<>(select(jcas1, NamedEntity.class)));
+                new ArrayList<>(select(jcas, Token.class)), 
+                new ArrayList<>(select(jcas, NamedEntity.class)));
         
         assertThat(labels).containsExactly("A", "B", "B", "C", "C", "C", "A", "B", "B", "C", "C",
                 "C");
@@ -143,28 +136,44 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void testExtractSparseLabels() throws Exception
     {
-        jcas();
+        JCas jcas = JCasFactory.createJCas();
+        jcas.setDocumentText("a b b c c c abbccc");
+        
+        new Token(jcas,  0,  1).addToIndexes(); // a
+        new Token(jcas,  2,  3).addToIndexes(); // b
+        new Token(jcas,  4,  5).addToIndexes(); // b
+        new Token(jcas,  6,  7).addToIndexes(); // c
+        new Token(jcas,  8,  9).addToIndexes(); // c
+        new Token(jcas, 10, 11).addToIndexes(); // c
+        new Token(jcas, 12, 13).addToIndexes(); // a
+        new Token(jcas, 13, 14).addToIndexes(); // b
+        new Token(jcas, 14, 15).addToIndexes(); // b
+        new Token(jcas, 15, 16).addToIndexes(); // c
+        new Token(jcas, 16, 17).addToIndexes(); // c
+        new Token(jcas, 17, 18).addToIndexes(); // c
         
         NamedEntity ne;
-        ne = new NamedEntity(jcas1,  6, 11); // c c c
+        ne = new NamedEntity(jcas,  6, 11); // c c c
         ne.setValue("C");
         ne.addToIndexes();
-        ne = new NamedEntity(jcas1, 13, 15); // bb
+        ne = new NamedEntity(jcas, 13, 15); // bb
         ne.setValue("B");
         ne.addToIndexes();
         
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
-                new ArrayList<>(select(jcas1, Token.class)), 
-                new ArrayList<>(select(jcas1, NamedEntity.class)));
+                new ArrayList<>(select(jcas, Token.class)), 
+                new ArrayList<>(select(jcas, NamedEntity.class)));
         
         assertThat(labels).containsExactly(NO_LABEL, NO_LABEL, NO_LABEL, "C", "C", "C", NO_LABEL,
                 "B", "B", NO_LABEL, NO_LABEL, NO_LABEL);
-    }
-    private void testExtractOverlappingLabelsFails(String string) throws Exception{
-    	String error=string;
-    	JCas jcas = JCasFactory.createJCas();
+    }    
+    
+    @Test
+    public void testExtractLabelsWithBadBoundaries() throws Exception
+    {
+        JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("a b b");
         
         new Token(jcas,  0,  1).addToIndexes(); // a
@@ -186,25 +195,63 @@ public class DL4JSequenceRecommenderTest
                 new ArrayList<>(select(jcas, Token.class)), 
                 new ArrayList<>(select(jcas, NamedEntity.class))))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining(error);
-    }
-    
-    @Test
-    public void testExtractLabelsWithBadBoundaries() throws Exception
-    {
-    	testExtractOverlappingLabelsFails("must start/end at token boundaries");
+            .hasMessageContaining("must start/end at token boundaries");
     }
     
     @Test
     public void testExtractOverlappingLabelsFails1() throws Exception
     {
-    	testExtractOverlappingLabelsFails("Overlapping labels are not supported");
+        JCas jcas = JCasFactory.createJCas();
+        jcas.setDocumentText("a b b");
+        
+        new Token(jcas,  0,  1).addToIndexes(); // a
+        new Token(jcas,  2,  3).addToIndexes(); // b
+        new Token(jcas,  4,  5).addToIndexes(); // b
+        
+        NamedEntity ne;
+        ne = new NamedEntity(jcas,  0,  1); // a
+        ne.setValue("A");
+        ne.addToIndexes();
+        ne = new NamedEntity(jcas,  0,  5); // b b
+        ne.setValue("B");
+        ne.addToIndexes();
+        
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
+                cache);
+        
+        assertThatThrownBy(() -> sut.extractTokenLabels(
+                new ArrayList<>(select(jcas, Token.class)), 
+                new ArrayList<>(select(jcas, NamedEntity.class))))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Overlapping labels are not supported");
     }
 
     @Test
     public void testExtractOverlappingLabelsFails2() throws Exception
     {
-    	testExtractOverlappingLabelsFails("Overlapping labels are not supported");
+        JCas jcas = JCasFactory.createJCas();
+        jcas.setDocumentText("a b b");
+        
+        new Token(jcas,  0,  1).addToIndexes(); // a
+        new Token(jcas,  2,  3).addToIndexes(); // b
+        new Token(jcas,  4,  5).addToIndexes(); // b
+        
+        NamedEntity ne;
+        ne = new NamedEntity(jcas,  0,  3); // a b
+        ne.setValue("A");
+        ne.addToIndexes();
+        ne = new NamedEntity(jcas,  2,  5); // b b
+        ne.setValue("B");
+        ne.addToIndexes();
+        
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
+                cache);
+        
+        assertThatThrownBy(() -> sut.extractTokenLabels(
+                new ArrayList<>(select(jcas, Token.class)), 
+                new ArrayList<>(select(jcas, NamedEntity.class))))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Overlapping labels are not supported");
     }
 
     @Test
@@ -257,20 +304,20 @@ public class DL4JSequenceRecommenderTest
 
         EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
-        double fscore = result.computeF1Score();
-        double accuracy = result.computeAccuracyScore();
-        double precision = result.computePrecisionScore();
-        double recall = result.computeRecallScore();
+        double DL4J_fscore = result.computeF1Score();
+        double DL4J_accuracy = result.computeAccuracyScore();
+        double DL4J_precision = result.computePrecisionScore();
+        double DL4J_recall = result.computeRecallScore();
 
-        System.out.printf("POS F1-Score: %f%n", fscore);
-        System.out.printf("POS Accuracy: %f%n", accuracy);
-        System.out.printf("POS Precision: %f%n", precision);
-        System.out.printf("POS Recall: %f%n", recall);
+        System.out.printf("POS F1-Score: %f%n", DL4J_fscore);
+        System.out.printf("POS Accuracy: %f%n", DL4J_accuracy);
+        System.out.printf("POS Precision: %f%n", DL4J_precision);
+        System.out.printf("POS Recall: %f%n", DL4J_recall);
         
-        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
-        assertThat(precision).isStrictlyBetween(0.0, 1.0);
-        assertThat(recall).isStrictlyBetween(0.0, 1.0);
-        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
+        assertThat(DL4J_fscore).isStrictlyBetween(0.0, 1.0);
+        assertThat(DL4J_precision).isStrictlyBetween(0.0, 1.0);
+        assertThat(DL4J_recall).isStrictlyBetween(0.0, 1.0);
+        assertThat(DL4J_accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
     @Test
@@ -323,22 +370,33 @@ public class DL4JSequenceRecommenderTest
         JCas cas = loadNerDevelopmentData();
 
         EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
+		/**
+		 *this is rename method of DL4JSequenceRecommenderTest.java
+		 */
+        double DL4J_fscore = result.computeF1Score();
+		/**
+		 *this is rename method of DL4JSequenceRecommenderTest.java
+		 */
+        double DL4J_accuracy = result.computeAccuracyScore();
+		/**
+		 *this is rename method of DL4JSequenceRecommenderTest.java
+		 */
+        double DL4J_precision = result.computePrecisionScore();
+		/**
+		 *this is rename method of DL4JSequenceRecommenderTest.java
+		 */
+        double DL4J_recall = result.computeRecallScore();
 
-        double fscore = result.computeF1Score();
-        double accuracy = result.computeAccuracyScore();
-        double precision = result.computePrecisionScore();
-        double recall = result.computeRecallScore();
-
-        System.out.printf("NER F1-Score: %f%n", fscore);
-        System.out.printf("NER Accuracy: %f%n", accuracy);
-        System.out.printf("NER Precision: %f%n", precision);
-        System.out.printf("NER Recall: %f%n", recall);
+        System.out.printf("NER F1-Score: %f%n", DL4J_fscore);
+        System.out.printf("NER Accuracy: %f%n", DL4J_accuracy);
+        System.out.printf("NER Precision: %f%n", DL4J_precision);
+        System.out.printf("NER Recall: %f%n", DL4J_recall);
         
         // FIXME is always zero
-        assertThat(fscore).isBetween(0.0, 1.0);
-        assertThat(precision).isBetween(0.0, 1.0);
-        assertThat(recall).isBetween(0.0, 1.0);
-        assertThat(accuracy).isBetween(0.0, 1.0);
+        assertThat(DL4J_fscore).isBetween(0.0, 1.0);
+        assertThat(DL4J_precision).isBetween(0.0, 1.0);
+        assertThat(DL4J_recall).isBetween(0.0, 1.0);
+        assertThat(DL4J_accuracy).isBetween(0.0, 1.0);
     }
 
     @Test

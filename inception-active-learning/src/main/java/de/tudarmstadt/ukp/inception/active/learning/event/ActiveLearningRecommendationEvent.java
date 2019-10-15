@@ -51,28 +51,38 @@ public class ActiveLearningRecommendationEvent
         action = aAction;
         allRecommendations = aAllRecommendations;
     }
-
-    public SourceDocument getDocument_1()
+    /**
+     * getDocument for OpenNlpPosRecommenderTraits
+     */
+    public SourceDocument ALRE_getDocument()
     {
         return document;
     }
-
-    public AnnotationSuggestion getCurrentRecommendation_1()
+    /**
+     * getCurrentRecommendation for OpenNlpPosRecommenderTraits
+     */
+    public AnnotationSuggestion ALRE_getCurrentRecommendation()
     {
         return currentRecommendation;
     }
-
-    public String getUser_1()
+    /**
+     * getUser for OpenNlpPosRecommenderTraits
+     */
+    public String ALRE_getUser()
     {
         return user;
     }
-
-    public AnnotationLayer getLayer_1()
+    /**
+     * getLayer for OpenNlpPosRecommenderTraits
+     */
+    public AnnotationLayer ALRE_getLayer()
     {
         return layer;
     }
-
-    public String getAnnotationFeature_1()
+    /**
+     * getAnnotationFeature for OpenNlpPosRecommenderTraits
+     */
+    public String ALRE_getAnnotationFeature()
     {
         return annotationFeature;
     }

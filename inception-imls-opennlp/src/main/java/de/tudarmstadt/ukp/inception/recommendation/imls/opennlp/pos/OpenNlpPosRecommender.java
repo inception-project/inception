@@ -78,16 +78,16 @@ public class OpenNlpPosRecommender
     }
 
     @Override
-    public boolean isReadyForPrediction(RecommenderContext aContext)
+    public boolean isReadyForPrediction(RecommenderContext ONPR_aContext)
     {
-        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+        return ONPR_aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
     
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
+    public void train(RecommenderContext ONPR_aContext, List<CAS> ONPR_aCasses)
         throws RecommendationException
     {
-        List<POSSample> posSamples = extractPosSamples(aCasses);
+        List<POSSample> posSamples = extractPosSamples(ONPR_aCasses);
         
         if (posSamples.size() < 2) {
             LOG.info("Not enough training data: [{}] items", posSamples.size());
@@ -103,7 +103,7 @@ public class OpenNlpPosRecommender
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         POSModel model = train(posSamples, params);
 
-        aContext.put(KEY_MODEL, model);
+        ONPR_aContext.put(KEY_MODEL, model);
     }
     
     @Override
@@ -113,31 +113,39 @@ public class OpenNlpPosRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas)
+    //rename aContext to ONPR_aContext, aCas to ONPR_aCas
+    public void predict(RecommenderContext ONPR_aContext, CAS ONPR_aCas)
         throws RecommendationException
     {
-        POSModel model = aContext.get(KEY_MODEL).orElseThrow(() -> 
+        POSModel model = ONPR_aContext.get(KEY_MODEL).orElseThrow(() -> 
                 new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
         
         POSTaggerME tagger = new POSTaggerME(model);
-
-        Type sentenceType = getType(aCas, Sentence.class);
-        Type predictedType = getPredictedType(aCas);
-        Type tokenType = getType(aCas, Token.class);
-
-        Feature scoreFeature = getScoreFeature(aCas);
-        Feature predictedFeature = getPredictedFeature(aCas);
-        Feature isPredictionFeature = getIsPredictionFeature(aCas);
-
-        int predictionCount = 0;
-        for (AnnotationFS sentence : select(aCas, sentenceType)) {
-            if (predictionCount >= traits.getPredictionLimit()) {
+        
+        //rename sentenceType to ONPR_sentenceType
+        Type ONPR_sentenceType = getType(ONPR_aCas, Sentence.class);
+        //rename predictedType to ONPR_predictedType
+        Type ONPR_predictedType = getPredictedType(ONPR_aCas);
+        //rename tokenType to ONPR_tokenType
+        Type ONPR_tokenType = getType(ONPR_aCas, Token.class);
+        
+        //rename scoreFeature to ONPR_scoreFeature
+        Feature ONPR_scoreFeature = getScoreFeature(ONPR_aCas);
+        //rename predictedFeature to ONPR_predictedFeature
+        Feature ONPR_predictedFeature = getPredictedFeature(ONPR_aCas);
+        //rename isPredictionFeature to ONPR_isPredictionFeature
+        Feature ONPR_isPredictionFeature = getIsPredictionFeature(ONPR_aCas);
+        
+        //rename predictionCount to ONPR_predictionCount
+        int ONPR_predictionCount = 0;
+        for (AnnotationFS sentence : select(ONPR_aCas, ONPR_sentenceType)) {
+            if (ONPR_predictionCount >= traits.ONPRT_getPredictionLimit()) {
                 break;
             }
-            predictionCount++;
-            
-            List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
-            String[] tokens = tokenAnnotations.stream()
+            ONPR_predictionCount++;
+            //rename ONPR_tokenAnnotations to ONPR_ONPR_tokenAnnotations
+            List<AnnotationFS> ONPR_tokenAnnotations = selectCovered(ONPR_tokenType, sentence);
+            String[] tokens = ONPR_tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
                 .toArray(String[]::new);
 
@@ -162,27 +170,27 @@ public class OpenNlpPosRecommender
                         continue;
                     }
 
-                    AnnotationFS token = tokenAnnotations.get(i);
+                    AnnotationFS token = ONPR_tokenAnnotations.get(i);
                     int begin = token.getBegin();
                     int end = token.getEnd();
                     double confidence = probabilities[i];
 
                     // Create the prediction
-                    AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
-                    annotation.setStringValue(predictedFeature, label);
-                    annotation.setDoubleValue(scoreFeature, confidence);
-                    annotation.setBooleanValue(isPredictionFeature, true);
-                    aCas.addFsToIndexes(annotation);
+                    AnnotationFS annotation = ONPR_aCas.createAnnotation(ONPR_predictedType, begin, end);
+                    annotation.setStringValue(ONPR_predictedFeature, label);
+                    annotation.setDoubleValue(ONPR_scoreFeature, confidence);
+                    annotation.setBooleanValue(ONPR_isPredictionFeature, true);
+                    ONPR_aCas.addFsToIndexes(annotation);
                 }
             }
         }
     }
 
     @Override
-    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> ONPR_aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {        
-        List<POSSample> data = extractPosSamples(aCasses);
+        List<POSSample> data = extractPosSamples(ONPR_aCasses);
         List<POSSample> trainingSet = new ArrayList<>();
         List<POSSample> testSet = new ArrayList<>();
 
@@ -243,18 +251,18 @@ public class OpenNlpPosRecommender
                 .collector(trainingSetSize, testSetSize, trainRatio, PAD));
     }
 
-    private List<POSSample> extractPosSamples(List<CAS> aCasses)
+    private List<POSSample> extractPosSamples(List<CAS> ONPR_aCasses)
     {
         List<POSSample> posSamples = new ArrayList<>();
         
-        casses: for (CAS cas : aCasses) {
-            Type sentenceType = getType(cas, Sentence.class);
-            Type tokenType = getType(cas, Token.class);
+        casses: for (CAS cas : ONPR_aCasses) {
+            Type ONPR_sentenceType = getType(cas, Sentence.class);
+            Type ONPR_tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
-                    tokenType);
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, ONPR_sentenceType,
+                    ONPR_tokenType);
             for (Map.Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
-                if (posSamples.size() >= traits.getTrainingSetSizeLimit()) {
+                if (posSamples.size() >= traits.ONPRT_getTrainingSetSizeLimit()) {
                     break casses;
                 }
                 
@@ -271,10 +279,10 @@ public class OpenNlpPosRecommender
         return posSamples;
     }
 
-    private Optional<POSSample> createPosSample(CAS aCas, AnnotationFS aSentence,
+    private Optional<POSSample> createPosSample(CAS ONPR_aCas, AnnotationFS aSentence,
             Collection<AnnotationFS> aTokens)
     {
-        Type annotationType = getType(aCas, layerName);
+        Type annotationType = getType(ONPR_aCas, layerName);
         Feature feature = annotationType.getFeatureByBaseName(featureName);
 
         int numberOfTokens = aTokens.size();
@@ -286,7 +294,7 @@ public class OpenNlpPosRecommender
         int i = 0;
         for (AnnotationFS token : aTokens) {
             tokens[i] = token.getCoveredText();
-            String tag = getFeatureValueCovering(aCas, token, annotationType, feature);
+            String tag = getFeatureValueCovering(ONPR_aCas, token, annotationType, feature);
             tags[i] = tag;
 
             // If the tag is neither PAD nor null, then there is at
@@ -301,7 +309,7 @@ public class OpenNlpPosRecommender
         // Require at least X percent of the sentence to have tags to avoid class imbalance on PAD
         // tag.
         double coverage = ((double) withTagCount * 100) / (double) numberOfTokens;
-        if (coverage > traits.getTaggedTokensThreshold()) {
+        if (coverage > traits.ONPRT_getTaggedTokensThreshold()) {
             return Optional.of(new POSSample(tokens, tags));
         }
         else {
@@ -309,7 +317,7 @@ public class OpenNlpPosRecommender
         }
     }
 
-    private String getFeatureValueCovering(CAS aCas, AnnotationFS aToken, Type aType,
+    private String getFeatureValueCovering(CAS ONPR_aCas, AnnotationFS aToken, Type aType,
             Feature aFeature)
     {
         List<AnnotationFS> annotations = CasUtil.selectCovered(aType, aToken);

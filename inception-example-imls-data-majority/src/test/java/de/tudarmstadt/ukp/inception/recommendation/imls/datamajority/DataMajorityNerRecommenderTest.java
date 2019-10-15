@@ -76,6 +76,7 @@ public class DataMajorityNerRecommenderTest
     public void thatTrainingWorks() throws Exception
     {
         DataMajorityNerRecommender DMNR_sut = new DataMajorityNerRecommender(recommender);
+
         List<CAS> DMNR_casList = loadDevelopmentData();
 
         DMNR_sut.train(context, DMNR_casList);
@@ -89,9 +90,12 @@ public class DataMajorityNerRecommenderTest
     public void thatPredictionWorks() throws Exception
     {
         DataMajorityNerRecommender DMNR_sut = new DataMajorityNerRecommender(recommender);
-        List<CAS> DMNR_casList = loadDevelopmentData();
-        
+
+		List<CAS> DMNR_casList = loadDevelopmentData();
+
         CAS DMNR_cas = DMNR_casList.get(0);
+
+
         addScoreFeature(DMNR_cas, NamedEntity.class.getName(), "value");
         
         DMNR_sut.train(context, asList(DMNR_cas));
@@ -118,9 +122,21 @@ public class DataMajorityNerRecommenderTest
         List<CAS> DMNR_casList = loadDevelopmentData();
 
         EvaluationResult result = DMNR_sut.evaluate(DMNR_casList, splitStrategy);
+		/**
+		 *this is rename method of DataMajorityNerRecommenderTest.java
+		 */
         double DMNR_fscore = result.computeF1Score();
+		/**
+		 *this is rename method of DataMajorityNerRecommenderTest.java
+		 */
         double DMNR_accuracy = result.computeAccuracyScore();
+		/**
+		 *this is rename method of DataMajorityNerRecommenderTest.java
+		 */
         double DMNR_precision = result.computePrecisionScore();
+		/**
+		 *this is rename method of DataMajorityNerRecommenderTest.java
+		 */
         double DMNR_recall = result.computeRecallScore();
 
         System.out.printf("F1-Score: %f%n", DMNR_fscore);
@@ -212,6 +228,7 @@ public class DataMajorityNerRecommenderTest
 
     private List<CAS> getTestNECas(String aText, String[] aVals, int[][] aIndices) throws Exception
     {
+		//this is rename method of DataMajorityNerRecommenderTest.java
         JCas jDMNR_cas = JCasFactory.createText(aText, "de");
 
         for (int i = 0; i < aVals.length; i++) {
@@ -234,12 +251,14 @@ public class DataMajorityNerRecommenderTest
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
+	    //this is rename method of DataMajorityNerRecommenderTest.java+
         Dataset DMNR_ds = loader.load("germeval2014-de", CONTINUE);
         return loadData(DMNR_ds, DMNR_ds.getDefaultSplit().getDevelopmentFiles());
     }
 
     private List<CAS> loadData(Dataset DMNR_ds, File ... files) throws UIMAException, IOException
     {
+	     //this is rename method of DataMajorityNerRecommenderTest.java
         CollectionReader reader = createReader(Conll2002Reader.class,
             Conll2002Reader.PARAM_PATTERNS, files, 
             Conll2002Reader.PARAM_LANGUAGE, DMNR_ds.getLanguage(), 
@@ -259,6 +278,7 @@ public class DataMajorityNerRecommenderTest
 
     private static Recommender buildRecommender()
     {
+	    //this is rename method of DataMajorityNerRecommenderTest.java
         AnnotationLayer DMNR_layer = new AnnotationLayer();
         DMNR_layer.setName(NamedEntity.class.getName());
 

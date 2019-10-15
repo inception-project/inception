@@ -88,19 +88,19 @@ public class QualifierFeatureEditor
     
     private static final Logger LOG = LoggerFactory.getLogger(QualifierFeatureEditor.class);
 
-    private @SpringBean AnnotationSchemaService annotationService1;
-    private @SpringBean ConceptLinkingService clService1;
-    private @SpringBean FactLinkingService factService1;
-    private @SpringBean FeatureSupportRegistry featureSupportRegistry1;
-    private @SpringBean KnowledgeBaseService kbService1;
+    private @SpringBean AnnotationSchemaService QFE_annotationService;
+    private @SpringBean ConceptLinkingService QFE_clService;
+    private @SpringBean FactLinkingService QFE_factService;
+    private @SpringBean FeatureSupportRegistry QFE_featureSupportRegistry;
+    private @SpringBean KnowledgeBaseService QFE_kbService;
 
-    private WebMarkupContainer content1;
-    private Component focusComponent1;
-    private AnnotationActionHandler actionHandler1;
-    private IModel<AnnotatorState> stateModel1;
-    private Project project1;
-    private LambdaModelAdapter<KBHandle> qualifierModel1;
-    private KBHandle selectedRole1;
+    private WebMarkupContainer QFE_content;
+    private Component QFE_focusComponent;
+    private AnnotationActionHandler QFE_actionHandler;
+    private IModel<AnnotatorState> QFE_stateModel;
+    private Project QFE_project;
+    private LambdaModelAdapter<KBHandle> QFE_qualifierModel;
+    private KBHandle QFE_selectedRole;
 
     public QualifierFeatureEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
@@ -108,21 +108,21 @@ public class QualifierFeatureEditor
     {
         super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
 
-        stateModel1 = aStateModel;
-        actionHandler1 = aHandler;
-        project1 = stateModel1.getObject().getProject();
+        QFE_stateModel = aStateModel;
+        QFE_actionHandler = aHandler;
+        QFE_project = QFE_stateModel.getObject().getProject();
 
         // Add warning that shows up if the knowledge base that is used by the concept feature
         // is disabled
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getLinkedAnnotationFeature())));
 
-        // Most of the content1 is inside this container such that we can refresh it independently
+        // Most of the QFE_content is inside this container such that we can refresh it independently
         // from the rest of the form
-        content1 = new WebMarkupContainer("content1");
-        content1.setOutputMarkupId(true);
-        add(content1);
+        QFE_content = new WebMarkupContainer("QFE_content");
+        QFE_content.setOutputMarkupId(true);
+        add(QFE_content);
 
-        content1.add(new RefreshingView<LinkWithRoleModel>("slots",
+        QFE_content.add(new RefreshingView<LinkWithRoleModel>("slots",
             PropertyModel.of(getModel(), "value"))
         {
             private static final long serialVersionUID = 5475284956525780698L;
@@ -144,7 +144,7 @@ public class QualifierFeatureEditor
             @Override
             protected void populateItem(final Item<LinkWithRoleModel> aItem)
             {
-                AnnotatorState state = stateModel1.getObject();
+                AnnotatorState state = QFE_stateModel.getObject();
 
                 aItem.setModel(new CompoundPropertyModel<>(aItem.getModelObject()));
                 Label role = new Label("role");
@@ -191,10 +191,10 @@ public class QualifierFeatureEditor
         });
 
         // Add a text field to select property as a role
-        content1.add(focusComponent1 = createSelectPropertyAutoCompleteTextField());
+        QFE_content.add(QFE_focusComponent = createSelectPropertyAutoCompleteTextField());
 
         // Add a new empty slot with the specified role
-        content1.add(new AjaxButton("add")
+        QFE_content.add(new AjaxButton("add")
         {
             private static final long serialVersionUID = 1L;
 
@@ -203,7 +203,7 @@ public class QualifierFeatureEditor
             {
                 super.onConfigure();
                 
-                AnnotatorState state = QualifierFeatureEditor.this.stateModel1.getObject();
+                AnnotatorState state = QualifierFeatureEditor.this.QFE_stateModel.getObject();
                 setVisible(!(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature())));
                 // setEnabled(!(model.isSlotArmed()
@@ -218,7 +218,7 @@ public class QualifierFeatureEditor
         });
 
         // Allows user to update slot
-        content1.add(new AjaxButton("set")
+        QFE_content.add(new AjaxButton("set")
         {
 
             private static final long serialVersionUID = 7923695373085126646L;
@@ -228,7 +228,7 @@ public class QualifierFeatureEditor
             {
                 super.onConfigure();
                 
-                AnnotatorState state = QualifierFeatureEditor.this.stateModel1.getObject();
+                AnnotatorState state = QualifierFeatureEditor.this.QFE_stateModel.getObject();
                 setVisible(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature()));
                 // setEnabled(model.isSlotArmed()
@@ -243,7 +243,7 @@ public class QualifierFeatureEditor
         });
 
         // Add a new empty slot with the specified role
-        content1.add(new AjaxButton("del")
+        QFE_content.add(new AjaxButton("del")
         {
             private static final long serialVersionUID = 1L;
 
@@ -252,7 +252,7 @@ public class QualifierFeatureEditor
             {
                 super.onConfigure();
                 
-                AnnotatorState state = QualifierFeatureEditor.this.stateModel1.getObject();
+                AnnotatorState state = QualifierFeatureEditor.this.QFE_stateModel.getObject();
                 setVisible(state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject()
                     .feature.equals(state.getArmedFeature()));
             }
@@ -278,12 +278,12 @@ public class QualifierFeatureEditor
     {
         AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
 
-        qualifierModel1 = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> {
+        QFE_qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> {
             this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
         });
 
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
-            qualifierModel1, new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
+            QFE_qualifierModel, new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
         {
 
             private static final long serialVersionUID = 5683897252648514996L;
@@ -291,7 +291,7 @@ public class QualifierFeatureEditor
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(actionHandler1, input, linkedAnnotationFeature,
+                return listInstances(QFE_actionHandler, input, linkedAnnotationFeature,
                     aItem.getModelObject().label, aItem.getModelObject().targetAddr);
             }
 
@@ -318,9 +318,9 @@ public class QualifierFeatureEditor
 
     private AnnotationFeature getLinkedAnnotationFeature() {
         String linkedType = this.getModelObject().feature.getType();
-        AnnotationLayer linkedLayer = annotationService1
-            .findLayer(this.stateModel1.getObject().getProject(), linkedType);
-        AnnotationFeature linkedAnnotationFeature = annotationService1
+        AnnotationLayer linkedLayer = QFE_annotationService
+            .findLayer(this.QFE_stateModel.getObject().getProject(), linkedType);
+        AnnotationFeature linkedAnnotationFeature = QFE_annotationService
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         return linkedAnnotationFeature;
     }
@@ -329,11 +329,11 @@ public class QualifierFeatureEditor
         KBHandle selectedKBHandleItem = null;
         if (aItem.getModelObject().targetAddr != -1) {
             try {
-                ConceptFeatureTraits traits = factService1.getFeatureTraits(project1);
-                CAS cas = actionHandler1.getEditorCas();
+                ConceptFeatureTraits traits = QFE_factService.getFeatureTraits(QFE_project);
+                CAS cas = QFE_actionHandler.getEditorCas();
                 int targetAddr = aItem.getModelObject().targetAddr;
-                selectedKBHandleItem = factService1.getKBHandleFromCasByAddr(cas, targetAddr,
-                    project1, traits);
+                selectedKBHandleItem = QFE_factService.getKBHandleFromCasByAddr(cas, targetAddr,
+                    QFE_project, traits);
             } catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
                 error("Error: " + e.getMessage());
@@ -347,20 +347,20 @@ public class QualifierFeatureEditor
     {
         if (aItem.getModelObject().targetAddr != -1) {
             try {
-                CAS cas = actionHandler1.getEditorCas();
+                CAS cas = QFE_actionHandler.getEditorCas();
                 FeatureStructure selectedFS = selectFsByAddr(cas,
                         aItem.getModelObject().targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value != null ? value.getIdentifier() : value);
                 LOG.info("change the value");
-                qualifierModel1.detach();
+                QFE_qualifierModel.detach();
 
                 // Save the CAS. This must be done explicitly here since the KBItem dropdown
                 // is not the focus-component of this editor. In fact, there could be multiple
                 // KBItem dropdowns in this feature editor since we can have multilpe modifiers.
                 // For focus-components, the AnnotationFeatureForm already handles adding the
                 // saving behavior.
-                actionHandler1.actionCreateOrUpdate(
+                QFE_actionHandler.actionCreateOrUpdate(
                         RequestCycle.get().find(AjaxRequestTarget.class).get(), cas);
             }
             catch (Exception e) {
@@ -382,15 +382,15 @@ public class QualifierFeatureEditor
         ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
         // Check if kb is actually enabled
         String repoId = traits.getRepositoryId();
-        if (!(repoId == null || kbService1.isKnowledgeBaseEnabled(project1, repoId))) {
+        if (!(repoId == null || QFE_kbService.isKnowledgeBaseEnabled(QFE_project, repoId))) {
             return Collections.emptyList();
         }
 
         // Use concept linking if enabled
         try {
-            handles = clService1.getLinkingInstancesInKBScope(traits.getRepositoryId(),
+            handles = QFE_clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
                     traits.getScope(), traits.getAllowedValueType(), aTypedString, roleLabel,
-                    roleAddr, getEditorCas(aHandler), project1);
+                    roleAddr, getEditorCas(aHandler), QFE_project);
         }
         catch (IOException e) {
             LOG.error("An error occurred while retrieving entity candidates.", e);
@@ -404,7 +404,7 @@ public class QualifierFeatureEditor
 
     private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
     {
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry1
+        FeatureSupport<ConceptFeatureTraits> fs = QFE_featureSupportRegistry
             .getFeatureSupport(aAnnotationFeature);
         ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
         return traits;
@@ -418,7 +418,7 @@ public class QualifierFeatureEditor
     private AutoCompleteTextField<KBProperty> createSelectPropertyAutoCompleteTextField()
     {
         AutoCompleteTextField<KBProperty> field = new AutoCompleteTextField<KBProperty>("newRole",
-            new PropertyModel<KBProperty>(this, "selectedRole1"),
+            new PropertyModel<KBProperty>(this, "QFE_selectedRole"),
             new TextRenderer<KBProperty>("uiLabel"), KBProperty.class)
         {
 
@@ -426,12 +426,12 @@ public class QualifierFeatureEditor
 
             @Override protected List<KBProperty> getChoices(String input)
             {
-                ConceptFeatureTraits traits = factService1.getFeatureTraits(project1);
+                ConceptFeatureTraits traits = QFE_factService.getFeatureTraits(QFE_project);
                 String repoId = traits.getRepositoryId();
-                if (!(repoId == null || kbService1.isKnowledgeBaseEnabled(project1, repoId))) {
+                if (!(repoId == null || QFE_kbService.isKnowledgeBaseEnabled(QFE_project, repoId))) {
                     return Collections.emptyList();
                 }
-                return factService1.listProperties(project1, traits);
+                return QFE_factService.listProperties(QFE_project, traits);
             }
 
             @Override
@@ -454,27 +454,27 @@ public class QualifierFeatureEditor
     @Override
     public Component getFocusComponent()
     {
-        return focusComponent1;
+        return QFE_focusComponent;
     }
 
     private void actionAdd(AjaxRequestTarget aTarget)
     {
-        if (selectedRole1 == null) {
+        if (QFE_selectedRole == null) {
             error("Must set slot label before adding!");
             aTarget.addChildren(getPage(), IFeedback.class);
         }
         else {
             List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
                 .getModelObject().value;
-            AnnotatorState state = QualifierFeatureEditor.this.stateModel1.getObject();
+            AnnotatorState state = QualifierFeatureEditor.this.QFE_stateModel.getObject();
 
             LinkWithRoleModel m = new LinkWithRoleModel();
-            m.role = selectedRole1.getUiLabel();
+            m.role = QFE_selectedRole.getUiLabel();
             links.add(m);
 
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
-            selectedRole1 = null;
+            QFE_selectedRole = null;
             aTarget.add(getOwner());
         }
     }
@@ -483,14 +483,14 @@ public class QualifierFeatureEditor
     {
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
             .getModelObject().value;
-        AnnotatorState state = QualifierFeatureEditor.this.stateModel1.getObject();
+        AnnotatorState state = QualifierFeatureEditor.this.QFE_stateModel.getObject();
 
         // Update the slot
         LinkWithRoleModel m = links.get(state.getArmedSlot());
-        m.role = selectedRole1.getUiLabel();
+        m.role = QFE_selectedRole.getUiLabel();
         links.set(state.getArmedSlot(), m); // avoid reordering
 
-        aTarget.add(content1);
+        aTarget.add(QFE_content);
 
         // Commit change - but only if we set the label on a slot which was already filled/saved.
         // Unset slots only exist in the link editor and if we commit the change here, we trigger
@@ -498,7 +498,7 @@ public class QualifierFeatureEditor
         // and leaves behind an armed slot pointing to a removed slot.
         if (m.targetAddr != -1) {
             try {
-                actionHandler1.actionCreateOrUpdate(aTarget, actionHandler1.getEditorCas());
+                QFE_actionHandler.actionCreateOrUpdate(aTarget, QFE_actionHandler.getEditorCas());
             }
             catch (Exception e) {
                 handleException(this, aTarget, e);
@@ -510,18 +510,18 @@ public class QualifierFeatureEditor
     {
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
             .getModelObject().value;
-        AnnotatorState state = QualifierFeatureEditor.this.stateModel1.getObject();
+        AnnotatorState state = QualifierFeatureEditor.this.QFE_stateModel.getObject();
 
         links.remove(state.getArmedSlot());
         state.clearArmedSlot();
-        selectedRole1 = null;
+        QFE_selectedRole = null;
 
-        aTarget.add(content1);
+        aTarget.add(QFE_content);
 
         // Auto-commit if working on existing annotation
         if (state.getSelection().getAnnotation().isSet()) {
             try {
-                actionHandler1.actionCreateOrUpdate(aTarget, actionHandler1.getEditorCas());
+                QFE_actionHandler.actionCreateOrUpdate(aTarget, QFE_actionHandler.getEditorCas());
             }
             catch (Exception e) {
                 handleException(this, aTarget, e);
@@ -531,19 +531,19 @@ public class QualifierFeatureEditor
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget, Item<LinkWithRoleModel> aItem)
     {
-        AnnotatorState state = QualifierFeatureEditor.this.stateModel1.getObject();
+        AnnotatorState state = QualifierFeatureEditor.this.QFE_stateModel.getObject();
 
         if (state.isArmedSlot(getModelObject(), aItem.getIndex())) {
             state.clearArmedSlot();
-            selectedRole1 = null;
-            aTarget.add(content1);
+            QFE_selectedRole = null;
+            aTarget.add(QFE_content);
         }
         else {
             state.setArmedSlot(getModelObject(), aItem.getIndex());
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
-            selectedRole1 = new KBHandle();
-            selectedRole1.setName(aItem.getModelObject().role);
+            QFE_selectedRole = new KBHandle();
+            QFE_selectedRole.setName(aItem.getModelObject().role);
             aTarget.add(getOwner());
         }
     }

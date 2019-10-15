@@ -34,37 +34,53 @@ public class OpenNlpPosRecommenderTraits
     private int numThreads = 1;
     private double taggedTokensThreshold = 75.0;
 
-    public int getNumThreads()
+   /**
+    * getNumThreads for OpenNlpPosRecommenderTraits
+    */
+    public int ONPRT_getNumThreads()
     {
         return numThreads;
     }
-
-    public void setNumThreads(int aNumThreads)
+    /**
+     * setNumThreads for OpenNlpPosRecommenderTraits
+     */
+    public void ONPRT_setNumThreads(int aNumThreads)
     {
         numThreads = aNumThreads;
     }
-    
-    public int getTrainingSetSizeLimit()
+    /**
+     * getTrainingSetSizeLimit for OpenNlpPosRecommenderTraits
+     */
+    public int ONPRT_getTrainingSetSizeLimit()
     {
         return trainingSetSizeLimit;
     }
-
-    public void setTrainingSetSizeLimit(int aTrainingSetSizeLimit)
+    /**
+     * setTrainingSetSizeLimit for OpenNlpPosRecommenderTraits
+     */
+    public void ONPRT_setTrainingSetSizeLimit(int aTrainingSetSizeLimit)
     {
         trainingSetSizeLimit = aTrainingSetSizeLimit;
     }
-
-    public int getPredictionLimit()
+    /**
+     * getPredictionLimit for OpenNlpPosRecommenderTraits
+     */
+    public int ONPRT_getPredictionLimit()
     {
         return predictionLimit;
     }
-
-    public void setPredictionLimit(int aPredictionLimit)
+    /**
+     * setPredictionLimit for OpenNlpPosRecommenderTraits
+     */
+    public void ONPRT_setPredictionLimit(int aPredictionLimit)
     {
         predictionLimit = aPredictionLimit;
     }
     
-    public double getTaggedTokensThreshold()
+    /**
+     * getTaggedTokensThreshold for OpenNlpPosRecommenderTraits
+     */
+    public double ONPRT_getTaggedTokensThreshold()
     {
         if (taggedTokensThreshold < 0.0) {
             return 0.0;

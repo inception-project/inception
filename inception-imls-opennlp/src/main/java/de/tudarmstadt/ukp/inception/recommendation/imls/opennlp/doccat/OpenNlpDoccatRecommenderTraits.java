@@ -27,12 +27,12 @@ public class OpenNlpDoccatRecommenderTraits
 {
     private static final long serialVersionUID = 220089332064652542L;
 
-    private int doc_trainingSetSizeLimit = Integer.MAX_VALUE;
-    private int doc_predictionLimit = Integer.MAX_VALUE;
+    private int ONDRT_trainingSetSizeLimit = Integer.MAX_VALUE;
+    private int ONDRT_predictionLimit = Integer.MAX_VALUE;
 
     private int iterations = 100;
     private int cutoff = 5;
-    private int doc_numThreads = 1;
+    private int ONDRT_numThreads = 1;
 
     public int getIterations()
     {
@@ -53,44 +53,63 @@ public class OpenNlpDoccatRecommenderTraits
     {
         cutoff = aCutoff;
     }
+    /**
+     * getNumThreads method from class OpenNlpDoccatRecommenderTraits
+     * @return ONDRT_numThreads
+     */
+    public int ONDRT_getNumThreads()
+    {
+        return ONDRT_numThreads;
+    }
     
-    public int doc_getNumThreads()
+    /**
+     * setNumThreads method from class OpenNlpDoccatRecommenderTraits
+     * @return 
+     */
+    public void ONDRT_setNumThreads(int ONDRT_aNumThreads)
     {
-        return doc_numThreads;
+        ONDRT_numThreads = ONDRT_aNumThreads;
     }
-
-    public void doc_setNumThreads(int doc_aNumThreads)
-    {
-        doc_numThreads = doc_aNumThreads;
-    }
-
+    /**
+     * getTrainingSetSizeLimit method from class OpenNlpDoccatRecommenderTraits
+     * @return ONDRT_trainingSetSizeLimit
+     */
     public int getTrainingSetSizeLimit()
     {
-        return doc_trainingSetSizeLimit;
+        return ONDRT_trainingSetSizeLimit;
     }
-
-    public void setTrainingSetSizeLimit(int doc_aTrainingSetSizeLimit)
+    /**
+     * setTrainingSetSizeLimit method from class OpenNlpDoccatRecommenderTraits
+     * @return 
+     */
+    public void setTrainingSetSizeLimit(int ONDRT_aTrainingSetSizeLimit)
     {
-        doc_trainingSetSizeLimit = doc_aTrainingSetSizeLimit;
+        ONDRT_trainingSetSizeLimit = ONDRT_aTrainingSetSizeLimit;
     }
-
-    public int doc_getPredictionLimit()
+    /**
+     * getPredictionLimit method from class OpenNlpDoccatRecommenderTraits
+     * @return ONDRT_predictionLimit
+     */
+    public int ONDRT_getPredictionLimit()
     {
-        return doc_predictionLimit;
+        return ONDRT_predictionLimit;
     }
-
-    public void doc_setPredictionLimit(int doc_aPredictionLimit)
+    /**
+     * setPredictionLimit method from class OpenNlpDoccatRecommenderTraits
+     * @return 
+     */
+    public void ONDRT_setPredictionLimit(int ONDRT_aPredictionLimit)
     {
-        doc_predictionLimit = doc_aPredictionLimit;
+        ONDRT_predictionLimit = ONDRT_aPredictionLimit;
     }
-
-    public TrainingParameters doc_getParameters()
+    
+    public TrainingParameters ONDRT_getParameters()
     {
-        TrainingParameters doc_parameters = TrainingParameters.defaultParams();
-        doc_parameters.put(AbstractTrainer.VERBOSE_PARAM, false);
-        doc_parameters.put(TrainingParameters.ITERATIONS_PARAM, iterations);
-        doc_parameters.put(TrainingParameters.CUTOFF_PARAM, cutoff);
-        doc_parameters.put(TrainingParameters.THREADS_PARAM, doc_numThreads);
-        return doc_parameters;
+        TrainingParameters ONDRT_parameters = TrainingParameters.defaultParams();
+        ONDRT_parameters.put(AbstractTrainer.VERBOSE_PARAM, false);
+        ONDRT_parameters.put(TrainingParameters.ITERATIONS_PARAM, iterations);
+        ONDRT_parameters.put(TrainingParameters.CUTOFF_PARAM, cutoff);
+        ONDRT_parameters.put(TrainingParameters.THREADS_PARAM, ONDRT_numThreads);
+        return ONDRT_parameters;
     }
 }

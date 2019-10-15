@@ -91,33 +91,45 @@ public class ExportedRecommender
     {
         layerName = aLayerName;
     }
-
-    public String getTool_1()
+    /**
+     * getTool for ExportedRecommender
+     */
+    public String ER_getTool()
     {
         return tool;
     }
-
-    public void setTool_1(String aTool)
+    /**
+     * setTool for ExportedRecommender
+     */
+    public void ER_setTool(String aTool)
     {
         tool = aTool;
     }
-
-    public double getThreshold_1()
+    /**
+     * getThreshold for ExportedRecommender
+     */
+    public double ER_getThreshold()
     {
         return threshold;
     }
-
-    public void setThreshold_1(double aThreshold)
+    /**
+     * setThreshold for ExportedRecommender
+     */
+    public void ER_setThreshold(double aThreshold)
     {
         threshold = aThreshold;
     }
-
-    public boolean isAlwaysSelected_1()
+    /**
+     * isAlwaysSelecte for ExportedRecommender
+     */
+    public boolean ER_isAlwaysSelected()
     {
         return alwaysSelected;
     }
-
-    public void setAlwaysSelected_1(boolean aAlwaysSelected)
+    /**
+     * setAlwaysSelected for ExportedRecommender
+     */
+    public void ER_setAlwaysSelected(boolean aAlwaysSelected)
     {
         alwaysSelected = aAlwaysSelected;
     }
