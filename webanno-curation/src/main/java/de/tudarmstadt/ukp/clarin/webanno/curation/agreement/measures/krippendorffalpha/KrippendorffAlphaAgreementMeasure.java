@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.dkpro.statistics.agreement.IAgreementMeasure;
+import org.dkpro.statistics.agreement.InsufficientDataException;
 import org.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
 import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
@@ -69,7 +70,12 @@ public class KrippendorffAlphaAgreementMeasure
                 new NominalDistanceFunction());
 
         if (agreementResult.getStudy().getItemCount() > 0) {
-            agreementResult.setAgreement(agreement.calculateAgreement());
+            try {
+                agreementResult.setAgreement(agreement.calculateAgreement());
+            }
+            catch (InsufficientDataException e) {
+                agreementResult.setAgreement(Double.NaN);
+            }
         }
         else {
             agreementResult.setAgreement(Double.NaN);

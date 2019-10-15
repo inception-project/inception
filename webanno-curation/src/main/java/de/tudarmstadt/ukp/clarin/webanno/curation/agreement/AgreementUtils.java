@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosit
 
 public class AgreementUtils
 {
+    @Deprecated
     public static CodingAgreementResult getCohenKappaAgreement(CasDiff aDiff, String aType,
             String aFeature, Map<String, List<CAS>> aCasMap)
     {

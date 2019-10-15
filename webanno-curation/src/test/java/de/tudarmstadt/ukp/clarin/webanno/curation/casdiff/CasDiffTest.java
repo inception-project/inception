@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.loadW
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.getCohenKappaAgreement;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
@@ -52,7 +51,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.testing.DkproTestContext;
-import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -115,42 +113,6 @@ public class CasDiffTest
         
         assertEquals(0, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
-    }
-
-    @Test
-    public void twoEmptyCasTest()
-        throws Exception
-    {
-        String text = "";
-        
-        CAS user1Cas = JCasFactory.createJCas().getCas();
-        user1Cas.setDocumentText(text);
-
-        CAS user2Cas = JCasFactory.createJCas().getCas();
-        user2Cas.setDocumentText(text);
-
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1Cas));
-        casByUser.put("user2", asList(user2Cas));
-
-        List<String> entryTypes = asList(Lemma.class.getName());
-
-        List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
-
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-        
-        result.print(System.out);
-        
-        assertEquals(0, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(0, result.getIncompleteConfigurationSets().size());
-
-        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-                entryTypes.get(0), "value", casByUser);
-        assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -315,143 +277,6 @@ public class CasDiffTest
                 entryTypes.get(0), "PosValue", casByUser);
         assertEquals(0.0d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
-    }
-
-    @Test
-    public void singleNoDifferencesWithAdditionalCas1Test()
-        throws Exception
-    {
-        JCas user1 = JCasFactory.createJCas();
-        user1.setDocumentText("test");
-
-        JCas user2 = JCasFactory.createJCas();
-        user2.setDocumentText("test");
-        
-        JCas user3 = JCasFactory.createJCas();
-        user3.setDocumentText("test");
-        POS pos3 = new POS(user3, 0, 4);
-        pos3.setPosValue("test");
-        pos3.addToIndexes();
-        
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1.getCas()));
-        casByUser.put("user2", asList(user2.getCas()));
-        casByUser.put("user3", asList(user3.getCas()));
-        
-        List<String> entryTypes = asList(POS.class.getName());
-
-        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
-
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
-
-        diff.toResult().print(System.out);
-        
-        casByUser.remove("user3");
-        
-        CodingAgreementResult agreement = AgreementUtils.getAgreement(
-                KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, diff, entryTypes.get(0), "PosValue",
-                casByUser);
-        
-        assertEquals(1, agreement.getTotalSetCount());
-        assertEquals(1, agreement.getIrrelevantSets().size());
-        assertEquals(0, agreement.getRelevantSetCount());
-    }
-
-    @Test
-    public void singleNoDifferencesWithAdditionalCas2Test()
-        throws Exception
-    {
-        JCas user1 = JCasFactory.createJCas();
-        user1.setDocumentText("test");
-
-        JCas user2 = JCasFactory.createJCas();
-        user2.setDocumentText("test");
-        
-        JCas user3 = JCasFactory.createJCas();
-        user3.setDocumentText("test");
-        POS pos3 = new POS(user3, 0, 4);
-        pos3.addToIndexes();
-        
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1.getCas()));
-        casByUser.put("user2", asList(user2.getCas()));
-        casByUser.put("user3", asList(user3.getCas()));
-        
-        List<String> entryTypes = asList(POS.class.getName());
-
-        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
-
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-
-        diff.toResult().print(System.out);
-
-        casByUser.remove("user3");
-
-        CodingAgreementResult agreement = AgreementUtils.getAgreement(
-                KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, diff, entryTypes.get(0), "PosValue",
-                casByUser);
-        
-        assertEquals(1, agreement.getTotalSetCount());
-        assertEquals(1, agreement.getIrrelevantSets().size());
-        assertEquals(0, agreement.getRelevantSetCount());
-    }
-
-    @Test
-    public void twoWithoutLabelTest()
-        throws Exception
-    {
-        JCas user1 = JCasFactory.createJCas();
-        user1.setDocumentText("test");
-        new POS(user1, 0, 1).addToIndexes();
-        new POS(user1, 1, 2).addToIndexes();
-        POS p1 = new POS(user1, 3, 4);
-        p1.setPosValue("A");
-        p1.addToIndexes();
-
-        JCas user2 = JCasFactory.createJCas();
-        user2.setDocumentText("test");
-        new POS(user2, 0, 1).addToIndexes();
-        new POS(user2, 2, 3).addToIndexes();
-        POS p2 = new POS(user2, 3, 4);
-        p2.setPosValue("B");
-        p2.addToIndexes();
-        
-        
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1.getCas()));
-        casByUser.put("user2", asList(user2.getCas()));
-        
-        List<String> entryTypes = asList(POS.class.getName());
-
-        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
-
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-
-        result.print(System.out);
-        
-        CodingAgreementResult agreement = AgreementUtils.getAgreement(
-                KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, diff, entryTypes.get(0), "PosValue",
-                casByUser);
-        
-        assertEquals(4, agreement.getTotalSetCount());
-        assertEquals(0, agreement.getIrrelevantSets().size());
-        // the following two counts are zero because the incomplete sets are not excluded!
-        assertEquals(2, agreement.getIncompleteSetsByPosition().size());
-        assertEquals(0, agreement.getIncompleteSetsByLabel().size());
-        assertEquals(3, agreement.getSetsWithDifferences().size());
-        assertEquals(4, agreement.getRelevantSetCount());
-        assertEquals(0.4, agreement.getAgreement(), 0.01);
-        ICodingAnnotationItem item1 = agreement.getStudy().getItem(0);
-        ICodingAnnotationItem item2 = agreement.getStudy().getItem(1);
-        ICodingAnnotationItem item3 = agreement.getStudy().getItem(2);
-        assertEquals("", item1.getUnit(0).getCategory());
-        assertEquals("", item1.getUnit(1).getCategory());
-        assertEquals("", item2.getUnit(0).getCategory());
-        assertEquals(null, item2.getUnit(1).getCategory());
-        assertEquals(null, item3.getUnit(0).getCategory());
-        assertEquals("", item3.getUnit(1).getCategory());
     }
 
     @Test
@@ -732,47 +557,6 @@ public class CasDiffTest
         AgreementUtils.dumpAgreementStudy(System.out, agreement);
         
         assertEquals(1.0d, agreement.getAgreement(), 0.00001d);
-    }
-
-    @Test
-    public void multiLinkWithRoleLabelDifferenceTest()
-        throws Exception
-    {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));     
-
-        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
-        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
-
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA.getCas()));
-        casByUser.put("user2", asList(jcasB.getCas()));
-
-        List<String> entryTypes = asList(HOST_TYPE);
-
-        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
-        adapter.addLinkFeature("links", "role", "target");
-        List<? extends DiffAdapter> diffAdapters = asList(adapter);
-
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
-        DiffResult result = diff.toResult();
-        
-        result.print(System.out);
-        
-        assertEquals(3, result.size());
-        assertEquals(0, result.getDifferingConfigurationSets().size());
-        assertEquals(2, result.getIncompleteConfigurationSets().size());
-        
-        // Check against new impl
-        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
-                "links", casByUser);
-
-        // Asserts
-        System.out.printf("Agreement: %s%n", agreement.toString());
-        AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        
-        assertEquals(Double.NaN, agreement.getAgreement(), 0.00001d);
     }
 
     @Test
