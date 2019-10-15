@@ -195,7 +195,7 @@
       <groupId>org.webjars</groupId>
       <artifactId>d3js</artifactId>
     </dependency>
-    
+
     <!-- Testing -->
 
     <dependency>

@@ -58,18 +58,20 @@
     <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
-
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
 
     <mockito.version>2.28.2</mockito.version>
     <assertj.version>3.13.2</assertj.version>
     <spring.version>5.1.10.RELEASE</spring.version>
     <spring.boot.version>2.1.9.RELEASE</spring.boot.version>
+    <spring.security.version>5.1.6.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
     <wicketstuff.version>8.6.0</wicketstuff.version>
     <wicket-jquery-ui.version>8.3.0</wicket-jquery-ui.version>
     <dkpro.version>2.0.0</dkpro.version>
     <uima.version>3.1.0</uima.version>
+    <log4j.version>2.12.1</log4j.version>
+
     <webanno.version>4.0.0-SNAPSHOT</webanno.version>
     <lucene.version>7.3.1</lucene.version>
     <elasticsearch.version>6.3.0</elasticsearch.version>
@@ -513,6 +515,24 @@
         <version>${spring.version}</version>
       </dependency>
       
+      <!-- LOG4J -->
+      
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j-impl</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      
       <!-- LUCENE MTAS -->
     
       <dependency>
@@ -668,6 +688,25 @@
         <version>1.2.0</version>
       </dependency>
       
+      <dependency>
+        <groupId>jaxen</groupId>
+        <artifactId>jaxen</artifactId>
+        <version>1.2.0</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>dom4j</artifactId>
+            <groupId>dom4j</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>xom</artifactId>
+            <groupId>xom</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>jdom</artifactId>
+            <groupId>jdom</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <dependency>
         <groupId>dom4j</groupId>
         <artifactId>dom4j</artifactId>
@@ -1075,7 +1114,39 @@
         <artifactId>d3js</artifactId>
         <version>5.5.0</version>
       </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-logging</artifactId>
+        <version>${spring.boot.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <version>${spring.boot.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
     </dependencies>
+    
+    
   </dependencyManagement>
   
   <build>
