@@ -154,5 +154,24 @@ public class SearchResultsProvider
         query = null;
         totalResults = 0;
     }
+
+    public AnnotationLayer getAnnotationLayer()
+    {
+        return annotationLayer;
+    }
+
+    public AnnotationFeature getAnnotationFeature()
+    {
+        return annotationFeature;
+    }
+
+    public SearchService getSearchService() {
+        return searchService;
+    }
+
+    public IModel<List<ResultsGroup>> getCurrentPageCache()
+    {
+        return currentPageCache;
+    }
 }
 

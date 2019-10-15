@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
@@ -121,7 +119,7 @@ public class SearchAnnotationSidebar
 
     private final WebMarkupContainer mainContainer;
     private final WebMarkupContainer resultsGroupContainer;
-    private final SearchResultsProvider resultsProvider;
+    private final SearchResultsProviderWrapper resultsProvider;
 
     private IModel<String> targetQuery = Model.of("");
     private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
@@ -144,9 +142,9 @@ public class SearchAnnotationSidebar
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         currentUser = userRepository.getCurrentUser();
-        
-        resultsProvider = new SearchResultsProvider(searchService,
-                groupedSearchResults);
+        resultsProvider = new SearchResultsProviderWrapper(new SearchResultsProvider(searchService,
+            groupedSearchResults));
+
         
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
@@ -205,7 +203,10 @@ public class SearchAnnotationSidebar
         searchOptions.getObject().setItemsPerPage(searchProperties.getPageSizes()[0]);
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
         resultsGroupContainer.add(searchResultGroups);
-        mainContainer.add(new PagingNavigator("pagingNavigator", searchResultGroups));
+        mainContainer.add(new PagingNavigator("pagingNavigator", searchResultGroups).add(
+            visibleWhen(
+                () -> groupedSearchResults.getObject() != null && !groupedSearchResults.getObject()
+                    .isEmpty())));
 
 
         Form<Void> annotationForm = new Form<>("annotateForm");
@@ -347,10 +348,11 @@ public class SearchAnnotationSidebar
         aTarget.add(mainContainer);
     }
     
-    private Map<String, ResultsGroup> getSearchResultsGrouped()
+    private void getSearchResultsGrouped()
     {
         if (isBlank(targetQuery.getObject())) {
             resultsProvider.emptyQuery();
+            groupedSearchResults.setObject(null);
             return;
         }
 
@@ -360,6 +362,7 @@ public class SearchAnnotationSidebar
             error(
                 "A feature has to be selected in order to group by feature values. If you want to group by document title, select none for both layer and feature.");
             resultsProvider.emptyQuery();
+            groupedSearchResults.setObject(null);
             return;
         }
         
@@ -380,6 +383,7 @@ public class SearchAnnotationSidebar
         catch (Exception e) {
             error("Error in the query: " + e.getMessage());
             resultsProvider.emptyQuery();
+            groupedSearchResults.setObject(null);
             return;
         }
     }
