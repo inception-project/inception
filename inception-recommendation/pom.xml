@@ -195,10 +195,6 @@
       <groupId>org.webjars</groupId>
       <artifactId>d3js</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-extensions</artifactId>
-    </dependency>
 
     <!-- Testing -->
 
