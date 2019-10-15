@@ -41,6 +41,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-agreement</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-curation</artifactId>
     </dependency>
     <dependency>
@@ -75,12 +79,6 @@
     <dependency>
       <groupId>org.jfree</groupId>
       <artifactId>jcommon</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.statistics</groupId>
-      <artifactId>dkpro-statistics-agreement</artifactId>
-      <version>2.0.0</version>
     </dependency>
 
     <dependency>
@@ -120,14 +118,6 @@
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-segmentation-asl</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-lexmorph-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-syntax-asl</artifactId>
-    </dependency>
 
     <!-- WICKET DEPENDENCIES -->
     <dependency>
@@ -156,10 +146,6 @@
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
     <dependency>
@@ -170,23 +156,6 @@
     <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
-    </dependency>
-
-    <!-- JUNIT DEPENDENCY FOR TESTING -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-testing-asl</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-tsv</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

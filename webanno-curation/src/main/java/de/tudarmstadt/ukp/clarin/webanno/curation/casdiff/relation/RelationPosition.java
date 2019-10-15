@@ -26,6 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
  */
 public class RelationPosition extends Position_ImplBase
 {
+    private static final long serialVersionUID = 2389265017101957950L;
+    
     private final int sourceBegin;
     private final int sourceEnd;
     private final String sourceText;
