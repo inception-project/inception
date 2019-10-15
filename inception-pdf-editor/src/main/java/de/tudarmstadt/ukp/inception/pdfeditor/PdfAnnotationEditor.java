@@ -334,6 +334,7 @@ public class PdfAnnotationEditor
         try {
             VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
             if (paramId.isSynthetic()) {
+                getModelObject().clearArmedSlot();
                 Offset offset = new Offset(aParams);
                 Offset docOffset =
                     PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, pdfExtractFile);
@@ -384,7 +385,8 @@ public class PdfAnnotationEditor
             // Doing anything but selecting or creating a span annotation when a
             // slot is armed will unarm it
             if (getModelObject().isSlotArmed()
-                && !(action.equals(SELECT_SPAN) || action.equals(CREATE_SPAN))) {
+                && !(action.equals(SELECT_SPAN) || action.equals(CREATE_SPAN)
+                   || action.equals(DELETE_RECOMMENDATION))) {
                 getModelObject().clearArmedSlot();
             }
 

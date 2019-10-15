@@ -72,7 +72,7 @@
     <uima.version>3.1.0</uima.version>
     <log4j.version>2.12.1</log4j.version>
 
-    <webanno.version>4.0.0-beta-2</webanno.version>
+    <webanno.version>4.0.0-SNAPSHOT</webanno.version>
     <lucene.version>7.3.1</lucene.version>
     <elasticsearch.version>6.3.0</elasticsearch.version>
     <mtas.version>7.3.0.3</mtas.version>
