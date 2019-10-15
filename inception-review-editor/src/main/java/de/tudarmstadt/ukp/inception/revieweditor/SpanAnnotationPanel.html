@@ -22,27 +22,27 @@
     <div wicket:id="featuresContainer" class="panel panel-default">
         <div class="panel-body">
             <div class="row">
-                <div class="col-sm-1 text-center">
-                    <button wicket:id="open" class="btn btn-secondary">Open</button>
-                </div>
-                <div class="col-sm-11">
+                <div class="col-sm-12">
                     <div class="row">
-                        <div wicket:id="features" class="col-sm-2">
+                        <div wicket:id="features" class="col-sm-3 col-md-2">
                             <label wicket:id="label"></label>
                             <span wicket:id="value"></span>
                         </div>
+                        <div class="col-sm-3 col-md-2 text-center pull-right">
+                            <button wicket:id="open" class="btn btn-sm btn-primary">Open <i class="fa fa-crosshairs"></i></button>
+                        </div>
                     </div>
                     <div class="row">
-                        <label class="col-sm-2">Text:</label>
-                        <div class="col-sm-10">
+                        <label class="col-sm-3 col-md-2">Text:</label>
+                        <div class="col-sm-9 col-md-10">
                             <span style="word-wrap: break-word;">
-                                <span wicket:id="preContext"></span><b wicket:id="text" style="color: #B90F22"></b><span wicket:id="postContext"></span>
+                                <span wicket:id="preContext"></span><mark wicket:id="text"></mark><span wicket:id="postContext"></span>
                             </span>
                         </div>
                     </div>
                     <div wicket:id="textFeatures" class="row" style="margin-top: 5px;">
-                        <label wicket:id="label" class="col-sm-2"></label>
-                        <div class="col-sm-10">
+                        <label wicket:id="label" class="col-sm-3 col-md-2"></label>
+                        <div class="col-sm-9 col-md-10">
                             <span wicket:id="value" style="word-wrap: break-word;"></span>
                         </div>
                     </div>

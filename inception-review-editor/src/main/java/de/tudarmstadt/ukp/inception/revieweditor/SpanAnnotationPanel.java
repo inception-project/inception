@@ -101,10 +101,9 @@ public class SpanAnnotationPanel
                 .collect(Collectors.toList());
             features.removeAll(textFeatures);
     
-            LambdaAjaxLink button = new LambdaAjaxLink(CID_OPEN, _target -> {
+            LambdaAjaxLink button = new LambdaAjaxLink(CID_OPEN, _target -> 
                 send(this, Broadcast.BUBBLE,
-                    new SelectAnnotationEvent(vid, begin, end, _target));
-            });
+                    new SelectAnnotationEvent(vid, begin, end, _target)));
     
             String text = cas.getDocumentText();
             int windowSize = 50;
