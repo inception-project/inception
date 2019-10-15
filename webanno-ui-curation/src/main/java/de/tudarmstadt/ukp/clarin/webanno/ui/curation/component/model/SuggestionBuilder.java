@@ -199,7 +199,7 @@ public class SuggestionBuilder
             }
 
             DiffResult diff = CasDiff.doDiffSingle(entryTypes, adapters, LINK_ROLE_AS_LABEL,
-                    casses, begin, end);
+                    casses, begin, end).toResult();
 
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
@@ -540,7 +540,7 @@ public class SuggestionBuilder
         try (StopWatch watch = new StopWatch(log, "CasDiff")) {
             diff = CasDiff.doDiffSingle(annotationService, aState.getProject(), entryTypes,
                     LINK_ROLE_AS_LABEL, aCasses, 0,
-                    mergeCas.getDocumentText().length());
+                    mergeCas.getDocumentText().length()).toResult();
         }
 
         try (StopWatch watch = new StopWatch(log, "CasMerge")) {

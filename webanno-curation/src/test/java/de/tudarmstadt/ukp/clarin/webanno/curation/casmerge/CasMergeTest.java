@@ -67,7 +67,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
@@ -101,7 +100,8 @@ public class CasMergeTest
         JCas curatorCas = createText(casByUser.values().stream()
                 .flatMap(Collection::stream).findFirst().get().getDocumentText());
         
-        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
+                .toResult();
 
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
@@ -136,7 +136,8 @@ public class CasMergeTest
         JCas curatorCas = createText(casByUser.values().stream()
                 .flatMap(Collection::stream).findFirst().get().getDocumentText());
         
-        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
+                .toResult();
 
         sut.setMergeIncompleteAnnotations(true);
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
@@ -185,7 +186,8 @@ public class CasMergeTest
         curatorCas.setDocumentText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
-        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
+                .toResult();
 
         result.print(System.out);
 
@@ -195,7 +197,7 @@ public class CasMergeTest
         casByUser.put("actual", asList(jcasA.getCas()));
         casByUser.put("merge", asList(curatorCas.getCas()));
 
-        result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
@@ -219,7 +221,8 @@ public class CasMergeTest
         curatorCas.setDocumentText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
-        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
+                .toResult();
 
         result.print(System.out);
 
@@ -254,7 +257,8 @@ public class CasMergeTest
         curatorCas.setDocumentText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
-        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
+                .toResult();
 
         result.print(System.out);
 
@@ -294,7 +298,8 @@ public class CasMergeTest
         SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         
-        DiffResult result = doDiff(entryTypes, asList(adapter), LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, asList(adapter), LINK_TARGET_AS_LABEL, casByUser)
+                .toResult();
 
         result.print(System.out);
 
@@ -327,7 +332,8 @@ public class CasMergeTest
         curatorCas.setDocumentText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
-        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
+                .toResult();
 
         result.print(System.out);
 
@@ -534,8 +540,8 @@ public class CasMergeTest
         casByUser.put("user1", asList(mergeCas.getCas()));
         casByUser.put("user2", asList(jcasA.getCas()));
 
-        CasDiff.DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
+                .toResult();
 
         assertEquals(0, diff.getDifferingConfigurationSets().size());
         assertEquals(0, diff.getIncompleteConfigurationSets().size());
@@ -568,8 +574,8 @@ public class CasMergeTest
         casByUser.put("user1", asList(mergeCas.getCas()));
         casByUser.put("user2", asList(jcasA.getCas()));
 
-        CasDiff.DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
+                .toResult();
 
         assertEquals(0, diff.getDifferingConfigurationSets().size());
         assertEquals(2, diff.getIncompleteConfigurationSets().size());

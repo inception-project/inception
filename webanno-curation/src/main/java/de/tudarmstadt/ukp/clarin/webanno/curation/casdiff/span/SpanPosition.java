@@ -26,6 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
  */
 public class SpanPosition extends Position_ImplBase
 {
+    private static final long serialVersionUID = 7672904919600263605L;
+    
     private final int begin;
     private final int end;
     private final String text;

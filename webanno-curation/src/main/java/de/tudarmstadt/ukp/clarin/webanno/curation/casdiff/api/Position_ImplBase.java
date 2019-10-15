@@ -24,6 +24,8 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 
 public abstract class Position_ImplBase implements Position
 {
+    private static final long serialVersionUID = -1237180459049008357L;
+    
     private final String type;
     private final int casId;
     private final String feature;
