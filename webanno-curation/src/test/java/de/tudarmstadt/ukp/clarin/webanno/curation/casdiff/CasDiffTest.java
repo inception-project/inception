@@ -23,12 +23,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.load;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.loadWebAnnoTsv3;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostFS;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.getCohenKappaAgreement;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
-import static java.lang.Double.NaN;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -55,8 +53,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
@@ -159,10 +155,11 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-                entryTypes.get(0), "value", casByUser);
-        assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+//                entryTypes.get(0), "value", casByUser);
+//        assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
+//        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
     @Test
     public void noDifferencesPosTest()
@@ -186,10 +183,11 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-                entryTypes.get(0), "PosValue", casByUser);
-        assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+//                entryTypes.get(0), "PosValue", casByUser);
+//        assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
+//        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -214,10 +212,11 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-                entryTypes.get(0), "DependencyType", casByUser);
-        assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+//                entryTypes.get(0), "DependencyType", casByUser);
+//        assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
+//        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -245,10 +244,11 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-                entryTypes.get(0), "PosValue", casByUser);
-        assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+//                entryTypes.get(0), "PosValue", casByUser);
+//        assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
+//        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -273,10 +273,11 @@ public class CasDiffTest
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-                entryTypes.get(0), "PosValue", casByUser);
-        assertEquals(0.0d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+//                entryTypes.get(0), "PosValue", casByUser);
+//        assertEquals(0.0d, agreement.getAgreement(), 0.000001d);
+//        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -300,10 +301,11 @@ public class CasDiffTest
         assertEquals(4, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-                "PosValue", casByUser);
-        assertEquals(0.836477987d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
+//                "PosValue", casByUser);
+//        assertEquals(0.836477987d, agreement.getAgreement(), 0.000001d);
+//        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -328,10 +330,11 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-                "PosValue", casByUser);
-        assertEquals(NaN, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
+//                "PosValue", casByUser);
+//        assertEquals(NaN, agreement.getAgreement(), 0.000001d);
+//        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -356,10 +359,11 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(2, result.getIncompleteConfigurationSets().size());
         
-        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-                "DependencyType", casByUser);
-        assertEquals(1.0, agreement.getAgreement(), 0.000001d);
-        assertEquals(2, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
+//                "DependencyType", casByUser);
+//        assertEquals(1.0, agreement.getAgreement(), 0.000001d);
+//        assertEquals(2, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -384,10 +388,11 @@ public class CasDiffTest
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-                "PosValue", casByUser);
-        assertEquals(0.958730d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
+//                "PosValue", casByUser);
+//        assertEquals(0.958730d, agreement.getAgreement(), 0.000001d);
+//        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
     @Test
@@ -416,10 +421,11 @@ public class CasDiffTest
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
-                "DependencyType", casByUser);
-        assertEquals(0.958199d, agreement.getAgreement(), 0.000001d);
-        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
+//                "DependencyType", casByUser);
+//        assertEquals(0.958199d, agreement.getAgreement(), 0.000001d);
+//        assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
     
     @Test
@@ -505,15 +511,15 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        // Check against new impl
-        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
-                "webanno.custom.Relation", "value", casByUser);
-
-        // Asserts
-        System.out.printf("Agreement: %s%n", agreement.toString());
-        AgreementUtils.dumpAgreementStudy(System.out, agreement);
-
-        assertEquals(1, agreement.getPluralitySets().size());
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+//                "webanno.custom.Relation", "value", casByUser);
+//
+//        // Asserts
+//        System.out.printf("Agreement: %s%n", agreement.toString());
+//        AgreementUtils.dumpAgreementStudy(System.out, agreement);
+//
+//        assertEquals(1, agreement.getPluralitySets().size());
     }
 
     @Test
@@ -548,15 +554,15 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        // Check against new impl
-        CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
-                casByUser);
-
-        // Asserts
-        System.out.printf("Agreement: %s%n", agreement.toString());
-        AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        
-        assertEquals(1.0d, agreement.getAgreement(), 0.00001d);
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
+//                casByUser);
+//
+//        // Asserts
+//        System.out.printf("Agreement: %s%n", agreement.toString());
+//        AgreementUtils.dumpAgreementStudy(System.out, agreement);
+//        
+//        assertEquals(1.0d, agreement.getAgreement(), 0.00001d);
     }
 
     @Test
@@ -589,15 +595,15 @@ public class CasDiffTest
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        // Check against new impl
-        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
-                "links", casByUser);
-
-        // Asserts
-        System.out.printf("Agreement: %s%n", agreement.toString());
-        AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        
-        assertEquals(0.0d, agreement.getAgreement(), 0.00001d);
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
+//                "links", casByUser);
+//
+//        // Asserts
+//        System.out.printf("Agreement: %s%n", agreement.toString());
+//        AgreementUtils.dumpAgreementStudy(System.out, agreement);
+//        
+//        assertEquals(0.0d, agreement.getAgreement(), 0.00001d);
     }
 
     @Test
@@ -630,15 +636,15 @@ public class CasDiffTest
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        // Check against new impl
-        CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
-                casByUser);
-
-        // Asserts
-        System.out.printf("Agreement: %s%n", agreement.toString());
-        AgreementUtils.dumpAgreementStudy(System.out, agreement);
-        
-        assertEquals(0.0, agreement.getAgreement(), 0.00001d);
+        // Todo: Agreement has moved to separate project - should create agreement test there
+//        CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
+//                casByUser);
+//
+//        // Asserts
+//        System.out.printf("Agreement: %s%n", agreement.toString());
+//        AgreementUtils.dumpAgreementStudy(System.out, agreement);
+//        
+//        assertEquals(0.0, agreement.getAgreement(), 0.00001d);
     }
 
     @Test

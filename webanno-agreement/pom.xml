@@ -1,5 +1,5 @@
 <!--
-  Copyright 2012
+  Copyright 2019
   Ubiquitous Knowledge Processing (UKP) Lab
   Technische Universität Darmstadt
 
@@ -22,17 +22,13 @@
     <artifactId>webanno</artifactId>
     <version>4.0.0-SNAPSHOT</version>
   </parent>
-  <artifactId>webanno-curation</artifactId>
-  <name>WebAnno - Core - Curation</name>
+  <artifactId>webanno-agreement</artifactId>
+  <name>WebAnno - Core - Agreement</name>
   <packaging>jar</packaging>
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
     </dependency>
 
     <dependency>
@@ -44,6 +40,10 @@
       <artifactId>uimafit-core</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-curation</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-support</artifactId>
@@ -75,18 +75,24 @@
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-metadata-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-syntax-asl</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-ner-asl</artifactId>
+      <groupId>org.dkpro.statistics</groupId>
+      <artifactId>dkpro-statistics-agreement</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
@@ -95,29 +101,35 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-tx</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
     
-    <!-- Hibernate dependencies -->
     <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
     </dependency>
-
     <dependency>
-      <groupId>com.github.ben-manes.caffeine</groupId>
-      <artifactId>caffeine</artifactId>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-extensions</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
     <!-- JUNIT DEPENDENCY FOR TESTING -->
@@ -130,10 +142,6 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.assertj</groupId>
-      <artifactId>assertj-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
