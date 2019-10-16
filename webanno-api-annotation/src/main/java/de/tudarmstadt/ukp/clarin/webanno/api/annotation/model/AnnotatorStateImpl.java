@@ -550,15 +550,7 @@ public class AnnotatorStateImpl
     {
         armedFeatureState = aState;
         armedSlot = aIndex;
-        
-        // Rerender all slots to deselect all slots that are not armed anymore
-        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
-        if (handler.isPresent()) {
-            Page page = (Page) handler.get().getPage();
-            page.send(page, Broadcast.BREADTH,
-                    new RenderSlotsEvent(
-                            RequestCycle.get().find(IPartialPageRequestHandler.class).get()));
-        }
+        rerenderSlots();
     }
 
     @Override
@@ -571,12 +563,24 @@ public class AnnotatorStateImpl
         return Objects.equals(aState.vid, armedFeatureState.vid)
                 && Objects.equals(aState.feature, armedFeatureState.feature) && aIndex == armedSlot;
     }
+    
+    private void rerenderSlots() {
+        // Rerender all slots to deselect all slots that are not armed anymore
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent()) {
+            Page page = (Page) handler.get().getPage();
+            page.send(page, Broadcast.BREADTH,
+                    new RenderSlotsEvent(
+                            RequestCycle.get().find(IPartialPageRequestHandler.class).get()));
+        }
+    } 
 
     @Override
     public void clearArmedSlot()
     {
         armedFeatureState = null;
         armedSlot = -1;
+        rerenderSlots();
     }
 
     @Override
