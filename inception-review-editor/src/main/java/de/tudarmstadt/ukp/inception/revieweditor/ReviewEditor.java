@@ -75,7 +75,7 @@ public class ReviewEditor
     }
     
     @OnEvent(stop = true)
-    public void onLinkFeatureSetEvent(SelectAnnotationEvent aEvent)
+    public void onSelectAnnotationEvent(SelectAnnotationEvent aEvent)
     {
         try {
             CAS cas = getCasProvider().get();
