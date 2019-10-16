@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.revieweditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -67,6 +68,7 @@ public class SpanAnnotationPanel
     private static final String CID_TEXT_FEATURES = "textFeatures";
     private static final String CID_FEATURES = "features";
     private static final String CID_OPEN = "open";
+    private static final String CID_OPENED = "opened";
     private static final String CID_LABEL = "label";
     private static final String CID_VALUE = "value";
     private static final String CID_PRE_CONTEXT = "preContext";
@@ -101,9 +103,19 @@ public class SpanAnnotationPanel
                 .collect(Collectors.toList());
             features.removeAll(textFeatures);
     
-            LambdaAjaxLink button = new LambdaAjaxLink(CID_OPEN, _target -> 
+            LambdaAjaxLink openButton = new LambdaAjaxLink(CID_OPEN, _target -> {
                 send(this, Broadcast.BUBBLE,
-                    new SelectAnnotationEvent(vid, begin, end, _target)));
+                    new SelectAnnotationEvent(vid, begin, end, _target));
+            });
+            openButton.add(visibleWhen(() 
+                -> !state.getSelection().getAnnotation().equals(vid)));
+    
+            LambdaAjaxLink openedButton = new LambdaAjaxLink(CID_OPENED, _target -> {
+                send(this, Broadcast.BUBBLE,
+                    new SelectAnnotationEvent(vid, begin, end, _target));
+            });
+            openedButton.add(visibleWhen(()
+                -> state.getSelection().getAnnotation().equals(vid)));
     
             String text = cas.getDocumentText();
             int windowSize = 50;
@@ -121,7 +133,8 @@ public class SpanAnnotationPanel
             featuresContainer.add(new Label(CID_PRE_CONTEXT, preContext));
             featuresContainer.add(new Label(CID_TEXT, link.label));
             featuresContainer.add(new Label(CID_POST_CONTEXT, postContext));
-            featuresContainer.add(button);
+            featuresContainer.add(openButton);
+            featuresContainer.add(openedButton);
             
             add(featuresContainer);
         }

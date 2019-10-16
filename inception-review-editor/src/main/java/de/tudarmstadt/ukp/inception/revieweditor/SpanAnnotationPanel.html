@@ -28,8 +28,11 @@
                             <label wicket:id="label"></label>
                             <span wicket:id="value"></span>
                         </div>
-                        <div class="col-sm-3 col-md-2 text-center pull-right">
+                        <div class="col-sm-3 col-md-2 text-center pull-right" wicket:enclosure="open">
                             <button wicket:id="open" class="btn btn-sm btn-primary">Open <i class="fa fa-crosshairs"></i></button>
+                        </div>
+                        <div class="col-sm-3 col-md-2 text-center pull-right" wicket:enclosure="opened">
+                            <button wicket:id="opened" class="btn btn-sm btn-success">Opened <i class="fa fa-crosshairs"></i></button>
                         </div>
                     </div>
                     <div class="row">
