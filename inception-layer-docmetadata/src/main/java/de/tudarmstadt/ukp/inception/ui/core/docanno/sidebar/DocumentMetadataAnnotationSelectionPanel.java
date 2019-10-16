@@ -237,7 +237,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private List<AnnotationLayer> listMetadataLayers()
     {
         return annotationService.listAnnotationLayer(getModelObject()).stream()
-                .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())).
+                .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())
+                        && layer.isEnabled()).
                 collect(Collectors.toList());
     }
     
@@ -253,11 +254,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         }
         
         List<AnnotationListItem> items = new ArrayList<>();
-        for (AnnotationLayer layer : listMetadataLayers()) {
-            if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
-                continue;
-            }
-            
+        for (AnnotationLayer layer : listMetadataLayers()) {            
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
