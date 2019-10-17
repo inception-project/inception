@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
 
@@ -29,6 +30,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -47,6 +49,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -56,6 +59,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -94,12 +100,13 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     private final ListView<FeatureState> featureList;
     private final DocumentMetadataAnnotationSelectionPanel selectionPanel;
     private final AnnotationActionHandler actionHandler;
+    private final AnnotatorState state;
     
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
             IModel<SourceDocument> aDocument, IModel<String> aUsername, CasProvider aCasProvider,
             IModel<Project> aProject, AnnotationPage aAnnotationPage,
             DocumentMetadataAnnotationSelectionPanel aSelectionPanel,
-            AnnotationActionHandler aActionHandler)
+            AnnotationActionHandler aActionHandler, AnnotatorState aState)
     {
         super(aId, aModel);
 
@@ -112,6 +119,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         project = aProject;
         selectionPanel = aSelectionPanel;
         actionHandler = aActionHandler;
+        state = aState;
         
         add(featureList = createFeaturesList());
         
@@ -406,5 +414,29 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     public void toggleVisibility()
     {
         setVisible(!isVisible());
+    }
+    
+    @OnEvent(stop = true)
+    public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
+    {
+        AjaxRequestTarget target = aEvent.getTarget();
+        try {
+            CAS cas = jcasProvider.get();
+            AnnotationFS fs =
+                selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
+            state.getSelection().selectSpan(fs);
+            if (state.getSelection().getAnnotation().isSet()) {
+                actionHandler.actionDelete(target);
+            }
+        }
+        catch (IOException | AnnotationException e) {
+            handleException(this, target, e);
+        }
+    }
+    
+    @OnEvent(stop = true)
+    public void onFeatureUpdatedEvent(FeatureEditorValueChangedEvent aEvent)
+    {
+        actionAnnotate(aEvent.getTarget());
     }
 }

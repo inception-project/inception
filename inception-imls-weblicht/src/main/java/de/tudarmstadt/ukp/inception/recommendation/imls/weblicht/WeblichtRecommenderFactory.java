@@ -15,9 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.sidebar;
+package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht;
 
-public enum RecommenderEvaluationScoreMetric
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtRecommenderTraits;
+import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtRecommenderTraitsEditor;
+
+/**
+ * This interface is required so we can safely inject {@link WeblichtRecommenderFactoryImpl} into
+ * {@link WeblichtRecommenderTraitsEditor}.
+ */
+public interface WeblichtRecommenderFactory
+    extends RecommendationEngineFactory<WeblichtRecommenderTraits>
 {
-    ACCURACY, PRECISION, F1, RECALL
+    // Nothing to add
 }

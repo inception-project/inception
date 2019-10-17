@@ -37,12 +37,9 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.form.AbstractChoice;
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -57,6 +54,7 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -64,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -77,7 +74,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 
 public class RecommenderEditorPanel
     extends Panel
@@ -100,7 +96,6 @@ public class RecommenderEditorPanel
     private static final String MID_ALWAYS_SELECTED = "alwaysSelected";
     private static final String MID_TOOL = "tool";
     private static final String MID_ACTIVATION_CONTAINER = "activationContainer";
-    private static final String MID_DOCUMENT_STATES = "statesForTraining";
 
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
@@ -309,20 +304,7 @@ public class RecommenderEditorPanel
                 return result;
             }
         };
-
-        CheckBoxMultipleChoice<AnnotationDocumentState> documentStates =
-                new CheckBoxMultipleChoice<>(
-                        MID_DOCUMENT_STATES,
-                        statesForTraining,
-                        asList(AnnotationDocumentState.values())
-                );
-        documentStates.setPrefix("<div class=\"checkbox\">");
-        documentStates.setSuffix("</div>");
-        documentStates.setLabelPosition(AbstractChoice.LabelPosition.WRAP_AFTER);
-        documentStates.setChoices(asList(AnnotationDocumentState.values()));
-        documentStates.setChoiceRenderer(new EnumChoiceRenderer<>(documentStates));
-        form.add(documentStates);
-
+        
         form.add(new LambdaAjaxLink(MID_DELETE, this::actionDelete)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink(MID_CANCEL, this::actionCancel));
@@ -482,23 +464,23 @@ public class RecommenderEditorPanel
         // cause additional UI elements to appear (e.g. options to upload pre-trained models
         // which cannot be uploaded/saved before the recommender has been persisted).
         
-        // Reload whole page because master panel also needs to be reloaded.
-        aTarget.add(getPage());
+        // Reload whole panel because master panel also needs to be reloaded.
+        aTarget.add(findParent(ProjectRecommendersPanel.class));
+
+        success(getString("save.success"));
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private void actionDelete(AjaxRequestTarget aTarget) {
         recommendationService.deleteRecommender(recommenderModel.getObject());
-        appEventPublisherHolder.get().publishEvent(
-            new RecommenderDeletedEvent(this, recommenderModel.getObject(),
-                userDao.getCurrentUser().getUsername(), projectModel.getObject()));
         actionCancel(aTarget);
     }
     
     private void actionCancel(AjaxRequestTarget aTarget) {
         recommenderModel.setObject(null);
         
-        // Reload whole page because master panel also needs to be reloaded.
-        aTarget.add(getPage());
+        // Reload whole panel because master panel also needs to be reloaded.
+        aTarget.add(findParent(ProjectRecommendersPanel.class));
     }
     
     private static Set<AnnotationDocumentState> getAllPossibleDocumentStates()

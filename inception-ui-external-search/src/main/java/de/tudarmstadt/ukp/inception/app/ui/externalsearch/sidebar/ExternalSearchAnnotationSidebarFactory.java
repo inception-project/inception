@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
 
 import org.apache.wicket.model.IModel;
-
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 

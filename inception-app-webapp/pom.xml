@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.12.0-SNAPSHOT</version>
+    <version>0.13.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -103,6 +103,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-stringmatch</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-weblicht</artifactId>
     </dependency>
 
     <!-- INCEPTION - ACTIVE LEARNING FUNCTIONALITY -->
@@ -191,6 +195,10 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-perseus-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-xml-asl</artifactId>
     </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
@@ -452,12 +460,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -682,13 +684,13 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
@@ -752,6 +754,7 @@
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
               <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
               <!-- Spring AOP
                 <usedDependency>org.springframework:spring-aop</usedDependency>
                 <usedDependency>org.springframework:spring-aspects</usedDependency>
@@ -866,7 +869,6 @@
             <version>${spring.boot.version}</version>
             <configuration>
               <executable>true</executable>
-              <layout>ZIP</layout> <!-- To use the PropertiesLauncher -->
             </configuration>
             <executions>
               <execution>

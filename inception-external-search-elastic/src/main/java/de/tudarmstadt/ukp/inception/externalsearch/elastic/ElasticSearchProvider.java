@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +34,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.RandomScoreFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
@@ -57,6 +59,7 @@ public class ElasticSearchProvider
     private static final String ELASTIC_HIT_METADATA_KEY = "metadata";
     private static final String ELASTIC_HIT_DOC_KEY = "doc";
     private static final String METADATA_SOURCE_KEY = "source";
+    private static final String METADATA_TITLE_KEY = "title";
     private static final String METADATA_URI_KEY = "uri";
     private static final String METADATA_LANGUAGE_KEY = "language";
     private static final String METADATA_TIMESTAMP_KEY = "timestamp";
@@ -76,32 +79,29 @@ public class ElasticSearchProvider
         
         try (RestHighLevelClient client = new RestHighLevelClient(
                 RestClient.builder(new HttpHost(hostUrl, 9200, "http")))) {
-            HighlightBuilder highlightBuilder = new HighlightBuilder();
-            HighlightBuilder.Field highlightField =
-                    new HighlightBuilder.Field(aTraits.getDefaultField());
-            highlightField.highlighterType("unified");
-            highlightBuilder.field(highlightField);
+            HighlightBuilder highlightBuilder = new HighlightBuilder()
+                    .field(new HighlightBuilder.Field(aTraits.getDefaultField())
+                            .highlighterType("unified"));
     
-            SearchRequest searchRequest = new SearchRequest(indexName);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
-                    .fetchSource(null, ELASTIC_HIT_DOC_KEY);
-            RandomScoreFunctionBuilder randomFunc = ScoreFunctionBuilders.randomFunction();
-            randomFunc.seed(aTraits.getSeed());
+                    .fetchSource(null, ELASTIC_HIT_DOC_KEY)
+                    .highlighter(highlightBuilder)
+                    .size(aTraits.getResultSize());
+            
+            QueryBuilder qb = QueryBuilders.simpleQueryStringQuery(aQuery)
+                    .field(aTraits.getDefaultField());
+            
             if (aTraits.isRandomOrder()) {
+                RandomScoreFunctionBuilder randomFunc = ScoreFunctionBuilders.randomFunction();
+                randomFunc.seed(aTraits.getSeed());
                 searchSourceBuilder.query(QueryBuilders.functionScoreQuery(
-                        QueryBuilders.constantScoreQuery(
-                            QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery)
-                        ).boost(1.0f),
-                        randomFunc));
+                        QueryBuilders.constantScoreQuery(qb).boost(1.0f), randomFunc));
             }
             else {
-                searchSourceBuilder.query(QueryBuilders.termQuery(
-                        aTraits.getDefaultField(), aQuery));
+                searchSourceBuilder.query(qb);
             }
-            searchSourceBuilder.highlighter(highlightBuilder);
-            searchSourceBuilder.size(aTraits.getResultSize());
-            searchRequest.source(searchSourceBuilder);
             
+            SearchRequest searchRequest = new SearchRequest(indexName).source(searchSourceBuilder);
             SearchResponse response = client.search(searchRequest);
     
             for (SearchHit hit: response.getHits().getHits()) {
@@ -114,25 +114,14 @@ public class ElasticSearchProvider
                 ExternalSearchResult result = new ExternalSearchResult(aRepository, indexName,
                         hit.getId());
     
-                // The title will be filled with the hit id, since there is no title in the
-                // ElasticSearch hit
-                result.setDocumentTitle(hit.getId());
-                
                 // If the order is random, then the score doesn't reflect the quality, so we do not
                 // forward it to the user
                 if (!aTraits.isRandomOrder()) {
                     result.setScore((double) hit.getScore());
                 }
-    
-                Map<String, Object> hitSource = hit.getSourceAsMap();
-                Map<String, String> metadata = (Map) hitSource.get(ELASTIC_HIT_METADATA_KEY);
-    
-                // Set the metadata fields
-                result.setOriginalSource(metadata.get(METADATA_SOURCE_KEY));
-                result.setOriginalUri(metadata.get(METADATA_URI_KEY));
-                result.setLanguage(metadata.get(METADATA_LANGUAGE_KEY));
-                result.setTimestamp(metadata.get(METADATA_TIMESTAMP_KEY));
-    
+                
+                fillResultWithMetadata(result, hit.getSourceAsMap());
+        
                 if (hit.getHighlightFields().size() != 0) {
     
                     // There are highlights, set them in the result
@@ -152,7 +141,57 @@ public class ElasticSearchProvider
 
         return results;
     }
+    
+    private void fillResultWithMetadata(ExternalSearchResult result, Map<String, Object> aHitMap)
+    {
+        Map<String, String> metadata = (Map) aHitMap.get(ELASTIC_HIT_METADATA_KEY);
+        
+        // The title will be filled with the hit id, since there is no title in the
+        // ElasticSearch hit
+        if (isNotBlank(metadata.get(METADATA_TITLE_KEY))) {
+            result.setDocumentTitle(metadata.get(METADATA_TITLE_KEY));
+        }
+        else {
+            result.setDocumentTitle((String) aHitMap.get("id"));
+        }
+        
+        // Set the metadata fields
+        result.setOriginalSource(metadata.get(METADATA_SOURCE_KEY));
+        result.setOriginalUri(metadata.get(METADATA_URI_KEY));
+        result.setLanguage(metadata.get(METADATA_LANGUAGE_KEY));
+        result.setTimestamp(metadata.get(METADATA_TIMESTAMP_KEY));
+    }
 
+    @Override
+    public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
+            ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
+            throws IOException
+    {
+        if (!aCollectionId.equals(aTraits.getIndexName())) {
+            throw new IllegalArgumentException(
+                    "Requested collection name does not match connection collection name");
+        }
+        
+        GetRequest getRequest = new GetRequest(aTraits.getIndexName(), aTraits.getObjectType(),
+                aDocumentId);
+        
+        String hostUrl = aTraits.getRemoteUrl().replaceFirst("https?://", "")
+                .replaceFirst("www.", "")
+                .split(":")[0];
+        
+        try (RestHighLevelClient client = new RestHighLevelClient(
+                RestClient.builder(new HttpHost(hostUrl, 9200, "http")))) {
+            ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
+                    aDocumentId);
+            
+            // Send get query
+            fillResultWithMetadata(result, client.get(getRequest).getSourceAsMap());
+            
+            return result;
+        }
+    }
+
+    
     @Override
     public String getDocumentText(DocumentRepository aRepository,
             ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
@@ -163,9 +202,8 @@ public class ElasticSearchProvider
                     "Requested collection name does not match connection collection name");
         }
     
-        GetRequest getRequest = new GetRequest(
-                aTraits.getIndexName(), aTraits.getObjectType(), aDocumentId
-        );
+        GetRequest getRequest = new GetRequest(aTraits.getIndexName(), aTraits.getObjectType(),
+                aDocumentId);
         
         String hostUrl = aTraits.getRemoteUrl().replaceFirst("https?://", "")
                 .replaceFirst("www.", "")
@@ -174,8 +212,8 @@ public class ElasticSearchProvider
         try (RestHighLevelClient client = new RestHighLevelClient(
                 RestClient.builder(new HttpHost(hostUrl, 9200, "http")))) {
             // Send get query
-            Map<String, String> document =
-                    (Map) client.get(getRequest).getSourceAsMap().get(ELASTIC_HIT_DOC_KEY);
+            Map<String, Object> result = client.get(getRequest).getSourceAsMap();
+            Map<String, String> document = (Map) result.get(ELASTIC_HIT_DOC_KEY);
             return (document.get(DOC_TEXT_KEY));
         }
     }
@@ -190,8 +228,8 @@ public class ElasticSearchProvider
     }
     
     @Override
-    public String getDocumentFormat(DocumentRepository aRepository, Object aTraits,
-            String aCollectionId, String aDocumentId)
+    public String getDocumentFormat(DocumentRepository aRepository,
+            ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
         return TextFormatSupport.ID;
     }

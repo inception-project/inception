@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -97,11 +98,12 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private final WebMarkupContainer annotationsContainer;
     private final AnnotationActionHandler actionHandler;
     private List<DocumentMetadataAnnotationDetailPanel> detailPanels;
+    private final AnnotatorState state;
     
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
             IModel<SourceDocument> aDocument, IModel<String> aUsername,
             CasProvider aCasProvider, AnnotationPage aAnnotationPage,
-            AnnotationActionHandler aActionHandler)
+            AnnotationActionHandler aActionHandler, AnnotatorState aState)
     {
         super(aId, aProject);
 
@@ -115,6 +117,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         selectedLayer = Model.of();
         actionHandler = aActionHandler;
         detailPanels = new ArrayList<>();
+        state = aState;
 
         annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
         annotationsContainer.setOutputMarkupId(true);
@@ -209,7 +212,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 } else {
                     detailPanel = new DocumentMetadataAnnotationDetailPanel(
                         CID_ANNOTATION_DETAILS, Model.of(vid), sourceDocument, username,
-                        jcasProvider, project, annotationPage, selectionPanel, actionHandler);
+                        jcasProvider, project, annotationPage, selectionPanel, actionHandler,
+                        state);
                     detailPanel.setVisible(renderVisible);
                     detailPanels.add(detailPanel);
                 }
@@ -233,7 +237,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private List<AnnotationLayer> listMetadataLayers()
     {
         return annotationService.listAnnotationLayer(getModelObject()).stream()
-                .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())).
+                .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())
+                        && layer.isEnabled()).
                 collect(Collectors.toList());
     }
     
@@ -249,11 +254,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         }
         
         List<AnnotationListItem> items = new ArrayList<>();
-        for (AnnotationLayer layer : listMetadataLayers()) {
-            if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
-                continue;
-            }
-            
+        for (AnnotationLayer layer : listMetadataLayers()) {            
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);

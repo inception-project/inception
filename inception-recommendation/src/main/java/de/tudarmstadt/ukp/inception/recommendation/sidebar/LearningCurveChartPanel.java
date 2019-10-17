@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
+import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
 
 public class LearningCurveChartPanel
     extends Panel
@@ -70,7 +71,7 @@ public class LearningCurveChartPanel
     
     private final ChartPanel chartPanel;
     private final IModel<AnnotatorState> model;
-    public RecommenderEvaluationScoreMetric selectedMetric;
+    public RecommenderEvaluationScoreMetricEnum selectedMetric;
 
     public LearningCurveChartPanel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -82,6 +83,7 @@ public class LearningCurveChartPanel
         //initially the chart is empty. passing empty model
         chartPanel = new ChartPanel(MID_CHART_CONTAINER,
                 LoadableDetachableModel.of(this::renderChart));
+        // chartPanel.add(visibleWhen(() -> chartPanel.getModelObject() != null));
         
         chartPanel.setOutputMarkupId(true);
         add(chartPanel);
@@ -90,7 +92,7 @@ public class LearningCurveChartPanel
         dropDownPanel.setOutputMarkupId(true);
         add(dropDownPanel);
         
-        selectedMetric = RecommenderEvaluationScoreMetric.ACCURACY;
+        selectedMetric = RecommenderEvaluationScoreMetricEnum.Accuracy;
     }
     
 
@@ -101,7 +103,7 @@ public class LearningCurveChartPanel
         if (event.getPayload() instanceof DropDownEvent) {
             DropDownEvent dEvent = (DropDownEvent) event.getPayload();
             
-            RecommenderEvaluationScoreMetric aSelectedMetric = dEvent.getSelectedValue();
+            RecommenderEvaluationScoreMetricEnum aSelectedMetric = dEvent.getSelectedValue();
             AjaxRequestTarget target = dEvent.getTarget();
             
             target.add(this);
@@ -130,7 +132,7 @@ public class LearningCurveChartPanel
         MultiValuedMap<String, Double> recommenderScoreMap = getLatestScores();
 
         if (CollectionUtils.isEmpty(recommenderScoreMap.keys())) {
-            LOG.error("Cannot plot the learning curve. Project: {}",
+            LOG.debug("Cannot plot the learning curve because there are no scores. Project: {}",
                     model.getObject().getProject());
             return null;
         }
@@ -223,13 +225,13 @@ public class LearningCurveChartPanel
                 double score;
                 
                 switch (selectedMetric ) {
-                case ACCURACY:
+                case Accuracy:
                     score = detail.accuracy;
                     break;
-                case PRECISION:
+                case Precision:
                     score = detail.precision;
                     break;
-                case RECALL:
+                case Recall:
                     score = detail.recall;
                     break;
                 case F1:

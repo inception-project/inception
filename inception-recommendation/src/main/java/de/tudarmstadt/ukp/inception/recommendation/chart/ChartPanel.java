@@ -29,7 +29,7 @@ import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.JavaScriptReferenceHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.TextRequestHandler;
 import org.slf4j.Logger;
@@ -53,14 +53,12 @@ public class ChartPanel
     private static final String MID_CHART_CONTAINER = "chart";
     private static final String OUTPUT_MARKUP_ID_CHART = "canvas";
 
-    private LoadableDetachableModel<LearningCurve> model;
     private final WebMarkupContainer chart;
     private final ChartAjaxBejavior chartAjaxBejavior;
 
-    public ChartPanel(String aId, LoadableDetachableModel<LearningCurve> aModel)
+    public ChartPanel(String aId, IModel<LearningCurve> aModel)
     {
         super(aId, aModel);
-        model = aModel;
 
         chart = new WebMarkupContainer(MID_CHART_CONTAINER);
         chart.setMarkupId(OUTPUT_MARKUP_ID_CHART);
@@ -68,8 +66,11 @@ public class ChartPanel
 
         chartAjaxBejavior = new ChartAjaxBejavior();
         add(chartAjaxBejavior);
-
-
+    }
+    
+    public LearningCurve getModelObject()
+    {
+        return (LearningCurve) getDefaultModelObject();
     }
 
     @Override
@@ -118,7 +119,7 @@ public class ChartPanel
         {
             RequestCycle requestCycle = RequestCycle.get();
 
-            LearningCurve learningCurve = model.getObject();
+            LearningCurve learningCurve = getModelObject();
 
             try {
                 String json = addLearningCurve(learningCurve);
