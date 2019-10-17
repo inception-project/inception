@@ -38,6 +38,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -239,5 +240,11 @@ public class DocumentAnnotationPanel
                 item.add(panel);
             }
         };
+    }
+    
+    @OnEvent
+    public void onRefreshEvent(RefreshEvent event)
+    {
+        event.getTarget().add(this);
     }
 }

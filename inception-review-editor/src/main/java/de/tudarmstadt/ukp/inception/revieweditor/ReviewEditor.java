@@ -22,6 +22,7 @@ import java.io.IOException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
@@ -59,7 +60,11 @@ public class ReviewEditor
     @Override
     public void render(AjaxRequestTarget aTarget)
     {
-        aTarget.add(this);
+        // TODO: maybe not the best method, however this fixes jumping in the editor on
+        //  selecting annotations or updating values in the right sidebar which occurs on
+        //  using aTarget.add(this);
+        send(getPage(), Broadcast.BREADTH,
+            new RefreshEvent(aTarget));
     }
 
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
@@ -77,6 +82,8 @@ public class ReviewEditor
     @OnEvent(stop = true)
     public void onSelectAnnotationEvent(SelectAnnotationEvent aEvent)
     {
+        // TODO: there was a problem with passing this object down to the SpanAnnotationPanel
+        //  to call the actionSelection there, hence used events
         try {
             CAS cas = getCasProvider().get();
             getModelObject().getSelection().selectSpan(
