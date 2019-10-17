@@ -78,6 +78,7 @@ public class NamedEntityLinkerTest
         context = new RecommenderContext();
         recommender = buildRecommender();
     }
+    
 
     @Test
     public void thatTrainingWorks() throws Exception
