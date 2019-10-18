@@ -20,9 +20,41 @@
 Agreement can be inspected on a per-feature basis and is calculated pair-wise between all 
 annotators across all documents.
 
-The first time a feature is selected for agreement inspection, it takes a moment to calculate the
-differences between the annotated documents. Switching between different features subsequently
-is much faster.
+== Measures
+
+Several agreement measures are supported.
+
+.Supported agreement measures
+|====
+| Measure | Type | Short description |
+
+| Cohen's kappa
+| Coding
+| Chance-corrected inter-annotator agreement for two annotators. The measure assumes a different probability distribution for all raters.
+
+| Fleiss' kappa
+| Coding
+| Generalization of Scott's pi-measure for calculating a chance-corrected inter-rater agreement for multiple raters, which is known as Fleiss' kappa and Carletta's K. The measure assumes the same probability distribution for all raters.
+
+| Krippendorff's alpha (nominal)
+| Coding
+| Chance-corrected inter-rater agreement for multiple raters for nominal categories (i.e. categories are either equal (distance 0) or unequal (distance 1). The basic idea is to divide the estimated variance of within the items by the estimated total variance.
+
+| Krippendorff's alpha (unitizing)
+| Unitizing
+| Chance-corrected inter-rater agreement for unitizing studies with multiple raters. As a model for expected disagreement, all possible unitizations for the given continuum and raters are considered. Note that
+units coded with the same categories by a single annotator may not overlap with each other.
+|====
+
+== Coding vs. Unitizing
+
+Coding measures are based on positions. I.e. two annotations are either at the same position or not.
+If they are, they can be compared - otherwise they cannot be compared. This makes coding measures
+unsuitable in cases where partital overlap of annotations needs to be considered, e.g. in the case
+of named entity annotations where it is common that annotators do not agree on the boundaries of the
+entity. In order to calculate the positions, all documents are scanned for annotations and  annotations located at the same positions are collected in configuration sets. To determine if two annotations are at the same position, different approaches are used depending on the layer type. For a span layer, the begin and end offsets are used. For a relation layer, the begin and end offsets of the source and target annotation are used. Chains are currently not supported. 
+
+Unitizing measures basically work by internally concatenating all documents into a single long virtual document and then consider partial overlaps of annotations from different annotations. I.e. there is no averaging over documents. The partial overlap agreement is calculated based on character positions, not on token positions. So if one annotator annotates *the blackboard* and another annotator just *blackboard*, then the partial overlap is comparatively high because *blackboard* is a longish word. Relation and chain layers are presently not supported by the unitizing measures.
 
 Agreement is calculated in two steps:
 
