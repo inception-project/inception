@@ -173,7 +173,7 @@ public class SpanAnnotationPanel
     {
         return new ListView<FeatureState>(CID_TEXT_FEATURES, features)
         {
-            private static final long serialVersionUID = -1139622234318691941L;
+            private static final long serialVersionUID = 2518085396361327922L;
             
             @Override
             protected void populateItem(ListItem<FeatureState> item)

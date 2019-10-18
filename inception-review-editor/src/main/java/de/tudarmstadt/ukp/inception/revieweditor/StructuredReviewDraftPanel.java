@@ -56,7 +56,7 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerS
 public class StructuredReviewDraftPanel
     extends Panel
 {
-    private static final long serialVersionUID = 4202869513273132875L;
+    private static final long serialVersionUID = 5419276164971178588L;
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
@@ -93,7 +93,7 @@ public class StructuredReviewDraftPanel
         return new ListView<AnnotationListItem>(CID_ANNOTATIONS,
             LoadableDetachableModel.of(this::listAnnotations))
         {
-            private static final long serialVersionUID = -6833373063896777785L;
+            private static final long serialVersionUID = 6885792032557021315L;
 
             @Override
             protected void populateItem(ListItem<AnnotationListItem> aItem)

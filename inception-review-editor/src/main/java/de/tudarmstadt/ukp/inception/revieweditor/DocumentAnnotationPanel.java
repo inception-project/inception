@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -35,6 +36,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,8 +86,8 @@ public class DocumentAnnotationPanel
     private final IModel<VID> model;
     private final AnnotatorState state;
 
-    public DocumentAnnotationPanel(String id, IModel<VID> aModel, CasProvider aCasProvider,
-        AnnotatorState aState, String aTitle)
+    public DocumentAnnotationPanel(String id, IModel<VID> aModel,
+        CasProvider aCasProvider, AnnotatorState aState, String aTitle)
     {
         super(id, aModel);
 
@@ -95,32 +97,34 @@ public class DocumentAnnotationPanel
 
         // Allow AJAX updates.
         setOutputMarkupId(true);
-    
-        List<FeatureState> features = listFeatures();
-        List<FeatureState> linkFeatures = new ArrayList<>();
-        List<FeatureState> otherFeatures = new ArrayList<>();
-    
-        for (FeatureState featureState : features) {
-            AnnotationFeature feature = featureState.feature;
-            if (feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
-                && feature.getLinkMode().equals(LinkMode.WITH_ROLE)) {
-                linkFeatures.add(featureState);
-            } else {
-                otherFeatures.add(featureState);
-            }
-        }
         
         featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
         featuresContainer.setOutputMarkupId(true);
-        featuresContainer.add(createFeaturesList(otherFeatures));
+        featuresContainer.add(createFeaturesList());
         add(featuresContainer);
     
         linkFeaturesContainer = new WebMarkupContainer(CID_LINK_FEATURES_CONTAINER);
         linkFeaturesContainer.setOutputMarkupId(true);
-        linkFeaturesContainer.add(createLinkFeaturesList(linkFeatures));
+        linkFeaturesContainer.add(createLinkFeaturesList());
         add(linkFeaturesContainer);
         
         add(new Label(CID_ANNOTATION_TITLE, aTitle));
+    }
+    
+    private List<FeatureState> listLinkFeatures() {
+        List<FeatureState> states = listFeatures(); 
+        return states.stream().filter(fs -> 
+                fs.feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
+                && fs.feature.getLinkMode().equals(LinkMode.WITH_ROLE))
+            .collect(Collectors.toList());
+    }
+    
+    private List<FeatureState> listNonLinkFeatures() {
+        List<FeatureState> states = listFeatures();
+        return states.stream().filter(fs ->
+            !(fs.feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
+                && fs.feature.getLinkMode().equals(LinkMode.WITH_ROLE)))
+            .collect(Collectors.toList());
     }
     
     private List<FeatureState> listFeatures()
@@ -171,11 +175,12 @@ public class DocumentAnnotationPanel
         return featureStates;
     }
 
-    private ListView<FeatureState> createFeaturesList(List<FeatureState> features)
+    private ListView<FeatureState> createFeaturesList()
     {
-        return new ListView<FeatureState>(CID_FEATURES, features)
+        return new ListView<FeatureState>(CID_FEATURES,
+            LoadableDetachableModel.of(this::listNonLinkFeatures))
         {
-            private static final long serialVersionUID = -1139622234318691941L;
+            private static final long serialVersionUID = -7259968895739818558L;
 
             @Override
             protected void populateItem(ListItem<FeatureState> item)
@@ -196,9 +201,10 @@ public class DocumentAnnotationPanel
         };
     }
     
-    private ListView<FeatureState> createLinkFeaturesList(List<FeatureState> features)
+    private ListView<FeatureState> createLinkFeaturesList()
     {
-        return new ListView<FeatureState>(CID_LINK_FEATURES, features)
+        return new ListView<FeatureState>(CID_LINK_FEATURES,
+            LoadableDetachableModel.of(this::listLinkFeatures))
         {
             private static final long serialVersionUID = 2226005003861152513L;
 
