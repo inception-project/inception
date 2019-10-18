@@ -290,10 +290,12 @@ public class LinkFeatureEditor
             // If a slot is armed, then load the slot's role into the dropdown
             FeatureState featureState = LinkFeatureEditor.this.getModelObject();
             AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) featureState.value;
+            
             if (state.isSlotArmed()
-                    && featureState.feature.equals(state.getArmedFeature().feature))
+                    && featureState.feature.equals(state.getArmedFeature().feature)
+                    && links.size() > state.getArmedSlot())
             {
-                List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) featureState.value;
                 field.setModelObject(links.get(state.getArmedSlot()).role);
             }
             else {
