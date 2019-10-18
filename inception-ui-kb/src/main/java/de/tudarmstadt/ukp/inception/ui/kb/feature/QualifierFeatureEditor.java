@@ -278,9 +278,9 @@ public class QualifierFeatureEditor
     {
         AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
 
-        qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> {
-            this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
-        });
+        qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> 
+            this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature)
+        );
 
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
             qualifierModel, new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)

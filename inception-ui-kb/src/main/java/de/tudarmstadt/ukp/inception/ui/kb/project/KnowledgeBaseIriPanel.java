@@ -146,9 +146,9 @@ public class KnowledgeBaseIriPanel
 
         IModel<String> adapter = new LambdaModelAdapter<String>(
             () -> { return model.getObject() != null ? model.getObject().stringValue() : null; },
-            str -> { 
+            str -> 
                 model.setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : 
-                    null); });
+                    null) );
 
         ComboBox<String> comboBox = new ComboBox<>(id, adapter, choices);
         comboBox.add(LambdaBehavior.enabledWhen(() -> 

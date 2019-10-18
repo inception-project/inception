@@ -19,10 +19,12 @@ package de.tudarmstadt.ukp.inception.scheduling;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public abstract class Task
@@ -99,4 +101,5 @@ public abstract class Task
     public int hashCode() {
         return Objects.hash(user, project);
     }
+    
 }
