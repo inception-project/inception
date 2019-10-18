@@ -86,9 +86,9 @@ public class DocumentRepositoryEditorPanel
         add(form);
 
         form.add(new TextField<String>("name")
-                .add(new LambdaAjaxFormSubmittingBehavior("change", t -> {
-                    t.add(form);
-                })));
+                .add(new LambdaAjaxFormSubmittingBehavior("change", t -> 
+                    t.add(form)
+                )));
 
         IModel<Pair<String, String>> typeModel = LambdaModelAdapter.of(() -> {
             return listTypes().stream()

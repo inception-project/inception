@@ -162,12 +162,12 @@ public class Predictions
      */
     public void putPredictions(long aLayerId, List<AnnotationSuggestion> aPredictions)
     {
-        aPredictions.forEach(prediction -> {
+        aPredictions.forEach(prediction -> 
             predictions.put(new ExtendedId(user.getUsername(), project.getId(),
                     prediction.getDocumentName(), aLayerId, prediction.getOffset(),
-                    prediction.getRecommenderId(), prediction.getId(), -1), prediction);
+                    prediction.getRecommenderId(), prediction.getId(), -1), prediction)
 
-        });
+        );
     }
 
     public Project getProject() {

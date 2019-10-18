@@ -179,21 +179,21 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             
             // button for deleting the KBObject
             LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete",
-                    AbstractInfoPanel.this::confirmActionDelete).onConfigure((_this) -> {
+                    AbstractInfoPanel.this::confirmActionDelete).onConfigure((_this) ->
                         _this.setVisible(kbObjectModel.getObject() != null
-                                && isNotEmpty(kbObjectModel.getObject().getIdentifier()));
-                    });
+                                && isNotEmpty(kbObjectModel.getObject().getIdentifier()))
+                    );
             deleteButton.add(new Label("label", new ResourceModel(getDeleteButtonResourceKey())));
             deleteButton.add(new WriteProtectionBehavior(kbModel));
             add(deleteButton);
             
             // button for creating a new subclass that is only visible for concepts  
             LambdaAjaxLink createSubclassButton = new LambdaAjaxLink("createSubclass",
-                    AbstractInfoPanel.this::actionCreateSubclass).onConfigure((_this) -> {
+                    AbstractInfoPanel.this::actionCreateSubclass).onConfigure((_this) -> 
                         _this.setVisible(kbObjectModel.getObject() != null
                                 && isNotEmpty(kbObjectModel.getObject().getIdentifier())
-                                && kbObjectModel.getObject() instanceof KBConcept);
-                    });
+                                && kbObjectModel.getObject() instanceof KBConcept)
+                    );
             createSubclassButton.add(new Label("subclassLabel",
                     new ResourceModel(getCreateSubclassButtonResourceKey())));
             createSubclassButton.add(new WriteProtectionBehavior(kbModel));

@@ -155,9 +155,9 @@ public class HtmlAnnotationEditor
         }
 
         // Sort backwards
-        nodes.sort((a, b) -> {
-            return b.position - a.position;
-        });
+        nodes.sort((a, b) -> 
+            b.position - a.position
+        );
 
         for (Node n : nodes) {
             buf.insert(n.position, n.type);

@@ -495,9 +495,9 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteConcept(KnowledgeBase aKB, KBConcept aConcept)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteConcept(conn, aKB, aConcept);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteConcept(conn, aKB, aConcept)
+        );
     }
 
     @Override
@@ -559,9 +559,9 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteProperty(KnowledgeBase aKB, KBProperty aType)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteProperty(conn, aKB, aType);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteProperty(conn, aKB, aType)
+        );
     }
 
     @Override
@@ -646,9 +646,9 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteInstance(KnowledgeBase aKB, KBInstance aInstance)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteInstance(conn, aKB, aInstance);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteInstance(conn, aKB, aInstance)
+        );
     }
 
     @Override
@@ -670,18 +670,18 @@ public class KnowledgeBaseServiceImpl
     public void upsertStatement(KnowledgeBase aKB, KBStatement aStatement)
         throws RepositoryException
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).upsertStatement(conn, aKB, aStatement);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).upsertStatement(conn, aKB, aStatement)
+        );
     }
 
     @Override
     public void deleteStatement(KnowledgeBase aKB, KBStatement aStatement)
         throws RepositoryException
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteStatement(conn, aKB, aStatement);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteStatement(conn, aKB, aStatement)
+        );
     }
 
     @Override
@@ -873,33 +873,33 @@ public class KnowledgeBaseServiceImpl
      */
     public void createBaseProperty(KnowledgeBase akb, KBProperty aProperty)
     {
-        update(akb, (conn) -> {
-            aProperty.write(conn, akb);
-        });
+        update(akb, (conn) -> 
+            aProperty.write(conn, akb)
+        );
     }
     
     @Override
     public void addQualifier(KnowledgeBase aKB, KBQualifier newQualifier)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).upsertQualifier(conn, aKB, newQualifier);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).upsertQualifier(conn, aKB, newQualifier)
+        );
     }
 
     @Override
     public void deleteQualifier(KnowledgeBase aKB, KBQualifier oldQualifier)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteQualifier(conn, aKB, oldQualifier);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteQualifier(conn, aKB, oldQualifier)
+        );
     }
 
     @Override
     public void upsertQualifier(KnowledgeBase aKB, KBQualifier aQualifier)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).upsertQualifier(conn, aKB, aQualifier);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).upsertQualifier(conn, aKB, aQualifier)
+        );
     }
 
     @Override
@@ -973,12 +973,12 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier)
     {
         try (StopWatch watch = new StopWatch(log, "readHandle(%s)", aIdentifier)) {
-            return read(aKB, conn -> { 
-                return SPARQLQueryBuilder.forItems(aKB)
+            return read(aKB, conn ->  
+                 SPARQLQueryBuilder.forItems(aKB)
                     .withIdentifier(aIdentifier)
                     .retrieveLabel()
-                    .asHandle(conn, true);
-            });
+                    .asHandle(conn, true)
+            );
         }
     }
 
