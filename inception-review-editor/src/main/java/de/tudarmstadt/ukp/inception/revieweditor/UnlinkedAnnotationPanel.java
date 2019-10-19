@@ -26,72 +26,73 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.revieweditor.event.RefreshEvent;
 
-public class StructuredReviewDraftPanel
+public class UnlinkedAnnotationPanel
     extends AnnotationPanel
 {
-    private static final long serialVersionUID = 5419276164971178588L;
-
+    private static final long serialVersionUID = -6975253945462000226L;
+    
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-
-    private static final String CID_LINKED_ANNOTATIONS_CONTAINER = "linkedAnnotationsContainer";
-    private static final String CID_UNLINKED_ANNOTATIONS_CONTAINER = "unlinkedAnnotationsContainer";
+    
+    private static final String CID_ANNOTATIONS_CONTAINER = "annotationsContainer";
     private static final String CID_ANNOTATIONS = "annotations";
     private static final String CID_ANNOTATION_DETAILS = "annotationDetails";
-
-    private final WebMarkupContainer linkedAnnotationsContainer;
-    private final WebMarkupContainer unlinkedAnnotationsContainer;
+    
+    private final WebMarkupContainer annotationsContainer;
     private final IModel<AnnotatorState> model;
-
-    public StructuredReviewDraftPanel(String aId, IModel<AnnotatorState> aModel,
-                                      CasProvider aCasProvider)
+    
+    public UnlinkedAnnotationPanel(String aId, IModel<AnnotatorState> aModel,
+        CasProvider aCasProvider)
     {
         super(aId, aModel, aCasProvider);
-        
+    
         model = aModel;
-        Project project = aModel.getObject().getProject();
-
+    
         // Allow AJAX updates.
         setOutputMarkupId(true);
     
-        unlinkedAnnotationsContainer = new UnlinkedAnnotationPanel(
-            CID_UNLINKED_ANNOTATIONS_CONTAINER, model, aCasProvider);
-        unlinkedAnnotationsContainer.setOutputMarkupId(true);
-        add(unlinkedAnnotationsContainer);
-
-        linkedAnnotationsContainer = new WebMarkupContainer(CID_LINKED_ANNOTATIONS_CONTAINER);
-        linkedAnnotationsContainer.setOutputMarkupId(true);
-        linkedAnnotationsContainer.add(createLinkedAnnotationList());
-        add(linkedAnnotationsContainer);
+        annotationsContainer = new WebMarkupContainer((CID_ANNOTATIONS_CONTAINER));
+        annotationsContainer.setOutputMarkupId(true);
+        annotationsContainer.add(createAnnotationList());
+        add(annotationsContainer);
     }
-
-    private ListView<AnnotationListItem> createLinkedAnnotationList()
+    
+    private ListView<AnnotationListItem> createAnnotationList()
     {
         return new ListView<AnnotationListItem>(CID_ANNOTATIONS,
-            LoadableDetachableModel.of(() -> listDocumentAnnotations()))
+            LoadableDetachableModel.of(() -> listUnlinkedAnnotations()))
         {
             private static final long serialVersionUID = 6885792032557021315L;
-
+            
             @Override
             protected void populateItem(ListItem<AnnotationListItem> aItem)
             {
-                // TODO: why???
                 aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
+                
                 String title = aItem.getModelObject().getLayer().getUiName();
+                
                 VID vid = new VID(aItem.getModelObject().getAddr());
-
-                DocumentAnnotationPanel panel = 
-                    new DocumentAnnotationPanel(CID_ANNOTATION_DETAILS, Model.of(vid),
-                        getCasProvider(), model.getObject(), title);
+                
+                SpanAnnotationPanel panel =
+                    new SpanAnnotationPanel(CID_ANNOTATION_DETAILS, Model.of(vid),
+                        getCas(), model.getObject());
+                panel.setOutputMarkupId(true);
                 aItem.add(panel);
-
+                
                 aItem.setOutputMarkupId(true);
             }
         };
+    }
+    
+    @OnEvent
+    public void onRefreshEvent(RefreshEvent event)
+    {
+        event.getTarget().add(this);
     }
 }

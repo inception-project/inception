@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,16 +41,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.revieweditor.event.SelectAnnotationEvent;
 
 public class SpanAnnotationPanel 
     extends Panel
@@ -74,73 +72,64 @@ public class SpanAnnotationPanel
     private static final String CID_PRE_CONTEXT = "preContext";
     private static final String CID_POST_CONTEXT = "postContext";
     
-    private final CasProvider casProvider;
     private final AnnotatorState state;
     private WebMarkupContainer featuresContainer;
     
-    public SpanAnnotationPanel(String aId, IModel<LinkWithRoleModel> aModel,
-        CasProvider aCasProvider, AnnotatorState aState)
+    public SpanAnnotationPanel(String aId, IModel<VID> aModel,
+        CAS aCas, AnnotatorState aState)
     {
         super(aId, aModel);
-        casProvider = aCasProvider;
         state = aState;
     
-        LinkWithRoleModel link = aModel.getObject();
+        VID vid = aModel.getObject();
     
-        try {
-            CAS cas = casProvider.get();
-            FeatureStructure fs = selectFsByAddr(cas, link.targetAddr);
-            VID vid = new VID(fs);
-            AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
-            AnnotationFS aFS = selectAnnotationByAddr(cas, link.targetAddr);
-            int begin = aFS.getBegin();
-            int end = aFS.getEnd();
+        FeatureStructure fs = selectFsByAddr(aCas, vid.getId());
+        AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
+        AnnotationFS aFS = selectAnnotationByAddr(aCas, vid.getId());
+        int begin = aFS.getBegin();
+        int end = aFS.getEnd();
             
-            List<FeatureState> features = listFeatures(fs, layer, vid);
-            List<FeatureState> textFeatures = features.stream()
-                .filter(state -> state.feature.getType().equals("uima.cas.String") 
-                    && state.feature.getTagset() == null)
-                .collect(Collectors.toList());
-            features.removeAll(textFeatures);
+        List<FeatureState> features = listFeatures(fs, layer, vid);
+        List<FeatureState> textFeatures = features.stream()
+            .filter(state -> state.feature.getType().equals("uima.cas.String") 
+                && state.feature.getTagset() == null)
+            .collect(Collectors.toList());
+        features.removeAll(textFeatures);
     
-            LambdaAjaxLink openButton = new LambdaAjaxLink(CID_OPEN, _target -> {
-                send(this, Broadcast.BUBBLE,
-                    new SelectAnnotationEvent(vid, begin, end, _target));
-            });
-            openButton.add(visibleWhen(() 
-                -> !state.getSelection().getAnnotation().equals(vid)));
+        LambdaAjaxLink openButton = new LambdaAjaxLink(CID_OPEN, _target -> {
+            send(this, Broadcast.BUBBLE,
+                new SelectAnnotationEvent(vid, begin, end, _target));
+        });
+        openButton.add(visibleWhen(() 
+            -> !state.getSelection().getAnnotation().equals(vid)));
     
-            LambdaAjaxLink openedButton = new LambdaAjaxLink(CID_OPENED, _target -> {
-                send(this, Broadcast.BUBBLE,
-                    new SelectAnnotationEvent(vid, begin, end, _target));
-            });
-            openedButton.add(visibleWhen(()
-                -> state.getSelection().getAnnotation().equals(vid)));
+        LambdaAjaxLink openedButton = new LambdaAjaxLink(CID_OPENED, _target -> {
+            send(this, Broadcast.BUBBLE,
+                new SelectAnnotationEvent(vid, begin, end, _target));
+        });
+        openedButton.add(visibleWhen(()
+            -> state.getSelection().getAnnotation().equals(vid)));
     
-            String text = cas.getDocumentText();
-            int windowSize = 50;
-            int contextBegin = aFS.getBegin() < windowSize
-                ? 0 : aFS.getBegin() - windowSize;
-            int contextEnd = aFS.getEnd() + windowSize > text.length()
-                ? text.length() : aFS.getEnd() + windowSize;
-            String preContext = text.substring(contextBegin, aFS.getBegin());
-            String postContext = text.substring(aFS.getEnd(), contextEnd);
+        String text = aCas.getDocumentText();
+        int windowSize = 50;
+        int contextBegin = aFS.getBegin() < windowSize
+            ? 0 : aFS.getBegin() - windowSize;
+        int contextEnd = aFS.getEnd() + windowSize > text.length()
+            ? text.length() : aFS.getEnd() + windowSize;
+        String preContext = text.substring(contextBegin, aFS.getBegin());
+        String postContext = text.substring(aFS.getEnd(), contextEnd);
     
-            featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
-            featuresContainer.setOutputMarkupId(true);
-            featuresContainer.add(createTextFeaturesList(textFeatures));
-            featuresContainer.add(createFeaturesList(features));
-            featuresContainer.add(new Label(CID_PRE_CONTEXT, preContext));
-            featuresContainer.add(new Label(CID_TEXT, link.label));
-            featuresContainer.add(new Label(CID_POST_CONTEXT, postContext));
-            featuresContainer.add(openButton);
-            featuresContainer.add(openedButton);
+        featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
+        featuresContainer.setOutputMarkupId(true);
+        featuresContainer.add(createTextFeaturesList(textFeatures));
+        featuresContainer.add(createFeaturesList(features));
+        featuresContainer.add(new Label(CID_PRE_CONTEXT, preContext));
+        featuresContainer.add(new Label(CID_TEXT, aFS.getCoveredText()));
+        featuresContainer.add(new Label(CID_POST_CONTEXT, postContext));
+        featuresContainer.add(openButton);
+        featuresContainer.add(openedButton);
             
-            add(featuresContainer);
-        }
-        catch (IOException e) {
-            LOG.error("Unable to load CAS", e);
-        }
+        add(featuresContainer);
     }
     
     private List<FeatureState> listFeatures(FeatureStructure aFs,

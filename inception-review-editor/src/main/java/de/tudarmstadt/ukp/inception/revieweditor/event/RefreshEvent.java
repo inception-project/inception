@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.revieweditor;
+package de.tudarmstadt.ukp.inception.revieweditor.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 

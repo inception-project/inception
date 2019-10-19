@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.revieweditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
@@ -37,6 +36,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.inception.revieweditor.event.RefreshEvent;
 
 public class DocumentAnnotationPanel 
     extends Panel
@@ -80,20 +81,20 @@ public class DocumentAnnotationPanel
     private static final String CID_LABEL = "label";
     private static final String CID_VALUE = "value";
 
-    private final CasProvider casProvider;
     private final WebMarkupContainer featuresContainer;
     private final WebMarkupContainer linkFeaturesContainer;
     private final IModel<VID> model;
     private final AnnotatorState state;
+    private final CasProvider casProvider;
 
     public DocumentAnnotationPanel(String id, IModel<VID> aModel,
-        CasProvider aCasProvider, AnnotatorState aState, String aTitle)
+        CasProvider aCasprovider, AnnotatorState aState, String aTitle)
     {
         super(id, aModel);
 
-        casProvider = aCasProvider;
         model = aModel;
         state = aState;
+        casProvider = aCasprovider;
 
         // Allow AJAX updates.
         setOutputMarkupId(true);
@@ -135,18 +136,9 @@ public class DocumentAnnotationPanel
             return emptyList();
         }
         
-        CAS cas;
-        try {
-            cas = casProvider.get();
-        }
-        catch (IOException e) {
-            LOG.error("Unable to load CAS", e);
-            return emptyList();
-        }
-        
         FeatureStructure fs;
         try {
-            fs = selectFsByAddr(cas, vid.getId());
+            fs = selectFsByAddr(getCas(), vid.getId());
         }
         catch (Exception e) {
             LOG.error("Unable to locate annotation with ID {}", vid);
@@ -242,7 +234,7 @@ public class DocumentAnnotationPanel
             @Override protected void populateItem(ListItem<LinkWithRoleModel> item)
             {
                 SpanAnnotationPanel panel = new SpanAnnotationPanel(CID_SPAN,
-                    item.getModel(), casProvider, state);
+                    Model.of(new VID(item.getModelObject().targetAddr)), getCas(), state);
                 item.add(panel);
             }
         };
@@ -252,5 +244,16 @@ public class DocumentAnnotationPanel
     public void onRefreshEvent(RefreshEvent event)
     {
         event.getTarget().add(this);
+    }
+    
+    private CAS getCas()
+    {
+        try {
+            return casProvider.get();
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load CAS.", e);
+        }
+        return null;
     }
 }
