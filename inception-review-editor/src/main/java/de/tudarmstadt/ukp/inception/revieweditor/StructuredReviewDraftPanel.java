@@ -58,16 +58,16 @@ public class StructuredReviewDraftPanel
 
         // Allow AJAX updates.
         setOutputMarkupId(true);
-    
-        unlinkedAnnotationsContainer = new UnlinkedAnnotationPanel(
-            CID_UNLINKED_ANNOTATIONS_CONTAINER, model, aCasProvider);
-        unlinkedAnnotationsContainer.setOutputMarkupId(true);
-        add(unlinkedAnnotationsContainer);
 
         linkedAnnotationsContainer = new WebMarkupContainer(CID_LINKED_ANNOTATIONS_CONTAINER);
         linkedAnnotationsContainer.setOutputMarkupId(true);
         linkedAnnotationsContainer.add(createLinkedAnnotationList());
         add(linkedAnnotationsContainer);
+    
+        unlinkedAnnotationsContainer = new UnlinkedAnnotationPanel(
+            CID_UNLINKED_ANNOTATIONS_CONTAINER, model, aCasProvider);
+        unlinkedAnnotationsContainer.setOutputMarkupId(true);
+        linkedAnnotationsContainer.add(unlinkedAnnotationsContainer);
     }
 
     private ListView<AnnotationListItem> createLinkedAnnotationList()
