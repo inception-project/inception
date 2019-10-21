@@ -182,25 +182,23 @@ public class StringMatchingRecommender
             Collection<AnnotationFS> tokens = selectCovered(tokenType, sentence);
             for (AnnotationFS token : tokens) {
                 Trie<DictEntry>.Node node = aDict.getNode(text, token.getBegin());
-                if (node != null) {
+                if (node != null &&  tokens.stream().filter(t -> t.getEnd() == token.getBegin()+node.level).findAny().isPresent()) {
                     int begin = token.getBegin();
                     int end = begin + node.level;
-                    
                     // Need to check that the match actually ends at a token boundary!
-                    if (tokens.stream().filter(t -> t.getEnd() == end).findAny().isPresent()) {
-                        for (LabelStats lc : node.value.getBest(maxRecommendations)) {
-                            String label = lc.getLabel();
-                            // check instance equality to avoid collision with user labels
-                            if (label == UNKNOWN_LABEL) {
-                                label = null;
-                            }
-                            spans.add(new Span(begin, end, text.substring(begin, end), label,
-                                    lc.getRelFreq()));
+                    for (LabelStats lc : node.value.getBest(maxRecommendations)) {
+                        String label = lc.getLabel();
+                        // check instance equality to avoid collision with user labels
+                        if (label == UNKNOWN_LABEL) {
+                            label = null;
                         }
+                        spans.add(new Span(begin, end, text.substring(begin, end), label,
+                                lc.getRelFreq()));
+                    }
                     }
                 }
             }
-            
+
             data.add(new Sample(aDocNo, sentence.getBegin(), sentence.getEnd(),
                     sentence.getCoveredText(), tokens, spans));
         }
@@ -252,36 +250,39 @@ public class StringMatchingRecommender
 
         // Train
         Trie<DictEntry> dict = createTrie();
+        List<Span> spans = new ArrayList<Span>();
         for (Sample sample : trainingSet) {
-            for (Span span : sample.getSpans()) {
-                learn(dict, span.getText(), span.getLabel());
-            }
+            spans.addAll(sample.getSpans());
+            
+        }
+        for (Span span : spans) {
+            learn(dict, span.getText(), span.getLabel());
         }
 
         // Predict
         List<LabelPair> labelPairs = new ArrayList<>();
+        List<TokenSpan> tokens = new ArrayList<TokenSpan>();
         for (Sample sample : testSet) {
-
-            for (TokenSpan token : sample.getTokens()) {
-                Trie<DictEntry>.Node node = dict.getNode(sample.getText(),
-                        token.getBegin() - sample.getBegin());
-                int begin = token.getBegin();
-                int end = token.getEnd();
-
-                String predictedLabel = NO_LABEL;
-                if (node != null && sample.hasTokenEndingAt(token.getBegin() + node.level)) {
-                    List<LabelStats> labelStats = node.value.getBest(1);
-                    if (!labelStats.isEmpty()) {
-                        predictedLabel = labelStats.get(0).getLabel();
-                    }
+            tokens.addAll(sample.getTokens());
+        }
+        for (TokenSpan token : tokens) {
+            Trie<DictEntry>.Node node = dict.getNode(sample.getText(),
+                    token.getBegin() - sample.getBegin());
+            int begin = token.getBegin();
+            int end = token.getEnd();
+            String predictedLabel = NO_LABEL;
+            if (node != null && sample.hasTokenEndingAt(token.getBegin() + node.level)) {
+                List<LabelStats> labelStats = node.value.getBest(1);
+                if (!labelStats.isEmpty()) {
+                    predictedLabel = labelStats.get(0).getLabel();
                 }
-                Optional<Span> coveringSpan = sample.getCoveringSpan(begin, end);
-                String goldLabel = NO_LABEL;
-                if (coveringSpan.isPresent()) {
-                    goldLabel = coveringSpan.get().getLabel();
-                }
-                labelPairs.add(new LabelPair(goldLabel, predictedLabel));
             }
+            Optional<Span> coveringSpan = sample.getCoveringSpan(begin, end);
+            String goldLabel = NO_LABEL;
+            if (coveringSpan.isPresent()) {
+                goldLabel = coveringSpan.get().getLabel();
+            }
+            labelPairs.add(new LabelPair(goldLabel, predictedLabel));
         }
 
         return labelPairs.stream().collect(EvaluationResult

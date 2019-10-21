@@ -25,6 +25,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -86,12 +87,7 @@ public class OpenNlpDoccatRecommender
     public void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException
     {
-        List<DocumentSample> docSamples = extractSamples(aCasses);
-        
-        if (docSamples.size() < 2) {
-            LOG.info("Not enough training data: [{}] items", docSamples.size());
-            return;
-        }
+        List<DocumentSample> nameSamples = extractSamples(aCasses);
         
         // The beam size controls how many results are returned at most. But even if the user
         // requests only few results, we always use at least the default bean size recommended by
@@ -101,7 +97,7 @@ public class OpenNlpDoccatRecommender
         TrainingParameters params = traits.getParameters();
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         
-        DoccatModel model = train(docSamples, params);
+        DoccatModel model = train(nameSamples, params);
         
         aContext.put(KEY_MODEL, model);
     }
@@ -180,7 +176,7 @@ public class OpenNlpDoccatRecommender
         
         if (trainingSetSize < 2 || testSetSize < 2) {
             String info = String.format(
-                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s].",
+                    "Not enough training data: training set [%s] items, test set [%s] of total [%s].",
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
             
@@ -215,9 +211,11 @@ public class OpenNlpDoccatRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(
+            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
                     cas, sentenceType, tokenType);
-            for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
+            Collection<AnnotationFS> annotations=new ArrayList<>();//实例化的具体类型要看selectCovered(annotationType, sentence)的返回
+            
+            for (Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
                 String[] tokenTexts = tokens.stream()
@@ -226,18 +224,18 @@ public class OpenNlpDoccatRecommender
                 
                 Type annotationType = getType(cas, layerName);
                 Feature feature = annotationType.getFeatureByBaseName(featureName);
+                Collections.addAll(annotations, selectCovered(annotationType, sentence));
+            }
+            for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
+                if (samples.size() >= traits.getTrainingSetSizeLimit()) {
+                    break casses;
+                }
                 
-                for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
-                    if (samples.size() >= traits.getTrainingSetSizeLimit()) {
-                        break casses;
-                    }
-                    
-                    String label = annotation.getFeatureValueAsString(feature);
-                    DocumentSample nameSample = new DocumentSample(
-                            label != null ? label : NO_CATEGORY, tokenTexts);
-                    if (nameSample.getCategory() != null) {
-                        samples.add(nameSample);
-                    }
+                String label = annotation.getFeatureValueAsString(feature);
+                DocumentSample nameSample = new DocumentSample(
+                        label != null ? label : NO_CATEGORY, tokenTexts);
+                if (nameSample.getCategory() != null) {
+                    samples.add(nameSample);
                 }
             }
         }

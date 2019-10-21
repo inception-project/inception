@@ -140,11 +140,7 @@ public class RecommendationSpanRenderer
                                 .getConfidence() < ao.getConfidence()) {
 
                     Map<Long, AnnotationSuggestion> confidencePerClassifier;
-                    if (labelMap.get(label) == null) {
-                        confidencePerClassifier = new HashMap<>();
-                    } else {
-                        confidencePerClassifier = labelMap.get(label);
-                    }
+                    confidencePerClassifier = labelMap.get(label) == null ? new HashMap<>() : labelMap.get(label);
 
                     confidencePerClassifier.put(ao.getRecommenderId(), ao);
                     labelMap.put(label, confidencePerClassifier);
@@ -188,29 +184,26 @@ public class RecommendationSpanRenderer
                 
                 boolean first = true;
                 Map<Long, AnnotationSuggestion> confidencePerClassifier = labelMap.get(label);
-                for (Long recommenderId: confidencePerClassifier.keySet()) {
-                    AnnotationSuggestion ao = confidencePerClassifier.get(recommenderId);
-
-                    // Only necessary for creating the first
-                    if (first) {
-                        AnnotationFeature feature = aAnnotationService
+                // Only necessary for creating the first
+                AnnotationSuggestion ao=confidencePerClassifier.get(confidencePerClassifier.keySet().get(0));
+                AnnotationFeature feature = aAnnotationService
                             .getFeature(ao.getFeature(), layer);
-                        // Retrieve the UI display label for the given feature value
-                        FeatureSupport featureSupport = aFsRegistry.getFeatureSupport(feature);
-                        String annotation = featureSupport.renderFeatureValue(feature,
-                                ao.getLabel());
-                        
-                        Map<String, String> featureAnnotation = new HashMap<>();
-                        featureAnnotation.put(ao.getFeature(), annotation);
+                 // Retrieve the UI display label for the given feature value
+                FeatureSupport featureSupport = aFsRegistry.getFeatureSupport(feature);
+                String annotation = featureSupport.renderFeatureValue(feature,
+                        ao.getLabel());
+                
+                Map<String, String> featureAnnotation = new HashMap<>();
+                featureAnnotation.put(ao.getFeature(), annotation);
 
-                        VSpan v = new VSpan(layer, vid, bratTypeName,
-                                new VRange(ao.getBegin() - aWindowBeginOffset,
-                                        ao.getEnd() - aWindowBeginOffset),
-                                featureAnnotation, Collections.emptyMap(), color);
-                        v.setLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
-                        vdoc.add(v);
-                        first = false;
-                    }
+                VSpan v = new VSpan(layer, vid, bratTypeName,
+                        new VRange(ao.getBegin() - aWindowBeginOffset,
+                                ao.getEnd() - aWindowBeginOffset),
+                        featureAnnotation, Collections.emptyMap(), color);
+                v.setLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
+                vdoc.add(v);
+                for (Long recommenderId: confidencePerClassifier.keySet()) {
+                    ao = confidencePerClassifier.get(recommenderId);
                     vdoc.add(new VComment(vid, VCommentType.INFO, ao.getRecommenderName()));
                     if (ao.getConfidence() != -1) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,

@@ -138,11 +138,10 @@ public abstract class Task
     @Override
     public boolean equals(Object obj)
     {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
+        switch (obj){
+            case this : return true;
+            case null : return false;
+            default : break;
         }
         if (getClass() != obj.getClass()) {
             return false;
