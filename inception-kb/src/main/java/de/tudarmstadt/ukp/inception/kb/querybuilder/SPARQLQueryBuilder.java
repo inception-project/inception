@@ -266,22 +266,14 @@ public class SPARQLQueryBuilder
                 classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
                 classPatterns.add(VAR_SUBJECT
                         .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), aContext));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
-                }
-                
+                SelectValue(aKB, aContext, classPatterns);
+
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case CLASS: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
                 classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
-                }
+                SelectValue(aKB, aContext, classPatterns);
 
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
@@ -313,12 +305,8 @@ public class SPARQLQueryBuilder
                         aContext.has(Path.of(oneOrMore(subClassProperty)), VAR_SUBJECT));
                 classPatterns.add(aContext
                         .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), VAR_SUBJECT));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(aContext.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            VAR_SUBJECT));
-                }
-                
+                selectValue(aKB, aContext, classPatterns);
+
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
@@ -343,12 +331,8 @@ public class SPARQLQueryBuilder
                 classPatterns.add(
                         VAR_SUBJECT.has(() -> subClassProperty.getQueryString(), aContext));
                 classPatterns.add(VAR_SUBJECT.has(typeOfProperty, aContext));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
-                }
-                
+                SelectValue(aKB, aContext, classPatterns);
+
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case INSTANCE: {
@@ -359,12 +343,8 @@ public class SPARQLQueryBuilder
                 // using OWL classes
                 List<GraphPattern> classPatterns = new ArrayList<>();
                 classPatterns.add(VAR_SUBJECT.has(subClassProperty, aContext));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
-                }
-                
+                SelectValue(aKB, aContext, classPatterns);
+
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
@@ -388,12 +368,8 @@ public class SPARQLQueryBuilder
                 List<GraphPattern> classPatterns = new ArrayList<>();
                 classPatterns.add(aContext.has(subClassProperty, VAR_SUBJECT));
                 classPatterns.add(aContext.has(typeOfProperty, VAR_SUBJECT));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(aContext.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            VAR_SUBJECT));
-                }
-                
+                selectValue(aKB, aContext, classPatterns);
+
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
@@ -450,7 +426,23 @@ public class SPARQLQueryBuilder
             }            
         }
     }
-    
+
+    private static void selectValue(KnowledgeBase aKB, Iri aContext, List<GraphPattern> classPatterns) {
+        if (OWL.CLASS.equals(aKB.getClassIri())) {
+            classPatterns.add(aContext.has(
+                Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
+                VAR_SUBJECT));
+        }
+    }
+
+    private static void SelectValue(KnowledgeBase aKB, Iri aContext, List<GraphPattern> classPatterns) {
+        if (OWL.CLASS.equals(aKB.getClassIri())) {
+            classPatterns.add(VAR_SUBJECT.has(
+                Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
+                aContext));
+        }
+    }
+
     /**
      * Retrieve any item from the KB. There is no check if the item looks like a class, instance or
      * property. The IRI and property mapping used in the patters is obtained from the given KB

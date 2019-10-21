@@ -127,27 +127,35 @@ public class SPARQLQueryBuilderGenericTest
 
         switch (kb.getType()) {
         case LOCAL: {
-            LuceneSail lucenesail = new LuceneSail();
-            lucenesail.setParameter(LuceneSail.LUCENE_RAMDIR_KEY, "true");
-            lucenesail.setBaseSail(new MemoryStore());
-            repo = new SailRepository(lucenesail);
-            repo.init();
-            importData(repo, profile.getAccess().getAccessUrl());
+            localRepo();
             break;
         }
         case REMOTE: {
-            Assume.assumeTrue(
-                    "Remote repository at [" + profile.getAccess().getAccessUrl()
-                            + "] is not reachable",
-                    isReachable(profile.getAccess().getAccessUrl()));
-            
-            repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
-            repo.init();
+            RemoteRepo();
             break;
         }
         default:
             throw new IllegalStateException("Unknown repo type: " + kb.getType());
         }
+    }
+
+    private void RemoteRepo() {
+        Assume.assumeTrue(
+                "Remote repository at [" + profile.getAccess().getAccessUrl()
+                        + "] is not reachable",
+                isReachable(profile.getAccess().getAccessUrl()));
+
+        repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
+        repo.init();
+    }
+
+    private void localRepo() throws IOException {
+        LuceneSail lucenesail = new LuceneSail();
+        lucenesail.setParameter(LuceneSail.LUCENE_RAMDIR_KEY, "true");
+        lucenesail.setBaseSail(new MemoryStore());
+        repo = new SailRepository(lucenesail);
+        repo.init();
+        importData(repo, profile.getAccess().getAccessUrl());
     }
 
     @Test

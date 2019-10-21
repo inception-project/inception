@@ -164,13 +164,7 @@ public class KnowledgeBaseServiceRemoteTest
         {
             KnowledgeBaseProfile profile = PROFILES.get("wine_ontology");
             KnowledgeBase kb_wine = new KnowledgeBase();
-            kb_wine.setName("Wine ontology (OWL)");
-            kb_wine.setType(profile.getType());
-            kb_wine.setReification(profile.getReification());
-            kb_wine.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-            kb_wine.applyMapping(profile.getMapping());
-            kb_wine.setDefaultLanguage(profile.getDefaultLanguage());
-            kb_wine.setMaxResults(maxResults);
+            wine_ontology_data(maxResults, profile, kb_wine);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Grape");
             parentChildConcepts = new HashMap<String, String>();
@@ -215,14 +209,7 @@ public class KnowledgeBaseServiceRemoteTest
         {
             KnowledgeBaseProfile profile = PROFILES.get("wikidata");
             KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
-            kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
-            kb_wikidata_direct.setType(profile.getType());
-            kb_wikidata_direct.setReification(profile.getReification());
-            kb_wikidata_direct.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-            kb_wikidata_direct.applyMapping(profile.getMapping());
-            kb_wikidata_direct.applyRootConcepts(profile);
-            kb_wikidata_direct.setDefaultLanguage(profile.getDefaultLanguage());
-            kb_wikidata_direct.setMaxResults(maxResults);
+            wikidata_data(maxResults, profile, kb_wikidata_direct);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.wikidata.org/entity/Q35120");
             parentChildConcepts = new HashMap<String, String>();
@@ -249,15 +236,7 @@ public class KnowledgeBaseServiceRemoteTest
         {
             KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
-            kb_dbpedia.setName(profile.getName());
-            kb_dbpedia.setType(profile.getType());
-            kb_dbpedia.setReification(profile.getReification());
-            kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-            kb_dbpedia.applyMapping(profile.getMapping());
-            kb_dbpedia.applyRootConcepts(profile);
-            kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
-            kb_dbpedia.setMaxResults(maxResults);
-            kb_dbpedia.setDefaultDatasetIri(profile.getDefaultDataset());
+            db_pedia_data(maxResults, profile, kb_dbpedia);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
             parentChildConcepts = new HashMap<String, String>();
@@ -270,14 +249,7 @@ public class KnowledgeBaseServiceRemoteTest
         {
             KnowledgeBaseProfile profile = PROFILES.get("yago");
             KnowledgeBase kb_yago = new KnowledgeBase();
-            kb_yago.setName(profile.getName());
-            kb_yago.setType(profile.getType());
-            kb_yago.setReification(profile.getReification());
-            kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-            kb_yago.applyMapping(profile.getMapping());
-            kb_yago.applyRootConcepts(profile);
-            kb_yago.setDefaultLanguage(profile.getDefaultLanguage());
-            kb_yago.setMaxResults(maxResults);
+            yago_data(maxResults, profile, kb_yago);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
             parentChildConcepts = new HashMap<String, String>();
@@ -291,14 +263,7 @@ public class KnowledgeBaseServiceRemoteTest
         {
             KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
             KnowledgeBase kb_zbw_stw_economics = new KnowledgeBase();
-            kb_zbw_stw_economics.setName(profile.getName());
-            kb_zbw_stw_economics.setType(profile.getType());
-            kb_zbw_stw_economics.setReification(profile.getReification());
-            kb_zbw_stw_economics.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-            kb_zbw_stw_economics.applyMapping(profile.getMapping());
-            kb_zbw_stw_economics.applyRootConcepts(profile);
-            kb_zbw_stw_economics.setDefaultLanguage(profile.getDefaultLanguage());
-            kb_zbw_stw_economics.setMaxResults(maxResults);
+            zbw_stw_economics_data(maxResults, profile, kb_zbw_stw_economics);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://zbw.eu/stw/thsys/a");
             parentChildConcepts = new HashMap<String, String>();
@@ -326,6 +291,61 @@ public class KnowledgeBaseServiceRemoteTest
             dataList.add(new Object[] { kb });
         }
         return dataList;
+    }
+
+    private static void zbw_stw_economics_data(int maxResults, KnowledgeBaseProfile profile, KnowledgeBase kb_zbw_stw_economics) {
+        kb_zbw_stw_economics.setName(profile.getName());
+        kb_zbw_stw_economics.setType(profile.getType());
+        kb_zbw_stw_economics.setReification(profile.getReification());
+        kb_zbw_stw_economics.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+        kb_zbw_stw_economics.applyMapping(profile.getMapping());
+        kb_zbw_stw_economics.applyRootConcepts(profile);
+        kb_zbw_stw_economics.setDefaultLanguage(profile.getDefaultLanguage());
+        kb_zbw_stw_economics.setMaxResults(maxResults);
+    }
+
+    private static void yago_data(int maxResults, KnowledgeBaseProfile profile, KnowledgeBase kb_yago) {
+        kb_yago.setName(profile.getName());
+        kb_yago.setType(profile.getType());
+        kb_yago.setReification(profile.getReification());
+        kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+        kb_yago.applyMapping(profile.getMapping());
+        kb_yago.applyRootConcepts(profile);
+        kb_yago.setDefaultLanguage(profile.getDefaultLanguage());
+        kb_yago.setMaxResults(maxResults);
+    }
+
+    private static void db_pedia_data(int maxResults, KnowledgeBaseProfile profile, KnowledgeBase kb_dbpedia) {
+        kb_dbpedia.setName(profile.getName());
+        kb_dbpedia.setType(profile.getType());
+        kb_dbpedia.setReification(profile.getReification());
+        kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+        kb_dbpedia.applyMapping(profile.getMapping());
+        kb_dbpedia.applyRootConcepts(profile);
+        kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
+        kb_dbpedia.setMaxResults(maxResults);
+        kb_dbpedia.setDefaultDatasetIri(profile.getDefaultDataset());
+    }
+
+    private static void wikidata_data(int maxResults, KnowledgeBaseProfile profile, KnowledgeBase kb_wikidata_direct) {
+        kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
+        kb_wikidata_direct.setType(profile.getType());
+        kb_wikidata_direct.setReification(profile.getReification());
+        kb_wikidata_direct.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+        kb_wikidata_direct.applyMapping(profile.getMapping());
+        kb_wikidata_direct.applyRootConcepts(profile);
+        kb_wikidata_direct.setDefaultLanguage(profile.getDefaultLanguage());
+        kb_wikidata_direct.setMaxResults(maxResults);
+    }
+
+    private static void wine_ontology_data(int maxResults, KnowledgeBaseProfile profile, KnowledgeBase kb_wine) {
+        kb_wine.setName("Wine ontology (OWL)");
+        kb_wine.setType(profile.getType());
+        kb_wine.setReification(profile.getReification());
+        kb_wine.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+        kb_wine.applyMapping(profile.getMapping());
+        kb_wine.setDefaultLanguage(profile.getDefaultLanguage());
+        kb_wine.setMaxResults(maxResults);
     }
 
     @Test
