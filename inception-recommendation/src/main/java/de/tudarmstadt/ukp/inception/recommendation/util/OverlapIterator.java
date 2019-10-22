@@ -33,8 +33,8 @@ public class OverlapIterator
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     /** The A/B lists */
-    private final List<Offset> _la;
-    private final List<Offset> _lb;
+    private final List<Offset> la;
+    private final List<Offset> lb;
 
     /** A values we do not want to see again (after a rewind). */
     private final boolean[] ignorea;
@@ -60,22 +60,22 @@ public class OverlapIterator
 
     private int stepCount;
 
-    public OverlapIterator(final List<Offset> la, final List<Offset> lb)
+    public OverlapIterator(final List<Offset> aList, final List<Offset> bList)
     {
-        done = !((la.size() > 0) && (lb.size() > 0));
+        done = !((aList.size() > 0) && (bList.size() > 0));
 
         // Intialize A
-        _la = la;
-        maxa = _la.size() - 1; // Up until here and no further
-        ia = _la.listIterator(); // Where we are now
+        la = aList;
+        maxa = la.size() - 1; // Up until here and no further
+        ia = la.listIterator(); // Where we are now
         na = ia.nextIndex(); // Index of _cura within _la
         cura = ia.next(); // The current object.
-        ignorea = new boolean[_la.size()];
+        ignorea = new boolean[la.size()];
 
         // Initialize B
-        _lb = lb;
-        maxb = _lb.size() - 1;
-        ib = _lb.listIterator();
+        lb = bList;
+        maxb = lb.size() - 1;
+        ib = lb.listIterator();
         nb = ib.nextIndex();
         curb = ib.next();
 
