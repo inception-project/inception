@@ -673,8 +673,8 @@ public class BratAnnotationEditor
      */
     private String bratRenderLaterCommand()
     {
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', " + "['"
-                + getCollection() + "', '1234', {}, true]);";
+        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', " + "["
+                + toJson(getCollection()) + ", '1234', {}, true]);";
     }
 
     /**

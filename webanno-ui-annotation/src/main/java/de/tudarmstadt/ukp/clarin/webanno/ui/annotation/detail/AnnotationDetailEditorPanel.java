@@ -1302,7 +1302,7 @@ public abstract class AnnotationDetailEditorPanel
             annotationFeatureForm.updateRememberLayer();
 
             if (aTarget != null) {
-                aTarget.add(annotationFeatureForm);
+                aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
             }
         }
         catch (Exception e) {
@@ -1427,7 +1427,7 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("clearFeatureEditorModels()");
         getModelObject().getFeatureStates().clear();
         if (aTarget != null) {
-            aTarget.add(annotationFeatureForm);
+            aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
         }
     }
 
