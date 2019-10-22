@@ -27,7 +27,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+
 import static java.util.Arrays.asList;
+
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
@@ -59,6 +61,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -95,6 +98,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
@@ -649,6 +653,9 @@ public abstract class AnnotationDetailEditorPanel
         internalCommitAnnotation(aTarget, aCas);
 
         internalCompleteAnnotation(aTarget, aCas);
+    
+        state.clearArmedSlot();    
+        send(getPage(), Broadcast.BREADTH, new RenderSlotsEvent(aTarget));
     }
     
     private Optional<AnnotationLayer> getRelationLayerFor(AnnotationLayer aSpanLayer)
@@ -1295,7 +1302,7 @@ public abstract class AnnotationDetailEditorPanel
             annotationFeatureForm.updateRememberLayer();
 
             if (aTarget != null) {
-                aTarget.add(annotationFeatureForm);
+                aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
             }
         }
         catch (Exception e) {
@@ -1420,7 +1427,7 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("clearFeatureEditorModels()");
         getModelObject().getFeatureStates().clear();
         if (aTarget != null) {
-            aTarget.add(annotationFeatureForm);
+            aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
         }
     }
 

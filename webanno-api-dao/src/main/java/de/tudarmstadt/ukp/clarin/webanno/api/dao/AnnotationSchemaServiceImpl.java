@@ -859,9 +859,21 @@ public class AnnotationSchemaServiceImpl
         switch (aMode) {
         case NO_CAS_UPGRADE:
             return;
-        case AUTO_CAS_UPGRADE:
-            upgradeCasIfRequired(aCas, aSourceDocument, aUser);
+        case AUTO_CAS_UPGRADE: {
+            boolean upgraded = upgradeCasIfRequired(aCas, aSourceDocument);
+            if (!upgraded) {
+                try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                        String.valueOf(aSourceDocument.getProject().getId()))) {
+                    log.debug(
+                            "CAS of user [{}] for document [{}]({}) in project [{}]({}) is already "
+                                    + "compatible with project type system - skipping upgrade",
+                            aUser, aSourceDocument.getName(), aSourceDocument.getId(),
+                            aSourceDocument.getProject().getName(),
+                            aSourceDocument.getProject().getId());
+                }
+            }
             return;
+        }
         case FORCE_CAS_UPGRADE:
             upgradeCas(aCas, aSourceDocument, aUser);
             return;
@@ -894,33 +906,36 @@ public class AnnotationSchemaServiceImpl
     }
     
     @Override
-    public void upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
+    public boolean upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException
     {
-        upgradeCasIfRequired(aCas, aAnnotationDocument.getDocument(),
-                aAnnotationDocument.getUser());
+        return upgradeCasIfRequired(asList(aCas), aAnnotationDocument.getProject());
     }
     
     @Override
-    public void upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument, String aUser)
+    public boolean upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument)
         throws UIMAException, IOException
     {
-        TypeSystemDescription ts = getFullProjectTypeSystem(aSourceDocument.getProject());
-        
-        // Check if the current CAS already contains the required type system
-        if (!isUpgradeRequired(aCas, ts)) {
-            log.debug(
-                    "CAS of user [{}] for document [{}]({}) in project [{}]({}) is already "
-                            + "compatible with project type system - skipping upgrade",
-                    aUser, aSourceDocument.getName(), aSourceDocument.getId(),
-                    aSourceDocument.getProject().getName(), aSourceDocument.getProject().getId());
-            return;
-        }
-
-        upgradeCas(aCas, ts);
+        return upgradeCasIfRequired(asList(aCas), aSourceDocument.getProject());
     }
     
-    
+    @Override
+    public boolean upgradeCasIfRequired(Iterable<CAS> aCasIter, Project aProject)
+        throws UIMAException, IOException
+    {
+        TypeSystemDescription ts = getFullProjectTypeSystem(aProject);
+        
+        // Check if the current CAS already contains the required type system
+        boolean upgradePerformed = false;
+        for (CAS cas : aCasIter) {
+            if (cas != null && isUpgradeRequired(cas, ts)) {
+                upgradeCas(cas, ts);
+                upgradePerformed = true;
+            }
+        }
+        
+        return upgradePerformed;
+    }
     
     @Override
     public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
