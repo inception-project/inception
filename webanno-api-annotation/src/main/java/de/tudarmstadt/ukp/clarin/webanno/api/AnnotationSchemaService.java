@@ -462,21 +462,37 @@ public interface AnnotationSchemaService
     void upgradeCas(CAS aCas, Project aProject) throws UIMAException, IOException;
     
     /**
-     * Checks if the given CAS is compatible with the current type system of the project to which
-     * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
-     * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.
+     * Checks if the given CAS is compatible with the current type system of the project to which it
+     * belongs and upgrades it if necessary. This should be preferred over the mandatory CAS upgrade
+     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. 
+     * <br>
+     * If multiple CASes need to be upgraded, use
+     * {@link #upgradeCasIfRequired(Iterable, Project)}.
      */
-    void upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
+    boolean upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
             throws UIMAException, IOException;
 
     /**
-     * The username and source document information is only used for logging.
-     * 
-     * @see #upgradeCasIfRequired(CAS, SourceDocument, String)
+     * Checks if the given CAS is compatible with the current type system of the project to which
+     * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
+     * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.
+     * <br>
+     * If multiple CASes need to be upgraded, use
+     * {@link #upgradeCasIfRequired(Iterable, Project)}.
      */
-    void upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument, String aUser)
+    boolean upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument)
             throws UIMAException, IOException;
 
+    /**
+     * Checks if the given CAS is compatible with the current type system of the project to which
+     * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
+     * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.
+     * <br>
+     * This method can deal with null values in the iterable. It will simply skip them.
+     */
+    boolean upgradeCasIfRequired(Iterable<CAS> aCas, Project aProject)
+        throws UIMAException, IOException;
+    
     TypeAdapter getAdapter(AnnotationLayer aLayer);
 
     /**

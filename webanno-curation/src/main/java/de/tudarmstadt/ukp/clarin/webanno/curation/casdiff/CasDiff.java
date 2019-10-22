@@ -340,7 +340,8 @@ public class CasDiff
             List<CAS> ref = i.next();
             while (i.hasNext()) {
                 List<CAS> cur = i.next();
-                assert ref.size() == cur.size();
+                assert ref.size() == cur.size() : "CAS list sizes differ: " + ref.size()
+                        + " vs " + cur.size();
                 for (int n = 0; n < ref.size(); n++) {
                     CAS refCas = ref.get(n);
                     CAS curCas = cur.get(n);
