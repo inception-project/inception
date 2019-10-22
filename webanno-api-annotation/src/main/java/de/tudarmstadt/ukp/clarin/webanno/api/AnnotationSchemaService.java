@@ -464,9 +464,10 @@ public interface AnnotationSchemaService
     /**
      * Checks if the given CAS is compatible with the current type system of the project to which it
      * belongs and upgrades it if necessary. This should be preferred over the mandatory CAS upgrade
-     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. <br>
+     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. 
+     * <br>
      * If multiple CASes need to be upgraded, use
-     * {@link #upgradeCasIfRequired(Iterable, SourceDocument, String)}.
+     * {@link #upgradeCasIfRequired(Iterable, Project)}.
      */
     boolean upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
             throws UIMAException, IOException;
@@ -475,8 +476,9 @@ public interface AnnotationSchemaService
      * Checks if the given CAS is compatible with the current type system of the project to which
      * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
      * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.
-     * 
-     * @see #upgradeCasIfRequired(CAS, SourceDocument, String)
+     * <br>
+     * If multiple CASes need to be upgraded, use
+     * {@link #upgradeCasIfRequired(Iterable, Project)}.
      */
     boolean upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument)
             throws UIMAException, IOException;
