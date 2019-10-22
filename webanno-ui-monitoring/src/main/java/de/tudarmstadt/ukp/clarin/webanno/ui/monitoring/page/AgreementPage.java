@@ -416,16 +416,28 @@ public class AgreementPage
         for (User user : users) {
             List<CAS> cases = new ArrayList<>();
 
+            // Bulk-fetch all source documents for which there is already an annoation document for
+            // the user which is faster then checking for their existence individually
+            List<SourceDocument> docsForUser = documentService
+                    .listAnnotationDocuments(project, user).stream()
+                    .map(AnnotationDocument::getDocument)
+                    .distinct()
+                    .collect(Collectors.toList());
+            
             nextDocument: for (SourceDocument document : sourceDocuments) {
                 CAS cas = null;
 
                 try {
-                    if (documentService.existsAnnotationDocument(document, user)) {
+                    if (docsForUser.contains(document)) {
                         AnnotationDocument annotationDocument = documentService
                                 .getAnnotationDocument(document, user);
                         
                         if (traits.isLimitToFinishedDocuments()
                                 && !annotationDocument.getState().equals(FINISHED)) {
+                            // Add a skip marker for the current CAS to the CAS list - this is 
+                            // necessary because we expect the CAS lists for all users to have the
+                            // same size
+                            cases.add(null);
                             continue nextDocument;
                         }
                         
@@ -436,10 +448,6 @@ public class AgreementPage
                         // annotation document, then we use the initial CAS for that user.
                         cas = documentService.createOrReadInitialCas(document);
                     }
-                    
-                    annotationService.upgradeCasIfRequired(cas, document, user.getUsername());
-                    // REC: I think there is no need to write the CASes here. We would not
-                    // want to interfere with currently active annotator users
                 }
                 catch (Exception e) {
                     LOG.error("Unable to load data", e);
@@ -459,11 +467,25 @@ public class AgreementPage
                 // source document yet.
                 cases.add(cas);
             }
-
+            
+            // Bulk-upgrade CASes - this is faster than upgrading them individually since the
+            // bulk upgrade only loads the project type system once.
+            try {
+                annotationService.upgradeCasIfRequired(cases, project);
+                // REC: I think there is no need to write the CASes here. We would not
+                // want to interfere with currently active annotator users
+            }
+            catch (Exception e) {
+                LOG.error("Unable to upgrade CAS", e);
+                error("Unable to upgrade CAS: " + ExceptionUtils.getRootCauseMessage(e));
+                continue;
+            }
+                
             cachedCASes.put(user.getUsername(), cases);
-            cachedProject = project;
-            cachedLimitToFinishedDocuments = traits.isLimitToFinishedDocuments();
         }
+
+        cachedProject = project;
+        cachedLimitToFinishedDocuments = traits.isLimitToFinishedDocuments();
 
         return cachedCASes;
     }
