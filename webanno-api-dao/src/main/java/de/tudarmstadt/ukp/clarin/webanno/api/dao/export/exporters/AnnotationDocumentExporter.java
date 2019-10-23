@@ -64,7 +64,7 @@ public class AnnotationDocumentExporter
     private static final String ANNOTATION_CAS_FOLDER = "/" + ANNOTATION_AS_SERIALISED_CAS + "/";
     
     private static final String CORRECTION_USER = "CORRECTION_USER";
-    private static final String CURATION_AS_SERIALISED_CAS = "/annotation_ser/";
+    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
     private static final String CURATION_FOLDER = "/curation/";
     
     private final Logger log = LoggerFactory.getLogger(getClass());
