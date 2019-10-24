@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static java.util.Arrays.asList;
 
 import java.io.File;
@@ -36,14 +38,12 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -54,8 +54,9 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 public class CuratedDocumentsExporter
     implements ProjectExporter
 {
-    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
     private static final String CURATION_FOLDER = "/curation/";
+    private static final String CURATION_AS_SERIALISED_CAS = "curation_ser";
+    private static final String CURATION_CAS_FOLDER = "/" + CURATION_AS_SERIALISED_CAS + "/";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -102,8 +103,7 @@ public class CuratedDocumentsExporter
         int initProgress = aRequest.progress - 1;
         int i = 1;
         for (SourceDocument sourceDocument : documents) {
-            File curationCasDir = new File(aStage,
-                    CURATION_AS_SERIALISED_CAS + sourceDocument.getName());
+            File curationCasDir = new File(aStage, CURATION_CAS_FOLDER + sourceDocument.getName());
             FileUtils.forceMkdir(curationCasDir);
 
             File curationDir = new File(aStage, CURATION_FOLDER + sourceDocument.getName());
@@ -116,8 +116,7 @@ public class CuratedDocumentsExporter
                     SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState())) ||
                 SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())
             ) {
-                File curationCasFile = documentService.getCasFile(sourceDocument,
-                        WebAnnoConst.CURATION_USER);
+                File curationCasFile = documentService.getCasFile(sourceDocument, CURATION_USER);
                 if (curationCasFile.exists()) {
                     // Copy CAS - this is used when importing the project again
                     FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
@@ -125,8 +124,7 @@ public class CuratedDocumentsExporter
                     // Copy secondary export format for convenience - not used during import
                     try {
                         File curationFile = importExportService.exportAnnotationDocument(
-                                sourceDocument, WebAnnoConst.CURATION_USER, format,
-                                WebAnnoConst.CURATION_USER, Mode.CURATION);
+                                sourceDocument, CURATION_USER, format, CURATION_USER, CURATION);
                         FileUtils.copyFileToDirectory(curationFile, curationDir);
                         FileUtils.forceDelete(curationFile);
                     }
@@ -167,8 +165,8 @@ public class CuratedDocumentsExporter
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ProjectExporter.normalizeEntryName(entry);
             
-            if (entryName.startsWith(CURATION_AS_SERIALISED_CAS)) {
-                String fileName = entryName.replace(CURATION_AS_SERIALISED_CAS, "");
+            if (entryName.startsWith(CURATION_AS_SERIALISED_CAS + "/")) {
+                String fileName = entryName.replace(CURATION_AS_SERIALISED_CAS + "/", "");
                 // the user annotated the document is file name minus extension
                 // (anno1.ser)
                 String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
