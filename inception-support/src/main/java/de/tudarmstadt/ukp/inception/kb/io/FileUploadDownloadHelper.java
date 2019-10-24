@@ -41,7 +41,7 @@ public class FileUploadDownloadHelper
 
     private final IFileCleaner fileTracker;
 
-    private final String INCEPTION_TMP_FILE_PREFIX = "inception_file";
+    private static final String INCEPTION_TMP_FILE_PREFIX = "inception_file";
 
     public FileUploadDownloadHelper(Application application)
     {
