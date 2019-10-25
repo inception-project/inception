@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationD
 import static java.util.Objects.isNull;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
+import static org.apache.wicket.util.time.Duration.milliseconds;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -71,7 +72,6 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -888,7 +888,7 @@ public class AnnotationFeatureForm
                     protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
                     {
                         super.updateAjaxAttributes(aAttributes);
-                        addDelay(aFrag, aAttributes, 100);
+                        addDelay(aFrag, aAttributes, 250);
                     }
 
                     @Override
@@ -906,8 +906,7 @@ public class AnnotationFeatureForm
             // there is a race condition between the saving the value of the feature
             // editor and the loading of the new annotation. Delay the feature editor
             // save to give preference to loading the new annotation.
-            aAttributes.setThrottlingSettings(new ThrottlingSettings(getMarkupId(),
-                Duration.milliseconds(aDelay), true));
+            aAttributes.setThrottlingSettings(new ThrottlingSettings(milliseconds(aDelay), true));
             aAttributes.getAjaxCallListeners().add(new AjaxCallListener()
             {
                 private static final long serialVersionUID = 1L;
