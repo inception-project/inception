@@ -52,9 +52,13 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
+import org.apache.wicket.markup.html.form.CheckGroup;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
@@ -849,8 +853,15 @@ public class AnnotationFeatureForm
 
         private void addAnnotateActionBehavior(final FeatureEditor aFrag)
         {
-            if (aFrag.getFocusComponent() instanceof RadioGroup) {
-                aFrag.getFocusComponent().add(new AjaxFormChoiceComponentUpdatingBehavior()
+            FormComponent focusComponent = aFrag.getFocusComponent();
+            
+            if (
+                    (focusComponent instanceof RadioChoice) ||
+                    (focusComponent instanceof CheckBoxMultipleChoice) || 
+                    (focusComponent instanceof RadioGroup) ||
+                    (focusComponent instanceof CheckGroup)
+            ) {
+                focusComponent.add(new AjaxFormChoiceComponentUpdatingBehavior()
                 {
                     private static final long serialVersionUID = -5058365578109385064L;
 
@@ -869,7 +880,7 @@ public class AnnotationFeatureForm
                 });
             }
             else {
-                aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior("change")
+                focusComponent.add(new AjaxFormComponentUpdatingBehavior("change")
                 {
                     private static final long serialVersionUID = 5179816588460867471L;
 
