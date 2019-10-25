@@ -65,6 +65,9 @@ public class GetCollectionInformationResponse
     @JsonProperty("entity_types")
     private Set<EntityType> entityTypes = new HashSet<>();
 
+    @JsonProperty("visual_options")
+    private VisualOptions visualOptions = new VisualOptions();
+    
     public GetCollectionInformationResponse()
     {
         super(COMMAND);
@@ -175,6 +178,16 @@ public class GetCollectionInformationResponse
     public void setEntityTypes(Set<EntityType> aEntityTypes)
     {
         entityTypes = aEntityTypes;
+    }
+
+    public VisualOptions getVisualOptions()
+    {
+        return visualOptions;
+    }
+
+    public void setVisualOptions(VisualOptions aVisualOptions)
+    {
+        visualOptions = aVisualOptions;
     }
 
     public static boolean is(String aCommand)
