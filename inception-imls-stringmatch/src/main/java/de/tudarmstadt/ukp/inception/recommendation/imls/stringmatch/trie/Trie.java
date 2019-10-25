@@ -210,7 +210,7 @@ public class Trie<V>
      *            the length to match.
      * @return the node.
      */
-    private Node _getNode(final CharSequence key, final int offset, final int length)
+    private Node get_node(final CharSequence key, final int offset, final int length)
     {
         // offset or length outside range
         if ((offset > key.length() - 1) || (offset + length > key.length())) {
@@ -268,7 +268,7 @@ public class Trie<V>
             return null;
         }
 
-        final Node match = _getNode(key, offset, length);
+        final Node match = get_node(key, offset, length);
         return ((match != null) && match.set) ? match : null;
     }
 
@@ -311,7 +311,7 @@ public class Trie<V>
             return false;
         }
 
-        final Node match = _getNode(prefix, offset, length);
+        final Node match = get_node(prefix, offset, length);
         return match != null;
     }
 

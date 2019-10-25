@@ -229,7 +229,7 @@ public class OverlapIterator
         if (steppedBack) {
             // Make sure the next peek really peeks ahead.
             na = ia.nextIndex();
-            cura =ia.next();
+            cura = ia.next();
         }
 
         // Skip over the A's we do not want to see again.
