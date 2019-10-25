@@ -413,6 +413,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     
     public void toggleVisibility()
     {
+        state.clearArmedSlot();
         setVisible(!isVisible());
     }
     
