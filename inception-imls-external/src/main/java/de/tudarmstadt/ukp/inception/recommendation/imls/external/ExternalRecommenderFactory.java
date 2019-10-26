@@ -17,13 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -64,9 +66,9 @@ public class ExternalRecommenderFactory
             return false;
         }
 
-        return asList(AnchoringMode.SINGLE_TOKEN, AnchoringMode.TOKENS, AnchoringMode.SENTENCES)
+        return asList(SINGLE_TOKEN, TOKENS, SENTENCES)
                 .contains(aLayer.getAnchoringMode()) &&
-                WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
+                SPAN_TYPE.equals(aLayer.getType());
     }
 
     @Override
