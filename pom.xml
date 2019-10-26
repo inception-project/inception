@@ -62,12 +62,12 @@
 
     <mockito.version>2.28.2</mockito.version>
     <assertj.version>3.13.2</assertj.version>
-    <spring.version>5.1.10.RELEASE</spring.version>
-    <spring.boot.version>2.1.9.RELEASE</spring.boot.version>
-    <spring.security.version>5.1.6.RELEASE</spring.security.version>
+    <spring.version>5.2.0.RELEASE</spring.version>
+    <spring.boot.version>2.2.0.RELEASE</spring.boot.version>
+    <spring.security.version>5.2.0.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
     <wicketstuff.version>8.6.0</wicketstuff.version>
-    <wicket-jquery-ui.version>8.3.0</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
     <dkpro.version>2.0.0</dkpro.version>
     <uima.version>3.1.0</uima.version>
     <log4j.version>2.12.1</log4j.version>
@@ -732,17 +732,13 @@
       </dependency>
 
       <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-io-html-asl</artifactId>
-        <version>${dkpro.version}</version>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno</artifactId>
+        <version>${webanno.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       
-      <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-io-conll-asl</artifactId>
-        <version>${dkpro.version}</version>
-      </dependency>
-
       <dependency>
         <groupId>org.dkpro.core</groupId>
         <artifactId>dkpro-core-asl</artifactId>
@@ -751,14 +747,6 @@
         <scope>import</scope>
       </dependency>
 
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno</artifactId>
-        <version>${webanno.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      
       <!--  
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
