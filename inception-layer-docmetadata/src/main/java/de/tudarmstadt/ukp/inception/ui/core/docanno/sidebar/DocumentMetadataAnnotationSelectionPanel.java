@@ -298,7 +298,12 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     {
         // If a feature value is updated refresh the annotation list since it might mean that
         // a label has changed
-        aEvent.getRequestTarget().add(annotationsContainer);
+        if (selectedAnnotation != null) {
+            aEvent.getRequestTarget().add(selectedAnnotation);
+        }
+        if (selectedDetailPanel != null) {
+            aEvent.getRequestTarget().add(selectedDetailPanel);
+        }
     }
     
     private class AnnotationListItem
