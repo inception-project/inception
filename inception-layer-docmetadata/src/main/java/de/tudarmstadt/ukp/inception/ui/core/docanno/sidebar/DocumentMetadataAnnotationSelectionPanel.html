@@ -40,12 +40,10 @@
           <ul wicket:id="annotationsContainer" class="form-group list-group">
             <li wicket:id="annotations" class="list-group-item">
               <div wicket:id="annotation">
+                <span><i wicket:id="open" class="fa fa-plus"></i></span>
+                <span><i wicket:id="close" class="fa fa-minus"></i></span>
                 <span wicket:id="type" class="badge"/>
-                <div class="pull-right">
-                  <span wicket:id="label"/>
-                  <span><i wicket:id="down" class="fa fa-angle-down"></i></span>
-                  <span><i wicket:id="up" class="fa fa-angle-up"></i></span>
-                </div>
+                <span wicket:id="label" class="pull-right"/>
               </div>
               <div wicket:id="annotationDetails"></div>
             </li>
