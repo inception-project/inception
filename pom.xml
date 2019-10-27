@@ -42,8 +42,8 @@
     <system>GitHub Issues</system>
   </issueManagement>
   <scm>
-    <connection>scm:git:git://github.com/webanno/webanno</connection>
-    <developerConnection>scm:git:git@github.com:webanno/webanno.git</developerConnection>
+    <connection>scm:git:https://github.com/webanno/webanno.git</connection>
+    <developerConnection>scm:git:https://github.com/webanno/webanno.git</developerConnection>
     <url>https://github.com/webanno/webanno</url>
     <tag>HEAD</tag>
   </scm>
