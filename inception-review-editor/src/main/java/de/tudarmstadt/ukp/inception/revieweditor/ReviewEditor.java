@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.inception.revieweditor.event.RefreshEvent;
 import de.tudarmstadt.ukp.inception.revieweditor.event.SelectAnnotationEvent;
 
@@ -87,10 +88,19 @@ public class ReviewEditor
         // TODO: there was a problem with passing this object down to the SpanAnnotationPanel
         //  to call the actionSelection there, hence used events
         try {
+            AjaxRequestTarget target = aEvent.getTarget();
+            VID vid = aEvent.getVid();
+            int begin = aEvent.getBegin();
+            int end = aEvent.getEnd();
             CAS cas = getCasProvider().get();
-            getModelObject().getSelection().selectSpan(
-                aEvent.getVid(), cas, aEvent.getBegin(), aEvent.getEnd());
-            getActionHandler().actionSelect(aEvent.getTarget(), cas);
+            
+            getModelObject().getSelection().selectSpan(vid, cas, begin, end);
+            
+            if (getModelObject().isSlotArmed()) {
+                getActionHandler().actionFillSlot(target, cas, begin, end, vid);
+            } else {
+                getActionHandler().actionSelect(target, cas);
+            }
         }
         catch (IOException e) {
             LOG.error("Unable to load CAS", e);

@@ -65,8 +65,8 @@ public class SpanAnnotationPanel
     private static final String CID_FEATURES_CONTAINER = "featuresContainer";
     private static final String CID_TEXT_FEATURES = "textFeatures";
     private static final String CID_FEATURES = "features";
-    private static final String CID_OPEN = "open";
-    private static final String CID_OPENED = "opened";
+    private static final String CID_SELECT = "select";
+    private static final String CID_SELECTED = "selected";
     private static final String CID_LABEL = "label";
     private static final String CID_VALUE = "value";
     private static final String CID_PRE_CONTEXT = "preContext";
@@ -96,18 +96,16 @@ public class SpanAnnotationPanel
             .collect(Collectors.toList());
         features.removeAll(textFeatures);
     
-        LambdaAjaxLink openButton = new LambdaAjaxLink(CID_OPEN, _target -> {
-            send(this, Broadcast.BUBBLE,
-                new SelectAnnotationEvent(vid, begin, end, _target));
+        LambdaAjaxLink selectButton = new LambdaAjaxLink(CID_SELECT, _target -> {
+            send(this, Broadcast.BUBBLE, new SelectAnnotationEvent(vid, begin, end, _target));
         });
-        openButton.add(visibleWhen(() 
+        selectButton.add(visibleWhen(() 
             -> !state.getSelection().getAnnotation().equals(vid)));
     
-        LambdaAjaxLink openedButton = new LambdaAjaxLink(CID_OPENED, _target -> {
-            send(this, Broadcast.BUBBLE,
-                new SelectAnnotationEvent(vid, begin, end, _target));
+        LambdaAjaxLink selectedButton = new LambdaAjaxLink(CID_SELECTED, _target -> {
+            send(this, Broadcast.BUBBLE, new SelectAnnotationEvent(vid, begin, end, _target));
         });
-        openedButton.add(visibleWhen(()
+        selectedButton.add(visibleWhen(()
             -> state.getSelection().getAnnotation().equals(vid)));
     
         String text = aCas.getDocumentText();
@@ -126,8 +124,8 @@ public class SpanAnnotationPanel
         featuresContainer.add(new Label(CID_PRE_CONTEXT, preContext));
         featuresContainer.add(new Label(CID_TEXT, aFS.getCoveredText()));
         featuresContainer.add(new Label(CID_POST_CONTEXT, postContext));
-        featuresContainer.add(openButton);
-        featuresContainer.add(openedButton);
+        featuresContainer.add(selectButton);
+        featuresContainer.add(selectedButton);
             
         add(featuresContainer);
     }
