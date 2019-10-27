@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
 import static java.util.Arrays.asList;
 
 import java.io.File;
@@ -39,7 +43,6 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -63,16 +66,21 @@ public class AnnotationDocumentExporter
     private static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
     private static final String ANNOTATION_CAS_FOLDER = "/" + ANNOTATION_AS_SERIALISED_CAS + "/";
     
-    private static final String CORRECTION_USER = "CORRECTION_USER";
-    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
-    private static final String CURATION_FOLDER = "/curation/";
-    
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    private @Autowired DocumentService documentService;
-    private @Autowired UserDao userRepository;
-    private @Autowired ImportExportService importExportService;
+    private final DocumentService documentService;
+    private final UserDao userRepository;
+    private final ImportExportService importExportService;
     
+    @Autowired
+    public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
+            ImportExportService aImportExportService)
+    {
+        documentService = aDocumentService;
+        userRepository = aUserRepository;
+        importExportService = aImportExportService;
+    }
+
     @Override
     public List<Class<? extends ProjectExporter>> getExportDependencies()
     {
@@ -173,7 +181,7 @@ public class AnnotationDocumentExporter
             // Export annotations from regular users
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : 
                     documentService.listAnnotationDocuments(sourceDocument)) {
-                // copy annotation document only for ACTIVE users and the state of the 
+                // copy annotation document only for existing users and the state of the 
                 // annotation document is not NEW/IGNORE
                 if (
                         userRepository.get(annotationDocument.getUser()) != null && 
@@ -213,34 +221,36 @@ public class AnnotationDocumentExporter
                 }
             }
             
-            // BEGIN FIXME #1224 CURATION_USER and CORRECTION_USER files should be exported in
-            // annotation_ser
-            // If this project is a correction project, add the auto-annotated CAS to same
-            // folder as CURATION_FOLDER
-            if (WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(project.getMode())
-                    || WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
+            // Special handling for the virtual CORRECTION_USER data used in automation and
+            // correction type projects.
+            if (
+                    PROJECT_TYPE_AUTOMATION.equals(project.getMode()) || 
+                    PROJECT_TYPE_CORRECTION.equals(project.getMode())
+            ) {
                 File correctionCasFile = documentService.getCasFile(sourceDocument,
                         CORRECTION_USER);
                 if (correctionCasFile.exists()) {
                     // Copy CAS - this is used when importing the project again
-                    File curationCasDir = new File(aStage + CURATION_AS_SERIALISED_CAS
+                    // Util WebAnno 3.4.x, the CORRECTION_USER CAS was exported to 'curation' and
+                    // 'curation_ser'.
+                    // Since WebAnno 3.5.x, the CORRECTION_USER CAS is exported to 'annotation' and
+                    // 'annotation_ser'.
+                    File curationCasDir = new File(aStage + ANNOTATION_AS_SERIALISED_CAS
                             + sourceDocument.getName());
                     FileUtils.forceMkdir(curationCasDir);
                     FileUtils.copyFileToDirectory(correctionCasFile, curationCasDir);
                     
                     // Copy secondary export format for convenience - not used during import
                     File curationDir = new File(
-                            aStage + CURATION_FOLDER + sourceDocument.getName());
+                            aStage + ANNOTATION_ORIGINAL_FOLDER + sourceDocument.getName());
                     FileUtils.forceMkdir(curationDir);
                     File correctionFile = importExportService.exportAnnotationDocument(
                             sourceDocument, CORRECTION_USER, format, CORRECTION_USER,
-                            Mode.CORRECTION);
+                            CORRECTION);
                     FileUtils.copyFileToDirectory(correctionFile, curationDir);
                     FileUtils.forceDelete(correctionFile);
                 }
             }
-            // END FIXME #1224 CURATION_USER and CORRECTION_USER files should be exported in
-            // annotation_ser
             
             aRequest.progress = initProgress
                     + (int) Math.ceil(((double) i) / documents.size() * 80.0);

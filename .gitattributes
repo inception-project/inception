@@ -26,3 +26,4 @@
 *.woff  binary
 *.woff2  binary
 *.otf  binary
+*.zip  binary
