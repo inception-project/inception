@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
 import static java.util.Arrays.asList;
@@ -58,7 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 
-public class CuratedDocumentsExporterTest
+public class AnnotationDocumentsExporterTest
 {
     public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
     
@@ -74,7 +74,7 @@ public class CuratedDocumentsExporterTest
     private File workFolder;
     private long nextDocId = 1;
 
-    private CuratedDocumentsExporter sut;
+    private AnnotationDocumentExporter sut;
 
     @Before
     public void setUp() throws Exception
@@ -116,7 +116,7 @@ public class CuratedDocumentsExporterTest
             return doc;
         });
                 
-        sut = new CuratedDocumentsExporter(documentService, importExportSerivce);
+        sut = new AnnotationDocumentExporter(documentService, null, importExportSerivce);
     }
 
     @Test
@@ -130,9 +130,9 @@ public class CuratedDocumentsExporterTest
 
         // Check that the curation for the document in the project is imported
         assertThat(imported).extracting(p -> p.getKey().getName())
-                .containsExactlyInAnyOrder("example_sentence.txt");
+                .containsExactlyInAnyOrder("example_sentence.txt", "example_sentence.txt");
         assertThat(imported).extracting(Pair::getValue)
-                .containsExactlyInAnyOrder(CURATION_USER);
+                .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin");
     }
     
     @Test
@@ -146,10 +146,11 @@ public class CuratedDocumentsExporterTest
 
         // Check that the curation for the document in the project is imported
         assertThat(imported).extracting(p -> p.getKey().getName())
-                .containsExactlyInAnyOrder("example_sentence.txt");
+                .containsExactlyInAnyOrder("example_sentence.txt", "example_sentence.txt", 
+                        "example_sentence.txt");
         // Since WebAnno 3.5.x, the CORRECTION_USER CAS is stored with the annotations
         assertThat(imported).extracting(Pair::getValue)
-                .containsExactlyInAnyOrder(CURATION_USER);
+                .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin", CORRECTION_USER);
     }
     
     @Test
@@ -166,9 +167,8 @@ public class CuratedDocumentsExporterTest
                 .containsExactlyInAnyOrder("example_sentence.txt", "example_sentence.txt");
         // Before WebAnno 3.5.x, the CORRECTION_USER CAS was stored with the curations
         assertThat(imported).extracting(Pair::getValue)
-                .containsExactlyInAnyOrder(CURATION_USER, CORRECTION_USER);
-    }
-    
+                .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin");
+    }    
     private List<Pair<SourceDocument, String>> runImportAndFetchDocuments(ZipFile aZipFile)
         throws Exception
     {

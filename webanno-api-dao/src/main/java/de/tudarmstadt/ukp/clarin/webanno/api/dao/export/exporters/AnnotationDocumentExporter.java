@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
@@ -65,16 +66,21 @@ public class AnnotationDocumentExporter
     private static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
     private static final String ANNOTATION_CAS_FOLDER = "/" + ANNOTATION_AS_SERIALISED_CAS + "/";
     
-    private static final String CORRECTION_USER = "CORRECTION_USER";
-    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
-    private static final String CURATION_FOLDER = "/curation/";
-    
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    private @Autowired DocumentService documentService;
-    private @Autowired UserDao userRepository;
-    private @Autowired ImportExportService importExportService;
+    private final DocumentService documentService;
+    private final UserDao userRepository;
+    private final ImportExportService importExportService;
     
+    @Autowired
+    public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
+            ImportExportService aImportExportService)
+    {
+        documentService = aDocumentService;
+        userRepository = aUserRepository;
+        importExportService = aImportExportService;
+    }
+
     @Override
     public List<Class<? extends ProjectExporter>> getExportDependencies()
     {
@@ -175,7 +181,7 @@ public class AnnotationDocumentExporter
             // Export annotations from regular users
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : 
                     documentService.listAnnotationDocuments(sourceDocument)) {
-                // copy annotation document only for ACTIVE users and the state of the 
+                // copy annotation document only for existing users and the state of the 
                 // annotation document is not NEW/IGNORE
                 if (
                         userRepository.get(annotationDocument.getUser()) != null && 
