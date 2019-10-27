@@ -38,30 +38,30 @@ public class PercentageBasedSplitterTest {
 
     @RunWith(Parameterized.class)
     public static class ParameterizedTests {
-        private final double k2;
-        private final int trainingSetSize2;
-        private final int testSetSize2;
+        private final double k;
+        private final int trainingSetSize;
+        private final int testSetSize;
 
         public ParameterizedTests(double aK, int aTrainingSetSize, int aTestSetSize) {
-            k2 = aK;
-            trainingSetSize2 = aTrainingSetSize;
-            testSetSize2 = aTestSetSize;
+            k = aK;
+            trainingSetSize = aTrainingSetSize;
+            testSetSize = aTestSetSize;
         }
 
         @Test
         public void thatSplittingWorks() {
             List<String> data = asList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
-            PercentageBasedSplitter splitter = new PercentageBasedSplitter(k2, 4);
-            List<String> trainingSet2 = new ArrayList<>();
-            List<String> testSet2 = new ArrayList<>();
+            PercentageBasedSplitter splitter = new PercentageBasedSplitter(k, 4);
+            List<String> trainingSet = new ArrayList<>();
+            List<String> testSet = new ArrayList<>();
 
             for (String s : data) {
                 switch (splitter.getTargetSet(s)) {
                 case TRAIN:
-                    trainingSet2.add(s);
+                    trainingSet.add(s);
                     break;
                 case TEST:
-                    testSet2.add(s);
+                    testSet.add(s);
                     break;
                 default:
                     // Do nothing
@@ -69,12 +69,12 @@ public class PercentageBasedSplitterTest {
                 }
             }
 
-            assertThat(trainingSet2)
+            assertThat(trainingSet)
                 .as("Training set has correct size")
-                .hasSize(trainingSetSize2);
-            assertThat(testSet2)
+                .hasSize(trainingSetSize);
+            assertThat(testSet)
                 .as("Test set has correct size")
-                .hasSize(testSetSize2);
+                .hasSize(testSetSize);
         }
 
         @Parameterized.Parameters

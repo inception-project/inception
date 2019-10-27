@@ -52,47 +52,45 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 public class TestFixtures
 {
-	//rename entityManager to TF_entityManager, remove the duplicated code block
-    private TestEntityManager TF_entityManager;
+    private TestEntityManager entityManager;
 
     public TestFixtures(TestEntityManager aEntityManager)
     {
-        TF_entityManager = aEntityManager;
+        entityManager = aEntityManager;
     }
 
     public Project createProject(String name)
     {
-		//rename project to TF_project
-        Project TF_project = new Project();
-        TF_project.setName(name);
-        TF_project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
-        return TF_entityManager.persist(TF_project);
+        Project project = new Project();
+        project.setName(name);
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        return entityManager.persist(project);
     }
 
-    public KnowledgeBase buildKnowledgeBase(Project TF_project, String name, Reification reification)
+    public KnowledgeBase buildKnowledgeBase(Project project, String name, Reification reification)
     {
-        KnowledgeBase TF_kb = new KnowledgeBase();
-        TF_kb.setName(name);
-        TF_kb.setProject(TF_project);
-        TF_kb.setType(RepositoryType.LOCAL);
-        TF_kb.setClassIri(RDFS.CLASS);
-        TF_kb.setSubclassIri(RDFS.SUBCLASSOF);
-        TF_kb.setTypeIri(RDF.TYPE);
-        TF_kb.setLabelIri(RDFS.LABEL);
-        TF_kb.setPropertyTypeIri(RDF.PROPERTY);
-        TF_kb.setDescriptionIri(RDFS.COMMENT);
-        TF_kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
-        TF_kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        KnowledgeBase kb = new KnowledgeBase();
+        kb.setName(name);
+        kb.setProject(project);
+        kb.setType(RepositoryType.LOCAL);
+        kb.setClassIri(RDFS.CLASS);
+        kb.setSubclassIri(RDFS.SUBCLASSOF);
+        kb.setTypeIri(RDF.TYPE);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         // Intentionally using different IRIs for label/description and property-label/description
         // to detect cases where we accidentally construct queries using the wrong mapping, e.g.
         // querying for properties with the class label.
-        TF_kb.setPropertyLabelIri(SKOS.PREF_LABEL);
-        TF_kb.setPropertyDescriptionIri(SKOS.DEFINITION);
-        TF_kb.setRootConcepts(new ArrayList<>());
-        TF_kb.setReification(reification);
-        TF_kb.setMaxResults(1000);
-        TF_kb.setDefaultLanguage("en");
-        return TF_kb;
+        kb.setPropertyLabelIri(SKOS.PREF_LABEL);
+        kb.setPropertyDescriptionIri(SKOS.DEFINITION);
+        kb.setRootConcepts(new ArrayList<>());
+        kb.setReification(reification);
+        kb.setMaxResults(1000);
+        kb.setDefaultLanguage("en");
+        return kb;
     }
 
     public KBConcept buildConcept()
@@ -153,12 +151,11 @@ public class TestFixtures
         return statement;
     }
 
-	//rename kbStatement to TF_kbStatement
-    public KBQualifier buildQualifier(KBStatement TF_kbStatement, KBProperty propertyHandle,
+    public KBQualifier buildQualifier(KBStatement kbStatement, KBProperty propertyHandle,
         String value)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        KBQualifier qualifier = new KBQualifier(TF_kbStatement, propertyHandle,
+        KBQualifier qualifier = new KBQualifier(kbStatement, propertyHandle,
             vf.createLiteral(value));
         return qualifier;
     }

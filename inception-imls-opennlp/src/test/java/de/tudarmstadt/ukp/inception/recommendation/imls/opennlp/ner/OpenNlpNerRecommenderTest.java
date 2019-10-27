@@ -65,7 +65,7 @@ public class OpenNlpNerRecommenderTest
     public void setUp()
     {
         context = new RecommenderContext();
-        recommender = ONNRT_buildRecommender();
+        recommender = buildRecommender();
         traits = new OpenNlpNerRecommenderTraits();
         traits.setNumThreads(2);
         traits.setTrainingSetSizeLimit(250);
@@ -181,18 +181,18 @@ public class OpenNlpNerRecommenderTest
         return casList;
     }
 
-    private static Recommender ONNRT_buildRecommender()
+    private static Recommender buildRecommender()
     {
-        AnnotationLayer ONNRT_layer = new AnnotationLayer();
-        ONNRT_layer.setName(NamedEntity.class.getName());
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setName(NamedEntity.class.getName());
 
-        AnnotationFeature ONNRT_feature = new AnnotationFeature();
-        ONNRT_feature.setName("value");
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("value");
         
-        Recommender ONNRT_recommender = new Recommender();
-        ONNRT_recommender.setLayer(ONNRT_layer);
-        ONNRT_recommender.setFeature(ONNRT_feature);
+        Recommender recommender = new Recommender();
+        recommender.setLayer(layer);
+        recommender.setFeature(feature);
 
-        return ONNRT_recommender;
+        return recommender;
     }
 }

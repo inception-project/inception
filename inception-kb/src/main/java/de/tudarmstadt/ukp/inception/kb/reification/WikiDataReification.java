@@ -1,5 +1,5 @@
 /*
- * Copyright 208
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -78,17 +78,17 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.Queries;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.ValuesPattern;
 
 /**
- * wd:Q248 p:P86 ?statement.    # Mona Lisa: material used: ?statement
- * ?statement ps:P86 wd:Q296955.  # value: oil paint
+ * wd:Q12418 p:P186 ?statement1.    # Mona Lisa: material used: ?statement1
+ * ?statement1 ps:P186 wd:Q296955.  # value: oil paint
  *
- * wd:Q248 p:P86 ?statement2.    # Mona Lisa: material used: ?statement2
- * ?statement2 ps:P86 wd:Q29034.  # value: poplar wood
- * ?statement2 pq:P58 wd:Q86259.  # qualifier: applies to part: painting surface
+ * wd:Q12418 p:P186 ?statement2.    # Mona Lisa: material used: ?statement2
+ * ?statement2 ps:P186 wd:Q291034.  # value: poplar wood
+ * ?statement2 pq:P518 wd:Q861259.  # qualifier: applies to part: painting surface
  *
- * wd:Q248 p:P86 ?statement3.    # Mona Lisa: material used: ?statement3
- * ?statement3 ps:P86 wd:Q287.     # value: wood
- * ?statement3 pq:P58 wd:Q737943. # qualifier: applies to part: stretcher bar
- * ?statement3 pq:P580 95.        # qualifier: start time: 95 (pseudo-syntax)
+ * wd:Q12418 p:P186 ?statement3.    # Mona Lisa: material used: ?statement3
+ * ?statement3 ps:P186 wd:Q287.     # value: wood
+ * ?statement3 pq:P518 wd:Q1737943. # qualifier: applies to part: stretcher bar
+ * ?statement3 pq:P580 1951.        # qualifier: start time: 1951 (pseudo-syntax)
  */
 public class WikiDataReification
     implements ReificationStrategy
@@ -104,7 +104,7 @@ public class WikiDataReification
     private static final String PREFIX_WDS = "http://www.wikidata.org/entity/statement/";
     
     private static final Variable VAR_SUBJECT = var("s");
-    private static final Variable VAR_PRED = var("p");
+    private static final Variable VAR_PRED1 = var("p1");
     private static final Variable VAR_STATEMENT = var("st");
     private static final Variable VAR_PRED2 = var("p2");
     private static final Variable VAR_VALUE = var("v");
@@ -117,12 +117,12 @@ public class WikiDataReification
     {
         long startTime = currentTimeMillis();
         
-        SelectQuery query = SELECT(VAR_SUBJECT, VAR_PRED, VAR_STATEMENT, VAR_PRED2, VAR_VALUE);
+        SelectQuery query = SELECT(VAR_SUBJECT, VAR_PRED1, VAR_STATEMENT, VAR_PRED2, VAR_VALUE);
         query.where(
             new ValuesPattern(VAR_SUBJECT, iri(aItem.getIdentifier())),
-            GraphPatterns.and(VAR_SUBJECT.has(VAR_PRED, VAR_STATEMENT),
+            GraphPatterns.and(VAR_SUBJECT.has(VAR_PRED1, VAR_STATEMENT),
             VAR_STATEMENT.has(VAR_PRED2, VAR_VALUE)).filter(and(
-                function(STRSTARTS, function(STR, VAR_PRED), literalOf(PREFIX_PROP)),or(
+                function(STRSTARTS, function(STR, VAR_PRED1), literalOf(PREFIX_PROP)),or(
                     function(STRSTARTS, function(STR, VAR_PRED2), literalOf(PREFIX_PROP_STATEMENT)),
                     function(STRSTARTS, function(STR, VAR_PRED2), literalOf(PREFIX_PROP_QUALIFIER)))
                     .parenthesize())));
@@ -143,14 +143,14 @@ public class WikiDataReification
                 log.trace("[{}] Bindings: {}", queryId, bindings);
                 
                 IRI subject = (IRI) bindings.getBinding("s").getValue();
-                IRI pred = (IRI) bindings.getBinding("p").getValue();
+                IRI pred1 = (IRI) bindings.getBinding("p1").getValue();
                 Resource stmt = (Resource) bindings.getBinding("st").getValue();
                 IRI pred2 = (IRI) bindings.getBinding("p2").getValue();
                 Value value = bindings.getBinding("v").getValue();
                 
                 // Statement representing the primary triple with the reified statement in the
                 // object position
-                Statement priStatement = vf.createStatement(subject, pred, stmt);
+                Statement priStatement = vf.createStatement(subject, pred1, stmt);
                 // Statement representing the secondary triple for the property value and/or
                 // qualifiers with the value in the object position
                 Statement secStatement = vf.createStatement(stmt, pred2, value);
@@ -159,7 +159,7 @@ public class WikiDataReification
                 KBStatement statement = statements.get(priStatement);
                 if (statement == null) {
                     statement = new KBStatement(stmt.stringValue(), subject.stringValue());
-                    statement.setProperty(new KBProperty(pred.stringValue()));
+                    statement.setProperty(new KBProperty(pred1.stringValue()));
                     statements.put(priStatement, statement);
                 }
                 
@@ -269,7 +269,7 @@ public class WikiDataReification
                 "  ?id ?ps ?o .",
                 "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))",
                 "}",
-                "LIMIT 0");
+                "LIMIT 10");
         Resource id = vf.createBNode(aStatementId);
         TupleQuery tupleQuery = aConnection.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         tupleQuery.setBinding("id", id);
@@ -437,12 +437,12 @@ public class WikiDataReification
         
         // According to the Wikidata reification scheme, the predicate of the secondary triple
         // corresponds to the predicate of the primary triple with the prefix replaced, e.g.
-        // p:P86 -> ps:P86
+        // p:P186 -> ps:P186
         String propStatementIri = aStatement.getProperty().getIdentifier().replace(PREFIX_PROP,
                 PREFIX_PROP_STATEMENT);
         
         IRI subject = vf.createIRI(aStatement.getInstance().getIdentifier());
-        IRI pred =  vf.createIRI(aStatement.getProperty().getIdentifier());
+        IRI pred1 =  vf.createIRI(aStatement.getProperty().getIdentifier());
         Resource stmt = aStatement.getStatementId() != null
                 ? vf.createIRI(aStatement.getStatementId())
                 : vf.createIRI(generateStatementIdentifier(aConnection, aKB));
@@ -453,7 +453,7 @@ public class WikiDataReification
         // Generate all the triples that are to be stored by this statement
         // Add primary and secondary triple
         Set<Statement> statements = new HashSet<>();
-        statements.add(vf.createStatement(subject, pred, stmt));
+        statements.add(vf.createStatement(subject, pred1, stmt));
         statements.add(vf.createStatement(stmt, pred2, value));
         
         // Delete all original triples except the ones which we would re-create anyway
@@ -486,7 +486,7 @@ public class WikiDataReification
     {
         // According to the Wikidata reification scheme, the predicate of the property prefix is
         // replaced when the property is used as a qualifier, e.g.
-        // p:P86 -> pq:P86
+        // p:P186 -> pq:P186
         String propStatementIri = aQualifier.getProperty().getIdentifier().replace(PREFIX_PROP,
                 PREFIX_PROP_QUALIFIER);
         
@@ -556,12 +556,12 @@ public class WikiDataReification
     {
         // According to the Wikidata reification scheme, the predicate of the secondary triple
         // corresponds to the predicate of the primary triple with the prefix replaced, e.g.
-        // p:P86 -> ps:P86
+        // p:P186 -> ps:P186
         String propStatementIri = aStatement.getProperty().getIdentifier().replace(PREFIX_PROP,
                 PREFIX_PROP_STATEMENT);
         
         Iri subject = iri(aStatement.getInstance().getIdentifier());
-        Iri pred =  iri(aStatement.getProperty().getIdentifier());
+        Iri pred1 =  iri(aStatement.getProperty().getIdentifier());
         Variable stmt = var("stmt");
         Iri pred2 =  iri(propStatementIri);
         RdfObject value = object(
@@ -569,7 +569,7 @@ public class WikiDataReification
         
         String query = String.join("\n",
                 "SELECT * { BIND ( EXISTS {",
-                subject.has(pred, stmt).getQueryString(),
+                subject.has(pred1, stmt).getQueryString(),
                 stmt.has(pred2, value).getQueryString(),
                 "} AS ?result ) }");
         

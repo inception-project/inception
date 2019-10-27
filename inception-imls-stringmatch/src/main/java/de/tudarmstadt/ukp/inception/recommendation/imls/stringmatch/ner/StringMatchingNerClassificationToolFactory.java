@@ -37,13 +37,13 @@ public class StringMatchingNerClassificationToolFactory
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String UID = 
+    public static final String ID = 
             "de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.ner.StringMatchingNerClassificationTool";
 
     @Override
     public String getId()
     {
-        return UID;
+        return ID;
     }
     
     @Override
@@ -54,8 +54,9 @@ public class StringMatchingNerClassificationToolFactory
 
     @Override
     public RecommendationEngine build(Recommender aRecommender)
-    {       
-        return new StringMatchingRecommender(aRecommender, new StringMatchingRecommenderTraits());
+    {
+        StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
+        return new StringMatchingRecommender(aRecommender, traits);
     }
     
     @Override

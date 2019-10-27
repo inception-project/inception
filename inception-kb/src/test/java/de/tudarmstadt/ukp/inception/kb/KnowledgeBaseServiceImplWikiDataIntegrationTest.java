@@ -66,24 +66,24 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest
 public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
-    private static final String KBSIWDIT_PROJECT_NAME = "Test KBSIWDIT_project";
-    private static final String KBSIWDIT_KB_NAME = "Wikidata (official/direct mapping)";
+    private static final String PROJECT_NAME = "Test project";
+    private static final String KB_NAME = "Wikidata (official/direct mapping)";
 
     @Rule
-    public TemporaryFolder KBSIWDIT_temporaryFolder = new TemporaryFolder();
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Autowired
-    private TestEntityManager KBSIWDIT_testEntityManager;
+    private TestEntityManager testEntityManager;
 
     @ClassRule
     public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 
     @Rule
-    public final SpringMethodRule KBSIWDIT_springMethodRule = new SpringMethodRule();
+    public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
-    private KnowledgeBaseServiceImpl KBSIWDIT_sut;
-    private Project KBSIWDIT_project;
-    private KnowledgeBase KBSIWDIT_kb;
+    private KnowledgeBaseServiceImpl sut;
+    private Project project;
+    private KnowledgeBase kb;
     private Reification reification;
 
     private TestFixtures testFixtures;
@@ -111,29 +111,29 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(KBSIWDIT_temporaryFolder.getRoot());
-        EntityManager entityManager = KBSIWDIT_testEntityManager.getEntityManager();
-        testFixtures = new TestFixtures(KBSIWDIT_testEntityManager);
-        KBSIWDIT_sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        KBSIWDIT_project = createProject(KBSIWDIT_PROJECT_NAME);
-        KBSIWDIT_kb = buildKnowledgeBase(KBSIWDIT_project, KBSIWDIT_KB_NAME);
+        repoProps.setPath(temporaryFolder.getRoot());
+        EntityManager entityManager = testEntityManager.getEntityManager();
+        testFixtures = new TestFixtures(testEntityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        project = createProject(PROJECT_NAME);
+        kb = buildKnowledgeBase(project, KB_NAME);
         String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
         testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl);
-        KBSIWDIT_sut.registerKnowledgeBase(KBSIWDIT_kb, KBSIWDIT_sut.getRemoteConfig(wikidataAccessUrl));
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
 
     }
 
     @After
     public void tearDown() throws Exception
     {
-        KBSIWDIT_testEntityManager.clear();
-        KBSIWDIT_sut.destroy();
+        testEntityManager.clear();
+        sut.destroy();
     }
 
     @Test
     public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult()
     {
-        Optional<KBConcept> savedConcept = KBSIWDIT_sut.readConcept(KBSIWDIT_kb,
+        Optional<KBConcept> savedConcept = sut.readConcept(kb,
                 "https://nonexistent.identifier.test", true);
         assertThat(savedConcept.isPresent()).as("Check that no concept was read").isFalse();
     }
@@ -141,7 +141,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     @Test
     public void readConcept_WithExistentConcept_ShouldReturnResult()
     {
-        Optional<KBConcept> concept = KBSIWDIT_sut.readConcept(KBSIWDIT_kb, "http://www.wikidata.org/entity/Q171644",
+        Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644",
                 true);
         assertThat(concept.get().getName()).as("Check that concept has the same UI label")
                 .isIn("12 Hours of Reims");
@@ -150,7 +150,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     @Test
     public void listChildConcept_WithExistentConcept_ShouldReturnResult()
     {
-        List<KBHandle> concept = KBSIWDIT_sut.listChildConcepts(KBSIWDIT_kb, "http://www.wikidata.org/entity/Q171644",
+        List<KBHandle> concept = sut.listChildConcepts(kb, "http://www.wikidata.org/entity/Q171644",
                 true);
 
         assertThat(concept.iterator().next().getUiLabel())
@@ -161,7 +161,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     @Test
     public void listRootConcepts()
     {
-        Stream<String> rootConcepts = KBSIWDIT_sut.listRootConcepts(KBSIWDIT_kb, false).stream()
+        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getIdentifier);
         String expectedInstances = "http://www.wikidata.org/entity/Q35120";
         
@@ -173,21 +173,21 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     
     @Test
     public void listProperties() {
-        Stream<String> properties = KBSIWDIT_sut.listProperties(KBSIWDIT_kb, true)
+        Stream<String> properties = sut.listProperties(kb, true)
             .stream()
             .map(KBObject::getIdentifier);
         
         assertThat(properties)
             .as("Check that properties have been found")
-            .hasSize(KBSIWDIT_kb.getMaxResults());
+            .hasSize(kb.getMaxResults());
     }
     
     @Test
     public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult()
     {
-        KBSIWDIT_sut.registerKnowledgeBase(KBSIWDIT_kb, KBSIWDIT_sut.getNativeConfig());
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        Optional<KBInstance> savedInstance = KBSIWDIT_sut.readInstance(KBSIWDIT_kb,
+        Optional<KBInstance> savedInstance = sut.readInstance(kb,
                 "https://nonexistent.identifier.test");
 
         assertThat(savedInstance.isPresent()).as("Check that no instance was read").isFalse();
@@ -196,8 +196,8 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     @Test
     public void listInstances()
     {
-        Stream<String> instances = KBSIWDIT_sut
-                .listInstances(KBSIWDIT_kb, "http://www.wikidata.org/entity/Q2897", true).stream()
+        Stream<String> instances = sut
+                .listInstances(kb, "http://www.wikidata.org/entity/Q2897", true).stream()
                 .map(KBHandle::getIdentifier);
         String[] expectedInstances = { "http://www.wikidata.org/entity/Q22663448",
                 "http://www.wikidata.org/entity/Q22663448",
@@ -211,7 +211,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void listStatements() {
         KBHandle handle = new KBHandle("http://www.wikidata.org/entity/Q50556889");
 
-        Stream<String> properties = KBSIWDIT_sut.listStatements(KBSIWDIT_kb, handle, true).stream()
+        Stream<String> properties = sut.listStatements(kb, handle, true).stream()
                 .map(KBStatement::getProperty)
                 .map(KBProperty::getIdentifier);
 
@@ -244,19 +244,19 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project KBSIWDIT_project, String name) throws IOException
+    private KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException
     {
         PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
-        KnowledgeBase KBSIWDIT_kb_wikidata_direct = new KnowledgeBase();
-        KBSIWDIT_kb_wikidata_direct.setProject(KBSIWDIT_project);
-        KBSIWDIT_kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
-        KBSIWDIT_kb_wikidata_direct.setType(PROFILES.get("wikidata").getType());
-        KBSIWDIT_kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
-        KBSIWDIT_kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
-        KBSIWDIT_kb_wikidata_direct.setReification(reification);
-        KBSIWDIT_kb_wikidata_direct.setDefaultLanguage("en");
-        KBSIWDIT_kb_wikidata_direct.setMaxResults(1000);
+        KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
+        kb_wikidata_direct.setProject(project);
+        kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
+        kb_wikidata_direct.setType(PROFILES.get("wikidata").getType());
+        kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
+        kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
+        kb_wikidata_direct.setReification(reification);
+        kb_wikidata_direct.setDefaultLanguage("en");
+        kb_wikidata_direct.setMaxResults(1000);
 
-        return KBSIWDIT_kb_wikidata_direct;
+        return kb_wikidata_direct;
     }
 }

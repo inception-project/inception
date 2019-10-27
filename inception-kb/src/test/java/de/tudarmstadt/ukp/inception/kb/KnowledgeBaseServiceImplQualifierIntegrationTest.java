@@ -63,69 +63,69 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     private static final String KB_NAME = "Test knowledge base";
 
     @Rule
-    public TemporaryFolder KBSIQIT_temporaryFolder = new TemporaryFolder();
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Autowired
-    private TestEntityManager KBSIQIT_testEntityManager;
+    private TestEntityManager testEntityManager;
 
     @ClassRule
-    public static final SpringClassRule KBSIQIT_SPRING_CLASS_RULE = new SpringClassRule();
+    public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 
     @Rule
-    public final SpringMethodRule KBSIQIT_springMethodRule = new SpringMethodRule();
+    public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
-    private KnowledgeBaseServiceImpl KBSIQIT_sut;
-    private Project KBSIQIT_project;
-    private KnowledgeBase KBSIQIT_kb;
-    private TestFixtures KBSIQIT_testFixtures;
+    private KnowledgeBaseServiceImpl sut;
+    private Project project;
+    private KnowledgeBase kb;
+    private TestFixtures testFixtures;
 
-    private KBConcept KBSIQIT_concept;
-    private KBProperty KBSIQIT_property;
-    private KBHandle KBSIQIT_conceptHandle;
-    private KBHandle KBSIQIT_propertyHandle;
-    private KBStatement KBSIQIT_statement;
+    private KBConcept concept;
+    private KBProperty property;
+    private KBHandle conceptHandle;
+    private KBHandle propertyHandle;
+    private KBStatement statement;
 
     @BeforeClass
-    public static void KBSIQIT_setUpOnce()
+    public static void setUpOnce()
     {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
     @Before
-    public void KBSIQIT_setUp() throws Exception
+    public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(KBSIQIT_temporaryFolder.getRoot());
-        EntityManager entityManager = KBSIQIT_testEntityManager.getEntityManager();
-        KBSIQIT_testFixtures = new TestFixtures(KBSIQIT_testEntityManager);
-        KBSIQIT_sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        KBSIQIT_project = KBSIQIT_testFixtures.createProject(PROJECT_NAME);
-        KBSIQIT_kb = KBSIQIT_testFixtures.buildKnowledgeBase(KBSIQIT_project, KB_NAME, Reification.WIKIDATA);
-        KBSIQIT_sut.registerKnowledgeBase(KBSIQIT_kb, KBSIQIT_sut.getNativeConfig());
+        repoProps.setPath(temporaryFolder.getRoot());
+        EntityManager entityManager = testEntityManager.getEntityManager();
+        testFixtures = new TestFixtures(testEntityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        project = testFixtures.createProject(PROJECT_NAME);
+        kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.WIKIDATA);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         
-        KBSIQIT_concept = KBSIQIT_testFixtures.buildConcept();
-        KBSIQIT_property = KBSIQIT_testFixtures.buildProperty();
-        KBSIQIT_sut.createConcept(KBSIQIT_kb, KBSIQIT_concept);
-        KBSIQIT_sut.createProperty(KBSIQIT_kb, KBSIQIT_property);
-        KBSIQIT_conceptHandle = KBSIQIT_concept.toKBHandle();
-        KBSIQIT_propertyHandle = KBSIQIT_property.toKBHandle();
-        KBSIQIT_statement = KBSIQIT_testFixtures.buildStatement(KBSIQIT_conceptHandle, KBSIQIT_property, "Test statement");
-        KBSIQIT_sut.upsertStatement(KBSIQIT_kb, KBSIQIT_statement);
+        concept = testFixtures.buildConcept();
+        property = testFixtures.buildProperty();
+        sut.createConcept(kb, concept);
+        sut.createProperty(kb, property);
+        conceptHandle = concept.toKBHandle();
+        propertyHandle = property.toKBHandle();
+        statement = testFixtures.buildStatement(conceptHandle, property, "Test statement");
+        sut.upsertStatement(kb, statement);
     }
 
     @After
-    public void KBSIQIT_tearDown() throws Exception
+    public void tearDown() throws Exception
     {
-        KBSIQIT_testEntityManager.clear();
-        KBSIQIT_sut.destroy();
+        testEntityManager.clear();
+        sut.destroy();
     }
 
     @Test
     public void addQualifier_WithUnsavedQualifier_shouldCreateQualifier()
     {
-        KBSIQIT_sut.addQualifier(KBSIQIT_kb, KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier"));
+        sut.addQualifier(kb, testFixtures.buildQualifier(statement, property, "Test qualifier"));
 
-        List<KBStatement> statements = KBSIQIT_sut.listStatements(KBSIQIT_kb, KBSIQIT_conceptHandle, false);
+        List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
 
         assertThat(statements).hasSize(1);
         
@@ -139,17 +139,17 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void addQualifier_WithReadOnlyKnowledgeBase_ShouldDoNothing()
     {
-        KBSIQIT_kb.setReadOnly(true);
+        kb.setReadOnly(true);
         
-        KBSIQIT_sut.updateKnowledgeBase(KBSIQIT_kb, KBSIQIT_sut.getKnowledgeBaseConfig(KBSIQIT_kb));
+        sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
 
-        int qualifierCountBeforeDeletion = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement).size();
+        int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
         
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSIQIT_sut.addQualifier(KBSIQIT_kb,
-                KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier")));
+            .isThrownBy(() -> sut.addQualifier(kb,
+                testFixtures.buildQualifier(statement, property, "Test qualifier")));
 
-        int qualifierCountAfterDeletion = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement).size();
+        int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
         
         assertThat(qualifierCountBeforeDeletion)
             .as("Check that statement was not added")
@@ -159,18 +159,18 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void upsertQualifier_withUnsavedQualifier_shouldCreateQualifier()
     {
-        KBQualifier qualifier = KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
-        KBSIQIT_sut.upsertQualifier(KBSIQIT_kb, qualifier);
+        sut.upsertQualifier(kb, qualifier);
 
-        KBSIQIT_sut.read(KBSIQIT_kb, conn -> {
+        sut.read(kb, conn -> {
             RDFWriter rdfWriter = Rio.createWriter(RDFFormat.TURTLE, System.out);
             conn.export(rdfWriter);
             System.out.println("------");
             return null;
         });
 
-        List<KBStatement> statements = KBSIQIT_sut.listStatements(KBSIQIT_kb, KBSIQIT_conceptHandle, false);
+        List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
 
         assertThat(qualifier.getStatement().getQualifiers())
             .as("Check that KBStatement has updated correctly")
@@ -190,13 +190,13 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void upsertQualifier_withExistingQualifier_shouldUpdateQualifier()
     {
-        KBQualifier qualifier = KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
-        KBSIQIT_sut.upsertQualifier(KBSIQIT_kb, qualifier);
+        sut.upsertQualifier(kb, qualifier);
     
         qualifier.setValue("changed Qualifier");
         
-        KBSIQIT_sut.upsertQualifier(KBSIQIT_kb, qualifier);
+        sut.upsertQualifier(kb, qualifier);
         
         assertThat(qualifier.getStatement().getQualifiers())
             .as("Check that KBStatement has updated correctly")
@@ -205,7 +205,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
             .hasFieldOrProperty("property")
             .hasFieldOrPropertyWithValue("value", "changed Qualifier");
     
-        List<KBStatement> statements = KBSIQIT_sut.listStatements(KBSIQIT_kb, KBSIQIT_conceptHandle, false);
+        List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
         
         assertThat(statements.get(0).getQualifiers())
             .as("Check that Knowledge Base has updated correctly")
@@ -218,18 +218,18 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void upsertQualifier_withReadOnlyKnowledgeBase_shouldDoNothing()
     {
-        KBSIQIT_kb.setReadOnly(true);
+        kb.setReadOnly(true);
         
-        KBSIQIT_sut.updateKnowledgeBase(KBSIQIT_kb, KBSIQIT_sut.getKnowledgeBaseConfig(KBSIQIT_kb));
+        sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
     
-        int qualifierCountBeforeDeletion = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement).size();
+        int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
         
-        KBQualifier qualifier = KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSIQIT_sut.upsertQualifier(KBSIQIT_kb, qualifier));
+            .isThrownBy(() -> sut.upsertQualifier(kb, qualifier));
     
-        int qualifierCountAfterDeletion = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement).size();
+        int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
         assertThat(qualifierCountBeforeDeletion)
             .as("Check that statement was not updated")
             .isEqualTo(qualifierCountAfterDeletion);
@@ -238,14 +238,14 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void deleteQualifier_WithExistingQualifier_ShouldDeleteQualifier()
     {
-        KBQualifier qualifier = KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
-        KBSIQIT_sut.addQualifier(KBSIQIT_kb, qualifier);
+        sut.addQualifier(kb, qualifier);
         
-        KBSIQIT_sut.deleteQualifier(KBSIQIT_kb, qualifier);
+        sut.deleteQualifier(kb, qualifier);
         
-        List<KBStatement> statements = KBSIQIT_sut.listStatements(KBSIQIT_kb, KBSIQIT_conceptHandle, false);
-        List<KBQualifier> qualifiers = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement);
+        List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
+        List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
 
         assertThat(statements.get(0).getQualifiers())
             .isEmpty();
@@ -259,26 +259,26 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     public void deleteQualifier_WithNonExistentQualifier_ShouldDoNothing()
     {
         assertThatCode(() -> {
-            KBSIQIT_sut.deleteQualifier(KBSIQIT_kb,
-                    KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier"));
+            sut.deleteQualifier(kb,
+                    testFixtures.buildQualifier(statement, property, "Test qualifier"));
         }).doesNotThrowAnyException();
     }
 
     @Test
     public void deleteQualifier__WithReadOnlyKnowledgeBase_ShouldDoNothing()
     {
-        KBQualifier qualifier = KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
-        KBSIQIT_sut.addQualifier(KBSIQIT_kb, qualifier);
-        KBSIQIT_kb.setReadOnly(true);
+        sut.addQualifier(kb, qualifier);
+        kb.setReadOnly(true);
         
-        KBSIQIT_sut.updateKnowledgeBase(KBSIQIT_kb, KBSIQIT_sut.getKnowledgeBaseConfig(KBSIQIT_kb));
+        sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
 
-        int qualifierCountBeforeDeletion = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement).size();
+        int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
         assertThatExceptionOfType(ReadOnlyException.class)
-            .isThrownBy(() -> KBSIQIT_sut.deleteQualifier(KBSIQIT_kb, qualifier));
+            .isThrownBy(() -> sut.deleteQualifier(kb, qualifier));
 
-        int qualifierCountAfterDeletion = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement).size();
+        int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
         assertThat(qualifierCountBeforeDeletion).as("Check that statement was not deleted")
             .isEqualTo(qualifierCountAfterDeletion);
     }
@@ -286,12 +286,12 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void deleteStatement_WithExistingStatementAndQualifier_ShouldDeleteAll()
     {
-        KBSIQIT_sut.addQualifier(KBSIQIT_kb, KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier"));
+        sut.addQualifier(kb, testFixtures.buildQualifier(statement, property, "Test qualifier"));
 
-        KBSIQIT_sut.deleteStatement(KBSIQIT_kb, KBSIQIT_statement);
+        sut.deleteStatement(kb, statement);
 
-        List<KBStatement> statements = KBSIQIT_sut.listStatements(KBSIQIT_kb, KBSIQIT_conceptHandle, false);
-        List<KBQualifier> qualifiers = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement);
+        List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
+        List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
         assertThat(statements)
             .as("Check that the statement was deleted correctly")
             .noneMatch(stmt -> "Test statement".equals(stmt.getValue()));
@@ -303,9 +303,9 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void listQualifiers_WithExistentQualifier_ShouldReturnOnlyThisQualifier()
     {
-        KBSIQIT_sut.addQualifier(KBSIQIT_kb, KBSIQIT_testFixtures.buildQualifier(KBSIQIT_statement, KBSIQIT_property, "Test qualifier"));
+        sut.addQualifier(kb, testFixtures.buildQualifier(statement, property, "Test qualifier"));
 
-        List<KBQualifier> qualifiers = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement);
+        List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
 
         assertThat(qualifiers).as("Check that saved qualifier is found")
             .hasSize(1)
@@ -316,7 +316,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void listQualifiers_WithNonExistentQualifier_ShouldReturnNothing()
     {
-        List<KBQualifier> qualifiers = KBSIQIT_sut.listQualifiers(KBSIQIT_kb, KBSIQIT_statement);
+        List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
 
         assertThat(qualifiers)
             .isEmpty();

@@ -91,45 +91,33 @@ public class ExportedRecommender
     {
         layerName = aLayerName;
     }
-    /**
-     * getTool for ExportedRecommender
-     */
-    public String ER_getTool()
+
+    public String getTool()
     {
         return tool;
     }
-    /**
-     * setTool for ExportedRecommender
-     */
-    public void ER_setTool(String aTool)
+
+    public void setTool(String aTool)
     {
         tool = aTool;
     }
-    /**
-     * getThreshold for ExportedRecommender
-     */
-    public double ER_getThreshold()
+
+    public double getThreshold()
     {
         return threshold;
     }
-    /**
-     * setThreshold for ExportedRecommender
-     */
-    public void ER_setThreshold(double aThreshold)
+
+    public void setThreshold(double aThreshold)
     {
         threshold = aThreshold;
     }
-    /**
-     * isAlwaysSelecte for ExportedRecommender
-     */
-    public boolean ER_isAlwaysSelected()
+
+    public boolean isAlwaysSelected()
     {
         return alwaysSelected;
     }
-    /**
-     * setAlwaysSelected for ExportedRecommender
-     */
-    public void ER_setAlwaysSelected(boolean aAlwaysSelected)
+
+    public void setAlwaysSelected(boolean aAlwaysSelected)
     {
         alwaysSelected = aAlwaysSelected;
     }
@@ -154,32 +142,32 @@ public class ExportedRecommender
         skipEvaluation = aSkipEvaluation;
     }
 
-    public int getMaxRecommendations_1()
+    public int getMaxRecommendations()
     {
         return maxRecommendations;
     }
 
-    public void setMaxRecommendations_1(int aMaxRecommendations)
+    public void setMaxRecommendations(int aMaxRecommendations)
     {
         maxRecommendations = aMaxRecommendations;
     }
 
-    public Set<AnnotationDocumentState> getStatesIgnoredForTraining_1()
+    public Set<AnnotationDocumentState> getStatesIgnoredForTraining()
     {
         return statesIgnoredForTraining;
     }
 
-    public void setStatesIgnoredForTraining_1(Set<AnnotationDocumentState> aStatesIgnoredForTraining)
+    public void setStatesIgnoredForTraining(Set<AnnotationDocumentState> aStatesIgnoredForTraining)
     {
         statesIgnoredForTraining = aStatesIgnoredForTraining;
     }
 
-    public String getTraits_1()
+    public String getTraits()
     {
         return traits;
     }
 
-    public void setTraits_1(String aTraits)
+    public void setTraits(String aTraits)
     {
         traits = aTraits;
     }

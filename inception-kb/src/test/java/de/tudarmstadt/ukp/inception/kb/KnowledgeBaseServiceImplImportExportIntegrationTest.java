@@ -65,40 +65,40 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest
 public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
-    private static final String PROJECT_NAME = "Test KBSIIEIT_project";
+    private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
 
     @Rule
-    public TemporaryFolder KBSIIEIT_temporaryFolder = new TemporaryFolder();
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Autowired
-    private TestEntityManager KBSIIEIT_testEntityManager;
-    private TestFixtures KBSIIEIT_testFixtures;
+    private TestEntityManager testEntityManager;
+    private TestFixtures testFixtures;
 
-    private KnowledgeBaseServiceImpl KBSIIEIT_sut;
-    private Project KBSIIEIT_project;
-    private KnowledgeBase KBSIIEIT_kb;
+    private KnowledgeBaseServiceImpl sut;
+    private Project project;
+    private KnowledgeBase kb;
 
     @BeforeClass
-    public static void KBSIIEIT_setUpOnce() {
+    public static void setUpOnce() {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
     @Before
-    public void KBSIIEIT_setUp() {
+    public void setUp() {
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(KBSIIEIT_temporaryFolder.getRoot());
-        EntityManager entityManager = KBSIIEIT_testEntityManager.getEntityManager();
-        KBSIIEIT_testFixtures = new TestFixtures(KBSIIEIT_testEntityManager);
-        KBSIIEIT_sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        KBSIIEIT_project = createProject(PROJECT_NAME);
-        KBSIIEIT_kb = buildKnowledgeBase(KBSIIEIT_project, KB_NAME);
+        repoProps.setPath(temporaryFolder.getRoot());
+        EntityManager entityManager = testEntityManager.getEntityManager();
+        testFixtures = new TestFixtures(testEntityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        project = createProject(PROJECT_NAME);
+        kb = buildKnowledgeBase(project, KB_NAME);
     }
 
     @After
-    public void KBSIIEIT_tearDown() throws Exception {
-        KBSIIEIT_testEntityManager.clear();
-        KBSIIEIT_sut.destroy();
+    public void tearDown() throws Exception {
+        testEntityManager.clear();
+        sut.destroy();
     }
 
     @Test
@@ -107,12 +107,12 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Test
     public void importData_WithExistingTtl_ShouldImportTriples() throws Exception {
-        KBSIIEIT_sut.registerKnowledgeBase(KBSIIEIT_kb, KBSIIEIT_sut.getNativeConfig());
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = KBSIIEIT_sut.listAllConcepts(KBSIIEIT_kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = KBSIIEIT_sut.listProperties(KBSIIEIT_kb, false).stream().map(KBObject::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
         assertThat(conceptLabels)
             .as("Check that concepts all have been imported")
             .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog");
@@ -123,13 +123,13 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Test
     public void importData_WithReadOnlyKb_ShouldDoNothing() throws Exception {
-        KBSIIEIT_sut.registerKnowledgeBase(KBSIIEIT_kb, KBSIIEIT_sut.getNativeConfig());
-        KBSIIEIT_kb.setReadOnly(true);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        kb.setReadOnly(true);
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = KBSIIEIT_sut.listAllConcepts(KBSIIEIT_kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = KBSIIEIT_sut.listProperties(KBSIIEIT_kb, false).stream().map(KBObject::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
         assertThat(conceptLabels)
             .as("Check that no concepts have been imported")
             .isEmpty();
@@ -140,14 +140,14 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Test
     public void importData_WithTwoFilesAndOneKnowledgeBase_ShouldImportAllTriples() throws Exception {
-        KBSIIEIT_sut.registerKnowledgeBase(KBSIIEIT_kb, KBSIIEIT_sut.getNativeConfig());
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         String[] resourceNames = {"data/pets.ttl", "data/more_pets.ttl"};
         for (String resourceName : resourceNames) {
             importKnowledgeBase(resourceName);
         }
 
-        Stream<String> conceptLabels = KBSIIEIT_sut.listAllConcepts(KBSIIEIT_kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = KBSIIEIT_sut.listProperties(KBSIIEIT_kb, false).stream().map(KBObject::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
 
         assertThat(conceptLabels)
             .as("Check that concepts all have been imported")
@@ -162,16 +162,16 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         ClassLoader classLoader = getClass().getClassLoader();
         String resourceName = "turtle/mismatching_literal_statement.ttl";
         String fileName = classLoader.getResource(resourceName).getFile();
-        KBSIIEIT_sut.registerKnowledgeBase(KBSIIEIT_kb, KBSIIEIT_sut.getNativeConfig());
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
-            KBSIIEIT_sut.importData(KBSIIEIT_kb, fileName, is);
+            sut.importData(kb, fileName, is);
         }
 
-        KBInstance kahmi = KBSIIEIT_sut.readInstance(KBSIIEIT_kb, "http://mbugert.de/pets#kahmi").get();
-        Stream<String> conceptLabels = KBSIIEIT_sut.listAllConcepts(KBSIIEIT_kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = KBSIIEIT_sut.listProperties(KBSIIEIT_kb, false).stream().map(KBObject::getName);
-        Stream<Object> kahmiValues = KBSIIEIT_sut.listStatements(KBSIIEIT_kb, kahmi, false)
+        KBInstance kahmi = sut.readInstance(kb, "http://mbugert.de/pets#kahmi").get();
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
+        Stream<Object> kahmiValues = sut.listStatements(kb, kahmi, false)
             .stream()
             .map(KBStatement::getValue);
         assertThat(conceptLabels)
@@ -191,25 +191,25 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         concept.setName("TestConcept");
         KBProperty property = new KBProperty();
         property.setName("TestProperty");
-        KBSIIEIT_sut.registerKnowledgeBase(KBSIIEIT_kb, KBSIIEIT_sut.getNativeConfig());
-        KBSIIEIT_sut.createConcept(KBSIIEIT_kb, concept);
-        KBSIIEIT_sut.createProperty(KBSIIEIT_kb, property);
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        sut.createConcept(kb, concept);
+        sut.createProperty(kb, property);
 
-        File KBSIIEIT_kbFile = KBSIIEIT_temporaryFolder.newFile("exported_KBSIIEIT_kb.ttl");
-        try (OutputStream os = new FileOutputStream(KBSIIEIT_kbFile)) {
-            KBSIIEIT_sut.exportData(KBSIIEIT_kb, RDFFormat.TURTLE, os);
+        File kbFile = temporaryFolder.newFile("exported_kb.ttl");
+        try (OutputStream os = new FileOutputStream(kbFile)) {
+            sut.exportData(kb, RDFFormat.TURTLE, os);
         }
 
-        KnowledgeBase importedKb = buildKnowledgeBase(KBSIIEIT_project, "Imported knowledge base");
-        KBSIIEIT_sut.registerKnowledgeBase(importedKb, KBSIIEIT_sut.getNativeConfig());
-        try (InputStream is = new FileInputStream(KBSIIEIT_kbFile)) {
-            KBSIIEIT_sut.importData(importedKb, KBSIIEIT_kbFile.getAbsolutePath(), is);
+        KnowledgeBase importedKb = buildKnowledgeBase(project, "Imported knowledge base");
+        sut.registerKnowledgeBase(importedKb, sut.getNativeConfig());
+        try (InputStream is = new FileInputStream(kbFile)) {
+            sut.importData(importedKb, kbFile.getAbsolutePath(), is);
         }
-        List<String> conceptLabels = KBSIIEIT_sut.listAllConcepts(importedKb, false)
+        List<String> conceptLabels = sut.listAllConcepts(importedKb, false)
             .stream()
             .map(KBObject::getName)
             .collect(Collectors.toList());
-        List<String> propertyLabels = KBSIIEIT_sut.listProperties(importedKb, false)
+        List<String> propertyLabels = sut.listProperties(importedKb, false)
             .stream()
             .map(KBObject::getName)
             .filter(Objects::nonNull)
@@ -224,12 +224,12 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Test
     public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception {
-        File outputFile = KBSIIEIT_temporaryFolder.newFile();
-        KBSIIEIT_kb.setType(RepositoryType.REMOTE);
-        KBSIIEIT_sut.registerKnowledgeBase(KBSIIEIT_kb, KBSIIEIT_sut.getRemoteConfig(KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
+        File outputFile = temporaryFolder.newFile();
+        kb.setType(RepositoryType.REMOTE);
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
 
         try (OutputStream os = new FileOutputStream(outputFile)) {
-            KBSIIEIT_sut.exportData(KBSIIEIT_kb, RDFFormat.TURTLE, os);
+            sut.exportData(kb, RDFFormat.TURTLE, os);
         }
 
         assertThat(outputFile)
@@ -243,18 +243,18 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         Project p = new Project();
         p.setName(name);
         p.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
-        return KBSIIEIT_testEntityManager.persist(p);
+        return testEntityManager.persist(p);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project KBSIIEIT_project, String name) {
-        return KBSIIEIT_testFixtures.buildKnowledgeBase(KBSIIEIT_project, name, Reification.NONE);
+    private KnowledgeBase buildKnowledgeBase(Project project, String name) {
+        return testFixtures.buildKnowledgeBase(project, name, Reification.NONE);
     }
 
     private void importKnowledgeBase(String resourceName) throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
-            KBSIIEIT_sut.importData(KBSIIEIT_kb, fileName, is);
+            sut.importData(kb, fileName, is);
         }
     }
 }

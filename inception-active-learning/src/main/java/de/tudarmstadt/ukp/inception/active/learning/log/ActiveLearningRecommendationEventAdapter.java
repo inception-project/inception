@@ -47,13 +47,13 @@ public class ActiveLearningRecommendationEventAdapter
     @Override
     public long getDocument(ActiveLearningRecommendationEvent aEvent)
     {
-        return aEvent.ALRE_getDocument().getId();
+        return aEvent.getDocument().getId();
     }
 
     @Override
     public long getProject(ActiveLearningRecommendationEvent aEvent)
     {
-        return aEvent.ALRE_getDocument().getProject().getId();
+        return aEvent.getDocument().getProject().getId();
     }
 
     @Override
@@ -62,15 +62,15 @@ public class ActiveLearningRecommendationEventAdapter
         try {
             ActiveLearningRecommendationDetails details = new ActiveLearningRecommendationDetails();
             details.ann = new AnnotationDetails();
-            details.ann.setBegin(aEvent.ALRE_getCurrentRecommendation().getBegin());
-            details.ann.setEnd(aEvent.ALRE_getCurrentRecommendation().getEnd());
-            details.ann.setText(aEvent.ALRE_getCurrentRecommendation().getCoveredText());
-            details.ann.setType(aEvent.ALRE_getLayer().getName());
-            details.annotationFeature = aEvent.ALRE_getAnnotationFeature();
+            details.ann.setBegin(aEvent.getCurrentRecommendation().getBegin());
+            details.ann.setEnd(aEvent.getCurrentRecommendation().getEnd());
+            details.ann.setText(aEvent.getCurrentRecommendation().getCoveredText());
+            details.ann.setType(aEvent.getLayer().getName());
+            details.annotationFeature = aEvent.getAnnotationFeature();
             details.userAction = aEvent.getAction();
-            details.currentLabel = aEvent.ALRE_getCurrentRecommendation().getLabel();
-            details.confidence = aEvent.ALRE_getCurrentRecommendation().getConfidence();
-            details.recommenderId = aEvent.ALRE_getCurrentRecommendation().getRecommenderId();
+            details.currentLabel = aEvent.getCurrentRecommendation().getLabel();
+            details.confidence = aEvent.getCurrentRecommendation().getConfidence();
+            details.recommenderId = aEvent.getCurrentRecommendation().getRecommenderId();
 
             List<String> allLabelList = aEvent.getAllRecommendations().stream()
                 .map(ao -> ao.getLabel()).collect(Collectors.toList());

@@ -16,15 +16,17 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.inception.active.learning.event;
+
 import java.util.List;
 
 import org.springframework.context.ApplicationEvent;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
-public class ActiveLearningRecommendationEvent 
+public class ActiveLearningRecommendationEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = -2741267700429534514L;
@@ -51,38 +53,28 @@ public class ActiveLearningRecommendationEvent
         action = aAction;
         allRecommendations = aAllRecommendations;
     }
-    /**
-     * getDocument for OpenNlpPosRecommenderTraits
-     */
-    public SourceDocument ALRE_getDocument()
+
+    public SourceDocument getDocument()
     {
         return document;
     }
-    /**
-     * getCurrentRecommendation for OpenNlpPosRecommenderTraits
-     */
-    public AnnotationSuggestion ALRE_getCurrentRecommendation()
+
+    public AnnotationSuggestion getCurrentRecommendation()
     {
         return currentRecommendation;
     }
-    /**
-     * getUser for OpenNlpPosRecommenderTraits
-     */
-    public String ALRE_getUser()
+
+    public String getUser()
     {
         return user;
     }
-    /**
-     * getLayer for OpenNlpPosRecommenderTraits
-     */
-    public AnnotationLayer ALRE_getLayer()
+
+    public AnnotationLayer getLayer()
     {
         return layer;
     }
-    /**
-     * getAnnotationFeature for OpenNlpPosRecommenderTraits
-     */
-    public String ALRE_getAnnotationFeature()
+
+    public String getAnnotationFeature()
     {
         return annotationFeature;
     }

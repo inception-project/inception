@@ -74,43 +74,28 @@ public class NoReificationTest
             "    rdfs:label 'Red Goblin' ;",
             "    rdfs:comment 'Little red monster' .");
     
-    private KnowledgeBase NRT_kb;
+    private KnowledgeBase kb;
     private Repository rdf4jLocalRepo;
     private ReificationStrategy sut;
     
     @Before
     public void setUp()
     {
-	    /**
-		 *this is rename method of NamedEntityLinkerTest.java
-		 */
-        NRT_kb = new KnowledgeBase();
-		/**
-		 *this is rename method of NamedEntityLinkerTest.java
-		 */
-        NRT_kb.setDefaultLanguage("en");
-		/**
-		 *this is rename method of NamedEntityLinkerTest.java
-		 */
-        NRT_kb.setType(RepositoryType.LOCAL);
-		/**
-		 *this is rename method of NamedEntityLinkerTest.java
-		 */
-        NRT_kb.setFullTextSearchIri(null);
-		/**
-		 *this is rename method of NamedEntityLinkerTest.java
-		 */
-        NRT_kb.setMaxResults(1000);
+        kb = new KnowledgeBase();
+        kb.setDefaultLanguage("en");
+        kb.setType(RepositoryType.LOCAL);
+        kb.setFullTextSearchIri(null);
+        kb.setMaxResults(1000);
         
         initRdfsMapping();
         
         // Local in-memory store - this should be used for most tests because we can
         // a) rely on its availability
         // b) import custom test data
-        LuceneSail NRT_lucenesail = new LuceneSail();
-        NRT_lucenesail.setParameter(LuceneSail.LUCENE_RAMDIR_KEY, "true");
-        NRT_lucenesail.setBaseSail(new MemoryStore());
-        rdf4jLocalRepo = new SailRepository(NRT_lucenesail);
+        LuceneSail lucenesail = new LuceneSail();
+        lucenesail.setParameter(LuceneSail.LUCENE_RAMDIR_KEY, "true");
+        lucenesail.setBaseSail(new MemoryStore());
+        rdf4jLocalRepo = new SailRepository(lucenesail);
         rdf4jLocalRepo.init();
         
         sut = new NoReification();
@@ -137,7 +122,7 @@ public class NoReificationTest
         try (RepositoryConnection conn = aRepo.getConnection()) {
             long startTime = System.currentTimeMillis();
   
-            List<KBStatement> results = sut.listStatements(conn, NRT_kb, aItem, true);
+            List<KBStatement> results = sut.listStatements(conn, kb, aItem, true);
   
             System.out.printf("Results : %d in %dms%n", results.size(),
                     System.currentTimeMillis() - startTime);
@@ -163,7 +148,7 @@ public class NoReificationTest
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
-            String prefix = StringUtils.removeEnd(NRT_kb.getBasePrefix(), "#");
+            String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
             conn.add(aIS, prefix, aFormat);
         }
     }
@@ -171,19 +156,19 @@ public class NoReificationTest
     private void initRdfsMapping()
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        //this is rename varies of NoReificationTest.java
-        NRT_kb.setClassIri(RDFS.CLASS);
-        NRT_kb.setSubclassIri(RDFS.SUBCLASSOF);
-        NRT_kb.setTypeIri(RDF.TYPE);
-        NRT_kb.setLabelIri(RDFS.LABEL);
-        NRT_kb.setPropertyTypeIri(RDF.PROPERTY);
-        NRT_kb.setDescriptionIri(RDFS.COMMENT);
+        
+        kb.setClassIri(RDFS.CLASS);
+        kb.setSubclassIri(RDFS.SUBCLASSOF);
+        kb.setTypeIri(RDF.TYPE);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setDescriptionIri(RDFS.COMMENT);
         // We are intentionally not using RDFS.LABEL here to ensure we can test the label
         // and property label separately
-        NRT_kb.setPropertyLabelIri(SKOS.PREF_LABEL);        
+        kb.setPropertyLabelIri(SKOS.PREF_LABEL);        
         // We are intentionally not using RDFS.COMMENT here to ensure we can test the description
         // and property description separately
-        NRT_kb.setPropertyDescriptionIri(vf.createIRI("http://schema.org/description"));
-        NRT_kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setPropertyDescriptionIri(vf.createIRI("http://schema.org/description"));
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
     }
 }

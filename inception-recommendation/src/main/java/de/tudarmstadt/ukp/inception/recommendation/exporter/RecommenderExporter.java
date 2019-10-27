@@ -80,18 +80,18 @@ public class RecommenderExporter implements ProjectExporter {
         List<ExportedRecommender> exportedRecommenders = new ArrayList<>();
         for (Recommender recommender : recommendationService.listRecommenders(project)) {
             ExportedRecommender exportedRecommender = new ExportedRecommender();
-            exportedRecommender.ER_setAlwaysSelected(recommender.isAlwaysSelected());
+            exportedRecommender.setAlwaysSelected(recommender.isAlwaysSelected());
             exportedRecommender.setFeature(recommender.getFeature().getName());
             exportedRecommender.setEnabled(recommender.isEnabled());
             exportedRecommender.setLayerName(recommender.getLayer().getName());
             exportedRecommender.setName(recommender.getName());
-            exportedRecommender.ER_setThreshold(recommender.getThreshold());
-            exportedRecommender.ER_setTool(recommender.getTool());
+            exportedRecommender.setThreshold(recommender.getThreshold());
+            exportedRecommender.setTool(recommender.getTool());
             exportedRecommender.setSkipEvaluation(recommender.isSkipEvaluation());
-            exportedRecommender.setMaxRecommendations_1(recommender.getMaxRecommendations());
-            exportedRecommender.setStatesIgnoredForTraining_1(
+            exportedRecommender.setMaxRecommendations(recommender.getMaxRecommendations());
+            exportedRecommender.setStatesIgnoredForTraining(
                     recommender.getStatesIgnoredForTraining());
-            exportedRecommender.setTraits_1(recommender.getTraits());
+            exportedRecommender.setTraits(recommender.getTraits());
             exportedRecommenders.add(exportedRecommender);
         }
 
@@ -108,16 +108,16 @@ public class RecommenderExporter implements ProjectExporter {
 
         for (ExportedRecommender exportedRecommender : recommenders) {
             Recommender recommender = new Recommender();
-            recommender.setAlwaysSelected(exportedRecommender.ER_isAlwaysSelected());
+            recommender.setAlwaysSelected(exportedRecommender.isAlwaysSelected());
             recommender.setEnabled(exportedRecommender.isEnabled());
             recommender.setName(exportedRecommender.getName());
-            recommender.setThreshold(exportedRecommender.ER_getThreshold());
-            recommender.setTool(exportedRecommender.ER_getTool());
+            recommender.setThreshold(exportedRecommender.getThreshold());
+            recommender.setTool(exportedRecommender.getTool());
             recommender.setSkipEvaluation(exportedRecommender.isSkipEvaluation());
-            recommender.setMaxRecommendations(exportedRecommender.getMaxRecommendations_1());
+            recommender.setMaxRecommendations(exportedRecommender.getMaxRecommendations());
             recommender.setStatesIgnoredForTraining(
-                    exportedRecommender.getStatesIgnoredForTraining_1());
-            recommender.setTraits(exportedRecommender.getTraits_1());
+                    exportedRecommender.getStatesIgnoredForTraining());
+            recommender.setTraits(exportedRecommender.getTraits());
 
             // The value for max recommendations must be between 1 and 100
             if (recommender.getMaxRecommendations() < 1) {

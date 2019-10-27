@@ -304,20 +304,20 @@ public class DL4JSequenceRecommenderTest
 
         EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
-        double DL4J_fscore = result.computeF1Score();
-        double DL4J_accuracy = result.computeAccuracyScore();
-        double DL4J_precision = result.computePrecisionScore();
-        double DL4J_recall = result.computeRecallScore();
+        double fscore = result.computeF1Score();
+        double accuracy = result.computeAccuracyScore();
+        double precision = result.computePrecisionScore();
+        double recall = result.computeRecallScore();
 
-        System.out.printf("POS F1-Score: %f%n", DL4J_fscore);
-        System.out.printf("POS Accuracy: %f%n", DL4J_accuracy);
-        System.out.printf("POS Precision: %f%n", DL4J_precision);
-        System.out.printf("POS Recall: %f%n", DL4J_recall);
+        System.out.printf("POS F1-Score: %f%n", fscore);
+        System.out.printf("POS Accuracy: %f%n", accuracy);
+        System.out.printf("POS Precision: %f%n", precision);
+        System.out.printf("POS Recall: %f%n", recall);
         
-        assertThat(DL4J_fscore).isStrictlyBetween(0.0, 1.0);
-        assertThat(DL4J_precision).isStrictlyBetween(0.0, 1.0);
-        assertThat(DL4J_recall).isStrictlyBetween(0.0, 1.0);
-        assertThat(DL4J_accuracy).isStrictlyBetween(0.0, 1.0);
+        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
+        assertThat(precision).isStrictlyBetween(0.0, 1.0);
+        assertThat(recall).isStrictlyBetween(0.0, 1.0);
+        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
     @Test
@@ -370,33 +370,22 @@ public class DL4JSequenceRecommenderTest
         JCas cas = loadNerDevelopmentData();
 
         EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
-		/**
-		 *this is rename method of DL4JSequenceRecommenderTest.java
-		 */
-        double DL4J_fscore = result.computeF1Score();
-		/**
-		 *this is rename method of DL4JSequenceRecommenderTest.java
-		 */
-        double DL4J_accuracy = result.computeAccuracyScore();
-		/**
-		 *this is rename method of DL4JSequenceRecommenderTest.java
-		 */
-        double DL4J_precision = result.computePrecisionScore();
-		/**
-		 *this is rename method of DL4JSequenceRecommenderTest.java
-		 */
-        double DL4J_recall = result.computeRecallScore();
 
-        System.out.printf("NER F1-Score: %f%n", DL4J_fscore);
-        System.out.printf("NER Accuracy: %f%n", DL4J_accuracy);
-        System.out.printf("NER Precision: %f%n", DL4J_precision);
-        System.out.printf("NER Recall: %f%n", DL4J_recall);
+        double fscore = result.computeF1Score();
+        double accuracy = result.computeAccuracyScore();
+        double precision = result.computePrecisionScore();
+        double recall = result.computeRecallScore();
+
+        System.out.printf("NER F1-Score: %f%n", fscore);
+        System.out.printf("NER Accuracy: %f%n", accuracy);
+        System.out.printf("NER Precision: %f%n", precision);
+        System.out.printf("NER Recall: %f%n", recall);
         
         // FIXME is always zero
-        assertThat(DL4J_fscore).isBetween(0.0, 1.0);
-        assertThat(DL4J_precision).isBetween(0.0, 1.0);
-        assertThat(DL4J_recall).isBetween(0.0, 1.0);
-        assertThat(DL4J_accuracy).isBetween(0.0, 1.0);
+        assertThat(fscore).isBetween(0.0, 1.0);
+        assertThat(precision).isBetween(0.0, 1.0);
+        assertThat(recall).isBetween(0.0, 1.0);
+        assertThat(accuracy).isBetween(0.0, 1.0);
     }
 
     @Test

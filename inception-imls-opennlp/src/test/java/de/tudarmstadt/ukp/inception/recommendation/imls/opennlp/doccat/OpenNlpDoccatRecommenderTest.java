@@ -74,11 +74,11 @@ public class OpenNlpDoccatRecommenderTest
     public void setUp()
     {
         context = new RecommenderContext();
-        recommender = ONDRT_buildRecommender();
+        recommender = buildRecommender();
         traits = new OpenNlpDoccatRecommenderTraits();
-        traits.ONDRT_setNumThreads(2);
+        traits.setNumThreads(2);
         traits.setTrainingSetSizeLimit(250);
-        traits.ONDRT_setPredictionLimit(250);
+        traits.setPredictionLimit(250);
     }
 
     @Test
@@ -186,19 +186,19 @@ public class OpenNlpDoccatRecommenderTest
         return casList;
     }
 
-    private static Recommender ONDRT_buildRecommender()
+    private static Recommender buildRecommender()
     {
-        AnnotationLayer ONDRT_layer = new AnnotationLayer();
-        ONDRT_layer.setName(NamedEntity.class.getName());
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setName(NamedEntity.class.getName());
         
-        AnnotationFeature ONDRT_feature = new AnnotationFeature();
-        ONDRT_feature.setName("value");
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("value");
 
-        Recommender ONDRT_recommender = new Recommender();
-        ONDRT_recommender.setLayer(ONDRT_layer);
-        ONDRT_recommender.setFeature(ONDRT_feature);
+        Recommender recommender = new Recommender();
+        recommender.setLayer(layer);
+        recommender.setFeature(feature);
 
-        return ONDRT_recommender;
+        return recommender;
     }
     
     public static class Reader extends JCasResourceCollectionReader_ImplBase

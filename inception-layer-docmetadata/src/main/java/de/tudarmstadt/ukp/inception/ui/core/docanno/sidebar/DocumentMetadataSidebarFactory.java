@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 
 @Component("documentMetadataSidebar")
 @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+        matchIfMissing = true )
 public class DocumentMetadataSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {

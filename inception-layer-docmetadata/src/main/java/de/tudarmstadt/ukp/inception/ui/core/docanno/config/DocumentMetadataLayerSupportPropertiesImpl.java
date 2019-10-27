@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 public class DocumentMetadataLayerSupportPropertiesImpl
     implements DocumentMetadataLayerSupportProperties
 {
-    private boolean enabled = false;
+    private boolean enabled = true;
 
     public boolean isEnabled()
     {

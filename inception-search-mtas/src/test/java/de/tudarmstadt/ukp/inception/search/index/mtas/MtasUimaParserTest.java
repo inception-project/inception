@@ -68,7 +68,7 @@ public class MtasUimaParserTest
     private JCas jcas;
     
     @Before
-    public void setup1() throws Exception
+    public void setup() throws Exception
     {
         initMocks(this);
         

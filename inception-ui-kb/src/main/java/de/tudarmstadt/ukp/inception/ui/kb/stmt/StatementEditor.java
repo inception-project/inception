@@ -85,8 +85,8 @@ public class StatementEditor extends Panel
         statement = aStatement;
 
         // new statements start with edit mode right away
-        boolean isNewStatement1 = statement.getObject().getOriginalTriples().isEmpty();
-        if (isNewStatement1) {
+        boolean isNewStatement = statement.getObject().getOriginalTriples().isEmpty();
+        if (isNewStatement) {
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, statement, true);
 
             // obtain AjaxRequestTarget and set the focus
@@ -101,7 +101,7 @@ public class StatementEditor extends Panel
         add(content);
     }
 
-    protected void actionEdit1(AjaxRequestTarget aTarget) {
+    protected void actionEdit(AjaxRequestTarget aTarget) {
         // Edit mode works on a model of a shallow copy of the original statement. Any floating
         // changes to the statement are either persisted by saving or undone by canceling. In
         // conjunction with onchange AjaxFormComponentUpdatingBehaviours, this makes sure that
@@ -116,25 +116,25 @@ public class StatementEditor extends Panel
         aTarget.add(this);
     }
 
-    private void actionAddQualifier1(AjaxRequestTarget aTarget, KBStatement statement) {
+    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement) {
         KBQualifier qualifierPorto = new KBQualifier(statement);
         statement.addQualifier(qualifierPorto);
         aTarget.add(this);
     }
 
-    private void actionCancelExistingStatement1(AjaxRequestTarget aTarget) {
+    private void actionCancelExistingStatement(AjaxRequestTarget aTarget) {
         content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, statement));
         aTarget.add(this);
     }
 
-    private void actionCancelNewStatement1(AjaxRequestTarget aTarget) {
+    private void actionCancelNewStatement(AjaxRequestTarget aTarget) {
         // send a delete event to trigger the deletion in the UI
         AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
                 statement.getObject(), this, true);
         send(getPage(), Broadcast.BREADTH, deleteEvent);
     }
 
-    private void actionSave1(AjaxRequestTarget aTarget, Form<KBStatement> aForm) {
+    private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm) {
         KBStatement modifiedStatement = aForm.getModelObject();
         try {
             String language = aForm.getModelObject().getLanguage() != null
@@ -146,7 +146,7 @@ public class StatementEditor extends Panel
             kbService.upsertStatement(kbModel.getObject(), modifiedStatement);
             statement.setObject(modifiedStatement);
             // switch back to ViewMode and send notification to listeners
-            actionCancelExistingStatement1(aTarget);
+            actionCancelExistingStatement(aTarget);
             send(getPage(), Broadcast.BREADTH,
                     new AjaxStatementChangedEvent(aTarget, statement.getObject()));
         }
@@ -157,7 +157,7 @@ public class StatementEditor extends Panel
         }
     }
 
-    private void actionDelete1(AjaxRequestTarget aTarget) {
+    private void actionDelete(AjaxRequestTarget aTarget) {
         try {
             kbService.deleteStatement(kbModel.getObject(), statement.getObject());
 
@@ -172,7 +172,7 @@ public class StatementEditor extends Panel
         }
     }
 
-    private void actionMakeExplicit1(AjaxRequestTarget aTarget) {
+    private void actionMakeExplicit(AjaxRequestTarget aTarget) {
         try {
             // add the statement as-is to the knowledge base
             kbService.upsertStatement(kbModel.getObject(), statement.getObject());
@@ -217,13 +217,13 @@ public class StatementEditor extends Panel
                 }
             });
             
-            LambdaAjaxLink editLink = new LambdaAjaxLink("edit", StatementEditor.this::actionEdit1)
+            LambdaAjaxLink editLink = new LambdaAjaxLink("edit", StatementEditor.this::actionEdit)
                     .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred()));
             editLink.add(new WriteProtectionBehavior(kbModel));
             add(editLink);
 
             LambdaAjaxLink addQualifierLink = new LambdaAjaxLink("addQualifier",
-                t -> actionAddQualifier1(t, aStatement.getObject()))
+                t -> actionAddQualifier(t, aStatement.getObject()))
                 .onConfigure((_this) -> _this.setVisible(!statement.getObject().isInferred() &&
                     kbModel.getObject().getReification().supportsQualifier()));
             addQualifierLink.add(new Label("label", new ResourceModel("qualifier.add")));
@@ -231,7 +231,7 @@ public class StatementEditor extends Panel
             add(addQualifierLink);
             
             LambdaAjaxLink makeExplicitLink = new LambdaAjaxLink("makeExplicit",
-                    StatementEditor.this::actionMakeExplicit1).onConfigure(
+                    StatementEditor.this::actionMakeExplicit).onConfigure(
                         (_this) -> _this.setVisible(statement.getObject().isInferred()));
             makeExplicitLink.add(new WriteProtectionBehavior(kbModel));
             add(makeExplicitLink);
@@ -341,15 +341,15 @@ public class StatementEditor extends Panel
             // it should be possible to select an instance of that concept using some
             // auto-completing dropdown box
 
-            form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave1));
+            form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));
             form.add(new LambdaAjaxLink("cancel", t -> {
                 if (isNewStatement) {
-                    StatementEditor.this.actionCancelNewStatement1(t);
+                    StatementEditor.this.actionCancelNewStatement(t);
                 } else {
-                    StatementEditor.this.actionCancelExistingStatement1(t);
+                    StatementEditor.this.actionCancelExistingStatement(t);
                 }
             }));
-            form.add(new LambdaAjaxLink("delete", StatementEditor.this::actionDelete1)
+            form.add(new LambdaAjaxLink("delete", StatementEditor.this::actionDelete)
                     .setVisibilityAllowed(!isNewStatement));
             add(form);
         }

@@ -63,7 +63,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
 /**
- * Extension providing knowledge-base-related CFS_features for annotations.
+ * Extension providing knowledge-base-related features for annotations.
  */
 @Component
 public class ConceptFeatureSupport
@@ -79,15 +79,13 @@ public class ConceptFeatureSupport
 
     private final KnowledgeBaseService kbService;
     
-	//rename labelCache to CFS_labelCache
-    private LoadingCache<Key, KBHandle> CFS_labelCache = Caffeine.newBuilder()
+    private LoadingCache<Key, KBHandle> labelCache = Caffeine.newBuilder()
         .maximumSize(10_000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .refreshAfterWrite(1, TimeUnit.MINUTES)
         .build(key -> loadLabelValue(key));
     
-	//rename featureSupportId to CFS_featureSupportId
-    private String CFS_featureSupportId;
+    private String featureSupportId;
 
     @Autowired
     public ConceptFeatureSupport(KnowledgeBaseService aKbService)
@@ -98,13 +96,13 @@ public class ConceptFeatureSupport
     @Override
     public String getId()
     {
-        return CFS_featureSupportId;
+        return featureSupportId;
     }
 
     @Override
     public void setBeanName(String aBeanName)
     {
-        CFS_featureSupportId = aBeanName;
+        featureSupportId = aBeanName;
     }
     
     @Override
@@ -112,7 +110,7 @@ public class ConceptFeatureSupport
     {
         if (aFeature.getType().startsWith(PREFIX)) {
             return Optional.of(new FeatureType(aFeature.getType(),
-                    aFeature.getType().substring(PREFIX.length()), CFS_featureSupportId));
+                    aFeature.getType().substring(PREFIX.length()), featureSupportId));
         }
         else {
             return Optional.empty();
@@ -124,7 +122,7 @@ public class ConceptFeatureSupport
     {
         // We just start with no specific scope at all (ANY) and let the user refine this via
         // the traits editor
-        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Concept/Instance", CFS_featureSupportId));
+        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Concept/Instance", featureSupportId));
     }
 
     @Override
@@ -144,7 +142,7 @@ public class ConceptFeatureSupport
     {
         String renderValue = null;
         if (aLabel != null) {
-            return CFS_labelCache.get(new Key(aFeature, aLabel)).getUiLabel();
+            return labelCache.get(new Key(aFeature, aLabel)).getUiLabel();
         }
         return renderValue;
     }
@@ -172,11 +170,11 @@ public class ConceptFeatureSupport
             return kbObject.map(KBObject::toKBHandle).orElseThrow(NoSuchElementException::new);
         }
         catch (NoSuchElementException e) {
-            LOG.error("No CFS_label for CFS_feature value [{}]", aKey.getLabel());
+            LOG.error("No label for feature value [{}]", aKey.getLabel());
             return new KBErrorHandle("NO LABEL (" + aKey.getLabel() + ")", e);
         }
         catch (Exception e) {
-            LOG.error("Unable to obtain CFS_label value for CFS_feature value [{}]", aKey.getLabel(), e);
+            LOG.error("Unable to obtain label value for feature value [{}]", aKey.getLabel(), e);
             return new KBErrorHandle("ERROR (" + aKey.getLabel() + ")", e);
         }
     }
@@ -184,7 +182,7 @@ public class ConceptFeatureSupport
     @Override
     public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
-        // Normally, we get KBHandles back from the CFS_feature editors
+        // Normally, we get KBHandles back from the feature editors
         if (aValue instanceof KBHandle) {
             return ((KBHandle) aValue).getIdentifier();
         }
@@ -229,22 +227,22 @@ public class ConceptFeatureSupport
             AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
             IModel<FeatureState> aFeatureStateModel)
     {
-        AnnotationFeature CFS_feature = aFeatureStateModel.getObject().feature;
+        AnnotationFeature feature = aFeatureStateModel.getObject().feature;
         FeatureEditor editor;
 
-        switch (CFS_feature.getMultiValueMode()) {
+        switch (feature.getMultiValueMode()) {
         case NONE:
-            if (CFS_feature.getType().startsWith("kb:")) {
+            if (feature.getType().startsWith("kb:")) {
                 editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel, aStateModel,
                     aHandler);
             }
             else {
-                throw unsupportedMultiValueModeException(CFS_feature);
+                throw unsupportedMultiValueModeException(feature);
             }
             break;
         case ARRAY: // fall-through
         default:
-            throw unsupportedMultiValueModeException(CFS_feature);
+            throw unsupportedMultiValueModeException(feature);
         }
 
         return editor;
@@ -267,7 +265,7 @@ public class ConceptFeatureSupport
         }
         
         // If there is no scope set in the trait, see if once can be extracted from the legacy
-        // location which is the CFS_feature type.
+        // location which is the feature type.
         if (traits.getScope() == null && !TYPE_ANY_OBJECT.equals(aFeature.getType())) {
             traits.setScope(aFeature.getType().substring(PREFIX.length()));
         }
@@ -278,7 +276,7 @@ public class ConceptFeatureSupport
     @Override
     public void writeTraits(AnnotationFeature aFeature, ConceptFeatureTraits aTraits)
     {
-        // Update the CFS_feature type with the scope
+        // Update the feature type with the scope
         if (aTraits.getScope() != null) {
             aFeature.setType(PREFIX + aTraits.getScope());
         }
@@ -316,7 +314,7 @@ public class ConceptFeatureSupport
     {
         List<VLazyDetailResult> result = new ArrayList<>();
         
-        KBHandle handle = CFS_labelCache.get(new Key(aFeature, aQuery));
+        KBHandle handle = labelCache.get(new Key(aFeature, aQuery));
 
         result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
 
@@ -329,26 +327,24 @@ public class ConceptFeatureSupport
 
     private class Key
     {
-		//rename feature to CFS_feature
-        private final AnnotationFeature CFS_feature;
-		//rename label to CFS_label
-        private final String CFS_label;
+        private final AnnotationFeature feature;
+        private final String label;
         
         public Key(AnnotationFeature aFeature, String aLabel)
         {
             super();
-            CFS_feature = aFeature;
-            CFS_label = aLabel;
+            feature = aFeature;
+            label = aLabel;
         }
         
         public String getLabel()
         {
-            return CFS_label;
+            return label;
         }
         
         public AnnotationFeature getAnnotationFeature()
         {
-            return CFS_feature;
+            return feature;
         }
         
         @Override
@@ -358,14 +354,14 @@ public class ConceptFeatureSupport
                 return false;
             }
             Key castOther = (Key) other;
-            return new EqualsBuilder().append(CFS_feature, castOther.CFS_feature)
-                    .append(CFS_label, castOther.CFS_label).isEquals();
+            return new EqualsBuilder().append(feature, castOther.feature)
+                    .append(label, castOther.label).isEquals();
         }
 
         @Override
         public int hashCode()
         {
-            return new HashCodeBuilder().append(CFS_feature).append(CFS_label).toHashCode();
+            return new HashCodeBuilder().append(feature).append(label).toHashCode();
         }
     }
 }

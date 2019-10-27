@@ -66,43 +66,31 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class NamedEntityLinkerTest
-{   
-	/**
-	 *this is rename method of NamedEntityLinkerTest.java
-	 */
-    private static File NELT_cache = DkproTestContext.getCacheFolder();
-	/**
-	 *this is rename method of NamedEntityLinkerTest.java
-	 */
-    private static DatasetFactory NELT_loader = new DatasetFactory(NELT_cache);
-	/**
-	 *this is rename method of NamedEntityLinkerTest.java
-	 */
-    private RecommenderContext NELT_context;
-	/**
-	 *this is rename method of NamedEntityLinkerTest.java
-	 */
-    private Recommender NELT_recommender;
+{
+    private static File cache = DkproTestContext.getCacheFolder();
+    private static DatasetFactory loader = new DatasetFactory(cache);
+
+    private RecommenderContext context;
+    private Recommender recommender;
 
     @Before
     public void setUp() {
-        NELT_context = new RecommenderContext();
-        NELT_recommender = buildRecommender();
+        context = new RecommenderContext();
+        recommender = buildRecommender();
     }
 
     @Test
     public void thatTrainingWorks() throws Exception
     {
-		//this is rename varies of NamedEntityLinkerTest.java
-        NamedEntityLinker sut = new NamedEntityLinker(NELT_recommender, new NamedEntityLinkerTraits(),
+        NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
                 mock(KnowledgeBaseService.class), mock(ConceptLinkingServiceImpl.class),
                 mock(FeatureSupportRegistry.class), new ConceptFeatureTraits());
 
-        List<CAS> NETL_casList = loadDevelopmentData();
+        List<CAS> casList = loadDevelopmentData();
 
-        sut.train(NELT_context, NETL_casList);
+        sut.train(context, casList);
 
-        assertThat(NELT_context.get(NamedEntityLinker.KEY_MODEL))
+        assertThat(context.get(NamedEntityLinker.KEY_MODEL))
             .as("Model has been set")
             .isNotNull();
     }
@@ -132,21 +120,21 @@ public class NamedEntityLinkerTest
 
         FeatureSupportRegistry fsRegistry = mock(FeatureSupportRegistry.class);
         FeatureSupport fs = mock(FeatureSupport.class);
-        when(fsRegistry.getFeatureSupport(NELT_recommender.getFeature())).thenReturn(fs);
-        when(fs.readTraits(NELT_recommender.getFeature())).thenReturn(new ConceptFeatureTraits());
+        when(fsRegistry.getFeatureSupport(recommender.getFeature())).thenReturn(fs);
+        when(fs.readTraits(recommender.getFeature())).thenReturn(new ConceptFeatureTraits());
 
-        NamedEntityLinker sut = new NamedEntityLinker(NELT_recommender, new NamedEntityLinkerTraits(),
+        NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
                 kbService, clService, fsRegistry, new ConceptFeatureTraits());
 
-        List<CAS> NETL_casList = loadDevelopmentData();
-        CAS NETL_cas = NETL_casList.get(0);
+        List<CAS> casList = loadDevelopmentData();
+        CAS cas = casList.get(0);
         
-        sut.train(NELT_context, Collections.singletonList(NETL_cas));
-        RecommenderTestHelper.addScoreFeature(NETL_cas, NamedEntity.class, "value");
+        sut.train(context, Collections.singletonList(cas));
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
-        sut.predict(NELT_context, NETL_cas);
+        sut.predict(context, cas);
 
-        List<NamedEntity> predictions = getPredictions(NETL_cas, NamedEntity.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
@@ -154,44 +142,43 @@ public class NamedEntityLinkerTest
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset NETL_ds = NELT_loader.load("germeval2014-de", CONTINUE);
-        return loadData(NETL_ds, NETL_ds.getDefaultSplit().getDevelopmentFiles());
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
+        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
     }
 
-    private List<CAS> loadData(Dataset NETL_ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2002Reader.class,
             Conll2002Reader.PARAM_PATTERNS, files, 
-            Conll2002Reader.PARAM_LANGUAGE, NETL_ds.getLanguage(), 
+            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
             Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
             Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, 
             Conll2002Reader.PARAM_HAS_HEADER, true, 
             Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
-        List<CAS> NETL_casList = new ArrayList<>();
+        List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
-            JCas NETL_cas = JCasFactory.createJCas();
-            reader.getNext(NETL_cas.getCas());
-            NETL_casList.add(NETL_cas.getCas());
+            JCas cas = JCasFactory.createJCas();
+            reader.getNext(cas.getCas());
+            casList.add(cas.getCas());
         }
-        return NETL_casList;
+        return casList;
     }
 
     private static Recommender buildRecommender()
     {
-		//this is rename varies of NamedEntityLinkerTest.java
-        AnnotationLayer NETL_layer = new AnnotationLayer();
-        NETL_layer.setName(NamedEntity.class.getName());
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setName(NamedEntity.class.getName());
 
-        AnnotationFeature NETL_feature = new AnnotationFeature();
-        NETL_feature.setName("identifier");
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("identifier");
         
-        Recommender NELT_recommender = new Recommender();
-        NELT_recommender.setLayer(NETL_layer);
-        NELT_recommender.setFeature(NETL_feature);
-        NELT_recommender.setMaxRecommendations(3);
+        Recommender recommender = new Recommender();
+        recommender.setLayer(layer);
+        recommender.setFeature(feature);
+        recommender.setMaxRecommendations(3);
 
-        return NELT_recommender;
+        return recommender;
     }
 }
 

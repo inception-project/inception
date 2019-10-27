@@ -64,18 +64,18 @@ public class OpenNlpPosRecommenderTest
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new OpenNlpPosRecommenderTraits();
-        traits.ONPRT_setNumThreads(2);
-        traits.ONPRT_setTrainingSetSizeLimit(250);
-        traits.ONPRT_setPredictionLimit(250);
+        traits.setNumThreads(2);
+        traits.setTrainingSetSizeLimit(250);
+        traits.setPredictionLimit(250);
     }
 
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        OpenNlpPosRecommender ONPRT_sut = new OpenNlpPosRecommender(recommender, traits);
-        List<CAS> ONPRT_ONPRT_casList = loadDevelopmentData();
+        OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
+        List<CAS> casList = loadDevelopmentData();
 
-        ONPRT_sut.train(context, ONPRT_ONPRT_casList);
+        sut.train(context, casList);
 
         assertThat(context.get(OpenNlpPosRecommender.KEY_MODEL))
             .as("Model has been set")
@@ -85,17 +85,17 @@ public class OpenNlpPosRecommenderTest
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        OpenNlpPosRecommender ONPRT_sut = new OpenNlpPosRecommender(recommender, traits);
-        List<CAS> ONPRT_ONPRT_casList = loadDevelopmentData();
+        OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
+        List<CAS> casList = loadDevelopmentData();
         
-        CAS ONPRT_cas = ONPRT_ONPRT_casList.get(0);
-        RecommenderTestHelper.addScoreFeature(ONPRT_cas, POS.class, "PosValue");
+        CAS cas = casList.get(0);
+        RecommenderTestHelper.addScoreFeature(cas, POS.class, "PosValue");
 
-        ONPRT_sut.train(context, asList(ONPRT_cas));
+        sut.train(context, asList(cas));
 
-        ONPRT_sut.predict(context, ONPRT_cas);
+        sut.predict(context, cas);
 
-        List<POS> predictions = RecommenderTestHelper.getPredictions(ONPRT_cas, POS.class);
+        List<POS> predictions = RecommenderTestHelper.getPredictions(cas, POS.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
@@ -105,39 +105,39 @@ public class OpenNlpPosRecommenderTest
     public void thatEvaluationWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        OpenNlpPosRecommender ONPRT_sut = new OpenNlpPosRecommender(recommender, traits);
-        List<CAS> ONPRT_ONPRT_casList = loadDevelopmentData();
+        OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
+        List<CAS> casList = loadDevelopmentData();
 
-        EvaluationResult result = ONPRT_sut.evaluate(ONPRT_ONPRT_casList, splitStrategy);
+        EvaluationResult result = sut.evaluate(casList, splitStrategy);
 
-        double ONPRT_fscore = result.computeF1Score();
-        double ONPRT_accuracy = result.computeAccuracyScore();
-        double ONPRT_precision = result.computePrecisionScore();
-        double ONPRT_recall = result.computeRecallScore();
+        double fscore = result.computeF1Score();
+        double accuracy = result.computeAccuracyScore();
+        double precision = result.computePrecisionScore();
+        double recall = result.computeRecallScore();
 
-        System.out.printf("F1-Score: %f%n", ONPRT_fscore);
-        System.out.printf("Accuracy: %f%n", ONPRT_accuracy);
-        System.out.printf("Precision: %f%n", ONPRT_precision);
-        System.out.printf("Recall: %f%n", ONPRT_recall);
+        System.out.printf("F1-Score: %f%n", fscore);
+        System.out.printf("Accuracy: %f%n", accuracy);
+        System.out.printf("Precision: %f%n", precision);
+        System.out.printf("Recall: %f%n", recall);
         
-        assertThat(ONPRT_fscore).isStrictlyBetween(0.0, 1.0);
-        assertThat(ONPRT_precision).isStrictlyBetween(0.0, 1.0);
-        assertThat(ONPRT_recall).isStrictlyBetween(0.0, 1.0);
-        assertThat(ONPRT_accuracy).isStrictlyBetween(0.0, 1.0);
+        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
+        assertThat(precision).isStrictlyBetween(0.0, 1.0);
+        assertThat(recall).isStrictlyBetween(0.0, 1.0);
+        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
     @Test
     public void thatIncrementalPosEvaluationWorks() throws Exception
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
-        OpenNlpPosRecommender ONPRT_sut = new OpenNlpPosRecommender(recommender, traits);
-        List<CAS> ONPRT_ONPRT_casList = loadAllData();
+        OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
+        List<CAS> casList = loadAllData();
 
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = ONPRT_sut.evaluate(ONPRT_ONPRT_casList, splitStrategy).computeF1Score();
+            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             assertThat(score).isStrictlyBetween(0.0, 1.0);
             
@@ -147,44 +147,44 @@ public class OpenNlpPosRecommenderTest
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ONPRT_ds = loader.load("gum-en-conll-3.0.0");
-        return loadData(ONPRT_ds, ONPRT_ds.getDataFiles());
+        Dataset ds = loader.load("gum-en-conll-3.0.0");
+        return loadData(ds, ds.getDataFiles());
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ONPRT_ds = loader.load("gum-en-conll-3.0.0");
-        return loadData(ONPRT_ds, ONPRT_ds.getSplit(0.2).getTrainingFiles());
+        Dataset ds = loader.load("gum-en-conll-3.0.0");
+        return loadData(ds, ds.getSplit(0.2).getTrainingFiles());
     }
 
-    private List<CAS> loadData(Dataset ONPRT_ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2006Reader.class,
             Conll2006Reader.PARAM_PATTERNS, files,
-            Conll2006Reader.PARAM_LANGUAGE, ONPRT_ds.getLanguage());
+            Conll2006Reader.PARAM_LANGUAGE, ds.getLanguage());
 
-        List<CAS> ONPRT_ONPRT_casList = new ArrayList<>();
+        List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
-            JCas ONPRT_cas = JCasFactory.createJCas();
-            reader.getNext(ONPRT_cas.getCas());
-            ONPRT_ONPRT_casList.add(ONPRT_cas.getCas());
+            JCas cas = JCasFactory.createJCas();
+            reader.getNext(cas.getCas());
+            casList.add(cas.getCas());
         }
-        return ONPRT_ONPRT_casList;
+        return casList;
     }
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer ONPRT_layer = new AnnotationLayer();
-        ONPRT_layer.setName(POS.class.getName());
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setName(POS.class.getName());
 
-        AnnotationFeature ONPRT_feature = new AnnotationFeature();
-        ONPRT_feature.setName("PosValue");
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("PosValue");
         
-        Recommender ONPRT_recommender = new Recommender();
-        ONPRT_recommender.setLayer(ONPRT_layer);
-        ONPRT_recommender.setFeature(ONPRT_feature);
-        ONPRT_recommender.setMaxRecommendations(3);
+        Recommender recommender = new Recommender();
+        recommender.setLayer(layer);
+        recommender.setFeature(feature);
+        recommender.setMaxRecommendations(3);
 
-        return ONPRT_recommender;
+        return recommender;
     }
 }

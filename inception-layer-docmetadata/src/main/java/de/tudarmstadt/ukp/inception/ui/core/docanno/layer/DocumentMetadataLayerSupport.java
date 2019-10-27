@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+        matchIfMissing = true)
 public class DocumentMetadataLayerSupport
     implements LayerSupport<DocumentMetadataLayerAdapter>, InitializingBean
 {
