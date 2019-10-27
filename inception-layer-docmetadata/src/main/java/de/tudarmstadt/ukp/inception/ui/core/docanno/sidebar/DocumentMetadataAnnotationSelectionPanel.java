@@ -156,7 +156,15 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     
     private void actionSelect(AjaxRequestTarget aTarget, WebMarkupContainer container,
         DocumentMetadataAnnotationDetailPanel detailPanel)
-    {        
+    {
+        if (selectedAnnotation != null) {
+            aTarget.add(selectedAnnotation);
+        }
+    
+        if (selectedDetailPanel != null) {
+            aTarget.add(selectedDetailPanel);
+        }
+        
         if (selectedAnnotation == container) {
             // if container is already selected, deselect and close annotation
             selectedAnnotation = null;
@@ -169,14 +177,6 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
             selectedDetailPanel = null;
         } else {
             selectedDetailPanel = detailPanel;
-        }
-    
-        if (selectedAnnotation != null) {
-            aTarget.add(selectedAnnotation);
-        }
-    
-        if (selectedDetailPanel != null) {
-            aTarget.add(selectedDetailPanel);
         }
         
         aTarget.add(container);
