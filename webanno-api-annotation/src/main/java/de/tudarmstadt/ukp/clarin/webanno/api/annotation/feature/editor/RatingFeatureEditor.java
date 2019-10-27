@@ -20,19 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.ajax.AjaxEventBehavior;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 
 import com.googlecode.wicket.kendo.ui.form.Radio;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 
 public class RatingFeatureEditor
@@ -40,24 +35,20 @@ public class RatingFeatureEditor
 {
     private static final long serialVersionUID = 9112762779124263198L;
     
-    @SuppressWarnings("rawtypes")
     private final RadioGroup<Integer> field;
-    private IModel<FeatureState> model;
     
     public RatingFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             List<Integer> aRange)
     {
         super(aId, aItem, aModel);
-        model = aModel;
         
         field = new RadioGroup<>("group", new PropertyModel<>(aModel, "value"));
         field.add(createFeaturesList(aRange));
         add(field);
     }
     
-    @SuppressWarnings("rawtypes")
     @Override
-    public RadioGroup getFocusComponent()
+    public RadioGroup<Integer> getFocusComponent()
     {
         return field;
     }
@@ -71,25 +62,10 @@ public class RatingFeatureEditor
             @Override
             protected void populateItem(ListItem<Integer> item)
             {
-                Radio<Integer> radio =
-                        new Radio<>("radio", new Model(item.getModelObject()), field);
-                radio.add(new AjaxEventBehavior("click")
-                {
-                    @Override protected void onEvent(AjaxRequestTarget aTarget)
-                    {
-                        model.getObject().value = item.getModelObject();
-                        update(aTarget);
-                    }
-                });
-                Radio.Label label = new Radio.Label("label", item.getModelObject(), radio);
+                Radio<Integer> radio = new Radio<>("radio", item.getModel(), field);
+                Radio.Label label = new Radio.Label("label", item.getModel(), radio);
                 item.add(radio, label);
             }
         };
     }
-    
-    private void update(AjaxRequestTarget aTarget) {
-        send(this, Broadcast.BUBBLE,
-                new FeatureEditorValueChangedEvent(model.getObject(), aTarget));
-    }
-    
 }
