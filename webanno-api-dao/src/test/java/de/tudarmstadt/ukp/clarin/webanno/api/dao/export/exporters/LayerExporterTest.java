@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
@@ -44,7 +45,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -71,7 +71,7 @@ public class LayerExporterTest
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        project.setMode(PROJECT_TYPE_ANNOTATION);
         
         workFolder = tempFolder.newFolder();
         
@@ -84,7 +84,7 @@ public class LayerExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project and import it again
-        ArgumentCaptor<AnnotationLayer> captor = runExportImportAndFetchEvents();
+        ArgumentCaptor<AnnotationLayer> captor = runExportImportAndFetchLayers();
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues())
@@ -108,7 +108,7 @@ public class LayerExporterTest
         return asList(layer1, layer2, layer3);
     }
     
-    private ArgumentCaptor<AnnotationLayer> runExportImportAndFetchEvents() throws Exception
+    private ArgumentCaptor<AnnotationLayer> runExportImportAndFetchLayers() throws Exception
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
