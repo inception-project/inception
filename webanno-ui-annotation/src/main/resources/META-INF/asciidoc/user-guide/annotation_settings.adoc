@@ -30,15 +30,18 @@ The *Sidebar size* controls the width of the sidebar containing the annotation d
 actions box. In particular on small screens, increasing this can be useful. The sidebar can be 
 configured to take between 10% and 50% of the screen.
 
-The *Font zoom* setting controls the font size in the annotation area. 
+The *Font zoom* setting controls the font size in the annotation area. This setting may not apply to all editors.
 
 The *Page size* controls how many sentences are visible in the annotation area. The more
-sentences are visible, the slower the user interface will react.
+sentences are visible, the slower the user interface will react. This setting may not apply to all editors.
 
 The *Remember layer* checkbox controls if the annotation layer selected in the *Actions* box. It will work as main layer during the annotation process. Only instances of this layer will be created, even if an annotation in another layer is selected. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
 
 The *Auto-scroll* setting controls if the annotation view is centered on the sentence in which the
-last annotation was made. This can be useful to avoid manual navigation.
+last annotation was made. This can be useful to avoid manual navigation. This setting may not apply to all editors.
+
+The *Collaps arcs* setting controls whether long ranging relations can be collapsed to save space
+on screen. This setting may not apply to all editors.
 
 The *Read-only palette* controls the coloring of annotations on read-only layers. This setting
 overrides any per-layer preferences.
