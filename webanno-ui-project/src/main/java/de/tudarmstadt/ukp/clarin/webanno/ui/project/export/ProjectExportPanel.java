@@ -263,7 +263,7 @@ public class ProjectExportPanel
                         info("Project export cancelled");
                         break;
                     default:
-                        error("Invalid project export state after export: " + exportProject);
+                        error("Invalid project export state after export: " + runnable.getState());
                     }
                     
                     runnable = null;

@@ -24,19 +24,19 @@ When exporting a whole project, the structure of the exported ZIP file is as fol
 * *annotation*
 ** *<source document name>*
 *** *<user ID>.XXX* - file representing the annotations for this user in the selected format. 
+*** *CORRECTION_USER.XXX* - _correction_ project: original document state, _automation_ project 
+    automatically generated suggestions
 * *annotation_ser*
 ** *<source document name>*
 *** *<user ID>.ser* - serialized CAS file representing the annotations for this user
+*** *CORRECTION_USER.ser* - _correction_ project: original document state, _automation_ project 
+    automatically generated suggestions
 * *curation*
 ** *<source document name>*
 *** *CURATION_USER.XXX* - file representing the state of curation in the selected format.
-*** *CORRECTION_USER.XXX* - _correction_ project: original document state, _automation_ project 
-    automatically generated suggestions
 * *curation_ser*
 ** *<source document name>*
 *** *CURATION_USER.ser* - serialized UIMA CAS representing the state of curation
-*** *CORRECTION_USER.ser* - _correction_ project: original document state, _automation_ project 
-    automatically generated suggestions
 * *log*
 ** *<project ID>.log* - project log file
 * *source* - folder containing the original source files
@@ -50,5 +50,8 @@ NOTE: Some browsers automatically extract ZIP files into a folder after the down
 
 NOTE: The files under `annotation` and `curation` are provided for convenience only. They are 
       ignored upon import.
+      
+NOTE: The `CORRECTION_USER.XXX` and `CURATION_USER.ser` may be located in the `curation` and
+     `curation_ser` folders for old exported projects.
 
 Currently, it is not possible to choose a specific format for bulk-exporting annotations. However, link:https://groups.google.com/forum/#!msg/webanno-user/X3ShaFPXQT0/PnBzpPdXrIgJ[this mailing list post] describes how link:https://code.google.com/p/dkpro-core-asl/[DKPro Core] can be used to transform the UIMA CAS formats into alternative formats.   

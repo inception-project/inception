@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static java.util.Arrays.asList;
 
 import java.io.File;
@@ -46,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 
@@ -60,9 +61,17 @@ public class CuratedDocumentsExporter
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Autowired DocumentService documentService;
-    private @Autowired ImportExportService importExportService;
+    private final DocumentService documentService;
+    private final ImportExportService importExportService;
     
+    @Autowired
+    public CuratedDocumentsExporter(DocumentService aDocumentService,
+            ImportExportService aImportExportService)
+    {
+        documentService = aDocumentService;
+        importExportService = aImportExportService;
+    }
+
     @Override
     public List<Class<? extends ProjectExporter>> getImportDependencies()
     {
@@ -113,8 +122,8 @@ public class CuratedDocumentsExporter
             // finished or also the ones that are in progress
             if (
                 (aRequest.isIncludeInProgress() && 
-                    SourceDocumentState.CURATION_IN_PROGRESS.equals(sourceDocument.getState())) ||
-                SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())
+                    CURATION_IN_PROGRESS.equals(sourceDocument.getState())) ||
+                CURATION_FINISHED.equals(sourceDocument.getState())
             ) {
                 File curationCasFile = documentService.getCasFile(sourceDocument, CURATION_USER);
                 if (curationCasFile.exists()) {
@@ -161,31 +170,45 @@ public class CuratedDocumentsExporter
         for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
                 .hasMoreElements();) {
             ZipEntry entry = zipEnumerate.nextElement();
+            
+            log.trace("Considering ZIP entry [{}]", entry.getName());
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ProjectExporter.normalizeEntryName(entry);
             
-            if (entryName.startsWith(CURATION_AS_SERIALISED_CAS + "/")) {
-                String fileName = entryName.replace(CURATION_AS_SERIALISED_CAS + "/", "");
-                // the user annotated the document is file name minus extension
-                // (anno1.ser)
-                String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
-
-                // name of the annotation document
-                fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
-                if (fileName.trim().isEmpty()) {
-                    continue;
-                }
-                SourceDocument sourceDocument = documentService.getSourceDocument(aProject,
-                        fileName);
-                File annotationFilePath = documentService.getCasFile(sourceDocument, username);
-
-                FileUtils.copyInputStreamToFile(aZip.getInputStream(entry), annotationFilePath);
-                
-                log.info("Imported curation document content for user [" + username
-                        + "] for source document [" + sourceDocument.getId() + "] in project ["
-                        + aProject.getName() + "] with id [" + aProject.getId() + "]");
+            if (!entryName.startsWith(CURATION_AS_SERIALISED_CAS + "/")) {
+                continue;
             }
+            
+            String fileName = entryName.replace(CURATION_AS_SERIALISED_CAS + "/", "");
+            // the user annotated the document is file name minus extension
+            // (anno1.ser)
+            String username = FilenameUtils.getBaseName(fileName).replace(".ser", "");
+
+            
+            // COMPATIBILITY NOTE: One might ask oneself why we extract the filename when it should
+            // always be CURATION_USER. The reason is compatibility:
+            // - Util WebAnno 3.4.x, the CORRECTION_USER CAS was exported to 'curation' and
+            //   'curation_ser'. So for projects exported from this version, the 
+            //   CuratedDocumentsExporter takes care of importing the CORRECTION_USER CASes.
+            // - Since WebAnno 3.5.x, the CORRECTION_USER CAS is exported to 'annotation' and
+            //   'annotation_ser'. So for projects exported from this version, the 
+            //   AnnotationDocumentExporter takes care of importing the CORRECTION_USER CASes!
+            
+            // name of the annotation document
+            fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
+            if (fileName.trim().isEmpty()) {
+                continue;
+            }
+            SourceDocument sourceDocument = documentService.getSourceDocument(aProject,
+                    fileName);
+            File annotationFilePath = documentService.getCasFile(sourceDocument, username);
+
+            FileUtils.copyInputStreamToFile(aZip.getInputStream(entry), annotationFilePath);
+            
+            log.info("Imported curation document content for user [" + username
+                    + "] for source document [" + sourceDocument.getId() + "] in project ["
+                    + aProject.getName() + "] with id [" + aProject.getId() + "]");
         }
     }
 }
