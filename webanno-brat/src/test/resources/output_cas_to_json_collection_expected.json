@@ -9,5 +9,8 @@
   "search_config" : [ ],
   "ner_taggers" : null,
   "annotation_logging" : false,
-  "entity_types" : [ ]
+  "entity_types" : [ ],
+  "visual_options" : {
+    "arc_bundle" : "none"
+  }
 }
