@@ -549,7 +549,7 @@ public abstract class AnnotationDetailEditorPanel
         // to the CAS
         if (state.getSelection().getAnnotation().equals(state.getArmedFeature().vid)) {
             // Make sure that panel is re-rendered when a slot is filled
-            aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
+            annotationFeatureForm.refresh(aTarget);
                         
             // Loading feature editor values from CAS
             loadFeatureEditorModels(aCas, aTarget);
@@ -892,7 +892,7 @@ public abstract class AnnotationDetailEditorPanel
                 state.getDefaultAnnotationLayer().getUiName());
 
         // #186 - After filling a slot, the annotation detail panel is not updated
-        aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
+        annotationFeatureForm.refresh(aTarget);
 
         // internalCommitAnnotation is used to update an existing annotation as well as to create
         // a new one. In either case, the selectedAnnotationLayer indicates the layer type! Do not
@@ -1302,7 +1302,7 @@ public abstract class AnnotationDetailEditorPanel
             annotationFeatureForm.updateRememberLayer();
 
             if (aTarget != null) {
-                aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
+                annotationFeatureForm.refresh(aTarget);
             }
         }
         catch (Exception e) {
@@ -1427,7 +1427,7 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("clearFeatureEditorModels()");
         getModelObject().getFeatureStates().clear();
         if (aTarget != null) {
-            aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
+            annotationFeatureForm.refresh(aTarget);
         }
     }
 
