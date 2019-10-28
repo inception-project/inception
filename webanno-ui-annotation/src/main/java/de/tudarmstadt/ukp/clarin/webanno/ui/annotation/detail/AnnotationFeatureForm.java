@@ -118,6 +118,9 @@ public class AnnotationFeatureForm
     private DropDownChoice<AnnotationLayer> layerSelector;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
     private WebMarkupContainer layerContainer;
+    private WebMarkupContainer buttonContainer;
+    private LambdaAjaxLink selectedTextLabel;
+    private Label selectedAnnotationTypeLabel;
 
     private final AnnotationDetailEditorPanel editorPanel;
     
@@ -136,9 +139,12 @@ public class AnnotationFeatureForm
         add(createNoAnnotationWarningLabel());
         add(deleteAnnotationDialog = createDeleteDialog());
         add(replaceAnnotationDialog = createReplaceDialog());
-        add(createDeleteButton());
-        add(createReverseButton());
-        add(createClearButton());
+        buttonContainer = new WebMarkupContainer("buttonContainer");
+        buttonContainer.setOutputMarkupPlaceholderTag(true);
+        buttonContainer.add(createDeleteButton());
+        buttonContainer.add(createReverseButton());
+        buttonContainer.add(createClearButton());
+        add(buttonContainer);
         layerContainer.add(relationHint = createRelationHint());
         layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
         layerContainer.add(visibleWhen(() -> layerSelector.getChoicesModel()
@@ -146,7 +152,7 @@ public class AnnotationFeatureForm
                 .orElse(false).getObject()));
         add(layerContainer);
         add(featureEditorPanel = createFeatureEditorPanel());
-        add(createSelectedAnnotationTypeLabel());
+        add(selectedAnnotationTypeLabel = createSelectedAnnotationTypeLabel());
         setDefaultButton(null);
     }
 
@@ -163,7 +169,7 @@ public class AnnotationFeatureForm
         container.add(createNoFeaturesWarningLabel());
         container.add(featureEditorPanelContent = createFeatureEditorPanelContent());
         container.add(createFocusResetHelper());
-        container.add(createSelectedTextLabel());
+        container.add(selectedTextLabel = createSelectedTextLabel());
         container.add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
 
         return container;
@@ -978,6 +984,12 @@ public class AnnotationFeatureForm
     protected WebMarkupContainer getFeatureEditorPanel()
     {
         return featureEditorPanel;
+    }
+    
+    public void refresh(AjaxRequestTarget aTarget)
+    {
+        aTarget.add(featureEditorPanel, buttonContainer, selectedAnnotationTypeLabel,
+                selectedTextLabel);
     }
     
     protected DropDownChoice<AnnotationLayer> getLayerSelector()
