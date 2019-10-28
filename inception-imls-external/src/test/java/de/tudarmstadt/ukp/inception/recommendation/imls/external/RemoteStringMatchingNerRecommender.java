@@ -48,6 +48,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
@@ -72,8 +73,8 @@ public class RemoteStringMatchingNerRecommender
         featureName = aRecommender.getFeature().getName();
     }
 
-    public void train(String aTrainingRequestJson) throws Exception
-
+    public void train(String aTrainingRequestJson) throws UIMAException, SAXException,
+        IOException, RecommendationException
     {
         TrainingRequest request = deserializeTrainingRequest(aTrainingRequestJson);
 
@@ -96,8 +97,8 @@ public class RemoteStringMatchingNerRecommender
         }
     }
 
-    public String predict(String aPredictionRequestJson)
-        throws Exception
+    public String predict(String aPredictionRequestJson) throws IOException, UIMAException,
+        SAXException, RecommendationException
     {
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
         CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
