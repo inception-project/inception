@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>23-SNAPSHOT</version>
+    <version>23</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -42,8 +42,8 @@
     <system>GitHub Issues</system>
   </issueManagement>
   <scm>
-    <connection>scm:git:git://github.com/webanno/webanno</connection>
-    <developerConnection>scm:git:git@github.com:webanno/webanno.git</developerConnection>
+    <connection>scm:git:https://github.com/webanno/webanno.git</connection>
+    <developerConnection>scm:git:https://github.com/webanno/webanno.git</developerConnection>
     <url>https://github.com/webanno/webanno</url>
     <tag>HEAD</tag>
   </scm>
