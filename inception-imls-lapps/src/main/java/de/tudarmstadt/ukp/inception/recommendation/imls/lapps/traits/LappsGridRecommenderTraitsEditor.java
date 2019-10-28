@@ -56,10 +56,10 @@ public class LappsGridRecommenderTraitsEditor
 
     private static final Logger LOG = LoggerFactory.getLogger(LappsGridRecommender.class);
 
-    public static String NER_LAYER = NamedEntity.class.getName();
-    public static String NER_FEATURE = "value";
-    public static String POS_LAYER = POS.class.getName();
-    public static String POS_FEATURE = "PosValue";
+    public static final String NER_LAYER = NamedEntity.class.getName();
+    public static final String NER_FEATURE = "value";
+    public static final String POS_LAYER = POS.class.getName();
+    public static final String POS_FEATURE = "PosValue";
 
     private static final String MID_FORM = "form";
     private static final String MID_SERVICES = "service";
