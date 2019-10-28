@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.inception.image.feature;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.image.ExternalImage;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -87,7 +87,7 @@ public class ImageFeatureEditor
     }
 
     @Override
-    public Component getFocusComponent()
+    public FormComponent getFocusComponent()
     {
         return field;
     }
