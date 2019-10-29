@@ -66,7 +66,7 @@ public class RatingFeatureEditor
     {
         return new ListView<Integer>("radios", range)
         {
-            private static final long serialVersionUID = -1139622234318691941L;
+            private static final long serialVersionUID = 6856342528153905386L;
             
             @Override
             protected void populateItem(ListItem<Integer> item)
