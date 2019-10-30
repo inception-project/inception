@@ -46,7 +46,6 @@ import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.io.PrintWriter;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -68,11 +67,14 @@ public class Tsv3XSerializer
     {
         write(aOut, aDocument.getFormatHeader());
         
-        write(aOut, aDocument.getSchema(), aDocument.getActiveColumns());
+        List<TsvColumn> headerColumns = aDocument.getSchema()
+                .getHeaderColumns(aDocument.getActiveColumns());
+        
+        write(aOut, headerColumns);
         
         for (TsvSentence sentence : aDocument.getSentences()) {
             aOut.print(LINE_BREAK);
-            write(aOut, sentence);
+            write(aOut, sentence, headerColumns);
         }
     }
     
@@ -82,11 +84,13 @@ public class Tsv3XSerializer
         aOut.printf("%s %s\n", aHeader.getName(), aHeader.getVersion());
     }
     
-    public void write(PrintWriter aOut, TsvSchema aSchema, Set<TsvColumn> aActiveColumns)
+    /**
+     * Write the schema header.
+     */
+    public void write(PrintWriter aOut, List<TsvColumn> aHeaderColumns)
     {
         Type currentType = null;
-        List<TsvColumn> headerColumns = aSchema.getHeaderColumns(aActiveColumns);
-        for (TsvColumn col : headerColumns) {
+        for (TsvColumn col : aHeaderColumns) {
             if (currentType == null || !currentType.equals(col.uimaType)) {
                 if (currentType != null) {
                     aOut.print(LINE_BREAK);
@@ -161,7 +165,7 @@ public class Tsv3XSerializer
         }
         
         // Add line-break to terminate the final column definition
-        if (!headerColumns.isEmpty()) {
+        if (!aHeaderColumns.isEmpty()) {
             aOut.print(LINE_BREAK);
         }
         
@@ -170,7 +174,7 @@ public class Tsv3XSerializer
         aOut.print(LINE_BREAK); 
     }
     
-    public void write(PrintWriter aOut, TsvSentence aSentence)
+    public void write(PrintWriter aOut, TsvSentence aSentence, List<TsvColumn> aHeaderColumns)
     {
         String[] lines = splitPreserveAllTokens(aSentence.getUimaSentence().getCoveredText(),
                 LINE_BREAK);
@@ -181,16 +185,16 @@ public class Tsv3XSerializer
         }
         
         for (TsvToken token : aSentence.getTokens()) {
-            write(aOut, token);
+            write(aOut, token, aHeaderColumns);
             aOut.write(LINE_BREAK);
             for (TsvSubToken subToken : token.getSubTokens()) {
-                write(aOut, subToken);
+                write(aOut, subToken, aHeaderColumns);
                 aOut.write(LINE_BREAK);
             }
         }
     }
 
-    public void write(PrintWriter aOut, TsvUnit aUnit)
+    public void write(PrintWriter aOut, TsvUnit aUnit, List<TsvColumn> aHeaderColumns)
     {
         TsvDocument doc = aUnit.getDocument();
         
@@ -208,7 +212,7 @@ public class Tsv3XSerializer
         aOut.printf(FIELD_SEPARATOR);
 
         // Write the remaining columns according to the schema definition
-        for (TsvColumn col : doc.getSchema().getHeaderColumns(doc.getActiveColumns())) {
+        for (TsvColumn col : aHeaderColumns) {
             // Write all the values in this column - there could be multiple due to stacking
             writeValues(aOut, aUnit, col);
             aOut.printf(FIELD_SEPARATOR);
