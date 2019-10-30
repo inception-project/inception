@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
@@ -32,7 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.SpanRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -40,9 +40,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class SpanLayerSupport
-    implements LayerSupport<SpanAdapter>, InitializingBean
+    extends LayerSupport_ImplBase<SpanAdapter>
+    implements InitializingBean
 {
-    private final FeatureSupportRegistry featureSupportRegistry;
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
@@ -54,7 +54,7 @@ public class SpanLayerSupport
             ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
             LayerBehaviorRegistry aLayerBehaviorsRegistry)
     {
-        featureSupportRegistry = aFeatureSupportRegistry;
+        super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         schemaService = aSchemaService;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
@@ -94,29 +94,23 @@ public class SpanLayerSupport
     public SpanAdapter createAdapter(AnnotationLayer aLayer)
     {
         SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, eventPublisher, aLayer,
-                schemaService.listAnnotationFeature(aLayer),
-                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+            () -> schemaService.listAnnotationFeature(aLayer),
+            layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
         
         return adapter;
     }
     
     @Override
-    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
+    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
+            List<AnnotationFeature> aAllFeaturesInProject)
     {
         TypeDescription td = aTsd.addType(aLayer.getName(), aLayer.getDescription(),
                 CAS.TYPE_NAME_ANNOTATION);
         
-        generateFeatures(aTsd, td, aLayer);
-    }
-    
-    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationLayer aLayer)
-    {
-        List<AnnotationFeature> features = schemaService.listAnnotationFeature(aLayer);
-        for (AnnotationFeature feature : features) {
-            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
-            fs.generateFeature(aTSD, aTD, feature);
-        }
+        List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
+                .filter(feature -> aLayer.equals(feature.getLayer()))
+                .collect(toList());
+        generateFeatures(aTsd, td, featureForLayer);
     }
     
     @Override

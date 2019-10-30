@@ -134,8 +134,8 @@ public class RelationRendererTest
         }
 
         RelationAdapter adapter = new RelationAdapter(featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+            FEAT_REL_TARGET, FEAT_REL_SOURCE,
+            () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -171,8 +171,8 @@ public class RelationRendererTest
         }
 
         RelationAdapter adapter = new RelationAdapter(featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+            FEAT_REL_TARGET, FEAT_REL_SOURCE,
+            () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
