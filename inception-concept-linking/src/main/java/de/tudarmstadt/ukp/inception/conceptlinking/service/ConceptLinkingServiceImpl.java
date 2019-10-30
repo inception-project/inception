@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertie
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.ranking.BaselineRanker;
 import de.tudarmstadt.ukp.inception.conceptlinking.ranking.Ranker;
+import de.tudarmstadt.ukp.inception.conceptlinking.ranking.letor.ExternalLetorRanker;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -100,6 +101,7 @@ public class ConceptLinkingServiceImpl
 
         ranker = new BaselineRanker(featureGeneratorsProxy, stopwords,
                 properties.getCandidateDisplayLimit(), properties.getMentionContextSize());
+        ranker = new ExternalLetorRanker();
     }
     
     @EventListener
@@ -284,7 +286,6 @@ public class ConceptLinkingServiceImpl
         long startTime = currentTimeMillis();
         
         List<KBHandle> results = ranker.rank(aQuery, aMention, aCandidates, aCas, aBegin);
-         
         log.debug("Ranked [{}] candidates for mention [{}] and query [{}] in [{}] ms",
                  results.size(), aMention, aQuery, currentTimeMillis() - startTime);
          

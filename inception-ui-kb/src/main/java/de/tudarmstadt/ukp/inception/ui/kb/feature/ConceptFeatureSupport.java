@@ -296,7 +296,17 @@ public class ConceptFeatureSupport
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
+        // KB handle
+        String typename = "inception.internal.KbHandle";
+        if (aTSD.getType(typename) == null) {
+            TypeDescription kbHandle = aTSD.addType(typename, "", CAS.TYPE_NAME_TOP);
+            kbHandle.addFeature("iri", "", CAS.TYPE_NAME_STRING);
+            kbHandle.addFeature("label", "", CAS.TYPE_NAME_STRING);
+            kbHandle.addFeature("description", "", CAS.TYPE_NAME_STRING);
+        }
+
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
+        aTD.addFeature("candidates", "", CAS.TYPE_NAME_FS_ARRAY, typename, false);
     }
     
     @Override

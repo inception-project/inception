@@ -23,11 +23,17 @@ import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
@@ -42,6 +48,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -49,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEd
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
@@ -80,8 +89,7 @@ public class ConceptFeatureEditor
         add(iriBadge = new IriInfoBadge("iriInfoBadge",
                 LoadableDetachableModel.of(this::iriTooltipValue)));
         iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
-        add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
-                getCandidates(aStateModel, aHandler, _query)));
+        add(focusComponent = buildAutoCompleteField(aStateModel, aHandler));
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
     }
 
@@ -157,5 +165,69 @@ public class ConceptFeatureEditor
     public FormComponent getFocusComponent()
     {
         return focusComponent;
+    }
+
+    private AutoCompleteTextField buildAutoCompleteField(IModel<AnnotatorState> aStateModel,
+                                                         AnnotationActionHandler aHandler)
+    {
+        AutoCompleteTextField result = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query ->
+                getCandidates(aStateModel, aHandler, _query)) {
+
+            private List<KBHandle> cachedChoices;
+
+            @Override
+            protected void onModelChanged() {
+                super.onModelChanged();
+
+                if (aStateModel == null || aHandler == null || cachedChoices == null) {
+                    LOG.warn("Something was null");
+                    return;
+                }
+
+                CAS cas;
+                try {
+                     cas = aHandler.getEditorCas();
+                } catch (IOException e) {
+                    LOG.error("Could not read CAS", e);
+                    return;
+                }
+
+                Type kbHandleType = CasUtil.getType(cas, "inception.internal.KbHandle");
+                Feature iriFeature = kbHandleType.getFeatureByBaseName("iri");
+                Feature labelFeature = kbHandleType.getFeatureByBaseName("label");
+                Feature descriptionFeature = kbHandleType.getFeatureByBaseName("description");
+
+                Selection selection = aStateModel.getObject().getSelection();
+                int begin = selection.getBegin();
+                int end = selection.getEnd();
+
+                // Delete old preferences
+                for (AnnotationFS oldPreference : CasUtil.selectAt(cas, kbHandleType, begin, end)) {
+                    cas.removeFsFromIndexes(oldPreference);
+                }
+
+                // Create new preferences
+                System.out.println("User selected: " + getModel());
+                System.out.println("Candidates:");
+                for (KBHandle candidate : cachedChoices) {
+                    AnnotationFS preference = cas.createAnnotation(kbHandleType, begin, end);
+                    preference.setStringValue(iriFeature, candidate.getIdentifier());
+                    preference.setStringValue(labelFeature, candidate.getName());
+                    preference.setStringValue(descriptionFeature, candidate.getDescription());
+                    cas.addFsToIndexes(preference);
+
+                    LOG.info("Created preference: " + preference);
+                }
+            }
+
+            @Override
+            protected List<KBHandle> getChoices(String aInput) {
+                List<KBHandle> result =  super.getChoices(aInput);
+                cachedChoices = new ArrayList<>(result);
+                return result;
+            }
+        };
+
+        return result;
     }
 }
