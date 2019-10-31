@@ -107,17 +107,17 @@
               </span> 
             </h3>
           </div>
-          <div class="scrolling panel-body">
-            <div class="col-sm-12">
-              <span wicket:id="noAnnotationWarning"></span>
-              
-              <div class="form-group" wicket:enclosure="selectedAnnotationType" style="position: relative; height: 5em;">
-                <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0;" readonly>
-                  <wicket:container wicket:id="selectedAnnotationType"/>
+          <div class="scrolling panel-body flex-v-container">
+            <div wicket:id="noAnnotationWarning" class="flex-content flex-h-container no-data-notice">
+              <div>No annotation selected</div>
+            </div>
+            <div class="col-sm-12" wicket:id="infoContainer">
+              <div class="form-horizontal" wicket:id="selectedAnnotationInfoContainer">
+                <div wicket:enclosure="selectedAnnotationType" style="position: relative; height: 5em; margin-bottom: 5px;">
+                  <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0;" readonly>
+                    <wicket:container wicket:id="selectedAnnotationType"/>
+                  </div>
                 </div>
-              </div>
-
-              <div wicket:id="featureEditorsContainer" class="form-horizontal">
                 <div class="form-group" wicket:enclosure="selectedAnnotationLayer">
                   <label class="col-sm-3 control-label">Layer</label>
                   <div class="col-sm-9">
@@ -134,12 +134,14 @@
                 </div>
                 <hr/>
                 <div wicket:id="noFeaturesWarning"></div>
-                <div wicket:id="featureValues">
-                  <div wicket:id="editor"></div>
-                </div>
-                <div style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">
-                  <input wicket:id="focusResetHelper" tabindex="-1"></input>
-                </div>
+              </div>
+            </div>
+            <div class="col-sm-12 flex-content form-horizontal" wicket:id="featureEditorContainer">
+              <wicket:container wicket:id="featureEditors">
+                <div wicket:id="editor"></div>
+              </wicket:container>
+              <div style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">
+                <input wicket:id="focusResetHelper" tabindex="-1"></input>
               </div>
             </div>
           </div>

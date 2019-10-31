@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -45,25 +46,38 @@ public abstract class TypeAdapter_ImplBase
     private final FeatureSupportRegistry featureSupportRegistry;
     
     private final AnnotationLayer layer;
+    
+    private final Supplier<Collection<AnnotationFeature>> featureSupplier;
 
-    private final Map<String, AnnotationFeature> features;
+    private Map<String, AnnotationFeature> features;
 
     private ApplicationEventPublisher applicationEventPublisher;
 
+    /**
+     * Constructor.
+     * 
+     * @param aFeatureSupportRegistry
+     *            the feature support registry to allow e.g. convenient generation of features or
+     *            getting/setting feature values.
+     * @param aEventPublisher
+     *            an optional publisher for Spring events.
+     * @param aLayer
+     *            the layer for which the adapter is created.
+     * @param aFeatures
+     *            supplier for the features, typically
+     *            {@link AnnotationSchemaService#listAnnotationFeature(AnnotationLayer)}. Since the
+     *            features are not always needed, we use a supplied here so they can be loaded
+     *            lazily. To facilitate testing, we do not pass the entire
+     *            {@link AnnotationSchemaService}.
+     */
     public TypeAdapter_ImplBase(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures)
+            Supplier<Collection<AnnotationFeature>> aFeatures)
     {
         featureSupportRegistry = aFeatureSupportRegistry;
         applicationEventPublisher = aEventPublisher;
         layer = aLayer;
-
-        // Using a sorted map here so we have reliable positions in the map when iterating. We use
-        // these positions to remember the armed slots!
-        features = new TreeMap<>();
-        for (AnnotationFeature f : aFeatures) {
-            features.put(f.getName(), f);
-        }
+        featureSupplier = aFeatures;
     }
     
     @Override
@@ -75,6 +89,15 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public Collection<AnnotationFeature> listFeatures()
     {
+        if (features == null) {
+            // Using a sorted map here so we have reliable positions in the map when iterating. We
+            // use these positions to remember the armed slots!
+            features = new TreeMap<>();
+            for (AnnotationFeature f : featureSupplier.get()) {
+                features.put(f.getName(), f);
+            }
+        }
+        
         return features.values();
     }
     

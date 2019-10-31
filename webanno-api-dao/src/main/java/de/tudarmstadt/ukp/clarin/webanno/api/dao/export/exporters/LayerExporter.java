@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.zip.ZipFile;
 
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -57,6 +59,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 public class LayerExporter
     implements ProjectExporter
 {
+    private static final Logger LOG = LoggerFactory.getLogger(LayerExporter.class);
+    
     private final AnnotationSchemaService annotationService;
     
     @Autowired
@@ -102,6 +106,9 @@ public class LayerExporter
         }
         
         aExProject.setLayers(exLayers);
+        
+        LOG.info("Exported [{}] layers for project [{}]", exLayers.size(),
+                aRequest.getProject().getName());
     }
     
     public ExportedAnnotationLayer exportLayerDetails(

@@ -26,6 +26,7 @@ import static org.apache.uima.fit.util.CasUtil.selectFS;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -67,10 +68,10 @@ public class ChainAdapter
     public static final String FEAT_NEXT = "next";
 
     private final List<SpanLayerBehavior> behaviors;
-    
+
     public ChainAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures, List<SpanLayerBehavior> aBehaviors)
+            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
 

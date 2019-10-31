@@ -337,3 +337,18 @@ a.disabled {
 		padding-right: @grid-gutter-width / 2;
 	}
 }
+
+.no-data-notice {
+  display: flex;
+  color: grey;
+  background-color: @panel-footer-bg; 
+  font-style: italic; 
+  justify-content: center; 
+  align-items: center;
+}
+
+.panel-body {
+	.no-data-notice {
+		margin: -5px;
+	}
+}

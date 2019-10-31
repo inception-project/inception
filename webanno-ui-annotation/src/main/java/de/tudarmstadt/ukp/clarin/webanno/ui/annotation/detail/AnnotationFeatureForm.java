@@ -112,23 +112,28 @@ public class AnnotationFeatureForm
     
     private static final long serialVersionUID = 3635145598405490893L;
 
-    // Add "featureEditorPanel" to AjaxRequestTargets instead of "featureEditorPanelContent"
-    private WebMarkupContainer featureEditorPanel;
-    private FeatureEditorPanelContent featureEditorPanelContent;
+    // Top-level containers
+    private final WebMarkupContainer noAnnotationWarning;
+    private final WebMarkupContainer layerContainer;
+    private final WebMarkupContainer buttonContainer;
+    private final WebMarkupContainer infoContainer;
+    private final WebMarkupContainer featureEditorContainer;
 
-    private Label selectedAnnotationLayer;
-    private CheckBox forwardAnnotationCheckBox;
-    private ConfirmationDialog deleteAnnotationDialog;
-    private ConfirmationDialog replaceAnnotationDialog;
-    private Label relationHint;
-    private DropDownChoice<AnnotationLayer> layerSelector;
-    private List<AnnotationLayer> annotationLayers = new ArrayList<>();
-    private WebMarkupContainer layerContainer;
-    private WebMarkupContainer buttonContainer;
-    private LambdaAjaxLink selectedTextLabel;
-    private Label selectedAnnotationTypeLabel;
+    // Within infoContainer
+    private final WebMarkupContainer selectedAnnotationInfoContainer;
 
+    // Parent
     private final AnnotationDetailEditorPanel editorPanel;
+
+    // Components
+    private final Label selectedAnnotationLayer;
+    private final CheckBox forwardAnnotationCheckBox;
+    private final ConfirmationDialog deleteAnnotationDialog;
+    private final ConfirmationDialog replaceAnnotationDialog;
+    private final Label relationHint;
+    private final DropDownChoice<AnnotationLayer> layerSelector;
+    private final List<AnnotationLayer> annotationLayers = new ArrayList<>();
+    private final FeatureEditorPanelContent featureEditorPanelContent;
     
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -139,46 +144,57 @@ public class AnnotationFeatureForm
         IModel<AnnotatorState> aState)
     {
         super(id, new CompoundPropertyModel<>(aState));
+        setDefaultButton(null);
         editorPanel = aEditorPanel;
-        layerContainer = new WebMarkupContainer("layerContainer");
-        layerContainer.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
-        add(createNoAnnotationWarningLabel());
+
         add(deleteAnnotationDialog = createDeleteDialog());
         add(replaceAnnotationDialog = createReplaceDialog());
-        buttonContainer = new WebMarkupContainer("buttonContainer");
-        buttonContainer.setOutputMarkupPlaceholderTag(true);
-        buttonContainer.add(createDeleteButton());
-        buttonContainer.add(createReverseButton());
-        buttonContainer.add(createClearButton());
-        add(buttonContainer);
+        
+        noAnnotationWarning = new WebMarkupContainer("noAnnotationWarning");
+        noAnnotationWarning.setOutputMarkupPlaceholderTag(true);
+        noAnnotationWarning
+                .add(visibleWhen(() -> !getModelObject().getSelection().getAnnotation().isSet()));
+        add(noAnnotationWarning);
+        
+        layerContainer = new WebMarkupContainer("layerContainer");
+        layerContainer.setOutputMarkupPlaceholderTag(true);
+        layerContainer.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
         layerContainer.add(relationHint = createRelationHint());
         layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
         layerContainer.add(visibleWhen(() -> layerSelector.getChoicesModel()
                 .map(layerChoices -> layerChoices.size() > 1)
                 .orElse(false).getObject()));
         add(layerContainer);
-        add(featureEditorPanel = createFeatureEditorPanel());
-        add(selectedAnnotationTypeLabel = createSelectedAnnotationTypeLabel());
-        setDefaultButton(null);
-    }
 
-    private WebMarkupContainer createFeatureEditorPanel()
-    {
-        WebMarkupContainer container = new WebMarkupContainer("featureEditorsContainer");
-        container.add(
+        infoContainer = new WebMarkupContainer("infoContainer");
+        infoContainer.setOutputMarkupPlaceholderTag(true);
+        add(infoContainer);
+        
+        selectedAnnotationInfoContainer = new WebMarkupContainer("selectedAnnotationInfoContainer");
+        selectedAnnotationInfoContainer.setOutputMarkupPlaceholderTag(true);
+        selectedAnnotationInfoContainer.add(
                 visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        selectedAnnotationInfoContainer.add(createSelectedAnnotationTypeLabel());
+        selectedAnnotationInfoContainer.add(createNoFeaturesWarningLabel());
+        selectedAnnotationInfoContainer.add(createSelectedTextLabel());
+        selectedAnnotationInfoContainer
+                .add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
+        infoContainer.add(selectedAnnotationInfoContainer);
 
-        // Add placeholder since wmc might start out invisible. Without the placeholder we
-        // cannot make it visible in an AJAX call
-        container.setOutputMarkupPlaceholderTag(true);
-
-        container.add(createNoFeaturesWarningLabel());
-        container.add(featureEditorPanelContent = createFeatureEditorPanelContent());
-        container.add(createFocusResetHelper());
-        container.add(selectedTextLabel = createSelectedTextLabel());
-        container.add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
-
-        return container;
+        featureEditorContainer = new WebMarkupContainer("featureEditorContainer");
+        featureEditorContainer.setOutputMarkupPlaceholderTag(true);
+        featureEditorContainer.add(featureEditorPanelContent = createFeatureEditorPanelContent());
+        featureEditorContainer.add(createFocusResetHelper());
+        featureEditorContainer.add(
+                visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        add(featureEditorContainer);
+        
+        buttonContainer = new WebMarkupContainer("buttonContainer");
+        buttonContainer.setOutputMarkupPlaceholderTag(true);
+        buttonContainer.add(createDeleteButton());
+        buttonContainer.add(createReverseButton());
+        buttonContainer.add(createClearButton());
+        add(buttonContainer);
     }
 
     private TextField<String> createFocusResetHelper()
@@ -219,7 +235,7 @@ public class AnnotationFeatureForm
 
     private FeatureEditorPanelContent createFeatureEditorPanelContent()
     {
-        return new FeatureEditorPanelContent("featureValues");
+        return new FeatureEditorPanelContent("featureEditors");
     }
     
     public Optional<FeatureEditor> getFirstFeatureEditor()
@@ -529,22 +545,6 @@ public class AnnotationFeatureForm
         replaceAnnotationDialog.show(aTarget);
     }
 
-    private Label createNoAnnotationWarningLabel()
-    {
-        return new Label("noAnnotationWarning", "No annotation selected!")
-        {
-            private static final long serialVersionUID = -6046409838139863541L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(!getModelObject().getSelection().getAnnotation().isSet());
-            }
-        };
-    }
-
     /**
      * Part of <i>forward annotation</i> mode: creates the checkbox to toggle forward annotation
      * mode.
@@ -790,7 +790,7 @@ public class AnnotationFeatureForm
             // Look up a suitable editor and instantiate it
             FeatureSupport featureSupport = featureSupportRegistry
                     .getFeatureSupport(featureState.feature);
-            editor = featureSupport.createEditor("editor", AnnotationFeatureForm.this, editorPanel,
+            editor = featureSupport.createEditor("editor", featureEditorContainer, editorPanel,
                     AnnotationFeatureForm.this.getModel(), item.getModel());
 
             // We need to enable the markup ID here because we use it during the AJAX behavior
@@ -852,7 +852,7 @@ public class AnnotationFeatureForm
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    aTarget.add(featureEditorPanel);
+                    AnnotationFeatureForm.this.refresh(aTarget);
                 }
             });
         }
@@ -943,7 +943,7 @@ public class AnnotationFeatureForm
                 if (state.getConstraints() != null) {
                     // Make sure we update the feature editor panel because due to
                     // constraints the contents may have to be re-rendered
-                    aTarget.add(featureEditorPanel);
+                    AnnotationFeatureForm.this.refresh(aTarget);
                 }
                 
                 // When updating an annotation in the sidebar, we must not force a
@@ -1023,15 +1023,10 @@ public class AnnotationFeatureForm
         return annotationLayers;
     }
 
-    protected WebMarkupContainer getFeatureEditorPanel()
-    {
-        return featureEditorPanel;
-    }
-    
     public void refresh(AjaxRequestTarget aTarget)
     {
-        aTarget.add(featureEditorPanel, buttonContainer, selectedAnnotationTypeLabel,
-                selectedTextLabel);
+        aTarget.add(layerContainer, buttonContainer, infoContainer, featureEditorContainer,
+                noAnnotationWarning);
     }
     
     protected DropDownChoice<AnnotationLayer> getLayerSelector()
