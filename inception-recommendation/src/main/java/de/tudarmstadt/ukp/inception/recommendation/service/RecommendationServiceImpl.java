@@ -444,7 +444,7 @@ public class RecommendationServiceImpl
             // as quickly as possible without any interaction needed
             User user = userRepository.get(username);
             Predictions predictions = getPredictions(user, project);
-            if (predictions == null || predictions.hasPredictions()) {
+            if (predictions == null || !predictions.hasPredictions()) {
                 log.debug("Starting prediction task after document was opened!");
                 Task task = new PredictionTask(user, project, "DocumentOpenedEvent", doc);
                 schedulingService.enqueue(task);
