@@ -23,8 +23,6 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -195,7 +193,9 @@ public class SelectionTask
                             recommender, user.getUsername(), result,
                             System.currentTimeMillis() - start, activated));
                 }
-                catch (ConcurrentException | RecommendationException e) {
+               
+                // Catching Throwable is intentional here as we want to continue the execution even if a particular recommender fails.
+                catch (Throwable e) {
                     log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
                 }
             }
