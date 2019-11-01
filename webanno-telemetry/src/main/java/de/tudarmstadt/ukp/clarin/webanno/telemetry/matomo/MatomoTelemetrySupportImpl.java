@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -41,6 +42,7 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.util.collections.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -50,6 +52,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.web.session.HttpSessionCreatedEvent;
 import org.springframework.stereotype.Component;
 
 import ch.rasc.piwik.tracking.PiwikConfig;
@@ -93,6 +96,10 @@ public class MatomoTelemetrySupportImpl
     private final String applicationName;
     private final SessionRegistry sessionRegistry;
     private final ScheduledExecutorService scheduler;
+    
+    // Set of all principals that were active in the interval between one PING and the next. Gets
+    // cleared when the PING is sent.
+    private final Set<Object> activePrincipals = new ConcurrentHashSet<>(10);
 
     private PiwikTracker tracker;
     
@@ -240,7 +247,33 @@ public class MatomoTelemetrySupportImpl
             sendTelemetry(ACTION_HELLO);
         }
         else {
+            resetActivePrincipals();
             log.debug("Telemetry disabled");
+        }
+    }
+    
+    private void updateActivePrincipals()
+    {
+        // Collect all active principals
+        List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
+        allPrincipals.stream()
+                .flatMap(principal -> sessionRegistry.getAllSessions(principal, false).stream())
+                .forEach(sessionInfo -> activePrincipals.add(sessionInfo.getPrincipal()));;
+    }
+    
+    private void resetActivePrincipals()
+    {
+        activePrincipals.clear();
+    }
+    
+    @Override
+    @EventListener
+    public void onSessionCreated(HttpSessionCreatedEvent aEvent)
+    {
+        // Listen explicitly ot all sessions so we catch sessions that get created and destroyed
+        // within a PING period.
+        if (isEnabled()) {
+            updateActivePrincipals();
         }
     }
     
@@ -251,17 +284,21 @@ public class MatomoTelemetrySupportImpl
         }
 
         // Check if there are any active (non-expired) sessions - if yes, we send a ping.
-        List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
-        boolean hasActiveSessions = allPrincipals.stream()
-                .map(principal -> sessionRegistry.getAllSessions(principal, false))
-                .anyMatch(list -> !list.isEmpty());
+        updateActivePrincipals();
+        boolean hasActiveSessions = !activePrincipals.isEmpty();
         
         if (!hasActiveSessions) {
+            log.debug("Telemetry detected no active principals: {}", activePrincipals);
             return;
         }
         else {
-            log.debug("Telemetry detected active principals: {}", allPrincipals);
+            log.debug("Telemetry detected active principals: {}", activePrincipals);
         }
+        
+        // Clear the active principals from the last period and perform an initial collection for
+        // the new period
+        resetActivePrincipals();
+        updateActivePrincipals();
 
         sendTelemetry(ACTION_PING);
     }
