@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -43,27 +44,38 @@ public class PredictionTask
     private @Autowired RecommendationService recommendationService;
     private @Autowired DocumentService documentService;
 
-    public PredictionTask(User aUser, Project aProject, String aTrigger)
+    private final SourceDocument currentDocument;
+
+    public PredictionTask(User aUser, Project aProject, String aTrigger,
+                          SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
+        currentDocument = aCurrentDocument;
     }
 
     @Override
     public void run()
     {
         User user = getUser();
+        String username = user.getUsername();
 
         Project project = getProject();
-        List<SourceDocument> docs = documentService.listSourceDocuments(project);
 
-        log.debug("[{}][{}]: Starting prediction for project [{}] triggered by [{}]...", getId(),
-                user.getUsername(), project, getTrigger());
+        List<SourceDocument> docs;
+        if (recommendationService.isPredictForAllDocuments(username, project)) {
+            docs = documentService.listSourceDocuments(project);
+        } else {
+            docs = Collections.singletonList(currentDocument);
+        }
+
+        log.debug("[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
+                getId(), username, project, docs.size(), getTrigger());
         
         long startTime = System.currentTimeMillis();
 
         Predictions predictions = recommendationService.computePredictions(user, project, docs);
         
-        log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), user.getUsername(),
+        log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
                 (System.currentTimeMillis() - startTime));
 
         recommendationService.putIncomingPredictions(user, project, predictions);

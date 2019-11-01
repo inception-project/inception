@@ -116,6 +116,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
@@ -430,13 +431,29 @@ public class RecommendationServiceImpl
     public void onDocumentOpened(DocumentOpenedEvent aEvent)
     {
         Project project = aEvent.getDocument().getProject();
-        String user = aEvent.getAnnotator();
+        String username = aEvent.getAnnotator();
+        SourceDocument doc = aEvent.getDocument();
 
         // If there already is a state, we just re-use it. We only trigger a new training if there
         // is no state yet.
-        if (!states.containsKey(new RecommendationStateKey(user, project))) {
-            triggerTrainingAndClassification(user, project, "DocumentOpenedEvent");
+        if (!states.containsKey(new RecommendationStateKey(username, project))) {
+            triggerTrainingAndClassification(username, project, "DocumentOpenedEvent", doc);
+        } else {
+            // If we already trained, predicted only for the last document and open a new
+            // document, we start the predictions so that the user gets recommendations
+            // as quickly as possible without any interaction needed
+            User user = userRepository.get(username);
+            Predictions predictions = getPredictions(user, project);
+            if (predictions == null || predictions.hasPredictions()) {
+                log.debug("Starting prediction task after document was opened!");
+                Task task = new PredictionTask(user, project, "DocumentOpenedEvent", doc);
+                schedulingService.enqueue(task);
+            }
         }
+
+        // We reset this in case the state was not properly cleared, e.g. the AL session
+        // was started but then the browser closed
+        getState(username, project).setPredictForAllDocuments(false);
     }
 
     /* 
@@ -481,11 +498,12 @@ public class RecommendationServiceImpl
             committed = new HashSet<>();
             requestCycle.setMetaData(COMMITTED, committed);
         }
-        
+
         committed.add(new RecommendationStateKey(aEvent.getDocument().getUser(),
                 aEvent.getDocument().getProject()));        
         
-        requestCycle.getListeners().add(triggerTrainingTaskListener());
+        requestCycle.getListeners().add(triggerTrainingTaskListener(
+                aEvent.getDocument().getDocument()));
     }
     
     @EventListener
@@ -516,7 +534,8 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
+    public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
+                                                 SourceDocument aCurrentDocument)
     {
         User user = userRepository.get(aUser);
         
@@ -540,14 +559,27 @@ public class RecommendationServiceImpl
             // If it is time for a selection task, we just start a selection task.
             // The selection task then will start the training once its finished,
             // i.e. we do not start it here.
-            Task task = new SelectionTask(aProject, user, aEventName);
+            Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument);
             schedulingService.enqueue(task);
         } else {
-            Task task = new TrainingTask(user, aProject, aEventName);
+            Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument);
             schedulingService.enqueue(task);
         }
     }
-    
+
+    @Override
+    public boolean isPredictForAllDocuments(String aUser, Project aProject)
+    {
+        return getState(aUser, aProject).isPredictForAllDocuments();
+    }
+
+    @Override
+    public void setPredictForAllDocuments(String aUser, Project aProject,
+                                          boolean aPredictForAllDocuments)
+    {
+        getState(aUser, aProject).setPredictForAllDocuments(aPredictForAllDocuments);
+    }
+
     @EventListener
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void onSessionDestroyed(SessionDestroyedEvent event)
@@ -567,7 +599,8 @@ public class RecommendationServiceImpl
         String userName = aEvent.getDocument().getUser();
         Project project = aEvent.getDocument().getProject();
         clearState(userName);
-        triggerTrainingAndClassification(userName, project, "AfterDocumentResetEvent");
+        triggerTrainingAndClassification(userName, project, "AfterDocumentResetEvent",
+                aEvent.getDocument().getDocument());
     }
 
     @Override
@@ -746,7 +779,8 @@ public class RecommendationServiceImpl
         private Map<Recommender, RecommenderContext> contexts = new ConcurrentHashMap<>();
         private Predictions activePredictions;
         private Predictions incomingPredictions;
-        
+        private boolean predictForAllDocuments;
+
         public Preferences getPreferences()
         {
             return preferences;
@@ -848,6 +882,16 @@ public class RecommendationServiceImpl
             }
             
             setActiveRecommenders(newActiveRecommenders);
+        }
+
+        public boolean isPredictForAllDocuments()
+        {
+            return predictForAllDocuments;
+        }
+
+        public void setPredictForAllDocuments(boolean aPredictForAllDocuments)
+        {
+            predictForAllDocuments = aPredictForAllDocuments;
         }
     }
     
@@ -1259,7 +1303,8 @@ public class RecommendationServiceImpl
         return aTargetCas;
     }
     
-    private synchronized IRequestCycleListener triggerTrainingTaskListener()
+    private synchronized IRequestCycleListener triggerTrainingTaskListener(
+            SourceDocument aCurrentDocument)
     {
         if (triggerTraingRunListener == null) {
             triggerTraingRunListener = new IRequestCycleListener()
@@ -1287,8 +1332,8 @@ public class RecommendationServiceImpl
                         }
                         
                         triggerTrainingAndClassification(
-                                committedKey.getUser(), project, 
-                                "Committed dirty CAS at end of request");
+                                committedKey.getUser(), project,
+                                "Committed dirty CAS at end of request", aCurrentDocument);
                     }
                 };
             };

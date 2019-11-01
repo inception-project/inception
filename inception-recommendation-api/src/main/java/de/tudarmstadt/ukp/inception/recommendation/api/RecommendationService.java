@@ -139,5 +139,10 @@ public interface RecommendationService
 
     void clearState(String aUsername);
 
-    void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName);
+    void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
+                                          SourceDocument aCurrentDocument);
+
+    boolean isPredictForAllDocuments(String aUser, Project aProject);
+    void setPredictForAllDocuments(String aUser, Project aProject, boolean aPredictForAllDocuments);
+
 }
