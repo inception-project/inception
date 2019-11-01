@@ -222,7 +222,7 @@ public class SelectionTask
         for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
             try {
                 CAS cas = documentService.readAnnotationCas(document, aUserName);
-                annoService.upgradeCasIfRequired(cas, document, aUserName);
+                annoService.upgradeCasIfRequired(cas, document);
                 casses.add(cas);
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
