@@ -30,16 +30,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.text.BreakIterator;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -412,7 +403,7 @@ public class MtasDocumentIndex
         SearchQueryRequest aRequest, String field, MtasSpanQuery q)
         throws IOException
     {
-        Map<String, List<SearchResult>> results = new TreeMap<>(FEATUREVALUE_COMPARATOR);
+        Map<String, List<SearchResult>> results = new LinkedHashMap<>();
 
         ListIterator<LeafReaderContext> leafReaderContextIterator = aIndexReader.leaves()
                 .listIterator();
