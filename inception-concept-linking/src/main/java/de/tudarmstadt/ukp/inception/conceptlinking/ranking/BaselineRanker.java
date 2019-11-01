@@ -93,8 +93,8 @@ public class BaselineRanker
     private final int candidatesLimit;
     private final int contextSize;
 
-    public BaselineRanker(List<EntityRankingFeatureGenerator> aFeatureGenerators, Set<String> aStopwords,
-                          int aCandidatesLimit, int aContextSize) {
+    public BaselineRanker(List<EntityRankingFeatureGenerator> aFeatureGenerators,
+                          Set<String> aStopwords, int aCandidatesLimit, int aContextSize) {
         featureGenerators = aFeatureGenerators;
         stopwords = aStopwords;
         candidatesLimit = aCandidatesLimit;
@@ -102,7 +102,8 @@ public class BaselineRanker
     }
 
     @Override
-    public List<KBHandle> rank(String aQuery, String aMention, Set<KBHandle> aCandidates, CAS aCas, int aBeginOffset) {
+    public List<KBHandle> rank(String aQuery, String aMention, Set<KBHandle> aCandidates,
+                               CAS aCas, int aBeginOffset) {
         // Set the feature values
         List<CandidateEntity> candidates = aCandidates.parallelStream()
                 .map(CandidateEntity::new)

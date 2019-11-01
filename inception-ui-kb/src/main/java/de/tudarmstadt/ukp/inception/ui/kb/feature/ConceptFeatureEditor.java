@@ -186,7 +186,7 @@ public class ConceptFeatureEditor
 
                 CAS cas;
                 try {
-                     cas = aHandler.getEditorCas();
+                    cas = aHandler.getEditorCas();
                 } catch (IOException e) {
                     LOG.error("Could not read CAS", e);
                     return;

@@ -74,7 +74,6 @@ public class ConceptFeatureSupport
     public static final String ANY_OBJECT = "<ANY>";
     public static final String TYPE_ANY_OBJECT = PREFIX + ANY_OBJECT;
 
-    
     private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureSupport.class);
 
     private final KnowledgeBaseService kbService;
@@ -296,17 +295,19 @@ public class ConceptFeatureSupport
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
+        System.out.println("I am called");
+        LOG.error("I am called!");
+
+        aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
+
         // KB handle
         String typename = "inception.internal.KbHandle";
         if (aTSD.getType(typename) == null) {
-            TypeDescription kbHandle = aTSD.addType(typename, "", CAS.TYPE_NAME_TOP);
+            TypeDescription kbHandle = aTSD.addType(typename, "", CAS.TYPE_NAME_ANNOTATION);
             kbHandle.addFeature("iri", "", CAS.TYPE_NAME_STRING);
             kbHandle.addFeature("label", "", CAS.TYPE_NAME_STRING);
             kbHandle.addFeature("description", "", CAS.TYPE_NAME_STRING);
         }
-
-        aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
-        aTD.addFeature("candidates", "", CAS.TYPE_NAME_FS_ARRAY, typename, false);
     }
     
     @Override
