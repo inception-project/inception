@@ -24,7 +24,6 @@ import java.util.concurrent.BlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 
@@ -67,7 +66,8 @@ public class TaskConsumer
                     activeTask.run();
                     log.debug("Indexing task completed: {}", activeTask);
                 }
-                catch (BeansException e) {
+                // Catching Throwable is intentional here as we want to continue the execution even if a particular recommender fails.
+                catch (Throwable e) {
                     log.error("Indexing task failed: {}", activeTask, e);
                 }
                 finally {
