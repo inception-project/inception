@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security.session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
@@ -43,6 +44,7 @@ public class SessionListener
     
     private final SessionRegistry sessionRegistry;
 
+    @Autowired
     public SessionListener(SessionRegistry aSessionRegistry)
     {
         sessionRegistry = aSessionRegistry;
