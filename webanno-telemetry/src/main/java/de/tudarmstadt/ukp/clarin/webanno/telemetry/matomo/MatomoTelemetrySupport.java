@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.security.web.session.HttpSessionCreatedEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.event.TelemetrySettingsSavedEvent;
@@ -34,4 +35,6 @@ public interface MatomoTelemetrySupport
     void onApplicationReady(ApplicationReadyEvent aEvent);
 
     void onTelemetrySettingsSaved(TelemetrySettingsSavedEvent aEvent);
+    
+    void onSessionCreated(HttpSessionCreatedEvent aEvent);
 }
