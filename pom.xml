@@ -1102,7 +1102,7 @@
             <dependency>com.sun.xml.bind:jaxb-core</dependency>
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
-          </usedDependencies>
+          </ignoredDependencies>
         </configuration>
       </plugin>
       <plugin>
