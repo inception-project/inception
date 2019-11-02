@@ -42,8 +42,8 @@
     <system>GitHub Issues</system>
   </issueManagement>
   <scm>
-    <connection>scm:git:git://github.com/inception-project/inception</connection>
-    <developerConnection>scm:git:git@github.com:inception-project/inception.git</developerConnection>
+    <connection>scm:git:https://github.com/inception-project/inception.git</connection>
+    <developerConnection>scm:git:https://github.com:inception-project/inception.git</developerConnection>
     <url>https://github.com/inception-project/inception</url>
     <tag>HEAD</tag>
   </scm>
@@ -61,8 +61,8 @@
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
 
     <mockito.version>2.28.2</mockito.version>
-    <assertj.version>3.13.2</assertj.version>
-    <spring.version>5.2.0.RELEASE</spring.version>
+    <assertj.version>3.14.0</assertj.version>
+    <spring.version>5.2.1.RELEASE</spring.version>
     <spring.boot.version>2.2.0.RELEASE</spring.boot.version>
     <spring.security.version>5.2.0.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
@@ -131,6 +131,8 @@
       <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
       <releases>
         <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
       </releases>
       <snapshots>
         <enabled>false</enabled>
@@ -166,13 +168,13 @@
   <dependencies>
     <!-- The logging subsystem used by WebAnno -->
     <dependency>
-      <!-- Use Log4J http as logging backend -->
+      <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Use Log4J http as logging backend -->
+      <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
       <scope>runtime</scope>
@@ -1373,6 +1375,16 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.22.1</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>2.7</version>
+          <configuration>
+            <rulesUri>file:${maven.multiModuleProjectDirectory}/rules.xml</rulesUri>
+            <allowAnyUpdates>false</allowAnyUpdates>
+            <allowMajorUpdates>false</allowMajorUpdates>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -1475,6 +1487,7 @@
                 <configuration>
                   <consoleOutput>true</consoleOutput>
                   <excludes>
+                    <exclude>.mvn/jvm.config</exclude>
                     <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
@@ -1484,6 +1497,7 @@
                     <exclude>src/main/filter/**/*</exclude>
                     <!-- release generated artifact -->
                     <exclude>release.properties</exclude>
+                    <exclude>CONTRIBUTORS.txt</exclude>
                     <exclude>CHANGES</exclude>
                     <exclude>NOTICE</exclude>
                     <exclude>README</exclude>
@@ -1585,7 +1599,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>8.20</version>
+                  <version>8.26</version>
                 </dependency>
               </dependencies>
               <configuration>
