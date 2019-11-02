@@ -98,7 +98,7 @@ public class SpanAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, () -> asList(),
                 behaviors);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
@@ -114,7 +114,7 @@ public class SpanAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, () -> asList(),
                 behaviors);
 
         // Add two annotations
@@ -135,7 +135,7 @@ public class SpanAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, () -> asList(),
                 behaviors);
 
         // First time should work
@@ -169,7 +169,7 @@ public class SpanAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, () -> asList(),
                 behaviors);
 
         // Add two annotations
@@ -210,7 +210,7 @@ public class SpanAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, () -> asList(),
                 behaviors);
 
         // First time should work - we annotate the whole word "This"
@@ -248,7 +248,7 @@ public class SpanAdapterTest
         new NamedEntity(jcas, 0, 4).addToIndexes();
         new NamedEntity(jcas, 4, 5).addToIndexes();
         
-        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, () -> asList(),
                 behaviors);
 
         neLayer.setOverlapMode(NO_OVERLAP);

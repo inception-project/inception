@@ -31,6 +31,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
@@ -43,9 +44,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 
 /**
@@ -81,19 +81,20 @@ public class ExportDocumentDialogContent
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
         add(form);
         
-        form.add(new BootstrapSelect<>("format", writeableFormats));
+        DropDownChoice<String> format = new BootstrapSelect<>("format", writeableFormats);
+        format.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        form.add(format);
 
         // FIXME Use EnumChoiceRenderer?
         DropDownChoice<String> documentType = new BootstrapSelect<>("documentType",
                 Model.of(SELECTEXPORT.ANNOTATED.toString()), Arrays.asList(
                         SELECTEXPORT.ANNOTATED.toString(), SELECTEXPORT.AUTOMATED.toString()));
         documentType.setVisible(state.getObject().getMode().equals(Mode.AUTOMATION));
+        documentType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         form.add(documentType);
 
         AjaxDownloadLink export = new AjaxDownloadLink("export",
-                LambdaModel.of(ExportDocumentDialogContent.this::export));
-        // Before triggering the export, submit the form values
-        export.add(new LambdaAjaxFormSubmittingBehavior("click", t -> export.onClick(t)));
+                LoadableDetachableModel.of(this::export));
         form.add(export);
         form.add(new LambdaAjaxLink("cancel", (target) -> modalWindow.close(target)));
     }

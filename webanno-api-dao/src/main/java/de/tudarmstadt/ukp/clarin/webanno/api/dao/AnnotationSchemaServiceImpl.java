@@ -737,10 +737,12 @@ public class AnnotationSchemaServiceImpl
         // Create a new type system from scratch
         TypeSystemDescription tsd = new TypeSystemDescription_impl();
 
+        List<AnnotationFeature> allFeaturesInProject = listAnnotationFeature(aProject);
+        
         listAnnotationLayer(aProject).stream()
                 .filter(layer -> !layer.isBuiltIn())
                 .forEachOrdered(layer -> layerSupportRegistry.getLayerSupport(layer)
-                        .generateTypes(tsd, layer));
+                        .generateTypes(tsd, layer, allFeaturesInProject));
 
         return tsd;
     }
@@ -754,9 +756,10 @@ public class AnnotationSchemaServiceImpl
 
         TypeSystemDescription builtInTypes = createTypeSystemDescription();
         
-        List<AnnotationLayer> layers = listAnnotationLayer(aProject);
+        List<AnnotationLayer> allLayersInProject = listAnnotationLayer(aProject);
+        List<AnnotationFeature> allFeaturesInProject = listAnnotationFeature(aProject);
         
-        for (AnnotationLayer layer : layers) {
+        for (AnnotationLayer layer : allLayersInProject) {
             LayerSupport<?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
             
             // for built-in layers, we clone the information from the built-in type descriptors
@@ -767,7 +770,7 @@ public class AnnotationSchemaServiceImpl
             }
             // for custom layers, we use the information from the project settings
             else {
-                layerSupport.generateTypes(tsd, layer);
+                layerSupport.generateTypes(tsd, layer, allFeaturesInProject);
             }
         }
 

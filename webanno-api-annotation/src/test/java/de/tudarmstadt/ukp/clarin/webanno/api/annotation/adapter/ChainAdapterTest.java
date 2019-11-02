@@ -98,8 +98,8 @@ public class ChainAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer, asList(),
-                behaviors);
+        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer,
+            () -> asList(), behaviors);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
                 .isThrownBy(() -> sut.addSpan(document, username, jcas.getCas(), 0, 
@@ -113,8 +113,8 @@ public class ChainAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer, asList(),
-                behaviors);
+        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer,
+            () -> asList(), behaviors);
 
         // First time should work
         corefLayer.setOverlapMode(ANY_OVERLAP);
@@ -147,8 +147,8 @@ public class ChainAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer, asList(),
-                behaviors);
+        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer,
+            () -> asList(), behaviors);
 
         // First time should work - we annotate the whole word "This"
         corefLayer.setOverlapMode(ANY_OVERLAP);

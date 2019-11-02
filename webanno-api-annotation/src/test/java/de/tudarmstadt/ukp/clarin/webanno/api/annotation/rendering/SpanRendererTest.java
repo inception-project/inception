@@ -84,7 +84,7 @@ public class SpanRendererTest
         NamedEntity ne = new NamedEntity(jcas, 5, 15);
         ne.addToIndexes();
         
-        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, () -> asList(),
                 asList(new SpanCrossSentenceBehavior()));
         
         SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry,
@@ -110,7 +110,7 @@ public class SpanRendererTest
         NamedEntity ne2 = new NamedEntity(jcas, 3, 8);
         ne2.addToIndexes();
         
-        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, () -> asList(),
                 asList(new SpanOverlapBehavior()));
         
         SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry,

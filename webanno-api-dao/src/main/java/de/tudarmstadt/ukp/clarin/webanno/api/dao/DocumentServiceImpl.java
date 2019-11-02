@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
@@ -79,7 +80,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -758,8 +758,10 @@ public class DocumentServiceImpl
                 .createQuery(
                         "FROM AnnotationDocument WHERE project = :project AND document = :document "
                                 + "AND user in (:users)", AnnotationDocument.class)
-                .setParameter("project", aDocument.getProject()).setParameter("users", users)
-                .setParameter("document", aDocument).getResultList();
+                .setParameter("project", aDocument.getProject())
+                .setParameter("users", users)
+                .setParameter("document", aDocument)
+                .getResultList();
     }
     
     @Override
@@ -768,7 +770,8 @@ public class DocumentServiceImpl
         return entityManager
                 .createQuery("FROM AnnotationDocument WHERE project = :project AND user = :user",
                         AnnotationDocument.class)
-                .setParameter("project", aProject).setParameter("user", aUser.getUsername())
+                .setParameter("project", aProject)
+                .setParameter("user", aUser.getUsername())
                 .getResultList();
     }
 
@@ -889,24 +892,19 @@ public class DocumentServiceImpl
     
     private List<String> getAllAnnotators(Project aProject)
     {
+        String query = String.join("\n",
+                "SELECT DISTINCT p.user",
+                "FROM ProjectPermission p, User u",
+                "WHERE p.project = :project",
+                "  AND p.level   = :level",
+                "  AND p.user    = u.username");
+        
         // Get all annotators in the project
         List<String> users = entityManager
-                .createQuery(
-                        "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
-                                + "AND level = :level", String.class)
-                .setParameter("project", aProject).setParameter("level", PermissionLevel.ANNOTATOR)
+                .createQuery(query, String.class)
+                .setParameter("project", aProject)
+                .setParameter("level", ANNOTATOR)
                 .getResultList();
-
-        // check if the username is in the Users database (imported projects
-        // might have username
-        // in the ProjectPermission entry while it is not in the Users database
-        List<String> notInUsers = new ArrayList<>();
-        for (String user : users) {
-            if (!userRepository.exists(user)) {
-                notInUsers.add(user);
-            }
-        }
-        users.removeAll(notInUsers);
 
         return users;
     }

@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
 import java.util.List;
@@ -35,7 +36,6 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RelationRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
@@ -44,9 +44,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class RelationLayerSupport
-    implements LayerSupport<RelationAdapter>, InitializingBean
+    extends LayerSupport_ImplBase<RelationAdapter>
+    implements InitializingBean
 {
-    private final FeatureSupportRegistry featureSupportRegistry;
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
@@ -59,7 +59,7 @@ public class RelationLayerSupport
             ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
             LayerBehaviorRegistry aLayerBehaviorsRegistry)
     {
-        featureSupportRegistry = aFeatureSupportRegistry;
+        super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         schemaService = aSchemaService;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
@@ -99,15 +99,16 @@ public class RelationLayerSupport
     public RelationAdapter createAdapter(AnnotationLayer aLayer)
     {
         RelationAdapter adapter = new RelationAdapter(featureSupportRegistry, eventPublisher,
-                aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                schemaService.listAnnotationFeature(aLayer),
-                layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
+            aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+            () -> schemaService.listAnnotationFeature(aLayer),
+            layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
 
         return adapter;
     }
 
     @Override
-    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
+    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
+            List<AnnotationFeature> aAllFeaturesInProject)
     {
         TypeDescription td = aTsd.addType(aLayer.getName(), aLayer.getDescription(),
                 TYPE_NAME_ANNOTATION);
@@ -116,16 +117,10 @@ public class RelationLayerSupport
         td.addFeature(FEAT_REL_TARGET, "", attachType.getName());
         td.addFeature(FEAT_REL_SOURCE, "", attachType.getName());
 
-        generateFeatures(aTsd, td, aLayer);
-    }
-
-    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD, AnnotationLayer aLayer)
-    {
-        List<AnnotationFeature> features = schemaService.listAnnotationFeature(aLayer);
-        for (AnnotationFeature feature : features) {
-            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
-            fs.generateFeature(aTSD, aTD, feature);
-        }
+        List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
+                .filter(feature -> aLayer.equals(feature.getLayer()))
+                .collect(toList());
+        generateFeatures(aTsd, td, featureForLayer);
     }
 
     @Override
