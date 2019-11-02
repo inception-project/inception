@@ -470,7 +470,6 @@
               -->
               <!-- Spring Security -->
               <usedDependency>org.springframework.security:spring-security-config</usedDependency>
-              <usedDependency>org.springframework.security:spring-security-web</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
