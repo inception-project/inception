@@ -295,8 +295,6 @@ public class ConceptFeatureSupport
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
-        System.out.println("I am called");
-        LOG.error("I am called!");
 
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
 
@@ -307,6 +305,7 @@ public class ConceptFeatureSupport
             kbHandle.addFeature("iri", "", CAS.TYPE_NAME_STRING);
             kbHandle.addFeature("label", "", CAS.TYPE_NAME_STRING);
             kbHandle.addFeature("description", "", CAS.TYPE_NAME_STRING);
+            kbHandle.addFeature("rank", "", CAS.TYPE_NAME_INTEGER);
         }
     }
     

@@ -18,10 +18,9 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.ranking.letor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
@@ -58,8 +57,10 @@ public class ExternalLetorRanker
                 .post(body)
                 .build();
 
-        try {
-            okhttp3.Response response = client.newCall(httpRequest).execute();
+        try (okhttp3.Response response = client.newCall(httpRequest).execute()){
+            ObjectMapper mapper = new ObjectMapper();
+            Integer[] ranks = mapper.readValue(response.body().string(), Integer[].class);
+            return argsort(unsortedCandidates, ranks);
         } catch (IOException e) {
             log.error("Exception while re-ranking externally", e);
         }
@@ -78,5 +79,15 @@ public class ExternalLetorRanker
         }
 
         return sentence.getCoveredText();
+    }
+
+    private List<KBHandle> argsort(List<KBHandle> aCandidates, Integer[] aRanks) {
+        KBHandle[] result = new KBHandle[aCandidates.size()];
+        for (int i = 0; i < aCandidates.size(); i++) {
+            int rank = aRanks[i];
+            result[rank] = aCandidates.get(i);
+        }
+
+        return Arrays.asList(result);
     }
 }
