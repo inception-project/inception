@@ -580,11 +580,6 @@
         <version>1.5.0</version>
       </dependency>
       <dependency>
-        <groupId>org.jfree</groupId>
-        <artifactId>jcommon</artifactId>
-        <version>1.0.24</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.xmlgraphics</groupId>
         <artifactId>batik-dom</artifactId>
         <version>${batik.version}</version>
@@ -1357,7 +1352,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.0.0</version>
+              <version>3.1.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>
