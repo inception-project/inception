@@ -21,7 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.wicket.request.resource.DynamicImageResource;
-import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 
 /**
@@ -50,7 +50,7 @@ public class ChartImageResource
     {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ChartUtilities.writeChartAsPNG(bos, chart, width, height);
+            ChartUtils.writeChartAsPNG(bos, chart, width, height);
             return bos.toByteArray();
         }
         catch (IOException e) {

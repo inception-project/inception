@@ -95,6 +95,8 @@ public class FixCoreferenceFeatures
 
     private void doMigration()
     {
+        long start = System.currentTimeMillis();
+        
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("migrationRoot");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -131,5 +133,8 @@ public class FixCoreferenceFeatures
                 txManager.rollback(status);
             }
         }
+        
+        log.info("Migration [" + getClass().getSimpleName() + "] took {}ms",
+                System.currentTimeMillis() - start);
     }
 }

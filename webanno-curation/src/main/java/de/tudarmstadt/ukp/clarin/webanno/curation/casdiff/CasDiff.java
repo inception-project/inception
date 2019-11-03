@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -335,20 +336,30 @@ public class CasDiff
         boolean assertsEnabled = false;
         assert assertsEnabled = true; // Intentional side effect!
         if (assertsEnabled) {
-            Iterator<List<CAS>> i = aCasMap.values().iterator();
+            Iterator<Entry<String, List<CAS>>> i = aCasMap.entrySet().iterator();
             
-            List<CAS> ref = i.next();
+            Entry<String, List<CAS>> ref = i.next();
+            String refUser = ref.getKey();
+            List<CAS> refCASes = ref.getValue();
             while (i.hasNext()) {
-                List<CAS> cur = i.next();
-                assert ref.size() == cur.size() : "CAS list sizes differ: " + ref.size()
-                        + " vs " + cur.size();
-                for (int n = 0; n < ref.size(); n++) {
-                    CAS refCas = ref.get(n);
-                    CAS curCas = cur.get(n);
+                Entry<String, List<CAS>> cur = i.next();
+                String curUser = cur.getKey();
+                List<CAS> curCASes = cur.getValue();
+                assert refCASes.size() == curCASes.size() : "CAS list sizes differ: "
+                        + refCASes.size() + " vs " + curCASes.size();
+                for (int n = 0; n < refCASes.size(); n++) {
+                    CAS refCas = refCASes.get(n);
+                    CAS curCas = curCASes.get(n);
                     // null elements in the list can occur if a user has never worked on a CAS
-                    assert !(refCas != null && curCas != null)
-                            || StringUtils.equals(refCas.getDocumentText(),
-                                    curCas.getDocumentText());
+                    assert !(refCas != null && curCas != null) || StringUtils.equals(
+                            refCas.getDocumentText(),
+                            curCas.getDocumentText()) : "Trying to compare CASes with different document texts: ["
+                                    + curUser + "] having ["
+                                    + abbreviateMiddle(curCas.getDocumentText(), "...", 40)
+                                    + "] (length: " + curCas.getDocumentText().length() + ") vs ["
+                                    + refUser + "] having ["
+                                    + abbreviateMiddle(refCas.getDocumentText(), "...", 40)
+                                    + "] (length: " + refCas.getDocumentText().length() + ")";
                 }
             }
         }

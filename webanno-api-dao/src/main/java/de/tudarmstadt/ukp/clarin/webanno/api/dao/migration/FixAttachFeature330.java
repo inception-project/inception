@@ -108,6 +108,8 @@ public class FixAttachFeature330
 
     private void doMigration()
     {
+        long start = System.currentTimeMillis();
+        
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("migrationRoot");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -148,6 +150,9 @@ public class FixAttachFeature330
                 txManager.rollback(status);
             }
         }
+        
+        log.info("Migration [" + getClass().getSimpleName() + "] took {}ms",
+                System.currentTimeMillis() - start);
     }
     
     private void fix(Project aProject, Class<? extends TOP> aLayer, String aLayerType,
