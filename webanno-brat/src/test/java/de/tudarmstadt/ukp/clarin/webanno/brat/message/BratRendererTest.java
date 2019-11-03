@@ -36,6 +36,7 @@ import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.dkpro.core.io.tcf.TcfReader;
 import org.dkpro.core.io.text.TextReader;
 import org.dkpro.core.tokit.BreakIteratorSegmenter;
 import org.junit.Before;
@@ -65,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
