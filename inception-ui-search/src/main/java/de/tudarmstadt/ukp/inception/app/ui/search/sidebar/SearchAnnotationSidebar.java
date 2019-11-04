@@ -24,6 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -58,7 +59,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,7 +123,8 @@ public class SearchAnnotationSidebar
 
     private IModel<String> targetQuery = Model.of("");
     private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
-    private IModel<List<ResultsGroup>> groupedSearchResults = new ListModel<>();
+    private IModel<SearchResultsPagesCache> groupedSearchResults = Model
+        .of(new SearchResultsPagesCache());
     private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
             .of(new CreateAnnotationsOptions());
     private IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
@@ -145,7 +146,7 @@ public class SearchAnnotationSidebar
         resultsProvider = new SearchResultsProviderWrapper(new SearchResultsProvider(searchService,
             groupedSearchResults));
 
-        
+
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
@@ -193,7 +194,7 @@ public class SearchAnnotationSidebar
             {
                 ResultsGroup result = item.getModelObject();
                 item.add(new Label("groupTitle", LoadableDetachableModel
-                        .of(() -> result.getGroupKey() + " (" + result.getResults().size() + ")")));
+                        .of(() -> createGroupSizeLabel(result))));
                 item.add(createGroupLevelSelectionCheckBox("selectAllInGroup",
                         result.getGroupKey()));
                 item.add(new SearchResultGroup("group", "resultGroup", SearchAnnotationSidebar.this,
@@ -251,12 +252,23 @@ public class SearchAnnotationSidebar
         annotationForm.add(visibleWhen(() -> groupedSearchResults.getObject() != null
                 && !groupedSearchResults.getObject().isEmpty()));
 
-        
+
         LambdaAjaxButton<Void> clearButton = new LambdaAjaxButton<>("clearButton",
                 this::actionClearResults);
         annotationForm.add(clearButton);
-        
+
         mainContainer.add(annotationForm);
+    }
+
+    private String createGroupSizeLabel(ResultsGroup aResultsGroup) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(aResultsGroup.getGroupKey() + " (" + aResultsGroup.getResults().size());
+        // If grouping is activated, paging is deactivated, so we know the total group sizes
+        if (resultsProvider.isGroupingActivated()) {
+            sb.append("/" + resultsProvider.groupSize(aResultsGroup.getGroupKey()));
+        }
+        sb.append(")");
+        return sb.toString();
     }
 
     private DropDownChoice<Long> createResultsPerPageSelection(String aId)
@@ -299,10 +311,12 @@ public class SearchAnnotationSidebar
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                for (ResultsGroup resultsGroup : groupedSearchResults.getObject()) {
-                    if (resultsGroup.getGroupKey().equals(aGroupKey)) {
-                        resultsGroup.getResults().stream()
-                            .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
+                for (List<ResultsGroup> page : groupedSearchResults.getObject().allPages()) {
+                    for (ResultsGroup resultsGroup : page) {
+                        if (resultsGroup.getGroupKey().equals(aGroupKey)) {
+                            resultsGroup.getResults().stream()
+                                .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
+                        }
                     }
                 }
                 target.add(resultsGroupContainer);
@@ -312,19 +326,20 @@ public class SearchAnnotationSidebar
             protected void onConfigure()
             {
                 super.onConfigure();
-                for (ResultsGroup resultsGroup : groupedSearchResults.getObject()) {
-                    if (resultsGroup.getGroupKey().equals(aGroupKey)) {
-                        List<SearchResult> unselectedResults = resultsGroup.getResults().stream()
-                                .filter(sr -> !sr.isSelectedForAnnotation())
+                for (List<ResultsGroup> page : groupedSearchResults.getObject().allPages()) {
+                    for (ResultsGroup resultsGroup : page) {
+                        if (resultsGroup.getGroupKey().equals(aGroupKey)) {
+                            List<SearchResult> unselectedResults = resultsGroup.getResults()
+                                .stream().filter(sr -> !sr.isSelectedForAnnotation())
                                 .collect(Collectors.toList());
-                        if (unselectedResults.isEmpty()) {
-                            setModelObject(true);
-                        }
-                        else {
-                            setModelObject(false);
+                            if (!unselectedResults.isEmpty()) {
+                                setModelObject(false);
+                                return;
+                            }
                         }
                     }
                 }
+                setModelObject(true);
             }
         };
         return selectAllCheckBox;
@@ -339,7 +354,7 @@ public class SearchAnnotationSidebar
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
-    
+
     private void actionClearResults(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         targetQuery.setObject("");
@@ -347,12 +362,11 @@ public class SearchAnnotationSidebar
         groupedSearchResults.detach();
         aTarget.add(mainContainer);
     }
-    
+
     private void getSearchResultsGrouped()
     {
         if (isBlank(targetQuery.getObject())) {
             resultsProvider.emptyQuery();
-            groupedSearchResults.setObject(null);
             return;
         }
 
@@ -362,10 +376,9 @@ public class SearchAnnotationSidebar
             error(
                 "A feature has to be selected in order to group by feature values. If you want to group by document title, select none for both layer and feature.");
             resultsProvider.emptyQuery();
-            groupedSearchResults.setObject(null);
             return;
         }
-        
+
         try {
             AnnotatorState state = getModelObject();
             Project project = state.getProject();
@@ -377,13 +390,11 @@ public class SearchAnnotationSidebar
             SearchOptions opt = searchOptions.getObject();
             resultsProvider.initializeQuery(currentUser, project, targetQuery.getObject(),
                     limitToDocument, opt.getGroupingLayer(), opt.getGroupingFeature());
-            groupedSearchResults.setObject(null);
             return;
         }
         catch (Exception e) {
             error("Error in the query: " + e.getMessage());
             resultsProvider.emptyQuery();
-            groupedSearchResults.setObject(null);
             return;
         }
     }
@@ -414,17 +425,22 @@ public class SearchAnnotationSidebar
             try {
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
                 adapter.silenceEvents();
-                
+
+                // Flatten ResultGroups that are currently in the cache into one list
+                List<ResultsGroup> resultsGroups = new ArrayList<>();
+                groupedSearchResults.getObject().allPages().stream()
+                    .forEach(p -> resultsGroups.addAll(p));
+
                 // Group the results by document such that we can process one CAS at a time
-                Map<Long, List<SearchResult>> resultsByDocument = groupedSearchResults.getObject()
+                Map<Long, List<SearchResult>> resultsByDocument = resultsGroups
                         .stream()
                         // the grouping can be based on some other strategy than the document, so
                         // we re-group here
                         .flatMap(group -> group.getResults().stream())
                         .collect(groupingBy(SearchResult::getDocumentId));
-                
+
                 BulkOperationResult bulkResult = new BulkOperationResult();
-                
+
                 AnnotatorState state = getModelObject();
                 for (Entry<Long, List<SearchResult>> resultsGroup : resultsByDocument.entrySet()) {
                     long documentId = resultsGroup.getKey();
@@ -433,7 +449,7 @@ public class SearchAnnotationSidebar
 
                     AnnotationDocument annoDoc = documentService
                             .createOrGetAnnotationDocument(sourceDoc, currentUser);
-                    
+
                     switch (annoDoc.getState()) {
                     case FINISHED: // fall-through
                     case IGNORE:
@@ -442,7 +458,7 @@ public class SearchAnnotationSidebar
                     default:
                         // Do nothing
                     }
-                    
+
                     // Load annotated document
                     CAS cas = documentService.readAnnotationCas(sourceDoc,
                             currentUser.getUsername());
@@ -452,14 +468,14 @@ public class SearchAnnotationSidebar
                         if (result.isReadOnly() || !result.isSelectedForAnnotation()) {
                             continue;
                         }
-                        
+
                         aConsumer.apply(sourceDoc, cas, adapter, result, bulkResult);
                     }
 
                     // Persist annotated document
                     writeJCasAndUpdateTimeStamp(sourceDoc, cas);
                 }
-                
+
                 if (bulkResult.created > 0) {
                     success("Created annotations: " + bulkResult.created);
                 }
@@ -472,11 +488,11 @@ public class SearchAnnotationSidebar
                 if (bulkResult.conflict > 0) {
                     warn("Annotations skipped due to conflicts: " + bulkResult.conflict);
                 }
-                
+
                 if (bulkResult.created == 0 && bulkResult.updated == 0 && bulkResult.deleted == 0) {
                     info("No changes");
                 }
-                
+
                 applicationEventPublisher.get().publishEvent(new BulkAnnotationEvent(this,
                         getModelObject().getProject(), currentUser.getUsername(), layer));
             }
@@ -489,7 +505,7 @@ public class SearchAnnotationSidebar
                 LOG.error("Unable to apply action to search results: ", e);
             }
         }
-        
+
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
@@ -500,7 +516,7 @@ public class SearchAnnotationSidebar
         AnnotatorState state = getModelObject();
         AnnotationLayer layer = aAdapter.getLayer();
         List<FeatureState> featureStates = state.getFeatureStates();
-        
+
         Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
         AnnotationFS annoFS = selectAt(aCas, type, aSearchResult.getOffsetStart(),
             aSearchResult.getOffsetEnd()).stream().findFirst().orElse(null);
@@ -553,7 +569,7 @@ public class SearchAnnotationSidebar
                 && deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
             return;
         }
-        
+
         aAdapter.delete(aDocument, currentUser.getUsername(), aCas, new VID(annoFS));
         aBulkResult.deleted++;
     }
@@ -587,7 +603,7 @@ public class SearchAnnotationSidebar
         }
         return true;
     }
-    
+
     private class SearchResultGroup
         extends Fragment
     {
@@ -597,18 +613,18 @@ public class SearchAnnotationSidebar
             String groupKey, IModel<ResultsGroup> aModel)
         {
             super(aId, aMarkupId, aMarkupProvider, aModel);
-            
+
             ListView<SearchResult> statementList = new ListView<SearchResult>("results")
             {
                 private static final long serialVersionUID = 5811425707843441458L;
-    
+
                 @Override
                 protected void populateItem(ListItem<SearchResult> aItem)
                 {
                     Project currentProject = SearchAnnotationSidebar.this.getModel().getObject()
                             .getProject();
                     SearchResult result = aItem.getModelObject();
-                    
+
                     LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument",
                         t -> {
                             selectedResult = aItem.getModelObject();
@@ -652,10 +668,10 @@ public class SearchAnnotationSidebar
             };
             statementList
                     .setModel(LoadableDetachableModel.of(() -> aModel.getObject().getResults()));
-            add(statementList);        
+            add(statementList);
         }
     }
-    
+
     @FunctionalInterface
     private interface Operation
     {
@@ -663,7 +679,7 @@ public class SearchAnnotationSidebar
                 BulkOperationResult aBulkResult)
             throws AnnotationException;
     }
-    
+
     private class BulkOperationResult
     {
         public int created = 0;

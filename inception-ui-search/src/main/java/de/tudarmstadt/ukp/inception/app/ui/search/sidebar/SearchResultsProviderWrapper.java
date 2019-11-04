@@ -82,7 +82,9 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
                     resultsGroupsSubList.add(group);
                 }
             }
-            searchResultsProvider.getCurrentPageCache().setObject(resultsGroupsSubList);
+            searchResultsProvider.getCurrentPageCache().getObject()
+                .setPage(new SearchResultsPagesCache.PageKey(first, first + count),
+                    resultsGroupsSubList);
             return resultsGroupsSubList.iterator();
         }
 
@@ -101,6 +103,20 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
         return searchResultsProvider.model(object);
     }
 
+    public long groupSize(String aGroupKey)
+    {
+        for (ResultsGroup group : resultGroups) {
+            if (group.getGroupKey().equals(aGroupKey)) {
+                return group.getResults().size();
+            }
+        }
+        return -1;
+    }
+
+    public boolean isGroupingActivated()
+    {
+        return groupingActivated;
+    }
 
     public void initializeQuery(User aUser, Project aProject, String aQuery,
         SourceDocument aDocument, AnnotationLayer aAnnotationLayer,

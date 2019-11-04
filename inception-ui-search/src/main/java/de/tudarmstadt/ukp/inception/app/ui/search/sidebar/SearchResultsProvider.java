@@ -59,12 +59,10 @@ public class SearchResultsProvider
 
     // Cache
     private long totalResults = 0;
-    private IModel<List<ResultsGroup>> currentPageCache;
-    private long currentOffset = -1;
-    private long currentCount = -1;
+    private IModel<SearchResultsPagesCache> currentPageCache;
 
     public SearchResultsProvider(SearchService aSearchService,
-            IModel<List<ResultsGroup>> aCurrentPageCache)
+        IModel<SearchResultsPagesCache> aCurrentPageCache)
     {
         searchService = aSearchService;
         currentPageCache = aCurrentPageCache;
@@ -74,23 +72,24 @@ public class SearchResultsProvider
     public Iterator<ResultsGroup> iterator(long first, long count)
     {
         if (query == null) {
-            currentPageCache.setObject(Collections.emptyList());
-            return currentPageCache.getObject().iterator();
+            currentPageCache.getObject().clear();
+            List<ResultsGroup> emptyList = Collections.emptyList();
+            return emptyList.iterator();
         }
         // Query if we just initialized a new query currentPageCache.getObject() == null or we want
-        // to retrieve a new page of the current query (currentOffset != first,
+        // to retrieve a new page of the current query  (currentOffset != first,
         // currentCount != count)
-        if (currentPageCache.getObject() == null || (currentOffset != first
-            || currentCount != count)) {
+        if (currentPageCache.getObject().isEmpty() || !currentPageCache.getObject()
+            .containsPage(first, first + count)) {
             try {
                 List<ResultsGroup> queryResults = searchService
                     .query(user, project, query, document, annotationLayer, annotationFeature,
                         first, count).entrySet().stream()
                     .map(e -> new ResultsGroup(e.getKey(), e.getValue()))
                     .collect(Collectors.toList());
-                currentPageCache.setObject(queryResults);
-                currentCount = count;
-                currentOffset = first;
+                currentPageCache.getObject()
+                    .setPage(new SearchResultsPagesCache.PageKey(first, first + count),
+                        queryResults);
                 return queryResults.iterator();
             }
             catch (IOException | ExecutionException e) {
@@ -99,7 +98,8 @@ public class SearchResultsProvider
             }
         }
         else {
-            return currentPageCache.getObject().iterator();
+            return currentPageCache.getObject()
+                .getPage(new SearchResultsPagesCache.PageKey(first, first + count)).iterator();
         }
     }
 
@@ -146,7 +146,7 @@ public class SearchResultsProvider
         annotationFeature = aAnnotationFeature;
 
         totalResults = -1; // reset size cache
-        currentPageCache.setObject(null); // reset page cache
+        currentPageCache.getObject().clear(); // reset page cache
     }
 
     public void emptyQuery()
@@ -169,7 +169,7 @@ public class SearchResultsProvider
         return searchService;
     }
 
-    public IModel<List<ResultsGroup>> getCurrentPageCache()
+    public IModel<SearchResultsPagesCache> getCurrentPageCache()
     {
         return currentPageCache;
     }
