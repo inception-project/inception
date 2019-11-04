@@ -794,14 +794,19 @@ var VisualizerUI = (function($, window, undefined) {
             });
 
             var resizeFunction = function(evt) {
+// WEBANNO EXTENSION BEGIN - #1519 - Optimize re-rendering of brat view when window is resizes
+/*
             	window.location.reload();
-              };
+*/
+            	dispatcher.post('rerender');
+// WEBANNO EXTENSION BEGIN - #1519 - Optimize re-rendering of brat view when window is resizes
+            };
 
               var resizerTimeout = null;
               var onResize = function(evt) {
                 if (evt.target === window) {
                   clearTimeout(resizerTimeout);
-                  resizerTimeout = setTimeout(resizeFunction, 2000); // TODO is 2000ms okay?
+                  resizerTimeout = setTimeout(resizeFunction, 300);
                 }
               };
               
