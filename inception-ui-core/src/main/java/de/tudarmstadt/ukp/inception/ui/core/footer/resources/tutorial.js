@@ -15,62 +15,53 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 */
-$(document).ready(function() {
-			var enjoyhint_instance = new EnjoyHint({
-				onSkip : function() {
-					// reset all the cookies
-				}
-			});
 
+	var cName = "tutorialSession";
+	var contextPath = "";
+	var isRecommenderError=false;
+
+	var enjoyhint_instance = new EnjoyHint({
+		onSkip : function() {
+			// reset all the cookies
+		}
+	});
+
+	
+$(document).ready(function() {
 			var enjoyhint_script_steps;
 			var currentPage = window.location.pathname;
 			var projectId = getUrlParameter('p');
 			
-			var cName = document.location.pathname.match(/[^\/]+$/)[0];
-			//createCookieName(currentPage);
+			// var cName = document.location.pathname.match(/[^\/]+$/)[0];
+			// createCookieName(currentPage);
 			var ps = getCookie(cName); 
 
-			if (currentPage.includes("projects.html")) {
-				ps = getCookie(cName);
-				if (ps == 'true') {
-				} else if (ps == "") {
+			if (currentPage.includes("projects.html") && ps == "tutorialStarted")
+			{
 					enjoyhint_instance = new EnjoyHint({
 						onEnd : function() {
-							setCookie(cName, 'projectCreated');
+							setCookie(cName, 'tutorialStarted',contextPath);
 						},
 						onSkip : function() {
-							setCookie(cName, true);
+							setCookie(cName, true, contextPath);
 						}
 					});
 
 					enjoyhint_script_steps = createFirstPageRoutine();
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
-				} else if (ps == "projectCreated") {
-					enjoyhint_instance = new EnjoyHint({
-						onEnd : function() {
-							setCookie(cName, true);
-						},
-						onSkip : function() {
-							setCookie(cName, true);
-						}
-					});
-					enjoyhint_script_steps = createFirstPageRoutinePart2();
-					enjoyhint_instance.set(enjoyhint_script_steps);
-					enjoyhint_instance.runScript();
-
-				}
-			} else if (currentPage.includes("projectsetting.html") 
-					&& projectId == 'NEW' && ps != "projectSaved") {
+			} 
+			
+			else if (currentPage.includes("projectsetting.html")  && projectId == 'NEW' && ps == "tutorialStarted") 
+			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
 						// reset all the cookies
-						setCookie(cName, 'projectSaved');
+						setCookie(cName, 'projectSaved', contextPath);
 					},
 					onSkip : function() {
-						setCookie(cName, true);
+						setCookie(cName, true, contextPath);
 					}
-
 				});
 
 				ps = getCookie(cName);
@@ -78,72 +69,79 @@ $(document).ready(function() {
 				} else {
 					ps = 'projectSaved';
 					if (ps != "" && ps != null) {
-						setCookie(cName, ps, 365);
+						setCookie(cName, ps, contextPath);
 					}
 
 					enjoyhint_script_steps = createNewProjectRoutine();
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
-				}
-			} else if (currentPage.includes("projectsetting.html")
-					&& projectId == 'NEW' && ps == "projectSaved") {
-
+			    }
+			} 
+			
+			else if (currentPage.includes("projectsetting.html") && projectId == 'NEW' && ps == "projectSaved") 
+			{
 				//save the project name in the cookie
 				var projectName = $('[name="p::name"]').val()
-				setCookie("projectName", projectName, 365);
+				setCookie("projectName", projectName, contextPath);
 				
 				//re-initialize the instance
-				enjoyhint_instance = new EnjoyHint({});
+				enjoyhint_instance = new EnjoyHint({
+					onEnd : function() {
+						setCookie(cName, 'projectCreated',contextPath);
+					}
+				});
 
 				//reset the projectsetting cookie so the tutorial shows up on the settings page later
 				ps = "";
 				if (ps != "" && ps != null) {
-					setCookie(cName, ps, 365);
+					setCookie(cName, ps, contextPath);
 				}
 				enjoyhint_script_steps = createProjectSavedRoutine();
 				enjoyhint_instance.set(enjoyhint_script_steps);
 				enjoyhint_instance.runScript();
-
-			} else if (currentPage.includes("project.html")) {
-				var ps = getCookie(cName);
-				if (ps != "") {
-				} else {
-					ps = true;
-					if (ps != "" && ps != null) {
-						setCookie(cName, ps, 365);
+			} 
+			
+			else if (currentPage.includes("projects.html") && ps == "projectCreated") 
+			{
+					enjoyhint_instance = new EnjoyHint({
+						onEnd : function() {
+							setCookie(cName, "projectView", contextPath);
+						},
+						onSkip : function() {
+							setCookie(cName, true, contextPath);
+						}
+					});
+					enjoyhint_script_steps = createFirstPageRoutinePart2();
+					enjoyhint_instance.set(enjoyhint_script_steps);
+					enjoyhint_instance.runScript();
+			}
+			
+			
+			else if (currentPage.includes("project.html") && ps == "projectView") 
+			{
+				enjoyhint_instance = new EnjoyHint({
+					onEnd : function() {
+						setCookie(cName, "projectsettingView", contextPath);
+					},
+					onSkip : function() {
 					}
-
+				});
+				
 					enjoyhint_script_steps = createDashboardRoutine();
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
-				}
-			} else if (currentPage.includes("projectsetting.html")) {
-				var ps = getCookie(cName);
+			} 
+			
+			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingView") {
 				
-				if (ps == 'true') {
-					// alert("PS Visited? " + ps);
-				} 
-				//TODO do we need it
-				else if (ps == "recommenderSaved") {
-					ps = true;
-					if (ps != "" && ps != null) {
-						setCookie(cName, ps, 365);
-					}
-					enjoyhint_script_steps = createAnnotationRoutine();
-					enjoyhint_instance.set(enjoyhint_script_steps);
-					enjoyhint_instance.runScript();
-				}
-				else {
 					enjoyhint_instance = new EnjoyHint({     
 						
 						onEnd : function() {
-							ps = "true";
-							if (ps != "" && ps != null) {
-								setCookie(cName, ps, 365);
-							}
+							setCookie(cName, "projectsettingConfigured", contextPath);
+							isRecommenderError=false;
 						},
 						onSkip : function() {
-							setCookie(cName, true);
+							setCookie(cName, true, contextPath);
 						}
 
 					});
@@ -151,17 +149,92 @@ $(document).ready(function() {
 					enjoyhint_script_steps = createSettingsRoutine(enjoyhint_instance);
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
-				}
+			}
+
+			//recommender saving error
+			else if (currentPage.includes("projectsetting.html") && ps == "recommenderError") {
+				debugger;
+					enjoyhint_instance = new EnjoyHint({     
+						
+						onEnd : function() {
+							setCookie(cName, "projectsettingConfigured", contextPath);
+						},
+						onSkip : function() {
+							setCookie(cName, true, contextPath);
+						}
+
+					});
+
+					enjoyhint_script_steps = createAddRecommenderRoutine(enjoyhint_instance);
+					enjoyhint_instance.set(enjoyhint_script_steps);
+					enjoyhint_instance.runScript();
+			}
+			
+			else if(currentPage.includes("projectsetting.html") && ps == "recommenderAdded")
+			{
+				enjoyhint_instance = new EnjoyHint({     
+					onEnd : function() {
+						setCookie(cName, "projectsettingConfigured", contextPath);
+					},
+					onSkip : function() {
+						setCookie(cName, true, contextPath);
+					}
+				});
+
+				enjoyhint_script_steps = createAddRecommenderRoutine(enjoyhint_instance);
+				enjoyhint_instance.set(
+				[
+					{
+						'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
+					}
+				]		
+				);
+				enjoyhint_instance.runScript();
+			}
+			
+			else if (currentPage.includes("project.html") && ps == "projectsettingConfigured")
+			{
+				enjoyhint_instance = new EnjoyHint({
+					onEnd : function() {
+						setCookie(cName, "ended", contextPath);
+					},
+					onSkip : function() {
+						setCookie(cName, "ended", contextPath);
+					}
+				});
+				enjoyhint_script_steps = createLastRoutine();
+				enjoyhint_instance.set(enjoyhint_script_steps);
+				enjoyhint_instance.runScript();
 			}
 		});
 
 
 
-function setCookie(cname, cvalue, exdays) {
+function startTutorial(aContextPath) {
+	contextPath = aContextPath;
+	var enjoyhint_instance = new EnjoyHint({
+		onEnd : function() {
+			//setCookie(cName, 'projectNotSaved',contextPath);
+		},
+		onSkip : function() {
+			setCookie(cName, true, contextPath);
+		}
+	});
+
+	enjoyhint_script_steps = createFirstPageRoutine();
+	enjoyhint_instance.set(enjoyhint_script_steps);
+	
+	setCookie(cName, 'tutorialStarted',contextPath);
+
+	enjoyhint_instance.runScript();
+}
+
+
+function setCookie(cname, cvalue, contextPath) {
 	var d = new Date();
-	d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+	d.setTime(d.getTime() + (1 * 24 * 60 * 60 * 1000));
 	var expires = "expires=" + d.toUTCString();
-	document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+	document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/"+contextPath;
 }
 
 function getCookie(cname) {
@@ -181,7 +254,7 @@ function getCookie(cname) {
 
 function createNewProjectRoutine() {
 	var a = [ {
-		'key [name=\'p::name\']' : 'Write the name of the project and press Enter',
+		'next [name=\'p::name\']' : 'Write the name of the project and press Enter',
 	}
 //	, {
 //		'click [type=submit]' : 'Click save'
@@ -228,10 +301,8 @@ function createFirstPageRoutinePart2() {
 			},
 			{
 				"event": "click", 
-				"selector": t[0], 
+				"selector": ".list-group-item", 
 				"description": "Click on the project to get started.",
-				
-
 			} 
 			];
 	return a;
@@ -260,10 +331,49 @@ function createDashboardRoutine() {
 	return a;
 }
 
+function createAddRecommenderRoutine(enjoyHint) {
+	var a = [
+			{
+				'next .col-sm-9' : "Already exists. Try again!",
+				onBeforeStart:function(){ 
+					
+				     $("[name=\'save\']").on('click',
+								function(e) { 
+				    	 debugger;
+							enjoyHint.trigger('next'); 
+							enjoyHint.trigger('next');
+							
+							if(setItToError)
+								{
+								setCookie(cName, "recommenderError", contextPath);
+								}
+							 
+//									goBackToDashboardRoutine();
+									
+//									if(!isRecommenderError)
+//									{enjoyHint.trigger('next'); }
+								});
+				     
+				}, 
+				 
+			},
+			{
+				'click [value=Save]:last' : 'Now, lets go to the Dashboard',
+				 
+			} ,
+			{
+				'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
+			}
+			];
+
+	return a;
+}
+
+var setItToError = false;
 function createSettingsRoutine(enjoyHint) {
 	var a = [
 			{
-				'click .tab2' : 'Click here to add a document to the project',
+				'click .tab1' : 'Click here to add a document to the project',
 			},
 			{
 				'next [class=flex-h-container]' : "Upload a file and import. Then click Next.",
@@ -297,21 +407,43 @@ function createSettingsRoutine(enjoyHint) {
 				},
 			},
 
-			{
-				"event_type": "custom", 
-				"event": "event-save-recommender", 
-				"selector": "[method=post]", 
-				"description": "Fill in the details and click save", 
+			{ 
+				"event .col-sm-9" : "Fill in the details and click save", 
 				onBeforeStart:function(){ 
+					//setCookie(cName, "recommenderError", contextPath);
 				     $("[name=\'save\']").on('click',
 								function(e) { 
+				    	 			debugger;
 									enjoyHint.trigger('next'); 
+									enjoyHint.trigger('next');
+									
+									if(setItToError)
+										{
+										setCookie(cName, "recommenderError", contextPath);
+										}
+									
+//									goBackToDashboardRoutine();
+									
+//									if(!isRecommenderError)
+//									{enjoyHint.trigger('next'); }
 								});
 				     
 				}, 
 		     
 
 			}, 
+//			{
+//				'click [value=Save]:last' : 'Now, lets go to the Dashboard',
+////				onBeforeStart : function() {
+////					setCookie(cName, "recommenderError", contextPath);
+////					$("[name=\'save\']").on('click', function(e) {
+////						debugger;
+////						//if(doNext)
+////						//enjoyHint.trigger('next');
+////					});
+////				}
+//			},
+			
 			{
 				'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
 			}
@@ -319,6 +451,28 @@ function createSettingsRoutine(enjoyHint) {
 
 	return a;
 }
+
+function goBackToDashboardRoutine()
+{
+	doNext = false;
+	debugger;
+	var enjoyhint_instance = new EnjoyHint({     
+		onEnd : function() {
+			setCookie(cName, "projectsettingConfigured", contextPath);
+		},
+		onSkip : function() {
+			setCookie(cName, true, contextPath);
+		}
+	});
+ 
+	enjoyhint_instance.set(
+	[
+		{
+			'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
+		}
+	]		
+	);
+	enjoyhint_instance.runScript();}
 
 function createSettingsRoutine2() {
 	var a = [
@@ -343,10 +497,15 @@ function createProjectSavedRoutine() {
 	return a;
 }
 
-function createAnnotationRoutine() {
+function createLastRoutine() {
 	var a = [
 			{
-				'click [href=\'./project.html\']:last' : 'Now, lets go to go to the Dashboard',
+				'click .flex-sidebar' : 'You can start exploring the website further',
+				
+				'skipButton' : {
+					className : "mySkip",
+					text : "Thanks!"
+				}
 			} ];
 
 	return a;
@@ -370,4 +529,49 @@ function getUrlParameter(sParam) {
 	}
 };
 
+function skipit(){
+	debugger;
+	setCookie(cName, "recommenderError", contextPath);
+	location.reload();
+//	debugger;
+	setItToError = true;
+	
+//	enjoyhint_instance.trigger('skip');
+	
+//	doNext = true;
+//	
+//	var enjoyhint_instance = new EnjoyHint({     
+//		
+//		onEnd : function() {
+//			setCookie(cName, "recommenderAdded", contextPath);
+//		},
+//		onSkip : function() {
+//			//setCookie(cName, true, contextPath);
+//		}
+//
+//	});
+//
+//	enjoyhint_script_steps = createAddRecommenderRoutine(enjoyhint_instance);
+//	enjoyhint_instance.set(enjoyhint_script_steps);
+//	enjoyhint_instance.runScript();
+}
+function skipIt() {
+	debugger;
+	
+	//enjoyhint_instance.trigger('skip');
+	
+	enjoyhint_instance = new EnjoyHint({     
+		
+		onEnd : function() {
+			setCookie(cName, "projectsettingConfigured", contextPath);
+		},
+		onSkip : function() {
+			//setCookie(cName, true, contextPath);
+		}
 
+	});
+
+	enjoyhint_script_steps = createAddRecommenderRoutine(enjoyhint_instance);
+	enjoyhint_instance.set(enjoyhint_script_steps);
+	enjoyhint_instance.runScript();
+}

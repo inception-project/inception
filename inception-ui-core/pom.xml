@@ -170,6 +170,10 @@
 	  <version>2.5</version>
 	  <scope>provided</scope>
 	</dependency>
+	    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation</artifactId>
+    </dependency>
   </dependencies>
   
   <build>

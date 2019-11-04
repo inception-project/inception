@@ -1,0 +1,7 @@
+== Enjoyhint
+
+File: src/main/java/de/tudarmstadt/ukp/inception/ui/core/footer/resources/enjoyhint.js
+
+The file is from xbsoftware and are licensed under the MIT.
+
+Original source: https://github.com/xbsoftware/enjoyhint

@@ -19,18 +19,12 @@ package de.tudarmstadt.ukp.inception.ui.core.menubar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
-import javax.servlet.http.Cookie;
-
 import org.apache.wicket.Session;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
-import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.http.WebRequest;
-import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
@@ -58,31 +52,9 @@ public class MenuBar
                 .add(visibleWhen(() -> userRepository.getCurrentUser() != null)));
 
         add(new BookmarkablePageLink<>("adminLink", AdminDashboardPage.class)
-                .add(visibleWhen(this::adminAreaAccessRequired)));
-
-        add(new LambdaStatelessLink("hintLink", () -> showHint())
-                .add(visibleWhen(this::adminAreaAccessRequired)));
+                .add(visibleWhen(this::adminAreaAccessRequired))); 
     }
     
-    private Object showHint()
-    {
-        WebRequest webRequest = (WebRequest)RequestCycle.get().getRequest();
-        WebResponse webResponse = (WebResponse)RequestCycle.get().getResponse();
-
-        // page name is used as cookie name
-        String cookieName =  webRequest.getOriginalUrl().getSegments().get(0);
-        Cookie cookie = webRequest.getCookie(cookieName);
-
-        if (cookie == null) {
-            return null;
-        }
-        webResponse.clearCookie(cookie);
-
-        //refresh the page for the hint javascript to execute
-        setResponsePage(getPage());
-        return null;
-    }
-
     private boolean adminAreaAccessRequired()
     {
         return userRepository.getCurrentUser() != null && AdminDashboardPage

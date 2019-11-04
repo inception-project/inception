@@ -38,6 +38,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
+import javax.servlet.ServletContext;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Component;
@@ -104,6 +106,7 @@ public class ProjectsOverviewPage
     private static final String MID_LEAVE_PROJECT = "leaveProject";
     private static final String MID_CONFIRM_LEAVE = "confirmLeave";
     private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
+    private static final String MID_START_TUTORIAL= "startTutorial";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
@@ -112,7 +115,8 @@ public class ProjectsOverviewPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
-    
+    private @SpringBean ServletContext context;
+
     private BootstrapFileInputField fileUpload;
     private WebMarkupContainer projectListContainer;
     private WebMarkupContainer roleFilters;
@@ -125,6 +129,7 @@ public class ProjectsOverviewPage
     {
         add(projectListContainer = createProjectList());
         add(createNewProjectLink());
+        add(createStartTutorialLink());
         add(createImportProjectForm());
         add(roleFilters = createRoleFilters());
         add(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
@@ -148,6 +153,24 @@ public class ProjectsOverviewPage
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
         
         return newProjectLink;
+    }
+    
+    private LambdaAjaxLink createStartTutorialLink()
+    {
+    	LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
+                this::startTutorial);
+    	
+        add(startTutorialLink);
+
+    	return startTutorialLink;
+    }
+    
+    private void startTutorial(AjaxRequestTarget aTarget)
+    {
+    	String contextPath = "inception-app-webapp";
+    	contextPath = context.getContextPath();
+
+		aTarget.appendJavaScript(" startTutorial('"+contextPath+"'); ");
     }
     
     private Form<Void> createImportProjectForm()

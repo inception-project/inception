@@ -17,16 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.footer;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
+import de.tudarmstadt.ukp.inception.recommendation.event.ErrorForJSEvent;
+import de.tudarmstadt.ukp.inception.recommendation.sidebar.DropDownEvent;
 import de.tudarmstadt.ukp.inception.ui.core.footer.resources.EnjoyHintJsReference;
 import de.tudarmstadt.ukp.inception.ui.core.footer.resources.TutorialJavascriptReference;
 
@@ -62,4 +67,14 @@ public class TutorialFooterPanel
         aResponse.render(JavaScriptHeaderItem.forReference(TutorialJavascriptReference.get()));
     }
     
+    @Override
+    public void onEvent(IEvent<?> aEvent) {
+        if (aEvent.getPayload() instanceof ErrorForJSEvent){
+        	ErrorForJSEvent dEvent = (ErrorForJSEvent) aEvent.getPayload();
+
+        	 AjaxRequestTarget target = dEvent.getTarget();
+        	 //setResponsePage(getPage());
+        	 target.appendJavaScript("skipit()");
+        }
+    }
 }
