@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
+import static org.apache.wicket.util.time.Duration.milliseconds;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -37,16 +38,21 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxCallListener;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.attributes.ThrottlingSettings;
+import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
+import org.apache.wicket.markup.html.form.CheckGroup;
+import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.form.RadioChoice;
+import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -255,46 +261,78 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     
     private void addAnnotateActionBehavior(final FeatureEditor aFrag)
     {
-        aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior("change")
-        {
-            private static final long serialVersionUID = 5179816588460867471L;
-
-            @Override
-            protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
+        FormComponent focusComponent = aFrag.getFocusComponent();
+        
+        if (
+            (focusComponent instanceof RadioChoice) ||
+                (focusComponent instanceof CheckBoxMultipleChoice) ||
+                (focusComponent instanceof RadioGroup) ||
+                (focusComponent instanceof CheckGroup)
+        ) {
+            focusComponent.add(new AjaxFormChoiceComponentUpdatingBehavior()
             {
-                super.updateAjaxAttributes(aAttributes);
-                // When focus is on a feature editor and the user selects a new annotation,
-                // there is a race condition between the saving the value of the feature
-                // editor and the loading of the new annotation. Delay the feature editor
-                // save to give preference to loading the new annotation.
-                aAttributes.setThrottlingSettings(new ThrottlingSettings(getMarkupId(),
-                    Duration.milliseconds(250), true));
-                aAttributes.getAjaxCallListeners().add(new AjaxCallListener()
+                private static final long serialVersionUID = -5058365578109385064L;
+                
+                @Override
+                protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
                 {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    public CharSequence getPrecondition(Component aComponent)
-                    {
-                        // If the panel refreshes because the user selects a new annotation,
-                        // the annotation editor panel is updated for the new annotation
-                        // first (before saving values) because of the delay set above. When
-                        // the delay is over, we can no longer save the value because the
-                        // old component is no longer there. We use the markup id of the
-                        // editor fragments to check if the old component is still there
-                        // (i.e. if the user has just tabbed to a new field) or if the old
-                        // component is gone (i.e. the user selected/created another
-                        // annotation). If the old component is no longer there, we abort
-                        // the delayed save action.
-                        return "return $('#" + aFrag.getMarkupId() + "').length > 0;";
-                    }
-                });
-            }
-
-            @Override
-            protected void onUpdate(AjaxRequestTarget aTarget)
+                    super.updateAjaxAttributes(aAttributes);
+                    addDelay(aFrag, aAttributes, 300);
+                }
+                
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    actionAnnotate(aTarget);
+                }
+            });
+        }
+        else {
+            focusComponent.add(new AjaxFormComponentUpdatingBehavior("change")
             {
-                actionAnnotate(aTarget);
+                private static final long serialVersionUID = -8944946839865527412L;
+                
+                @Override
+                protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
+                {
+                    super.updateAjaxAttributes(aAttributes);
+                    addDelay(aFrag, aAttributes, 250);
+                }
+                
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    actionAnnotate(aTarget);
+                }
+            });
+        }
+    }
+    
+    private void addDelay(FeatureEditor aFrag, AjaxRequestAttributes aAttributes, int aDelay)
+    {
+        // When focus is on a feature editor and the user selects a new annotation,
+        // there is a race condition between the saving the value of the feature
+        // editor and the loading of the new annotation. Delay the feature editor
+        // save to give preference to loading the new annotation.
+        aAttributes.setThrottlingSettings(new ThrottlingSettings(milliseconds(aDelay), true));
+        aAttributes.getAjaxCallListeners().add(new AjaxCallListener()
+        {
+            private static final long serialVersionUID = 3157811089824093324L;
+            
+            @Override
+            public CharSequence getPrecondition(Component aComponent)
+            {
+                // If the panel refreshes because the user selects a new annotation,
+                // the annotation editor panel is updated for the new annotation
+                // first (before saving values) because of the delay set above. When
+                // the delay is over, we can no longer save the value because the
+                // old component is no longer there. We use the markup id of the
+                // editor fragments to check if the old component is still there
+                // (i.e. if the user has just tabbed to a new field) or if the old
+                // component is gone (i.e. the user selected/created another
+                // annotation). If the old component is no longer there, we abort
+                // the delayed save action.
+                return "return $('#" + aFrag.getMarkupId() + "').length > 0;";
             }
         });
     }
@@ -413,6 +451,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     
     public void toggleVisibility()
     {
+        state.clearArmedSlot();
         setVisible(!isVisible());
     }
     
