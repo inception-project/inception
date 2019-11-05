@@ -194,7 +194,8 @@ public class SelectionTask
                             System.currentTimeMillis() - start, activated));
                 }
                
-                // Catching Throwable is intentional here as we want to continue the execution even if a particular recommender fails.
+                // Catching Throwable is intentional here as we want to continue the execution
+                // even if a particular recommender fails.
                 catch (Throwable e) {
                     log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
                 }
