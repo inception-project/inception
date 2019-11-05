@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,11 +62,16 @@ public class PredictionTask
 
         Project project = getProject();
 
-        List<SourceDocument> docs;
-        if (recommendationService.isPredictForAllDocuments(username, project)) {
-            docs = documentService.listSourceDocuments(project);
-        } else {
+        List<SourceDocument> docs = documentService.listSourceDocuments(project);
+        List<SourceDocument> inherit = Collections.emptyList();
+        
+        // Limit prediction to a single document and inherit the rest?
+        if (!recommendationService.isPredictForAllDocuments(username, project)) {
+            inherit = docs.stream().filter(d -> !d.equals(currentDocument))
+                    .collect(Collectors.toList());
             docs = Collections.singletonList(currentDocument);
+            log.debug("[{}][{}]: Limiting prediction to [{}]", getId(), username,
+                    currentDocument.getName());
         }
 
         log.debug("[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
@@ -73,7 +79,8 @@ public class PredictionTask
         
         long startTime = System.currentTimeMillis();
 
-        Predictions predictions = recommendationService.computePredictions(user, project, docs);
+        Predictions predictions = recommendationService.computePredictions(user, project, docs,
+                inherit);
         
         log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
                 (System.currentTimeMillis() - startTime));
