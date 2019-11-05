@@ -9,7 +9,7 @@
  *
  *  http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
+ * Unless required by applicable law or agreed count in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 
@@ -36,24 +37,16 @@ public class SearchResultsPagesCache implements Serializable
         pages = new HashMap<>();
     }
 
-    public List<ResultsGroup> getPage(PageKey aPageKey) {
-        return pages.get(aPageKey);
+    public List<ResultsGroup> getPage(long pageFirst, long pageCount) {
+        return pages.get(new PageKey(pageFirst, pageCount));
     }
 
-    public List<ResultsGroup> getPage(int pageFrom, int pageTo) {
-        return pages.get(new PageKey(pageFrom, pageTo));
+    public void putPage(long pageFirst, long pageCount, List<ResultsGroup> aPage) {
+        pages.put(new PageKey(pageFirst, pageCount), aPage);
     }
 
-    public void setPage(PageKey aPageKey, List<ResultsGroup> aPage) {
-        pages.put(aPageKey, aPage);
-    }
-
-    public void setPage(int pageFrom, int pageTo, List<ResultsGroup> aPage) {
-        pages.put(new PageKey(pageFrom, pageTo), aPage);
-    }
-
-    public Collection<List<ResultsGroup>> allPages() {
-        return pages.values();
+    public List<ResultsGroup> allResultsGroups() {
+        return pages.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
     }
 
     public void clear() {
@@ -64,18 +57,18 @@ public class SearchResultsPagesCache implements Serializable
         return pages.isEmpty();
     }
 
-    public boolean containsPage(long from, long to) {
-        return pages.containsKey(new PageKey(from, to));
+    public boolean containsPage(long first, long count) {
+        return pages.containsKey(new PageKey(first, count));
     }
 
-    public static class PageKey implements Serializable {
+    private class PageKey implements Serializable {
 
-        private long from;
-        private long to;
+        private long first;
+        private long count;
 
-        public PageKey (long aFrom, long aTo) {
-            from = aFrom;
-            to = aTo;
+        public PageKey (long aFirst, long aCount) {
+            first = aFirst;
+            count = aCount;
         }
 
         @Override
@@ -86,13 +79,13 @@ public class SearchResultsPagesCache implements Serializable
             if (o == null || getClass() != o.getClass())
                 return false;
             PageKey pageKey = (PageKey) o;
-            return from == pageKey.from && to == pageKey.to;
+            return first == pageKey.first && count == pageKey.count;
         }
 
         @Override
         public int hashCode()
         {
-            return Objects.hash(from, to);
+            return Objects.hash(first, count);
         }
     }
 }

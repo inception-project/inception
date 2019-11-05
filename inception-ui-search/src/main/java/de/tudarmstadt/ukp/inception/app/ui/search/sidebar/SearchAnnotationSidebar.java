@@ -24,7 +24,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -311,12 +310,11 @@ public class SearchAnnotationSidebar
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                for (List<ResultsGroup> page : groupedSearchResults.getObject().allPages()) {
-                    for (ResultsGroup resultsGroup : page) {
-                        if (resultsGroup.getGroupKey().equals(aGroupKey)) {
-                            resultsGroup.getResults().stream()
-                                .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
-                        }
+                for (ResultsGroup resultsGroup : groupedSearchResults.getObject()
+                    .allResultsGroups()) {
+                    if (resultsGroup.getGroupKey().equals(aGroupKey)) {
+                        resultsGroup.getResults().stream()
+                            .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
                     }
                 }
                 target.add(resultsGroupContainer);
@@ -326,16 +324,16 @@ public class SearchAnnotationSidebar
             protected void onConfigure()
             {
                 super.onConfigure();
-                for (List<ResultsGroup> page : groupedSearchResults.getObject().allPages()) {
-                    for (ResultsGroup resultsGroup : page) {
-                        if (resultsGroup.getGroupKey().equals(aGroupKey)) {
-                            List<SearchResult> unselectedResults = resultsGroup.getResults()
-                                .stream().filter(sr -> !sr.isSelectedForAnnotation())
-                                .collect(Collectors.toList());
-                            if (!unselectedResults.isEmpty()) {
-                                setModelObject(false);
-                                return;
-                            }
+
+                for (ResultsGroup resultsGroup : groupedSearchResults.getObject()
+                    .allResultsGroups()) {
+                    if (resultsGroup.getGroupKey().equals(aGroupKey)) {
+                        List<SearchResult> unselectedResults = resultsGroup.getResults().stream()
+                            .filter(sr -> !sr.isSelectedForAnnotation())
+                            .collect(Collectors.toList());
+                        if (!unselectedResults.isEmpty()) {
+                            setModelObject(false);
+                            return;
                         }
                     }
                 }
@@ -426,13 +424,9 @@ public class SearchAnnotationSidebar
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
                 adapter.silenceEvents();
 
-                // Flatten ResultGroups that are currently in the cache into one list
-                List<ResultsGroup> resultsGroups = new ArrayList<>();
-                groupedSearchResults.getObject().allPages().stream()
-                    .forEach(p -> resultsGroups.addAll(p));
-
                 // Group the results by document such that we can process one CAS at a time
-                Map<Long, List<SearchResult>> resultsByDocument = resultsGroups
+                Map<Long, List<SearchResult>> resultsByDocument = groupedSearchResults.getObject()
+                    .allResultsGroups()
                         .stream()
                         // the grouping can be based on some other strategy than the document, so
                         // we re-group here

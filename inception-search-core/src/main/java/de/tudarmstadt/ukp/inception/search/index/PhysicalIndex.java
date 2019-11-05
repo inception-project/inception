@@ -69,5 +69,5 @@ public interface PhysicalIndex
      */
     public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException;
 
-    long numberofQueryResults(SearchQueryRequest aSearchQueryRequest) throws ExecutionException;
+    long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest) throws ExecutionException;
 }

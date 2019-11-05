@@ -513,7 +513,7 @@ public class SearchServiceImpl
         log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
             aProject.getName(), aProject.getId());
 
-        long numResults = -1;
+        long numResults;
 
         Index index = getIndexFromMemory(aProject);
 
@@ -553,7 +553,7 @@ public class SearchServiceImpl
                 log.debug("Running query: [{}]", aQuery);
 
                 numResults = index.getPhysicalIndex()
-                        .numberofQueryResults(new SearchQueryRequest(aProject, aUser, aQuery,
+                        .numberOfQueryResults(new SearchQueryRequest(aProject, aUser, aQuery,
                                 aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
             }
 

@@ -48,47 +48,65 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
     public Iterator<ResultsGroup> iterator(long first, long count)
     {
         /*
-        If the grouping is activated we first fetch all results sorted them by group and then apply
+        If the grouping is activated we first fetch all results sorted by group and then apply
         the paging.
-        We do this because if we apply paging at query level and grouping together, members of a
+        This is done because if we apply paging at query level and grouping together, members of a
         group might me scattered over multiple pages. (Grouping by document is
         an exception because the query iterates over documents. So results from the same document
         appear in a sequence)
 
-        If the grouping is not activated we can apply paging directly when fetching the results
-        since it defaults to grouping by document. So we fetch them from the searchResultsProvider.
+        If the grouping is not activated (defaults to grouping by document) we can apply paging at
+        query level. So we fetch them directly from the searchResultsProvider.
          */
         if (groupingActivated) {
-            List<ResultsGroup> resultsGroupsSubList = new ArrayList<>();
-            int counter = 0;
-            for (ResultsGroup resultsGroup : resultGroups) {
-                if (counter - first + 1 > count) {
-                    break;
-                }
-                List<SearchResult> sublist = new ArrayList<>();
-                for (SearchResult result : resultsGroup.getResults()) {
-                    if (counter < first) {
-                        counter ++;
-                        continue;
-                    }
-                    if (counter - first + 1 > count) {
-                        break;
-                    }
-                    sublist.add(result);
-                    counter++;
-                }
-                if (! (counter <= first)) {
-                    ResultsGroup group = new ResultsGroup(resultsGroup.getGroupKey(), sublist);
-                    resultsGroupsSubList.add(group);
-                }
-            }
-            searchResultsProvider.getCurrentPageCache().getObject()
-                .setPage(new SearchResultsPagesCache.PageKey(first, first + count),
-                    resultsGroupsSubList);
-            return resultsGroupsSubList.iterator();
+            List<ResultsGroup> subList = resultsGroupsSublist(first, count);
+
+            searchResultsProvider.getPagesCache().getObject().putPage(first, count, subList);
+
+            return subList.iterator();
         }
 
         return searchResultsProvider.iterator(first, count);
+    }
+
+    /**
+     * Iterate over a List of ResultGroups and return a sublist that contains the SearchResults
+     * first to (first + count).
+     *
+     * e.g.: sublist of elements 2 - 5
+     *
+     * ResultsGroup1----------ResultsGroup2            ResultsGroup1----------ResultsGroup2
+     *      |                      |                        |                      |
+     * SearchResult-1         SearchResult-4           SearchResult-3         SearchResult-4
+     * SearchResult-2         SearchResult-5     --->                         SearchResult-5
+     * SearchResult-3         SearchResult-6
+     *
+     */
+    private List<ResultsGroup> resultsGroupsSublist(long first, long count) {
+        List<ResultsGroup> resultsGroupsSubList = new ArrayList<>();
+        int counter = 0;
+        for (ResultsGroup resultsGroup : resultGroups) {
+            if (counter - first + 1 > count) {
+                break;
+            }
+            List<SearchResult> sublist = new ArrayList<>();
+            for (SearchResult result : resultsGroup.getResults()) {
+                if (counter < first) {
+                    counter ++;
+                    continue;
+                }
+                if (counter - first + 1 > count) {
+                    break;
+                }
+                sublist.add(result);
+                counter++;
+            }
+            if (! (counter <= first)) {
+                ResultsGroup group = new ResultsGroup(resultsGroup.getGroupKey(), sublist);
+                resultsGroupsSubList.add(group);
+            }
+        }
+        return resultsGroupsSubList;
     }
 
     @Override

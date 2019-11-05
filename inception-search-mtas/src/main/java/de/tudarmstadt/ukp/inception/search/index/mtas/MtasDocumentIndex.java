@@ -107,6 +107,7 @@ import mtas.codec.MtasCodec;
 import mtas.codec.util.CodecInfo;
 import mtas.codec.util.CodecUtil;
 import mtas.parser.cql.MtasCQLParser;
+import mtas.parser.cql.ParseException;
 import mtas.search.spans.util.MtasSpanQuery;
 
 /**
@@ -158,23 +159,6 @@ public class MtasDocumentIndex
 
     private static final String EMPTY_FEATURE_VALUE_KEY = "<Empty>";
 
-    // Comparator for feature values. Sort lexicographically and make sure
-    // EMPTY_FEATUREVALUE_KEY is the "biggest" value
-    private static final Comparator<String> FEATUREVALUE_COMPARATOR = (o1, o2) -> {
-        if (EMPTY_FEATURE_VALUE_KEY.equals(o1) && EMPTY_FEATURE_VALUE_KEY.equals(o2)) {
-            return 0;
-        }
-        else if (EMPTY_FEATURE_VALUE_KEY.equals(o1)) {
-            return 1;
-        }
-        else if (EMPTY_FEATURE_VALUE_KEY.equals(o2)) {
-            return -1;
-        }
-        else {
-            return o1.compareTo(o2);
-        }
-    };
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
@@ -224,12 +208,7 @@ public class MtasDocumentIndex
             Directory directory = FSDirectory.open(getIndexDir().toPath());
             IndexReader indexReader = DirectoryReader.open(directory);
 
-            String modifiedQuery = parseQuery(aRequest.getQuery());
-            MtasSpanQuery mtasSpanQuery;
-            try (Reader reader = new StringReader(modifiedQuery)) {
-                MtasCQLParser parser = new MtasCQLParser(reader);
-                mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
-            }
+            MtasSpanQuery mtasSpanQuery = prepareMtasSpanQuery(aRequest);
             
             return doQuery(indexReader, aRequest, FIELD_CONTENT, mtasSpanQuery);
         }
@@ -244,7 +223,7 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public long numberofQueryResults(SearchQueryRequest aRequest) throws ExecutionException
+    public long numberOfQueryResults(SearchQueryRequest aRequest) throws ExecutionException
     {
         try {
             log.trace("Determining number of results for query {} on index {}", aRequest,
@@ -253,12 +232,7 @@ public class MtasDocumentIndex
             Directory directory = FSDirectory.open(getIndexDir().toPath());
             IndexReader indexReader = DirectoryReader.open(directory);
 
-            String modifiedQuery = parseQuery(aRequest.getQuery());
-            MtasSpanQuery mtasSpanQuery;
-            try (Reader reader = new StringReader(modifiedQuery)) {
-                MtasCQLParser parser = new MtasCQLParser(reader);
-                mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
-            }
+            MtasSpanQuery mtasSpanQuery = prepareMtasSpanQuery(aRequest);
 
             return countResults(indexReader, aRequest, mtasSpanQuery);
         }
@@ -270,6 +244,18 @@ public class MtasDocumentIndex
             log.error("Query execution error", e);
             throw (new ExecutionException("Query execution error", e));
         }
+    }
+
+    private MtasSpanQuery prepareMtasSpanQuery (SearchQueryRequest aRequest)
+        throws IOException, ParseException
+    {
+        String modifiedQuery = parseQuery(aRequest.getQuery());
+        MtasSpanQuery mtasSpanQuery;
+        try (Reader reader = new StringReader(modifiedQuery)) {
+            MtasCQLParser parser = new MtasCQLParser(reader);
+            mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+        }
+        return mtasSpanQuery;
     }
 
     private String parseQuery(String aQuery)
@@ -307,7 +293,6 @@ public class MtasDocumentIndex
         return result;
     }
 
-
     private long countResults(IndexReader aIndexReader,
         SearchQueryRequest aRequest, MtasSpanQuery q) throws IOException
     {
@@ -322,7 +307,7 @@ public class MtasDocumentIndex
         final float boost = 0;
         SpanWeight spanweight = q.rewrite(aIndexReader).createWeight(searcher, false, boost);
 
-        long current = 0;
+        long numResults = 0;
 
         while (leafReaderContextIterator.hasNext()) {
             LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
@@ -385,7 +370,7 @@ public class MtasDocumentIndex
                             }
 
                             while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
-                                current++;
+                                numResults++;
                             }
                         }
                     }
@@ -393,9 +378,10 @@ public class MtasDocumentIndex
             }
             catch (Exception e) {
                 log.error("Unable to process query results", e);
+                numResults = -1;
             }
         }
-        return current;
+        return numResults;
     }
 
     private Map<Long, Long> listAnnotatableDocuments(Project aProject, User aUser)
