@@ -66,7 +66,8 @@ public class TaskConsumer
                     activeTask.run();
                     log.debug("Indexing task completed: {}", activeTask);
                 }
-                // Catching Throwable is intentional here as we want to continue the execution even if a particular recommender fails.
+                // Catching Throwable is intentional here as we want to continue the execution even
+                // if a particular recommender fails.
                 catch (Throwable e) {
                     log.error("Indexing task failed: {}", activeTask, e);
                 }
