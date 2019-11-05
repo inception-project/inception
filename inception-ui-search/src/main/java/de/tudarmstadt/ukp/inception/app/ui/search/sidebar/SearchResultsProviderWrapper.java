@@ -61,7 +61,7 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
         if (groupingActivated) {
             List<ResultsGroup> subList = resultsGroupsSublist(first, count);
 
-            searchResultsProvider.getPagesCache().getObject().putPage(first, count, subList);
+            searchResultsProvider.getPagesCacheModel().getObject().putPage(first, count, subList);
 
             return subList.iterator();
         }

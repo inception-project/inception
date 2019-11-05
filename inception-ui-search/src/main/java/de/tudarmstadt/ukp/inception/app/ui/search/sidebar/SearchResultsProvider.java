@@ -59,26 +59,26 @@ public class SearchResultsProvider
 
     // Cache
     private long totalResults = 0;
-    private IModel<SearchResultsPagesCache> pagesCache;
+    private IModel<SearchResultsPagesCache> pagesCacheModel;
 
     public SearchResultsProvider(SearchService aSearchService,
-        IModel<SearchResultsPagesCache> aCurrentPageCache)
+        IModel<SearchResultsPagesCache> aPageCacheModel)
     {
         searchService = aSearchService;
-        pagesCache = aCurrentPageCache;
+        pagesCacheModel = aPageCacheModel;
     }
 
     @Override
     public Iterator<ResultsGroup> iterator(long first, long count)
     {
         if (query == null) {
-            pagesCache.getObject().clear();
+            pagesCacheModel.getObject().clear();
             List<ResultsGroup> emptyList = Collections.emptyList();
             return emptyList.iterator();
         }
         // Query if the results in the given range are not in the cache i.e. if we need to fetch
         // a new page
-        if (!pagesCache.getObject().containsPage(first, count)) {
+        if (!pagesCacheModel.getObject().containsPage(first, count)) {
             try {
                 List<ResultsGroup> queryResults = searchService
                     .query(user, project, query, document, annotationLayer, annotationFeature,
@@ -86,7 +86,7 @@ public class SearchResultsProvider
                     .map(e -> new ResultsGroup(e.getKey(), e.getValue()))
                     .collect(Collectors.toList());
 
-                pagesCache.getObject().putPage(first, count, queryResults);
+                pagesCacheModel.getObject().putPage(first, count, queryResults);
                 return queryResults.iterator();
             }
             catch (IOException | ExecutionException e) {
@@ -95,7 +95,7 @@ public class SearchResultsProvider
             }
         }
         else {
-            return pagesCache.getObject().getPage(first, count).iterator();
+            return pagesCacheModel.getObject().getPage(first, count).iterator();
         }
     }
 
@@ -142,7 +142,7 @@ public class SearchResultsProvider
         annotationFeature = aAnnotationFeature;
 
         totalResults = -1; // reset size cache
-        pagesCache.getObject().clear(); // reset page cache
+        pagesCacheModel.getObject().clear(); // reset page cache
     }
 
     public void emptyQuery()
@@ -161,9 +161,9 @@ public class SearchResultsProvider
         return annotationFeature;
     }
 
-    public IModel<SearchResultsPagesCache> getPagesCache()
+    public IModel<SearchResultsPagesCache> getPagesCacheModel()
     {
-        return pagesCache;
+        return pagesCacheModel;
     }
 }
 
