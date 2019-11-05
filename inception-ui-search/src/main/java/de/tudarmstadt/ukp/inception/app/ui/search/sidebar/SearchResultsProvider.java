@@ -149,6 +149,7 @@ public class SearchResultsProvider
     {
         query = null;
         totalResults = 0;
+        pagesCacheModel.getObject().clear();
     }
 
     public AnnotationLayer getAnnotationLayer()
