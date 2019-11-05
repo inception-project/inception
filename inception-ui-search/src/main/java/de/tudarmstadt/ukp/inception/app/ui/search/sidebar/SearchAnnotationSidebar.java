@@ -346,7 +346,6 @@ public class SearchAnnotationSidebar
     private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         selectedResult = null;
-        groupedSearchResults.detach();
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
         getSearchResultsGrouped();
         aTarget.add(mainContainer);
@@ -356,8 +355,8 @@ public class SearchAnnotationSidebar
     private void actionClearResults(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         targetQuery.setObject("");
+        resultsProvider.emptyQuery();
         selectedResult = null;
-        groupedSearchResults.detach();
         aTarget.add(mainContainer);
     }
 
