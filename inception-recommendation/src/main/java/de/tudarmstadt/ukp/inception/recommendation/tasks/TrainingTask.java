@@ -204,7 +204,8 @@ public class TrainingTask
                     ctx.close();
                     recommendationService.putContext(user, recommender, ctx);
                 }
-                // Catching Throwable is intentional here as we want to continue the execution even if a particular recommender fails.
+                // Catching Throwable is intentional here as we want to continue the execution
+                // even if a particular recommender fails.
                 catch (Throwable e) {
                     log.error("[{}][{}][{}]: Training failed ({} ms)", getId(),
                             user.getUsername(), recommender.getName(),
