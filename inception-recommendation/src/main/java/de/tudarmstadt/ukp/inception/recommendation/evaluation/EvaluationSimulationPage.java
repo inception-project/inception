@@ -29,8 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.evaluation.RecommenderViewPanel;
-import de.tudarmstadt.ukp.inception.recommendation.evaluation.SimulationLearningCurvePanel;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderListPanel;
 
 @MountPath("/evaluation.html")

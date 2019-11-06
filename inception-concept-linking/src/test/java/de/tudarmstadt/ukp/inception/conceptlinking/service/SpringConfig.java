@@ -28,6 +28,8 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 
 @SpringBootConfiguration
@@ -41,7 +43,6 @@ import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
         },
         basePackages = {
             "de.tudarmstadt.ukp.clarin.webanno.api",
-            "de.tudarmstadt.ukp.clarin.webanno.security",
             "de.tudarmstadt.ukp.inception"
         })
 @EntityScan(
@@ -51,23 +52,16 @@ import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 })
 @EnableAutoConfiguration
 public class SpringConfig {
-//    @Bean(name = "formats")
-//    public Properties getFileFormats()
-//    {
-//        return new Properties();
-//    }
-//
-//    @Bean
-//    @Primary
-//    public DocumentService documentService()
-//    {
-//        return Mockito.mock(DocumentService.class);
-//    }
-
     @Bean
     @Primary
     public ProjectService projectService()
     {
         return Mockito.mock(ProjectService.class);
+    }
+    
+    @Bean
+    public UserDao userDao()
+    {
+        return new UserDaoImpl();
     }
 }

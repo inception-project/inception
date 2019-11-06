@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.AnnotationBaseFS;
@@ -47,7 +48,7 @@ public class DocumentMetadataLayerAdapter
 {
     public DocumentMetadataLayerAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures)
+            Supplier<Collection<AnnotationFeature>> aFeatures)
     {
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
     }

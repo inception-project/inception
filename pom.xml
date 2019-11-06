@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>22</version>
+    <version>23</version>
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
@@ -42,8 +42,8 @@
     <system>GitHub Issues</system>
   </issueManagement>
   <scm>
-    <connection>scm:git:git://github.com/inception-project/inception</connection>
-    <developerConnection>scm:git:git@github.com:inception-project/inception.git</developerConnection>
+    <connection>scm:git:https://github.com/inception-project/inception.git</connection>
+    <developerConnection>scm:git:https://github.com:inception-project/inception.git</developerConnection>
     <url>https://github.com/inception-project/inception</url>
     <tag>HEAD</tag>
   </scm>
@@ -54,25 +54,30 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>4.0.0-SNAPSHOT</webanno.version>
-    <uima.version>3.1.0</uima.version>
-    <dkpro.version>2.0.0</dkpro.version>
-    <spring.version>5.1.10.RELEASE</spring.version>
-    <spring.boot.version>2.1.8.RELEASE</spring.boot.version>
+    <maven.surefire.heap>6g</maven.surefire.heap>
+    <maven.compiler.target>8</maven.compiler.target>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
+    <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
+
+    <mockito.version>2.28.2</mockito.version>
+    <assertj.version>3.14.0</assertj.version>
+    <spring.version>5.2.1.RELEASE</spring.version>
+    <spring.boot.version>2.2.0.RELEASE</spring.boot.version>
+    <spring.security.version>5.2.0.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
     <wicketstuff.version>8.6.0</wicketstuff.version>
-    <wicket-jquery-ui.version>8.3.0</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
+    <dkpro.version>2.0.0</dkpro.version>
+    <uima.version>3.1.0</uima.version>
+    <log4j.version>2.12.1</log4j.version>
+
+    <webanno.version>4.0.0-SNAPSHOT</webanno.version>
     <lucene.version>7.3.1</lucene.version>
     <elasticsearch.version>6.3.0</elasticsearch.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
-    <mockito.version>2.28.2</mockito.version>
-    <assertj.version>3.13.2</assertj.version>
     <okhttp.version>3.14.2</okhttp.version>
-    <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.target>8</maven.compiler.target>
-    <maven.compiler.source>8</maven.compiler.source>
-    <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
   </properties>
   <modules>
     <!-- Build infrastructure modules -->
@@ -126,6 +131,8 @@
       <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
       <releases>
         <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
       </releases>
       <snapshots>
         <enabled>false</enabled>
@@ -161,13 +168,13 @@
   <dependencies>
     <!-- The logging subsystem used by WebAnno -->
     <dependency>
-      <!-- Use Log4J http as logging backend -->
+      <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Use Log4J http as logging backend -->
+      <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
       <scope>runtime</scope>
@@ -510,6 +517,24 @@
         <version>${spring.version}</version>
       </dependency>
       
+      <!-- LOG4J -->
+      
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j-impl</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      
       <!-- LUCENE MTAS -->
     
       <dependency>
@@ -666,6 +691,25 @@
       </dependency>
       
       <dependency>
+        <groupId>jaxen</groupId>
+        <artifactId>jaxen</artifactId>
+        <version>1.2.0</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>dom4j</artifactId>
+            <groupId>dom4j</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>xom</artifactId>
+            <groupId>xom</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>jdom</artifactId>
+            <groupId>jdom</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
         <groupId>dom4j</groupId>
         <artifactId>dom4j</artifactId>
         <version>1.6.1</version>
@@ -689,34 +733,6 @@
         </exclusions>
       </dependency>
 
-      <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-io-html-asl</artifactId>
-        <version>${dkpro.version}</version>
-      </dependency>
-      
-      <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-io-conll-asl</artifactId>
-        <version>${dkpro.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-asl</artifactId>
-        <version>${dkpro.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno</artifactId>
-        <version>${webanno.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      
       <!--  
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
@@ -1072,6 +1088,161 @@
         <artifactId>d3js</artifactId>
         <version>5.5.0</version>
       </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-logging</artifactId>
+        <version>${spring.boot.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <version>${spring.boot.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      
+      <!-- SPRING -->
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-web</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webmvc</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-orm</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-oxm</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-tx</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jdbc</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-beans</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-aop</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-expression</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-test</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-aspects</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context-support</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      
+      <!-- SPRING SECURITY -->
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-core</artifactId>
+        <version>${spring.security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-config</artifactId>
+        <version>${spring.security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-web</artifactId>
+        <version>${spring.security.version}</version>
+      </dependency>
+
+      <dependency>
+        <!-- Import dependency management from Spring Boot -->
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring.boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      
+      <dependency>
+        <!-- Import dependency management from WebAnno -->
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno</artifactId>
+        <version>${webanno.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      
+      <dependency>
+        <!-- Import dependency management from DKPro Core -->
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      
+      <dependency>
+        <!-- Import dependency management from Wicket -->
+        <groupId>org.apache.wicket</groupId>
+        <artifactId>wicket-parent</artifactId>
+        <version>${wicket.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   
@@ -1204,6 +1375,16 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.22.1</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>2.7</version>
+          <configuration>
+            <rulesUri>file:${maven.multiModuleProjectDirectory}/rules.xml</rulesUri>
+            <allowAnyUpdates>false</allowAnyUpdates>
+            <allowMajorUpdates>false</allowMajorUpdates>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -1306,6 +1487,7 @@
                 <configuration>
                   <consoleOutput>true</consoleOutput>
                   <excludes>
+                    <exclude>.mvn/jvm.config</exclude>
                     <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
@@ -1315,6 +1497,7 @@
                     <exclude>src/main/filter/**/*</exclude>
                     <!-- release generated artifact -->
                     <exclude>release.properties</exclude>
+                    <exclude>CONTRIBUTORS.txt</exclude>
                     <exclude>CHANGES</exclude>
                     <exclude>NOTICE</exclude>
                     <exclude>README</exclude>
@@ -1405,7 +1588,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.0.0</version>
+              <version>3.1.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>
@@ -1416,7 +1599,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>8.20</version>
+                  <version>8.26</version>
                 </dependency>
               </dependencies>
               <configuration>
