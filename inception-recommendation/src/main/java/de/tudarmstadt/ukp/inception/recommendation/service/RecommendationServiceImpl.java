@@ -451,7 +451,7 @@ public class RecommendationServiceImpl
             if (
                     predictions == null ||
                     !predictions.hasRunPredictionOnDocument(aEvent.getDocument())
-             ) {
+            ) {
                 log.debug("Starting prediction task after document was opened!");
                 Task task = new PredictionTask(user, project, "DocumentOpenedEvent", doc);
                 schedulingService.enqueue(task);
@@ -532,10 +532,10 @@ public class RecommendationServiceImpl
                 // Otherwise use the document from the event... mind that if there are multiple
                 // events, we consider only the first one since after that the trigger listener
                 // will be in the cycle and we do not add another one.
-                // FIXME: This works as long as the user is working on a single document, but not if the
-                // user is doing a bulk operation. If a bulk-operation is done, we get multiple 
-                // AfterCasWrittenEvent and we do not know which of them belongs to the document which the
-                // user is currently viewing.
+                // FIXME: This works as long as the user is working on a single document, but not if
+                // the user is doing a bulk operation. If a bulk-operation is done, we get multiple
+                // AfterCasWrittenEvent and we do not know which of them belongs to the document
+                // which the user is currently viewing.
                 requestCycle.getListeners()
                         .add(new TriggerTrainingTaskListener(aEvent.getDocument().getDocument()));
             }
