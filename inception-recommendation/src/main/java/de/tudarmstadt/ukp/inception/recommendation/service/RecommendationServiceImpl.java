@@ -1085,6 +1085,8 @@ public class RecommendationServiceImpl
 
                         predictions.putPredictions(suggestions);
                     }
+                    // Catching Throwable is intentional here as we want to continue the execution
+                    // even if a particular recommender fails.
                     catch (Throwable e) {
                         log.error(
                                 "Error applying recommender [{}]({}) for user [{}] to document "
