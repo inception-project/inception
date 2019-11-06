@@ -345,7 +345,7 @@ public class PDFExtractor
         try {
             spaceWidthText = font.getSpaceWidth() * glyphSpaceToTextSpaceFactor;
         }
-        catch (Throwable e) {
+        catch (Exception e) {
             //LOG.warn(e, e);
         }
 
