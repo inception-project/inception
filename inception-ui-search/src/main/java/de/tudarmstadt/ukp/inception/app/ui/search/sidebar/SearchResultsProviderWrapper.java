@@ -37,11 +37,13 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
     private SearchResultsProvider searchResultsProvider;
     private List<ResultsGroup> resultGroups;
     private boolean groupingActivated;
+    private IModel<Boolean> isLowLevelPaging;
 
-
-    public SearchResultsProviderWrapper(SearchResultsProvider aSearchResultsProvider)
+    public SearchResultsProviderWrapper(SearchResultsProvider aSearchResultsProvider,
+        IModel<Boolean> aIsLowLevelPaging)
     {
         searchResultsProvider = aSearchResultsProvider;
+        isLowLevelPaging = aIsLowLevelPaging;
     }
 
     @Override
@@ -58,7 +60,7 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
         If the grouping is not activated (defaults to grouping by document) we can apply paging at
         query level. So we fetch them directly from the searchResultsProvider.
          */
-        if (groupingActivated) {
+        if (!applyLowLevelPaging()) {
             List<ResultsGroup> subList = resultsGroupsSublist(first, count);
 
             searchResultsProvider.getPagesCacheModel().getObject().putPage(first, count, subList);
@@ -67,6 +69,10 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
         }
 
         return searchResultsProvider.iterator(first, count);
+    }
+
+    public boolean applyLowLevelPaging() {
+        return !groupingActivated && isLowLevelPaging.getObject();
     }
 
     /**
@@ -131,11 +137,6 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
         return -1;
     }
 
-    public boolean isGroupingActivated()
-    {
-        return groupingActivated;
-    }
-
     public void initializeQuery(User aUser, Project aProject, String aQuery,
         SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
         AnnotationFeature aAnnotationFeature)
@@ -146,7 +147,7 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
         groupingActivated = !(searchResultsProvider.getAnnotationFeature() == null
             && searchResultsProvider.getAnnotationLayer() == null);
 
-        if (groupingActivated) {
+        if (!applyLowLevelPaging()) {
             resultGroups = getAllResults();
         }
 

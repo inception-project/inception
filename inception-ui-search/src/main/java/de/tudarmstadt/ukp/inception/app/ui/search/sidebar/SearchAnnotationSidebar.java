@@ -36,6 +36,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -54,10 +55,7 @@ import org.apache.wicket.markup.html.navigation.paging.PagingNavigator;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
-import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.*;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +119,7 @@ public class SearchAnnotationSidebar
     private final SearchResultsProviderWrapper resultsProvider;
 
     private IModel<String> targetQuery = Model.of("");
-    private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
+    private CompoundPropertyModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
     private IModel<SearchResultsPagesCache> groupedSearchResults = Model
         .of(new SearchResultsPagesCache());
     private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
@@ -130,8 +128,9 @@ public class SearchAnnotationSidebar
             .of(new DeleteAnnotationsOptions());
     private DataView<ResultsGroup> searchResultGroups;
 
-    DropDownChoice<AnnotationFeature> groupingFeature = new BootstrapSelect<>("groupingFeature",
-        Collections.emptyList(), new ChoiceRenderer<>("uiName"));
+    private DropDownChoice<AnnotationFeature> groupingFeature = new BootstrapSelect<>(
+        "groupingFeature", Collections.emptyList(), new ChoiceRenderer<>("uiName"));
+    private CheckBox lowLevelPagingCheckBox = createLowLevelPagingCheckBox();
 
     private SearchResult selectedResult;
 
@@ -142,8 +141,9 @@ public class SearchAnnotationSidebar
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         currentUser = userRepository.getCurrentUser();
-        resultsProvider = new SearchResultsProviderWrapper(new SearchResultsProvider(searchService,
-            groupedSearchResults));
+        resultsProvider = new SearchResultsProviderWrapper(
+            new SearchResultsProvider(searchService, groupedSearchResults),
+            searchOptions.bind("isLowLevelPaging"));
 
 
         mainContainer = new WebMarkupContainer("mainContainer");
@@ -165,6 +165,7 @@ public class SearchAnnotationSidebar
         groupingFeature.setNullValid(true);
         searchOptionsForm.add(createResultsPerPageSelection("itemsPerPage"));
         searchOptionsForm.add(visibleWhen(() -> searchOptionsForm.getModelObject().isVisible()));
+        searchOptionsForm.add(lowLevelPagingCheckBox);
         searchOptionsForm.setOutputMarkupPlaceholderTag(true);
         searchForm.add(searchOptionsForm);
 
@@ -262,8 +263,7 @@ public class SearchAnnotationSidebar
     private String createGroupSizeLabel(ResultsGroup aResultsGroup) {
         StringBuilder sb = new StringBuilder();
         sb.append(aResultsGroup.getGroupKey() + " (" + aResultsGroup.getResults().size());
-        // If grouping is activated, paging is deactivated, so we know the total group sizes
-        if (resultsProvider.isGroupingActivated()) {
+        if (!resultsProvider.applyLowLevelPaging()) {
             sb.append("/" + resultsProvider.groupSize(aResultsGroup.getGroupKey()));
         }
         sb.append(")");
@@ -293,11 +293,30 @@ public class SearchAnnotationSidebar
                 //update the choices for the feature selection dropdown
                 groupingFeature.setChoices(annotationService
                     .listAnnotationFeature(searchOptions.getObject().getGroupingLayer()));
-                aTarget.add(groupingFeature);
+                lowLevelPagingCheckBox.setModelObject(false);
+                aTarget.add(groupingFeature, lowLevelPagingCheckBox);
             }
         });
         layerChoice.setNullValid(true);
         return layerChoice;
+    }
+
+    private CheckBox createLowLevelPagingCheckBox() {
+        CheckBox checkbox = new CheckBox("lowLevelPaging")
+        {
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setEnabled(searchOptions.getObject().getGroupingLayer() == null
+                    && searchOptions.getObject().getGroupingFeature() == null);
+            }
+        };
+
+        checkbox.add(AttributeModifier.append("title",
+            new StringResourceModel("lowLevelPagingMouseover", this)));
+
+        return checkbox;
     }
 
     private AjaxCheckBox createGroupLevelSelectionCheckBox(String aId,

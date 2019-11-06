@@ -32,6 +32,8 @@ public class SearchOptions extends Options
 
     private long itemsPerPage;
 
+    private boolean lowLevelPaging;
+
     public boolean isLimitedToCurrentDocument()
     {
         return limitedToCurrentDocument;
@@ -70,5 +72,15 @@ public class SearchOptions extends Options
     public void setItemsPerPage(long aItemsPerPage)
     {
         itemsPerPage = aItemsPerPage;
+    }
+
+    public boolean isLowLevelPaging()
+    {
+        return lowLevelPaging;
+    }
+
+    public void setLowLevelPaging(boolean aLowLevelPaging)
+    {
+        lowLevelPaging = aLowLevelPaging;
     }
 }
