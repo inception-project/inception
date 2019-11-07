@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -196,6 +197,7 @@ public class ConceptFeatureEditor
                 Feature iriFeature = kbHandleType.getFeatureByBaseName("iri");
                 Feature labelFeature = kbHandleType.getFeatureByBaseName("label");
                 Feature descriptionFeature = kbHandleType.getFeatureByBaseName("description");
+                Feature rankFeature = kbHandleType.getFeatureByBaseName("rank");
 
                 Selection selection = aStateModel.getObject().getSelection();
                 int begin = selection.getBegin();
@@ -207,16 +209,27 @@ public class ConceptFeatureEditor
                 }
 
                 // Create new preferences
-                System.out.println("User selected: " + getModel());
-                System.out.println("Candidates:");
-                for (KBHandle candidate : cachedChoices) {
+                System.out.println("Begin: " + begin + " - End: " + end);
+                System.out.println("User selected: " + getModel().getObject());
+                System.out.println("Candidates:" + cachedChoices.size());
+
+                for (int i = 0; i < cachedChoices.size(); i++) {
+                    KBHandle candidate = cachedChoices.get(i);
                     AnnotationFS preference = cas.createAnnotation(kbHandleType, begin, end);
                     preference.setStringValue(iriFeature, candidate.getIdentifier());
                     preference.setStringValue(labelFeature, candidate.getName());
                     preference.setStringValue(descriptionFeature, candidate.getDescription());
-                    cas.addFsToIndexes(preference);
+                    preference.setIntValue(rankFeature, i);
 
-                    LOG.info("Created preference: " + preference);
+                    cas.addFsToIndexes(preference);
+                }
+
+                try {
+                    AnnotationPageBase page = findParent(AnnotationPageBase.class);
+                    page.writeEditorCas(cas);
+                } catch (IOException e) {
+                    LOG.error("Could not save preferences in CAS: ", e);
+                    e.printStackTrace();
                 }
             }
 

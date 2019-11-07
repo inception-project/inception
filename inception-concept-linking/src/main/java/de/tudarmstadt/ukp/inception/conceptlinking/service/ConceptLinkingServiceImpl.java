@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.Validate;
@@ -151,12 +152,13 @@ public class ConceptLinkingServiceImpl
         // want to avoid long reaction times when there is large number of candidates (which is
         // very likely when e.g. searching for all items starting with or containing a specific
         // letter.
-        final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 3;
+        final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 1;
         
         long startTime = currentTimeMillis();
         Set<KBHandle> result = new HashSet<>();
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
+            // Try whether the query is an IRI, if yes, search for it matching exactly
             if (aQuery != null) {
                 ParsedIRI iri = null;
                 try {
@@ -178,7 +180,7 @@ public class ConceptLinkingServiceImpl
                             .retrieveDescription()
                             .asHandles(conn, true);
     
-                    log.debug("Found [{}] candidates exactly matching IRI {}",
+                    log.info("Found [{}] candidates exactly matching IRI {}",
                             exactMatches.size(), asList(aQuery));
     
                     result.addAll(exactMatches);
@@ -196,9 +198,8 @@ public class ConceptLinkingServiceImpl
             // set of containing matches, due to the ranking performed by the KB/FTS, we might
             // not actually see the exact matches within the first N results. So we query for
             // the exact matches separately to ensure we have them.
-            String[] exactLabels = asList(
+            String[] exactLabels = Stream.of(
                     (aQuery != null && aQuery.length() <= threshold) ? aQuery : null, aMention)
-                    .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
             exactBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
@@ -208,7 +209,7 @@ public class ConceptLinkingServiceImpl
                     .retrieveDescription()
                     .asHandles(conn, true);
 
-            log.debug("Found [{}] candidates exactly matching {}",
+            log.info("Found [{}] candidates exactly matching {}",
                     exactMatches.size(), asList(exactLabels));
 
             result.addAll(exactMatches);
@@ -245,9 +246,8 @@ public class ConceptLinkingServiceImpl
                 containingBuilder.descendantsOf(aConceptScope);
             }
             
-            String[] containingLabels = asList(
+            String[] containingLabels = Stream.of(
                     (aQuery != null && aQuery.length() > threshold) ? aQuery : null, aMention)
-                    .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
             containingBuilder.withLabelContainingAnyOf(containingLabels);

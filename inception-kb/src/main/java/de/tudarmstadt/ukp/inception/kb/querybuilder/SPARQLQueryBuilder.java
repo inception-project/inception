@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -746,15 +747,25 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
-            
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
-            
+
+            StringJoiner joiner = new StringJoiner(" ");
+            for (String term : sanitizedValue.split(" ")) {
+                if (term.length() > 2) {
+                    joiner.add(term + "~");
+                } else {
+                    joiner.add(term);
+                }
+            }
+
+            String fuzzyValue = joiner.toString();
+
             valuePatterns.add(VAR_SUBJECT
-                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(sanitizedValue)))
-                    .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
+                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(fuzzyValue)))
+                    .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
         }
         
         return GraphPatterns.and(
