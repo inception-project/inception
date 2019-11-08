@@ -273,7 +273,6 @@
     <dependency>
       <groupId>jakarta.validation</groupId>
       <artifactId>jakarta.validation-api</artifactId>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
