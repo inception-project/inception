@@ -94,9 +94,8 @@ import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
+import org.jfree.chart.ui.RectangleInsets;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.ui.RectangleInsets;
-import org.jfree.util.UnitType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -859,7 +858,7 @@ public class MonitoringPage
         plot.setOutlineVisible(false);
         plot.setBackgroundPaint(null);
         plot.setNoDataMessage("No data");
-        plot.setInsets(new RectangleInsets(UnitType.ABSOLUTE, 0, 20, 0, 20));
+        plot.setInsets(new RectangleInsets(0, 20, 0, 20));
         if (aMaxValue > 0) {
             plot.getRangeAxis().setRange(0.0, aMaxValue);
             ((NumberAxis) plot.getRangeAxis()).setNumberFormatOverride(new DecimalFormat("0"));

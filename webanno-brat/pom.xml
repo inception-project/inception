@@ -173,8 +173,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-tcf</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-tcf-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
