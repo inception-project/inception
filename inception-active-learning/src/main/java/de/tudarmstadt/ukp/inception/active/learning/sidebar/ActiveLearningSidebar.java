@@ -797,6 +797,8 @@ public class ActiveLearningSidebar
                 // When the document is opened, the recommendation service defaults to only
                 // predicting for the current document. Therefore, while in an AL session,
                 // we kindly as again to predict for all documents
+                // See also RecommendationServiceImpl::onDocumentOpened where it is set again
+                // to predict on single documents only.
                 recommendationService.setPredictForAllDocuments(user.getUsername(), project, true);
             }
             String text = cas.getDocumentText();

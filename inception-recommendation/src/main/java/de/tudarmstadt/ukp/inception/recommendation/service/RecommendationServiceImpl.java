@@ -459,7 +459,8 @@ public class RecommendationServiceImpl
         }
 
         // We reset this in case the state was not properly cleared, e.g. the AL session
-        // was started but then the browser closed
+        // was started but then the browser closed. Places where it is set include
+        // - ActiveLearningSideBar::moveToNextRecommendation
         getState(username, project).setPredictForAllDocuments(false);
     }
 
