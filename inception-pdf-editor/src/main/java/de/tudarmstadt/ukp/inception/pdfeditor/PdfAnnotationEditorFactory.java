@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
 @Component("pdfEditor")
 @ConditionalOnProperty(prefix = "ui.pdf", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+        matchIfMissing = true)
 public class PdfAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
