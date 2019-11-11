@@ -65,9 +65,13 @@ public class SelectionTask
     private @Autowired ApplicationEventPublisher appEventPublisher;
     private @Autowired SchedulingService schedulingService;
 
-    public SelectionTask(Project aProject, User aUser, String aTrigger)
+    private final SourceDocument currentDocument;
+
+    public SelectionTask(User aUser, Project aProject, String aTrigger,
+                         SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
+        currentDocument = aCurrentDocument;
     }
 
     @Override
@@ -215,7 +219,7 @@ public class SelectionTask
         }
         
         schedulingService.enqueue(new TrainingTask(user, getProject(),
-                "SelectionTask after activating recommenders"));
+                "SelectionTask after activating recommenders", currentDocument));
         
     }
 
