@@ -21,7 +21,9 @@ import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
 import de.tudarmstadt.ukp.inception.app.css.InceptionCssReference;
 
 public class InceptionResourcesBehavior
@@ -36,6 +38,7 @@ public class InceptionResourcesBehavior
     {
         // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
         aResponse.render(CssHeaderItem.forReference(InceptionCssReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
     }
     
     public static InceptionResourcesBehavior get()

@@ -30,7 +30,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
-import de.tudarmstadt.ukp.inception.recommendation.event.ErrorForJSEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderSaveErrorEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderSavedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.sidebar.DropDownEvent;
 import de.tudarmstadt.ukp.inception.ui.core.footer.resources.EnjoyHintJsReference;
 import de.tudarmstadt.ukp.inception.ui.core.footer.resources.TutorialJavascriptReference;
@@ -69,12 +70,18 @@ public class TutorialFooterPanel
     
     @Override
     public void onEvent(IEvent<?> aEvent) {
-        if (aEvent.getPayload() instanceof ErrorForJSEvent){
-        	ErrorForJSEvent dEvent = (ErrorForJSEvent) aEvent.getPayload();
+        if (aEvent.getPayload() instanceof RecommenderSaveErrorEvent){
+        	 RecommenderSaveErrorEvent dEvent = (RecommenderSaveErrorEvent) aEvent.getPayload();
 
         	 AjaxRequestTarget target = dEvent.getTarget();
-        	 //setResponsePage(getPage());
         	 target.appendJavaScript("skipit()");
+        }
+        
+        if (aEvent.getPayload() instanceof RecommenderSavedEvent){
+        	RecommenderSavedEvent dEvent = (RecommenderSavedEvent) aEvent.getPayload();
+
+        	 AjaxRequestTarget target = dEvent.getTarget();
+        	 target.appendJavaScript("recommenderSaved()");
         }
     }
 }

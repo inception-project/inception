@@ -4,14 +4,18 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public class ErrorForJSEvent 
+/**
+ * this event is used for the tutorial feature. The recommender save error event needs to be captured to proceed to the next step of the tutorial
+ * 
+ */
+public class RecommenderSaveErrorEvent 
 {
     private static final long serialVersionUID = 4618078923202025558L;
 
     private final String errorMessage;
     public AjaxRequestTarget target;
 
-    public ErrorForJSEvent(Object aSource, String aerrorMessage)
+    public RecommenderSaveErrorEvent(Object aSource, String aerrorMessage)
     {
         errorMessage = aerrorMessage;
     }

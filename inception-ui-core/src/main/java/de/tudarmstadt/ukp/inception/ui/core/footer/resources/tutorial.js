@@ -32,10 +32,8 @@ $(document).ready(function() {
 			var currentPage = window.location.pathname;
 			var projectId = getUrlParameter('p');
 			
-			// var cName = document.location.pathname.match(/[^\/]+$/)[0];
-			// createCookieName(currentPage);
 			var ps = getCookie(cName); 
-
+			
 			if (currentPage.includes("projects.html") && ps == "tutorialStarted")
 			{
 					enjoyhint_instance = new EnjoyHint({
@@ -210,8 +208,7 @@ $(document).ready(function() {
 
 
 
-function startTutorial(aContextPath) {
-	contextPath = aContextPath;
+function startTutorial() {
 	var enjoyhint_instance = new EnjoyHint({
 		onEnd : function() {
 			//setCookie(cName, 'projectNotSaved',contextPath);
@@ -254,7 +251,7 @@ function getCookie(cname) {
 
 function createNewProjectRoutine() {
 	var a = [ {
-		'next [name=\'p::name\']' : 'Write the name of the project and press Enter',
+		'event [name=\'p::name\']' : 'Write the name of the project and press Enter',
 	}
 //	, {
 //		'click [type=submit]' : 'Click save'
@@ -334,12 +331,11 @@ function createDashboardRoutine() {
 function createAddRecommenderRoutine(enjoyHint) {
 	var a = [
 			{
-				'next .col-sm-9' : "Already exists. Try again!",
+				'event [method = post]' : "Already exists. Try again!",
 				onBeforeStart:function(){ 
 					
 				     $("[name=\'save\']").on('click',
 								function(e) { 
-				    	 debugger;
 							enjoyHint.trigger('next'); 
 							enjoyHint.trigger('next');
 							
@@ -382,33 +378,33 @@ function createSettingsRoutine(enjoyHint) {
 			}, {
 				'click [value=Create]' : "Click to create a new recommender",
 			},
-			 {
-				'next .form-group:nth(2)' : "Select a Layer", 
-				onBeforeStart:function(){ 
-				       $('[name=layer]').on('change', function() {
-						  enjoyHint.trigger('next'); 
-				    	});
-					}
-			},
-			 {
-				'next .form-group:nth(3)' : "Select a Feature", 
-				onBeforeStart:function(){ 
-				       $('[name=feature]').on('change', function() {
-							  enjoyHint.trigger('next'); 
-				    	});
-					}
-			},
-			 {
-				'next .form-group:nth(4)' : "Select a Tool", 
-				onBeforeStart:function(){ 
-				       $('[name=tool]').on('change', function() {
-							enjoyHint.trigger('next'); 
-				    	});
-				},
-			},
+//			 {
+//				'next .form-group:nth(2)' : "Select a Layer", 
+//				onBeforeStart:function(){ 
+//				       $('[name=layer]').on('change', function() {
+//						  enjoyHint.trigger('next'); 
+//				    	});
+//					}
+//			},
+//			 {
+//				'next .form-group:nth(3)' : "Select a Feature", 
+//				onBeforeStart:function(){ 
+//				       $('[name=feature]').on('change', function() {
+//							  enjoyHint.trigger('next'); 
+//				    	});
+//					}
+//			},
+//			 {
+//				'next .form-group:nth(4)' : "Select a Tool", 
+//				onBeforeStart:function(){ 
+//				       $('[name=tool]').on('change', function() {
+//							enjoyHint.trigger('next'); 
+//				    	});
+//				},
+//			},
 
 			{ 
-				"event .col-sm-9" : "Fill in the details and click save", 
+				"event [method = post]" : "Fill in the details and click save", 
 				onBeforeStart:function(){ 
 					//setCookie(cName, "recommenderError", contextPath);
 				     $("[name=\'save\']").on('click',
@@ -480,7 +476,7 @@ function createSettingsRoutine2() {
 				"event_type": "custom", 
 				"event": "event-save-recommender", 
 				"selector": "[method=post]", 
-				"description": "Fill in the details and click save", 
+				"description": "Modify the name and click Enter", 
 			}, 
 			{
 				'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
@@ -530,7 +526,6 @@ function getUrlParameter(sParam) {
 };
 
 function skipit(){
-	debugger;
 	setCookie(cName, "recommenderError", contextPath);
 	location.reload();
 //	debugger;
@@ -556,9 +551,6 @@ function skipit(){
 //	enjoyhint_instance.runScript();
 }
 function skipIt() {
-	debugger;
-	
-	//enjoyhint_instance.trigger('skip');
 	
 	enjoyhint_instance = new EnjoyHint({     
 		
@@ -566,7 +558,6 @@ function skipIt() {
 			setCookie(cName, "projectsettingConfigured", contextPath);
 		},
 		onSkip : function() {
-			//setCookie(cName, true, contextPath);
 		}
 
 	});
@@ -574,4 +565,10 @@ function skipIt() {
 	enjoyhint_script_steps = createAddRecommenderRoutine(enjoyhint_instance);
 	enjoyhint_instance.set(enjoyhint_script_steps);
 	enjoyhint_instance.runScript();
+}
+
+function recommenderSaved()
+{
+	setCookie(cName, "recommenderAdded", contextPath);
+	location.reload();
 }
