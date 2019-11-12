@@ -82,6 +82,7 @@ public class RecommendationSidebar
                     aModel.getObject().getProject(), v));
 
         warning = new WebMarkupContainer("warning");
+        warning.setOutputMarkupPlaceholderTag(true);
         add(warning);
         tipModel = new StringResourceModel("mismatch", this);
         TooltipBehavior tip = new TooltipBehavior(tipModel);
