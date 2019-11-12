@@ -28,6 +28,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -104,6 +105,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -1170,8 +1173,7 @@ public class RecommendationServiceImpl
     }
 
     private List<AnnotationSuggestion> extractSuggestions(String aUsername, CAS aCas,
-                                                          SourceDocument aDocument,
-                                                          Recommender aRecommender)
+            SourceDocument aDocument, Recommender aRecommender)
     {
         String typeName = aRecommender.getLayer().getName();
         String featureName = aRecommender.getFeature().getName();
@@ -1187,24 +1189,77 @@ public class RecommendationServiceImpl
         int predictionCount = 0;
 
         Type tokenType = getType(aCas, Token.class);
+        Type sentenceType = getType(aCas, Sentence.class);
 
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
+
         for (AnnotationFS annotationFS : CasUtil.select(aCas, predictedType)) {
             if (!annotationFS.getBooleanValue(predictionFeature)) {
                 continue;
             }
 
-            List<AnnotationFS> tokens = CasUtil.selectCovered(tokenType, annotationFS);
-            if (tokens.isEmpty()) {
-                // This can happen if a recommender uses different token boundaries (e.g. if a 
-                // remote service performs its own tokenization). We might be smart here by looking
-                // for overlapping tokens instead of contained tokens.
-                continue;
+            int begin;
+            int end;
+            switch (aRecommender.getLayer().getAnchoringMode()) {
+            case CHARACTERS: {
+                int[] offsets = { annotationFS.getBegin(), annotationFS.getEnd() };
+                TrimUtils.trim(annotationFS.getCAS().getDocumentText(), offsets);
+                begin = offsets[0];
+                end = offsets[1];
+                break;
             }
-            
-            AnnotationFS firstToken = tokens.get(0);
-            AnnotationFS lastToken = tokens.get(tokens.size() - 1);
+            case SINGLE_TOKEN: {
+                List<AnnotationFS> tokens = selectCovered(tokenType, annotationFS);
+                if (tokens.isEmpty()) {
+                    // This can happen if a recommender uses different token boundaries (e.g. if a
+                    // remote service performs its own tokenization). We might be smart here by
+                    // looking for overlapping tokens instead of contained tokens.
+                    continue;
+                }
+                
+                AnnotationFS firstToken = tokens.get(0);
+                AnnotationFS lastToken = tokens.get(tokens.size() - 1);
+                
+                if (!firstToken.equals(lastToken)) {
+                    // We only want to accept single-token suggestions
+                    continue;
+                }
+                
+                begin = firstToken.getBegin();
+                end = lastToken.getEnd();
+                break;
+            }
+            case TOKENS: {
+                List<AnnotationFS> tokens = selectCovered(tokenType, annotationFS);
+                if (tokens.isEmpty()) {
+                    // This can happen if a recommender uses different token boundaries (e.g. if a
+                    // remote service performs its own tokenization). We might be smart here by
+                    // looking for overlapping tokens instead of contained tokens.
+                    continue;
+                }
+                
+                begin = tokens.get(0).getBegin();
+                end = tokens.get(tokens.size() - 1).getEnd();
+                break;
+            }
+            case SENTENCES: {
+                List<AnnotationFS> sentences = selectCovered(sentenceType, annotationFS);
+                if (sentences.isEmpty()) {
+                    // This can happen if a recommender uses different token boundaries (e.g. if a
+                    // remote service performs its own tokenization). We might be smart here by
+                    // looking for overlapping sentences instead of contained sentences.
+                    continue;
+                }
+                
+                begin = sentences.get(0).getBegin();
+                end = sentences.get(sentences.size() - 1).getEnd();
+                break;
+            }
+            default:
+                throw new IllegalStateException("Unknown anchoring mode: ["
+                        + aRecommender.getLayer().getAnchoringMode() + "]");
+            }
 
             String label = annotationFS.getFeatureValueAsString(predictedFeature);
             double score = annotationFS.getDoubleValue(scoreFeature);
@@ -1212,9 +1267,8 @@ public class RecommendationServiceImpl
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
-                    aRecommender.getLayer().getId(), featureName, aDocument.getName(),
-                    firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
-                    label, score, scoreExplanation);
+                    aRecommender.getLayer().getId(), featureName, aDocument.getName(), begin, end,
+                    annotationFS.getCoveredText(), label, label, score, scoreExplanation);
 
             result.add(ao);
             id++;
