@@ -1215,6 +1215,8 @@ public class RecommendationServiceImpl
                     // This can happen if a recommender uses different token boundaries (e.g. if a
                     // remote service performs its own tokenization). We might be smart here by
                     // looking for overlapping tokens instead of contained tokens.
+                    log.trace("Discarding suggestion because no covering token was found: {}",
+                            annotationFS);
                     continue;
                 }
                 
@@ -1223,6 +1225,8 @@ public class RecommendationServiceImpl
                 
                 if (!firstToken.equals(lastToken)) {
                     // We only want to accept single-token suggestions
+                    log.trace("Discarding suggestion because only single-token suggestions are "
+                            + "accepted: {}", annotationFS);
                     continue;
                 }
                 
@@ -1236,6 +1240,8 @@ public class RecommendationServiceImpl
                     // This can happen if a recommender uses different token boundaries (e.g. if a
                     // remote service performs its own tokenization). We might be smart here by
                     // looking for overlapping tokens instead of contained tokens.
+                    log.trace("Discarding suggestion because no covering tokens were found: {}",
+                            annotationFS);
                     continue;
                 }
                 
@@ -1249,6 +1255,8 @@ public class RecommendationServiceImpl
                     // This can happen if a recommender uses different token boundaries (e.g. if a
                     // remote service performs its own tokenization). We might be smart here by
                     // looking for overlapping sentences instead of contained sentences.
+                    log.trace("Discarding suggestion because no covering sentences were found: {}",
+                            annotationFS);
                     continue;
                 }
                 
