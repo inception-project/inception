@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
