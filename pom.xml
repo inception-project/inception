@@ -297,7 +297,7 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-review-editor</artifactId>
-        <version>0.13.0-SNAPSHOT</version>
+        <version>0.14.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -690,23 +690,6 @@
         <artifactId>h2</artifactId>
         <version>1.4.197</version>
       </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-search-core</artifactId>
-        <version>0.11.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-search-mtas</artifactId>
-        <version>0.11.0-SNAPSHOT</version>
-      </dependency>
-      <!--
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-search-mimir</artifactId>
-        <version>0.5.0-SNAPSHOT</version>
-      </dependency>
-      -->
 
       <!-- JAXB DEPENDENCIES -->
       <dependency>
