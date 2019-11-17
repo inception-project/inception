@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
+import java.io.Serializable;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.feedback.IFeedback;
@@ -24,7 +26,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class LambdaAjaxSubmitLink
+public class LambdaAjaxSubmitLink<T extends Serializable>
     extends AjaxSubmitLink
 {
     private static final long serialVersionUID = 3946442967075930557L;
@@ -32,12 +34,12 @@ public class LambdaAjaxSubmitLink
     private AjaxFormCallback action;
     private AjaxExceptionHandler exceptionHandler;
 
-    public LambdaAjaxSubmitLink(String aId, AjaxFormCallback<?> aAction)
+    public LambdaAjaxSubmitLink(String aId, AjaxFormCallback<T> aAction)
     {
         this(aId, aAction, null);
     }
 
-    public LambdaAjaxSubmitLink(String aId, AjaxFormCallback<?> aAction,
+    public LambdaAjaxSubmitLink(String aId, AjaxFormCallback<T> aAction,
             AjaxExceptionHandler aExceptionHandler)
     {
         super(aId);
@@ -45,12 +47,12 @@ public class LambdaAjaxSubmitLink
         exceptionHandler = aExceptionHandler;
     }
 
-    public LambdaAjaxSubmitLink(String aId, Form aForm, AjaxFormCallback<?> aAction)
+    public LambdaAjaxSubmitLink(String aId, Form aForm, AjaxFormCallback<T> aAction)
     {
         this(aId, aForm, aAction, null);
     }
 
-    public LambdaAjaxSubmitLink(String aId, Form aForm, AjaxFormCallback<?> aAction,
+    public LambdaAjaxSubmitLink(String aId, Form aForm, AjaxFormCallback<T> aAction,
             AjaxExceptionHandler aExceptionHandler)
     {
         super(aId, aForm);

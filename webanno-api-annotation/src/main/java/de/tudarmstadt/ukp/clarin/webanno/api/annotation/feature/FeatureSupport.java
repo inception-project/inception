@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -320,7 +321,7 @@ public interface FeatureSupport<T>
      *            string representation of the value
      * @return feature editor representation of the value.
      */
-    Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
+    Serializable wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue);
     
     default IllegalArgumentException unsupportedFeatureTypeException(AnnotationFeature aFeature)
     {
@@ -366,5 +367,19 @@ public interface FeatureSupport<T>
     default IllegalArgumentException unsupportedMultiValueModeException(FeatureState aFeatureState)
     {
         return unsupportedMultiValueModeException(aFeatureState.feature);
+    }
+    
+    /**
+     * By default, the annotation editors should receive a focus if possible. However, in some
+     * situations, doing this is contraproductive, e.g. if single-key shortcuts are defined. These
+     * shortcuts should not trigger if an input field is in focus because otherwise one could never
+     * ever enter something into an input field. But that also means that if an editor gets the
+     * focus automatically, then the shortcuts won't be available and the user has to unfocus
+     * the editor before the shortcuts can be used. So it is better to suppress the auto-focus in
+     * such a case.
+     */
+    default boolean suppressAutoFocus(AnnotationFeature aFeature)
+    {
+        return false;
     }
 }

@@ -305,7 +305,7 @@ a.disabled {
   z-index: 21060 !important;
 }
 
-.bs3.bootstrap-select .dropdown-toggle .filter-option {
+.bs3.bootstrap-select .dropdown-toggle .filter-option, .k-autocomplete .k-input {
 	padding-top: 0px;
 	padding-bottom: 0px;
 }
@@ -351,4 +351,16 @@ a.disabled {
 	.no-data-notice {
 		margin: -5px;
 	}
+}
+
+.feature-editor-label {
+	.make-sm-column(3);
+}
+
+.feature-editor-label + .feature-editor-value {
+	.make-sm-column(9);
+}
+
+.feature-editor-value {
+	.make-sm-column(12);
 }

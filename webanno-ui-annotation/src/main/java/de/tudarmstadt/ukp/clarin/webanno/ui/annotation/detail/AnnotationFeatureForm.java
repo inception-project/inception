@@ -597,7 +597,7 @@ public class AnnotationFeatureForm
         // forwardAnnotationText element only for tagset based forward annotations
         if (feature.getTagset() == null) {
             getFirstFeatureEditor()
-                    .ifPresent(_editor -> aTarget.focusComponent(_editor.getFocusComponent()));
+                    .ifPresent(_editor -> autoFocus(aTarget, _editor.getFocusComponent()));
         }
         else {
             aTarget.focusComponent(editorPanel.getForwardAnnotationTextField());
@@ -768,7 +768,7 @@ public class AnnotationFeatureForm
                 else if (!Objects.equals(getRequestCycle().getMetaData(IsSidebarAction.INSTANCE),
                         true)) {
                     getFirstFeatureEditor().ifPresent(_editor -> 
-                            _target.focusComponent(_editor.getFocusComponent()));
+                            autoFocus(_target, _editor.getFocusComponent()));
                 }
             });
         }
@@ -980,17 +980,16 @@ public class AnnotationFeatureForm
                         // If the current editor cannot be found then move the focus to the
                         // first editor
                         if (i == -1) {
-                            aTarget.focusComponent(allEditors.get(0).getFocusComponent());
+                            autoFocus(aTarget, allEditors.get(0).getFocusComponent());
                         }
                         // ... if it is the last one, say at the last one
                         else if (i >= (allEditors.size() - 1)) {
-                            aTarget.focusComponent(allEditors.get(allEditors.size() - 1)
+                            autoFocus(aTarget, allEditors.get(allEditors.size() - 1)
                                     .getFocusComponent());
                         }
                         // ... otherwise move the focus to the next editor
                         else {
-                            aTarget.focusComponent(
-                                    allEditors.get(i + 1).getFocusComponent());
+                            autoFocus(aTarget, allEditors.get(i + 1).getFocusComponent());
                         }
                     }
                 }
@@ -1038,5 +1037,19 @@ public class AnnotationFeatureForm
         private static final long serialVersionUID = 1L;
         
         public final static IsSidebarAction INSTANCE = new IsSidebarAction();
+    }
+    
+    public void autoFocus(AjaxRequestTarget aTarget, Component aComponent)
+    {
+        // Check if any of the features suppresses auto-focus...
+        for (FeatureState fstate : getModelObject().getFeatureStates()) {
+            AnnotationFeature feature = fstate.getFeature();
+            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+            if (fs.suppressAutoFocus(feature)) {
+                return;
+            }
+        }
+        
+        aTarget.focusComponent(aComponent);
     }
 }
