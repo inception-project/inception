@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Traits for knowledge-base-related features.
@@ -30,6 +32,7 @@ public class ConceptFeatureTraits
     private String repositoryId;
     private String scope;
     private ConceptFeatureValueType allowedValueType;
+    private List<KeyBinding> keyBindings = new ArrayList<>();
 
     public ConceptFeatureTraits()
     {
@@ -63,6 +66,21 @@ public class ConceptFeatureTraits
 
     public void setAllowedValueType(ConceptFeatureValueType aAllowedType) {
         allowedValueType = aAllowedType;
+    }
+
+    public List<KeyBinding> getKeyBindings()
+    {
+        return keyBindings;
+    }
+
+    public void setKeyBindings(List<KeyBinding> aKeyBindings)
+    {
+        if (aKeyBindings == null) {
+            keyBindings = new ArrayList<>();
+        }
+        else {
+            keyBindings = aKeyBindings;
+        }
     }
 }
 

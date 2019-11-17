@@ -19,13 +19,18 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <div class="form-group" wicket:enclosure="value">
-    <label wicket:for="value" class="col-sm-3 control-label">
+    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label control-label">
       <span wicket:id="feature"/>
-      <span wicket:id="disabledKBWarning"></span>
-      <span wicket:id="iriInfoBadge"/>
     </label>
-    <div class="col-sm-9">
-      <input style="width: 100%;" wicket:id="value" type="text"/>
+    <div class="feature-editor-value">
+      <div class="input-group col-sm-12">
+        <span class="input-group-addon">
+          <span wicket:id="iriInfoBadge" />
+          <span wicket:id="disabledKBWarning"></span>
+        </span> 
+        <input style="width: 100%;" wicket:id="value" class="form-control" type="text"/>
+      </div>
+      <div wicket:id="keyBindings" class="col-sm-12"/>
     </div>
   </div>
 </wicket:panel>
