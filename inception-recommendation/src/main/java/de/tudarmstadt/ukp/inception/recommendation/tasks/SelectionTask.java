@@ -65,9 +65,13 @@ public class SelectionTask
     private @Autowired ApplicationEventPublisher appEventPublisher;
     private @Autowired SchedulingService schedulingService;
 
-    public SelectionTask(Project aProject, User aUser, String aTrigger)
+    private final SourceDocument currentDocument;
+
+    public SelectionTask(User aUser, Project aProject, String aTrigger,
+                         SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
+        currentDocument = aCurrentDocument;
     }
 
     @Override
@@ -193,6 +197,9 @@ public class SelectionTask
                             recommender, user.getUsername(), result,
                             System.currentTimeMillis() - start, activated));
                 }
+               
+                // Catching Throwable is intentional here as we want to continue the execution
+                // even if a particular recommender fails.
                 catch (Throwable e) {
                     log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
                 }
@@ -212,7 +219,7 @@ public class SelectionTask
         }
         
         schedulingService.enqueue(new TrainingTask(user, getProject(),
-                "SelectionTask after activating recommenders"));
+                "SelectionTask after activating recommenders", currentDocument));
         
     }
 
