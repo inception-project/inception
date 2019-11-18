@@ -50,9 +50,12 @@ public class ExternalLetorRanker
     public List<KBHandle> rank(String aQuery, String aMention, Set<KBHandle> aCandidates,
                                CAS aCas, int aBeginOffset)
     {
-        String context = getContext(aCas, aBeginOffset);
-
         List<KBHandle> unsortedCandidates = new ArrayList<>(aCandidates);
+        if (unsortedCandidates.size() == 0) {
+            return unsortedCandidates;
+        }
+
+        String context = getContext(aCas, aBeginOffset);
 
         PredictionRequest request = new PredictionRequest(aMention, context, unsortedCandidates);
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
