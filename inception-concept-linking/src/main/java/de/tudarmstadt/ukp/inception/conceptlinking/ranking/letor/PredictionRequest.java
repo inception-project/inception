@@ -27,12 +27,15 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
 public class PredictionRequest {
 
-    private String mention;
-    private String context;
-    private List<KBHandle> candidates;
+    private final String user;
+    private final  String mention;
+    private final  String context;
+    private final List<KBHandle> candidates;
 
-    public PredictionRequest(String aMention, String aContext, List<KBHandle> aCandidates)
+    public PredictionRequest(String aUser, String aMention, String aContext,
+                             List<KBHandle> aCandidates)
     {
+        user = aUser;
         mention = aMention;
         context = aContext;
         candidates = aCandidates;
@@ -42,6 +45,7 @@ public class PredictionRequest {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode result = mapper.createObjectNode();
 
+        result.put("user", user);
         result.put("mention", mention);
         result.put("context", context);
 

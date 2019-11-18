@@ -29,6 +29,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -51,13 +52,13 @@ public class ExternalLetorRanker
                                CAS aCas, int aBeginOffset)
     {
         List<KBHandle> unsortedCandidates = new ArrayList<>(aCandidates);
-        if (unsortedCandidates.size() == 0) {
+        if (unsortedCandidates.size() <= 1) {
             return unsortedCandidates;
         }
 
         String context = getContext(aCas, aBeginOffset);
 
-        PredictionRequest request = new PredictionRequest(aMention, context, unsortedCandidates);
+        PredictionRequest request = new PredictionRequest(getCurrentUser(), aMention, context, unsortedCandidates);
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
 
@@ -105,5 +106,9 @@ public class ExternalLetorRanker
         }
 
         return Arrays.asList(result);
+    }
+
+    private String getCurrentUser() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }
