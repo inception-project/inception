@@ -18,10 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
-import static java.util.Arrays.asList;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
@@ -66,9 +62,7 @@ public class ExternalRecommenderFactory
             return false;
         }
 
-        return asList(SINGLE_TOKEN, TOKENS, SENTENCES)
-                .contains(aLayer.getAnchoringMode()) &&
-                SPAN_TYPE.equals(aLayer.getType());
+        return SPAN_TYPE.equals(aLayer.getType());
     }
 
     @Override
