@@ -606,6 +606,10 @@ public abstract class AnnotationDetailEditorPanel
             AnnotationFS targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
             
             if (!originFS.getType().equals(targetFS.getType())) {
+                state.getSelection().clear();
+                loadFeatureEditorModels(aCas, aTarget);
+                send(getPage(), Broadcast.BREADTH, new RenderSlotsEvent(aTarget));
+                onChange(aTarget);
                 throw new IllegalPlacementException(
                         "Cannot create relation between spans on different layers");
             }

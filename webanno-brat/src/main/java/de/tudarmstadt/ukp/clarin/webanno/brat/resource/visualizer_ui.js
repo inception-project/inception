@@ -1036,6 +1036,42 @@ var VisualizerUI = (function($, window, undefined) {
 */
 // WEBANNO EXTENSION END
 
+// WEBANNO EXTENSION BEGIN
+      var contextMenu = function(evt) {
+        // If the user shift-right-clicks, open the normal browser context menu. This is useful
+        // e.g. during debugging / developing
+        if (evt.shiftKey) {
+          return;
+        }
+  
+        var target = $(evt.target);
+        var id;
+        var type;
+        
+        if (target.attr('data-arc-ed')) {
+          id = target.attr('data-arc-ed');
+          type = target.attr('data-arc-role');
+        }
+  
+        if (target.attr('data-span-id')) {
+          id = target.attr('data-span-id');
+          type = data.spans[id].type;
+        }
+  
+        if (id) {
+          evt.preventDefault();
+          dispatcher.post('ajax', [ {
+            action: 'contextMenu',
+            id: id,
+            type: type,
+            clientX: evt.clientX,
+            clientY: evt.clientY
+          }, 'serverResult']);
+        }
+      }
+// WEBANNO EXTENSION END
+      
+      
       dispatcher.
           on('init', init).
           on('dataReady', rememberData).
@@ -1089,7 +1125,8 @@ var VisualizerUI = (function($, window, undefined) {
 */
 // WEBANNO EXTENSION END
           on('keydown', onKeyDown).
-          on('mousemove', onMouseMove);
+          on('mousemove', onMouseMove).
+          on('contextmenu', contextMenu);
 // WEBANNO EXTENSION BEGIN
 /*
           on('dblclick', onDblClick).
@@ -1105,6 +1142,6 @@ var VisualizerUI = (function($, window, undefined) {
 */
 // WEBANNO EXTENSION END
     };
-
+    
     return VisualizerUI;
 })(jQuery, window);
