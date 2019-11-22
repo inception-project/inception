@@ -181,7 +181,8 @@ public class BratAnnotationEditor
                     paramId = VID.parseOptional(request.getParameterValue(PARAM_ID).toString());
                 }
                 else {
-                    VID arcId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
+                    VID arcId = VID
+                            .parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
                     // HACK: If an arc was clicked that represents a link feature, then 
                     // open the associated span annotation instead.
                     if (arcId.isSlotSet() && ArcAnnotationResponse.is(action)) {
@@ -342,8 +343,8 @@ public class BratAnnotationEditor
         return response;
     }
     
-    private void actionOpenContextMenu(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas,
-            VID paramId)
+    private void actionOpenContextMenu(AjaxRequestTarget aTarget, IRequestParameters request,
+            CAS aCas, VID paramId)
     {
         List<IMenuItem> items = contextMenu.getItemList();
         items.clear();
