@@ -106,7 +106,7 @@ public class ProjectsOverviewPage
     private static final String MID_LEAVE_PROJECT = "leaveProject";
     private static final String MID_CONFIRM_LEAVE = "confirmLeave";
     private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
-    private static final String MID_START_TUTORIAL= "startTutorial";
+    private static final String MID_START_TUTORIAL = "startTutorial";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
@@ -157,20 +157,20 @@ public class ProjectsOverviewPage
     
     private LambdaAjaxLink createStartTutorialLink()
     {
-    	LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
+        LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
                 this::startTutorial);
-    	
+
         add(startTutorialLink);
 
-    	return startTutorialLink;
+        return startTutorialLink;
     }
-    
+
     private void startTutorial(AjaxRequestTarget aTarget)
     {
-    	String contextPath = "inception-app-webapp";
-    	contextPath = context.getContextPath();
+        String contextPath = "inception-app-webapp";
+        contextPath = context.getContextPath();
 
-		aTarget.appendJavaScript(" startTutorial('"+contextPath+"'); ");
+        aTarget.appendJavaScript(" startTutorial('" + contextPath + "'); ");
     }
     
     private Form<Void> createImportProjectForm()

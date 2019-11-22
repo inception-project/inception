@@ -25,23 +25,21 @@ import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderSaveErrorEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderSavedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.sidebar.DropDownEvent;
 import de.tudarmstadt.ukp.inception.ui.core.footer.resources.EnjoyHintJsReference;
 import de.tudarmstadt.ukp.inception.ui.core.footer.resources.TutorialJavascriptReference;
 
 public class TutorialFooterPanel
     extends Panel
-{ 
-	private static final long serialVersionUID = -1520440226035000228L;
-	private final static Logger LOG = LoggerFactory.getLogger(TutorialFooterPanel.class);
-    
+{
+    private static final long serialVersionUID = -1520440226035000228L;
+    private final static Logger LOG = LoggerFactory.getLogger(TutorialFooterPanel.class);
+
     public TutorialFooterPanel(String aId)
     {
         super(aId); 
@@ -69,19 +67,20 @@ public class TutorialFooterPanel
     }
     
     @Override
-    public void onEvent(IEvent<?> aEvent) {
-        if (aEvent.getPayload() instanceof RecommenderSaveErrorEvent){
-        	 RecommenderSaveErrorEvent dEvent = (RecommenderSaveErrorEvent) aEvent.getPayload();
+    public void onEvent(IEvent<?> aEvent)
+    {
+        if (aEvent.getPayload() instanceof RecommenderSaveErrorEvent) {
+            RecommenderSaveErrorEvent dEvent = (RecommenderSaveErrorEvent) aEvent.getPayload();
 
-        	 AjaxRequestTarget target = dEvent.getTarget();
-        	 target.appendJavaScript("skipit()");
+            AjaxRequestTarget target = dEvent.getTarget();
+            target.appendJavaScript("skipit()");
         }
-        
-        if (aEvent.getPayload() instanceof RecommenderSavedEvent){
-        	RecommenderSavedEvent dEvent = (RecommenderSavedEvent) aEvent.getPayload();
 
-        	 AjaxRequestTarget target = dEvent.getTarget();
-        	 target.appendJavaScript("recommenderSaved()");
+        if (aEvent.getPayload() instanceof RecommenderSavedEvent) {
+            RecommenderSavedEvent dEvent = (RecommenderSavedEvent) aEvent.getPayload();
+
+            AjaxRequestTarget target = dEvent.getTarget();
+            target.appendJavaScript("recommenderSaved()");
         }
     }
 }

@@ -267,8 +267,9 @@ public class RecommenderEditorPanel
             @Override
             protected void onError(AjaxRequestTarget aTarget)
             {
-            	RecommenderSaveErrorEvent event = new RecommenderSaveErrorEvent(this, "add recommender error");
-            	event.setTarget(aTarget);
+                RecommenderSaveErrorEvent event = new RecommenderSaveErrorEvent(this,
+                        "add recommender error");
+                event.setTarget(aTarget);
                 send(getPage(), Broadcast.BREADTH, event); 
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
@@ -279,7 +280,7 @@ public class RecommenderEditorPanel
                 actionSave(target);
                 
                 RecommenderSavedEvent event = new RecommenderSavedEvent(  );
-            	event.setTarget(target);
+                event.setTarget(target);
                 send(getPage(), Broadcast.BREADTH, event); 
                 target.addChildren(getPage(), IFeedback.class);
             }

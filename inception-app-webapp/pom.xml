@@ -492,7 +492,6 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-native-websocket-javax</artifactId>
     </dependency>
-    
     <dependency>
       <groupId>org.webjars.bowergithub.xbsoftware</groupId>
       <artifactId>enjoyhint</artifactId>
@@ -773,6 +772,10 @@
                 <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
               <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
+              <!-- Tutorial Js dependencies -->
+              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
+              <usedDependency>org.webjars.npm:kinetic</usedDependency>
+              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
