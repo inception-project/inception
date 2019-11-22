@@ -18,8 +18,8 @@ On the annotation page, you can now:
 
 image::metadata-sidebar.png[align="center"]
 
-NOTE: This is an experimental feature not recommended for serious use. However, you can try it out
-      and enable it by adding `documentmetadata.enabled=true` to the `settings.properties` file. In 
+NOTE: This is an experimental feature not recommended for serious use. In 
       particular, curation of document metadata annotations is not possible and they are not supported
-      by the TSV format. They can be im-/exported via XMI or Binary CAS though.
+      by the TSV format. They can be im-/exported via XMI or Binary CAS though. However, you can try it out
+      and enable it by adding `documentmetadata.enabled=true` to the `settings.properties` file. This file is optional and might need to be created first in the application home folder <<admin-guide.adoc#sect_home_folder>>. 
 
