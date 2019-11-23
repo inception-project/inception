@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
@@ -52,6 +51,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
+import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.ConfigurationParameterFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -249,7 +249,7 @@ public class ImportExportServiceImpl
     {
         // Prepare a CAS with the project type system
         TypeSystemDescription allTypes = annotationService.getFullProjectTypeSystem(aProject);
-        CAS cas = createCas(allTypes);
+        CAS cas = CasFactory.createCas(allTypes);
 
         // Convert the source document to CAS
         FormatSupport format = getReadableFormatById(aFormatId).orElseThrow(() -> 

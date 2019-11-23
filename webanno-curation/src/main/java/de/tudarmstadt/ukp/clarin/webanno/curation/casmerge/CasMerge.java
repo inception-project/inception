@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.copyDocumentMetadata;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
@@ -53,8 +52,10 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -382,7 +383,7 @@ public class CasMerge
     private static void clearAnnotations(CAS aCas)
         throws UIMAException
     {
-        CAS backup = createCas();
+        CAS backup = CasFactory.createCas((TypeSystemDescription) null);
         
         // Copy the CAS - basically we do this just to keep the full type system information
         CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aCas);
