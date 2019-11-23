@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.image.feature;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -188,9 +189,9 @@ public class ImageFeatureSupport
     }
 
     @Override
-    public Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public Serializable wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
-        return aValue;
+        return (Serializable) aValue;
     }
     
     @Override
