@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -105,7 +106,7 @@ public class MtasUimaParserTest
         
         MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
                 featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas);
+        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         
         MtasUtils.print(tc);
         
@@ -155,7 +156,7 @@ public class MtasUimaParserTest
         
         MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
                 featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas);
+        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         
         MtasUtils.print(tc);
         
@@ -195,7 +196,7 @@ public class MtasUimaParserTest
         
         MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
                 featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas);
+        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         
         MtasUtils.print(tc);
         
@@ -271,17 +272,16 @@ public class MtasUimaParserTest
                 .thenReturn(asList(dependencyLayerGovernor, dependencyLayerDependent));
 
         when(annotationSchemaService.getAdapter(posLayer)).thenReturn(new SpanAdapter(
-                featureSupportRegistry, null, posLayer, asList(posLayerValue), null));
+                featureSupportRegistry, null, posLayer, () -> asList(posLayerValue), null));
 
-        when(annotationSchemaService.getAdapter(depLayer)).thenReturn(new RelationAdapter(
-                featureSupportRegistry, null, depLayer, depLayer.getId(), depLayer.getName(),
+        when(annotationSchemaService.getAdapter(depLayer))
+            .thenReturn(new RelationAdapter(featureSupportRegistry, null, depLayer,
                 WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
-                depLayer.getAttachFeature().getName(), depLayer.getAttachType().getName(),
-                asList(dependencyLayerGovernor, dependencyLayerDependent)));
+                () -> asList(dependencyLayerGovernor, dependencyLayerDependent), emptyList()));
         
         MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
                 featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas);
+        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         
         MtasUtils.print(tc);
         

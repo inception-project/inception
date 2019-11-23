@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
@@ -31,9 +32,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.NopRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
@@ -44,11 +44,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", 
         matchIfMissing = false)
 public class DocumentMetadataLayerSupport
-    implements LayerSupport<DocumentMetadataLayerAdapter>, InitializingBean
+    extends LayerSupport_ImplBase<DocumentMetadataLayerAdapter>
+    implements InitializingBean
 {
     public static final String TYPE = "document-metadata";
     
-    private final FeatureSupportRegistry featureSupportRegistry;
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
 
@@ -59,7 +59,7 @@ public class DocumentMetadataLayerSupport
     public DocumentMetadataLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService)
     {
-        featureSupportRegistry = aFeatureSupportRegistry;
+        super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         schemaService = aSchemaService;
     }
@@ -98,28 +98,22 @@ public class DocumentMetadataLayerSupport
     public DocumentMetadataLayerAdapter createAdapter(AnnotationLayer aLayer)
     {
         DocumentMetadataLayerAdapter adapter = new DocumentMetadataLayerAdapter(
-                featureSupportRegistry, eventPublisher, aLayer, 
-                schemaService.listAnnotationFeature(aLayer));
+            featureSupportRegistry, eventPublisher, aLayer,
+            () -> schemaService.listAnnotationFeature(aLayer));
 
         return adapter;
     }
     
     @Override
-    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
+    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
+            List<AnnotationFeature> aAllFeaturesInProject)
     {
         TypeDescription td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION_BASE);
         
-        generateFeatures(aTsd, td, aLayer);
-    }
-    
-    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationLayer aLayer)
-    {
-        List<AnnotationFeature> features = schemaService.listAnnotationFeature(aLayer);
-        for (AnnotationFeature feature : features) {
-            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
-            fs.generateFeature(aTSD, aTD, feature);
-        }
+        List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
+                .filter(feature -> aLayer.equals(feature.getLayer()))
+                .collect(toList());
+        generateFeatures(aTsd, td, featureForLayer);
     }
     
     @Override

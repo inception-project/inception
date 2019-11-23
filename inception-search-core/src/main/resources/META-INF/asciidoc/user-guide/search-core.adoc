@@ -38,7 +38,8 @@ results.
 This means that annotations will be created/deleted at the token offsets of the selected search
 results.
 Search results can be selected via the checkbox on the left. Per default all search
-results are selected.
+results are selected. If a result originates from a document which the user has already marked as
+*finished*, there is no checkbox since such documents cannot be modified anyway.
 
 The currently selected annotation in the annotation editor serves as template for the annotations
 that are to be created/deleted. Note that selecting an annotation first is necessary for

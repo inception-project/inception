@@ -31,7 +31,7 @@ import org.assertj.core.api.ListAssert;
 public class CasAssert
     extends AbstractAssert<CasAssert, CAS>
 {
-    private static String TYPE_NE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
+    private static final String TYPE_NE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
 
     public CasAssert(CAS cas)
     {

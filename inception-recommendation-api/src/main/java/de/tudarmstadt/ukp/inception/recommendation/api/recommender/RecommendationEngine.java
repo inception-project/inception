@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.List;
@@ -30,7 +32,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public abstract class RecommendationEngine {
+public abstract class RecommendationEngine
+{
     protected final Recommender recommender;
     protected final String layerName;
     protected final String featureName;
@@ -43,6 +46,11 @@ public abstract class RecommendationEngine {
         layerName = aRecommender.getLayer().getName();
         featureName = aRecommender.getFeature().getName();
         maxRecommendations = aRecommender.getMaxRecommendations();
+    }
+    
+    public Recommender getRecommender()
+    {
+        return recommender;
     }
 
 // tag::methodDefinition[]
@@ -107,6 +115,16 @@ public abstract class RecommendationEngine {
     {
         return RecommendationEngineCapability.TRAINING_SUPPORTED;
     }
+    
+    /**
+     * Create a new context given the previous context. This allows incrementally training 
+     * recommenders to salvage information from the current context for a new iteration. By default,
+     * no information is copy and simply new context is created.
+     */
+    public RecommenderContext newContext(RecommenderContext aCurrentContext)
+    {
+        return new RecommenderContext();
+    }
 
     protected Type getPredictedType(CAS aCas)
     {
@@ -120,8 +138,14 @@ public abstract class RecommendationEngine {
 
     protected Feature getScoreFeature(CAS aCas)
     {
-        String scoreFeatureName = featureName + "_score";
+        String scoreFeatureName = featureName + FEATURE_NAME_SCORE_SUFFIX;
         return getPredictedType(aCas).getFeatureByBaseName(scoreFeatureName);
+    }
+    
+    protected Feature getScoreExplanationFeature(CAS aCas) 
+    {
+        String scoreExplanationFeature = featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+        return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
     }
 
     protected Feature getIsPredictionFeature(CAS aCas)

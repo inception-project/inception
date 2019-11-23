@@ -55,7 +55,13 @@ public class TeiFormatSupport
     {
         return true;
     }
-
+    
+    @Override
+    public boolean isWritable()
+    {
+        return true;
+    }
+    
     @Override
     public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
     {

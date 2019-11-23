@@ -61,7 +61,7 @@ Congratulations! You have created your first annotation project.
 
 == Where to go from here
 
-To familiarize yourself with the functionalities of {product-name}, try importing some of the link:https://inception-project.github.io//use-case-gallery/[{product-name} downloads page][example projects]. 
+To familiarize yourself with the functionalities of {product-name}, try importing some of the link:https://inception-project.github.io//use-case-gallery/[{product-name} example projects]. 
 
 Running {product-name} in the way you just did is a great way to get started and try out its
 capabilities, but it is not the best way of working with the application. If you like 

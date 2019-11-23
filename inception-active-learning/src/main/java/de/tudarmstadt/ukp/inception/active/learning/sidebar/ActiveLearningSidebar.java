@@ -64,6 +64,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -86,10 +87,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -119,9 +121,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 
 public class ActiveLearningSidebar
     extends AnnotationSidebar_ImplBase
@@ -293,8 +295,11 @@ public class ActiveLearningSidebar
 
         moveToNextRecommendation(target, false);
 
+        String userName = state.getUser().getUsername();
+        Project project = state.getProject();
+        recommendationService.setPredictForAllDocuments(userName, project, true);
         applicationEventPublisherHolder.get().publishEvent(new ActiveLearningSessionStartedEvent(
-                this, state.getProject(), state.getUser().getUsername()));
+                this, project, userName));
     }
     
     private void actionStopSession(AjaxRequestTarget target)
@@ -307,8 +312,11 @@ public class ActiveLearningSidebar
         // Stop current session
         alState.setSessionActive(false);
 
+        String userName = state.getUser().getUsername();
+        Project project = state.getProject();
+        recommendationService.setPredictForAllDocuments(userName, project, false);
         applicationEventPublisherHolder.get().publishEvent(new ActiveLearningSessionCompletedEvent(
-                this, state.getProject(), state.getUser().getUsername()));
+                this, project,userName));
     }
 
     private void setHighlight(AnnotationSuggestion aSuggestion)
@@ -524,7 +532,8 @@ public class ActiveLearningSidebar
         // link feature types and the likes).
         Object wrappedFeatureValue = featureSupport.wrapFeatureValue(feat, null,
                 aCurrentRecommendation.getLabel());
-        FeatureState featureState = new FeatureState(feat, (Serializable) wrappedFeatureValue);
+        FeatureState featureState = new FeatureState(aCurrentRecommendation.getVID(), 
+            feat, (Serializable) wrappedFeatureValue);
         
         // Populate the tagset moving the tags with recommended labels to the top 
         List<Tag> tagList = annotationService.listTags(feat.getTagset());
@@ -713,8 +722,11 @@ public class ActiveLearningSidebar
             aTarget.add((Component) getActionHandler());
         }
 
+        User user = state.getUser();
+        Project project = state.getProject();
+
         Optional<Delta> recommendationDifference = activeLearningService
-                .generateNextSuggestion(state.getUser(), alState);
+                .generateNextSuggestion(user, alState);
         Optional<AnnotationSuggestion> prevSuggestion = alState.getSuggestion();
         alState.setCurrentDifference(recommendationDifference);
         
@@ -753,7 +765,7 @@ public class ActiveLearningSidebar
         // If there is one, open it in the sidebar and take the main editor to its location
         try {
             AnnotationSuggestion suggestion = alState.getSuggestion().get();
-            SourceDocument sourceDocument = documentService.getSourceDocument(state.getProject(),
+            SourceDocument sourceDocument = documentService.getSourceDocument(project,
                     suggestion.getDocumentName());
             
             // Refresh feature editor
@@ -780,7 +792,14 @@ public class ActiveLearningSidebar
             }
             else {
                 cas = documentService.readAnnotationCas(sourceDocument,
-                        state.getUser().getUsername());
+                        user.getUsername());
+
+                // When the document is opened, the recommendation service defaults to only
+                // predicting for the current document. Therefore, while in an AL session,
+                // we kindly as again to predict for all documents
+                // See also RecommendationServiceImpl::onDocumentOpened where it is set again
+                // to predict on single documents only.
+                recommendationService.setPredictForAllDocuments(user.getUsername(), project, true);
             }
             String text = cas.getDocumentText();
             alState.setLeftContext(
@@ -790,14 +809,14 @@ public class ActiveLearningSidebar
             
             // Send an application event that the suggestion has been rejected
             List<AnnotationSuggestion> alternativeSuggestions = recommendationService
-                    .getPredictions(state.getUser(), state.getProject())
+                    .getPredictions(user, project)
                     .getPredictionsByTokenAndFeature(suggestion.getDocumentName(),
                             alState.getLayer(), suggestion.getBegin(), suggestion.getEnd(),
                             suggestion.getFeature());
 
             applicationEventPublisherHolder.get()
                     .publishEvent(new ActiveLearningSuggestionOfferedEvent(this, sourceDocument,
-                            suggestion, state.getUser().getUsername(), alState.getLayer(),
+                            suggestion, user.getUsername(), alState.getLayer(),
                             suggestion.getFeature(), alternativeSuggestions));
         }
         catch (IOException e) {
@@ -1252,9 +1271,9 @@ public class ActiveLearningSidebar
     }
     
     @OnEvent
-    public void onPredictionsSwitched(AjaxPredictionsSwitchedEvent aEvent)
+    public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
     {
-        reactToChangeInPredictions(aEvent.getTarget());
+        reactToChangeInPredictions(aEvent.getRequestHandler());
         // As a reaction to the change in predictions, the highlights may have to be placed at 
         // a different location. This the prediction switch is announced late in the rendering
         // process and the highlights have already been added to the VDocument at this time, 

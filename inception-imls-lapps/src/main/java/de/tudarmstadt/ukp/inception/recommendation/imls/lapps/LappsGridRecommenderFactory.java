@@ -33,13 +33,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor;
 
 @Component
 @ConditionalOnProperty(prefix = "recommenders.lappsgrid", name = "enabled",
-        matchIfMissing = false)
+        matchIfMissing = true)
 public class LappsGridRecommenderFactory
     extends RecommendationEngineFactoryImplBase<LappsGridRecommenderTraits>
 {
@@ -54,7 +53,7 @@ public class LappsGridRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext)
+    public RecommendationEngine build(Recommender aRecommender)
     {
         LappsGridRecommenderTraits traits = readTraits(aRecommender);
         return new LappsGridRecommender(aRecommender, traits);
@@ -85,7 +84,8 @@ public class LappsGridRecommenderFactory
     }
 
     @Override
-    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
+    public LappsGridRecommenderTraitsEditor createTraitsEditor(String aId,
+            IModel<Recommender> aModel)
     {
         return new LappsGridRecommenderTraitsEditor(aId, aModel);
     }

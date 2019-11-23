@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -66,7 +66,7 @@ public class ConceptFeatureEditor
     
     private static final long serialVersionUID = 7763348613632105600L;
 
-    private Component focusComponent;
+    private FormComponent focusComponent;
     private IriInfoBadge iriBadge;
 
     private @SpringBean KnowledgeBaseService kbService;
@@ -154,7 +154,7 @@ public class ConceptFeatureEditor
     }
 
     @Override
-    public Component getFocusComponent()
+    public FormComponent getFocusComponent()
     {
         return focusComponent;
     }

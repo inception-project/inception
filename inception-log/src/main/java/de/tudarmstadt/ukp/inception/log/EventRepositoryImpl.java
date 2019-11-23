@@ -56,10 +56,13 @@ public class EventRepositoryImpl
     @Transactional
     public void create(LoggedEvent... aEvents)
     {
+        long start = System.currentTimeMillis();
         for (LoggedEvent event : aEvents) {
             log.trace("{}", event);
             entityManager.persist(event);
         }
+        long duration = System.currentTimeMillis() - start;
+        log.debug("... {} events stored ... ({}ms)", aEvents.length, duration);
     }
 
     @Override

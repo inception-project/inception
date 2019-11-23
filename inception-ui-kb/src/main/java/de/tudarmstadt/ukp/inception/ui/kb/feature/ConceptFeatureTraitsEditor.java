@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
+
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -30,18 +34,21 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
@@ -64,6 +71,7 @@ public class ConceptFeatureTraitsEditor
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean ConceptLinkingService conceptLinkingService;
 
     private String featureSupportId;
     private IModel<AnnotationFeature> feature;
@@ -93,26 +101,50 @@ public class ConceptFeatureTraitsEditor
             }
         };
         
-        form.add(
-                new BootstrapSelect<>(MID_SCOPE, 
-                        LambdaModel.of(this::listConcepts),
-                        new LambdaChoiceRenderer<>(KBHandle::getUiLabel))
-                .setNullValid(true)
+        form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE, this::listSearchResults)
                 .setOutputMarkupPlaceholderTag(true));
 
         form.add(
-                new BootstrapSelect<>(MID_KNOWLEDGE_BASE, 
-                        LambdaModel.of(this::listKnowledgeBases), 
-                        new LambdaChoiceRenderer<>(KnowledgeBase::getName))
-                .setNullValid(true)
-                .add(new LambdaAjaxFormComponentUpdatingBehavior("change", target ->
-                        target.add(form.get(MID_SCOPE)))));
+            new BootstrapSelect<>(MID_KNOWLEDGE_BASE, 
+                    LambdaModel.of(this::listKnowledgeBases), 
+                    new LambdaChoiceRenderer<>(KnowledgeBase::getName))
+            .setNullValid(true)
+            .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
         form.add(
-            new BootstrapSelect<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes)));
+            new BootstrapSelect<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes))
+            .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
 
         form.add(new DisabledKBWarning("disabledKBWarning", feature));
         add(form);
 
+    }
+    
+    private void refresh(AjaxRequestTarget aTarget)
+    {
+        Traits t = traits.getObject();
+        t.setScope(loadConcept(t.getKnowledgeBase(), t.getScope() != null ? 
+                t.getScope().getIdentifier() : null));
+        aTarget.add(get(MID_FORM).get(MID_SCOPE));
+        
+    }
+    
+    private KBHandle loadConcept(KnowledgeBase aKB, String aIdentifier)
+    {
+        if (aIdentifier == null) {
+            return null;
+        }
+
+        // Use the concept from a particular knowledge base
+        Optional<KBConcept> scope;
+        if (aKB != null) {
+            scope = kbService.readConcept(aKB, aIdentifier, true);
+        }
+        // Use the concept from any knowledge base (leave KB unselected)
+        else {
+            scope = kbService.readConcept(feature.getObject().getProject(), aIdentifier);
+        }
+
+        return scope.map(KBObject::toKBHandle).orElse(null);
     }
     
     /**
@@ -121,30 +153,17 @@ public class ConceptFeatureTraitsEditor
      */
     private Traits readTraits()
     {
-        Traits result = new Traits();
-
         Project project = feature.getObject().getProject();
+        
+        Traits result = new Traits();
 
         ConceptFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
 
-        // Use the concept from a particular knowledge base
         if (t.getRepositoryId() != null) {
-            Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
-                    t.getRepositoryId());
-            if (kb.isPresent() && kb.get().isEnabled()) {
-                result.setKnowledgeBase(kb.get());
-                if (t.getScope() != null) {
-                    kbService.readConcept(kb.get(), t.getScope(), true)
-                            .ifPresent(concept -> result.setScope(KBHandle.of(concept)));
-                }
-            }
+            kbService.getKnowledgeBaseById(project, t.getRepositoryId())
+                    .ifPresent(result::setKnowledgeBase);
         }
-        // Use the concept from any knowledge base (leave KB unselected)
-        else if (t.getScope() != null) {
-            kbService.readConcept(project, t.getScope())
-                    .ifPresent(concept -> result.setScope(KBHandle.of(concept)));
-        }
-
+        
         if (t.getAllowedValueType() != null) {
             result.setAllowedValueType(t.getAllowedValueType());
         }
@@ -152,6 +171,8 @@ public class ConceptFeatureTraitsEditor
             // Allow all values as default
             result.setAllowedValueType(ConceptFeatureValueType.ANY_OBJECT);
         }
+        
+        result.setScope(loadConcept(result.getKnowledgeBase(), t.getScope()));
 
         return result;
     }
@@ -182,24 +203,6 @@ public class ConceptFeatureTraitsEditor
         return kbService.getEnabledKnowledgeBases(feature.getObject().getProject());
     }
     
-    private List<KBHandle> listConcepts()
-    {
-        // If a specific KB is selected, we show the concepts inside that one
-        if (traits.getObject().knowledgeBase != null) {
-            return kbService.listAllConcepts(traits.getObject().knowledgeBase, false);
-        }
-        // Otherwise, we offer concepts from all KBs
-        else {
-            List<KBHandle> allConcepts = new ArrayList<>();
-            for (KnowledgeBase kb : kbService
-                .getEnabledKnowledgeBases(feature.getObject().getProject())) {
-                allConcepts.addAll(kbService.listAllConcepts(kb, false));
-            }
-
-            return allConcepts;
-        }
-    }
-
     private List<ConceptFeatureValueType> listAllowedTypes() {
         return Arrays.asList(ConceptFeatureValueType.values());
     }
@@ -209,6 +212,22 @@ public class ConceptFeatureTraitsEditor
         return featureSupportRegistry.getFeatureSupport(featureSupportId);
     }
     
+    /**
+     * Search for Entities in the current knowledge base based on a typed string. Use full text
+     * search if it is available. Returns a sorted/ranked list of KBHandles
+     */
+    private List<KBHandle> listSearchResults(String aTypedString)
+    {
+        if (StringUtils.isBlank(aTypedString)) {
+            return Collections.emptyList();
+        }
+        
+        Traits t = traits.getObject();
+        return conceptLinkingService.getLinkingInstancesInKBScope(
+                t.knowledgeBase != null ? t.knowledgeBase.getRepositoryId() : null, null, CONCEPT,
+                aTypedString, null, -1, null, feature.getObject().getProject());
+    }
+
     /**
      * A UI model holding the traits while the user is editing them. They are read/written to the
      * actual {@link ConceptFeatureTraits} via {@link ConceptFeatureTraitsEditor#readTraits()} and

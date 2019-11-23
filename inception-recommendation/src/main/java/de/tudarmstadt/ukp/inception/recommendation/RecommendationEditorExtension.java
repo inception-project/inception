@@ -53,15 +53,17 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
@@ -90,13 +92,15 @@ public class RecommendationEditorExtension
     private final ApplicationEventPublisher applicationEventPublisher;
     private final FeatureSupportRegistry fsRegistry;
     private final DocumentService documentService;
+    private final UserDao userRegistry;
 
     @Autowired
     public RecommendationEditorExtension(AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService)
+            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService, 
+            UserDao aUserRegistry)
     {
         annotationService = aAnnotationService;
         recommendationService = aRecommendationService;
@@ -104,6 +108,7 @@ public class RecommendationEditorExtension
         applicationEventPublisher = aApplicationEventPublisher;
         fsRegistry = aFsRegistry;
         documentService = aDocumentService;
+        userRegistry = aUserRegistry;
     }
 
     @Override
@@ -245,6 +250,12 @@ public class RecommendationEditorExtension
     public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc,
                        int aWindowBeginOffset, int aWindowEndOffset)
     {
+        // do not show predictions during curation or when viewing others' work
+        if (!aState.getMode().equals(Mode.ANNOTATION) || 
+                !aState.getUser().equals(userRegistry.getCurrentUser())) {
+            return;
+        }
+        
         // We activate new suggestions during rendering. For one, we don't have a push mechanism
         // at the moment. For another, even if we had it, it would be quite annoying to the user
         // if the UI kept updating itself without any the user expecting an update. The user does
@@ -258,7 +269,7 @@ public class RecommendationEditorExtension
             RequestCycle.get().find(AjaxRequestTarget.class)
                     .ifPresent(_target -> _target.getPage().send(_target.getPage(),
                             Broadcast.BREADTH,
-                            new AjaxPredictionsSwitchedEvent(_target, aCas, aState, aVDoc)));
+                            new PredictionsSwitchedEvent(_target, aCas, aState, aVDoc)));
         }
 
         // Add the suggestions to the visual document

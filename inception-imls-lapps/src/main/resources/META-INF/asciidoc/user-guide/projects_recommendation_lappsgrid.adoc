@@ -1,0 +1,36 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+== LAPPS Grid
+
+This recommender allows to use LAPPS Grid web-services to generate predictions. Only services
+taking the inputs are supported:
+
+.Inputs
+* Text
+* Tokens
+* Sentences
+
+Furthermore, the services must produce annotations on one of the following built-in layers:
+
+.Outputs
+* Part-of-speech
+* Lemma
+* Named entity
+
+The recommender comes with a list of pre-configured services that can be conveniently chosen from.
+However, note that these services use versioned URLs and as LAPPS Grid evolves, these the services
+might be upgrade and become available under different URLs. 

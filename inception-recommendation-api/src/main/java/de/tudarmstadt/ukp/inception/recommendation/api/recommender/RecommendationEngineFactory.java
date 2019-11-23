@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -46,18 +45,13 @@ public interface RecommendationEngineFactory<T>
         return true;
     }
 
-    default RecommendationEngine build(Recommender aRecommender) 
-    {
-        return build(aRecommender, new RecommenderContext());
-    }
-    
-    RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext);
+    RecommendationEngine build(Recommender aRecommender);
 
     boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
 
     T createTraits();
 
-    Component createTraitsEditor(String aId, IModel<Recommender> aModel);
+    AbstractTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel);
 
     T readTraits(Recommender aRecommender);
 

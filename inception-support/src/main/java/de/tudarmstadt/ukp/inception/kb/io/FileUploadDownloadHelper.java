@@ -58,7 +58,7 @@ public class FileUploadDownloadHelper
      * @return A handle to the created temporary file
      */
     public File writeFileUploadToTemporaryFile(FileUpload fileUpload, Object marker)
-        throws Exception
+        throws IOException
     {
         String fileName = fileUpload.getClientFileName();
         File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);

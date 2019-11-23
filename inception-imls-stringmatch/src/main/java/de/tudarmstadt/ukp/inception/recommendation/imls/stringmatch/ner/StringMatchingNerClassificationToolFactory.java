@@ -28,7 +28,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 
@@ -54,7 +53,7 @@ public class StringMatchingNerClassificationToolFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext)
+    public RecommendationEngine build(Recommender aRecommender)
     {
         StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
         return new StringMatchingRecommender(aRecommender, traits);
