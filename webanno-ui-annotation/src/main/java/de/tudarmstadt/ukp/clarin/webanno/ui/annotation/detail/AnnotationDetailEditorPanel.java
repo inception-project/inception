@@ -606,6 +606,10 @@ public abstract class AnnotationDetailEditorPanel
             AnnotationFS targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
             
             if (!originFS.getType().equals(targetFS.getType())) {
+                state.getSelection().clear();
+                loadFeatureEditorModels(aCas, aTarget);
+                send(getPage(), Broadcast.BREADTH, new RenderSlotsEvent(aTarget));
+                onChange(aTarget);
                 throw new IllegalPlacementException(
                         "Cannot create relation between spans on different layers");
             }
@@ -1242,7 +1246,9 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         try {
-            if (selection.isSpan()) {
+            // If we reset the layers while doing a relation, we won't be able to complete the 
+            // relation - so in this case, we leave the layers alone...
+            if (!selection.isArc()) {
                 annotationFeatureForm.updateLayersDropdown();
             }
 

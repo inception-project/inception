@@ -552,7 +552,7 @@ public class AnnotationFeatureForm
     private CheckBox createForwardAnnotationCheckBox()
     {
         CheckBox checkbox = new CheckBox("forwardAnnotation");
-        checkbox. setOutputMarkupId(true);
+        checkbox.setOutputMarkupPlaceholderTag(true);
         checkbox.add(visibleWhen(this::isForwardable));
         checkbox.add(LambdaBehavior.onConfigure(_this -> {
             // Force-disable forward annotation mode if current layer is not forwardable
@@ -699,7 +699,6 @@ public class AnnotationFeatureForm
                     if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
                         annotationLayers.add(layer);
                     }
-
                 }
             }
             // chain

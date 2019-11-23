@@ -364,3 +364,15 @@ a.disabled {
 .feature-editor-value {
 	.make-sm-column(12);
 }
+
+.ui-menu {
+	text-align: left;
+	
+	.ui-menu-item {
+		.ui-menu-item-wrapper.ui-state-active {
+			color: @component-active-color;
+			background-color: @component-active-bg;
+			background-image: none;
+		}
+	}
+}
