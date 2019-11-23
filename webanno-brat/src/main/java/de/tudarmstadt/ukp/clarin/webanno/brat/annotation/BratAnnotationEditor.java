@@ -354,6 +354,8 @@ public class BratAnnotationEditor
                 _target -> actionArcRightClick(_target, paramId)));
         }
         
+        extensionRegistry.generateContextMenuItems(items);
+        
         if (!items.isEmpty()) {
             contextMenu.onOpen(aTarget);
         }

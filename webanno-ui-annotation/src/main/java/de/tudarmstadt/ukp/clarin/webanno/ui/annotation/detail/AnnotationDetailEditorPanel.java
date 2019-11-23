@@ -1246,7 +1246,9 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         try {
-            if (selection.isSpan()) {
+            // If we reset the layers while doing a relation, we won't be able to complete the 
+            // relation - so in this case, we leave the layers alone...
+            if (!selection.isArc()) {
                 annotationFeatureForm.updateLayersDropdown();
             }
 

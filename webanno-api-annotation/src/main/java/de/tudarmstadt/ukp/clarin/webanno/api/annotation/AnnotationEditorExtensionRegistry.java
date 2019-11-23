@@ -23,6 +23,8 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
+import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -42,4 +44,6 @@ public interface AnnotationEditorExtensionRegistry
 
     void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
             int aWindowBeginOffset, int aWindowEndOffset);
+    
+    void generateContextMenuItems(List<IMenuItem> aItems);
 }
