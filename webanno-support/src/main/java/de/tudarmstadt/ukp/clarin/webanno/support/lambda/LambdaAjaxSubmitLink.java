@@ -77,4 +77,10 @@ public class LambdaAjaxSubmitLink<T extends Serializable>
             }
         }
     }
+    
+    @Override
+    protected void onError(AjaxRequestTarget aTarget)
+    {
+        aTarget.addChildren(getPage(), IFeedback.class);
+    }
 }
