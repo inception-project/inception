@@ -24,6 +24,7 @@ the source and target spans. If this is the case, there are two ways of creating
 * for short-distance relations, you can conveniently create relation by left-clicking on a span and
   while keeping the mouse button pressed moving the cursor over to the target span. A rubber-band
   arc is shown during this drag-and-drop operation to indicate the location of the relation.
+  To abort the creation of an annotation, hold the *CTRL* key when you release the mouse button.
   
 * for long-distance relations, first select the source span annotation. Then locate the target 
   annotation. You can scroll around or even switch to another page of the same document - just
@@ -38,9 +39,8 @@ and can cross sentence boundaries.
 
 .Self-looping relations
 To create a relation from a span to itself, press the *SHIFT* key before starting to drag the mouse
-and hold it until you release the mouse button.
-
-To abort the creation of an annotation, hold the *CTRL* key when you release the mouse button.
+and hold it until you release the mouse button. Or alternatively select the span and then 
+right-click on it and select **Link to...**.
 
 NOTE: Currently, there can be at most one relation layer per span layer. Relations between spans
       of different layers are not supported.
