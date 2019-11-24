@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
@@ -93,9 +94,10 @@ public class KeyBindingsPanel
                 keyBindingsVisible = !keyBindingsVisible;
                 _target.add(keyBindingsContainer, showHideMessage);
             });
-        add(toggleKeyBindingHints);
-        
         toggleKeyBindingHints.add(showHideMessage);
+        toggleKeyBindingHints
+                .add(LambdaBehavior.visibleWhen(() -> !aKeyBindings.getObject().isEmpty()));
+        add(toggleKeyBindingHints);
         
         keyBindingsContainer.add(new ListView<KeyBinding>("keyBindings", aKeyBindings) {
             private static final long serialVersionUID = 3942714328686353093L;
