@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 
 import java.io.File;
 import java.io.IOException;
@@ -149,9 +149,9 @@ public class PdfAnnotationEditor
                 // get sentences in which page begin and end offsets are and use those to compute
                 // the new page begin and end offsets. required because annotation rendering will
                 // sometimes fail if offset in middle of a sentence
-                AnnotationFS beginSent = getSentence(cas, pageOffset.getBegin());
+                AnnotationFS beginSent = selectSentenceAt(cas, pageOffset.getBegin());
                 int begin = (beginSent != null) ? beginSent.getBegin() : pageOffset.getBegin();
-                AnnotationFS endSent = getSentence(cas, pageOffset.getEnd());
+                AnnotationFS endSent = selectSentenceAt(cas, pageOffset.getEnd());
                 int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
 
                 VDocument vdoc = render(cas, begin, end);
