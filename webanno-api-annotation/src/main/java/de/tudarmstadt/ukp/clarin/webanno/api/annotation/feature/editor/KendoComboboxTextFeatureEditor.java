@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static com.googlecode.wicket.kendo.ui.KendoUIBehavior.widget;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import org.apache.wicket.MarkupContainer;
@@ -34,7 +35,10 @@ import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 
 /**
@@ -66,9 +70,18 @@ public class KendoComboboxTextFeatureEditor
     private static final Logger LOG = LoggerFactory.getLogger(KendoComboboxTextFeatureEditor.class);
 
     public KendoComboboxTextFeatureEditor(String aId, MarkupContainer aItem,
-            IModel<FeatureState> aModel)
+            IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, aModel);
+        
+        AnnotationFeature feat = getModelObject().feature;
+        StringFeatureTraits traits = readFeatureTraits(feat);
+        
+        add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
+                // The key bindings are only visible when the label is also enabled, i.e. when the
+                // editor is used in a "normal" context and not e.g. in the keybindings 
+                // configuration panel
+                .add(visibleWhen(() -> getLabelComponent().isVisible())));
     }
 
     @Override
@@ -103,11 +116,9 @@ public class KendoComboboxTextFeatureEditor
                     LOG.trace("onInitialize() requesting datasource re-reading");
                     target.appendJavaScript(String.join("\n",
                             "try {",
-                            "  console.log('chugga');",
                             "  var $w = " + widget(this, ComboBoxBehavior.METHOD) + ";",
                             "  if ($w) {",
                             "    $w.dataSource.read();",
-                            "    console.log('wumba');",
                             "  }",
                             "}",
                             "catch(error) {",
