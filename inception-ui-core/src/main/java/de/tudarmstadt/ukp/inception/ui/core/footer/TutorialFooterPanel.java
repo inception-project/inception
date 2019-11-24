@@ -69,13 +69,15 @@ public class TutorialFooterPanel
     @Override
     public void onEvent(IEvent<?> aEvent)
     {
+    	//Error while saving recommender
         if (aEvent.getPayload() instanceof RecommenderSaveErrorEvent) {
             RecommenderSaveErrorEvent dEvent = (RecommenderSaveErrorEvent) aEvent.getPayload();
 
             AjaxRequestTarget target = dEvent.getTarget();
-            target.appendJavaScript("skipit()");
+            target.appendJavaScript("recommenderError()");
         }
 
+        //recommender got saved successfully
         if (aEvent.getPayload() instanceof RecommenderSavedEvent) {
             RecommenderSavedEvent dEvent = (RecommenderSavedEvent) aEvent.getPayload();
 
