@@ -38,6 +38,7 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
@@ -57,6 +58,7 @@ public class KeyBindingsConfigurationPanel
     private static final long serialVersionUID = -8294428032177255299L;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean AnnotationSchemaService schemaService;
     
     private final WebMarkupContainer keyBindingsContainer;
     private final IModel<List<KeyBinding>> keyBindings;
@@ -85,6 +87,9 @@ public class KeyBindingsConfigurationPanel
         AnnotationFeature feature = aModel.getObject();
         FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
         featureState = Model.of(new FeatureState(VID.NONE_ID, feature, null));
+        if (feature.getTagset() != null) {
+            featureState.getObject().tagset = schemaService.listTags(feature.getTagset());
+        }
         // We are adding only the focus component here because we do not want to display the label
         // which usually goes along with the feature editor. This assumes that there is a sensible
         // focus component... might not be the case for some multi-component editors.

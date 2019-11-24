@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -36,7 +37,10 @@ import org.apache.wicket.util.convert.IConverter;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 
 /**
@@ -70,11 +74,20 @@ public class KendoAutoCompleteTextFeatureEditor
     private final int maxResults;
     
     public KendoAutoCompleteTextFeatureEditor(String aId, MarkupContainer aItem,
-            IModel<FeatureState> aModel, int aMaxResults)
+            IModel<FeatureState> aModel, int aMaxResults, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, aModel);
-        
+
+        AnnotationFeature feat = getModelObject().feature;
+        StringFeatureTraits traits = readFeatureTraits(feat);
+
         maxResults = aMaxResults;
+        
+        add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
+                // The key bindings are only visible when the label is also enabled, i.e. when the
+                // editor is used in a "normal" context and not e.g. in the keybindings 
+                // configuration panel
+                .add(visibleWhen(() -> getLabelComponent().isVisible())));
     }
     
     @Override

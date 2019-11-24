@@ -18,11 +18,15 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
 
 /**
  * Traits for input field text features.
  */
-public class UimaStringTraits
+public class StringFeatureTraits
         implements Serializable
 {
     private static final long serialVersionUID = -8450181605003189055L;
@@ -30,8 +34,9 @@ public class UimaStringTraits
     private boolean multipleRows = false;
     private int collapsedRows = 1;
     private int expandedRows = 1;
+    private List<KeyBinding> keyBindings = new ArrayList<>();
     
-    public UimaStringTraits()
+    public StringFeatureTraits()
     {
         // Nothing to do
     }
@@ -64,5 +69,20 @@ public class UimaStringTraits
     public void setExpandedRows(int expandedRows)
     {
         this.expandedRows = expandedRows;
+    }
+
+    public List<KeyBinding> getKeyBindings()
+    {
+        return keyBindings;
+    }
+
+    public void setKeyBindings(List<KeyBinding> aKeyBindings)
+    {
+        if (aKeyBindings == null) {
+            keyBindings = new ArrayList<>();
+        }
+        else {
+            keyBindings = aKeyBindings;
+        }
     }
 }
