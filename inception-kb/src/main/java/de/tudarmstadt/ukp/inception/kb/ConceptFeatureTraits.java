@@ -21,6 +21,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
+
 /**
  * Traits for knowledge-base-related features.
  */

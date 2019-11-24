@@ -18,11 +18,13 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
@@ -34,6 +36,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -42,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
-import de.tudarmstadt.ukp.inception.kb.KeyBinding;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -98,7 +101,7 @@ public class ConceptFeatureTraitsEditor
         };
         
         form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
-                _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
+            _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
 
         form.add(
             new BootstrapSelect<>(MID_KNOWLEDGE_BASE, 
