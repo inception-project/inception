@@ -59,6 +59,7 @@ import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
@@ -833,6 +834,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().contains("tower"));
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
     {
@@ -1172,6 +1174,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().startsWith("barack"));
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
     {
@@ -1210,6 +1213,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {
