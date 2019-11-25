@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings;
 
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
@@ -35,7 +35,6 @@ public class KeyBindingTest
     @Test
     public void thatInvalidKeyBindingCanBeParsed()
     {
-        assertThatExceptionOfType(IllegalKeyComboException.class)
-                .isThrownBy(() -> new KeyBinding("foo bar", null).asKeyTypes());
+        assertThat(new KeyBinding("foo bar", null).isValid()).isFalse();
     }
 }
