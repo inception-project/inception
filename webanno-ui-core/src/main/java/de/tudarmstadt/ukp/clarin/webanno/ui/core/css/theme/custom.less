@@ -407,3 +407,11 @@ a.disabled {
 		border: 0px;
 	}
 }
+
+// Make sure Kendo icons show in input groups where the input groups are rendered with a 
+// z-index of 2
+.input-group {
+	.k-icon {
+		z-index: 3;
+	}
+}
