@@ -34,6 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -118,6 +119,7 @@ public class KnowledgeBaseSubPropertyLabelTest
         sut.destroy();
     }
     
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void thatChildConceptsLabel() throws IOException
     {
@@ -142,6 +144,7 @@ public class KnowledgeBaseSubPropertyLabelTest
                     .contains("Abele, Familie");
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void readInstance_ShouldReturnInstanceWithSubPropertyLabel() throws IOException
     {
