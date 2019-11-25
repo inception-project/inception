@@ -225,8 +225,7 @@ public class BratAnnotationEditor
                         if (paramId.isSynthetic()) {
                             Offsets offsets = getOffsetsFromRequest(request, cas, paramId);
                             extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, cas, paramId, action, offsets.getBegin(),
-                                    offsets.getEnd());
+                                    aTarget, cas, paramId, action);
                         }
                         else {
                             actionDoAction(aTarget, request, cas, paramId);
@@ -236,8 +235,7 @@ public class BratAnnotationEditor
                         if (paramId.isSynthetic()) {
                             Offsets offsets = getOffsetsFromRequest(request, cas, paramId);
                             extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, cas, paramId, action, offsets.getBegin(),
-                                    offsets.getEnd());
+                                    aTarget, cas, paramId, action);
                         }
                         else {
                             // Doing anything but selecting or creating a span annotation when a

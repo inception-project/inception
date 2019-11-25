@@ -101,13 +101,11 @@ public class AnnotationEditorExtensionRegistryImpl
     
     @Override
     public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction, int aBegin,
-            int aEnd)
+            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
         throws IOException, AnnotationException
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction,
-                    aBegin, aEnd);
+            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction);
         }
     }
     

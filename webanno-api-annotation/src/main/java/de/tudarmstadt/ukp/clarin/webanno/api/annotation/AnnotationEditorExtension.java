@@ -42,7 +42,7 @@ public interface AnnotationEditorExtension
      * Handle an action.
      */
     default void handleAction(AnnotationActionHandler panel, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID paramId, String aAction, int aBegin, int aEnd)
+            AjaxRequestTarget aTarget, CAS aCas, VID paramId, String aAction)
         throws AnnotationException, IOException
     {
         // Do nothing by default
