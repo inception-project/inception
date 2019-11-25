@@ -18,11 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ClassAttributeModifier;
@@ -112,32 +109,20 @@ public class KeyBindingsPanel
                 LambdaAjaxLink link = new LambdaAjaxLink("shortcut",
                     _target -> actionInvokeShortcut(_target, aItem.getModelObject()));
                 
-                try {
-                    KeyType[] keyCombo = aItem.getModelObject().asKeyTypes();
-                    link.add(new InputBehavior(keyCombo, EventType.click)
-                    {
-                        private static final long serialVersionUID = -413804179695231212L;
+                KeyType[] keyCombo = aItem.getModelObject().asKeyTypes();
+                link.add(new InputBehavior(keyCombo, EventType.click)
+                {
+                    private static final long serialVersionUID = -413804179695231212L;
 
-                        @Override
-                        protected Boolean getDisable_in_input()
-                        {
-                            return true;
-                        }
-                    });
-                    
-                    String htmlKeyCombo = Arrays.stream(keyCombo)
-                        .map(keyType -> keyType.getKeyCode().toUpperCase(Locale.US))
-                        .collect(Collectors.joining(" ", "<kbd>", "</kbd>"));
-                    
-                    aItem.add(new Label("keyCombo", htmlKeyCombo).setEscapeModelStrings(false));
-                }
-                catch (IllegalKeyComboException e) {
-                    // If the key combo is for some reason invalid (should not happen because we
-                    // validate it before it gets saved in the config panel) then we just skip
-                    // the key binding here - by hiding it.
-                    aItem.setVisible(false);
-                    aItem.add(new Label("keyCombo"));
-                }
+                    @Override
+                    protected Boolean getDisable_in_input()
+                    {
+                        return true;
+                    }
+                });
+                
+                aItem.add(new Label("keyCombo", aItem.getModelObject().asHtml())
+                        .setEscapeModelStrings(false));
                 
                 link.add(new Label("value", fs.renderFeatureValue(feature, value)));
                 aItem.add(link);

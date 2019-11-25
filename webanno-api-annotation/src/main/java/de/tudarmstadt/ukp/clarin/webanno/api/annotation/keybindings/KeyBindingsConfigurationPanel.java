@@ -17,10 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -47,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * Can be added to a feature support traits editor to configure key bindings.
@@ -97,25 +93,25 @@ public class KeyBindingsConfigurationPanel
         editor.getLabelComponent().setVisible(false);
         keyBindingsContainer.add(editor);
         
-        ListView<KeyBinding> keyBindingsList = new ListView<KeyBinding>("keyBindings", keyBindings)
+        keyBindingsContainer.add(createKeyBindingsList("keyBindings", keyBindings));
+    }
+    
+    private ListView<KeyBinding> createKeyBindingsList(String aId,
+            IModel<List<KeyBinding>> aKeyBindings)
+    {
+        return new ListView<KeyBinding>(aId, aKeyBindings)
         {
             private static final long serialVersionUID = 432136316377546825L;
 
             @Override
             protected void populateItem(ListItem<KeyBinding> aItem)
             {
+                AnnotationFeature feature = KeyBindingsConfigurationPanel.this.getModelObject();
+                FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+
                 KeyBinding keyBinding = aItem.getModelObject();
-                
-                try {
-                    KeyType[] keyCombo = keyBinding.asKeyTypes();
-                    String htmlKeyCombo = Arrays.stream(keyCombo)
-                            .map(keyType -> keyType.getKeyCode().toUpperCase(Locale.US))
-                            .collect(Collectors.joining(" ", "<kbd>", "</kbd>"));
-                    aItem.add(new Label("keyCombo", htmlKeyCombo).setEscapeModelStrings(false));
-                }
-                catch (IllegalKeyComboException e) {
-                    aItem.add(new Label("keyCombo", e.getMessage()));
-                }
+
+                aItem.add(new Label("keyCombo", keyBinding.asHtml()).setEscapeModelStrings(false));
 
                 aItem.add(
                         new Label("value", fs.renderFeatureValue(feature, keyBinding.getValue())));
@@ -123,7 +119,6 @@ public class KeyBindingsConfigurationPanel
                     _target -> removeKeyBinding(_target, aItem.getModelObject())));
             }
         };
-        keyBindingsContainer.add(keyBindingsList);    
     }
     
     public AnnotationFeature getModelObject()
@@ -154,7 +149,7 @@ public class KeyBindingsConfigurationPanel
         aTarget.add(keyBindingsContainer);
     }
     
-    private class KeyComboValidator
+    private static class KeyComboValidator
         implements IValidator<String>
     {
         private static final long serialVersionUID = 6697292531559511021L;
@@ -164,11 +159,8 @@ public class KeyBindingsConfigurationPanel
         {
             String keyCombo = aValidatable.getValue();
             KeyBinding keyBinding = new KeyBinding(keyCombo, null);
-            try {
-                keyBinding.asKeyTypes();
-            }
-            catch (IllegalKeyComboException e) {
-                aValidatable.error(new ValidationError(e.getMessage()));
+            if (!keyBinding.isValid()) {
+                aValidatable.error(new ValidationError("Invalid key combo: [" + keyCombo + "]"));
             }
         }
     }
