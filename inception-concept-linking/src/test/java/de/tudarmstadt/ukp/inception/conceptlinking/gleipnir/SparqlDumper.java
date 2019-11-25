@@ -66,13 +66,13 @@ public class SparqlDumper {
 
     @Test
     public void dumpSparqlFts() throws Exception {
-        KnowledgeBase kb = buildSkosFuseki();
-        // KnowledgeBase kb = buildWikidata();
+        // KnowledgeBase kb = buildSkosFuseki();
+        KnowledgeBase kb = buildWikidata();
 
         String mention = "$Mention";
         // mention = "$Mention";
 
-        Set<KBHandle> candidates = sut.generateCandidates(kb, null, ConceptFeatureValueType.INSTANCE, "", mention);
+        Set<KBHandle> candidates = sut.generateCandidates(kb, null, ConceptFeatureValueType.INSTANCE, "$query", mention);
 
 
         System.out.println(knowledgeBaseService.readInstance(kb, "$IRI"));
@@ -124,7 +124,7 @@ public class SparqlDumper {
         kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
         kb.setPropertyLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
         kb.setPropertyDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
-        kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
+        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
 
         kb.setType(RepositoryType.REMOTE);
         kb.setName("wikidata");
@@ -136,7 +136,7 @@ public class SparqlDumper {
         kb.setDefaultLanguage("en");
         kb.setMaxResults(1000);
 
-        RepositoryImplConfig config = knowledgeBaseService.getRemoteConfig("https://query.wikidata.org/sparql");
+        RepositoryImplConfig config = knowledgeBaseService.getRemoteConfig("http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql");
         knowledgeBaseService.registerKnowledgeBase(kb, config);
 
         return kb;

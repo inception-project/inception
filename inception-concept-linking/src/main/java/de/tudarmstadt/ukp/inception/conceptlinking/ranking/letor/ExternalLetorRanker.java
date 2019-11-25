@@ -105,7 +105,9 @@ public class ExternalLetorRanker
             result[rank] = aCandidates.get(i);
         }
 
-        return Arrays.asList(result);
+        List<KBHandle> kbHandles = Arrays.asList(result);
+
+        return kbHandles;
     }
 
     private String getCurrentUser() {

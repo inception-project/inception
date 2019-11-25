@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -48,6 +47,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEvent;
 
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
@@ -59,12 +59,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoi
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
+import de.tudarmstadt.ukp.inception.ui.kb.log.EntityLinkingSearchQueryEvent;
 
 /**
  * Component for editing knowledge-base-related features on annotations.
@@ -82,6 +86,7 @@ public class ConceptFeatureEditor
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean ConceptLinkingService clService;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
@@ -138,10 +143,20 @@ public class ConceptFeatureEditor
             int mentionBegin = aStateModel != null
                     ? aStateModel.getObject().getSelection().getBegin()
                     : -1;
-            
+            int mentionEnd = aStateModel != null
+                    ? aStateModel.getObject().getSelection().getEnd()
+                    : -1;
+
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
                     traits.getScope(), traits.getAllowedValueType(), aInput, mention, mentionBegin,
                     cas, feat.getProject());
+
+            Project project = aStateModel.getObject().getProject();
+            String username = aStateModel.getObject().getUser().getUsername();
+
+
+            ApplicationEvent event = new EntityLinkingSearchQueryEvent(this, project, username, aInput, aStateModel.getObject().getDocument(), mentionBegin, mentionEnd);
+            applicationEventPublisher.get().publishEvent(event);
         }
         catch (Exception e) {
             choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));
@@ -204,9 +219,9 @@ public class ConceptFeatureEditor
                 int end = selection.getEnd();
 
                 // Delete old preferences
-                for (AnnotationFS oldPreference : CasUtil.selectAt(cas, kbHandleType, begin, end)) {
-                    cas.removeFsFromIndexes(oldPreference);
-                }
+                // for (AnnotationFS oldPreference : CasUtil.selectAt(cas, kbHandleType, begin, end)) {
+                //    cas.removeFsFromIndexes(oldPreference);
+                // }
 
                 // Create new preferences
                 System.out.println("Begin: " + begin + " - End: " + end);
