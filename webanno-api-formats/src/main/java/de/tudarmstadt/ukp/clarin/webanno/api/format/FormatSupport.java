@@ -40,7 +40,7 @@ public interface FormatSupport
     String getName();
 
     /**
-     * @return whether the format can be reader (i.e. {@link #getReaderDescription()} is
+     * @return whether the format can be reader (i.e. {@link #getReaderDescription} is
      *         implemented).
      */
     default boolean isReadable()
@@ -49,7 +49,7 @@ public interface FormatSupport
     }
 
     /**
-     * @return whether the format can be written (i.e. {@link #getWriterDescription()} is
+     * @return whether the format can be written (i.e. {@link #getWriterDescription} is
      *         implemented).
      */
     default boolean isWritable()
