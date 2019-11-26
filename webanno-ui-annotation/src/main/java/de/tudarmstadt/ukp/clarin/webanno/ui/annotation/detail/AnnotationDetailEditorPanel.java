@@ -1363,16 +1363,19 @@ public abstract class AnnotationDetailEditorPanel
             if (featureState != null) {
                 state.getFeatureStates().add(featureState);
 
-                // verification to check whether constraints exist for this project or NOT
-                if (state.getConstraints() != null
-                        && state.getSelection().getAnnotation().isSet()) {
-                    // indicator.setRulesExist(true);
-                    populateTagsBasedOnRules(aCas, featureState);
-                }
-                else {
-                    // indicator.setRulesExist(false);
-                    featureState.tagset = annotationService
-                            .listTags(featureState.feature.getTagset());
+                // Populate tagsets if necessary
+                if (featureState.feature.getTagset() != null) {
+                    // verification to check whether constraints exist for this project or NOT
+                    if (state.getConstraints() != null
+                            && state.getSelection().getAnnotation().isSet()) {
+                        // indicator.setRulesExist(true);
+                        populateTagsBasedOnRules(aCas, featureState);
+                    }
+                    else {
+                        // indicator.setRulesExist(false);
+                        featureState.tagset = annotationService
+                                .listTags(featureState.feature.getTagset());
+                    }
                 }
             }
         }
