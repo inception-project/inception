@@ -57,7 +57,13 @@ NOTE: Since the character offsets are based on UTF-16 and the TSV file itself is
 
 == File Header
 
-WebAnno TSV 3.2 file starts with the following header marker
+the WebAnno TSV 3.2 file header consists of two main parts: 
+
+* the format indicator
+* the column declarations
+
+After the header, there must be **two** empty lines before the body part containing the annotations
+may start. 
 
 .Example: format in file header
 [source,text]
