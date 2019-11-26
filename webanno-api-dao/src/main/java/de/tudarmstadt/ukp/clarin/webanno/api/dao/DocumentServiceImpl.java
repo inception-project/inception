@@ -719,27 +719,40 @@ public class DocumentServiceImpl
     }
     
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional
     public boolean isAnnotationFinished(SourceDocument aDocument, User aUser)
     {
-        try {
-            AnnotationDocument annotationDocument = entityManager
-                    .createQuery(
-                            "FROM AnnotationDocument WHERE document = :document AND "
-                                    + "user =:user", AnnotationDocument.class)
-                    .setParameter("document", aDocument).setParameter("user", aUser.getUsername())
-                    .getSingleResult();
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-        // User even didn't start annotating
-        catch (NoResultException e) {
-            return false;
-        }
+        String query = String.join("\n",
+                "SELECT COUNT(*) FROM AnnotationDocument",
+                "WHERE document = :document",
+                "  AND user     = :user",
+                "  AND state    = :state");
+        
+        return entityManager.createQuery(query, Long.class)
+                .setParameter("document", aDocument)
+                .setParameter("user", aUser.getUsername())
+                .setParameter("state", AnnotationDocumentState.FINISHED)
+                .getSingleResult() > 0;
+        
+//        try {
+//            AnnotationDocument annotationDocument = entityManager
+//                    .createQuery(
+//                            "FROM AnnotationDocument WHERE document = :document AND "
+//                                    + "user =:user", AnnotationDocument.class)
+//                    .setParameter("document", aDocument)
+//                    .setParameter("user", aUser.getUsername())
+//                    .getSingleResult();
+//            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+//                return true;
+//            }
+//            else {
+//                return false;
+//            }
+//        }
+//        // User even didn't start annotating
+//        catch (NoResultException e) {
+//            return false;
+//        }
     }
 
     @Override
