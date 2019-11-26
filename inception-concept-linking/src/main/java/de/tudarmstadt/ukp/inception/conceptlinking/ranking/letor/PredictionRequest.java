@@ -30,14 +30,16 @@ public class PredictionRequest {
     private final String user;
     private final  String mention;
     private final  String context;
+    private final String query;
     private final List<KBHandle> candidates;
 
-    public PredictionRequest(String aUser, String aMention, String aContext,
+    public PredictionRequest(String aUser, String aMention, String aContext, String aQuery,
                              List<KBHandle> aCandidates)
     {
         user = aUser;
         mention = aMention;
         context = aContext;
+        query = aQuery;
         candidates = aCandidates;
     }
 
@@ -48,6 +50,7 @@ public class PredictionRequest {
         result.put("user", user);
         result.put("mention", mention);
         result.put("context", context);
+        result.put("query", query);
 
         ArrayNode candidatesNode = result.putArray("candidates");
 

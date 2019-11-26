@@ -23,11 +23,7 @@ import static java.util.Collections.unmodifiableList;
 
 import java.io.File;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ClassUtils;
@@ -155,7 +151,7 @@ public class ConceptLinkingServiceImpl
         final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 1;
         
         long startTime = currentTimeMillis();
-        Set<KBHandle> result = new HashSet<>();
+        Set<KBHandle> result = new LinkedHashSet<>();
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             // Try whether the query is an IRI, if yes, search for it matching exactly

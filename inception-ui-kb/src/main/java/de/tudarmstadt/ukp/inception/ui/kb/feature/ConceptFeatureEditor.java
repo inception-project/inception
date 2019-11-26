@@ -83,6 +83,8 @@ public class ConceptFeatureEditor
     private FormComponent focusComponent;
     private IriInfoBadge iriBadge;
 
+    private String cachedQuery;
+
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean ConceptLinkingService clService;
@@ -131,6 +133,8 @@ public class ConceptFeatureEditor
         if (aInput == null) {
             return emptyList();
         }
+
+        cachedQuery = aInput;
         
         List<KBHandle> choices;
         try {
@@ -224,6 +228,7 @@ public class ConceptFeatureEditor
                 Feature labelFeature = kbHandleType.getFeatureByBaseName("label");
                 Feature descriptionFeature = kbHandleType.getFeatureByBaseName("description");
                 Feature rankFeature = kbHandleType.getFeatureByBaseName("rank");
+                Feature queryFeature = kbHandleType.getFeatureByBaseName("query");
 
                 Selection selection = aStateModel.getObject().getSelection();
                 int begin = selection.getBegin();
@@ -246,6 +251,7 @@ public class ConceptFeatureEditor
                     preference.setStringValue(labelFeature, candidate.getName());
                     preference.setStringValue(descriptionFeature, candidate.getDescription());
                     preference.setIntValue(rankFeature, i);
+                    preference.setStringValue(queryFeature, cachedQuery);
 
                     cas.addFsToIndexes(preference);
                 }

@@ -44,7 +44,7 @@ public class ExternalLetorRanker
     implements Ranker
 {
 
-    private static final String URL = "http://blinky:5000/rank";
+    private static final String URL = "http://localhost:5000/rank";
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
@@ -58,7 +58,7 @@ public class ExternalLetorRanker
 
         String context = getContext(aCas, aBeginOffset);
 
-        PredictionRequest request = new PredictionRequest(getCurrentUser(), aMention, context, unsortedCandidates);
+        PredictionRequest request = new PredictionRequest(getCurrentUser(), aMention, context, aQuery, unsortedCandidates);
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
 

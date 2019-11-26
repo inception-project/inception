@@ -240,7 +240,7 @@ public class ExternalRecommender
         return new Metadata(
             layer.getName(),
             recommender.getFeature().getName(),
-            casMetadata.getProjectId(),
+            casMetadata.getProjectName(),
             layer.getAnchoringMode().getId(),
             layer.isCrossSentence()
         );

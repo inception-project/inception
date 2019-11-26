@@ -306,6 +306,7 @@ public class ConceptFeatureSupport
             kbHandle.addFeature("label", "", CAS.TYPE_NAME_STRING);
             kbHandle.addFeature("description", "", CAS.TYPE_NAME_STRING);
             kbHandle.addFeature("rank", "", CAS.TYPE_NAME_INTEGER);
+            kbHandle.addFeature("query", "", CAS.TYPE_NAME_STRING);
         }
     }
     

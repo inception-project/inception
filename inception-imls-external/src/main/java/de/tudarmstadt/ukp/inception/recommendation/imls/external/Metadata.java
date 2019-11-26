@@ -23,13 +23,13 @@ public class Metadata {
 
     private final String layer;
     private final String feature;
-    private final long projectId;
+    private final String projectId;
     private final String anchoringMode;
     private final boolean crossSentence;
 
     public Metadata(@JsonProperty(value = "layer", required = true) String aLayer,
                     @JsonProperty(value = "feature", required = true) String aFeature,
-                    @JsonProperty(value = "projectId", required = true) long aProjectId,
+                    @JsonProperty(value = "projectId", required = true) String aProjectId,
                     @JsonProperty(value = "anchoringMode", required = true) String aAnchoringMode,
                     @JsonProperty(value = "crossSentence", required = true) boolean aCrossSentence)
     {
@@ -50,7 +50,7 @@ public class Metadata {
         return feature;
     }
 
-    public long getProjectId()
+    public String getProjectId()
     {
         return projectId;
     }
