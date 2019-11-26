@@ -60,7 +60,7 @@ include::{include-dir}remote-api-webhooks.adoc[leveloffset=+1]
 
 
 
-include::{include-dir}settings.adoc[leveloffset=+1]
+include::{include-dir}settings.adoc[]
 
 include::{include-dir}settings_general.adoc[leveloffset=+1]
 
