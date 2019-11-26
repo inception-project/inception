@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
@@ -118,6 +119,10 @@ public class RecommendationSpanRenderer
 
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
+        
+        // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
+        Map<String, AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer)
+            .stream().collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
         for (SuggestionGroup suggestion : groups) {
             Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
@@ -193,8 +198,7 @@ public class RecommendationSpanRenderer
 
                     // Only necessary for creating the first
                     if (first) {
-                        AnnotationFeature feature = aAnnotationService
-                            .getFeature(ao.getFeature(), layer);
+                        AnnotationFeature feature = features.get(ao.getFeature());
                         // Retrieve the UI display label for the given feature value
                         FeatureSupport featureSupport = aFsRegistry.getFeatureSupport(feature);
                         String annotation = featureSupport.renderFeatureValue(feature,
