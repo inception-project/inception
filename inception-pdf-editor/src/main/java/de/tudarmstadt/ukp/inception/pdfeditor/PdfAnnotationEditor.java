@@ -230,8 +230,7 @@ public class PdfAnnotationEditor
                 AnnotatorState state = getModelObject();
                 if (paramId.isSynthetic()) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                        aTarget, aCas, paramId, "spanOpenDialog", offset.getBegin(),
-                        offset.getEnd());
+                        aTarget, aCas, paramId, "spanOpenDialog");
                 } else if (state.isSlotArmed()) {
                     // When filling a slot, the current selection is *NOT* changed. The
                     // Span annotation which owns the slot that is being filled remains
@@ -340,7 +339,7 @@ public class PdfAnnotationEditor
                     PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, pdfExtractFile);
                 if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
-                        aCas, paramId, "doAction", docOffset.getBegin(), docOffset.getEnd());
+                        aCas, paramId, "doAction");
                 } else {
                     handleError("Unable to delete recommendation: No match was found", aTarget);
                 }
