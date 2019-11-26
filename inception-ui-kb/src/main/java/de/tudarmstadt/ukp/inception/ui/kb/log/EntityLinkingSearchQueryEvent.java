@@ -35,9 +35,10 @@ public class EntityLinkingSearchQueryEvent
     private final SourceDocument sourceDocument;
     private final int begin;
     private final int end;
+    private final int numberOfCandidates;
 
     public EntityLinkingSearchQueryEvent(Object aSource, Project aProject, String aUser, String aQuery,
-            SourceDocument aSourceDocument, int aBegin, int aEnd)
+            SourceDocument aSourceDocument, int aBegin, int aEnd, int aNumberOfCandidates)
     {
         super(aSource);
 
@@ -47,6 +48,7 @@ public class EntityLinkingSearchQueryEvent
         sourceDocument = aSourceDocument;
         begin = aBegin;
         end = aEnd;
+        numberOfCandidates = aNumberOfCandidates;
     }
 
     public String getUser()
@@ -78,6 +80,10 @@ public class EntityLinkingSearchQueryEvent
 
     public int getEnd() {
         return end;
+    }
+
+    public int getNumberOfCandidates() {
+        return numberOfCandidates;
     }
 
     @Override

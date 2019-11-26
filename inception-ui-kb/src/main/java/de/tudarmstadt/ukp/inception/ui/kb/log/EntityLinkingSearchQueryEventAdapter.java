@@ -60,6 +60,7 @@ public class EntityLinkingSearchQueryEventAdapter
             details.documentId = aEvent.getSourceDocument().getId();
             details.begin = aEvent.getBegin();
             details.end = aEvent.getEnd();
+            details.numberOfCandidates = aEvent.getNumberOfCandidates();
 
             return JSONUtil.toJsonString(details);
         }
@@ -75,5 +76,6 @@ public class EntityLinkingSearchQueryEventAdapter
         public Long documentId;
         public int begin;
         public int end;
+        public int numberOfCandidates;
     }
 }

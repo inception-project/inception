@@ -170,7 +170,7 @@ public class ConceptFeatureEditor
             String username = aStateModel.getObject().getUser().getUsername();
 
 
-            ApplicationEvent event = new EntityLinkingSearchQueryEvent(this, project, username, aInput, aStateModel.getObject().getDocument(), mentionBegin, mentionEnd);
+            ApplicationEvent event = new EntityLinkingSearchQueryEvent(this, project, username, aInput, aStateModel.getObject().getDocument(), mentionBegin, mentionEnd, choices.size());
             applicationEventPublisher.get().publishEvent(event);
         }
         catch (Exception e) {
