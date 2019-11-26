@@ -138,7 +138,7 @@ public class BratRendererTest
         layerRegistry.init();
         
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
-        when(schemaService.listAnnotationFeature(any(AnnotationLayer.class)))
+        when(schemaService.listAnnotationFeature(any(Project.class)))
                 .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
