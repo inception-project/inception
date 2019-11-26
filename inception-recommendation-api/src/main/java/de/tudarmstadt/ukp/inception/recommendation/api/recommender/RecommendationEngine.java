@@ -22,6 +22,10 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -152,4 +156,9 @@ public abstract class RecommendationEngine
     {
         return getPredictedType(aCas).getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
     }
+    
+    /**
+     * Method supporting export the recommender object
+     */
+    public abstract void export(RecommenderContext aContext, OutputStream aTarget) throws IOException;
 }

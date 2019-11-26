@@ -25,10 +25,26 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,8 +54,10 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.uima.cas.impl.CASImpl;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -61,6 +79,11 @@ public class StringMatchingRecommender
     extends RecommendationEngine
 {
     public static final Key<Trie<DictEntry>> KEY_MODEL = new Key<>("model");
+    public static final Key<String[]> KEY_TAGSET = new Key<>("labelDict");
+
+    private @SpringBean RecommendationService recommendationService;
+    private @SpringBean UserDao userService;
+
 
     private static final String UNKNOWN_LABEL = "unknown";
     private static final String NO_LABEL = "O";
@@ -83,6 +106,53 @@ public class StringMatchingRecommender
 
         traits = aTraits;
         gazeteerService = aGazeteerService;
+    }
+    
+    @Override
+    public void export(RecommenderContext aContext, OutputStream aTarget) throws IOException
+    {
+
+        aContext.get(KEY_MODEL);
+        aContext.get(KEY_TAGSET);
+
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
+
+        User user = userService.getCurrentUser();
+
+        CAS cas = new CASImpl();
+
+        List<CAS> casList=new ArrayList<>();
+        casList.add(cas);
+
+        try {
+            train(aContext, casList );
+        }
+        catch (RecommendationException e) {
+            e.printStackTrace();
+        }
+
+        Predictions predictions = recommendationService.getPredictions(user, new Project());
+
+        // TODO #176 use the document Id once it it available in the CAS
+        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
+                .orElse(getDocumentTitle(cas));
+
+        // Extract all predictions for the current document / recommender
+        List<AnnotationSuggestion> suggestions = predictions.getPredictions().entrySet().stream()
+                .filter(f -> f.getKey().getDocumentName().equals(sourceDocumentName))
+                .filter(f -> f.getKey().getRecommenderId() == this.recommender.getId().longValue())
+                .map(Map.Entry::getValue)
+                .filter(s -> s.isVisible())
+                .collect(Collectors.toList());
+        
+        try {
+        	ObjectOutputStream objos= new ObjectOutputStream(new FileOutputStream("D://recommender.txt"));
+            objos.writeObject(this);
+            objos.close();
+        } catch(FileNotFoundException e){
+        	e.printStackTrace();
+        }
+
     }
 
     @Override
