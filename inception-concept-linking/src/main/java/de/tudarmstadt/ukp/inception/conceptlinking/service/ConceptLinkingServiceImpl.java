@@ -278,7 +278,7 @@ public class ConceptLinkingServiceImpl
                 aMention);
         return rankCandidates(aQuery, aMention, candidates, aCas, aMentionBeginOffset);
     }
-    
+
     @Override
     public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
             CAS aCas, int aBegin)
