@@ -119,16 +119,16 @@ public class RecommendationEditorExtension
 
     @Override
     public void handleAction(AnnotationActionHandler aActionHandler, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID aVID, String aAction, int aBegin, int aEnd)
+            AjaxRequestTarget aTarget, CAS aCas, VID aVID, String aAction)
         throws IOException, AnnotationException
     {
         // Create annotation
         if (SpanAnnotationResponse.is(aAction)) {
-            actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, aVID, aBegin, aEnd);
+            actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
         // Reject annotation
         else if (DoActionResponse.is(aAction)) {
-            actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID, aBegin, aEnd);
+            actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
     }
     
@@ -144,8 +144,7 @@ public class RecommendationEditorExtension
      * </ul>
      */
     private void actionAcceptRecommendation(AnnotationActionHandler aActionHandler,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID, int aBegin,
-            int aEnd)
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
         throws AnnotationException, IOException
     {
         SourceDocument document = aState.getDocument();
@@ -175,7 +174,8 @@ public class RecommendationEditorExtension
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         // panel
-        aState.getSelection().selectSpan(new VID(address), aCas, aBegin, aEnd);
+        aState.getSelection().selectSpan(new VID(address), aCas, suggestion.getBegin(),
+                suggestion.getEnd());
         aActionHandler.actionSelect(aTarget, aCas);            
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
@@ -203,8 +203,7 @@ public class RecommendationEditorExtension
      * </ul>
      */
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID, int aBegin,
-            int aEnd)
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
         throws AnnotationException
     {
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
@@ -237,9 +236,9 @@ public class RecommendationEditorExtension
         aActionHandler.actionSelect(aTarget, aCas);
         
         // Send an application event that the suggestion has been rejected
-        applicationEventPublisher.publishEvent(
-                new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(),
-                        aBegin, aEnd, suggestion.getCoveredText(), feature, suggestion.getLabel()));
+        applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, document,
+                aState.getUser().getUsername(), suggestion.getBegin(), suggestion.getEnd(),
+                suggestion.getCoveredText(), feature, suggestion.getLabel()));
 
         // Send a UI event that the suggestion has been rejected
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,

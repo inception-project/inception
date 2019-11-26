@@ -25,7 +25,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.MarkupContainer;
@@ -47,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -83,6 +83,15 @@ public class ConceptFeatureEditor
         add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
                 getCandidates(aStateModel, aHandler, _query)));
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
+        
+        AnnotationFeature feat = getModelObject().feature;
+        ConceptFeatureTraits traits = readFeatureTraits(feat);
+        
+        add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
+                // The key bindings are only visible when the label is also enabled, i.e. when the
+                // editor is used in a "normal" context and not e.g. in the keybindings 
+                // configuration panel
+                .add(visibleWhen(() -> getLabelComponent().isVisible())));
     }
 
     @Override
@@ -95,9 +104,11 @@ public class ConceptFeatureEditor
     
     private String iriTooltipValue()
     {
-        return Optional.ofNullable((KBHandle) getModelObject().value)
+        return getModel().map(FeatureState::getValue)
+                .map(value -> (KBHandle) value)
                 .map(KBHandle::getIdentifier)
-                .orElse("");
+                .orElse("")
+                .getObject();
     }
 
     private List<KBHandle> getCandidates(IModel<AnnotatorState> aStateModel,
