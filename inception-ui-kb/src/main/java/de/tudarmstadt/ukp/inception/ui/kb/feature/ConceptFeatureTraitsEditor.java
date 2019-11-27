@@ -31,12 +31,13 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -46,9 +47,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
@@ -75,7 +74,7 @@ public class ConceptFeatureTraitsEditor
 
     private String featureSupportId;
     private IModel<AnnotationFeature> feature;
-    private IModel<Traits> traits;
+    private CompoundPropertyModel<Traits> traits;
     
     public ConceptFeatureTraitsEditor(String aId, ConceptFeatureSupport aFS,
             IModel<AnnotationFeature> aFeatureModel)
@@ -87,9 +86,9 @@ public class ConceptFeatureTraitsEditor
         // when required.
         featureSupportId = aFS.getId();
         feature = aFeatureModel;
-        traits = Model.of(readTraits());
+        traits = CompoundPropertyModel.of(readTraits());
 
-        Form<Traits> form = new Form<Traits>(MID_FORM, CompoundPropertyModel.of(traits))
+        Form<Traits> form = new Form<Traits>(MID_FORM, traits)
         {
             private static final long serialVersionUID = -3109239605783291123L;
 
@@ -101,8 +100,8 @@ public class ConceptFeatureTraitsEditor
             }
         };
         
-        form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE, this::listSearchResults)
-                .setOutputMarkupPlaceholderTag(true));
+        form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
+            _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
 
         form.add(
             new BootstrapSelect<>(MID_KNOWLEDGE_BASE, 
@@ -117,6 +116,8 @@ public class ConceptFeatureTraitsEditor
         form.add(new DisabledKBWarning("disabledKBWarning", feature));
         add(form);
 
+        add(new KeyBindingsConfigurationPanel("keyBindings", aFeatureModel,
+                traits.bind("keyBindings")));
     }
     
     private void refresh(AjaxRequestTarget aTarget)
@@ -135,16 +136,16 @@ public class ConceptFeatureTraitsEditor
         }
 
         // Use the concept from a particular knowledge base
-        Optional<KBConcept> scope;
+        Optional<KBHandle> scope;
         if (aKB != null) {
-            scope = kbService.readConcept(aKB, aIdentifier, true);
+            scope = kbService.readHandle(aKB, aIdentifier);
         }
         // Use the concept from any knowledge base (leave KB unselected)
         else {
-            scope = kbService.readConcept(feature.getObject().getProject(), aIdentifier);
+            scope = kbService.readHandle(feature.getObject().getProject(), aIdentifier);
         }
 
-        return scope.map(KBObject::toKBHandle).orElse(null);
+        return scope.orElse(null);
     }
     
     /**
@@ -173,6 +174,8 @@ public class ConceptFeatureTraitsEditor
         }
         
         result.setScope(loadConcept(result.getKnowledgeBase(), t.getScope()));
+        
+        result.setKeyBindings(t.getKeyBindings());
 
         return result;
     }
@@ -194,7 +197,8 @@ public class ConceptFeatureTraitsEditor
         }
 
         t.setAllowedValueType(traits.getObject().allowedValueType);
-
+        t.setKeyBindings(traits.getObject().getKeyBindings());
+        
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
     
@@ -216,7 +220,7 @@ public class ConceptFeatureTraitsEditor
      * Search for Entities in the current knowledge base based on a typed string. Use full text
      * search if it is available. Returns a sorted/ranked list of KBHandles
      */
-    private List<KBHandle> listSearchResults(String aTypedString)
+    private List<KBHandle> listSearchResults(String aTypedString, ConceptFeatureValueType aType)
     {
         if (StringUtils.isBlank(aTypedString)) {
             return Collections.emptyList();
@@ -224,7 +228,7 @@ public class ConceptFeatureTraitsEditor
         
         Traits t = traits.getObject();
         return conceptLinkingService.getLinkingInstancesInKBScope(
-                t.knowledgeBase != null ? t.knowledgeBase.getRepositoryId() : null, null, CONCEPT,
+                t.knowledgeBase != null ? t.knowledgeBase.getRepositoryId() : null, null, aType,
                 aTypedString, null, -1, null, feature.getObject().getProject());
     }
 
@@ -240,8 +244,8 @@ public class ConceptFeatureTraitsEditor
         private KnowledgeBase knowledgeBase;
         private KBHandle scope;
         private ConceptFeatureValueType allowedValueType;
+        private List<KeyBinding> keyBindings;
 
-        @SuppressWarnings("unused")
         public KBHandle getScope()
         {
             return scope;
@@ -252,7 +256,6 @@ public class ConceptFeatureTraitsEditor
             scope = aScope;
         }
 
-        @SuppressWarnings("unused")
         public KnowledgeBase getKnowledgeBase()
         {
             return knowledgeBase;
@@ -263,12 +266,25 @@ public class ConceptFeatureTraitsEditor
             knowledgeBase = aKnowledgeBase;
         }
 
-        public ConceptFeatureValueType getAllowedValueType() {
+        @SuppressWarnings("unused")
+        public ConceptFeatureValueType getAllowedValueType()
+        {
             return allowedValueType;
         }
 
-        public void setAllowedValueType(ConceptFeatureValueType aAllows) {
+        public void setAllowedValueType(ConceptFeatureValueType aAllows)
+        {
             allowedValueType = aAllows;
+        }
+
+        public List<KeyBinding> getKeyBindings()
+        {
+            return keyBindings;
+        }
+
+        public void setKeyBindings(List<KeyBinding> aKeyBindings)
+        {
+            keyBindings = aKeyBindings;
         }
     }
 }

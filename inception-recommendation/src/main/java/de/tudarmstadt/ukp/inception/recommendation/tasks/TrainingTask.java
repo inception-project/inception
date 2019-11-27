@@ -67,9 +67,13 @@ public class TrainingTask
     private @Autowired RecommendationService recommendationService;
     private @Autowired SchedulingService schedulingService;
 
-    public TrainingTask(User aUser, Project aProject, String aTrigger)
+    private final SourceDocument currentDocument;
+
+    public TrainingTask(User aUser, Project aProject, String aTrigger,
+                        SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
+        currentDocument = aCurrentDocument;
     }
     
     @Override
@@ -204,6 +208,8 @@ public class TrainingTask
                     ctx.close();
                     recommendationService.putContext(user, recommender, ctx);
                 }
+                // Catching Throwable is intentional here as we want to continue the execution
+                // even if a particular recommender fails.
                 catch (Throwable e) {
                     log.error("[{}][{}][{}]: Training failed ({} ms)", getId(),
                             user.getUsername(), recommender.getName(),
@@ -219,7 +225,7 @@ public class TrainingTask
         }
         
         schedulingService.enqueue(new PredictionTask(user, getProject(),
-                String.format("TrainingTask %s complete", getId())));
+                String.format("TrainingTask %s complete", getId()), currentDocument));
     }
 
     private List<TrainingDocument> readCasses(Project aProject, User aUser)

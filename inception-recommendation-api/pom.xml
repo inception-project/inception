@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.13.0-SNAPSHOT</version>
+    <version>0.14.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-recommendation-api</artifactId>
   <name>INCEpTION - Recommendation - API</name>
@@ -68,6 +68,10 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-util</artifactId>
     </dependency>
 
     <dependency>
