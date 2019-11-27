@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer.convertToDocumentOffset;
 
 import java.io.File;
 import java.io.IOException;
@@ -149,9 +151,9 @@ public class PdfAnnotationEditor
                 // get sentences in which page begin and end offsets are and use those to compute
                 // the new page begin and end offsets. required because annotation rendering will
                 // sometimes fail if offset in middle of a sentence
-                AnnotationFS beginSent = getSentence(cas, pageOffset.getBegin());
+                AnnotationFS beginSent = selectSentenceAt(cas, pageOffset.getBegin());
                 int begin = (beginSent != null) ? beginSent.getBegin() : pageOffset.getBegin();
-                AnnotationFS endSent = getSentence(cas, pageOffset.getEnd());
+                AnnotationFS endSent = selectSentenceAt(cas, pageOffset.getEnd());
                 int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
 
                 VDocument vdoc = render(cas, begin, end);
@@ -185,29 +187,29 @@ public class PdfAnnotationEditor
                 + "Did you accidentally marked text when switching documents?", aTarget);
             return;
         }
-        try
-        {
+        
+        try {
             Offset offset = new Offset(aParams);
-            Offset docOffset =
-                PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, pdfExtractFile);
+            Offset docOffset = convertToDocumentOffset(offset, documentModel, pdfExtractFile);
             AnnotatorState state = getModelObject();
             if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                 if (state.isSlotArmed()) {
                     // When filling a slot, the current selection is *NOT* changed. The
                     // Span annotation which owns the slot that is being filled remains
                     // selected!
-                    getActionHandler().actionFillSlot(
-                        aTarget, aCas, docOffset.getBegin(), docOffset.getEnd(), VID.NONE_ID);
-                } else {
+                    getActionHandler().actionFillSlot(aTarget, aCas, docOffset.getBegin(),
+                            docOffset.getEnd(), NONE_ID);
+                }
+                else {
                     state.getSelection().selectSpan(aCas, docOffset.getBegin(), docOffset.getEnd());
                     getActionHandler().actionCreateOrUpdate(aTarget, aCas);
                 }
-            } else {
+            }
+            else {
                 handleError("Unable to create span annotation: No match was found", aTarget);
             }
         }
-        catch (IOException | AnnotationException e)
-        {
+        catch (IOException | AnnotationException e) {
             handleError("Unable to create span annotation", e, aTarget);
         }
     }
@@ -216,39 +218,42 @@ public class PdfAnnotationEditor
         AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
     {
         VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
-        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, paramId.getId());
-        Offset offset = new Offset(fs.getBegin(), fs.getEnd());
-        selectSpanAnnotation(aTarget, paramId, offset, aCas);
+        selectSpanAnnotation(aTarget, paramId, aCas);
     }
     
     private void selectSpanAnnotation(
-        AjaxRequestTarget aTarget, VID paramId, Offset offset, CAS aCas)
+        AjaxRequestTarget aTarget, VID paramId, CAS aCas)
     {
-        try
-        {
+        try {
+            if (paramId.isSynthetic()) {
+                extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
+                        aCas, paramId, "spanOpenDialog");
+                return;
+            }
+
+            AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, paramId.getId());
+            Offset offset = new Offset(fs.getBegin(), fs.getEnd());
+
             if (offset.getBegin() > -1 && offset.getEnd() > -1) {
                 AnnotatorState state = getModelObject();
-                if (paramId.isSynthetic()) {
-                    extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                        aTarget, aCas, paramId, "spanOpenDialog", offset.getBegin(),
-                        offset.getEnd());
-                } else if (state.isSlotArmed()) {
+                if (state.isSlotArmed()) {
                     // When filling a slot, the current selection is *NOT* changed. The
                     // Span annotation which owns the slot that is being filled remains
                     // selected!
                     getActionHandler().actionFillSlot(aTarget, aCas, offset.getBegin(),
-                        offset.getEnd(), paramId);
-                } else {
+                            offset.getEnd(), paramId);
+                }
+                else {
                     state.getSelection().selectSpan(paramId, aCas, offset.getBegin(),
                             offset.getEnd());
                     getActionHandler().actionSelect(aTarget, aCas);
                 }
-            } else {
+            }
+            else {
                 handleError("Unable to select span annotation: No match was found", aTarget);
             }
         }
-        catch (AnnotationException | IOException e)
-        {
+        catch (AnnotationException | IOException e) {
             handleError("Unable to select span annotation", e, aTarget);
         }
     }
@@ -306,24 +311,22 @@ public class PdfAnnotationEditor
             AnnotatorState state = getModelObject();
             Selection selection = state.getSelection();
             VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
-    
+
             // HACK: If an arc was clicked that represents a link feature, then
             // open the associated span annotation instead.
             if (paramId.isSlotSet()) {
                 paramId = new VID(paramId.getId());
-                Offset offset = new Offset(originFs.getBegin(), originFs.getEnd());
-                selectSpanAnnotation(aTarget, paramId, offset, aCas);
-            } else {
-                selection.selectArc(paramId,
-                    originFs, targetFs);
-    
+                selectSpanAnnotation(aTarget, paramId, aCas);
+            }
+            else {
+                selection.selectArc(paramId, originFs, targetFs);
+
                 if (selection.getAnnotation().isSet()) {
                     getActionHandler().actionSelect(aTarget, aCas);
                 }
             }
         }
-        catch (AnnotationException e)
-        {
+        catch (AnnotationException e) {
             handleError("Unable to select relation annotation", e, aTarget);
         }
     }
@@ -340,7 +343,7 @@ public class PdfAnnotationEditor
                     PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, pdfExtractFile);
                 if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
-                        aCas, paramId, "doAction", docOffset.getBegin(), docOffset.getEnd());
+                        aCas, paramId, "doAction");
                 } else {
                     handleError("Unable to delete recommendation: No match was found", aTarget);
                 }
@@ -390,21 +393,27 @@ public class PdfAnnotationEditor
                 getModelObject().clearArmedSlot();
             }
 
-            switch (action)
-            {
-            case CREATE_SPAN: createSpanAnnotation(aTarget, aParams, cas);
+            switch (action) {
+            case CREATE_SPAN:
+                createSpanAnnotation(aTarget, aParams, cas);
                 break;
-            case SELECT_SPAN: selectSpanAnnotation(aTarget, aParams, cas);
+            case SELECT_SPAN:
+                selectSpanAnnotation(aTarget, aParams, cas);
                 break;
-            case CREATE_RELATION: createRelationAnnotation(aTarget, aParams, cas);
+            case CREATE_RELATION:
+                createRelationAnnotation(aTarget, aParams, cas);
                 break;
-            case SELECT_RELATION: selectRelationAnnotation(aTarget, aParams, cas);
+            case SELECT_RELATION:
+                selectRelationAnnotation(aTarget, aParams, cas);
                 break;
-            case DELETE_RECOMMENDATION: deleteRecommendation(aTarget, aParams, cas);
+            case DELETE_RECOMMENDATION:
+                deleteRecommendation(aTarget, aParams, cas);
                 break;
-            case GET_ANNOTATIONS: getAnnotations(aTarget, aParams);
+            case GET_ANNOTATIONS:
+                getAnnotations(aTarget, aParams);
                 break;
-            default: handleError("Unkown action: " + action, aTarget);
+            default:
+                handleError("Unkown action: " + action, aTarget);
             }
         }
         catch (IOException e)
