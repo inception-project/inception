@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @RunWith(Parameterized.class)
 public class SPARQLQueryBuilderGenericTest
 {
-    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago");
+    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago", "zbw-gnd");
     
     @Parameterized.Parameters(name = "KB = {0}")
     public static List<Object[]> data() throws Exception
