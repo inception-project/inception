@@ -96,8 +96,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
@@ -980,6 +980,31 @@ public class KnowledgeBaseServiceImpl
                     .asHandle(conn, true);
             });
         }
+    }
+    
+    @Override
+    public Optional<KBHandle> readHandle(Project aProject, String aIdentifier)
+    {
+        Optional<KBHandle> someResult = Optional.empty();
+        
+        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+            Optional<KBHandle> concept = readHandle(kb, aIdentifier);
+            if (!concept.isPresent()) {
+                continue;
+            }
+
+            someResult = concept;
+
+            // If we find a handle with a label, we stop immediately. Otherwise, we continue with
+            // the other KBs to see if there is one with a label. This is necessary because
+            // readHandle *always* returns a result, even if there is no triple actually containing
+            // the IRI in the KB.
+            if (someResult.map(KBHandle::getName).isPresent()) {
+                break;
+            }
+        }
+        
+        return someResult;
     }
 
     /**

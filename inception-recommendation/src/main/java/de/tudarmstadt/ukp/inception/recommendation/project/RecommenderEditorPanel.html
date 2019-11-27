@@ -17,7 +17,6 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
   <wicket:panel>
     <form wicket:id="form" class="flex-content panel panel-default panel-flex">
       <div class="panel-heading">
@@ -106,12 +105,6 @@
               <input type="number" wicket:id="maxRecommendations" class="form-control"/>
             </div>
           </div>
-          <div class="form-group" wicket:enclosure="statesForTraining">
-            <label wicket:for="statesForTraining" class="col-sm-3 control-label">
-              <wicket:label key="statesForTraining"/>
-            </label>
-            <div class="col-sm-9" wicket:id="statesForTraining"></div>
-          </div>
           <div wicket:id="traitsContainer">
             <div wicket:id="traits"></div>
           </div>
@@ -124,5 +117,4 @@
       </div>            
     </form>
   </wicket:panel>
-</body>
 </html>

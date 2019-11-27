@@ -125,7 +125,7 @@ public class DataMajorityNerRecommender
         int numberOfAnnotations = model.values().stream().reduce(Integer::sum).get();
         double confidence = (float) entry.getValue() / numberOfAnnotations;
 
-        return new DataMajorityModel(majorityLabel, confidence);
+        return new DataMajorityModel(majorityLabel, confidence, numberOfAnnotations);
     }
 // end::trainModel[]
 
@@ -144,6 +144,7 @@ public class DataMajorityNerRecommender
         // Add predictions to the CAS
         Type predictedType = getPredictedType(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
+        Feature scoreExplanationFeature = getScoreExplanationFeature(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
@@ -151,6 +152,7 @@ public class DataMajorityNerRecommender
             AnnotationFS annotation = aCas.createAnnotation(predictedType, ann.begin, ann.end);
             annotation.setStringValue(predictedFeature, ann.label);
             annotation.setDoubleValue(scoreFeature, ann.score);
+            annotation.setStringValue(scoreExplanationFeature, ann.explanation);
             annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
@@ -171,8 +173,8 @@ public class DataMajorityNerRecommender
             int begin = token.getBegin();
             int end = token.getEnd();
 
-            Annotation annotation = new Annotation(aModel.majorityLabel, begin, end);
-            annotation.score = aModel.confidence;
+            Annotation annotation = new Annotation(aModel.majorityLabel, aModel.confidence, 
+                    aModel.numberOfAnnotations, begin, end);
             result.add(annotation);
         }
 
@@ -227,28 +229,40 @@ public class DataMajorityNerRecommender
 // end::evaluate[]
 
 // tag::utility[]
-    private static class DataMajorityModel
+    private static class DataMajorityModel 
     {
         private final String majorityLabel;
         private final double confidence;
+        private final int numberOfAnnotations;
 
-        private DataMajorityModel(String aMajorityLabel, double aConfidence)
+        private DataMajorityModel(String aMajorityLabel, double aConfidence, 
+                int aNumberOfAnnotations) 
         {
             majorityLabel = aMajorityLabel;
             confidence = aConfidence;
+            numberOfAnnotations = aNumberOfAnnotations;
         }
     }
 
-    private static class Annotation
+    private static class Annotation 
     {
         private final String label;
+        private final double score;
+        private final String explanation;
         private final int begin;
         private final int end;
-        private double score;
 
         private Annotation(String aLabel, int aBegin, int aEnd)
         {
+            this(aLabel, 0, 0, aBegin, aEnd);
+        }
+        
+        private Annotation(String aLabel, double aScore, int aNumberOfAnnotations, int aBegin, 
+                int aEnd)
+        {
             label = aLabel;
+            score = aScore;
+            explanation = "Based on " + aNumberOfAnnotations + " annotations";
             begin = aBegin;
             end = aEnd;
         }

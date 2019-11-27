@@ -17,19 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
-import static java.util.Arrays.asList;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 @Component
 public class ExternalRecommenderFactory
@@ -46,7 +43,7 @@ public class ExternalRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext)
+    public RecommendationEngine build(Recommender aRecommender)
     {
         ExternalRecommenderTraits traits = readTraits(aRecommender);
         return new ExternalRecommender(aRecommender, traits);
@@ -65,12 +62,12 @@ public class ExternalRecommenderFactory
             return false;
         }
 
-        return asList(AnchoringMode.SINGLE_TOKEN, AnchoringMode.TOKENS).contains(
-                aLayer.getAnchoringMode()) && WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
+        return SPAN_TYPE.equals(aLayer.getType());
     }
 
     @Override
-    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
+    public ExternalRecommenderTraitsEditor createTraitsEditor(String aId,
+            IModel<Recommender> aModel)
     {
         return new ExternalRecommenderTraitsEditor(aId, aModel);
     }

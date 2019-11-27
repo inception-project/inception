@@ -25,6 +25,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -50,6 +51,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
@@ -65,12 +68,21 @@ public class StringMatchingRecommender
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final StringMatchingRecommenderTraits traits;
 
+    private final GazeteerService gazeteerService;
+
     public StringMatchingRecommender(Recommender aRecommender,
             StringMatchingRecommenderTraits aTraits)
+    {
+        this(aRecommender, aTraits, null);
+    }
+
+    public StringMatchingRecommender(Recommender aRecommender,
+            StringMatchingRecommenderTraits aTraits, GazeteerService aGazeteerService)
     {
         super(aRecommender);
 
         traits = aTraits;
+        gazeteerService = aGazeteerService;
     }
 
     @Override
@@ -81,8 +93,8 @@ public class StringMatchingRecommender
     
     public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
     {
-        Trie<DictEntry> dict = createTrie();
-
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
+        
         if (aData != null) {
             for (GazeteerEntry entry : aData) {
                 learn(dict, entry.text, entry.label);
@@ -100,7 +112,23 @@ public class StringMatchingRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
-        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElse(createTrie());
+        // Pre-load the gazeteers into the model
+        if (gazeteerService != null) {
+            for (Gazeteer gaz : gazeteerService.listGazeteers(recommender)) {
+                try {
+                    pretrain(gazeteerService.readGazeteerFile(gaz), aContext);
+                }
+                catch (IOException e) {
+                    log.info("Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
+                            gaz.getName(), gaz.getRecommender().getName(),
+                            gaz.getRecommender().getId(),
+                            gaz.getRecommender().getProject().getName(),
+                            gaz.getRecommender().getProject().getId(), e);
+                }
+            }
+        }
+        
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
         
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);

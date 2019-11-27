@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @RunWith(Parameterized.class)
 public class SPARQLQueryBuilderGenericTest
 {
-    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago");
+    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago", "zbw-gnd");
     
     @Parameterized.Parameters(name = "KB = {0}")
     public static List<Object[]> data() throws Exception
@@ -169,7 +169,7 @@ public class SPARQLQueryBuilderGenericTest
         
         assertThat(roots).extracting(KBHandle::getIdentifier).allMatch(_root -> {
             try (RepositoryConnection conn = repo.getConnection()) {
-//                System.out.print("R"); 
+                System.out.printf("R: %s%n", _root); 
                 List<KBHandle> children = SPARQLQueryBuilder
                         .forClasses(kb)
                         .childrenOf(_root)
@@ -179,14 +179,14 @@ public class SPARQLQueryBuilderGenericTest
                         SPARQLQueryBuilder
                                 .forClasses(kb)
                                 .parentsOf(_child)
-                                .limit(3)
+                                .limit(5)
                                 .asHandles(conn, true)
                                 .stream()
                                 .map(KBHandle::getIdentifier)
-//                                .map(v -> { 
-//                                    System.out.print("C"); 
-//                                    return v;
-//                                })
+                                .map(v -> { 
+                                    System.out.printf("C: %s%n", v); 
+                                    return v;
+                                })
                                 .anyMatch(iri -> rootIdentifiers.contains(iri)));
             }
         });

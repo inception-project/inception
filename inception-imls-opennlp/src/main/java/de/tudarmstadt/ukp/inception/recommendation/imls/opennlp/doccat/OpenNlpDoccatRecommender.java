@@ -86,7 +86,12 @@ public class OpenNlpDoccatRecommender
     public void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException
     {
-        List<DocumentSample> nameSamples = extractSamples(aCasses);
+        List<DocumentSample> docSamples = extractSamples(aCasses);
+        
+        if (docSamples.size() < 2) {
+            LOG.info("Not enough training data: [{}] items", docSamples.size());
+            return;
+        }
         
         // The beam size controls how many results are returned at most. But even if the user
         // requests only few results, we always use at least the default bean size recommended by
@@ -96,7 +101,7 @@ public class OpenNlpDoccatRecommender
         TrainingParameters params = traits.getParameters();
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         
-        DoccatModel model = train(nameSamples, params);
+        DoccatModel model = train(docSamples, params);
         
         aContext.put(KEY_MODEL, model);
     }
@@ -175,7 +180,7 @@ public class OpenNlpDoccatRecommender
         
         if (trainingSetSize < 2 || testSetSize < 2) {
             String info = String.format(
-                    "Not enough training data: training set [%s] items, test set [%s] of total [%s].",
+                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s].",
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
             
@@ -210,9 +215,9 @@ public class OpenNlpDoccatRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(
                     cas, sentenceType, tokenType);
-            for (Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
                 String[] tokenTexts = tokens.stream()

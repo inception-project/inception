@@ -39,6 +39,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -46,6 +47,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
@@ -62,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoi
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -89,7 +92,7 @@ public class SubjectObjectFeatureEditor
     private @SpringBean KnowledgeBaseService kbService;
 
     private WebMarkupContainer content;
-    private Component focusComponent;
+    private FormComponent focusComponent;
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
@@ -212,7 +215,7 @@ public class SubjectObjectFeatureEditor
 
     private boolean roleLabelSlotIsSelected()
     {
-        return stateModel.getObject().isArmedSlot(getModelObject().feature, 0);
+        return stateModel.getObject().isArmedSlot(getModelObject(), 0);
     }
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget)
@@ -224,7 +227,7 @@ public class SubjectObjectFeatureEditor
             aTarget.add(getOwner());
         }
         else {
-            state.setArmedSlot(getModelObject().feature, 0);
+            state.setArmedSlot(getModelObject(), 0);
             aTarget.add(getOwner());
         }
     }
@@ -236,7 +239,7 @@ public class SubjectObjectFeatureEditor
     }
 
     @Override
-    public Component getFocusComponent()
+    public FormComponent getFocusComponent()
     {
         return focusComponent;
     }
@@ -433,5 +436,12 @@ public class SubjectObjectFeatureEditor
             linkedAnnotationFeature = getLinkedAnnotationFeature();
         }
         return new DisabledKBWarning("disabledKBWarning", Model.of(linkedAnnotationFeature));
+    }
+
+    @OnEvent
+    public void onRenderSlotsEvent(RenderSlotsEvent aEvent)
+    {
+        // Redraw because it could happen that another slot is armed, replacing this.
+        aEvent.getRequestHandler().add(this);
     }
 }

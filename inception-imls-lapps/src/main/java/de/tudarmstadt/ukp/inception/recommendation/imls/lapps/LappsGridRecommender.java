@@ -27,13 +27,13 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.dkpro.core.io.lif.internal.DKPro2Lif;
+import org.dkpro.core.io.lif.internal.Lif2DKPro;
 import org.lappsgrid.client.ServiceClient;
 import org.lappsgrid.discriminator.Discriminators;
 import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.DataContainer;
 import org.lappsgrid.serialization.Serializer;
 import org.lappsgrid.serialization.lif.Container;
-import org.lappsgrid.serialization.lif.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
@@ -75,20 +76,6 @@ public class LappsGridRecommender
             Container container = new Container();
             new DKPro2Lif().convert(aCas.getJCas(), container);
 
-            for (View view : container.getViews()) {
-                view.addContains(
-                        Discriminators.Uri.SENTENCE,
-                        "INCEpTION",
-                        "Sentence"
-                );
-
-                view.addContains(
-                        Discriminators.Uri.TOKEN,
-                        "INCEpTION",
-                        "Token"
-                );
-            }
-
             String request = new Data<>(Discriminators.Uri.LIF, container).asJson();
             String response = client.execute(request);
 
@@ -101,6 +88,10 @@ public class LappsGridRecommender
             for (AnnotationFS predictedAnnotation : select(aCas, getPredictedType(aCas))) {
                 predictedAnnotation.setBooleanValue(isPredictionFeature, true);
             }
+            
+            // Drop the tokens we got from the remote service since their boundaries might not
+            // match ours.
+            select(aCas, getType(aCas, Token.class)).forEach(aCas::removeFsFromIndexes);
             
             // If the remote service did not return tokens (or if we didn't find them...), then
             // let's just re-add the tokens that we originally sent. We need the tokens later
@@ -144,5 +135,10 @@ public class LappsGridRecommender
     public boolean isReadyForPrediction(RecommenderContext aContext)
     {
         return true;
+    }
+
+    public RecommendationEngineCapability getTrainingCapability()
+    {
+        return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
     }
 }

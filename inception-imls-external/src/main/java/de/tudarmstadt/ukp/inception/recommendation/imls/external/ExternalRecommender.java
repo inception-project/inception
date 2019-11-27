@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
@@ -68,6 +69,9 @@ public class ExternalRecommender
     
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
     private static final MediaType JSON = MediaType.parse("application/json");
+    private static final long CONNECT_TIMEOUT = 30;
+    private static final long WRITE_TIMEOUT = 30;
+    private static final long READ_TIMEOUT = 30;
 
     private final Recommender recommender;
     private final ExternalRecommenderTraits traits;
@@ -79,13 +83,21 @@ public class ExternalRecommender
 
         recommender = aRecommender;
         traits = aTraits;
-        client = new OkHttpClient();
+        client = new OkHttpClient.Builder()
+                .connectTimeout(CONNECT_TIMEOUT,TimeUnit.SECONDS)
+                .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
+                .build();
     }
 
     @Override
     public boolean isReadyForPrediction(RecommenderContext aContext)
     {
-        return aContext.get(KEY_TRAINING_COMPLETE).orElse(false);
+        if (traits.isTrainable()) {
+            return aContext.get(KEY_TRAINING_COMPLETE).orElse(false);
+        } else {
+            return true;
+        }
     }
     
     @Override
@@ -287,7 +299,10 @@ public class ExternalRecommender
     public RecommendationEngineCapability getTrainingCapability() 
     {
         if (traits.isTrainable()) {
-            return TRAINING_SUPPORTED;
+            // 
+            // return TRAINING_SUPPORTED;
+            // We need to get at least one training CAS because we need to extract the type system
+            return TRAINING_REQUIRED;
         } else {
             return TRAINING_NOT_SUPPORTED;
         }

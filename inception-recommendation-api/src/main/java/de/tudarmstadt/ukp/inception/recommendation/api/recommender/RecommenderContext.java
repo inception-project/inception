@@ -17,11 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
+
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public class RecommenderContext
 {
@@ -36,11 +42,14 @@ public class RecommenderContext
     }
     
     private final Map<String, Object> store;
+    private List<LogMessage> messages;
+    private Optional<User> user;
     private boolean closed = false;
 
     public RecommenderContext()
     {
         store = new HashMap<>();
+        messages = new ArrayList<>();
     }
 
     @SuppressWarnings("unchecked")
@@ -59,12 +68,47 @@ public class RecommenderContext
         store.put(aKey.name, aValue);
     }
     
+    synchronized public void info(String aFormat, Object... aValues)
+    {
+        if (closed) {
+            throw new IllegalStateException("Adding data to a closed context is not permitted.");
+        }
+        
+        messages.add(LogMessage.info(this, aFormat, aValues));
+    }
+
+    synchronized public void warn(String aFormat, Object... aValues)
+    {
+        if (closed) {
+            throw new IllegalStateException("Adding data to a closed context is not permitted.");
+        }
+        
+        messages.add(LogMessage.warn(this, aFormat, aValues));
+    }
+
+    synchronized public void error(String aFormat, Object... aValues)
+    {
+        if (closed) {
+            throw new IllegalStateException("Adding data to a closed context is not permitted.");
+        }
+        
+        messages.add(LogMessage.error(this, aFormat, aValues));
+    }
+    
+    public List<LogMessage> getMessages()
+    {
+        return messages;
+    }
+
     /**
      * Close the context. Further modifications to the context are not permitted.
      */
     synchronized public void close()
     {
-        closed = true;
+        if (!closed) {
+            closed = true;
+            messages = Collections.unmodifiableList(messages);
+        }
     }
     
     /**
@@ -75,21 +119,6 @@ public class RecommenderContext
         return closed;
     }
     
-    /**
-     * Creates a non-closed copy of the current context. The data from the internal store is copied
-     * into the store of the new context.
-     */
-    synchronized public RecommenderContext copy()
-    {
-        if (!closed) {
-            throw new IllegalStateException("Context must be closed before it can be copied.");
-        }
-        
-        RecommenderContext ctx = new RecommenderContext();
-        ctx.store.putAll(store);   
-        return ctx;
-    }
-    
     public static class Key<T>
     {
         private final String name;
@@ -98,5 +127,13 @@ public class RecommenderContext
         {
             name = aName;
         }
+    }
+    
+    public Optional<User> getUser() {
+        return user;
+    }
+    
+    public void setUser(User aUser) {
+        user = Optional.ofNullable(aUser);
     }
 }

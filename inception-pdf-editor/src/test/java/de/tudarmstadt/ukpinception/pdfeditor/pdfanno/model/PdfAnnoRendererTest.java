@@ -38,14 +38,17 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.dkpro.core.io.tcf.TcfReader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -61,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
@@ -121,8 +123,8 @@ public class PdfAnnoRendererTest
         posFeature.setVisible(true);
 
         FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
-            asList(new PrimitiveUimaFeatureSupport(),
-                new SlotFeatureSupport(schemaService)));
+                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
+                        new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
@@ -138,7 +140,7 @@ public class PdfAnnoRendererTest
         layerRegistry.init();
 
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
-        when(schemaService.listAnnotationFeature(any(AnnotationLayer.class)))
+        when(schemaService.listAnnotationFeature(any(Project.class)))
             .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
@@ -176,8 +178,9 @@ public class PdfAnnoRendererTest
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
             cas.getDocumentText(), schemaService, pdfExtractFile, 0);
 
-        assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
-                contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
+        assertThat(annoFile.getAnnoFileContent())
+            .isEqualToNormalizingNewlines(contentOf(
+                    new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
     }
 
     /**

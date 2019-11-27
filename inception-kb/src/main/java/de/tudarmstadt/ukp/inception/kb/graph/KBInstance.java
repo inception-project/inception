@@ -44,7 +44,7 @@ public class KBInstance
     private URI type;
     private List<Statement> originalStatements = new ArrayList<>();
     private String language;
-    private static String ENGLISH = "en";
+    private static final String ENGLISH = "en";
     private KnowledgeBase kb;
     
     public KBInstance()

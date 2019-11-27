@@ -59,6 +59,7 @@ import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
@@ -619,6 +620,35 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("http://example.org/#subclass1-1");
     }
 
+    /**
+     * This query tries to find all <i>humans in the Star Trek universe</i> 
+     * ({@code http://www.wikidata.org/entity/Q924827}) who are named <i>Amanda</i>. It tests
+     * whether the call to {@link SPARQLQueryBuilder#childrenOf(String)} disables the FTS. If the
+     * FTS is not disabled, then no result would be returned because there are so many Amandas in
+     * Wikidata that the popular ones returned by the FTS do not include any from the Star Trek
+     * universe.
+     */
+    @Test
+    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata() throws Exception
+    {
+        assertIsReachable(wikidata);
+        
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
+        initWikidataMapping();
+    
+        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
+                .forInstances(kb)
+                .childrenOf("http://www.wikidata.org/entity/Q924827")
+                .withLabelStartingWith("Amanda")
+                .retrieveLabel());
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://www.wikidata.org/entity/Q1412447");
+    }
+
     @Test
     public void thatClassQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults() throws Exception
     {
@@ -804,6 +834,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().contains("tower"));
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
     {
@@ -1143,6 +1174,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().startsWith("barack"));
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
     {
@@ -1181,6 +1213,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {
