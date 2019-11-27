@@ -37,9 +37,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -102,12 +102,19 @@ public class ExportDocumentDialogContent
     private FileResourceStream export()
     {
         File downloadFile = null;
-        String username = state.getObject().getMode()
+        
+        String username;
+        
+        if (state.getObject().getMode()
                 .equals(Mode.AUTOMATION)
                 && preferences.getObject().documentType
-                        .equals(SELECTEXPORT.AUTOMATED.toString()) ? "CORRECTION_USER"
-                                : SecurityContextHolder.getContext().getAuthentication()
-                                        .getName();
+                        .equals(SELECTEXPORT.AUTOMATED.toString())) {
+            username = WebAnnoConst.CORRECTION_USER;
+        }
+        else {
+            username = state.getObject().getUser().getUsername();
+        }
+        
         try {
             downloadFile = importExportService.exportAnnotationDocument(
                     state.getObject().getDocument(), username,
