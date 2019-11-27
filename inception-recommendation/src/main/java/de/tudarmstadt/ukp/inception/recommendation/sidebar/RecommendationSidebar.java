@@ -148,7 +148,7 @@ public class RecommendationSidebar
         AnnotatorState state = getModelObject();
         recommendationService.clearState(state.getUser().getUsername());
         recommendationService.triggerTrainingAndClassification(state.getUser().getUsername(),
-                state.getProject(), "User request via sidebar");
+                state.getProject(), "User request via sidebar", state.getDocument());
     }
     
     private List<String> findMismatchedRecommenders()

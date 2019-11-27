@@ -19,14 +19,20 @@ package de.tudarmstadt.ukp.inception.log;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.annotation.Lazy;
@@ -40,7 +46,7 @@ import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 @Component
-public class EventLoggingListener
+public class EventLoggingListener implements DisposableBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -51,6 +57,10 @@ public class EventLoggingListener
 
     private final EventRepository repo;
 
+    private final ScheduledExecutorService scheduler;
+    
+    private final Deque<LoggedEvent> queue;
+
     public EventLoggingListener(
             @Autowired EventRepository aRepo,
             @Lazy @Autowired(required = false) List<EventLoggingAdapter<?>> aAdapters)
@@ -58,6 +68,11 @@ public class EventLoggingListener
         repo = aRepo;
         adapterProxy = aAdapters;
         adapterCache = new HashedMap<>();
+        
+        queue = new ConcurrentLinkedDeque<>();
+        
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(() -> flush(), 1, 1, TimeUnit.SECONDS);
     }
 
     @EventListener
@@ -124,7 +139,37 @@ public class EventLoggingListener
             e.setDocument(a.getDocument(aEvent));
             e.setAnnotator(a.getAnnotator(aEvent));
             e.setDetails(a.getDetails(aEvent));
-            repo.create(e);
+            // Add to the writing queue which gets flushed regularly by a timer
+            queue.add(e);
+            
+            // If the queue gets too large, force a flush even if the timer is not there yet
+            if (queue.size() > 1000) {
+                flush();
+            }
         }
+    }
+    
+    public void flush()
+    {
+        synchronized (this) {
+            // Fetch all items that are currently in the queue
+            List<LoggedEvent> batch = new ArrayList<>();
+            while (!queue.isEmpty()) {
+                batch.add(queue.pop());
+            }
+            
+            // And dump them into the database
+            repo.create(batch.toArray(new LoggedEvent[batch.size()]));
+        }
+    }
+
+    @Override
+    public void destroy() throws Exception
+    {
+        // Kill the flush scheduler
+        scheduler.shutdownNow();
+        
+        // Make sure and pending events are flushed before the application shuts down
+        flush();
     }
 }

@@ -324,6 +324,13 @@ public class ConceptFeatureSupport
         
         return result;
     }
+    
+    @Override
+    public boolean suppressAutoFocus(AnnotationFeature aFeature)
+    {
+        ConceptFeatureTraits traits = readTraits(aFeature);
+        return !traits.getKeyBindings().isEmpty();
+    }
 
     private class Key
     {
