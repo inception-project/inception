@@ -20,16 +20,16 @@ package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.linesOf;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
@@ -38,14 +38,17 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.dkpro.core.io.tcf.TcfReader;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -61,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
@@ -121,8 +123,8 @@ public class PdfAnnoRendererTest
         posFeature.setVisible(true);
 
         FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
-            asList(new PrimitiveUimaFeatureSupport(),
-                new SlotFeatureSupport(schemaService)));
+                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
+                        new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
@@ -138,7 +140,7 @@ public class PdfAnnoRendererTest
         layerRegistry.init();
 
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
-        when(schemaService.listAnnotationFeature(any(AnnotationLayer.class)))
+        when(schemaService.listAnnotationFeature(any(Project.class)))
             .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
@@ -172,14 +174,13 @@ public class PdfAnnoRendererTest
         preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
                 schemaService.listAnnotationLayer(project));
 
-        List expectedAnnoFileLines = linesOf(new File("src/test/resources/rendererTestAnnoFile.anno"), "UTF-8");
-
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
             cas.getDocumentText(), schemaService, pdfExtractFile, 0);
 
-        assertThat(expectedAnnoFileLines)
-            .isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));
+        assertThat(annoFile.getAnnoFileContent())
+            .isEqualToNormalizingNewlines(contentOf(
+                    new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
     }
 
     /**
@@ -207,18 +208,38 @@ public class PdfAnnoRendererTest
         // List of PDFAnno offsets
         // indices represent line numbers in the PDFExtractFile for the according character
         List<Offset> offsets = new ArrayList<>();
+        offsets.add(new Offset(3, 3));
+        offsets.add(new Offset(3, 4));
+        offsets.add(new Offset(3, 5));
+        offsets.add(new Offset(3, 6));
         offsets.add(new Offset(3, 7));
+        offsets.add(new Offset(3, 8));
+        offsets.add(new Offset(6, 8));
+        offsets.add(new Offset(7, 7));
+        offsets.add(new Offset(7, 8));
+        offsets.add(new Offset(8, 8));
         offsets.add(new Offset(8, 13));
+        offsets.add(new Offset(28, 28));
         offsets.add(new Offset(28, 30));
         offsets.add(new Offset(35, 38));
         // convert to offests for document in INCEpTION
         List<Offset> docOffsets =
             PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
         List<Offset> expectedOffsets = new ArrayList<>();
-        expectedOffsets.add(new Offset(0, 5));
-        expectedOffsets.add(new Offset(6, 12));
-        expectedOffsets.add(new Offset(29, 32));
-        expectedOffsets.add(new Offset(38, 42));
+        expectedOffsets.add(new Offset(0, 0));
+        expectedOffsets.add(new Offset(0, 1));
+        expectedOffsets.add(new Offset(0, 2));
+        expectedOffsets.add(new Offset(0, 3));
+        expectedOffsets.add(new Offset(0, 4));
+        expectedOffsets.add(new Offset(0, 6));
+        expectedOffsets.add(new Offset(3, 6));
+        expectedOffsets.add(new Offset(4, 4));
+        expectedOffsets.add(new Offset(4, 6));
+        expectedOffsets.add(new Offset(6, 6));
+        expectedOffsets.add(new Offset(6, 11));
+        expectedOffsets.add(new Offset(29, 29));
+        expectedOffsets.add(new Offset(29, 31));
+        expectedOffsets.add(new Offset(38, 41));
         assertThat(docOffsets).isEqualTo(expectedOffsets);
     }
 }

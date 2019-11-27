@@ -23,8 +23,6 @@ NOTE: It is assumed that you plan to test the {product-name} standalone version 
 
 All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
 
-
-
 = Introduction
 
 include::{include-dir}getting-started.adoc[leveloffset=+1]
@@ -53,6 +51,8 @@ include::{include-dir}dashboard_project-view.adoc[leveloffset=+1]
 
 include::{include-dir}annotation.adoc[leveloffset=+1]
 
+include::{include-dir}other_editors.adoc[leveloffset=+1]
+
 include::{include-dir}annotation_open.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_navigation.adoc[leveloffset=+2]
@@ -74,6 +74,8 @@ include::{include-dir}annotation_create-annotations_primitive-features.adoc[leve
 include::{include-dir}annotation_create-annotations_link-features.adoc[leveloffset=+3]
 
 include::{include-dir}annotation_create-annotations_image-features.adoc[leveloffset=+3]
+
+include::{include-dir}annotation_create-annotations_concept-features.adoc[leveloffset=+3]
 
 include::{include-dir}annotation_settings.adoc[leveloffset=+2]
 
@@ -106,6 +108,9 @@ include::{include-dir}monitoring.adoc[leveloffset=+1]
 include::{include-dir}agreement.adoc[leveloffset=+1]
 
 <<<
+include::{include-dir}evaluation.adoc[leveloffset=+1]
+
+<<<
 
 include::{include-dir}knowledge_base.adoc[]
 
@@ -132,6 +137,10 @@ include::{include-dir}projects_recommendation_opennlp.adoc[leveloffset=+2]
 include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_lappsgrid.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_weblicht.adoc[leveloffset=+2]
 
 include::{include-dir}projects_tagsets.adoc[leveloffset=+2]
 
@@ -173,6 +182,10 @@ include::{include-dir}casdoctor.adoc[leveloffset=+1]
 <<<
 
 include::{include-dir}guidelines.adoc[leveloffset=+1]
+
+<<<
+
+include::{include-dir}pdf-editor.adoc[leveloffset=+1]
 
 <<<
 

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentUri;
@@ -29,6 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -83,12 +83,17 @@ public class NamedEntityLinker
     }
 
     @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+
+    @Override
     public void train(RecommenderContext aContext, List<CAS> aCasList)
     {
         Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples =
             extractNamedEntities(aCasList);
         aContext.put(KEY_MODEL, nameSamples);
-        aContext.markAsReadyForPrediction();
     }
 
     private Collection<ImmutablePair<String, Collection<AnnotationFS>>> extractNamedEntities(
@@ -102,9 +107,9 @@ public class NamedEntityLinker
             Collection<AnnotationFS> namesPerDocument = new ArrayList<>();
             Type sentenceType = getType(cas, Sentence.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
                 predictedType);
-            for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            for (Map.Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 Collection<AnnotationFS> tokens = e.getValue().stream()
                     // If the identifier has not been set
                     .filter(a -> a.getStringValue(predictedFeature) == null)
@@ -113,8 +118,7 @@ public class NamedEntityLinker
             }
 
             // TODO #176 use the document Id once it is available in the CAS
-            nameSamples.add(
-                new ImmutablePair<>(getDocumentUri(cas), namesPerDocument));
+            nameSamples.add(new ImmutablePair<>(getDocumentUri(cas), namesPerDocument));
         }
         return nameSamples;
     }
@@ -129,7 +133,7 @@ public class NamedEntityLinker
                         "Key [" + KEY_MODEL + "] not found in context"));
         
         return model.stream().anyMatch(pair -> pair.getLeft().equals(aDocumentUri)
-        && pair.getRight().stream().anyMatch(t -> t.getBegin() == token.getBegin()));
+                && pair.getRight().stream().anyMatch(t -> t.getBegin() == token.getBegin()));
     }
 
     @Override

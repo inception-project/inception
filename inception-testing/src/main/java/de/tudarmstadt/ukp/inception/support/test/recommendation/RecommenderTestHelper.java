@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.inception.support.test.recommendation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescription;
 
 import java.io.IOException;
@@ -46,11 +49,14 @@ public class RecommenderTestHelper
     public static void addScoreFeature(CAS aCas, String aTypeName, String aFeatureName)
             throws IOException, UIMAException
     {
-        String scoreFeatureName = aFeatureName + "_score";
+        String scoreFeatureName = aFeatureName + FEATURE_NAME_SCORE_SUFFIX;
+        String scoreExplanationFeatureName = aFeatureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 
         TypeSystemDescription tsd = typeSystem2TypeSystemDescription(aCas.getTypeSystem());
         TypeDescription typeDescription = tsd.getType(aTypeName);
         typeDescription.addFeature(scoreFeatureName, "Confidence feature", TYPE_NAME_DOUBLE);
+        typeDescription.addFeature(scoreExplanationFeatureName, "Confidence explanation feature", 
+                TYPE_NAME_STRING);
         typeDescription.addFeature(FEATURE_NAME_IS_PREDICTION, "Is prediction", TYPE_NAME_BOOLEAN);
 
         AnnotationSchemaService annotationSchemaService = new AnnotationSchemaServiceImpl();
@@ -64,8 +70,16 @@ public class RecommenderTestHelper
 
     public static double getScore(AnnotationFS aAnnotationFS, String aFeatureName)
     {
-        Feature feature = aAnnotationFS.getType().getFeatureByBaseName(aFeatureName + "_score");
+        Feature feature = aAnnotationFS.getType().getFeatureByBaseName(aFeatureName + 
+                FEATURE_NAME_SCORE_SUFFIX);
         return aAnnotationFS.getDoubleValue(feature);
+    }
+    
+    public static String getScoreExplanation(AnnotationFS aAnnotationFS, String aFeatureName)
+    {
+        Feature feature = aAnnotationFS.getType().getFeatureByBaseName(aFeatureName + 
+                FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
+        return aAnnotationFS.getStringValue(feature);
     }
 
     public static <T extends Annotation> List<T> getPredictions(CAS aCas, Class<T> aClass)

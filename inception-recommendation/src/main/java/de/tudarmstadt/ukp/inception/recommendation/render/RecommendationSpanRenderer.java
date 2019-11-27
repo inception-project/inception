@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
@@ -118,6 +119,10 @@ public class RecommendationSpanRenderer
 
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
+        
+        // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
+        Map<String, AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer)
+            .stream().collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
         for (SuggestionGroup suggestion : groups) {
             Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
@@ -165,17 +170,15 @@ public class RecommendationSpanRenderer
             }
             
             // Sort and filter labels under threshold value
-            List<LabelMapKey> filtered = maxConfidencePerLabel.entrySet().stream()
+            // Note: the order in which annotations are rendered is only indicative to the 
+            // frontend (e.g. brat) which may choose to re-order them (e.g. for layout reasons).
+            List<LabelMapKey> sortedAndfiltered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                     .limit(pref.getMaxPredictions())
                     .map(Entry::getKey).collect(Collectors.toList());
 
             // Render annotations for each label
-            for (LabelMapKey label : labelMap.keySet()) {
-                if (!filtered.contains(label)) {
-                    continue;
-                }
-
+            for (LabelMapKey label : sortedAndfiltered) {
                 // Create VID using the recommendation with the lowest recommendationId
                 AnnotationSuggestion canonicalRecommendation = suggestion.stream()
                         // check for label or feature for no-label annotations as key
@@ -195,8 +198,7 @@ public class RecommendationSpanRenderer
 
                     // Only necessary for creating the first
                     if (first) {
-                        AnnotationFeature feature = aAnnotationService
-                            .getFeature(ao.getFeature(), layer);
+                        AnnotationFeature feature = features.get(ao.getFeature());
                         // Retrieve the UI display label for the given feature value
                         FeatureSupport featureSupport = aFsRegistry.getFeatureSupport(feature);
                         String annotation = featureSupport.renderFeatureValue(feature,
@@ -217,6 +219,10 @@ public class RecommendationSpanRenderer
                     if (ao.getConfidence() != -1) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,
                                 String.format("Confidence: %.2f", ao.getConfidence())));
+                    }
+                    if (ao.getConfidenceExplanation().isPresent()) {
+                        vdoc.add(new VComment(vid, VCommentType.INFO,
+                                "Explanation: " + ao.getConfidenceExplanation().get()));
                     }
                     if (pref.isShowAllPredictions() && !ao.isVisible()) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,

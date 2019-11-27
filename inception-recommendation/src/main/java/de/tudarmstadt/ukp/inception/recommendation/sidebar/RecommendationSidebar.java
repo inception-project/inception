@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
@@ -41,7 +42,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -59,15 +62,19 @@ public class RecommendationSidebar
     
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annoService;
+    private @SpringBean UserDao userRepository;
 
     private WebMarkupContainer warning;
     private StringResourceModel tipModel;
+    private Form<Preferences> form;
+    private RecommenderInfoPanel recommenderInfos;
     
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        
         IModel<Preferences> modelPreferences = LambdaModelAdapter.of(
             () -> recommendationService.getPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject()),
@@ -75,13 +82,14 @@ public class RecommendationSidebar
                     aModel.getObject().getProject(), v));
 
         warning = new WebMarkupContainer("warning");
+        warning.setOutputMarkupPlaceholderTag(true);
         add(warning);
         tipModel = new StringResourceModel("mismatch", this);
         TooltipBehavior tip = new TooltipBehavior(tipModel);
         tip.setOption("width", Options.asString("300px"));
         warning.add(tip);
         
-        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
+        form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class)
                 .setMinimum(1)
@@ -90,14 +98,17 @@ public class RecommendationSidebar
 
         form.add(new CheckBox("showAllPredictions"));
 
+        form.add(new LambdaAjaxLink("retrain", this::actionRetrain));
+
         form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
                 aAnnotationPage.actionRefreshDocument(_target)));
 
         add(form);
 
-        LearningCurveChartPanel chartContainer = new LearningCurveChartPanel(LEARNING_CURVE,aModel);
-        chartContainer.setOutputMarkupId(true);
-        add(chartContainer);
+        add(new LearningCurveChartPanel(LEARNING_CURVE, aModel));
+        
+        recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
+        add(recommenderInfos);
     }
 
     @Override
@@ -105,6 +116,14 @@ public class RecommendationSidebar
     {
         // using onConfigure as last state in lifecycle to configure visibility
         super.onConfigure();
+        configureMismatched();
+        boolean enabled = getModelObject().getUser().equals(userRepository.getCurrentUser());
+        form.setEnabled(enabled);
+        recommenderInfos.setEnabled(enabled);
+    }
+
+    protected void configureMismatched()
+    {
         List<String> mismatchedRecommenders = findMismatchedRecommenders();
         
         if (mismatchedRecommenders.isEmpty()) {
@@ -124,6 +143,14 @@ public class RecommendationSidebar
         aEvent.getRequestHandler().add(warning);
     }
 
+    private void actionRetrain(AjaxRequestTarget aTarget)
+    {
+        AnnotatorState state = getModelObject();
+        recommendationService.clearState(state.getUser().getUsername());
+        recommendationService.triggerTrainingAndClassification(state.getUser().getUsername(),
+                state.getProject(), "User request via sidebar", state.getDocument());
+    }
+    
     private List<String> findMismatchedRecommenders()
     {
         List<String> mismatchedRecommenderNames = new ArrayList<>();

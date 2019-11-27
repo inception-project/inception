@@ -40,8 +40,10 @@ import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -81,9 +83,9 @@ public class ConceptFeatureIndexingSupportTest
 
         kb = new KnowledgeBase();
 
-        featureSupportRegistry = new FeatureSupportRegistryImpl(asList(
-                new PrimitiveUimaFeatureSupport(),
-                new ConceptFeatureSupport(kbService)));
+        featureSupportRegistry = new FeatureSupportRegistryImpl(
+                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
+                        new NumberFeatureSupport(), new ConceptFeatureSupport(kbService)));
         featureSupportRegistry.init();
         
         featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(asList(
@@ -146,7 +148,7 @@ public class ConceptFeatureIndexingSupportTest
 
         MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
                 featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas);
+        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         MtasUtils.print(tc);
         
         List<MtasToken> tokens = new ArrayList<>();

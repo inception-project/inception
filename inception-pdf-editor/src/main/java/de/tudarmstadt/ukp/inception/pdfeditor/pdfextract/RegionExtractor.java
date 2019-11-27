@@ -37,7 +37,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 public class RegionExtractor
 {
 
-    static int POINTS_IN_INCH = 72;
+    static final int POINTS_IN_INCH = 72;
 
     PDFRenderer renderer;
     int dpi;

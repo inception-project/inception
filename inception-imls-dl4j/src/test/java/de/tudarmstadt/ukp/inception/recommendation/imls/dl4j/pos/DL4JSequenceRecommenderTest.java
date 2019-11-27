@@ -25,6 +25,7 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,19 +37,19 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.dkpro.core.api.datasets.Dataset;
+import org.dkpro.core.api.datasets.DatasetFactory;
+import org.dkpro.core.io.conll.Conll2000Reader;
+import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2000Reader;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
@@ -411,7 +412,7 @@ public class DL4JSequenceRecommenderTest
 
     private JCas loadPosDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("conll2000-en");
+        Dataset ds = loader.load("conll2000-en", CONTINUE);
         
         CollectionReader reader = createReader(Conll2000Reader.class,
                 Conll2000Reader.PARAM_PATTERNS, ds.getDefaultSplit().getTestFiles(), 
@@ -424,7 +425,7 @@ public class DL4JSequenceRecommenderTest
 
     private JCas loadNerDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         
         CollectionReader reader = createReader(Conll2002Reader.class,
             Conll2002Reader.PARAM_PATTERNS, ds.getDefaultSplit().getDevelopmentFiles(), 

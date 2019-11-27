@@ -10,7 +10,6 @@ export function expose () {
   window.add = addAnnotation
   window.addAll = addAllAnnotations
   window.delete = deleteAnnotation
-  window.RectAnnotation = PublicRectAnnotation
   window.SpanAnnotation = PublicSpanAnnotation
   window.RelationAnnotation = PublicRelationAnnotation
   window.readTOML = readTOML
@@ -42,8 +41,6 @@ export function addAllAnnotations (tomlObject) {
     let a
     if (data.type === 'span') {
       a = new PublicSpanAnnotation(data)
-    } else if (data.type === 'rect') {
-      a = new PublicRectAnnotation(data)
     } else if (data.type === 'relation') {
       data.ids = data.ids.map(refId => tomlObject[refId].uuid)
       a = new PublicRelationAnnotation(data)
@@ -103,42 +100,6 @@ export function addAnnotation (publicAnnotation) {
 export function deleteAnnotation (publicAnnotation) {
 
   publicAnnotation.annotation.destroy()
-}
-
-/**
- * Rect Annotation Class wrapping the core.
- */
-export class PublicRectAnnotation {
-
-  /**
-   * Create a rect annotation from a TOML data.
-   */
-  constructor ({ page, position, label = '', id = 0, uuid = '' }) {
-
-    // Check inputs.
-    if (!page || typeof page !== 'number') {
-      throw new Error('Set the page as number.')
-    }
-    if (!position || position.length !== 4) {
-      throw new Error('Set the position which includes `x`, `y`, `width` and `height`.')
-    }
-
-    // position: String -> Float.
-    position = position.map(p => parseFloat(p))
-
-    let rect = window.annoPage.createRectAnnotation({
-      uuid,
-      x        : position[0],
-      y        : convertFromExportY(page, position[1]),
-      width    : position[2],
-      height   : position[3],
-      text     : label,
-      color    : '#FF0',
-      readOnly : false
-    })
-
-    this.annotation = rect
-  }
 }
 
 /**

@@ -89,7 +89,7 @@
         </form>
         
         <div class="scrolling flex-content">
-          <table id="bd" class="table table-striped table-condensed">
+          <table wicket:id="resultsGroupContainer" class="table table-striped table-condensed">
             <wicket:container wicket:id="searchResultGroups">
               <tr valign="middle" style="line-height: 2em;">
                 <th class="headers" style="text-align: center; width: 15%" colspan="1">
@@ -167,6 +167,13 @@
               </div>
             </div>
           </form>
+          
+          <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
+            <button wicket:id="clearButton" class="btn btn-primary flex-content">
+              <i class="fas fa-times"></i>
+                Clear
+            </button>
+          </div>
         </form>
       </div>
     </div>

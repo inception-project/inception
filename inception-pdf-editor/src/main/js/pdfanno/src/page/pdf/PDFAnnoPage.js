@@ -1,18 +1,12 @@
-// import axios from 'axios'
 import * as annoUI from 'anno-ui'
-import { loadFiles } from './loadFiles'
 import { getSearchHighlight } from '../search'
-import * as socket from '../socket'
 import { anyOf, dispatchWindowEvent } from '../../shared/util'
 import { convertToExportY, paddingBetweenPages, nextZIndex } from '../../shared/coords'
 import {
   unlistenWindowLeaveEvent,
   adjustViewerSize
 } from '../util/window'
-// import { saveSpan } from '../../core/src/UI/span'
 import * as constants from '../../shared/constants'
-import * as pako from 'pako'
-import { PDFEXTRACT_VERSION } from '../../core/src/version'
 
 /**
  * PDFAnno's Annotation functions for Page produced by .
@@ -40,8 +34,6 @@ export default class PDFAnnoPage {
     // TODO Remove this alias.
     window.iframeWindow = window
 
-    // window.iframeWindow.addEventListener('DOMContentLoaded', () => {
-
     // Adjust the height of viewer.
     adjustViewerSize()
 
@@ -49,53 +41,6 @@ export default class PDFAnnoPage {
     unlistenWindowLeaveEvent()
 
     dispatchWindowEvent('iframeReady')
-    // })
-
-    // window.iframeWindow.addEventListener('pagerendered', ev => {
-    //     dispatchWindowEvent('pagerendered', ev.detail)
-    // })
-
-    // window.iframeWindow.addEventListener('annotationrendered', () => {
-    //     dispatchWindowEvent('annotationrendered')
-    // })
-
-    // Set the confirm dialog when leaving a page.
-    // window.iframeWindow.addEventListener('annotationUpdated', () => {
-    //     listenWindowLeaveEvent()
-    //     dispatchWindowEvent('annotationUpdated')
-    // })
-
-    // enable text input.
-    // window.iframeWindow.addEventListener('enableTextInput', e => {
-    //     dispatchWindowEvent('enableTextInput', e.detail)
-    // })
-    //
-    // // disable text input.
-    // window.iframeWindow.addEventListener('disappearTextInput', e => {
-    //     dispatchWindowEvent('disappearTextInput', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationDeleted', e => {
-    //     dispatchWindowEvent('annotationDeleted', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationHoverIn', e => {
-    //     dispatchWindowEvent('annotationHoverIn', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationHoverOut', e => {
-    //     dispatchWindowEvent('annotationHoverOut', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationSelected', e => {
-    //     dispatchWindowEvent('annotationSelected', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationDeselected', () => {
-    //     dispatchWindowEvent('annotationDeselected')
-    // })
-
-    // setInterval(this.checkAnnotationUpdate, 1500)
   }
 
   /**
@@ -174,27 +119,13 @@ export default class PDFAnnoPage {
   /**
    * Start the viewer.
    */
-// BEGIN INCEpTION EXTENSION - #593 - Add PDFAnno sources
-/*
-    initializeViewer (initialPDFPath = '../pdfs/P12-1046.pdf', viewerSelector = '#viewer') {
-*/
     initializeViewer (viewerSelector = '#viewer') {
-// END INCEpTION EXTENSION
 
     window.pdf = null
     window.pdfName = null
 
     // Reset setting.
     this.resetPDFViewerSettings()
-
-    // let url = './viewer.html'
-    // if (initialPDFPath) {
-    //     url += '?file=' + initialPDFPath
-    // }
-
-    // // Reload pdf.js.
-    // $(viewerSelector + ' iframe').remove()
-    // $(viewerSelector).html('<iframe src="' + url + '" class="anno-viewer" frameborder="0"></iframe>')
   }
 
   /**
@@ -220,8 +151,6 @@ export default class PDFAnnoPage {
    * Create a Span annotation.
    */
   createSpan ({ text = null, color = null } = {}) {
-    // TODO Refactoring: a little too long.
-
     // Get user selection.
     const rects = window.iframeWindow.PDFAnnoCore.default.UI.getRectangles()
     console.log('createSpan:rects:', rects)
@@ -307,7 +236,7 @@ export default class PDFAnnoPage {
 
     let selectedAnnotations = window.iframeWindow.annotationContainer.getSelectedAnnotations()
     selectedAnnotations = selectedAnnotations.filter(a => {
-      return a.type === 'rect' || a.type === 'span'
+      return a.type === 'span'
     }).sort((a1, a2) => {
       return (a1.selectedTime - a2.selectedTime) // asc
     })
@@ -469,13 +398,6 @@ export default class PDFAnnoPage {
   }
 
   /**
-   * Create a new rect annotation.
-   */
-  createRectAnnotation (options) {
-    return window.iframeWindow.PDFAnnoCore.default.RectAnnotation.newInstance(options)
-  }
-
-  /**
    * Create a new span annotation.
    */
   createSpanAnnotation (options) {
@@ -570,27 +492,15 @@ export default class PDFAnnoPage {
   }
 
   /**
-   * Get the content's name displayed now.
-   */
-  getCurrentContentName () {
-    return window.iframeWindow.getFileName(window.iframeWindow.PDFView.url)
-  }
-
-  /**
    * Load PDF data from url.
    * @param {String} url
    * @returns Promise<Uint8Array>
    * @memberof PDFAnnoPage
    */
   loadPdf (url) {
-// BEGIN INCEpTION EXTENSION - #939 - PDF editor loads wrong PDF
-/*
-    return fetch(url, {
-*/
     // add noise to the query parameters so caching is prevented
     var antiCacheUrl= url + "&time=" + new Date().getTime();
     return fetch(antiCacheUrl, {
-// END INCEpTION EXTENSION
       method : 'GET',
       mode   : 'cors'
     }).then(response => {
@@ -605,12 +515,6 @@ export default class PDFAnnoPage {
     })
   }
 
-  // loadPdftxt (url) {
-  //   this.loadPdf(url).then(data => {
-  //     return pako.inflate(data, {to : 'string'})
-  //   })
-  // }
-
   /**
    * Load pdftxt data from url.
    * @param {String} url
@@ -618,36 +522,17 @@ export default class PDFAnnoPage {
    * @memberof PDFAnnoPage
    */
   loadPdftxt (url) {
-// BEGIN INCEpTION EXTENSION - #939 - PDF editor loads wrong PDF
-/*
-    return fetch(url, {
-*/
     // add noise to the query parameters so caching is prevented
     var antiCacheUrl= url + "&time=" + new Date().getTime();
     return fetch(antiCacheUrl, {
-// END INCEpTION EXTENSION
       method : 'GET',
       mode   : 'cors'
     }).then(response => {
-// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
-/*
-      if (response.ok) {
-        return response.arrayBuffer()
-      } else {
-        // throw new Error(`HTTP ${response.status} - ${response.statusText}`)
-        throw new Error(`HTTP ${response.status} - pdftxtファイルのロードに失敗しました。`)
-      }
-    }).then(buffer => {
-      return new Uint8Array(buffer)
-    }).then(data => {
-      return pako.inflate(data, {to : 'string'})
-*/
       if (response.ok) {
         return response.text()
       } else {
         throw new Error(`HTTP ${response.status} - pdftxt`)
       }
-// END INCEpTION EXTENSION
     })
   }
 
@@ -658,43 +543,14 @@ export default class PDFAnnoPage {
    * @returns Promise<Object>
    * @memberof PDFAnnoPage
    */
-// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
-/*
-  loadPDFFromServer (pdfURL) {
-  const pdftxtUrl = url + '.' + PDFEXTRACT_VERSION.replace(/\./g, '-') + '.txt.gz'
-  return Promise.all([
-    this.loadPdf(url),
-    this.loadPdftxt(pdftxtUrl)
-*/
   loadPDFFromServer (pdfURL, pdftxtURL) {
     return Promise.all([
       this.loadPdf(pdfURL),
       this.loadPdftxt(pdftxtURL)
-// END INCEpTION EXTENSION
     ]).then(results => {
       return {
         pdf           : results[0],
         analyzeResult : results[1]
-      }
-    })
-  }
-
-  /**
-   * Load PDF annotaion file from url.
-   * @param {String} url
-   * @returns Promise<String>
-   * @memberof PDFAnnoPage
-   */
-  loadAnnoFileFromServer (url) {
-    return fetch(url, {
-      method : 'GET',
-      mode   : 'cors'
-    }).then(response => {
-      if (response.ok) {
-        return response.text()
-      } else {
-        // throw new Error(`HTTP ${response.status} - ${response.statusText}`)
-        throw new Error(`HTTP ${response.status} - annotationファイルのロードに失敗しました。`)
       }
     })
   }
@@ -707,135 +563,4 @@ export default class PDFAnnoPage {
     return this._pdftxt
   }
 
-  /**
-   * Check annotation changings.
-   */
-  async checkAnnotationUpdate () {
-
-    // TODO Refactoring. Too Long...
-
-    // prevs.
-    const prevAnnotations = this.prevAnnotations
-    const prevFileName = this.prevFileName
-    const prevLabelMap = this.prevLabelMap
-
-    // current.
-    const currentAnnotations = this.getAllAnnotations()
-    let currentFileName // = annoUI.downloadButton.getDownloadFileName(this.getCurrentContentName)
-    // TODO Refactoring (use in downloadButton)
-    (() => {
-      let primaryAnnotationName
-      $('#dropdownAnnoPrimary a').each((index, element) => {
-        let $elm = $(element)
-        if ($elm.find('.fa-check').hasClass('no-visible') === false) {
-          primaryAnnotationName = $elm.find('.js-annoname').text()
-        }
-      })
-      if (primaryAnnotationName) {
-        currentFileName = primaryAnnotationName
-        return
-      }
-
-      // The name of Content.
-      let pdfFileName = this.getCurrentContentFile() && this.getCurrentContentFile().name
-      if (!pdfFileName) {
-        return
-        // TODO pdftxtとannoダウンロードは、Viewerが閉じている時には無効化すべし.
-      }
-      // let annoName = pdfFileName.replace(/\.pdf$/i, '.anno')
-      let annoName = pdfFileName.replace(/\.pdf$/i, '.' + constants.ANNO_FILE_EXTENSION)
-      currentFileName = annoName
-    })()
-    if (!currentFileName) {
-      return
-    }
-    // console.log('currentFileName:', currentFileName)
-    // console.log('currentAnnotations:', currentAnnotations.length)
-
-    // Check.
-    if (prevAnnotations && prevFileName && currentAnnotations && currentFileName) {
-
-      // TODO test.
-
-      // Check the fileName.
-      if (prevFileName !== currentFileName) {
-        socket.sendAnnotationUpdated({
-          fileName   : currentFileName,
-          updated    : `file was changed (${prevFileName} => ${currentFileName}).`,
-          userId     : $('#userId').val(),
-          annotation : await this.exportData()
-        })
-
-        // Check if added.
-      } else if (currentAnnotations.length > prevAnnotations.length) {
-
-        // TODO test => OK.
-
-        const adds = currentAnnotations.filter(a => {
-          return prevAnnotations.indexOf(a) === -1
-        })
-
-        if (adds.length > 0) {
-          const ids = adds.map(a => a.uuid)
-          socket.sendAnnotationUpdated({
-            fileName   : currentFileName,
-            updated    : `an annotation(${ids.join(',')}) was added.`,
-            userId     : $('#userId').val(),
-            annotation : await this.exportData()
-          })
-        }
-
-        // Check if deleted.
-      } else if (currentAnnotations.length < prevAnnotations.length) {
-
-        // TODO test => OK.
-
-        const deletes = prevAnnotations.filter(a => {
-          return currentAnnotations.indexOf(a) === -1
-        })
-
-        if (deletes.length > 0) {
-          const ids = deletes.map(a => a.uuid)
-          const messages = ids.map(id => {
-            return `an annotation(${id}) was deleted.`
-          })
-          socket.sendAnnotationUpdated({
-            fileName   : currentFileName,
-            updated    : messages.join('\n'),
-            userId     : $('#userId').val(),
-            annotation : await this.exportData()
-          })
-        }
-
-        // Check if labels are modifed.
-      } else {
-
-        const changes = Object.keys(prevLabelMap).filter(uuid => {
-          const b = currentAnnotations.filter(aa => uuid === aa.uuid)
-          if (b.length > 0) {
-            return prevLabelMap[uuid] !== b[0].text
-          }
-          return false
-        })
-
-        if (changes.length > 0) {
-          socket.sendAnnotationUpdated({
-            fileName   : currentFileName,
-            updated    : `an label(${changes.join(',')}) was changed.`,
-            userId     : $('#userId').val(),
-            annotation : await this.exportData()
-          })
-        }
-      }
-    }
-
-    // Save the state.
-    this.prevAnnotations = currentAnnotations
-    this.prevFileName = currentFileName
-    this.prevLabelMap = {}
-    currentAnnotations.forEach(a => {
-      this.prevLabelMap[a.uuid] = a.text
-    })
-
-  }
 }

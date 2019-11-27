@@ -1,9 +1,3 @@
-// BEGIN INCEpTION EXTENSION - #593 - Add PDFAnno sources
-/*
-<p align="center"><img src="https://github.com/paperai/pdfanno/blob/master/pdfanno.gif" width="850"></p>
-*/
-// END INCEpTION EXTENSION
-
 # PDFAnno
 PDFAnno is a browser-based linguistic annotation tool for PDF documents.  
 It offers functions for annotating PDF with labels and relations.  
