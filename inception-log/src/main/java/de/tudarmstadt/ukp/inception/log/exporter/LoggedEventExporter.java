@@ -93,9 +93,9 @@ public class LoggedEventExporter implements ProjectExporter
         // Set up a map of document IDs to document names because we export by name and not
         // by ID.
         Map<Long, String> documentNameIndex = new HashMap<>();
-        documentService.listSourceDocuments(project).forEach(doc -> {
-            documentNameIndex.put(doc.getId(), doc.getName());
-        });
+        documentService.listSourceDocuments(project).forEach(doc -> 
+            documentNameIndex.put(doc.getId(), doc.getName())
+        );
         
         File eventLog = new File(aFile, EVENT_LOG);
         eventLog.createNewFile();

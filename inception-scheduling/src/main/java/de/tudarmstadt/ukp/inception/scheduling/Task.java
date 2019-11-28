@@ -99,4 +99,5 @@ public abstract class Task
     public int hashCode() {
         return Objects.hash(user, project);
     }
+    
 }
