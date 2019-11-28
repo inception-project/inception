@@ -98,9 +98,10 @@ public abstract class TsvUnit
      */
     public void addUimaAnnotation(AnnotationFS aFS, boolean aAddDisambiguationIfStacked)
     {
-        uimaAnnotations.putIfAbsent(aFS.getType(), new ArrayList<>());
+        Type effectiveType = getDocument().getSchema().getEffectiveType(aFS);
+        uimaAnnotations.putIfAbsent(effectiveType, new ArrayList<>());
         
-        List<AnnotationFS> annotations = uimaAnnotations.get(aFS.getType());
+        List<AnnotationFS> annotations = uimaAnnotations.get(effectiveType);
         
         // If we already have annotations of this type, then we need to add disambiguation IDs.
         boolean alreadyHaveAnnotationsOfSameType = !annotations.isEmpty();

@@ -59,6 +59,7 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_NOUN;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -1816,6 +1817,29 @@ public abstract class WebAnnoTsv3WriterTestBase
         // otherwise it could not be represented in the TSV3 format.
         new NamedEntity(jcas, 1, 1).addToIndexes();
         
+        writeAndAssertEquals(jcas);
+    }
+    
+    @Test
+    public void testElevatedType() throws Exception {
+        JCas jcas = JCasFactory.createJCas();
+        
+        DocumentMetaData.create(jcas).setDocumentId("doc");
+        jcas.setDocumentText("John");
+        
+        // Add an elevated type which is not a direct subtype of Annotation. This type not be picked
+        // up by the schema analyzer but should still be serialized as the POS type which is in fact
+        // picked up.
+        POS_NOUN pos = new POS_NOUN(jcas, 0, 4);
+        pos.setPosValue("NN");
+        pos.setCoarseValue("NOUN");
+        pos.addToIndexes();
+        
+        Token t = new Token(jcas, 0, 4);
+        t.setPos(pos);
+        t.addToIndexes();
+        new Sentence(jcas, 0, 4).addToIndexes();
+                
         writeAndAssertEquals(jcas);
     }
 
