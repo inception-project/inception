@@ -48,6 +48,7 @@ public class WebAnnoTsv3WriterTest extends WebAnnoTsv3WriterTestBase
         failingTests.add("testAnnotationWithLeadingWhitespaceAtStart");
         failingTests.add("testAnnotationWithTrailingWhitespace");
         failingTests.add("testAnnotationWithTrailingWhitespaceAtEnd");
+        failingTests.add("testElevatedType");
         failingTests.add("testSubtokenChain");
         failingTests.add("testStackedSubMultiTokenSpanWithFeatureValue");
         failingTests.add("testSubMultiTokenSpanWithFeatureValue");
