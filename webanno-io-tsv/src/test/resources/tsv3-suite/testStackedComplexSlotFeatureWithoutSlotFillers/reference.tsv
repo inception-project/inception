@@ -1,4 +1,4 @@
-#FORMAT=WebAnno TSV 3.2
+#FORMAT=WebAnno TSV 3.3
 #T_SP=webanno.custom.SimpleSpan|
 #T_SP=webanno.custom.ComplexLinkHost|ROLE_webanno.custom.ComplexLinkHost:links_webanno.custom.ComplexLinkType|webanno.custom.SimpleSpan|value
 

@@ -34,6 +34,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatC
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.NULL_COLUMN;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.NULL_VALUE;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.PREFIX_TEXT;
+import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.PREFIX_SENTENCE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.SLOT_SEP;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.FormatConstants.STACK_SEP;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.COREFERENCE_RELATION_FEATURE;
@@ -41,6 +42,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSche
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model.TsvSchema.FEAT_SLOT_TARGET;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.splitPreserveAllTokens;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 
@@ -178,6 +180,14 @@ public class Tsv3XSerializer
     {
         String[] lines = splitPreserveAllTokens(aSentence.getUimaSentence().getCoveredText(),
                 LINE_BREAK);
+
+        String sentenceId = aSentence.getUimaSentence().getId();
+        if (isNotBlank(sentenceId)) {
+            aOut.print(PREFIX_SENTENCE_ID);
+            aOut.print(escapeText(sentenceId));
+            aOut.print(LINE_BREAK);
+        }
+        
         for (String line : lines) {
             aOut.print(PREFIX_TEXT);
             aOut.print(escapeText(line));

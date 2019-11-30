@@ -38,6 +38,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.io.xmi.XmiWriter;
 import org.dkpro.core.testing.DkproTestContext;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,6 +53,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
+/**
+ * @deprecated These test were used during the development of the new {@link WebannoTsv3XReader} and
+ *             {@link WebannoTsv3XWriter} code to check that the two are reasonably compatible. Now
+ *             that the new code is done, these old tests are not really needed anymore.
+ */
+@Deprecated
+@Ignore("Ignoring because these produce WebAnno TSV 3.2 headers and we are now at TSV 3.3")
 @RunWith(value = Parameterized.class)
 public class WebAnnoTsv3ReaderWriterRoundTripTest
 {

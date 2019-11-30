@@ -1842,6 +1842,19 @@ public abstract class WebAnnoTsv3WriterTestBase
                 
         writeAndAssertEquals(jcas);
     }
+    
+    @Test
+    public void testSentenceId() throws Exception {
+        JCas jcas = makeJCasTwoSentences();
+        
+        int n = 1;
+        for (Sentence s : select(jcas, Sentence.class)) {
+            s.setId("sent-" + n);
+            n++;
+        }
+                        
+        writeAndAssertEquals(jcas);
+    }
 
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException

@@ -69,7 +69,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * Chain types starts with the prefix <b> #T_CH=</b>. <br>
  * Slot features start with prefix <b> ROLE_</b>. <br>
  * All features of a type follows the the name separated by <b>|</b> character. <br>
+ *
+ * @deprecated Superseded by {@link WebannoTsv3XReader}
  */
+@Deprecated
 public class WebannoTsv3Reader
     extends JCasResourceCollectionReader_ImplBase
 {

@@ -1,4 +1,4 @@
-#FORMAT=WebAnno TSV 3.2
+#FORMAT=WebAnno TSV 3.3
 #T_SP=de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS|PosValue|coarseValue
 #T_RL=de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency|DependencyType|flavor|BT_de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS
 

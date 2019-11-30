@@ -1,4 +1,4 @@
-#FORMAT=WebAnno TSV 3.2
+#FORMAT=WebAnno TSV 3.3
 #T_SP=webanno.custom.Span|value
 #T_RL=webanno.custom.Relation|value|BT_webanno.custom.Span
 
