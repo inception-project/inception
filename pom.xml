@@ -71,7 +71,7 @@
     <wicket-jquery-selectors.version>2.0.7</wicket-jquery-selectors.version>
     <wicket-webjars.version>2.0.16</wicket-webjars.version>    
     <wicket-spring-boot.version>2.1.7</wicket-spring-boot.version>
-    <dkpro.version>2.0.0</dkpro.version>
+    <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <uimafit.version>3.0.0</uimafit.version>
     <slf4j.version>1.7.28</slf4j.version>
