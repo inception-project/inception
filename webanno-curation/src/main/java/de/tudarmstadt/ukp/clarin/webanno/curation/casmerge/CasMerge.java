@@ -579,6 +579,7 @@ public class CasMerge
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
                 adapter.delete(aDocument, aUsername, aTargetCas, new VID(mergedSpan));
+                throw e;
             }
             return CasMergeOpertationResult.CREATED;
         }
