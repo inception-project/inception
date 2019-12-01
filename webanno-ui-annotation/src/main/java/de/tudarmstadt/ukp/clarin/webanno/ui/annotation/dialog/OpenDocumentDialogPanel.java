@@ -84,17 +84,17 @@ public class OpenDocumentDialogPanel
     
     private final ModalWindow modalWindow;
     
-    public OpenDocumentDialogPanel(String aId, AnnotatorState aBModel, ModalWindow aModalWindow,
+    public OpenDocumentDialogPanel(String aId, AnnotatorState aState, ModalWindow aModalWindow,
             IModel<List<DecoratedObject<Project>>> aProjects)
     {
         super(aId);
         
         modalWindow = aModalWindow;
-        state = aBModel;
+        state = aState;
         projects = aProjects;
         
-        projectListChoice = createProjectListChoice(aBModel);
-        userListChoice = createUserListChoice();
+        projectListChoice = createProjectListChoice(aState);
+        userListChoice = createUserListChoice(aState);
         docListChoice = createDocListChoice();
         
         Form<Void> form = new Form<>("form");
@@ -154,13 +154,28 @@ public class OpenDocumentDialogPanel
             AnnotatorState aBModel)
     {
         List<DecoratedObject<Project>> allowedProjects = projects.getObject();
-        IModel<DecoratedObject<Project>> selectedProject = Model.of();
-        if (!allowedProjects.isEmpty()) {
-            selectedProject = Model.of(DecoratedObject.of(allowedProjects.get(0).get()));
-        }
+        IModel<DecoratedObject<Project>> selectedProject;
         if (aBModel.isProjectLocked()) {
+            // If the project is locked, then we must use the locked-to project
             selectedProject = Model.of(DecoratedObject.of(aBModel.getProject()));
         }
+        else {
+            DecoratedObject<Project> dProject = DecoratedObject.of(aBModel.getProject());
+            // If the project currently selected is in the list of allowed projects, then we use
+            // that
+            if (allowedProjects.contains(dProject)) {
+                selectedProject = Model.of(dProject);
+            }
+            // ... otherwise, we use the first project if there is one ...
+            else if (!allowedProjects.isEmpty()) {
+                selectedProject = Model.of(DecoratedObject.of(allowedProjects.get(0).get()));
+            }
+            // ... or nothing if there is no project at all
+            else {
+                selectedProject = Model.of();
+            }
+        }
+        
         projectListChoice = new OverviewListChoice<>("project", selectedProject,
                 projects.getObject());
         projectListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<Project>>()
@@ -218,9 +233,11 @@ public class OpenDocumentDialogPanel
         return projectListChoice;
     }
     
-    private OverviewListChoice<DecoratedObject<User>> createUserListChoice()
+    private OverviewListChoice<DecoratedObject<User>> createUserListChoice(AnnotatorState aState)
     {
         DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
+        DecoratedObject<User> viewUser = DecoratedObject.of(aState.getUser());
+        
         userListChoice = new OverviewListChoice<>("user", Model.of(), listUsers());
         userListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
         {
@@ -261,7 +278,10 @@ public class OpenDocumentDialogPanel
         }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)
                 && isManagerForListedProjects()));
 
-        if (userListChoice.getChoices().contains(currentUser)) {
+        if (userListChoice.getChoices().contains(viewUser)) {
+            userListChoice.setModelObject(viewUser);
+        }
+        else if (userListChoice.getChoices().contains(currentUser)) {
             userListChoice.setModelObject(currentUser);
         }
         else if (!userListChoice.getChoices().isEmpty()) {
@@ -270,7 +290,6 @@ public class OpenDocumentDialogPanel
         else {
             userListChoice.setModelObject(null);
         }
-        
         
         return userListChoice;
     }
