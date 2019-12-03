@@ -112,6 +112,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
@@ -1384,7 +1385,7 @@ public class RecommendationServiceImpl
                     SuggestionGroup group = suggestions.get(oi.getA());
                     for (AnnotationFS annotation : annotations.get(oi.getB())) {
                         String label = annotation.getFeatureValueAsString(feat);
-                        for (AnnotationSuggestion suggestion : group) {
+                        for (AnnotationSuggestion_ImplBase suggestion : group) {
                             if (!aLayer.isAllowStacking()
                                     || (label != null && label.equals(suggestion.getLabel()))
                                     || suggestion.getLabel() == null) {

@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
@@ -180,7 +181,7 @@ public class RecommendationSpanRenderer
             // Render annotations for each label
             for (LabelMapKey label : sortedAndfiltered) {
                 // Create VID using the recommendation with the lowest recommendationId
-                AnnotationSuggestion canonicalRecommendation = suggestion.stream()
+                AnnotationSuggestion_ImplBase canonicalRecommendation = suggestion.stream()
                         // check for label or feature for no-label annotations as key
                         .filter(p -> label.equalsAnnotationSuggestion(p))
                         .max(Comparator.comparingInt(AnnotationSuggestion::getId)).orElse(null);
@@ -246,7 +247,7 @@ public class RecommendationSpanRenderer
 
         private boolean hasNoLabel;
 
-        public LabelMapKey(AnnotationSuggestion aSuggestion)
+        public LabelMapKey(AnnotationSuggestion_ImplBase aSuggestion)
         {
             if (aSuggestion.getLabel() == null) {
                 hasNoLabel = true;
@@ -284,7 +285,7 @@ public class RecommendationSpanRenderer
             return hasNoLabel;
         }
         
-        public boolean equalsAnnotationSuggestion(AnnotationSuggestion aSuggestion)
+        public boolean equalsAnnotationSuggestion(AnnotationSuggestion_ImplBase aSuggestion)
         {
             // annotation is label-less
             if (aSuggestion.getLabel() == null) {
