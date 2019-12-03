@@ -163,12 +163,11 @@ public class Predictions
      */
     public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
-        aPredictions.forEach(prediction -> {
+        aPredictions.forEach(prediction -> 
             predictions.put(new ExtendedId(user.getUsername(), project.getId(),
                     prediction.getDocumentName(), prediction.getLayerId(), prediction.getOffset(),
-                    prediction.getRecommenderId(), prediction.getId(), -1), prediction);
-
-        });
+                    prediction.getRecommenderId(), prediction.getId(), -1), prediction)
+        );
     }
     
     public Project getProject()
