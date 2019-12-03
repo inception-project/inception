@@ -17,33 +17,108 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+
 public class RecommenderContext
 {
-    private final ConcurrentHashMap<String, Object> store;
-    private boolean ready = false;
+    /**
+     * Empty context which starts out being closed.
+     */
+    public static final RecommenderContext EMPTY_CONTEXT;
+    
+    static {
+        EMPTY_CONTEXT = new  RecommenderContext();
+        EMPTY_CONTEXT.close();
+    }
+    
+    private final Map<String, Object> store;
+    private List<LogMessage> messages;
+    private Optional<User> user;
+    private boolean closed = false;
 
     public RecommenderContext()
     {
-        store = new ConcurrentHashMap<>();
+        store = new HashMap<>();
+        messages = new ArrayList<>();
     }
 
     @SuppressWarnings("unchecked")
     @Nullable
-    public <T> Optional<T> get(Key<T> aKey)
+    synchronized public <T> Optional<T> get(Key<T> aKey)
     {
         return Optional.ofNullable((T) store.get(aKey.name));
     }
 
-    public <T> void put(Key<T> aKey, T aValue)
+    synchronized public <T> void put(Key<T> aKey, T aValue)
     {
+        if (closed) {
+            throw new IllegalStateException("Adding data to a closed context is not permitted.");
+        }
+        
         store.put(aKey.name, aValue);
     }
+    
+    synchronized public void info(String aFormat, Object... aValues)
+    {
+        if (closed) {
+            throw new IllegalStateException("Adding data to a closed context is not permitted.");
+        }
+        
+        messages.add(LogMessage.info(this, aFormat, aValues));
+    }
 
+    synchronized public void warn(String aFormat, Object... aValues)
+    {
+        if (closed) {
+            throw new IllegalStateException("Adding data to a closed context is not permitted.");
+        }
+        
+        messages.add(LogMessage.warn(this, aFormat, aValues));
+    }
+
+    synchronized public void error(String aFormat, Object... aValues)
+    {
+        if (closed) {
+            throw new IllegalStateException("Adding data to a closed context is not permitted.");
+        }
+        
+        messages.add(LogMessage.error(this, aFormat, aValues));
+    }
+    
+    public List<LogMessage> getMessages()
+    {
+        return messages;
+    }
+
+    /**
+     * Close the context. Further modifications to the context are not permitted.
+     */
+    synchronized public void close()
+    {
+        if (!closed) {
+            closed = true;
+            messages = Collections.unmodifiableList(messages);
+        }
+    }
+    
+    /**
+     * @return whether the context is closed.
+     */
+    synchronized public boolean isClosed()
+    {
+        return closed;
+    }
+    
     public static class Key<T>
     {
         private final String name;
@@ -54,19 +129,11 @@ public class RecommenderContext
         }
     }
     
-    /**
-     * Mark context as ready meaning that it can be used to generate predictions.
-     */
-    public void markAsReadyForPrediction()
-    {
-        ready = true;
+    public Optional<User> getUser() {
+        return user;
     }
     
-    /**
-     * @return whether the context is ready to be used for making predictions.
-     */
-    public boolean isReadyForPrediction()
-    {
-        return ready;
+    public void setUser(User aUser) {
+        user = Optional.ofNullable(aUser);
     }
 }

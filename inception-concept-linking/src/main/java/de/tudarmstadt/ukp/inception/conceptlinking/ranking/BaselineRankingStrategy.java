@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 
 public class BaselineRankingStrategy
 {
-    private static Comparator<CandidateEntity> INSTANCE = (e1, e2) -> new CompareToBuilder()
+    private static final Comparator<CandidateEntity> INSTANCE = (e1, e2) -> new CompareToBuilder()
             // Did the user enter an URI and does the candidate exactly match it?
             // Note that the comparator sorts ascending by value, so a match is represented using
             // a 0 while a mistmatch is represented using 1. The typical case is that neither

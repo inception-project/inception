@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.isReachable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
@@ -33,6 +34,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -45,12 +47,12 @@ import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -59,7 +61,7 @@ import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
-@SpringBootTest(classes = SpringConfig.class)
+@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
 public class KnowledgeBaseServiceRemoteTest
@@ -122,7 +124,7 @@ public class KnowledgeBaseServiceRemoteTest
             importKnowledgeBase(sutConfig.getDataUrl());
         }
         else if (kb.getType() == RepositoryType.REMOTE) {
-            testFixtures.assumeEndpointIsAvailable(sutConfig.getDataUrl(), 5000);
+            testFixtures.assumeEndpointIsAvailable(sutConfig.getDataUrl());
             sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sutConfig.getDataUrl()));
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
         }
@@ -142,6 +144,11 @@ public class KnowledgeBaseServiceRemoteTest
     public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig) throws Exception
     {
         sutConfig = aConfig;
+        
+        Assume.assumeTrue(
+                "Remote repository at [" + aConfig.getDataUrl() + "] is not reachable",
+                aConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE || 
+                        isReachable(aConfig.getDataUrl()));
     }
 
     @Parameterized.Parameters(name = "KB = {0}")

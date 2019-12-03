@@ -66,9 +66,6 @@ gulp.task('_minify-html', () => {
 gulp.task('prepare', () => {
   fs.removeSync('build')
   fs.copySync('pdfjs', path.join('build', 'pdfjs'))
-// BEGIN INCEpTION EXTENSION - #593 - Add PDFAnno sources
-//   fs.copySync('pdfs', path.join('build', 'pdfs'))
-// END INCEpTION EXTENSION
   fs.copySync('pages', path.join('build'))
   fs.copySync('schemas/pdfanno-schema.json', path.join('build', 'schema.json'))
 })
@@ -107,8 +104,6 @@ gulp.task('watch-sw', () => {
 
 gulp.task('publish', cb => {
   checkIsStableVersion()
-// BEGIN INCEpTION EXTENSION - #593 - Add PDFAnno sources
   baseDir = 'dist/pdfanno'
-// END INCEpTION EXTENSION
   publish(cb)
 })

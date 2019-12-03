@@ -2,9 +2,7 @@ import { uuid } from 'anno-ui/src/utils'
 import { ANNO_VERSION, PDFEXTRACT_VERSION } from '../version'
 import { toTomlString, fromTomlString } from '../utils/tomlString'
 import { dispatchWindowEvent } from '../utils/event'
-// import { convertToExportY } from '../../../shared/coords'
 import SpanAnnotation from './span'
-import RectAnnotation from './rect'
 import RelationAnnotation from './relation'
 import semver from 'semver'
 import Ajv from 'ajv'
@@ -181,9 +179,6 @@ export default class AnnotationContainer {
 
       // schema Validation
       if (!this.validate(dataExport)) {
-        // errorをcatchしづらい
-        // reject(this.validate.errors)
-        // return
         console.error(JSON.stringify(this.validate.errors))
       }
 
@@ -277,15 +272,6 @@ export default class AnnotationContainer {
         span.render()
         span.enableViewMode()
 
-        // Rect.
-      } else if (d.type === 'rect') {
-
-        let rect = RectAnnotation.newInstanceFromTomlObject(d)
-        rect.color = getColor(tomlIndex, rect.type, rect.text)
-        rect.save()
-        rect.render()
-        rect.enableViewMode()
-
         // Relation.
       } else if (d.type === 'relation') {
 
@@ -318,11 +304,6 @@ export default class AnnotationContainer {
 
           if (key === 'spans') {
             const span = SpanAnnotation.newInstanceFromTomlObject(obj)
-// BEGIN INCEpTION EXTENSION - #981 - Labels for Annotations in PDF editor
-/*
-            span.color = getColor(tomlIndex, 'span', span.text)
-*/
-// END INCEpTION EXTENSION
             span.save()
             span.render()
             span.enableViewMode()
@@ -333,11 +314,6 @@ export default class AnnotationContainer {
             obj.rel1 = span1 ? span1.uuid : null
             obj.rel2 = span2 ? span2.uuid : null
             const relation = RelationAnnotation.newInstanceFromTomlObject(obj)
-// BEGIN INCEpTION EXTENSION - #981 - Labels for Annotations in PDF editor
-/*
-            relation.color = getColor(tomlIndex, relation.direction, relation.text)
-*/
-// END INCEpTION EXTENSION
             relation.save()
             relation.render()
             relation.enableViewMode()

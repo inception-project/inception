@@ -18,9 +18,10 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -31,9 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
@@ -64,11 +63,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -76,13 +77,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -112,6 +113,7 @@ public class SearchAnnotationSidebar
     private User currentUser;
 
     private final WebMarkupContainer mainContainer;
+    private final WebMarkupContainer resultsGroupContainer;
 
     private IModel<String> targetQuery = Model.of("");
     private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
@@ -170,6 +172,10 @@ public class SearchAnnotationSidebar
             searchService.reindex(project);
         }));
 
+        resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
+        resultsGroupContainer.setOutputMarkupId(true);
+        mainContainer.add(resultsGroupContainer);
+
         ListView<ResultsGroup> searchResultGroups = new ListView<ResultsGroup>("searchResultGroups")
         {
             private static final long serialVersionUID = -631500052426449048L;
@@ -192,7 +198,7 @@ public class SearchAnnotationSidebar
                 groupedSearchResults.getObject().values().stream()
                         .sorted(Comparator.comparing(ResultsGroup::getGroupKey))
                         .collect(Collectors.toList())));
-        mainContainer.add(searchResultGroups);
+        resultsGroupContainer.add(searchResultGroups);
 
         Form<Void> annotationForm = new Form<>("annotateForm");
         // create annotate-button and options form
@@ -235,6 +241,11 @@ public class SearchAnnotationSidebar
         annotationForm.setDefaultButton(annotateButton);
         annotationForm.add(visibleWhen(() -> !groupedSearchResults.getObject().isEmpty()));
 
+        
+        LambdaAjaxButton<Void> clearButton = new LambdaAjaxButton<>("clearButton",
+                this::actionClearResults);
+        annotationForm.add(clearButton);
+        
         mainContainer.add(annotationForm);
     }
 
@@ -256,6 +267,8 @@ public class SearchAnnotationSidebar
 
         layerChoice.add(new AjaxFormComponentUpdatingBehavior("change")
         {
+            private static final long serialVersionUID = -6095969211884063787L;
+
             @Override protected void onUpdate(AjaxRequestTarget aTarget)
             {
                 //update the choices for the feature selection dropdown
@@ -286,17 +299,26 @@ public class SearchAnnotationSidebar
                     }
                 }
                 groupLevelSelections.put(aGroupKey, getModelObject());
-                target.add(mainContainer);
+                target.add(resultsGroupContainer);
             }
         };
         return selectAllCheckBox;
     }
 
-    private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm) {
+    private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm)
+    {
         selectedResult = null;
         groupedSearchResults.detach();
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
+    }
+    
+    private void actionClearResults(AjaxRequestTarget aTarget, Form<Void> aForm)
+    {
+        targetQuery.setObject("");
+        selectedResult = null;
+        groupedSearchResults.detach();
+        aTarget.add(mainContainer);
     }
     
     private Map<String, ResultsGroup> getSearchResultsGrouped()
@@ -354,7 +376,7 @@ public class SearchAnnotationSidebar
     }
 
     public void actionApplyToSelectedResults(AjaxRequestTarget aTarget,
-        BiConsumer<SearchResult, SpanAdapter> aConsumer)
+            Operation aConsumer)
     {
         if (VID.NONE_ID.equals(getModelObject().getSelection().getAnnotation())) {
             error("No annotation selected. Please select an annotation first");
@@ -363,127 +385,163 @@ public class SearchAnnotationSidebar
             AnnotationLayer layer = getModelObject().getSelectedAnnotationLayer();
             try {
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
-                for (ResultsGroup group : groupedSearchResults.getObject().values()) {
-                    for (SearchResult result : group.getResults()) {
-                        if (result.isSelectedForAnnotation()) {
-                            aConsumer.accept(result, adapter);
-                        }
+                adapter.silenceEvents();
+                
+                // Group the results by document such that we can process one CAS at a time
+                Map<Long, List<SearchResult>> resultsByDocument = groupedSearchResults.getObject()
+                        .values().stream()
+                        // the grouping can be based on some other strategy than the document, so
+                        // we re-group here
+                        .flatMap(group -> group.getResults().stream())
+                        .collect(groupingBy(SearchResult::getDocumentId));
+                
+                BulkOperationResult bulkResult = new BulkOperationResult();
+                
+                AnnotatorState state = getModelObject();
+                for (Entry<Long, List<SearchResult>> resultsGroup : resultsByDocument.entrySet()) {
+                    long documentId = resultsGroup.getKey();
+                    SourceDocument sourceDoc = documentService
+                            .getSourceDocument(state.getProject().getId(), documentId);
+
+                    AnnotationDocument annoDoc = documentService
+                            .createOrGetAnnotationDocument(sourceDoc, currentUser);
+                    
+                    switch (annoDoc.getState()) {
+                    case FINISHED: // fall-through
+                    case IGNORE:
+                        // Skip processing any documents which are finished or ignored
+                        continue;
+                    default:
+                        // Do nothing
                     }
+                    
+                    // Load annotated document
+                    CAS cas = documentService.readAnnotationCas(sourceDoc,
+                            currentUser.getUsername());
+
+                    // Apply bulk operations to all hits from this document
+                    for (SearchResult result : resultsGroup.getValue()) {
+                        if (result.isReadOnly() || !result.isSelectedForAnnotation()) {
+                            continue;
+                        }
+                        
+                        aConsumer.apply(sourceDoc, cas, adapter, result, bulkResult);
+                    }
+
+                    // Persist annotated document
+                    writeJCasAndUpdateTimeStamp(sourceDoc, cas);
                 }
+                
+                if (bulkResult.created > 0) {
+                    success("Created annotations: " + bulkResult.created);
+                }
+                if (bulkResult.updated > 0) {
+                    success("Updated annotations: " + bulkResult.updated);
+                }
+                if (bulkResult.deleted > 0) {
+                    success("Deleted annotations: " + bulkResult.deleted);
+                }
+                if (bulkResult.conflict > 0) {
+                    warn("Annotations skipped due to conflicts: " + bulkResult.conflict);
+                }
+                
+                if (bulkResult.created == 0 && bulkResult.updated == 0 && bulkResult.deleted == 0) {
+                    info("No changes");
+                }
+                
+                applicationEventPublisher.get().publishEvent(new BulkAnnotationEvent(this,
+                        getModelObject().getProject(), currentUser.getUsername(), layer));
             }
             catch (ClassCastException e) {
                 error("Can only create SPAN annotations for search results.");
                 LOG.error("Can only create SPAN annotations for search results", e);
             }
+            catch (Exception e) {
+                error("Unable to apply action to search results: " + e.getMessage());
+                LOG.error("Unable to apply action to search results: ", e);
+            }
         }
+        
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
-    private void createAnnotationAtSearchResult(SearchResult searchResult, SpanAdapter aAdapter)
+    private void createAnnotationAtSearchResult(SourceDocument aDocument, CAS aCas,
+            SpanAdapter aAdapter, SearchResult aSearchResult, BulkOperationResult aBulkResult)
+        throws AnnotationException
     {
         AnnotatorState state = getModelObject();
         AnnotationLayer layer = aAdapter.getLayer();
         List<FeatureState> featureStates = state.getFeatureStates();
-        SourceDocument sourceDoc = documentService
-            .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
-        try {
-            CAS jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
+        
+        Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
+        AnnotationFS annoFS = selectAt(aCas, type, aSearchResult.getOffsetStart(),
+            aSearchResult.getOffsetEnd()).stream().findFirst().orElse(null);
 
-            Type type = CasUtil.getAnnotationType(jCas, aAdapter.getAnnotationTypeName());
-            AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
-                searchResult.getOffsetEnd());
+        boolean overrideExisting = createOptions.getObject().isOverrideExistingAnnotations();
 
-            boolean overrideExisting = createOptions.getObject().isOverrideExistingAnnotations();
+        // if there is already an annotation of the same type at the target location
+        // and we don't want to override it and stacking is not enabled, do nothing.
+        if (annoFS != null && !overrideExisting && !layer.isAllowStacking()) {
+            return;
+        }
 
-            // if there is already an annotation of the same type at the target location
-            // and we don't want to override it and stacking is not enabled, do nothing.
-            if (annoFS != null && !overrideExisting && !layer.isAllowStacking()) {
-                return;
-            }
-
-            // create a new annotation if not already there or if stacking is enabled and the
-            // new annotation has different features than the existing one
-            if (annoFS == null || !featureValuesMatchCurrentState(annoFS) && !overrideExisting) {
+        // create a new annotation if not already there or if stacking is enabled and the
+        // new annotation has different features than the existing one
+        if (annoFS == null || (!overrideExisting && !featureValuesMatchCurrentState(annoFS))) {
+            try {
                 annoFS = aAdapter
-                    .add(sourceDoc, currentUser.getUsername(), jCas, searchResult.getOffsetStart(),
-                        searchResult.getOffsetEnd());
+                    .add(aDocument, currentUser.getUsername(), aCas, aSearchResult.getOffsetStart(),
+                        aSearchResult.getOffsetEnd());
+                aBulkResult.created++;
             }
-
-            // set values for all features according to current state
-            for (FeatureState featureState : featureStates) {
-                Object featureValue = featureState.value;
-                AnnotationFeature feature = featureState.feature;
-                if (featureValue != null) {
-                    int addr = getAddr(annoFS);
-                    aAdapter
-                        .setFeatureValue(sourceDoc, currentUser.getUsername(), jCas, addr, feature,
-                            featureValue);
-                }
+            catch (AnnotationException e) {
+                aBulkResult.conflict++;
             }
-
-            writeJCasAndUpdateTimeStamp(sourceDoc, jCas);
         }
-        catch (IOException | AnnotationException e) {
-            error(
-                "Unable to create annotation for search result [" + searchResult.toString() + " ]: "
-                    + e.getLocalizedMessage());
-            LOG.error("Unable to create annotation for search result [" + searchResult.toString()
-                + " ]: ", e);
+        else {
+            aBulkResult.updated++;
+        }
+
+        // set values for all features according to current state
+        for (FeatureState featureState : featureStates) {
+            Object featureValue = featureState.value;
+            AnnotationFeature feature = featureState.feature;
+            if (featureValue != null) {
+                int addr = getAddr(annoFS);
+                aAdapter.setFeatureValue(aDocument, currentUser.getUsername(), aCas, addr,
+                        feature, featureValue);
+            }
         }
     }
 
-    private void deleteAnnotationAtSearchResult(SearchResult searchResult, SpanAdapter aAdapter)
+    private void deleteAnnotationAtSearchResult(SourceDocument aDocument, CAS aCas,
+            SpanAdapter aAdapter, SearchResult aSearchResult, BulkOperationResult aBulkResult)
     {
-        AnnotatorState state = getModelObject();
-        SourceDocument sourceDoc = documentService
-            .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
-        try {
-            CAS jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
+        Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
+        AnnotationFS annoFS = selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd()).stream().findFirst().orElse(null);
 
-            Type type = CasUtil.getAnnotationType(jCas, aAdapter.getAnnotationTypeName());
-            AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
-                searchResult.getOffsetEnd());
-
-            if (annoFS == null
-                || !featureValuesMatchCurrentState(annoFS) && deleteOptions.getObject()
-                .isDeleteOnlyMatchingFeatureValues()) {
-                return;
-            }
-            aAdapter.delete(sourceDoc, currentUser.getUsername(), jCas, new VID(annoFS));
-
-            writeJCasAndUpdateTimeStamp(sourceDoc, jCas);
+        if (annoFS == null || !featureValuesMatchCurrentState(annoFS)
+                && deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
+            return;
         }
-        catch (IOException e) {
-            error(
-                "Unable to delete annotation for search result [" + searchResult.toString() + " ]: "
-                    + e.getLocalizedMessage());
-            LOG.error("Unable to delete annotation for search result [" + searchResult.toString()
-                + " ]: ", e);
-        }
+        
+        aAdapter.delete(aDocument, currentUser.getUsername(), aCas, new VID(annoFS));
+        aBulkResult.deleted++;
     }
 
-    private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, CAS aJCas)
+    private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, CAS aCas)
         throws IOException
     {
-        if (!documentService.existsAnnotationDocument(aSourceDoc, currentUser)) {
-            documentService.createOrGetAnnotationDocument(aSourceDoc, currentUser);
-        }
-        documentService.writeAnnotationCas(aJCas, aSourceDoc, currentUser, true);
-
-        updateTimestamp(aSourceDoc);
-    }
-
-    private void updateTimestamp(SourceDocument aModifiedDocument) throws IOException
-    {
-        // If the currently displayed document is the same one where the annotation was created,
-        // then update timestamp in state to avoid concurrent modification errors
         AnnotatorState state = getModelObject();
-        if (Objects.equals(state.getDocument().getId(), aModifiedDocument.getId())) {
-            Optional<Long> diskTimestamp = documentService
-                .getAnnotationCasTimestamp(aModifiedDocument, currentUser.getUsername());
-            if (diskTimestamp.isPresent()) {
-                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
+
+        if (Objects.equals(state.getDocument().getId(), aSourceDoc.getId())) {
+            // Updating the currently open document is done through the page in order to notify the
+            // mechanism to detect concurrent modifications.
+            getAnnotationPage().writeEditorCas(aCas);
+        }
+        else {
+            documentService.writeAnnotationCas(aCas, aSourceDoc, currentUser, true);
         }
     }
 
@@ -544,6 +602,7 @@ public class SearchAnnotationSidebar
                 {
                     Project currentProject = SearchAnnotationSidebar.this.getModel().getObject()
                             .getProject();
+                    SearchResult result = aItem.getModelObject();
                     
                     LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument",
                         t -> {
@@ -557,8 +616,10 @@ public class SearchAnnotationSidebar
                     aItem.add(lambdaAjaxLink);
 
                     AjaxCheckBox selected = new AjaxCheckBox("selected",
-                        Model.of(aItem.getModelObject().isSelectedForAnnotation()))
+                        Model.of(result.isSelectedForAnnotation()))
                     {
+                        private static final long serialVersionUID = -6955396602403459129L;
+
                         @Override
                         protected void onUpdate(AjaxRequestTarget target)
                         {
@@ -568,10 +629,11 @@ public class SearchAnnotationSidebar
                                 // not all results in the document are selected, so set document
                                 // level selection to false
                                 groupLevelSelections.put(groupKey, false);
-                                target.add(mainContainer);
+                                target.add(resultsGroupContainer);
                             }
                         }
                     };
+                    selected.setVisible(!result.isReadOnly());
                     aItem.add(selected);
 
                     String sentence = new String();
@@ -588,5 +650,21 @@ public class SearchAnnotationSidebar
                     .setModel(LoadableDetachableModel.of(() -> aModel.getObject().getResults()));
             add(statementList);        
         }
+    }
+    
+    @FunctionalInterface
+    private interface Operation
+    {
+        void apply(SourceDocument aSourceDoc, CAS aCas, SpanAdapter aAdapter, SearchResult aResult,
+                BulkOperationResult aBulkResult)
+            throws AnnotationException;
+    }
+    
+    private class BulkOperationResult
+    {
+        public int created = 0;
+        public int deleted = 0;
+        public int updated = 0;
+        public int conflict = 0;
     }
 }

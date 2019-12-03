@@ -19,6 +19,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,8 +46,8 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,7 +66,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = SpringConfig.class)
+@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
 public class RecommendationServiceImplIntegrationTest
@@ -173,14 +175,17 @@ public class RecommendationServiceImplIntegrationTest
                 .thenReturn(asList(layer));
         doCallRealMethod().when(annoService)
                 .upgradeCas(any(CAS.class), any(TypeSystemDescription.class));
+        doCallRealMethod().when(annoService)
+                .upgradeCas(any(CAS.class), any(CAS.class), any(TypeSystemDescription.class));
 
-        sut.monkeyPatchTypeSystem(project, jCas.getCas());
+        sut.cloneAndMonkeyPatchCAS(project, jCas.getCas(), jCas.getCas());
 
         Type type = CasUtil.getType(jCas.getCas(), layer.getName());
 
         assertThat(type.getFeatures())
                 .extracting(Feature::getShortName)
-                .contains(feature.getName() + "_score")
+                .contains(feature.getName() + FEATURE_NAME_SCORE_SUFFIX)
+                .contains(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX)
                 .contains(FEATURE_NAME_IS_PREDICTION);
     }
 

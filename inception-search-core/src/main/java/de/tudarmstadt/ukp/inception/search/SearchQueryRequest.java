@@ -23,11 +23,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class SearchQueryRequest
 {
     private final Project project;
-    private final String username;
+    private final User user;
     private final String query;
 
     private final SourceDocument limitedToDocument;
@@ -35,24 +36,24 @@ public class SearchQueryRequest
     private final AnnotationLayer annoationLayer;
     private final AnnotationFeature annotationFeature;
 
-    public SearchQueryRequest(Project aProject, String aUsername, String aQuery)
+    public SearchQueryRequest(Project aProject, User aUser, String aQuery)
     {
-        this(aProject, aUsername, aQuery, null);
+        this(aProject, aUser, aQuery, null);
     }
 
-    public SearchQueryRequest(Project aProject, String aUsername, String aQuery,
+    public SearchQueryRequest(Project aProject, User aUser, String aQuery,
             SourceDocument aLimitedToDocument)
     {
-        this(aProject, aUsername, aQuery, aLimitedToDocument, null, null);
+        this(aProject, aUser, aQuery, aLimitedToDocument, null, null);
     }
 
-    public SearchQueryRequest(Project aProject, String aUsername, String aQuery,
+    public SearchQueryRequest(Project aProject, User aUser, String aQuery,
         SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
         AnnotationFeature aAnnotationFeature)
     {
         super();
         project = aProject;
-        username = aUsername;
+        user = aUser;
         query = aQuery;
         limitedToDocument = aLimitedToDocument;
         annoationLayer = aAnnotationLayer;
@@ -64,9 +65,9 @@ public class SearchQueryRequest
         return project;
     }
 
-    public String getUsername()
+    public User getUser()
     {
-        return username;
+        return user;
     }
 
     public String getQuery()

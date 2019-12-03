@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -47,6 +48,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
@@ -76,10 +78,21 @@ public class OpenNlpPosRecommender
     }
 
     @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+    
+    @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException
     {
         List<POSSample> posSamples = extractPosSamples(aCasses);
+        
+        if (posSamples.size() < 2) {
+            LOG.info("Not enough training data: [{}] items", posSamples.size());
+            return;
+        }
 
         // The beam size controls how many results are returned at most. But even if the user
         // requests only few results, we always use at least the default bean size recommended by
@@ -90,10 +103,13 @@ public class OpenNlpPosRecommender
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         POSModel model = train(posSamples, params);
 
-        if (model != null) {
-            aContext.put(KEY_MODEL, model);
-            aContext.markAsReadyForPrediction();
-        }
+        aContext.put(KEY_MODEL, model);
+    }
+    
+    @Override
+    public RecommendationEngineCapability getTrainingCapability() 
+    {
+        return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override
@@ -191,7 +207,7 @@ public class OpenNlpPosRecommender
         
         if (trainingSetSize < 2 || testSetSize < 2) {
             String info = String.format(
-                    "Not enough training data: training set [%s] items, test set [%s] of total [%s]",
+                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s]",
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
 
@@ -235,9 +251,9 @@ public class OpenNlpPosRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
-                    cas, sentenceType, tokenType);
-            for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
+                    tokenType);
+            for (Map.Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 if (posSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
                 }
@@ -265,7 +281,7 @@ public class OpenNlpPosRecommender
         String[] tokens = new String[numberOfTokens];
         String[] tags = new String[numberOfTokens];
 
-        boolean hasAnnotations = false;
+        int withTagCount = 0;
 
         int i = 0;
         for (AnnotationFS token : aTokens) {
@@ -276,13 +292,21 @@ public class OpenNlpPosRecommender
             // If the tag is neither PAD nor null, then there is at
             // least one annotation the trainer can work with.
             if (tag != null & !PAD.equals(tag)) {
-                hasAnnotations = true;
+                withTagCount++;
             }
 
             i++;
         }
-
-        return hasAnnotations ? Optional.of(new POSSample(tokens, tags)) : Optional.empty();
+        
+        // Require at least X percent of the sentence to have tags to avoid class imbalance on PAD
+        // tag.
+        double coverage = ((double) withTagCount * 100) / (double) numberOfTokens;
+        if (coverage > traits.getTaggedTokensThreshold()) {
+            return Optional.of(new POSSample(tokens, tags));
+        }
+        else {
+            return Optional.empty();
+        }
     }
 
     private String getFeatureValueCovering(CAS aCas, AnnotationFS aToken, Type aType,

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -39,6 +41,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
@@ -56,7 +59,14 @@ public class DataMajorityNerRecommender
         super(aRecommender);
     }
 // end::classDefinition[]
+
 // tag::train[]
+    @Override
+    public RecommendationEngineCapability getTrainingCapability() 
+    {
+        return TRAINING_REQUIRED;
+    }
+    
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
             throws RecommendationException
@@ -65,9 +75,15 @@ public class DataMajorityNerRecommender
 
         DataMajorityModel model = trainModel(annotations);
         aContext.put(KEY_MODEL, model);
-        aContext.markAsReadyForPrediction();
+    }
+    
+    @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
 // end::train[]
+    
 // tag::extractAnnotations[]
     private List<Annotation> extractAnnotations(List<CAS> aCasses)
     {
@@ -88,6 +104,7 @@ public class DataMajorityNerRecommender
         return annotations;
     }
 // end::extractAnnotations[]
+
 // tag::trainModel[]
     private DataMajorityModel trainModel(List<Annotation> aAnnotations)
             throws RecommendationException
@@ -108,9 +125,10 @@ public class DataMajorityNerRecommender
         int numberOfAnnotations = model.values().stream().reduce(Integer::sum).get();
         double confidence = (float) entry.getValue() / numberOfAnnotations;
 
-        return new DataMajorityModel(majorityLabel, confidence);
+        return new DataMajorityModel(majorityLabel, confidence, numberOfAnnotations);
     }
 // end::trainModel[]
+
 // tag::predict1[]
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
@@ -126,6 +144,7 @@ public class DataMajorityNerRecommender
         // Add predictions to the CAS
         Type predictedType = getPredictedType(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
+        Feature scoreExplanationFeature = getScoreExplanationFeature(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
@@ -133,11 +152,13 @@ public class DataMajorityNerRecommender
             AnnotationFS annotation = aCas.createAnnotation(predictedType, ann.begin, ann.end);
             annotation.setStringValue(predictedFeature, ann.label);
             annotation.setDoubleValue(scoreFeature, ann.score);
+            annotation.setStringValue(scoreExplanationFeature, ann.explanation);
             annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
     }
 // end::predict1[]
+
 // tag::predict2[]
     private List<Annotation> predict(Collection<AnnotationFS> candidates,
                                      DataMajorityModel aModel)
@@ -152,14 +173,15 @@ public class DataMajorityNerRecommender
             int begin = token.getBegin();
             int end = token.getEnd();
 
-            Annotation annotation = new Annotation(aModel.majorityLabel, begin, end);
-            annotation.score = aModel.confidence;
+            Annotation annotation = new Annotation(aModel.majorityLabel, aModel.confidence, 
+                    aModel.numberOfAnnotations, begin, end);
             result.add(annotation);
         }
 
         return result;
     }
 // end::predict2[]
+
 // tag::evaluate[]
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
@@ -205,26 +227,42 @@ public class DataMajorityNerRecommender
         return result;
     }
 // end::evaluate[]
+
 // tag::utility[]
-    private static class DataMajorityModel {
+    private static class DataMajorityModel 
+    {
         private final String majorityLabel;
         private final double confidence;
+        private final int numberOfAnnotations;
 
-        private DataMajorityModel(String aMajorityLabel, double aConfidence) {
+        private DataMajorityModel(String aMajorityLabel, double aConfidence, 
+                int aNumberOfAnnotations) 
+        {
             majorityLabel = aMajorityLabel;
             confidence = aConfidence;
+            numberOfAnnotations = aNumberOfAnnotations;
         }
     }
 
-    private static class Annotation {
+    private static class Annotation 
+    {
         private final String label;
+        private final double score;
+        private final String explanation;
         private final int begin;
         private final int end;
-        private double score;
 
         private Annotation(String aLabel, int aBegin, int aEnd)
         {
+            this(aLabel, 0, 0, aBegin, aEnd);
+        }
+        
+        private Annotation(String aLabel, double aScore, int aNumberOfAnnotations, int aBegin, 
+                int aEnd)
+        {
             label = aLabel;
+            score = aScore;
+            explanation = "Based on " + aNumberOfAnnotations + " annotations";
             begin = aBegin;
             end = aEnd;
         }

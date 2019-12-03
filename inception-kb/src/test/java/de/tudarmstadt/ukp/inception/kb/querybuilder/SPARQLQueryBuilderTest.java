@@ -25,6 +25,8 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.sa
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.assertThatChildrenOfExplicitRootCanBeRetrieved;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.exists;
+import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
+import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +35,8 @@ import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -55,6 +59,7 @@ import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
@@ -615,6 +620,35 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("http://example.org/#subclass1-1");
     }
 
+    /**
+     * This query tries to find all <i>humans in the Star Trek universe</i> 
+     * ({@code http://www.wikidata.org/entity/Q924827}) who are named <i>Amanda</i>. It tests
+     * whether the call to {@link SPARQLQueryBuilder#childrenOf(String)} disables the FTS. If the
+     * FTS is not disabled, then no result would be returned because there are so many Amandas in
+     * Wikidata that the popular ones returned by the FTS do not include any from the Star Trek
+     * universe.
+     */
+    @Test
+    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata() throws Exception
+    {
+        assertIsReachable(wikidata);
+        
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
+        initWikidataMapping();
+    
+        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
+                .forInstances(kb)
+                .childrenOf("http://www.wikidata.org/entity/Q924827")
+                .withLabelStartingWith("Amanda")
+                .retrieveLabel());
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://www.wikidata.org/entity/Q1412447");
+    }
+
     @Test
     public void thatClassQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults() throws Exception
     {
@@ -800,6 +834,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().contains("tower"));
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
     {
@@ -1139,6 +1174,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().startsWith("barack"));
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
     {
@@ -1177,6 +1213,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {
@@ -1565,6 +1602,40 @@ public class SPARQLQueryBuilderTest
         kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
     }    
     
+    public static boolean isReachable(String aUrl)
+    {
+        try {
+            URL url = new URL(aUrl);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(2500);
+            con.setReadTimeout(2500);
+            con.setRequestProperty("Content-Type", "application/sparql-query");
+            int status = con.getResponseCode();
+            
+            if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
+                String location = con.getHeaderField("Location");
+                return isReachable(location);
+            }
+        }
+        catch (Exception e) {
+            return false;
+        }
+        
+        SPARQLRepository r = new SPARQLRepository(aUrl);
+        r.init();
+        try (RepositoryConnection conn = r.getConnection()) {
+            TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
+            query.setMaxExecutionTime(5);
+            try (TupleQueryResult result = query.evaluate()) {
+                return true;
+            }
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+    
     public static void assertIsReachable(Repository aRepository)
     {
         if (!(aRepository instanceof SPARQLRepository)) {
@@ -1573,19 +1644,7 @@ public class SPARQLQueryBuilderTest
         
         SPARQLRepository sparqlRepository = (SPARQLRepository) aRepository;
         
-        boolean reachable;
-        try (RepositoryConnection conn = sparqlRepository.getConnection()) {
-            TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
-            try (TupleQueryResult result = query.evaluate()) {
-                reachable = true;
-            }
-        }
-        catch (Exception e) {
-            reachable = false;
-        }
-        
         Assume.assumeTrue("Remote repository at [" + sparqlRepository + "] is not reachable",
-                reachable);
-        
+                isReachable(sparqlRepository.toString()));
     }
 }

@@ -17,21 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 public class ExternalRecommenderTraitsEditor
-    extends Panel
+    extends DefaultTrainableRecommenderTraitsEditor
 {
     private static final long serialVersionUID = 1677442652521110324L;
 
@@ -66,8 +69,13 @@ public class ExternalRecommenderTraitsEditor
         form.add(remoteUrl);
 
         CheckBox trainable = new CheckBox("trainable");
+        trainable.setOutputMarkupId(true);
+        trainable.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> 
+                _target.add(getTrainingStatesChoice())));
         form.add(trainable);
-
+        
+        getTrainingStatesChoice().add(visibleWhen(() -> trainable.getModelObject() == true));
+        
         add(form);
     }
 }

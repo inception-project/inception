@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -45,6 +46,8 @@ public interface RecommendationService
 {
     String SERVICE_NAME = "recommendationService";
     String FEATURE_NAME_IS_PREDICTION = "inception_internal_predicted";
+    String FEATURE_NAME_SCORE_SUFFIX = "_score";
+    String FEATURE_NAME_SCORE_EXPLANATION_SUFFIX = "_score_explanation";
 
     int MAX_RECOMMENDATIONS_DEFAULT = 3; 
     int MAX_RECOMMENDATIONS_CAP = 10; 
@@ -74,10 +77,12 @@ public interface RecommendationService
 
     RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender);
 
-    void setActiveRecommenders(User aUser, AnnotationLayer layer,
-            List<Recommender> selectedClassificationTools);
+    boolean hasActiveRecommenders(String aUser, Project aProject);
     
-    List<Recommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
+    void setActiveRecommenders(User aUser, AnnotationLayer layer,
+            List<EvaluatedRecommender> selectedClassificationTools);
+    
+    List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
 
     void setPreferences(User aUser, Project aProject, Preferences aPreferences);
     
@@ -92,8 +97,7 @@ public interface RecommendationService
     boolean switchPredictions(User aUser, Project aProject);
 
     /**
-     * Returns the {@code RecommenderContext} for the given recommender if it exists, else it
-     * creates an empty one.
+     * Returns the {@code RecommenderContext} for the given recommender if it exists.
      * 
      * @param aUser
      *            The owner of the context
@@ -101,8 +105,20 @@ public interface RecommendationService
      *            The recommender to which the desired context belongs
      * @return The context of the given recommender if there is one, or an empty one
      */
-    RecommenderContext getContext(User aUser, Recommender aRecommender);
+    Optional<RecommenderContext> getContext(User aUser, Recommender aRecommender);
 
+    /**
+     * Publishes a new context for the given recommender.
+     * 
+     * @param aUser
+     *            The owner of the context.
+     * @param aRecommender
+     *            The recommender to which the desired context belongs.
+     * @param aContext
+     *            The new active context of the given recommender.
+     */
+    void putContext(User aUser, Recommender aRecommender, RecommenderContext aContext);
+    
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
@@ -114,10 +130,33 @@ public interface RecommendationService
             String aValue, int aBegin, int aEnd)
         throws AnnotationException;
     
-    Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments);
+    /**
+     * Compute predictions.
+     * 
+     * @param aUser
+     *            the user to compute the predictions for.
+     * @param aProject
+     *            the project to compute the predictions for.
+     * @param aDocuments
+     *            the documents to compute the predictions for.
+     * @param aInherit
+     *            any documents for which to inherit the predictions from a previous run
+     * @return the new predictions.
+     */
+    Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments,
+            List<SourceDocument> aInherit);
     
     void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd);
 
     List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
+
+    void clearState(String aUsername);
+
+    void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
+                                          SourceDocument aCurrentDocument);
+
+    boolean isPredictForAllDocuments(String aUser, Project aProject);
+    void setPredictForAllDocuments(String aUser, Project aProject, boolean aPredictForAllDocuments);
+
 }

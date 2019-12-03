@@ -100,8 +100,6 @@ function getContents (files) {
       continue
     }
 
-    // console.log('Load:', relativePath)
-
     // Get files only PDFs or Anno files.
     if (relativePath.match(/\.pdf$/i)) {
       // find pdftxt file

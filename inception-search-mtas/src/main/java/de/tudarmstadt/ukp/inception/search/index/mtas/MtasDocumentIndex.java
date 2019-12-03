@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
+import static org.apache.uima.cas.SerialFormat.SERIALIZED_TSI;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -70,12 +73,11 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.impl.XmiCasSerializer;
+import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.xml.sax.SAXException;
 
 import com.github.openjson.JSONObject;
 
@@ -287,6 +289,12 @@ public class MtasDocumentIndex
 
         IndexSearcher searcher = new IndexSearcher(aIndexReader);
 
+        Map<SourceDocument, AnnotationDocument> sourceAnnotationDocPairs = documentService
+                .listAnnotatableDocuments(aRequest.getProject(), aRequest.getUser());
+        Map<Long, SourceDocument> sourceDocumentIndex = new HashMap<>();
+        sourceAnnotationDocPairs.entrySet().stream()
+                .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
+
         final float boost = 0;
         SpanWeight spanweight = q.rewrite(aIndexReader).createWeight(searcher, false, boost);
 
@@ -317,8 +325,28 @@ public class MtasDocumentIndex
                                 continue;
 
                             }
+                            
                             long sourceDocumentId = Long.valueOf(rawSourceDocumentId);
                             long annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
+                            boolean matchInSourceDocument = annotationDocumentId == -1;
+                            
+                            SourceDocument sourceDocument = sourceDocumentIndex
+                                    .get(sourceDocumentId);
+                            
+                            if (sourceDocument == null) {
+                                // Document is not annotatable by this user, so we skip this result
+                                continue;
+                            }
+                            
+                            AnnotationDocument annotationDocument = sourceAnnotationDocPairs
+                                    .get(sourceDocument);
+                            
+                            if (annotationDocument != null
+                                    && IGNORE != annotationDocument.getState()) {
+                                // Skip if the document is ignored for this user
+                                log.trace("Skipping results from ignored document {}",
+                                        sourceDocumentId);
+                            }
                             
                             // If the query is limited to a given document, skip any results
                             // which are not in the given document
@@ -332,35 +360,23 @@ public class MtasDocumentIndex
                                 continue;
                             }
 
-                            // FIXME Checking for every document whether an annotation document
-                            // exists will heavily slow down search in larger projects. We have
-                            // TWO DB accesses here, one for the source document and one checking
-                            // whether there is an annotation document. This is quite bad. However,
-                            // if we do not do this here, then the user will not get any results
-                            // from documents which the user has not opened yet or alternatively
-                            // duplicate results. Better find a solution which handles this during
-                            // indexing time.
-                            // See: https://github.com/inception-project/inception/issues/790
-                            SourceDocument sourceDocument = documentService
-                                    .getSourceDocument(project.getId(), sourceDocumentId);
-                            if (documentService.existsAnnotationDocument(sourceDocument,
-                                    aRequest.getUsername()) && annotationDocumentId == -1) {
+                            if (matchInSourceDocument && annotationDocument != null) {
                                 // Exclude result if the retrieved document is a sourcedocument
-                                // (that is, has annotationDocument = -1) AND it has a
-                                // corresponding annotation document for this user
+                                // AND it has a corresponding annotation document for this user
+                                // AND the document is not ignored for this user
                                 log.trace("Skipping results from indexed source document {} in"
                                         + "favor of results from the corresponding annotation "
-                                        + "document", sourceDocument.getId());
+                                        + "document", sourceDocumentId);
                                 continue;
                             }
                             else if (annotationDocumentId != -1
-                                    && !aRequest.getUsername().equals(user)) {
+                                    && !aRequest.getUser().getUsername().equals(user)) {
                                 // Exclude result if the retrieved document is an annotation
                                 // document (that is, annotationDocument != -1 and its username
                                 // is different from the quering user
                                 log.trace("Skipping results from annotation document for user {} "
                                         + "which does not match the requested user {}", user,
-                                        aRequest.getUsername());
+                                        aRequest.getUser().getUsername());
                                 continue;
                             }
 
@@ -408,6 +424,9 @@ public class MtasDocumentIndex
                                         .getAsInt());
                                 result.setTokenStart(matchStart);
                                 result.setTokenLength(matchEnd - matchStart);
+                                result.setReadOnly(annotationDocument != null
+                                        && FINISHED.equals(annotationDocument.getState()));
+                                result.setSelectedForAnnotation(!result.isReadOnly());
                                 
                                 MtasTokenString prevToken = null;
                                 for (MtasTokenString token : tokens) {
@@ -462,8 +481,6 @@ public class MtasDocumentIndex
                                     // if no annotation feature is specified group by document title
                                     addToResults(results, result.getDocumentTitle(), result);
                                 }
-
-
                             }
                         }
                     }
@@ -563,9 +580,12 @@ public class MtasDocumentIndex
                         aAnnotationDocumentId, aUser);
                 
                 // Prepare bytearray with document content to be indexed
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                XmiCasSerializer.serialize(aCas, null, bos, true, null);
-                bos.close();
+                String encodedCAS; 
+                try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                    //XmiCasSerializer.serialize(aCas, null, bos, true, null);
+                    CasIOUtils.save(aCas, bos, SERIALIZED_TSI);
+                    encodedCAS = new String(MtasUtils.bytesToChars(bos.toByteArray()));
+                }
 
                 // Calculate timestamp that will be indexed
                 String timestamp = DateTools.dateToString(new Date(),
@@ -584,8 +604,7 @@ public class MtasDocumentIndex
                 doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
                 doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
                 doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
-                doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
-                        Field.Store.NO));
+                doc.add(new TextField(FIELD_CONTENT, encodedCAS, Field.Store.NO));
     
                 // Add document to the Lucene index
                 indexWriter.addDocument(doc);
@@ -599,7 +618,7 @@ public class MtasDocumentIndex
                         project.getName(), project.getId(), aSourceDocumentId,
                         aAnnotationDocumentId, aUser, timestamp);
             }
-            catch (SAXException e) {
+            catch (Exception e) {
                 log.error("Unable to index document", e);
             }
         }
@@ -885,7 +904,7 @@ public class MtasDocumentIndex
                 log.info("Indexing all documents in the project [{}]({})", project.getName(),
                         project.getId());
                 indexAllDocuments();
-                log.debug("All documents have been indexed in the project [{}]({})",
+                log.info("All documents have been indexed in the project [{}]({})",
                         project.getName(), project.getId());
             } else {
                 log.debug("Index has not been opened. No documents have been indexed.");

@@ -17,12 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 
-import static de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,21 +37,22 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.dkpro.core.api.datasets.Dataset;
+import org.dkpro.core.api.datasets.DatasetFactory;
+import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
@@ -112,6 +114,10 @@ public class StringMatchingRecommenderTest
 
         assertThat(predictions).as("Some score is not perfect")
             .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
+        
+        assertThat(predictions)
+            .as("There is no score explanation")
+            .allMatch(prediction -> getScoreExplanation(prediction) == null);
     }
 
     @Test
@@ -129,6 +135,61 @@ public class StringMatchingRecommenderTest
 
         assertThat(predictions).as("Has all null labels").extracting(NamedEntity::getValue)
                 .containsOnlyNulls();
+    }
+
+    @Test
+    public void thatPredictionForCharacterLevelLayerWorks() throws Exception
+    {
+        recommender.getLayer().setAnchoringMode(CHARACTERS);
+        
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        
+        JCas jcas = JCasFactory.createJCas();
+        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "John Smith. Peter Johnheim .");
+        CAS cas = jcas.getCas();
+        
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("John Smith", "ORG"));
+        gazeteer.add(new GazeteerEntry("Peter John", "LOC"));
+
+        sut.pretrain(gazeteer, context);
+
+        sut.predict(context, cas);
+
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions).extracting(NamedEntity::getCoveredText)
+                .contains("John Smith", "Peter John");
+    }
+
+    @Test
+    public void thatPredictionForCrossSentenceLayerWorks() throws Exception
+    {
+        recommender.getLayer().setCrossSentence(true);
+        
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        
+        JCas jcas = JCasFactory.createJCas();
+        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "John Smith .\nPeter Johnheim .");
+        CAS cas = jcas.getCas();
+        
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("Smith . Peter", "ORG"));
+
+        sut.pretrain(gazeteer, context);
+
+        sut.predict(context, cas);
+
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions).extracting(NamedEntity::getCoveredText)
+                .contains("Smith .\nPeter");
     }
 
     private CAS getTestCasNoLabelLabels() throws Exception
@@ -157,7 +218,7 @@ public class StringMatchingRecommenderTest
         gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
         gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
 
-        sut.pretrain(gazeteer);
+        sut.pretrain(gazeteer, context);
 
         sut.train(context, emptyList());
 
@@ -346,5 +407,10 @@ public class StringMatchingRecommenderTest
     private static Double getScore(AnnotationFS fs)
     {
         return RecommenderTestHelper.getScore(fs, "value");
+    }
+    
+    private static String getScoreExplanation(AnnotationFS fs)
+    {
+        return RecommenderTestHelper.getScoreExplanation(fs, "value");
     }
 }

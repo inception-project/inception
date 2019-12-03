@@ -23,9 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.util.collections.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +52,7 @@ public class Predictions
     private static final long serialVersionUID = -1598768729246662885L;
     
     private Map<ExtendedId, AnnotationSuggestion> predictions = new ConcurrentHashMap<>();
+    private Set<String> seenDocumentsForPrediction = new ConcurrentHashSet<>();
     
     private final Project project;
     private final User user;
@@ -119,15 +122,12 @@ public class Predictions
     private List<AnnotationSuggestion> getFlattenedPredictions(String aDocumentName,
         AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        List<Map.Entry<ExtendedId, AnnotationSuggestion>> p = predictions.entrySet().stream()
+        return predictions.entrySet().stream()
             .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
             .filter(f -> f.getKey().getLayerId() == aLayer.getId())
             .filter(f -> aWindowBegin == -1 || (f.getKey().getBegin() >= aWindowBegin))
             .filter(f -> aWindowEnd == -1 || (f.getKey().getEnd() <= aWindowEnd))
             .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
-            .collect(Collectors.toList());
-
-        return p.stream()
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
     }
@@ -159,21 +159,19 @@ public class Predictions
     }
     
     /**
-     * 
-     * @param aLayerId
      * @param aPredictions - list of sentences containing recommendations
      */
-    public void putPredictions(long aLayerId, List<AnnotationSuggestion> aPredictions)
+    public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
-        aPredictions.forEach(prediction -> {
+        aPredictions.forEach(prediction -> 
             predictions.put(new ExtendedId(user.getUsername(), project.getId(),
-                    prediction.getDocumentName(), aLayerId, prediction.getOffset(),
-                    prediction.getRecommenderId(), prediction.getId(), -1), prediction);
-
-        });
+                    prediction.getDocumentName(), prediction.getLayerId(), prediction.getOffset(),
+                    prediction.getRecommenderId(), prediction.getId(), -1), prediction)
+        );
     }
-
-    public Project getProject() {
+    
+    public Project getProject()
+    {
         return project;
     }
 
@@ -190,6 +188,7 @@ public class Predictions
     public void clearPredictions()
     {
         predictions.clear();
+        seenDocumentsForPrediction.clear();
     }
 
     public void removePredictions(Long recommenderId)
@@ -208,7 +207,7 @@ public class Predictions
      * @param aBegin the offset character begin
      * @param aEnd the offset character end
      * @param aFeature the given annotation feature name
-     * @return
+     * @return the annotation suggestions
      */
     public List<AnnotationSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
         AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
@@ -221,6 +220,35 @@ public class Predictions
             .filter(f -> f.getValue().getFeature().equals(aFeature))
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
+    }
 
+    public List<AnnotationSuggestion> getPredictionsByRecommenderAndDocument(
+            Recommender aRecommender, String aDocument)
+    {
+        return predictions.entrySet().stream()
+                .filter(f -> 
+                        f.getKey().getRecommenderId() == (long) aRecommender.getId() &&
+                        f.getKey().getDocumentName().equals(aDocument))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+    }
+
+    public List<AnnotationSuggestion> getPredictionsByDocument(String aDocument)
+    {
+        return predictions.entrySet().stream()
+                .filter(f -> 
+                        f.getKey().getDocumentName().equals(aDocument))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+    }
+
+    public void markDocumentAsPredictionCompleted(SourceDocument aDocument)
+    {
+        seenDocumentsForPrediction.add(aDocument.getName());
+    }
+
+    public boolean hasRunPredictionOnDocument(SourceDocument aDocument)
+    {
+        return seenDocumentsForPrediction.contains(aDocument.getName());
     }
 }

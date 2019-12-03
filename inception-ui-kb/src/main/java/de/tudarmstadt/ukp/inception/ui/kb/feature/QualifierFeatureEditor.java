@@ -41,6 +41,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -52,6 +53,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
@@ -68,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoi
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -93,7 +96,7 @@ public class QualifierFeatureEditor
     private @SpringBean KnowledgeBaseService kbService;
 
     private WebMarkupContainer content;
-    private Component focusComponent;
+    private FormComponent focusComponent;
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
@@ -150,7 +153,7 @@ public class QualifierFeatureEditor
 
                 final Label label;
                 if (aItem.getModelObject().targetAddr == -1
-                    && state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
+                    && state.isArmedSlot(getModelObject(), aItem.getIndex())) {
                     label = new Label("label", "<Select to fill>");
                 }
                 else {
@@ -173,7 +176,7 @@ public class QualifierFeatureEditor
                     @Override
                     public String getObject()
                     {
-                        if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
+                        if (state.isArmedSlot(getModelObject(), aItem.getIndex())) {
                             return "; background: orange";
                         }
                         else {
@@ -276,9 +279,9 @@ public class QualifierFeatureEditor
     {
         AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
 
-        qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> {
-            this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
-        });
+        qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> 
+            this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature)
+        );
 
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
             qualifierModel, new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
@@ -450,7 +453,7 @@ public class QualifierFeatureEditor
     }
 
     @Override
-    public Component getFocusComponent()
+    public FormComponent getFocusComponent()
     {
         return focusComponent;
     }
@@ -531,13 +534,13 @@ public class QualifierFeatureEditor
     {
         AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
-        if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
+        if (state.isArmedSlot(getModelObject(), aItem.getIndex())) {
             state.clearArmedSlot();
             selectedRole = null;
             aTarget.add(content);
         }
         else {
-            state.setArmedSlot(getModelObject().feature, aItem.getIndex());
+            state.setArmedSlot(getModelObject(), aItem.getIndex());
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
             selectedRole = new KBHandle();
@@ -569,5 +572,12 @@ public class QualifierFeatureEditor
             aComponent.error("Error: " + e.getMessage());
             LOG.error("Error: " + e.getMessage(), e);
         }
+    }
+
+    @OnEvent
+    public void onRenderSlotsEvent(RenderSlotsEvent aEvent)
+    {
+        // Redraw because it could happen that another slot is armed, replacing this.
+        aEvent.getRequestHandler().add(this);
     }
 }

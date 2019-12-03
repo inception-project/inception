@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -44,6 +45,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
@@ -77,10 +79,21 @@ public class OpenNlpNerRecommender
     }
 
     @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+    
+    @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException
     {
         List<NameSample> nameSamples = extractNameSamples(aCasses);
+        
+        if (nameSamples.size() < 2) {
+            LOG.info("Not enough training data: [{}] items", nameSamples.size());
+            return;
+        }
         
         // The beam size controls how many results are returned at most. But even if the user
         // requests only few results, we always use at least the default bean size recommended by
@@ -91,10 +104,14 @@ public class OpenNlpNerRecommender
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         
         TokenNameFinderModel model = train(nameSamples, params);
-        if (model != null) {
-            aContext.put(KEY_MODEL, model);
-            aContext.markAsReadyForPrediction();
-        }
+        
+        aContext.put(KEY_MODEL, model);
+    }
+    
+    @Override
+    public RecommendationEngineCapability getTrainingCapability() 
+    {
+        return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override
@@ -171,7 +188,7 @@ public class OpenNlpNerRecommender
 
         if (trainingSetSize < 2 || testSetSize < 2) {
             String info = String.format(
-                    "Not enough training data: training set [%s] items, test set [%s] of total [%s]",
+                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s]",
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
             
@@ -276,9 +293,9 @@ public class OpenNlpNerRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(
                     cas, sentenceType, tokenType);
-            for (Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
                 }

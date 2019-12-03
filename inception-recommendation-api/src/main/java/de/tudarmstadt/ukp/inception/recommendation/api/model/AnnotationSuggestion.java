@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -61,6 +62,10 @@ public class AnnotationSuggestion
      */
     public static final int FLAG_TRANSIENT_CORRECTED = 1 << 5;
     
+    public static final int FLAG_ALL = FLAG_OVERLAP | FLAG_SKIPPED | FLAG_REJECTED
+            | FLAG_TRANSIENT_ACCEPTED | FLAG_TRANSIENT_REJECTED | FLAG_TRANSIENT_CORRECTED;
+    
+    
     private final int id;
 
     private final long recommenderId;
@@ -77,12 +82,14 @@ public class AnnotationSuggestion
     private final String label;
     private final String uiLabel;
     private final double confidence;
+    private final String confidenceExplanation;
 
     private int hidingFlags = 0;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
         long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
-        String aCoveredText, String aLabel, String aUiLabel, double aConfidence)
+        String aCoveredText, String aLabel, String aUiLabel, double aConfidence,
+        String aConfidenceExplanation)
     {
         label = aLabel;
         uiLabel = aUiLabel;
@@ -91,6 +98,7 @@ public class AnnotationSuggestion
         feature = aFeature;
         recommenderName = aRecommenderName;
         confidence = aConfidence;
+        confidenceExplanation = aConfidenceExplanation;
         recommenderId = aRecommenderId;
         begin = aBegin;
         end = aEnd;
@@ -113,6 +121,7 @@ public class AnnotationSuggestion
         feature = aObject.feature;
         recommenderName = aObject.recommenderName;
         confidence = aObject.confidence;
+        confidenceExplanation = aObject.confidenceExplanation;
         recommenderId = aObject.recommenderId;
         begin = aObject.begin;
         end = aObject.end;
@@ -177,6 +186,11 @@ public class AnnotationSuggestion
     public double getConfidence()
     {
         return confidence;
+    }
+    
+    public Optional<String> getConfidenceExplanation() 
+    {
+        return Optional.ofNullable(confidenceExplanation);
     }
 
     public long getRecommenderId()
@@ -272,6 +286,7 @@ public class AnnotationSuggestion
                 .append("begin", begin).append("end", end)
                 .append("coveredText", coveredText).append("label", label)
                 .append("uiLabel", uiLabel).append("confidence", confidence)
+                .append("confindenceExplanation", confidenceExplanation)
                 .append("visible", isVisible())
                 .append("reasonForHiding", getReasonForHiding()).toString();
     }

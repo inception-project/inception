@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators;
 
 public class AccessSpecificSettingsPanel
     extends Panel
@@ -183,11 +184,12 @@ public class AccessSpecificSettingsPanel
     {
         IModel<String> adapter = new LambdaModelAdapter<String>(() -> {
             return model.getObject() != null ? model.getObject().stringValue() : null;
-        }, str -> {
-            model.setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : null);
-        });
-        
-        return new TextField<String>(aId, adapter);
+        }, str -> 
+            model.setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : null)
+        );
+        TextField<String> defaultDataset = new TextField<>(aId, adapter);
+        defaultDataset.add(Validators.IRI_VALIDATOR);
+        return defaultDataset;
     }
 
     private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,
@@ -416,7 +418,7 @@ public class AccessSpecificSettingsPanel
         aTarget.add(listViewContainer, infoContainerLocal);
     }
 
-    private File uploadFile(FileUpload fu) throws Exception
+    private File uploadFile(FileUpload fu) throws IOException
     {
         String fileName = fu.getClientFileName();
         if (!uploadedFiles.containsKey(fileName)) {

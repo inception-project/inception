@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
 @Component("pdfEditor")
 @ConditionalOnProperty(prefix = "ui.pdf", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+        matchIfMissing = true)
 public class PdfAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
@@ -44,5 +44,11 @@ public class PdfAnnotationEditorFactory
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         return new PdfAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+    }
+    
+    @Override
+    public void initState(AnnotatorState aModelObject)
+    {
+        aModelObject.setPagingStrategy(new NoPagingStrategy());
     }
 }

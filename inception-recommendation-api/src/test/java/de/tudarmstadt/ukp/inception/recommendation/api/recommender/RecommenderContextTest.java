@@ -74,13 +74,13 @@ public class RecommenderContextTest {
     @Test
     public void thatContextStartsOutNotReady()
     {
-        assertThat(sut.isReadyForPrediction()).isFalse();
+        assertThat(sut.isClosed()).isFalse();
     }
 
     @Test
     public void thatContextCanBeMarkedAsReady()
     {
-        sut.markAsReadyForPrediction();
-        assertThat(sut.isReadyForPrediction()).isTrue();
+        sut.close();
+        assertThat(sut.isClosed()).isTrue();
     }
 }

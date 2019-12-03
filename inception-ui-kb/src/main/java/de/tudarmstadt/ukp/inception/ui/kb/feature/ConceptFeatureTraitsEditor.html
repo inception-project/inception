@@ -41,9 +41,17 @@
         <wicket:label key="scope"/>
       </label>
       <div class="col-sm-8">
-        <select wicket:id="scope" class="form-control" data-container="body"></select>
+        <input wicket:id="scope" class="form-control" data-container="body"></input>
       </div>
     </div>
   </form>
+  <div class="form-group">
+    <label class="col-sm-4 control-label">
+      Key bindings
+    </label>
+    <div class="col-sm-8">
+      <div wicket:id="keyBindings"/>
+    </div>
+  </div>
 </wicket:panel>
 </html>

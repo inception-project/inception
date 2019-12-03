@@ -1,0 +1,2 @@
+
+In addition to the default annotation view, PDF documents can be viewed and annotated using the PDF-Editor. Please refer to <<sect_pdf_editor>> for an explanation on navigating and annotating in the PDF-view.

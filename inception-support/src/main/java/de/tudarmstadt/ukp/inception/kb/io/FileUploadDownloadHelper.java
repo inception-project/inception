@@ -56,10 +56,9 @@ public class FileUploadDownloadHelper
      * @param fileUpload The file upload handle to write to the temporary file
      * @param marker The object to whose lifetime the temporary file is bound
      * @return A handle to the created temporary file
-     * @throws Exception
      */
     public File writeFileUploadToTemporaryFile(FileUpload fileUpload, Object marker)
-        throws Exception
+        throws IOException
     {
         String fileName = fileUpload.getClientFileName();
         File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);

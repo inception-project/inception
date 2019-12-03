@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -64,9 +65,13 @@ public class SelectionTask
     private @Autowired ApplicationEventPublisher appEventPublisher;
     private @Autowired SchedulingService schedulingService;
 
-    public SelectionTask(Project aProject, User aUser, String aTrigger)
+    private final SourceDocument currentDocument;
+
+    public SelectionTask(User aUser, Project aProject, String aTrigger,
+                         SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
+        currentDocument = aCurrentDocument;
     }
 
     @Override
@@ -88,6 +93,7 @@ public class SelectionTask
             }
         };
 
+        boolean seenRecommender = false;
         for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
             if (!layer.isEnabled()) {
                 continue;
@@ -95,12 +101,14 @@ public class SelectionTask
             
             List<Recommender> recommenders = recommendationService.listRecommenders(layer);
             if (recommenders == null || recommenders.isEmpty()) {
-                log.debug("[{}][{}]: No recommenders, skipping selection.", userName,
+                log.trace("[{}][{}]: No recommenders, skipping selection.", userName,
                         layer.getUiName());
                 continue;
             }
+            
+            seenRecommender = true;
     
-            List<Recommender> activeRecommenders = new ArrayList<>();
+            List<EvaluatedRecommender> activeRecommenders = new ArrayList<>();
             
             for (Recommender r : recommenders) {
                 // Make sure we have the latest recommender config from the DB - the one from
@@ -127,6 +135,12 @@ public class SelectionTask
                     RecommendationEngineFactory factory = recommendationService
                         .getRecommenderFactory(recommender);
                     
+                    if (factory == null) {
+                        log.error("[{}][{}]: No recommender factory available for [{}]",
+                                user.getUsername(), r.getName(), r.getTool());
+                        continue;
+                    }
+                    
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                         log.info("[{}][{}]: Recommender configured with invalid layer or feature "
                                 + "- skipping recommender", user.getUsername(), r.getName());
@@ -138,12 +152,14 @@ public class SelectionTask
                     if (recommender.isAlwaysSelected()) {
                         log.debug("[{}][{}]: Activating [{}] without evaluating - always selected",
                                 userName, recommenderName, recommenderName);
-                        activeRecommenders.add(recommender);
+                        activeRecommenders.add(
+                                new EvaluatedRecommender(recommender, EvaluationResult.skipped()));
                         continue;
                     } else if (!factory.isEvaluable()) {
                         log.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable",
                                 userName, recommenderName, recommenderName);
-                        activeRecommenders.add(recommender);
+                        activeRecommenders.add(
+                                new EvaluatedRecommender(recommender, EvaluationResult.skipped()));
                         continue;
                     }
     
@@ -151,13 +167,21 @@ public class SelectionTask
 
                     DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
                     EvaluationResult result = recommendationEngine.evaluate(casses.get(), splitter);
+                    
+                    if (result.isEvaluationSkipped()) {
+                        log.info("[{}][{}]: Evaluation could not be performed: {}",
+                                user.getUsername(), recommenderName,
+                                result.getErrorMsg().orElse("unknown reason"));
+                        continue;
+                    }
+                    
                     double score = result.computeF1Score();
 
                     Double threshold = recommender.getThreshold();
                     boolean activated;
                     if (score >= threshold) {
                         activated = true;
-                        activeRecommenders.add(recommender);
+                        activeRecommenders.add(new EvaluatedRecommender(recommender, result));
                         log.info("[{}][{}]: Activated ({} is above threshold {})",
                                 user.getUsername(), recommenderName, score,
                                 threshold);
@@ -173,6 +197,9 @@ public class SelectionTask
                             recommender, user.getUsername(), result,
                             System.currentTimeMillis() - start, activated));
                 }
+               
+                // Catching Throwable is intentional here as we want to continue the execution
+                // even if a particular recommender fails.
                 catch (Throwable e) {
                     log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
                 }
@@ -180,9 +207,20 @@ public class SelectionTask
     
             recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
         }
+        
+        if (!seenRecommender) {
+            log.trace("[{}]: No recommenders configured, skipping training.", userName);
+            return;
+        }
 
+        if (!recommendationService.hasActiveRecommenders(user.getUsername(), project)) {
+            log.debug("[{}]: No recommenders active, skipping training.", userName);
+            return;
+        }
+        
         schedulingService.enqueue(new TrainingTask(user, getProject(),
-                "SelectionTask after activating recommenders"));
+                "SelectionTask after activating recommenders", currentDocument));
+        
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)
@@ -191,7 +229,7 @@ public class SelectionTask
         for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
             try {
                 CAS cas = documentService.readAnnotationCas(document, aUserName);
-                annoService.upgradeCasIfRequired(cas, document, aUserName);
+                annoService.upgradeCasIfRequired(cas, document);
                 casses.add(cas);
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
