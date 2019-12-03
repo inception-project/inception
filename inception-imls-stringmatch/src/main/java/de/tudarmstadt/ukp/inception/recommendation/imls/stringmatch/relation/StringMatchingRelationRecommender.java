@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -24,6 +24,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
@@ -95,7 +96,6 @@ public class StringMatchingRelationRecommender
         }
 
         aContext.put(KEY_MODEL, model);
-        aContext.markAsReadyForPrediction();
     }
 
     @Override
@@ -158,5 +158,11 @@ public class StringMatchingRelationRecommender
     {
         Type attachType = getAttachType(aCas);
         return attachType.getFeatureByBaseName(traits.getAdjunctFeature());
+    }
+    
+    @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
 }

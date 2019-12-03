@@ -17,23 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.settings;
 
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 
 public class StringMatchingRelationRecommenderTraitsEditor
-    extends Panel
+    extends AbstractTraitsEditor
 {
-    private static final Logger LOG = LoggerFactory
-            .getLogger(StringMatchingRelationRecommenderTraitsEditor.class);
-    
     private static final long serialVersionUID = 1677442652521110324L;
 
     public StringMatchingRelationRecommenderTraitsEditor(String aId,
-                                                         IModel<Recommender> aRecommender) {
+            IModel<Recommender> aRecommender)
+    {
         super(aId, aRecommender);
     }
 }

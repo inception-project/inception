@@ -58,8 +58,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.model.G
 
 public class GazeteerExporterTest
 {
-    private @Mock
-    GazeteerService gazeteerService;
+    private @Mock GazeteerService gazeteerService;
     private @Mock RecommendationService recommendationService;
 
     private Project sourceProject;
