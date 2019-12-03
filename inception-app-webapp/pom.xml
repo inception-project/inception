@@ -493,8 +493,8 @@
       <artifactId>wicket-native-websocket-javax</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-curation</artifactId>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-curation</artifactId>
     </dependency>
   </dependencies>
   <build>

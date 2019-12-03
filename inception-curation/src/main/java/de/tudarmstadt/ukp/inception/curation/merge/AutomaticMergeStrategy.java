@@ -58,8 +58,10 @@ public class AutomaticMergeStrategy
         List<AnnotationLayer> layers = aState.getAnnotationLayers();
         List<Type> entryTypes = SuggestionBuilder.getEntryTypes(aTargetCas, layers,
                 annotationService);
-        DiffResult diff = CasDiff.doDiffSingle(annotationService, aState.getProject(), entryTypes,
-                LINK_ROLE_AS_LABEL, aUserCasses, 0, aTargetCas.getDocumentText().length());
+        DiffResult diff = CasDiff
+                .doDiffSingle(annotationService, aState.getProject(), entryTypes,
+                        LINK_ROLE_AS_LABEL, aUserCasses, 0, aTargetCas.getDocumentText().length())
+                .toResult();
         CasMerge casMerge = new CasMerge(annotationService);
         try {
             casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),

@@ -88,7 +88,7 @@ public class CurationEditorExtension
 
     @Override
     public void handleAction(AnnotationActionHandler aPanel, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction, int aBegin, int aEnd)
+            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
         throws AnnotationException, IOException
     {
         // only process actions relevant to curation
@@ -101,15 +101,14 @@ public class CurationEditorExtension
             return;
         }
         // Annotation has been selected for gold
-        saveAnnotation(aAction, aPanel, aState, aTarget, aCas, extendedVID, aBegin, aEnd);        
+        saveAnnotation(aAction, aPanel, aState, aTarget, aCas, extendedVID);        
     }
 
     /**
      * Save annotation identified by aVID from user CAS to given curator's CAS
      */
     private void saveAnnotation(String aAction, AnnotationActionHandler aPanel,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aTargetCas, VID aVID, int aBegin,
-            int aEnd)
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aTargetCas, VID aVID)
         throws IOException, AnnotationException
     {
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
@@ -135,7 +134,7 @@ public class CurationEditorExtension
                     sourceAnnotation, layer.isAllowStacking());
             // open created/updates FS in annotation detail editorpanel
             aState.getSelection().selectSpan(new VID(mergeResult.getResultFSAddress()), aTargetCas,
-                    aBegin, aEnd);
+                    sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
             
         }
         else if (ACTION_SELECT_ARC.equals(aAction.toString())) {
@@ -149,7 +148,7 @@ public class CurationEditorExtension
                         sourceAnnotation, feature.getName(), aVID.getSlot());
                 // open created/updates FS in annotation detail editorpanel
                 aState.getSelection().selectSpan(new VID(mergeResult.getResultFSAddress()),
-                        aTargetCas, aBegin, aEnd);
+                        aTargetCas, sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
             }
             // normal relation annotation arc is clicked
             else {

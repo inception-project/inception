@@ -1112,7 +1112,7 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-curation</artifactId>
-        <version>0.12.0-SNAPSHOT</version>
+        <version>0.15.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
