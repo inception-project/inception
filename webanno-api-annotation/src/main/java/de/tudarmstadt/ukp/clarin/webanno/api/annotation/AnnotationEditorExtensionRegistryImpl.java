@@ -109,8 +109,7 @@ public class AnnotationEditorExtensionRegistryImpl
             if (!ext.getBeanName().equals(aParamId.getExtensionId())) {
                 continue;
             }
-            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction,
-                    aBegin, aEnd);
+            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction);
         }
     }
     

@@ -261,7 +261,7 @@ public class CasMerge
                     aCases.forEach((k, v) -> casMap.put(k, asList(v)));
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
                             .getRepresentative(casMap);
-                    CasMergeOpertationResult result = mergeSpanAnnotation(aTargetDocument,
+                    CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,
                             sourceFS, false);
                     LOG.trace(" `-> merged annotation with agreement");
@@ -353,7 +353,7 @@ public class CasMerge
                     aCases.forEach((k, v) -> casMap.put(k, asList(v)));
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
                             .getRepresentative(casMap);
-                    CasMergeOpertationResult result = mergeRelationAnnotation(aTargetDocument,
+                    CasMergeOperationResult result = mergeRelationAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,
                             sourceFS, false);
                     LOG.trace(" `-> merged annotation with agreement");
