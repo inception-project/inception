@@ -82,6 +82,7 @@ public class RecommendationSidebar
                     aModel.getObject().getProject(), v));
 
         warning = new WebMarkupContainer("warning");
+        warning.setOutputMarkupPlaceholderTag(true);
         add(warning);
         tipModel = new StringResourceModel("mismatch", this);
         TooltipBehavior tip = new TooltipBehavior(tipModel);
@@ -147,7 +148,7 @@ public class RecommendationSidebar
         AnnotatorState state = getModelObject();
         recommendationService.clearState(state.getUser().getUsername());
         recommendationService.triggerTrainingAndClassification(state.getUser().getUsername(),
-                state.getProject(), "User request via sidebar");
+                state.getProject(), "User request via sidebar", state.getDocument());
     }
     
     private List<String> findMismatchedRecommenders()

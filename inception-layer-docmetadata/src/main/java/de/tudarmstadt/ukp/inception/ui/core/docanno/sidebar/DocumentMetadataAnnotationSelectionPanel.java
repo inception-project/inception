@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
@@ -24,12 +25,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -97,7 +98,9 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private final IModel<AnnotationLayer> selectedLayer;
     private final WebMarkupContainer annotationsContainer;
     private final AnnotationActionHandler actionHandler;
-    private List<DocumentMetadataAnnotationDetailPanel> detailPanels;
+    private WebMarkupContainer selectedAnnotation;
+    private DocumentMetadataAnnotationDetailPanel selectedDetailPanel;
+    private int createdAnnotationAddress;
     private final AnnotatorState state;
     
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
@@ -116,7 +119,6 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         project = aProject;
         selectedLayer = Model.of();
         actionHandler = aActionHandler;
-        detailPanels = new ArrayList<>();
         state = aState;
 
         annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
@@ -146,31 +148,47 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         CAS cas = jcasProvider.get();
         AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), cas);
         
+        createdAnnotationAddress = fs.getAddress();
         annotationPage.writeEditorCas(cas);
-        
-        // close all other panels so that this is the only one opened after creation
-        detailPanels.forEach(d -> d.setVisible(false));
-        
+                
         aTarget.add(this);
     }
     
-    private void actionSelect(
-        AjaxRequestTarget aTarget, DocumentMetadataAnnotationDetailPanel aDetailPanel)
+    private void actionSelect(AjaxRequestTarget aTarget, WebMarkupContainer container,
+        DocumentMetadataAnnotationDetailPanel detailPanel)
     {
-        // close all other detail panels that are open
-        for (DocumentMetadataAnnotationDetailPanel detailPanel : detailPanels) {
-            if (!(detailPanel == aDetailPanel) && detailPanel.isVisible()) {
-                detailPanel.toggleVisibility();
-                aTarget.add(detailPanel);
-            }
+        if (selectedAnnotation != null) {
+            aTarget.add(selectedAnnotation);
         }
-        aDetailPanel.toggleVisibility();
-        aTarget.add(aDetailPanel);
+    
+        if (selectedDetailPanel != null) {
+            aTarget.add(selectedDetailPanel);
+        }
+        
+        if (selectedAnnotation == container) {
+            // if container is already selected, deselect and close annotation
+            selectedAnnotation = null;
+        } else {
+            selectedAnnotation = container;
+        }
+    
+        if (selectedDetailPanel == detailPanel) {
+            // if detail panel is already selected, deselect and close annotation
+            selectedDetailPanel = null;
+        } else {
+            selectedDetailPanel = detailPanel;
+        }
+        
+        aTarget.add(container);
+        aTarget.add(detailPanel);
     }
     
     void actionDelete(AjaxRequestTarget aTarget, DocumentMetadataAnnotationDetailPanel detailPanel)
     {
-        detailPanels.remove(detailPanel);
+        if (selectedDetailPanel == detailPanel) {
+            selectedAnnotation = null;
+            selectedDetailPanel = null;
+        }
         remove(detailPanel);
         aTarget.add(this);
     }
@@ -178,7 +196,6 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private ListView<AnnotationListItem> createAnnotationList()
     {
         DocumentMetadataAnnotationSelectionPanel selectionPanel = this;
-        detailPanels = new ArrayList<>();
         return new ListView<AnnotationListItem>(CID_ANNOTATIONS,
                 LoadableDetachableModel.of(this::listAnnotations))
         {
@@ -191,45 +208,53 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
              * open them afterwards.
              * If there are no annotations at initialization it is initialized with true else false.
              */
-            boolean renderVisible = getModelObject().size() == 0;
-
             @Override
             protected void populateItem(ListItem<AnnotationListItem> aItem)
             {
                 aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
 
-                aItem.add(new Label(CID_TYPE, aItem.getModelObject().layer.getUiName()));
-
                 VID vid = new VID(aItem.getModelObject().addr);
     
-                DocumentMetadataAnnotationDetailPanel detailPanel;
-                // see if this detail panel already is instantiated, if so use it
-                Optional<DocumentMetadataAnnotationDetailPanel> oldPanel =
-                    detailPanels.stream().filter(d -> d.getModelObject().equals(vid)).findFirst();
+                WebMarkupContainer container = new WebMarkupContainer("annotation");
+                aItem.add(container);
                 
-                if (oldPanel.isPresent()) {
-                    detailPanel = oldPanel.get();
-                } else {
-                    detailPanel = new DocumentMetadataAnnotationDetailPanel(
-                        CID_ANNOTATION_DETAILS, Model.of(vid), sourceDocument, username,
-                        jcasProvider, project, annotationPage, selectionPanel, actionHandler,
-                        state);
-                    detailPanel.setVisible(renderVisible);
-                    detailPanels.add(detailPanel);
-                }
+                DocumentMetadataAnnotationDetailPanel detailPanel = 
+                    new DocumentMetadataAnnotationDetailPanel(CID_ANNOTATION_DETAILS,
+                        Model.of(vid), sourceDocument, username, jcasProvider, project, 
+                        annotationPage, selectionPanel, actionHandler, state);
                 aItem.add(detailPanel);
+    
+                container.add(new AjaxEventBehavior("click")
+                {
+                    @Override protected void onEvent(AjaxRequestTarget aTarget)
+                    {
+                        actionSelect(aTarget, container, detailPanel);
+                    }
+                });
+    
+                detailPanel.add(visibleWhen(() -> selectedAnnotation == container));
+    
+                if (createdAnnotationAddress == vid.getId()) {
+                    createdAnnotationAddress = -1;
+                    selectedAnnotation = container;
+                    selectedDetailPanel = detailPanel;
+                }
                 
-                LambdaAjaxLink link = new LambdaAjaxLink(CID_ANNOTATION_LINK,
-                    _target -> actionSelect(_target, detailPanel));
-                link.add(new Label(CID_LABEL));
-                aItem.add(link);
+                WebMarkupContainer close = new WebMarkupContainer("close");
+                close.add(visibleWhen(() -> !detailPanel.isVisible()));
+                close.setOutputMarkupId(true);
+                container.add(close);
+                
+                WebMarkupContainer open = new WebMarkupContainer("open");
+                open.add(visibleWhen(detailPanel::isVisible));
+                open.setOutputMarkupId(true);
+                container.add(open);
+                
+                container.add(new Label(CID_TYPE, aItem.getModelObject().layer.getUiName()));
+                container.add(new Label(CID_LABEL));
+                container.setOutputMarkupId(true);
     
                 aItem.setOutputMarkupId(true);
-                
-                // after all panels are created for existing annotations set renderVisible to true
-                if (detailPanels.size() == getModelObject().size()) {
-                    renderVisible = true;
-                }
             }
         };
     }
@@ -237,7 +262,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private List<AnnotationLayer> listMetadataLayers()
     {
         return annotationService.listAnnotationLayer(getModelObject()).stream()
-                .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())).
+                .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())
+                        && layer.isEnabled()).
                 collect(Collectors.toList());
     }
     
@@ -253,11 +279,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         }
         
         List<AnnotationListItem> items = new ArrayList<>();
-        for (AnnotationLayer layer : listMetadataLayers()) {
-            if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
-                continue;
-            }
-            
+        for (AnnotationLayer layer : listMetadataLayers()) {            
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
@@ -265,9 +287,6 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
             for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
                 Map<String, String> renderedFeatures = renderer.getFeatures(adapter, fs, features);
                 String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
-                if (labelText.isEmpty()) {
-                    labelText = "(" + layer.getUiName() + ")";
-                }
                 items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText, layer));
             }
         }
@@ -280,7 +299,12 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     {
         // If a feature value is updated refresh the annotation list since it might mean that
         // a label has changed
-        aEvent.getRequestTarget().add(annotationsContainer);
+        if (selectedAnnotation != null) {
+            aEvent.getRequestTarget().add(selectedAnnotation);
+        }
+        if (selectedDetailPanel != null) {
+            aEvent.getRequestTarget().add(selectedDetailPanel);
+        }
     }
     
     private class AnnotationListItem

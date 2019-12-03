@@ -1176,9 +1176,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.createProperty(kb, property);
         KBStatement statement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
 
-        assertThatCode(() -> {
-            sut.deleteStatement(kb, statement);
-        }).doesNotThrowAnyException();
+        assertThatCode(() -> 
+            sut.deleteStatement(kb, statement)
+        ).doesNotThrowAnyException();
     }
 
     @Test
@@ -1527,9 +1527,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
 
         assertThat(profiles)
-            .allSatisfy((key, profile) -> {
-                assertThat(key).isNotNull();
-            });
+            .allSatisfy((key, profile) -> 
+                assertThat(key).isNotNull()
+            );
 
     }
 

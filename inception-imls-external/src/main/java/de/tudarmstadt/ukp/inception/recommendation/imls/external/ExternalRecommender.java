@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -299,7 +299,10 @@ public class ExternalRecommender
     public RecommendationEngineCapability getTrainingCapability() 
     {
         if (traits.isTrainable()) {
-            return TRAINING_SUPPORTED;
+            // 
+            // return TRAINING_SUPPORTED;
+            // We need to get at least one training CAS because we need to extract the type system
+            return TRAINING_REQUIRED;
         } else {
             return TRAINING_NOT_SUPPORTED;
         }
