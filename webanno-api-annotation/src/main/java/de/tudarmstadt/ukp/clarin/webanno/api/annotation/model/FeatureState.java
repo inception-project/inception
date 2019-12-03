@@ -52,11 +52,40 @@ public class FeatureState
             value = new ArrayList<>();
         }
     }
+    
+    public Serializable getValue()
+    {
+        return value;
+    }
+
+    public void setValue(Serializable aValue)
+    {
+        value = aValue;
+    }
+
+    public VID getVid()
+    {
+        return vid;
+    }
+
+    public void setVid(VID aVid)
+    {
+        vid = aVid;
+    }
+
+    public AnnotationFeature getFeature()
+    {
+        return feature;
+    }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         FeatureState that = (FeatureState) o;
         return feature.equals(that.feature) &&
                 vid.equals(that.vid);

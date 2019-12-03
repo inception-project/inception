@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+
+import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -38,13 +41,24 @@ public interface AnnotationEditorExtension
     /**
      * Handle an action.
      */
-    void handleAction(AnnotationActionHandler panel, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID paramId, String aAction, int aBegin, int aEnd)
-        throws AnnotationException, IOException;
+    default void handleAction(AnnotationActionHandler panel, AnnotatorState aState,
+            AjaxRequestTarget aTarget, CAS aCas, VID paramId, String aAction)
+        throws AnnotationException, IOException
+    {
+        // Do nothing by default
+    }
 
     /**
      * Post-process the output during rendering.
      */
-    void render(CAS aCas, AnnotatorState aState, VDocument vdoc, int aWindowBeginOffset,
-            int aWindowEndOffset);
+    default void render(CAS aCas, AnnotatorState aState, VDocument vdoc, int aWindowBeginOffset,
+            int aWindowEndOffset)
+    {
+        // Do nothing by default
+    }
+    
+    default void generateContextMenuItems(List<IMenuItem> aItems)
+    {
+        // Do nothing by default
+    }
 }

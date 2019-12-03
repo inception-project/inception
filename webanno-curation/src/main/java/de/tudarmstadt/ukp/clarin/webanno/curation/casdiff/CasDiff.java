@@ -23,11 +23,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -114,7 +116,7 @@ public class CasDiff
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static DiffResult doDiff(Class<? extends AnnotationFS> aEntryType,
+    public static CasDiff doDiff(Class<? extends AnnotationFS> aEntryType,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
             Map<String, CAS> aCasMap)
     {
@@ -137,7 +139,7 @@ public class CasDiff
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static DiffResult doDiff(Type aEntryType,
+    public static CasDiff doDiff(Type aEntryType,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
             Map<String, CAS> aCasMap)
     {
@@ -160,7 +162,7 @@ public class CasDiff
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static DiffResult doSingleDiff(List<String> aEntryTypes,
+    public static CasDiff doSingleDiff(List<String> aEntryTypes,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
             Map<String, CAS> aCasMap)
     {
@@ -184,7 +186,7 @@ public class CasDiff
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static DiffResult doDiff(String aEntryType, DiffAdapter aAdapter,
+    public static CasDiff doDiff(String aEntryType, DiffAdapter aAdapter,
             LinkCompareBehavior aLinkCompareBehavior, Map<String, List<CAS>> aCasMap)
     {
         return doDiff(asList(aEntryType), asList(aAdapter), aLinkCompareBehavior, aCasMap);
@@ -201,17 +203,17 @@ public class CasDiff
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static DiffResult doDiff(List<String> aEntryTypes,
+    public static CasDiff doDiff(List<String> aEntryTypes,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
             Map<String, List<CAS>> aCasMap)
     {
         if (aCasMap.isEmpty()) {
-            return new DiffResult(new CasDiff(0,0, aAdapters, aLinkCompareBehavior));
+            return new CasDiff(0,0, aAdapters, aLinkCompareBehavior);
         }
         
         List<CAS> casList = aCasMap.values().iterator().next();
         if (casList.isEmpty()) {
-            return new DiffResult(new CasDiff(0,0, aAdapters, aLinkCompareBehavior));
+            return new CasDiff(0,0, aAdapters, aLinkCompareBehavior);
         }
         
         return doDiff(aEntryTypes, aAdapters, aCasMap, -1, -1, aLinkCompareBehavior);
@@ -235,7 +237,7 @@ public class CasDiff
      *            end of the span for which differences should be calculated.
      * @return a diff result.
      */
-    public static DiffResult doDiffSingle(AnnotationSchemaService aService, Project aProject,
+    public static CasDiff doDiffSingle(AnnotationSchemaService aService, Project aProject,
             List<Type> aEntryTypes, LinkCompareBehavior aLinkCompareBehavior,
             Map<String, CAS> aCasMap, int aBegin, int aEnd)
     {
@@ -261,7 +263,7 @@ public class CasDiff
      *            end of the span for which differences should be calculated.
      * @return a diff result.
      */
-    public static DiffResult doDiffSingle(List<Type> aEntryTypes,
+    public static CasDiff doDiffSingle(List<Type> aEntryTypes,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
             Map<String, CAS> aCasMap, int aBegin, int aEnd)
     {
@@ -293,9 +295,9 @@ public class CasDiff
      *            begin of the span for which differences should be calculated.
      * @param aEnd
      *            end of the span for which differences should be calculated.
-     * @return a diff result.
+     * @return a diff.
      */
-    public static DiffResult doDiff(List<String> aEntryTypes,
+    public static CasDiff doDiff(List<String> aEntryTypes,
             Collection<? extends DiffAdapter> aAdapters, Map<String, List<CAS>> aCasMap,
             int aBegin, int aEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
@@ -318,7 +320,7 @@ public class CasDiff
         
         LOG.trace("CASDiff2 completed in {} ms", System.currentTimeMillis() - startTime);
         
-        return new DiffResult(diff);
+        return diff;
     }
     
     /**
@@ -334,19 +336,30 @@ public class CasDiff
         boolean assertsEnabled = false;
         assert assertsEnabled = true; // Intentional side effect!
         if (assertsEnabled) {
-            Iterator<List<CAS>> i = aCasMap.values().iterator();
+            Iterator<Entry<String, List<CAS>>> i = aCasMap.entrySet().iterator();
             
-            List<CAS> ref = i.next();
+            Entry<String, List<CAS>> ref = i.next();
+            String refUser = ref.getKey();
+            List<CAS> refCASes = ref.getValue();
             while (i.hasNext()) {
-                List<CAS> cur = i.next();
-                assert ref.size() == cur.size();
-                for (int n = 0; n < ref.size(); n++) {
-                    CAS refCas = ref.get(n);
-                    CAS curCas = cur.get(n);
+                Entry<String, List<CAS>> cur = i.next();
+                String curUser = cur.getKey();
+                List<CAS> curCASes = cur.getValue();
+                assert refCASes.size() == curCASes.size() : "CAS list sizes differ: "
+                        + refCASes.size() + " vs " + curCASes.size();
+                for (int n = 0; n < refCASes.size(); n++) {
+                    CAS refCas = refCASes.get(n);
+                    CAS curCas = curCASes.get(n);
                     // null elements in the list can occur if a user has never worked on a CAS
-                    assert !(refCas != null && curCas != null)
-                            || StringUtils.equals(refCas.getDocumentText(),
-                                    curCas.getDocumentText());
+                    assert !(refCas != null && curCas != null) || StringUtils.equals(
+                            refCas.getDocumentText(),
+                            curCas.getDocumentText()) : "Trying to compare CASes with different document texts: ["
+                                    + curUser + "] having ["
+                                    + abbreviateMiddle(curCas.getDocumentText(), "...", 40)
+                                    + "] (length: " + curCas.getDocumentText().length() + ") vs ["
+                                    + refUser + "] having ["
+                                    + abbreviateMiddle(refCas.getDocumentText(), "...", 40)
+                                    + "] (length: " + refCas.getDocumentText().length() + ")";
                 }
             }
         }
@@ -362,6 +375,11 @@ public class CasDiff
             typeAdapters.put(aType, adapter);
         }
         return adapter;
+    }
+    
+    public Map<String, DiffAdapter> getTypeAdapters()
+    {
+        return typeAdapters;
     }
     
     /**
@@ -468,7 +486,7 @@ public class CasDiff
                         + pos.getClass() + "] vs [" + configSet.position.getClass() + "]";
     
                 // Merge FS into current set
-                configSet.addConfiguration(aCasGroupId, fs);
+                addConfiguration(configSet, aCasGroupId, fs);
             }
         }
 
@@ -480,11 +498,126 @@ public class CasDiff
 //        entryTypes.add(aType);
     }
     
+    private void addConfiguration(ConfigurationSet aSet, String aCasGroupId, FeatureStructure aFS)
+    {
+        if (aFS instanceof SofaFS) {
+            return;
+        }
+        
+        if (aSet.position.getFeature() == null) {
+            // Check if this configuration is already present
+            Configuration configuration = null;
+            for (Configuration cfg : aSet.configurations) {
+                // Handle main positions
+                if (equalsFS(cfg.getRepresentative(cases), aFS)) {
+                    configuration = cfg;
+                    break;
+                }
+            }
+
+            // Not found, add new one
+            if (configuration == null) {
+                configuration = new Configuration(aSet.position);
+                aSet.configurations.add(configuration);
+            }
+            
+            configuration.add(aCasGroupId, aFS);
+        }
+        else {
+            // For each slot at the given position in the FS-to-be-added, we need find a
+            // corresponding configuration
+            ArrayFS links = (ArrayFS) aFS.getFeatureValue(aFS.getType().getFeatureByBaseName(
+                    aSet.position.getFeature()));
+            for (int i = 0; i < links.size(); i++) {
+                FeatureStructure link = links.get(i);
+                DiffAdapter adapter = getAdapter(aFS.getType().getName());
+                LinkFeatureDecl decl = adapter.getLinkFeature(aSet.position.getFeature());
+                
+                // Check if this configuration is already present
+                Configuration configuration = null;
+                switch (aSet.position.getLinkCompareBehavior()) {
+                case LINK_TARGET_AS_LABEL: {
+                    String role = link.getStringValue(
+                            link.getType().getFeatureByBaseName(decl.getRoleFeature()));
+                    if (!role.equals(aSet.position.getRole())) {
+                        continue;
+                    }
+                    
+                    AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
+                            .getFeatureByBaseName(decl.getTargetFeature()));
+                    
+                    cfgLoop: for (Configuration cfg : aSet.configurations) {
+                        FeatureStructure repFS = cfg.getRepresentative(cases);
+                        AID repAID = cfg.getRepresentativeAID();
+                        FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
+                                repFS.getType().getFeatureByBaseName(decl.getName())))
+                                        .get(repAID.index);
+                        AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(repLink
+                                .getType().getFeatureByBaseName(decl.getTargetFeature()));
+                        
+                        // Compare targets
+                        if (equalsAnnotationFS(repTarget, target)) {
+                            configuration = cfg;
+                            break cfgLoop;
+                        }
+                    }
+                    break;
+                }
+                case LINK_ROLE_AS_LABEL: {
+                    AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
+                            .getFeatureByBaseName(decl.getTargetFeature()));
+                    if (!(target.getBegin() == aSet.position.getLinkTargetBegin() && 
+                            target.getEnd() == aSet.position.getLinkTargetEnd())) {
+                        continue;
+                    }
+                    
+                    String role = link.getStringValue(link.getType().getFeatureByBaseName(
+                            decl.getRoleFeature()));
+                    
+                    cfgLoop: for (Configuration cfg : aSet.configurations) {
+                        FeatureStructure repFS = cfg.getRepresentative(cases);
+                        AID repAID = cfg.getRepresentativeAID();
+                        FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
+                                repFS.getType().getFeatureByBaseName(decl.getName())))
+                                        .get(repAID.index);
+                        String linkRole = repLink.getStringValue(repLink.getType()
+                                .getFeatureByBaseName(decl.getRoleFeature()));
+                        
+                        // Compare roles
+                        if (role.equals(linkRole)) {
+                            configuration = cfg;
+                            break cfgLoop;
+                        }
+                    }
+                    break;
+                }
+                default:
+                    throw new IllegalStateException("Unknown link target comparison mode ["
+                            + linkCompareBehavior + "]");
+                }
+                
+                // Not found, add new one
+                if (configuration == null) {
+                    configuration = new Configuration(aSet.position);
+                    aSet.configurations.add(configuration);
+                }
+                
+                configuration.add(aCasGroupId, aFS, aSet.position.getFeature(), i);
+            }
+        }
+
+        aSet.casGroupIds.add(aCasGroupId);
+    }
+
+    
     /**
      * The set of configurations seen at a particular position.
      */
-    public class ConfigurationSet
+    public static class ConfigurationSet
+        implements Serializable
     {
+        private static final long serialVersionUID = -2820621316555472339L;
+        
         private final Position position;
         private List<Configuration> configurations = new ArrayList<>();
         private Set<String> casGroupIds = new LinkedHashSet<>();
@@ -492,117 +625,6 @@ public class CasDiff
         public ConfigurationSet(Position aPosition)
         {
             position = aPosition;
-        }
-        
-        private void addConfiguration(String aCasGroupId, FeatureStructure aFS)
-        {
-            if (aFS instanceof SofaFS) {
-                return;
-            }
-            
-            if (position.getFeature() == null) {
-                // Check if this configuration is already present
-                Configuration configuration = null;
-                for (Configuration cfg : configurations) {
-                    // Handle main positions
-                    if (equalsFS(cfg.getRepresentative(), aFS)) {
-                        configuration = cfg;
-                        break;
-                    }
-                }
-    
-                // Not found, add new one
-                if (configuration == null) {
-                    configuration = new Configuration(position);
-                    configurations.add(configuration);
-                }
-                
-                configuration.add(aCasGroupId, aFS);
-            }
-            else {
-                // For each slot at the given position in the FS-to-be-added, we need find a
-                // corresponding configuration
-                ArrayFS links = (ArrayFS) aFS.getFeatureValue(aFS.getType().getFeatureByBaseName(
-                        position.getFeature()));
-                for (int i = 0; i < links.size(); i++) {
-                    FeatureStructure link = links.get(i);
-                    DiffAdapter adapter = getAdapter(aFS.getType().getName());
-                    LinkFeatureDecl decl = adapter.getLinkFeature(position.getFeature());
-                    
-                    // Check if this configuration is already present
-                    Configuration configuration = null;
-                    switch (position.getLinkCompareBehavior()) {
-                    case LINK_TARGET_AS_LABEL: {
-                        String role = link.getStringValue(
-                                link.getType().getFeatureByBaseName(decl.getRoleFeature()));
-                        if (!role.equals(position.getRole())) {
-                            continue;
-                        }
-                        
-                        AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
-                                .getFeatureByBaseName(decl.getTargetFeature()));
-                        
-                        cfgLoop: for (Configuration cfg : configurations) {
-                            FeatureStructure repFS = cfg.getRepresentative();
-                            AID repAID = cfg.getRepresentativeAID();
-                            FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
-                                    repFS.getType().getFeatureByBaseName(decl.getName())))
-                                            .get(repAID.index);
-                            AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(repLink
-                                    .getType().getFeatureByBaseName(decl.getTargetFeature()));
-                            
-                            // Compare targets
-                            if (equalsAnnotationFS(repTarget, target)) {
-                                configuration = cfg;
-                                break cfgLoop;
-                            }
-                        }
-                        break;
-                    }
-                    case LINK_ROLE_AS_LABEL: {
-                        AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
-                                .getFeatureByBaseName(decl.getTargetFeature()));
-                        if (!(target.getBegin() == position.getLinkTargetBegin() && 
-                                target.getEnd() == position.getLinkTargetEnd())) {
-                            continue;
-                        }
-                        
-                        String role = link.getStringValue(link.getType().getFeatureByBaseName(
-                                decl.getRoleFeature()));
-                        
-                        cfgLoop: for (Configuration cfg : configurations) {
-                            FeatureStructure repFS = cfg.getRepresentative();
-                            AID repAID = cfg.getRepresentativeAID();
-                            FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
-                                    repFS.getType().getFeatureByBaseName(decl.getName())))
-                                            .get(repAID.index);
-                            String linkRole = repLink.getStringValue(repLink.getType()
-                                    .getFeatureByBaseName(decl.getRoleFeature()));
-                            
-                            // Compare roles
-                            if (role.equals(linkRole)) {
-                                configuration = cfg;
-                                break cfgLoop;
-                            }
-                        }
-                        break;
-                    }
-                    default:
-                        throw new IllegalStateException("Unknown link target comparison mode ["
-                                + linkCompareBehavior + "]");
-                    }
-                    
-                    // Not found, add new one
-                    if (configuration == null) {
-                        configuration = new Configuration(position);
-                        configurations.add(configuration);
-                    }
-                    
-                    configuration.add(aCasGroupId, aFS, position.getFeature(), i);
-                }
-            }
-
-            casGroupIds.add(aCasGroupId);
         }
         
         /**
@@ -659,6 +681,19 @@ public class CasDiff
         }
     }
     
+    public Collection<Position> getPositions() {
+        return configSets.keySet();
+    }
+    
+    /**
+     * @param aPosition a position.
+     * @return the configuration set for the given position.
+     */
+    public ConfigurationSet getConfigurtionSet(Position aPosition)
+    {
+        return configSets.get(aPosition);
+    }
+    
     /**
      * Compare two feature structure to each other. Comparison is done recursively, but stops at
      * feature values that are annotations. For these, only offsets are checked, but feature values
@@ -671,7 +706,7 @@ public class CasDiff
      *            second feature structure.
      * @return {@code true} if they are equal.
      */
-    public boolean equalsFS(FeatureStructure aFS1, FeatureStructure aFS2)
+    private boolean equalsFS(FeatureStructure aFS1, FeatureStructure aFS2)
     {
         // Trivial case
         if (aFS1 == aFS2) {
@@ -830,13 +865,16 @@ public class CasDiff
         
         return pos1.compareTo(pos2) == 0;
     }
-    
+        
     /**
      * A single configuration seen at a particular position. The configuration may have been
      * observed in multiple CASes. 
      */
-    public class Configuration
+    public static class Configuration
+        implements Serializable
     {
+        private static final long serialVersionUID = 5387873327207575817L;
+        
         private final Position position;
         private final Map<String, AID> fsAddresses = new TreeMap<>();
         
@@ -880,17 +918,17 @@ public class CasDiff
             }
         }
 
-        public FeatureStructure getRepresentative()
-        {
-            Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
-            return selectFsByAddr(cases.get(e.getKey()).get(position.getCasId()),
-                    e.getValue().addr);
-        }
-
         public AID getRepresentativeAID()
         {
             Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
             return e.getValue();
+        }
+        
+        public FeatureStructure getRepresentative(Map<String, List<CAS>> aCasMap)
+        {
+            Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
+            return selectFsByAddr(aCasMap.get(e.getKey()).get(position.getCasId()),
+                    e.getValue().addr);
         }
 
         private Map<String, AID> getAddressByCasId()
@@ -954,7 +992,7 @@ public class CasDiff
                 sb.append(e.getValue());
             }
             sb.append("] -> ");
-            sb.append(getRepresentative());
+            sb.append(getRepresentativeAID());
             return sb.toString();
         }
     }
@@ -963,24 +1001,20 @@ public class CasDiff
      * A description of the differences between CASes.
      */
     public static class DiffResult
+        implements Serializable
     {
+        private static final long serialVersionUID = 5208017972858534258L;
+        
         private final Map<Position, ConfigurationSet> data;
         private final Set<String> casGroupIds;
         private final Map<ConfigurationSet, Boolean> completenessCache = new HashMap<>();
         private final boolean cachedHasDifferences;
-        private final Map<String, DiffAdapter> typeDiffAdapters;
         
         private DiffResult(CasDiff aDiff)
         {
             data = Collections.unmodifiableMap(aDiff.configSets);
             casGroupIds = new LinkedHashSet<>(aDiff.cases.keySet());
             cachedHasDifferences = !getDifferingConfigurationSets().isEmpty();
-            typeDiffAdapters = aDiff.typeAdapters;
-        }
-        
-        public DiffAdapter getDiffAdapter(String aType)
-        {
-            return typeDiffAdapters.get(aType);
         }
         
         public boolean hasDifferences()
@@ -1192,6 +1226,11 @@ public class CasDiff
             }
         }
         return adapters;
+    }
+    
+    public DiffResult toResult()
+    {
+        return new DiffResult(this);
     }
 
 //  private Set<String> entryTypes = new LinkedHashSet<>();

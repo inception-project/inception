@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.copyDocumentMetadata;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
@@ -27,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+import static java.util.Arrays.asList;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -35,6 +35,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +52,10 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -254,9 +257,11 @@ public class CasMerge
                 }
                 
                 try {
+                    Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+                    aCases.forEach((k, v) -> casMap.put(k, asList(v)));
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
-                            .getRepresentative();
-                    CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
+                            .getRepresentative(casMap);
+                    CasMergeOpertationResult result = mergeSpanAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,
                             sourceFS, false);
                     LOG.trace(" `-> merged annotation with agreement");
@@ -302,8 +307,10 @@ public class CasMerge
                 }
                 
                 try {
+                    Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+                    aCases.forEach((k, v) -> casMap.put(k, asList(v)));
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
-                            .getRepresentative();
+                            .getRepresentative(casMap);
                     AID sourceFsAid = cfgs.getConfigurations().get(0)
                             .getRepresentativeAID();
                     mergeSlotFeature(aTargetDocument, aTargetUsername,
@@ -342,9 +349,11 @@ public class CasMerge
                 }
                 
                 try {
+                    Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+                    aCases.forEach((k, v) -> casMap.put(k, asList(v)));
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
-                            .getRepresentative();
-                    CasMergeOperationResult result = mergeRelationAnnotation(aTargetDocument,
+                            .getRepresentative(casMap);
+                    CasMergeOpertationResult result = mergeRelationAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,
                             sourceFS, false);
                     LOG.trace(" `-> merged annotation with agreement");
@@ -374,7 +383,7 @@ public class CasMerge
     private static void clearAnnotations(CAS aCas)
         throws UIMAException
     {
-        CAS backup = createCas();
+        CAS backup = CasFactory.createCas((TypeSystemDescription) null);
         
         // Copy the CAS - basically we do this just to keep the full type system information
         CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aCas);
@@ -572,6 +581,7 @@ public class CasMerge
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
                 adapter.delete(aDocument, aUsername, aTargetCas, new VID(mergedSpan));
+                throw e;
             }
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
                     mergedSpanAddr);

@@ -345,6 +345,9 @@ public class Tsv3XDeserializer
         TsvSentence sentence = null;
         TsvToken token = null;
 
+        List<TsvColumn> headerColumns = aDoc.getSchema()
+                .getHeaderColumns(aDoc.getSchema().getColumns());
+        
         String line = aIn.readLine();
         while (!State.END.equals(state)) {
             // These variables are only used in TOKEN and SUBTOKEN states.
@@ -456,12 +459,12 @@ public class Tsv3XDeserializer
                 token = sentence.createToken(uimaToken);
 
                 // Read annotations from the columns
-                parseAnnotations(aDoc, sentence, token, fields);
+                parseAnnotations(aDoc, sentence, token, fields, headerColumns);
                 break;
             case SUBTOKEN:
                 // Read annotations from the columns
                 TsvSubToken subToken = token.createSubToken(begin, end);
-                parseAnnotations(aDoc, sentence, subToken, fields);
+                parseAnnotations(aDoc, sentence, subToken, fields, headerColumns);
                 break;
             case SENTENCE:
                 // Header parsing action
@@ -500,11 +503,9 @@ public class Tsv3XDeserializer
     }
 
     private void parseAnnotations(TsvDocument aDoc, TsvSentence aSentence, TsvUnit aUnit,
-            String[] aFields)
+            String[] aFields, List<TsvColumn> aHeaderColumns)
     {
-        List<TsvColumn> headerColumns = aDoc.getSchema()
-                .getHeaderColumns(aDoc.getSchema().getColumns());
-        for (TsvColumn col : headerColumns) {
+        for (TsvColumn col : aHeaderColumns) {
             String rawValue = aFields[col.index + 3];
 
             if (NULL_COLUMN.equals(rawValue)) {

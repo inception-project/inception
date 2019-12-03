@@ -17,12 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.wicket.markup.head.HeaderItem;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 public class KendoChoiceDescriptionScriptReference
     extends JavaScriptResourceReference
@@ -48,6 +53,17 @@ public class KendoChoiceDescriptionScriptReference
     private KendoChoiceDescriptionScriptReference()
     {
         super(KendoChoiceDescriptionScriptReference.class, "KendoChoiceDescriptionScriptReference.js");
+    }
+    
+    @Override
+    public List<HeaderItem> getDependencies()
+    {
+        List<HeaderItem> dependencies = new ArrayList<>(super.getDependencies());
+        
+        // Required to load the tooltop plugin 
+        dependencies.add(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
+        
+        return dependencies;
     }
     
     public static IJQueryTemplate template()

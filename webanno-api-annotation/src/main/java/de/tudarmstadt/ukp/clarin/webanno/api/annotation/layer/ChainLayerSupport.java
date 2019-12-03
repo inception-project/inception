@@ -33,7 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ChainRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
@@ -42,9 +41,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class ChainLayerSupport
-    implements LayerSupport<ChainAdapter>, InitializingBean
+    extends LayerSupport_ImplBase<ChainAdapter>
+    implements InitializingBean
 {
-    private final FeatureSupportRegistry featureSupportRegistry;
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
@@ -57,7 +56,7 @@ public class ChainLayerSupport
             ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
             LayerBehaviorRegistry aLayerBehaviorsRegistry)
     {
-        featureSupportRegistry = aFeatureSupportRegistry;
+        super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         schemaService = aSchemaService;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
@@ -97,15 +96,16 @@ public class ChainLayerSupport
     public ChainAdapter createAdapter(AnnotationLayer aLayer)
     {
         ChainAdapter adapter = new ChainAdapter(featureSupportRegistry, eventPublisher, aLayer,
-                schemaService.listAnnotationFeature(aLayer),
-                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+            () -> schemaService.listAnnotationFeature(aLayer),
+            layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
 
         return adapter;
     }
     
     
     @Override
-    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
+    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
+            List<AnnotationFeature> aAllFeaturesInProject)
     {
         TypeDescription tdChains = aTsd.addType(aLayer.getName() + "Chain", aLayer.getDescription(),
                 CAS.TYPE_NAME_ANNOTATION_BASE);
@@ -125,16 +125,6 @@ public class ChainLayerSupport
     public List<String> getGeneratedTypeNames(AnnotationLayer aLayer)
     {
         return asList(aLayer.getName() + "Chain", aLayer.getName() + "Link");
-    }
-    
-    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationLayer aLayer)
-    {
-        List<AnnotationFeature> features = schemaService.listAnnotationFeature(aLayer);
-        for (AnnotationFeature feature : features) {
-            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
-            fs.generateFeature(aTSD, aTD, feature);
-        }
     }
     
     @Override

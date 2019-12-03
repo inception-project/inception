@@ -25,6 +25,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosit
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility.isDocumentFinished;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
@@ -74,11 +77,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.AlreadyMergedException;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
@@ -612,15 +613,15 @@ public class SuggestionViewPanel
         Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
 
         DiffResult diff;
-        if (state.getMode().equals(Mode.CURATION)) {
-            diff = CasDiff.doDiffSingle(annotationService, state.getProject(), entryTypes,
-                    LinkCompareBehavior.LINK_ROLE_AS_LABEL, aCasses,
-                    aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd());
+        if (state.getMode().equals(CURATION)) {
+            diff = doDiffSingle(annotationService, state.getProject(), entryTypes,
+                    LINK_ROLE_AS_LABEL, aCasses, aCurationSegment.getCurationBegin(),
+                    aCurationSegment.getCurationEnd()).toResult();
         }
         else {
-            diff = CasDiff.doDiffSingle(annotationService, state.getProject(), entryTypes,
-                    LinkCompareBehavior.LINK_ROLE_AS_LABEL, aCasses, aCurationSegment.getBegin(),
-                    aCurationSegment.getEnd());
+            diff = doDiffSingle(annotationService, state.getProject(), entryTypes,
+                    LINK_ROLE_AS_LABEL, aCasses, aCurationSegment.getBegin(),
+                    aCurationSegment.getEnd()).toResult();
         }
 
         Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();

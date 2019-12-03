@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
+import static org.apache.commons.io.IOUtils.buffer;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -61,8 +63,8 @@ public class WebannoTsv3XWriter
         
         TsvDocument doc = Tsv3XCasDocumentBuilder.of(schema, aJCas);
         
-        try (PrintWriter docOS = new PrintWriter(new OutputStreamWriter(
-                getOutputStream(aJCas, filenameSuffix), encoding))) {
+        try (PrintWriter docOS = new PrintWriter(new OutputStreamWriter(buffer(
+                getOutputStream(aJCas, filenameSuffix)), encoding))) {
             new Tsv3XSerializer().write(docOS, doc);
         }
         catch (IOException e) {

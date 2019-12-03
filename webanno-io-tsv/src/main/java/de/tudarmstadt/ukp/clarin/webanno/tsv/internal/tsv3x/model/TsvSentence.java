@@ -77,7 +77,8 @@ public class TsvSentence
     {
         StringWriter buf = new StringWriter();
         try (PrintWriter out = new PrintWriter(buf)) {
-            new Tsv3XSerializer().write(out, this);
+            new Tsv3XSerializer().write(out, this,
+                    doc.getSchema().getHeaderColumns(doc.getActiveColumns()));
         }
         return buf.toString();
     }

@@ -25,10 +25,14 @@ import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public abstract class TextFeatureEditorBase
     extends FeatureEditor
@@ -40,7 +44,9 @@ public abstract class TextFeatureEditorBase
     @SuppressWarnings("rawtypes")
     private FormComponent field;
     private boolean hideUnconstrainedFeature;
-    
+
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+
     public TextFeatureEditorBase(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
@@ -100,7 +106,7 @@ public abstract class TextFeatureEditorBase
     }
 
     @Override
-    public Component getFocusComponent()
+    public FormComponent getFocusComponent()
     {
         return field;
     }
@@ -117,5 +123,13 @@ public abstract class TextFeatureEditorBase
         // if enabled and constraints rule execution returns anything other than green
         setVisible(!hideUnconstrainedFeature || (getModelObject().indicator.isAffected()
                 && getModelObject().indicator.getStatusColor().equals("green")));
+    }
+
+    public StringFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
+    {
+        FeatureSupport<StringFeatureTraits> fs = featureSupportRegistry
+                .getFeatureSupport(aAnnotationFeature);
+        StringFeatureTraits traits = fs.readTraits(aAnnotationFeature);
+        return traits;
     }
 }

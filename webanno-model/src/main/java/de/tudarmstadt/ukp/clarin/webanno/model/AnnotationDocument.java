@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -88,7 +89,17 @@ public class AnnotationDocument
     {
         // Nothing to do
     }
-    
+
+    public AnnotationDocument(String aName, Project aProject, String aUser,
+            SourceDocument aDocument)
+    {
+        super();
+        name = aName;
+        project = aProject;
+        user = aUser;
+        document = aDocument;
+    }
+
     public SourceDocument getDocument()
     {
         return document;
@@ -211,5 +222,23 @@ public class AnnotationDocument
     public void setUpdated(Date aUpdated)
     {
         updated = aUpdated;
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof AnnotationDocument)) {
+            return false;
+        }
+        AnnotationDocument castOther = (AnnotationDocument) other;
+        return Objects.equals(name, castOther.name) && Objects.equals(project, castOther.project)
+                && Objects.equals(user, castOther.user)
+                && Objects.equals(document, castOther.document);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(name, project, user, document);
     }
 }

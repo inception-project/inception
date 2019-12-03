@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationD
 import static java.util.Objects.isNull;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
+import static org.apache.wicket.util.time.Duration.milliseconds;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,15 +46,21 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxCallListener;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.attributes.ThrottlingSettings;
+import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
+import org.apache.wicket.markup.html.form.CheckGroup;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.form.RadioChoice;
+import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -65,7 +72,6 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,20 +113,28 @@ public class AnnotationFeatureForm
     
     private static final long serialVersionUID = 3635145598405490893L;
 
-    // Add "featureEditorPanel" to AjaxRequestTargets instead of "featureEditorPanelContent"
-    private WebMarkupContainer featureEditorPanel;
-    private FeatureEditorPanelContent featureEditorPanelContent;
+    // Top-level containers
+    private final WebMarkupContainer noAnnotationWarning;
+    private final WebMarkupContainer layerContainer;
+    private final WebMarkupContainer buttonContainer;
+    private final WebMarkupContainer infoContainer;
+    private final WebMarkupContainer featureEditorContainer;
 
-    private Label selectedAnnotationLayer;
-    private CheckBox forwardAnnotationCheckBox;
-    private ConfirmationDialog deleteAnnotationDialog;
-    private ConfirmationDialog replaceAnnotationDialog;
-    private Label relationHint;
-    private DropDownChoice<AnnotationLayer> layerSelector;
-    private List<AnnotationLayer> annotationLayers = new ArrayList<>();
-    private WebMarkupContainer layerContainer;
+    // Within infoContainer
+    private final WebMarkupContainer selectedAnnotationInfoContainer;
 
+    // Parent
     private final AnnotationDetailEditorPanel editorPanel;
+
+    // Components
+    private final Label selectedAnnotationLayer;
+    private final CheckBox forwardAnnotationCheckBox;
+    private final ConfirmationDialog deleteAnnotationDialog;
+    private final ConfirmationDialog replaceAnnotationDialog;
+    private final Label relationHint;
+    private final DropDownChoice<AnnotationLayer> layerSelector;
+    private final List<AnnotationLayer> annotationLayers = new ArrayList<>();
+    private final FeatureEditorPanelContent featureEditorPanelContent;
     
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -131,43 +145,57 @@ public class AnnotationFeatureForm
         IModel<AnnotatorState> aState)
     {
         super(id, new CompoundPropertyModel<>(aState));
+        setDefaultButton(null);
         editorPanel = aEditorPanel;
-        layerContainer = new WebMarkupContainer("layerContainer");
-        layerContainer.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
-        add(createNoAnnotationWarningLabel());
+
         add(deleteAnnotationDialog = createDeleteDialog());
         add(replaceAnnotationDialog = createReplaceDialog());
-        add(createDeleteButton());
-        add(createReverseButton());
-        add(createClearButton());
+        
+        noAnnotationWarning = new WebMarkupContainer("noAnnotationWarning");
+        noAnnotationWarning.setOutputMarkupPlaceholderTag(true);
+        noAnnotationWarning
+                .add(visibleWhen(() -> !getModelObject().getSelection().getAnnotation().isSet()));
+        add(noAnnotationWarning);
+        
+        layerContainer = new WebMarkupContainer("layerContainer");
+        layerContainer.setOutputMarkupPlaceholderTag(true);
+        layerContainer.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
         layerContainer.add(relationHint = createRelationHint());
         layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
         layerContainer.add(visibleWhen(() -> layerSelector.getChoicesModel()
                 .map(layerChoices -> layerChoices.size() > 1)
                 .orElse(false).getObject()));
         add(layerContainer);
-        add(featureEditorPanel = createFeatureEditorPanel());
-        add(createSelectedAnnotationTypeLabel());
-        setDefaultButton(null);
-    }
 
-    private WebMarkupContainer createFeatureEditorPanel()
-    {
-        WebMarkupContainer container = new WebMarkupContainer("featureEditorsContainer");
-        container.add(
+        infoContainer = new WebMarkupContainer("infoContainer");
+        infoContainer.setOutputMarkupPlaceholderTag(true);
+        add(infoContainer);
+        
+        selectedAnnotationInfoContainer = new WebMarkupContainer("selectedAnnotationInfoContainer");
+        selectedAnnotationInfoContainer.setOutputMarkupPlaceholderTag(true);
+        selectedAnnotationInfoContainer.add(
                 visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        selectedAnnotationInfoContainer.add(createSelectedAnnotationTypeLabel());
+        selectedAnnotationInfoContainer.add(createNoFeaturesWarningLabel());
+        selectedAnnotationInfoContainer.add(createSelectedTextLabel());
+        selectedAnnotationInfoContainer
+                .add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
+        infoContainer.add(selectedAnnotationInfoContainer);
 
-        // Add placeholder since wmc might start out invisible. Without the placeholder we
-        // cannot make it visible in an AJAX call
-        container.setOutputMarkupPlaceholderTag(true);
-
-        container.add(createNoFeaturesWarningLabel());
-        container.add(featureEditorPanelContent = createFeatureEditorPanelContent());
-        container.add(createFocusResetHelper());
-        container.add(createSelectedTextLabel());
-        container.add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
-
-        return container;
+        featureEditorContainer = new WebMarkupContainer("featureEditorContainer");
+        featureEditorContainer.setOutputMarkupPlaceholderTag(true);
+        featureEditorContainer.add(featureEditorPanelContent = createFeatureEditorPanelContent());
+        featureEditorContainer.add(createFocusResetHelper());
+        featureEditorContainer.add(
+                visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        add(featureEditorContainer);
+        
+        buttonContainer = new WebMarkupContainer("buttonContainer");
+        buttonContainer.setOutputMarkupPlaceholderTag(true);
+        buttonContainer.add(createDeleteButton());
+        buttonContainer.add(createReverseButton());
+        buttonContainer.add(createClearButton());
+        add(buttonContainer);
     }
 
     private TextField<String> createFocusResetHelper()
@@ -208,7 +236,7 @@ public class AnnotationFeatureForm
 
     private FeatureEditorPanelContent createFeatureEditorPanelContent()
     {
-        return new FeatureEditorPanelContent("featureValues");
+        return new FeatureEditorPanelContent("featureEditors");
     }
     
     public Optional<FeatureEditor> getFirstFeatureEditor()
@@ -518,22 +546,6 @@ public class AnnotationFeatureForm
         replaceAnnotationDialog.show(aTarget);
     }
 
-    private Label createNoAnnotationWarningLabel()
-    {
-        return new Label("noAnnotationWarning", "No annotation selected!")
-        {
-            private static final long serialVersionUID = -6046409838139863541L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(!getModelObject().getSelection().getAnnotation().isSet());
-            }
-        };
-    }
-
     /**
      * Part of <i>forward annotation</i> mode: creates the checkbox to toggle forward annotation
      * mode.
@@ -541,7 +553,7 @@ public class AnnotationFeatureForm
     private CheckBox createForwardAnnotationCheckBox()
     {
         CheckBox checkbox = new CheckBox("forwardAnnotation");
-        checkbox. setOutputMarkupId(true);
+        checkbox.setOutputMarkupPlaceholderTag(true);
         checkbox.add(visibleWhen(this::isForwardable));
         checkbox.add(LambdaBehavior.onConfigure(_this -> {
             // Force-disable forward annotation mode if current layer is not forwardable
@@ -586,7 +598,7 @@ public class AnnotationFeatureForm
         // forwardAnnotationText element only for tagset based forward annotations
         if (feature.getTagset() == null) {
             getFirstFeatureEditor()
-                    .ifPresent(_editor -> aTarget.focusComponent(_editor.getFocusComponent()));
+                    .ifPresent(_editor -> autoFocus(aTarget, _editor.getFocusComponent()));
         }
         else {
             aTarget.focusComponent(editorPanel.getForwardAnnotationTextField());
@@ -689,7 +701,6 @@ public class AnnotationFeatureForm
                     if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
                         annotationLayers.add(layer);
                     }
-
                 }
             }
             // chain
@@ -758,7 +769,7 @@ public class AnnotationFeatureForm
                 else if (!Objects.equals(getRequestCycle().getMetaData(IsSidebarAction.INSTANCE),
                         true)) {
                     getFirstFeatureEditor().ifPresent(_editor -> 
-                            _target.focusComponent(_editor.getFocusComponent()));
+                            autoFocus(_target, _editor.getFocusComponent()));
                 }
             });
         }
@@ -780,7 +791,7 @@ public class AnnotationFeatureForm
             // Look up a suitable editor and instantiate it
             FeatureSupport featureSupport = featureSupportRegistry
                     .getFeatureSupport(featureState.feature);
-            editor = featureSupport.createEditor("editor", AnnotationFeatureForm.this, editorPanel,
+            editor = featureSupport.createEditor("editor", featureEditorContainer, editorPanel,
                     AnnotationFeatureForm.this.getModel(), item.getModel());
 
             // We need to enable the markup ID here because we use it during the AJAX behavior
@@ -842,119 +853,154 @@ public class AnnotationFeatureForm
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    aTarget.add(featureEditorPanel);
+                    AnnotationFeatureForm.this.refresh(aTarget);
                 }
             });
         }
 
         private void addAnnotateActionBehavior(final FeatureEditor aFrag)
         {
-            aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior("change")
-            {
-                private static final long serialVersionUID = 5179816588460867471L;
-
-                @Override
-                protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
+            FormComponent focusComponent = aFrag.getFocusComponent();
+            
+            if (
+                    (focusComponent instanceof RadioChoice) ||
+                    (focusComponent instanceof CheckBoxMultipleChoice) || 
+                    (focusComponent instanceof RadioGroup) ||
+                    (focusComponent instanceof CheckGroup)
+            ) {
+                focusComponent.add(new AjaxFormChoiceComponentUpdatingBehavior()
                 {
-                    super.updateAjaxAttributes(aAttributes);
-                    // When focus is on a feature editor and the user selects a new annotation,
-                    // there is a race condition between the saving the value of the feature
-                    // editor and the loading of the new annotation. Delay the feature editor
-                    // save to give preference to loading the new annotation.
-                    aAttributes.setThrottlingSettings(new ThrottlingSettings(getMarkupId(),
-                        Duration.milliseconds(250), true));
-                    aAttributes.getAjaxCallListeners().add(new AjaxCallListener()
+                    private static final long serialVersionUID = -5058365578109385064L;
+
+                    @Override
+                    protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
                     {
-                        private static final long serialVersionUID = 1L;
+                        super.updateAjaxAttributes(aAttributes);
+                        addDelay(aFrag, aAttributes, 300);
+                    }
 
-                        @Override
-                        public CharSequence getPrecondition(Component aComponent)
-                        {
-                            // If the panel refreshes because the user selects a new annotation,
-                            // the annotation editor panel is updated for the new annotation
-                            // first (before saving values) because of the delay set above. When
-                            // the delay is over, we can no longer save the value because the
-                            // old component is no longer there. We use the markup id of the
-                            // editor fragments to check if the old component is still there
-                            // (i.e. if the user has just tabbed to a new field) or if the old
-                            // component is gone (i.e. the user selected/created another
-                            // annotation). If the old component is no longer there, we abort
-                            // the delayed save action.
-                            return "return $('#" + aFrag.getMarkupId() + "').length > 0;";
-                        }
-                    });
-                }
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
+                    @Override
+                    protected void onUpdate(AjaxRequestTarget aTarget)
+                    {
+                        actionFeatureUpdate(getComponent(), aTarget);
+                    }
+                });
+            }
+            else {
+                focusComponent.add(new AjaxFormComponentUpdatingBehavior("change")
                 {
-                    try {
-                        AnnotatorState state = getModelObject();
+                    private static final long serialVersionUID = 5179816588460867471L;
 
-                        if (state.getConstraints() != null) {
-                            // Make sure we update the feature editor panel because due to
-                            // constraints the contents may have to be re-rendered
-                            aTarget.add(featureEditorPanel);
-                        }
-                        
-                        // When updating an annotation in the sidebar, we must not force a
-                        // re-focus after rendering
-                        getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
-                        
-                        CAS cas = editorPanel.getEditorCas();
-                        AnnotationLayer layer = state.getSelectedAnnotationLayer();
-                        if (
-                                state.isForwardAnnotation() &&
-                                layer != null &&
-                                layer.equals(state.getDefaultAnnotationLayer())
-                        ) {
-                            editorPanel.actionCreateForward(aTarget, cas);
-                        } else {
-                            editorPanel.actionCreateOrUpdate(aTarget, cas);
-                        }
-                        
-                        // If the focus was lost during the update, then try force-focusing the
-                        // next editor or the first one if we are on the last one.
-                        if (aTarget.getLastFocusedElementId() == null) {
-                            List<FeatureEditor> allEditors = new ArrayList<>();
-                            featureEditorPanelContent.visitChildren(FeatureEditor.class,
-                                (editor, visit) -> {
-                                    allEditors.add((FeatureEditor) editor);
-                                    visit.dontGoDeeper();
-                                });
+                    @Override
+                    protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
+                    {
+                        super.updateAjaxAttributes(aAttributes);
+                        addDelay(aFrag, aAttributes, 250);
+                    }
 
-                            if (!allEditors.isEmpty()) {
-                                FeatureEditor currentEditor = getComponent()
-                                        .findParent(FeatureEditor.class);
-                                
-                                int i = allEditors.indexOf(currentEditor);
-                                
-                                // If the current editor cannot be found then move the focus to the
-                                // first editor
-                                if (i == -1) {
-                                    aTarget.focusComponent(allEditors.get(0).getFocusComponent());
-                                }
-                                // ... if it is the last one, say at the last one
-                                else if (i >= (allEditors.size() - 1)) {
-                                    aTarget.focusComponent(allEditors.get(allEditors.size() - 1)
-                                            .getFocusComponent());
-                                }
-                                // ... otherwise move the focus to the next editor
-                                else {
-                                    aTarget.focusComponent(
-                                            allEditors.get(i + 1).getFocusComponent());
-                                }
-                            }
-                        }
+                    @Override
+                    protected void onUpdate(AjaxRequestTarget aTarget)
+                    {
+                        actionFeatureUpdate(getComponent(), aTarget);
                     }
-                    catch (Exception e) {
-                        handleException(AnnotationFeatureForm.FeatureEditorPanelContent.this,
-                            aTarget, e);
-                    }
-                }
-            });
+                });
+            }
         }
 
+        private void addDelay(FeatureEditor aFrag, AjaxRequestAttributes aAttributes, int aDelay)
+        {
+            // When focus is on a feature editor and the user selects a new annotation,
+            // there is a race condition between the saving the value of the feature
+            // editor and the loading of the new annotation. Delay the feature editor
+            // save to give preference to loading the new annotation.
+            aAttributes.setThrottlingSettings(new ThrottlingSettings(milliseconds(aDelay), true));
+            aAttributes.getAjaxCallListeners().add(new AjaxCallListener()
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public CharSequence getPrecondition(Component aComponent)
+                {
+                    // If the panel refreshes because the user selects a new annotation,
+                    // the annotation editor panel is updated for the new annotation
+                    // first (before saving values) because of the delay set above. When
+                    // the delay is over, we can no longer save the value because the
+                    // old component is no longer there. We use the markup id of the
+                    // editor fragments to check if the old component is still there
+                    // (i.e. if the user has just tabbed to a new field) or if the old
+                    // component is gone (i.e. the user selected/created another
+                    // annotation). If the old component is no longer there, we abort
+                    // the delayed save action.
+                    return "return $('#" + aFrag.getMarkupId() + "').length > 0;";
+                }
+            }); 
+        }
+        
+        private void actionFeatureUpdate(Component aComponent, AjaxRequestTarget aTarget)
+        {
+            try {
+                AnnotatorState state = getModelObject();
+
+                if (state.getConstraints() != null) {
+                    // Make sure we update the feature editor panel because due to
+                    // constraints the contents may have to be re-rendered
+                    AnnotationFeatureForm.this.refresh(aTarget);
+                }
+                
+                // When updating an annotation in the sidebar, we must not force a
+                // re-focus after rendering
+                getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
+                
+                CAS cas = editorPanel.getEditorCas();
+                AnnotationLayer layer = state.getSelectedAnnotationLayer();
+                if (
+                        state.isForwardAnnotation() &&
+                        layer != null &&
+                        layer.equals(state.getDefaultAnnotationLayer())
+                ) {
+                    editorPanel.actionCreateForward(aTarget, cas);
+                } else {
+                    editorPanel.actionCreateOrUpdate(aTarget, cas);
+                }
+                
+                // If the focus was lost during the update, then try force-focusing the
+                // next editor or the first one if we are on the last one.
+                if (aTarget.getLastFocusedElementId() == null) {
+                    List<FeatureEditor> allEditors = new ArrayList<>();
+                    featureEditorPanelContent.visitChildren(FeatureEditor.class,
+                        (editor, visit) -> {
+                            allEditors.add((FeatureEditor) editor);
+                            visit.dontGoDeeper();
+                        });
+
+                    if (!allEditors.isEmpty()) {
+                        FeatureEditor currentEditor = aComponent.findParent(FeatureEditor.class);
+                        
+                        int i = allEditors.indexOf(currentEditor);
+                        
+                        // If the current editor cannot be found then move the focus to the
+                        // first editor
+                        if (i == -1) {
+                            autoFocus(aTarget, allEditors.get(0).getFocusComponent());
+                        }
+                        // ... if it is the last one, say at the last one
+                        else if (i >= (allEditors.size() - 1)) {
+                            autoFocus(aTarget, allEditors.get(allEditors.size() - 1)
+                                    .getFocusComponent());
+                        }
+                        // ... otherwise move the focus to the next editor
+                        else {
+                            autoFocus(aTarget, allEditors.get(i + 1).getFocusComponent());
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                handleException(AnnotationFeatureForm.FeatureEditorPanelContent.this,
+                    aTarget, e);
+            }
+        }
+        
         @Override
         protected Iterator<IModel<FeatureState>> getItemModels()
         {
@@ -977,9 +1023,10 @@ public class AnnotationFeatureForm
         return annotationLayers;
     }
 
-    protected WebMarkupContainer getFeatureEditorPanel()
+    public void refresh(AjaxRequestTarget aTarget)
     {
-        return featureEditorPanel;
+        aTarget.add(layerContainer, buttonContainer, infoContainer, featureEditorContainer,
+                noAnnotationWarning);
     }
     
     protected DropDownChoice<AnnotationLayer> getLayerSelector()
@@ -991,5 +1038,19 @@ public class AnnotationFeatureForm
         private static final long serialVersionUID = 1L;
         
         public final static IsSidebarAction INSTANCE = new IsSidebarAction();
+    }
+    
+    public void autoFocus(AjaxRequestTarget aTarget, Component aComponent)
+    {
+        // Check if any of the features suppresses auto-focus...
+        for (FeatureState fstate : getModelObject().getFeatureStates()) {
+            AnnotationFeature feature = fstate.getFeature();
+            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
+            if (fs.suppressAutoFocus(feature)) {
+                return;
+            }
+        }
+        
+        aTarget.focusComponent(aComponent);
     }
 }

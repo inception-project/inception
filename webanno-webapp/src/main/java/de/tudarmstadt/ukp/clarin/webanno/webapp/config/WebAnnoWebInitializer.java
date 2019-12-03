@@ -27,6 +27,7 @@ import javax.servlet.ServletException;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.orm.jpa.support.OpenEntityManagerInViewFilter;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 
@@ -48,5 +49,7 @@ public class WebAnnoWebInitializer
                 OpenEntityManagerInViewFilter.class);
         openSessionInViewFilter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false,
                 "/*");
+        
+        aServletContext.addListener(HttpSessionEventPublisher.class);
     }
 }

@@ -21,13 +21,6 @@ In order to programmatically manage annotation project, a REST-like remote API i
 is disabled by default. In order to enable it, add the setting `remote-api.enabled=true` to the
 `settings.properties` file.
 
-Once the remote API is enabled, it becomes possible to assign the role `ROLE_REMOTE` to a user. Create a new user, e.g. `remote-api` via the user management page and assign at least the roles `ROLE_USER` and `ROLE_REMOTE`. Most of the actions accessible through the remote API require administrator access, so adding the `ROLE_ADMIN` is usually necessary as well.
-
-Once the remote API has been enabled, it offers a convenient and self-explanatory web-based user interface under `<APPLICATION_URL>/swagger-ui.html` which can be accessed by any user with the role `ROLE_REMOTE`. Here, you can browse the different operations, their parameters, and even try them out directly via a web browser. The actual AERO remote API uses `<APPLICATION_URL/api/aero/v1` as the
-base URL for its operations.
-
-The API follows the link:https://openminted.github.io/releases/aero-spec/1.0.0/omtd-aero/[Annotation Editor Remote Operations (AERO) protocol].
-
 .Remote API settings
 [cols="4*", options="header"]
 |===
@@ -41,3 +34,13 @@ The API follows the link:https://openminted.github.io/releases/aero-spec/1.0.0/o
 | false
 | true
 |===
+
+Once the remote API is enabled, it becomes possible to assign the role `ROLE_REMOTE` to a user. Create a new user, e.g. `remote-api` via the user management page and assign at least the roles `ROLE_USER` and `ROLE_REMOTE`. Most of the actions accessible through the remote API require administrator access, so adding the `ROLE_ADMIN` is usually necessary as well.
+
+Once the remote API has been enabled, it offers a convenient and self-explanatory web-based user interface under `<APPLICATION_URL>/swagger-ui.html` which can be accessed by any user with the role `ROLE_REMOTE`. Here, you can browse the different operations, their parameters, and even try them out directly via a web browser. The actual AERO remote API uses `<APPLICATION_URL/api/aero/v1` as the
+base URL for its operations.
+
+The API follows the link:https://openminted.github.io/releases/aero-spec/1.0.0/omtd-aero/[Annotation Editor Remote Operations (AERO) protocol].
+
+The third-party Python library link:https://pycaprio.readthedocs.io/en/latest/[pycaprio] can be used
+to facilitate accessing the remote API.

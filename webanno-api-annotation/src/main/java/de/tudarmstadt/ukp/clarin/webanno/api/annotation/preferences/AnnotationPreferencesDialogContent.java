@@ -131,7 +131,10 @@ public class AnnotationPreferencesDialogContent
 
         // Add a check box to enable/disable automatic page navigations while annotating
         form.add(new CheckBox("scrollPage"));
-        
+
+        // Add a check box to enable/disable arc collapsing
+        form.add(new CheckBox("collapseArcs"));
+
         form.add(new CheckBox("rememberLayer"));
 
         // Add global read-only coloring strategy combo box
@@ -164,6 +167,7 @@ public class AnnotationPreferencesDialogContent
             prefs.setColorPerLayer(model.colorPerLayer);
             prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
             prefs.setEditor(model.editor.getKey());
+            prefs.setCollapseArcs(model.collapseArcs);
 
             state.setAnnotationLayers(model.annotationLayers.stream()
                     .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
@@ -197,6 +201,7 @@ public class AnnotationPreferencesDialogContent
         model.colorPerLayer = prefs.getColorPerLayer();
         model.readonlyLayerColoringBehaviour = prefs.getReadonlyLayerColoringBehaviour();
         model.rememberLayer = prefs.isRememberLayer();
+        model.collapseArcs = prefs.isCollapseArcs();
 
         AnnotationEditorFactory editorFactory = annotationEditorRegistry
                 .getEditorFactory(state.getPreferences().getEditor());
@@ -281,5 +286,6 @@ public class AnnotationPreferencesDialogContent
         private List<AnnotationLayer> annotationLayers;
         private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour;
         private Map<Long, ColoringStrategyType> colorPerLayer;
+        private boolean collapseArcs;
     }
 }

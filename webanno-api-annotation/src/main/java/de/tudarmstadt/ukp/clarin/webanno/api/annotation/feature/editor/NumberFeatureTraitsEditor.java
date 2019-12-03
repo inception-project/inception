@@ -40,7 +40,7 @@ import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.UimaPrimitiveFeatureSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
@@ -59,7 +59,8 @@ public class NumberFeatureTraitsEditor
     private IModel<AnnotationFeature> feature;
     private IModel<Traits> traits;
     
-    public NumberFeatureTraitsEditor(String aId, PrimitiveUimaFeatureSupport aFS,
+    public NumberFeatureTraitsEditor(String aId,
+            UimaPrimitiveFeatureSupport_ImplBase<NumberFeatureTraits> aFS,
             IModel<AnnotationFeature> aFeature)
     {
         super(aId, aFeature);
@@ -158,20 +159,21 @@ public class NumberFeatureTraitsEditor
                 && feature.getObject().getType().equals(CAS.TYPE_NAME_INTEGER);
     }
     
-    private PrimitiveUimaFeatureSupport getFeatureSupport()
+    private UimaPrimitiveFeatureSupport_ImplBase<NumberFeatureTraits> getFeatureSupport()
     {
         return featureSupportRegistry.getFeatureSupport(featureSupportId);
     }
     
     /**
      * Read traits and then transfer the values from the actual traits model
-     * {{@link NumberFeatureTraits}} to the the UI traits model ({@link NumberFeatureTraits}).
+     * {{@link NumberFeatureTraits}} to the the UI traits model
+     * ({@link NumberFeatureTraits}).
      */
     private Traits readTraits()
     {
         Traits result = new Traits();
         
-        NumberFeatureTraits t = getFeatureSupport().readNumberFeatureTraits(feature.getObject());
+        NumberFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
         
         result.setLimited(t.isLimited());
         result.setMinimum(t.getMinimum());
@@ -196,7 +198,7 @@ public class NumberFeatureTraitsEditor
                 ? traits.getObject().getEditorType() 
                 : NumberFeatureTraits.EDITOR_TYPE.SPINNER);
         
-        getFeatureSupport().writeNumberFeatureTraits(feature.getObject(), t);
+        getFeatureSupport().writeTraits(feature.getObject(), t);
     }
     
     /**

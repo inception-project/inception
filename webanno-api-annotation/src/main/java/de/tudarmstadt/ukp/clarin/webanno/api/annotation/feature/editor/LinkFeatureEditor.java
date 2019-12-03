@@ -43,6 +43,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -290,10 +291,12 @@ public class LinkFeatureEditor
             // If a slot is armed, then load the slot's role into the dropdown
             FeatureState featureState = LinkFeatureEditor.this.getModelObject();
             AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) featureState.value;
+            
             if (state.isSlotArmed()
-                    && featureState.feature.equals(state.getArmedFeature().feature))
+                    && featureState.feature.equals(state.getArmedFeature().feature)
+                    && links.size() > state.getArmedSlot())
             {
-                List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) featureState.value;
                 field.setModelObject(links.get(state.getArmedSlot()).role);
             }
             else {
@@ -471,7 +474,7 @@ public class LinkFeatureEditor
     }
 
     @Override
-    public Component getFocusComponent()
+    public FormComponent getFocusComponent()
     {
         return field;
     }

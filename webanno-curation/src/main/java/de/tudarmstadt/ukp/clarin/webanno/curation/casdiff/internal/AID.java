@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal;
 
+import java.io.Serializable;
+
 public class AID
+    implements Serializable
 {
+    private static final long serialVersionUID = 2509249097545433991L;
+    
     public final int addr;
     public final String feature;
     public final int index;

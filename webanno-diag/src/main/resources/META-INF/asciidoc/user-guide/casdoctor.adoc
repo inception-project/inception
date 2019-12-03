@@ -86,7 +86,7 @@ and saving inconsistent documents.
 
 [horizontal]
 ID:: `AllFeatureStructuresIndexedCheck`
-Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>, <<repair_RemoveDanglingRelationsRepair>>, <<repair_ReindexFeatureAttachedSpanAnnotationsRepair>>
+Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>, <<repair_RemoveDanglingRelationsRepair>>, <<repair_ReindexFeatureAttachedSpanAnnotationsRepair>>, <<repair_RemoveDanglingFeatureAttachedSpanAnnotationsRepair>>
 
 This check verifies if all reachable feature structures in the CAS are also indexed. We do not
 currently use any un-indexed feature structures. If there are any un-indexed feature structures in the
@@ -222,6 +222,19 @@ This repair action removes all chain links that are not reachable through a chai
 
 Although this is a destructive repair action, it is likely a safe action in most cases. Users are
 not able see chain links that are not part of a chain in the user interface anyway.
+
+[[repair_RemoveDanglingFeatureAttachedSpanAnnotationsRepair]]
+=== Remove dangling feature-attached span annotations
+
+[horizontal]
+ID:: `RemoveDanglingFeatureAttachedSpanAnnotationsRepair`
+
+This repair action removes all annotations which are themselves no longer indexed (i.e. they have
+been deleted), but they are still reachable through some layer to which they had attached. This 
+affects mainly the DKPro Core POS and Lemma layers.
+
+Although this is a destructive repair action, it is sometimes a desired action because the user may
+know that they do not care to resurrect the deleted annotation as per <<repair_ReindexFeatureAttachedSpanAnnotationsRepair>>.
 
 [[repair_RemoveDanglingRelationsRepair]]
 === Remove dangling relations
