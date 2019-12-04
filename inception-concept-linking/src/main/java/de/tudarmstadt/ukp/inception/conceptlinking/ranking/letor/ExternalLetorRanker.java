@@ -115,16 +115,14 @@ public class ExternalLetorRanker
         List<KBHandle> result = new ArrayList<>(Collections.nCopies(aCandidates.size(), null));
 
         for (int i = 0; i < aCandidates.size(); i++) {
-            KBHandle handle = aCandidates.get(aRanks.get(i));
+            int rank = aRanks.get(i);
+            KBHandle handle = aCandidates.get(rank);
 
-            List<String> data = explanations.get(i).entrySet()
+            String explanation = explanations.get(rank).entrySet()
                     .stream()
-                    .sorted(Map.Entry.comparingByValue())
+                    .sorted(Map.Entry.comparingByKey())
                     .map(e -> String.format("%s: %.3f", e.getKey(), e.getValue()))
-                    .collect(Collectors.toList());
-
-            Collections.reverse(data);
-            String explanation = data.stream().collect(Collectors.joining("; "));
+                    .collect(Collectors.joining("; \n"));
 
             handle.setDebugInfo(explanation);
             result.set(i, handle);
