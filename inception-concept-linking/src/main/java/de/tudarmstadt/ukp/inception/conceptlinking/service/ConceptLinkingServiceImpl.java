@@ -151,7 +151,7 @@ public class ConceptLinkingServiceImpl
         // want to avoid long reaction times when there is large number of candidates (which is
         // very likely when e.g. searching for all items starting with or containing a specific
         // letter.
-        final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 1;
+        final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 2;
         
         long startTime = currentTimeMillis();
         Set<KBHandle> result = new LinkedHashSet<>();
