@@ -235,9 +235,10 @@ public class ConceptFeatureEditor
                 int end = selection.getEnd();
 
                 // Delete old preferences
-                // for (AnnotationFS oldPreference : CasUtil.selectAt(cas, kbHandleType, begin, end)) {
-                //    cas.removeFsFromIndexes(oldPreference);
-                // }
+                // TODO: Delete preferences when underlying annotation is deleted
+                for (AnnotationFS oldPreference : CasUtil.selectAt(cas, kbHandleType, begin, end)) {
+                   cas.removeFsFromIndexes(oldPreference);
+                }
 
                 // Create new preferences
                 System.out.println("Begin: " + begin + " - End: " + end);

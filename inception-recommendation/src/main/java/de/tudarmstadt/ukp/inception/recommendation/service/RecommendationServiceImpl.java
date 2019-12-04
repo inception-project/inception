@@ -1098,6 +1098,8 @@ public class RecommendationServiceImpl
                                 recommender.getName(), recommender.getId(), username,
                                 document.getName(), document.getId(),
                                 document.getProject().getName(), document.getProject().getId(), e);
+
+
                         continue nextRecommender;
                     }
                 }
