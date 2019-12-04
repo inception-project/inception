@@ -20,14 +20,19 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -134,7 +139,30 @@ public class ConceptFeatureEditor
             return emptyList();
         }
 
-        cachedQuery = aInput;
+        String input = aInput;
+        
+        // Extract filter on the description
+        final String descriptionFilter;
+        if (input.contains("::")) {
+            descriptionFilter = substringAfter(input , "::");
+            input = substringBefore(input , "::");
+        }
+        else {
+            descriptionFilter = null;
+        }
+        
+        // Extract exact match filter on the query
+        boolean labelFilter = false;
+        String trimmedInput = input.trim();
+        if (trimmedInput.length() > 2 && trimmedInput.startsWith("\"")
+                && trimmedInput.endsWith("\"")) {
+            input = StringUtils.substring(input, 1, -1);
+            labelFilter = true;
+        }
+        
+        final String finalInput = input;
+        
+        cachedQuery = finalInput;
         
         List<KBHandle> choices;
         try {
@@ -163,15 +191,14 @@ public class ConceptFeatureEditor
                     : -1;
 
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
-                    traits.getScope(), traits.getAllowedValueType(), aInput, mention, mentionBegin,
-                    cas, feat.getProject());
+                    traits.getScope(), traits.getAllowedValueType(), finalInput, mention,
+                    mentionBegin, cas, feat.getProject());
 
             Project project = aStateModel.getObject().getProject();
             String username = aStateModel.getObject().getUser().getUsername();
 
-
             ApplicationEvent event = new EntityLinkingSearchQueryEvent(this, project, username,
-                    aInput, aStateModel.getObject().getDocument(), mentionBegin, mentionEnd,
+                    finalInput, aStateModel.getObject().getDocument(), mentionBegin, mentionEnd,
                     choices.size());
             applicationEventPublisher.get().publishEvent(event);
         }
@@ -183,6 +210,19 @@ public class ConceptFeatureEditor
                 .find(IPartialPageRequestHandler.class)
                 .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
+
+        if (labelFilter) {
+            choices = choices.stream()
+                    .filter(kb -> containsIgnoreCase(kb.getUiLabel(), finalInput))
+                    .collect(Collectors.toList());
+        }
+
+        if (isNotBlank(descriptionFilter)) {
+            choices = choices.stream()
+                    .filter(kb -> containsIgnoreCase(kb.getDescription(), descriptionFilter))
+                    .collect(Collectors.toList());
+        }
+        
         return choices;
     }
 
