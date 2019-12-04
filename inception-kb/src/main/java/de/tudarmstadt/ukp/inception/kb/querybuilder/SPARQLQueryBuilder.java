@@ -59,6 +59,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -752,6 +753,14 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
+            if (caseInsensitive) {
+                // We assume that the FTS is case insensitive and found that some FTSes (i.e. 
+                // Fuseki) can have trouble matching if they get upper-case query when they
+                // internally lower-case#
+                // FIXME: locale should try to respect KB language setting...
+                sanitizedValue = sanitizedValue.toLowerCase(Locale.US);
+            }
+            
             StringJoiner joiner = new StringJoiner(" ");
             for (String term : sanitizedValue.split(" ")) {
                 if (term.length() > 4) {
@@ -767,9 +776,14 @@ public class SPARQLQueryBuilder
             valuePatterns.add(VAR_SUBJECT
                     .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(sanitizedValue)))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
-            valuePatterns.add(VAR_SUBJECT
-                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(fuzzyValue)))
-                    .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+            
+            // No need to add the fuzzy query pattern if actually none of the tokens exceeded the
+            // fuzzy threshold and got a "~"
+            if (!fuzzyValue.equals(sanitizedValue)) {
+                valuePatterns.add(VAR_SUBJECT
+                        .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(fuzzyValue)))
+                        .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+            }
         }
         
         return GraphPatterns.and(
