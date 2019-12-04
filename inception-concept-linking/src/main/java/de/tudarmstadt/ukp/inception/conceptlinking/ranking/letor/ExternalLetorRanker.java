@@ -21,9 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -33,6 +36,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.ranking.Ranker;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import okhttp3.MediaType;
@@ -44,8 +48,11 @@ public class ExternalLetorRanker
     implements Ranker
 {
 
-    private static final String URL = "http://localhost:5000/rank";
+    private static final String URL = "http://blinky.ukp.informatik.tu-darmstadt.de:5000/rank";
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private static final long CONNECT_TIMEOUT = 30;
+    private static final long WRITE_TIMEOUT = 30;
+    private static final long READ_TIMEOUT = 30;
 
     @Override
     public List<KBHandle> rank(String aQuery, String aMention, Set<KBHandle> aCandidates,
@@ -60,7 +67,11 @@ public class ExternalLetorRanker
 
         PredictionRequest request = new PredictionRequest(getCurrentUser(), aMention, context, aQuery, unsortedCandidates);
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+                .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
+                .build();
 
         okhttp3.RequestBody body = RequestBody.create(JSON, request.toJson());
         okhttp3.Request httpRequest = new okhttp3.Request.Builder()
@@ -72,8 +83,10 @@ public class ExternalLetorRanker
              ResponseBody responseBody = response.body()) {
             if (response.isSuccessful()) {
                 ObjectMapper mapper = new ObjectMapper();
-                Integer[] ranks = mapper.readValue(responseBody.string(), Integer[].class);
-                return argsort(unsortedCandidates, ranks);
+
+                PredictionResponse predictionResponse = JSONUtil.fromJsonString(PredictionResponse.class, responseBody.string());
+
+                return rerank(unsortedCandidates, predictionResponse.getRanks(), predictionResponse.getExplanations());
             } else {
                 log.error("Reranking request was not successful: [{} - {}]", response.code(), responseBody.string());
             }
@@ -98,16 +111,26 @@ public class ExternalLetorRanker
         return sentence.getCoveredText();
     }
 
-    private List<KBHandle> argsort(List<KBHandle> aCandidates, Integer[] aRanks) {
-        KBHandle[] result = new KBHandle[aCandidates.size()];
+    private List<KBHandle> rerank(List<KBHandle> aCandidates, List<Integer> aRanks, List<Map<String, Double>> explanations) {
+        List<KBHandle> result = new ArrayList<>(Collections.nCopies(aCandidates.size(), null));
+
         for (int i = 0; i < aCandidates.size(); i++) {
-            int rank = aRanks[i];
-            result[rank] = aCandidates.get(i);
+            KBHandle handle = aCandidates.get(aRanks.get(i));
+
+            List<String> data = explanations.get(i).entrySet()
+                    .stream()
+                    .sorted(Map.Entry.comparingByValue())
+                    .map(e -> String.format("%s: %.3f", e.getKey(), e.getValue()))
+                    .collect(Collectors.toList());
+
+            Collections.reverse(data);
+            String explanation = data.stream().collect(Collectors.joining("; "));
+
+            handle.setDebugInfo(explanation);
+            result.set(i, handle);
         }
 
-        List<KBHandle> kbHandles = Arrays.asList(result);
-
-        return kbHandles;
+        return result;
     }
 
     private String getCurrentUser() {

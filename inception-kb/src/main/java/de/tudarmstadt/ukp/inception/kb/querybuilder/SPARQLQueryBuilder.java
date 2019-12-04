@@ -754,15 +754,18 @@ public class SPARQLQueryBuilder
 
             StringJoiner joiner = new StringJoiner(" ");
             for (String term : sanitizedValue.split(" ")) {
-                if (term.length() > 2) {
+                if (term.length() > 4) {
                     joiner.add(term + "~");
-                } else {
+                } else if(term.length() >= 3) {
                     joiner.add(term);
                 }
             }
 
             String fuzzyValue = joiner.toString();
 
+            valuePatterns.add(VAR_SUBJECT
+                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(sanitizedValue)))
+                    .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
             valuePatterns.add(VAR_SUBJECT
                     .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(fuzzyValue)))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));

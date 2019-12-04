@@ -22,14 +22,17 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.File;
-import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
-import org.eclipse.rdf4j.common.net.ParsedIRI;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,35 +157,6 @@ public class ConceptLinkingServiceImpl
         Set<KBHandle> result = new LinkedHashSet<>();
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            // Try whether the query is an IRI, if yes, search for it matching exactly
-            if (aQuery != null) {
-                ParsedIRI iri = null;
-                try {
-                    iri = new ParsedIRI(aQuery);
-                }
-                catch (URISyntaxException | NullPointerException e) {
-                    // Skip match by IRI.
-                }
-                if (iri != null && iri.isAbsolute()) {
-                    SPARQLQueryPrimaryConditions iriMatchBuilder = newQueryBuilder(aValueType, aKB)
-                            .withIdentifier(aQuery);
-                    
-                    if (aConceptScope != null) {
-                        iriMatchBuilder.descendantsOf(aConceptScope);
-                    }
-                    
-                    List<KBHandle> exactMatches = iriMatchBuilder
-                            .retrieveLabel()
-                            .retrieveDescription()
-                            .asHandles(conn, true);
-    
-                    log.info("Found [{}] candidates exactly matching IRI {}",
-                            exactMatches.size(), asList(aQuery));
-    
-                    result.addAll(exactMatches);
-                }
-            }
-            
             SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB);
             
             if (aConceptScope != null) {
@@ -199,7 +173,7 @@ public class ConceptLinkingServiceImpl
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
             exactBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
-            
+
             List<KBHandle> exactMatches = exactBuilder
                     .retrieveLabel()
                     .retrieveDescription()

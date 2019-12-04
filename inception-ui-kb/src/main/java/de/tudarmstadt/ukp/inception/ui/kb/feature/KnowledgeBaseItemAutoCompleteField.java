@@ -48,6 +48,8 @@ public class KnowledgeBaseItemAutoCompleteField
         
         Validate.notNull(aChoiceProvider);
         choiceProvider = aChoiceProvider;
+
+
     }
 
     public KnowledgeBaseItemAutoCompleteField(String aId,
@@ -84,6 +86,7 @@ public class KnowledgeBaseItemAutoCompleteField
         behavior.setOption("autoWidth", true);
         behavior.setOption("ignoreCase", false);
         behavior.setOption("delay", 500);
+        behavior.setOption("height", 500);
     }
 
     @Override

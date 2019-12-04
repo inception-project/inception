@@ -272,7 +272,9 @@ public class ExternalRecommender
             return client.newCall(aRequest).execute();
         }
         catch (IOException e) {
-            throw new RecommendationException("Error while sending request!", e);
+            String msg = String.format("Error while sending external recommender request for [%s] to [%s] !",
+                    recommender.getName(), traits.getRemoteUrl());
+            throw new RecommendationException(msg + e.getMessage());
         }
     }
 
