@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
@@ -560,9 +561,16 @@ public class DocumentServiceImpl
                     aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
         }
     }
-    
+
     @Override
     public CAS createOrReadInitialCas(SourceDocument aDocument)
+        throws IOException
+    {
+        return createOrReadInitialCas(aDocument, CasUpgradeMode.NO_CAS_UPGRADE);
+    }
+    
+    @Override
+    public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -571,19 +579,20 @@ public class DocumentServiceImpl
                 aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
-        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, () -> {
-            // Normally, the initial CAS should be created on document import, but after
-            // adding this feature, the existing projects do not yet have initial CASes, so
-            // we create them here lazily
-            try {
-                return importExportService.importCasFromFile(
-                        getSourceDocumentFile(aDocument), aDocument.getProject(),
-                        aDocument.getFormat());
-            }
-            catch (UIMAException e) {
-                throw new IOException("Unable to create CAS: " + e.getMessage(), e);
-            }
-        });
+        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, true, 
+                aUpgradeMode, () -> {
+                // Normally, the initial CAS should be created on document import, but after
+                // adding this feature, the existing projects do not yet have initial CASes, so
+                // we create them here lazily
+                try {
+                    return importExportService.importCasFromFile(
+                            getSourceDocumentFile(aDocument), aDocument.getProject(),
+                            aDocument.getFormat());
+                }
+                catch (UIMAException e) {
+                    throw new IOException("Unable to create CAS: " + e.getMessage(), e);
+                }
+            });
     }
     
     @Override
@@ -707,7 +716,7 @@ public class DocumentServiceImpl
         throws UIMAException, IOException
     {
         AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
-        CAS cas = createOrReadInitialCas(aDocument);
+        CAS cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE);
         // Add/update the CAS metadata
         File casFile = getCasFile(aDocument, aUser.getUsername());
         if (casFile.exists()) {
