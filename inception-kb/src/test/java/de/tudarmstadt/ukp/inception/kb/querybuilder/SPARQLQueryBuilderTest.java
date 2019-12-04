@@ -1123,7 +1123,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
     
         // Two words with the second being very short and a space following - in this case we
-        // assmume that the user is in fact searching for "Barack Ob" and do either drop the
+        // assmume that the user is in fact searching for "Barack Ob" and do neither drop the
         // last element nor add a wildcard
         List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder
                 .forItems(kb)

@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -170,7 +170,7 @@ public class ConceptLinkingServiceImpl
             // the exact matches separately to ensure we have them.
             String[] exactLabels = Stream.of(
                     (aQuery != null && aQuery.length() <= threshold) ? aQuery : null, aMention)
-                    .filter(Objects::nonNull)
+                    .filter(StringUtils::isNotBlank)
                     .toArray(String[]::new);
             exactBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
 
@@ -201,36 +201,35 @@ public class ConceptLinkingServiceImpl
                         .retrieveDescription()
                         .asHandles(conn, true);
                 
-                log.debug("Found [{}] candidates starting with [{}]]",
-                        startingWithMatches.size(), aQuery);            
+                log.info("Found [{}] candidates starting with [{}]]",
+                        startingWithMatches.size(), aQuery);
                 
                 result.addAll(startingWithMatches);
             }
             
-            
             // Collect containing matches
-            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
+            SPARQLQueryPrimaryConditions matchingBuilder = newQueryBuilder(aValueType, aKB);
 
             if (aConceptScope != null) {
                 // Scope-limiting must always happen before label matching!
-                containingBuilder.descendantsOf(aConceptScope);
+                matchingBuilder.descendantsOf(aConceptScope);
             }
             
-            String[] containingLabels = Stream.of(
+            String[] matchingLabels = Stream.of(
                     (aQuery != null && aQuery.length() > threshold) ? aQuery : null, aMention)
-                    .filter(Objects::nonNull)
+                    .filter(StringUtils::isNotBlank)
                     .toArray(String[]::new);
-            containingBuilder.withLabelContainingAnyOf(containingLabels);
+            matchingBuilder.withLabelMatchingAnyOf(matchingLabels);
             
-            List<KBHandle> containingMatches = containingBuilder
+            List<KBHandle> matchingMatches = matchingBuilder
                     .retrieveLabel()
                     .retrieveDescription()
                     .asHandles(conn, true);
             
-            log.debug("Found [{}] candidates using containing {}",
-                    containingMatches.size(), asList(containingLabels));
+            log.info("Found [{}] candidates using matching {}",
+                    matchingMatches.size(), asList(matchingLabels));
             
-            result.addAll(containingMatches);
+            result.addAll(matchingMatches);
         }
 
         log.debug("Generated [{}] candidates in {}ms", result.size(),
