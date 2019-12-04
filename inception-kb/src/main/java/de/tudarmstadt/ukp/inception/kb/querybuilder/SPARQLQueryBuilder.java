@@ -756,7 +756,8 @@ public class SPARQLQueryBuilder
             for (String term : sanitizedValue.split(" ")) {
                 if (term.length() > 4) {
                     joiner.add(term + "~");
-                } else if(term.length() >= 3) {
+                }
+                else if (term.length() >= 3) {
                     joiner.add(term);
                 }
             }

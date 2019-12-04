@@ -37,8 +37,9 @@ public class EntityLinkingSearchQueryEvent
     private final int end;
     private final int numberOfCandidates;
 
-    public EntityLinkingSearchQueryEvent(Object aSource, Project aProject, String aUser, String aQuery,
-            SourceDocument aSourceDocument, int aBegin, int aEnd, int aNumberOfCandidates)
+    public EntityLinkingSearchQueryEvent(Object aSource, Project aProject, String aUser,
+            String aQuery, SourceDocument aSourceDocument, int aBegin, int aEnd,
+            int aNumberOfCandidates)
     {
         super(aSource);
 

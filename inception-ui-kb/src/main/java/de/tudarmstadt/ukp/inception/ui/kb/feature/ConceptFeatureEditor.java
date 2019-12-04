@@ -170,7 +170,9 @@ public class ConceptFeatureEditor
             String username = aStateModel.getObject().getUser().getUsername();
 
 
-            ApplicationEvent event = new EntityLinkingSearchQueryEvent(this, project, username, aInput, aStateModel.getObject().getDocument(), mentionBegin, mentionEnd, choices.size());
+            ApplicationEvent event = new EntityLinkingSearchQueryEvent(this, project, username,
+                    aInput, aStateModel.getObject().getDocument(), mentionBegin, mentionEnd,
+                    choices.size());
             applicationEventPublisher.get().publishEvent(event);
         }
         catch (Exception e) {
@@ -235,10 +237,10 @@ public class ConceptFeatureEditor
                 int end = selection.getEnd();
 
                 // Delete old preferences
-                // TODO: Delete preferences when underlying annotation is deleted
-                for (AnnotationFS oldPreference : CasUtil.selectAt(cas, kbHandleType, begin, end)) {
-                   cas.removeFsFromIndexes(oldPreference);
-                }
+                // for (AnnotationFS oldPreference : CasUtil.selectAt(cas, kbHandleType, begin,
+                // end)) {
+                // cas.removeFsFromIndexes(oldPreference);
+                // }
 
                 // Create new preferences
                 System.out.println("Begin: " + begin + " - End: " + end);

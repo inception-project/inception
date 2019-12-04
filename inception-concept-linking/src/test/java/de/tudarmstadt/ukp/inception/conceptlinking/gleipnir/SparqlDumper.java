@@ -89,8 +89,8 @@ public class SparqlDumper {
         String mention = "$Mention";
         // mention = "$Mention";
 
-        Set<KBHandle> candidates = sut.generateCandidates(kb, null, ConceptFeatureValueType.INSTANCE, "$query", mention);
-
+        Set<KBHandle> candidates = sut.generateCandidates(kb, null,
+                ConceptFeatureValueType.INSTANCE, "$query", mention);
 
         System.out.println(knowledgeBaseService.readInstance(kb, "$IRI"));
     }
