@@ -30,7 +30,8 @@ public class PredictionResponse {
 
     @JsonCreator
     public PredictionResponse(@JsonProperty("ranks") List<Integer> aRanks,
-                              @JsonProperty("explanations") List<Map<String, Double>> aExplanations) {
+            @JsonProperty("explanations") List<Map<String, Double>> aExplanations)
+    {
         ranks = aRanks;
         explanations = aExplanations;
     }

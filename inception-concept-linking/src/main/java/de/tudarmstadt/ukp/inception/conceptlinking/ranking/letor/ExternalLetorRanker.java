@@ -65,7 +65,8 @@ public class ExternalLetorRanker
 
         String context = getContext(aCas, aBeginOffset);
 
-        PredictionRequest request = new PredictionRequest(getCurrentUser(), aMention, context, aQuery, unsortedCandidates);
+        PredictionRequest request = new PredictionRequest(getCurrentUser(), aMention, context,
+                aQuery, unsortedCandidates);
         MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
@@ -84,11 +85,14 @@ public class ExternalLetorRanker
             if (response.isSuccessful()) {
                 ObjectMapper mapper = new ObjectMapper();
 
-                PredictionResponse predictionResponse = JSONUtil.fromJsonString(PredictionResponse.class, responseBody.string());
+                PredictionResponse predictionResponse = JSONUtil
+                        .fromJsonString(PredictionResponse.class, responseBody.string());
 
-                return rerank(unsortedCandidates, predictionResponse.getRanks(), predictionResponse.getExplanations());
+                return rerank(unsortedCandidates, predictionResponse.getRanks(),
+                        predictionResponse.getExplanations());
             } else {
-                log.error("Reranking request was not successful: [{} - {}]", response.code(), responseBody.string());
+                log.error("Reranking request was not successful: [{} - {}]", response.code(),
+                        responseBody.string());
             }
         } catch (IOException e) {
             log.error("Exception while re-ranking externally", e);
@@ -111,7 +115,9 @@ public class ExternalLetorRanker
         return sentence.getCoveredText();
     }
 
-    private List<KBHandle> rerank(List<KBHandle> aCandidates, List<Integer> aRanks, List<Map<String, Double>> explanations) {
+    private List<KBHandle> rerank(List<KBHandle> aCandidates, List<Integer> aRanks,
+            List<Map<String, Double>> explanations)
+    {
         List<KBHandle> result = new ArrayList<>(Collections.nCopies(aCandidates.size(), null));
 
         for (int i = 0; i < aCandidates.size(); i++) {
@@ -119,14 +125,13 @@ public class ExternalLetorRanker
 
             List<String> data = explanations.get(i).entrySet()
                     .stream()
-                    .sorted(Map.Entry.comparingByValue())
+                    .sorted(Map.Entry.comparingByKey())
                     .map(e -> String.format("%s: %.3f", e.getKey(), e.getValue()))
                     .collect(Collectors.toList());
 
-            Collections.reverse(data);
             String explanation = data.stream().collect(Collectors.joining("; "));
 
-            handle.setDebugInfo(explanation);
+            handle.setDebugInfo("[" + i + "/" + aCandidates.size() + "]: " + explanation);
             result.set(i, handle);
         }
 
