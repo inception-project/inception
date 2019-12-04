@@ -1072,8 +1072,8 @@ public class RecommendationServiceImpl
                                 activePredictions != null &&
                                 activePredictions.hasRunPredictionOnDocument(document)
                         ) {
-                            suggestions = inheritSuggestions(engine, activePredictions, document,
-                                    username);
+                            suggestions = inheritSuggestions(engine.getRecommender(),
+                                    activePredictions, document, username);
                         }
                         else {
                             suggestions = generateSuggestions(ctx, engine, activePredictions,
@@ -1099,6 +1099,14 @@ public class RecommendationServiceImpl
                                 document.getName(), document.getId(),
                                 document.getProject().getName(), document.getProject().getId(), e);
 
+                        // If there was a previous successful run of the recommender, inherit its
+                        // suggestions to avoid that all the suggestions of the recommende simply
+                        // disappear.
+                        List<AnnotationSuggestion> suggestions = inheritSuggestions(recommender,
+                                activePredictions, document, username);
+                        if (!suggestions.isEmpty()) {
+                            predictions.putPredictions(suggestions);
+                        }
 
                         continue nextRecommender;
                     }
@@ -1116,20 +1124,18 @@ public class RecommendationServiceImpl
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private List<AnnotationSuggestion> inheritSuggestions(RecommendationEngine engine,
+    private List<AnnotationSuggestion> inheritSuggestions(Recommender aRecommender,
             Predictions activePredictions, SourceDocument document, String aUsername)
     {
-        Recommender recommender = engine.getRecommender();
-        
         List<AnnotationSuggestion> suggestions = activePredictions
-                .getPredictionsByRecommenderAndDocument(recommender, document.getName());
+                .getPredictionsByRecommenderAndDocument(aRecommender, document.getName());
         
         log.debug(
                 "[{}]({}) for user [{}] on document "
                         + "[{}]({}) in project [{}]({}) inherited {} predictions.",
-                recommender.getName(), recommender.getId(), aUsername, document.getName(),
-                document.getId(), recommender.getProject().getName(),
-                recommender.getProject().getId(), suggestions.size());
+                aRecommender.getName(), aRecommender.getId(), aUsername, document.getName(),
+                document.getId(), aRecommender.getProject().getName(),
+                aRecommender.getProject().getId(), suggestions.size());
 
         suggestions.forEach(s -> s.show(FLAG_ALL));
         
