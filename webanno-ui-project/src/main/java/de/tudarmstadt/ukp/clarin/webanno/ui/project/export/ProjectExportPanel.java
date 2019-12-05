@@ -28,6 +28,7 @@ import java.net.URLEncoder;
 import java.nio.channels.ClosedByInterruptException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Queue;
@@ -146,8 +147,8 @@ public class ProjectExportPanel
             });
             format.setChoices(LoadableDetachableModel.of(() -> {
                 List<String> formats = importExportService.getWritableFormats().stream()
+                        .sorted(Comparator.comparing(FormatSupport::getName))
                         .map(FormatSupport::getId)
-                        .sorted()
                         .collect(Collectors.toCollection(ArrayList::new));
                 formats.add(0, ProjectExportRequest.FORMAT_AUTO);
                 return formats;

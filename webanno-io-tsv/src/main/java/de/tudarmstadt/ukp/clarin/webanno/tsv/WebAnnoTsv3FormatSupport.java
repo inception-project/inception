@@ -34,7 +34,7 @@ public class WebAnnoTsv3FormatSupport
     implements FormatSupport
 {
     public static final String ID = "ctsv3";
-    public static final String NAME = "WebAnno TSV3 (WebAnno v3)";
+    public static final String NAME = "WebAnno TSV v3.2 (WebAnno v3.x)";
     
     @Override
     public String getId()
