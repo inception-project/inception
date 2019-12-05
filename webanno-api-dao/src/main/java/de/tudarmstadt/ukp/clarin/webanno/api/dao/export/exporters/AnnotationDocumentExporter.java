@@ -172,10 +172,12 @@ public class AnnotationDocumentExporter
             
             FormatSupport format = importExportService.getWritableFormatById(formatId)
                     .orElseGet(() -> {
-                        aRequest.addMessage(LogMessage.error(this,"[%s] No writer found for "
-                                + "format [%s] - exporting as WebAnno TSV instead.",
-                                sourceDocument.getName(), aRequest.getFormat()));
-                        return new WebAnnoTsv3FormatSupport();
+                        FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
+                        aRequest.addMessage(LogMessage.error(this,"Annotation: [%s] No writer "
+                                + "found for original format [%s] - exporting as [%s] "
+                                + "instead.",
+                                sourceDocument.getName(), formatId, fallbackFormat.getName()));
+                        return fallbackFormat;
                     });
 
             // Export annotations from regular users
