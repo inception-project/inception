@@ -130,13 +130,13 @@ public class SearchAnnotationSidebar
     private SearchResult selectedResult;
     
     // UI elements for annotation changes
-    private Form<CreateAnnotationsOptions> annotationOptionsForm;
-    private LambdaAjaxLink createOptionsLink;
-    private LambdaAjaxButton<Void> deleteButton;
-    private Form<DeleteAnnotationsOptions> deleteOptionsForm;
-    private LambdaAjaxButton<Void> annotateButton;
-    private LambdaAjaxLink deleteOptionsLink;
-    private Form<Void> annotationForm;
+    private final Form<CreateAnnotationsOptions> annotationOptionsForm;
+    private final LambdaAjaxLink createOptionsLink;
+    private final LambdaAjaxButton<Void> deleteButton;
+    private final Form<DeleteAnnotationsOptions> deleteOptionsForm;
+    private final LambdaAjaxButton<Void> annotateButton;
+    private final LambdaAjaxLink deleteOptionsLink;
+    private final Form<Void> annotationForm;
 
     public SearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
