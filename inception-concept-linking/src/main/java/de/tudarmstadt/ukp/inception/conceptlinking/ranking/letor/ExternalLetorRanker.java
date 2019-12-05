@@ -48,7 +48,9 @@ public class ExternalLetorRanker
     implements Ranker
 {
 
-    private static final String URL = "http://blinky.ukp.informatik.tu-darmstadt.de:5000/rank";
+    // private static final String URL = "http://blinky.ukp.informatik.tu-darmstadt.de:5000/rank";
+    private static final String URL = "http://localhost:5000/rank";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
     private static final long CONNECT_TIMEOUT = 30;
     private static final long WRITE_TIMEOUT = 30;
