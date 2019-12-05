@@ -43,6 +43,7 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -87,6 +88,7 @@ public class ConceptFeatureEditor
 
     private FormComponent focusComponent;
     private IriInfoBadge iriBadge;
+    private ExternalLink openIriLink;
 
     private String cachedQuery;
 
@@ -99,12 +101,21 @@ public class ConceptFeatureEditor
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-        add(iriBadge = new IriInfoBadge("iriInfoBadge",
-                LoadableDetachableModel.of(this::iriTooltipValue)));
-        iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
-        add(focusComponent = buildAutoCompleteField(aStateModel, aHandler));
-        add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
         
+        IModel<String> iriModel = LoadableDetachableModel.of(this::iriTooltipValue);
+        
+        iriBadge = new IriInfoBadge("iriInfoBadge", iriModel);
+        iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
+        add(iriBadge);
+        
+        openIriLink = new ExternalLink("openIri", iriModel);
+        openIriLink.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
+        add(openIriLink);
+
+        add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
+
+        add(focusComponent = buildAutoCompleteField(aStateModel, aHandler));
+
         AnnotationFeature feat = getModelObject().feature;
         ConceptFeatureTraits traits = readFeatureTraits(feat);
         
