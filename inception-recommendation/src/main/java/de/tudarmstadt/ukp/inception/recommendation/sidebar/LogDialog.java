@@ -17,17 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
-import java.util.Collections;
+import static java.util.Arrays.asList;
+
 import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 
 public class LogDialog
@@ -35,16 +35,12 @@ public class LogDialog
 {
     private static final long serialVersionUID = -6911254813496835955L;
     
-    private boolean closeButtonClicked;
-    
-    private AjaxCallback onChangeAction;
-
-    public LogDialog(String id)
+    public LogDialog(String id, IModel<String> aTitle)
     {
-        this(id, null);
+        this(id, aTitle, null);
     }
 
-    public LogDialog(String id, IModel<List<LogMessageGroup>> aModel)
+    public LogDialog(String id, IModel<String> aTitle, IModel<List<LogMessageGroup>> aModel)
     {
         super(id, aModel);
         
@@ -54,10 +50,10 @@ public class LogDialog
         setResizable(true);
         setWidthUnit("px");
         setHeightUnit("px");
-        setTitle("Log");
+        setTitle(aTitle);
         setCssClassName("w_blue w_flex");
-        setCloseButtonCallback((target) -> {
-            closeButtonClicked = true;
+        setCloseButtonCallback(_target -> {
+            close(_target);
             return true;
         });
     }
@@ -75,55 +71,16 @@ public class LogDialog
     @Override
     public void show(IPartialPageRequestHandler aTarget)
     {
-        closeButtonClicked = false;
-        
-        setWindowClosedCallback((target) -> {
-            if (!closeButtonClicked) {
-                onConfirmInternal(target);
-            }
-        });
-        
         IModel<List<LogMessageGroup>> model = getModel();
         
         if (model == null || model.getObject() == null) {
-            model = new ListModel<>(Collections.emptyList());
+            LogMessageGroup group = new LogMessageGroup("No recommendations");
+            group.setMessages(asList(LogMessage.info("", "No recommender run has completed yet.")));
+            model = new ListModel<>(asList(group));
         }
         
         setContent(new LogDialogContent(getContentId(), this, model));
         
         super.show(aTarget);
     }
-
-    public AjaxCallback getOnChangeAction()
-    {
-        return onChangeAction;
-    }
-
-    public void setOnChangeAction(AjaxCallback aOnChangeAction)
-    {
-        onChangeAction = aOnChangeAction;
-    }
-
-    protected void onConfirmInternal(AjaxRequestTarget aTarget)
-    {
-        boolean closeOk = true;
-        
-        // Invoke callback if one is defined
-        if (onChangeAction != null) {
-            try {
-                onChangeAction.accept(aTarget);
-            }
-            catch (Exception e) {
-                // LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(),
-                // e);
-                // state.feedback = "Error: " + e.getMessage();
-                // aTarget.add(getContent());
-                closeOk = false;
-            }
-        }
-        
-        if (closeOk) {
-            close(aTarget);
-        }
-    }    
 }

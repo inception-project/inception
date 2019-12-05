@@ -84,7 +84,7 @@ public class LogDialogContent
             {
                 IModel<LogMessage> msg = aItem.getModel();
                 aItem.add(new Label("level", PropertyModel.of(msg, "level")));
-                aItem.add(new Label("source", PropertyModel.of(msg, "source.simpleName")));
+                aItem.add(new Label("source", PropertyModel.of(msg, "source")));
                 aItem.add(new Label("message", PropertyModel.of(msg, "message")));
             }
         };

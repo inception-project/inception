@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import static java.util.Arrays.asList;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -256,11 +257,18 @@ public class Predictions
     
     public void log(LogMessage aMessage)
     {
-        log.add(aMessage);
+        synchronized (log) {
+            log.add(aMessage);
+        }
     }
     
     public List<LogMessage> getLog()
     {
-        return Collections.unmodifiableList(log);
+        synchronized (log) {
+            // Making a copy here because we may still write to the log and don't want to hand out
+            // a live copy... which might cause problems, e.g. if the live copy would be used in the
+            // Wicket UI and becomes subject to serialization.
+            return asList(log.stream().toArray(LogMessage[]::new));
+        }
     }
 }
