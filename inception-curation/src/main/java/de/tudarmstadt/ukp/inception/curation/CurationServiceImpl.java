@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
 @Component
@@ -121,6 +122,7 @@ public class CurationServiceImpl implements CurationService
         public CurationState(String aUser)
         {
             curationUser = aUser;
+            selectedStrategy = new ManualMergeStrategy();
         }
 
         public List<User> getSelectedUsers()

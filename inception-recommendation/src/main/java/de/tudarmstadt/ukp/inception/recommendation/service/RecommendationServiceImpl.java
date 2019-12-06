@@ -450,6 +450,9 @@ public class RecommendationServiceImpl
             // document, we start the predictions so that the user gets recommendations
             // as quickly as possible without any interaction needed
             User user = userRepository.get(username);
+            if (user == null) {
+                return;
+            }
             Predictions predictions = getPredictions(user, project);
             if (
                     predictions == null ||

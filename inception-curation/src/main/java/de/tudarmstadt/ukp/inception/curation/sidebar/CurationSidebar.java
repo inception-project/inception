@@ -287,7 +287,7 @@ public class CurationSidebar
         Form<List<User>> usersForm = new Form<List<User>>("usersForm",
                 LoadableDetachableModel.of(this::listSelectedUsers));
         LambdaAjaxButton<Void> clearButton = new LambdaAjaxButton<>("clear", this::clearUsers);
-        LambdaAjaxButton<Void> showButton = new LambdaAjaxButton<>("show", this::updateUsers);
+        LambdaAjaxButton<Void> showButton = new LambdaAjaxButton<>("merge", this::selectAndMerge);
         usersForm.add(clearButton);
         usersForm.add(showButton);
         selectedUsers = new CheckGroup<User>("selectedUsers", usersForm.getModelObject());
@@ -306,7 +306,6 @@ public class CurationSidebar
         };
         selectedUsers.add(users);
         usersForm.add(selectedUsers);
-//        usersForm.add(visibleWhen(() -> !users.getModelObject().isEmpty()));
         return usersForm;
     }
     
@@ -348,6 +347,11 @@ public class CurationSidebar
         }
     }
 
+    private void selectAndMerge(AjaxRequestTarget aTarget, Form<Void> aForm) {
+        updateUsers(aTarget, aForm);
+        merge(aTarget, aForm);
+    }
+    
     private void updateUsers(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         AnnotatorState state = getModelObject();

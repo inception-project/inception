@@ -52,8 +52,13 @@ public class AutomaticMergeStrategy
     private @Autowired AnnotationSchemaService annotationService;
 
     @Override
+    /**
+     * Merges annotations that the given users (excluding the current one) agree on 
+     * into the current user's (might be CURATION_USER) CAS
+     */
     public void merge(AnnotatorState aState, CAS aTargetCas, Map<String, CAS> aUserCasses)
     {
+        //FIXME: should merging not overwrite the current users annos? (can result in deleting the users annos!!!)
         // prepare merged cas
         List<AnnotationLayer> layers = aState.getAnnotationLayers();
         List<Type> entryTypes = SuggestionBuilder.getEntryTypes(aTargetCas, layers,
