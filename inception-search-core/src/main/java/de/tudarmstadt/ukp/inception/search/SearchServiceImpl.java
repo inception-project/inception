@@ -168,7 +168,7 @@ public class SearchServiceImpl
     }
 
     @EventListener
-    public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws Exception
+    public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws IOException
     {
         log.trace("Starting beforeDocumentRemove");
 
@@ -310,7 +310,7 @@ public class SearchServiceImpl
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent) throws Exception
+    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
     {
         log.trace("Starting afterAnnotationUpdate");
 
@@ -397,7 +397,7 @@ public class SearchServiceImpl
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent) throws Exception
+    public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent)
     {
         log.trace("Starting afterDocumentCreate");
 
@@ -409,7 +409,6 @@ public class SearchServiceImpl
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
-        throws Exception
     {
         log.trace("Starting beforeLayerConfigurationChanged");
 

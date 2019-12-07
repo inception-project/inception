@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.13.0-SNAPSHOT</version>
+    <version>0.15.0-SNAPSHOT</version>
   </parent>
   <name>INCEpTION - Editor - PDF</name>
   <artifactId>inception-pdf-editor</artifactId>
@@ -152,8 +152,8 @@
     </dependency>
 
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-tcf</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-tcf-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -56,10 +56,10 @@ public class LappsGridRecommenderTraitsEditor
 
     private static final Logger LOG = LoggerFactory.getLogger(LappsGridRecommender.class);
 
-    public static String NER_LAYER = NamedEntity.class.getName();
-    public static String NER_FEATURE = "value";
-    public static String POS_LAYER = POS.class.getName();
-    public static String POS_FEATURE = "PosValue";
+    public static final String NER_LAYER = NamedEntity.class.getName();
+    public static final String NER_FEATURE = "value";
+    public static final String POS_LAYER = POS.class.getName();
+    public static final String POS_FEATURE = "PosValue";
 
     private static final String MID_FORM = "form";
     private static final String MID_SERVICES = "service";

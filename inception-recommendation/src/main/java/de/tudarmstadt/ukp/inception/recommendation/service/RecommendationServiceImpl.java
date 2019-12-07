@@ -28,6 +28,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,7 +66,10 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.wicket.MetaDataKey;
+import org.apache.wicket.Page;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
+import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +90,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -97,6 +103,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -111,10 +119,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
@@ -150,8 +160,6 @@ public class RecommendationServiceImpl
     private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
     
-    private IRequestCycleListener triggerTraingRunListener;
-
     /*
      * Marks user/projects to which annotations were added during this request. 
      */
@@ -430,13 +438,33 @@ public class RecommendationServiceImpl
     public void onDocumentOpened(DocumentOpenedEvent aEvent)
     {
         Project project = aEvent.getDocument().getProject();
-        String user = aEvent.getAnnotator();
+        String username = aEvent.getAnnotator();
+        SourceDocument doc = aEvent.getDocument();
 
         // If there already is a state, we just re-use it. We only trigger a new training if there
         // is no state yet.
-        if (!states.containsKey(new RecommendationStateKey(user, project))) {
-            triggerTrainingAndClassification(user, project, "DocumentOpenedEvent");
+        if (!states.containsKey(new RecommendationStateKey(username, project))) {
+            triggerTrainingAndClassification(username, project, "DocumentOpenedEvent", doc);
+        } else {
+            // If we already trained, predicted only for the last document and open a new
+            // document, we start the predictions so that the user gets recommendations
+            // as quickly as possible without any interaction needed
+            User user = userRepository.get(username);
+            Predictions predictions = getPredictions(user, project);
+            if (
+                    predictions == null ||
+                    !predictions.hasRunPredictionOnDocument(aEvent.getDocument())
+            ) {
+                log.debug("Starting prediction task after document was opened!");
+                Task task = new PredictionTask(user, project, "DocumentOpenedEvent", doc);
+                schedulingService.enqueue(task);
+            }
         }
+
+        // We reset this in case the state was not properly cleared, e.g. the AL session
+        // was started but then the browser closed. Places where it is set include
+        // - ActiveLearningSideBar::moveToNextRecommendation
+        getState(username, project).setPredictForAllDocuments(false);
     }
 
     /* 
@@ -481,11 +509,41 @@ public class RecommendationServiceImpl
             committed = new HashSet<>();
             requestCycle.setMetaData(COMMITTED, committed);
         }
-        
+
         committed.add(new RecommendationStateKey(aEvent.getDocument().getUser(),
                 aEvent.getDocument().getProject()));        
         
-        requestCycle.getListeners().add(triggerTrainingTaskListener());
+        boolean containsTrainingTrigger = false;
+        for (IRequestCycleListener listener : requestCycle.getListeners()) {
+            if (listener instanceof TriggerTrainingTaskListener) {
+                containsTrainingTrigger = true;
+            }
+        }
+        
+        if (!containsTrainingTrigger) {
+            // Hack to figure out which annotations the user is viewing. This obviously works only 
+            // if the user is viewing annotations through an AnnotationPageBase ... still not a 
+            // bad guess
+            IPageRequestHandler handler = PageRequestHandlerTracker
+                    .getLastHandler(requestCycle);
+            Page page = (Page) handler.getPage();
+            if (page instanceof AnnotationPageBase) {
+                AnnotatorState state = ((AnnotationPageBase) page).getModelObject();
+                requestCycle.getListeners()
+                        .add(new TriggerTrainingTaskListener(state.getDocument()));
+            }
+            else {
+                // Otherwise use the document from the event... mind that if there are multiple
+                // events, we consider only the first one since after that the trigger listener
+                // will be in the cycle and we do not add another one.
+                // FIXME: This works as long as the user is working on a single document, but not if
+                // the user is doing a bulk operation. If a bulk-operation is done, we get multiple
+                // AfterCasWrittenEvent and we do not know which of them belongs to the document
+                // which the user is currently viewing.
+                requestCycle.getListeners()
+                        .add(new TriggerTrainingTaskListener(aEvent.getDocument().getDocument()));
+            }
+        }
     }
     
     @EventListener
@@ -516,7 +574,8 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
+    public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
+            SourceDocument aCurrentDocument)
     {
         User user = userRepository.get(aUser);
         
@@ -540,14 +599,27 @@ public class RecommendationServiceImpl
             // If it is time for a selection task, we just start a selection task.
             // The selection task then will start the training once its finished,
             // i.e. we do not start it here.
-            Task task = new SelectionTask(aProject, user, aEventName);
+            Task task = new SelectionTask(user, aProject, aEventName, aCurrentDocument);
             schedulingService.enqueue(task);
         } else {
-            Task task = new TrainingTask(user, aProject, aEventName);
+            Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument);
             schedulingService.enqueue(task);
         }
     }
-    
+
+    @Override
+    public boolean isPredictForAllDocuments(String aUser, Project aProject)
+    {
+        return getState(aUser, aProject).isPredictForAllDocuments();
+    }
+
+    @Override
+    public void setPredictForAllDocuments(String aUser, Project aProject,
+                                          boolean aPredictForAllDocuments)
+    {
+        getState(aUser, aProject).setPredictForAllDocuments(aPredictForAllDocuments);
+    }
+
     @EventListener
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void onSessionDestroyed(SessionDestroyedEvent event)
@@ -567,7 +639,8 @@ public class RecommendationServiceImpl
         String userName = aEvent.getDocument().getUser();
         Project project = aEvent.getDocument().getProject();
         clearState(userName);
-        triggerTrainingAndClassification(userName, project, "AfterDocumentResetEvent");
+        triggerTrainingAndClassification(userName, project, "AfterDocumentResetEvent",
+                aEvent.getDocument().getDocument());
     }
 
     @Override
@@ -746,7 +819,8 @@ public class RecommendationServiceImpl
         private Map<Recommender, RecommenderContext> contexts = new ConcurrentHashMap<>();
         private Predictions activePredictions;
         private Predictions incomingPredictions;
-        
+        private boolean predictForAllDocuments;
+
         public Preferences getPreferences()
         {
             return preferences;
@@ -849,13 +923,25 @@ public class RecommendationServiceImpl
             
             setActiveRecommenders(newActiveRecommenders);
         }
+
+        public boolean isPredictForAllDocuments()
+        {
+            return predictForAllDocuments;
+        }
+
+        public void setPredictForAllDocuments(boolean aPredictForAllDocuments)
+        {
+            predictForAllDocuments = aPredictForAllDocuments;
+        }
     }
     
     @Override
     public Predictions computePredictions(User aUser, Project aProject,
-                                          List<SourceDocument> aDocuments)
+            List<SourceDocument> aDocuments, List<SourceDocument> aInherit)
     {
         String username = aUser.getUsername();
+        
+        Predictions activePredictions = getPredictions(aUser, aProject);
         Predictions predictions = new Predictions(aUser, aProject);
 
         CAS predictionCas = null;
@@ -866,7 +952,21 @@ public class RecommendationServiceImpl
             log.info("Cannot create prediction CAS, stopping predictions!");
             return predictions;
         }
+        
+        // Inherit at the document level. If inheritance at a recommender level is possible, this
+        // is done below.
+        if (activePredictions != null) {
+            for (SourceDocument document : aInherit) {
+                if (activePredictions.hasRunPredictionOnDocument(document)) {
+                    List<AnnotationSuggestion> suggestions = inheritSuggestions(aProject,
+                            activePredictions, document, username);
+                    predictions.putPredictions(suggestions);
+                    predictions.markDocumentAsPredictionCompleted(document);
+                }
+            }
+        }
 
+        // Generate new predictions or inherit at the recommender level
         nextDocument: for (SourceDocument document : aDocuments) {
             Optional<CAS> originalCas = Optional.empty();
             nextLayer: for (AnnotationLayer layer : annoService
@@ -948,9 +1048,9 @@ public class RecommendationServiceImpl
                     }
 
                     try {
-                        RecommendationEngine recommendationEngine = factory.build(recommender);
+                        RecommendationEngine engine = factory.build(recommender);
                         
-                        if (!recommendationEngine.isReadyForPrediction(ctx)) {
+                        if (!engine.isReadyForPrediction(ctx)) {
                             log.info("Recommender context [{}]({}) for user [{}] in project "
                                     + "[{}]({}) is not ready for prediction - skipping recommender",
                                     recommender.getName(), recommender.getId(), username,
@@ -967,48 +1067,30 @@ public class RecommendationServiceImpl
                         
                         // If the recommender is not trainable and not sensitive to annotations, 
                         // we can actually re-use the predictions.
-                        Predictions activePredictions = getPredictions(aUser, aProject);
-                        if (TRAINING_NOT_SUPPORTED
-                                .equals(recommendationEngine.getTrainingCapability())
-                                && activePredictions != null) {
-                            
-                            suggestions = activePredictions
-                                    .getPredictionsByRecommender(recommender);
-                            
-                            // Calculate the visibility of the suggestions. This happens via the 
-                            // original CAS which contains only the manually created annotations  
-                            // and *not* the suggestions.
-                            suggestions.forEach(s -> s.show(FLAG_ALL));
-                            Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
-                            calculateVisibility(originalCas.get(), username, layer,
-                                    groups, 0, originalCas.get().getDocumentText().length());
-                            
-                            log.debug("[{}]({}) for user [{}] on document "
-                                    + "[{}]({}) in project [{}]({}) inherited {} predictions.",
-                                    recommender.getName(), recommender.getId(), aUser.getUsername(),
-                                    document.getName(), document.getId(),
-                                    recommender.getProject().getName(),
-                                    recommender.getProject().getId(), suggestions.size());
+                        if (
+                                TRAINING_NOT_SUPPORTED.equals(engine.getTrainingCapability()) &&
+                                activePredictions != null &&
+                                activePredictions.hasRunPredictionOnDocument(document)
+                        ) {
+                            suggestions = inheritSuggestions(engine, activePredictions, document,
+                                    username);
                         }
                         else {
-                            // Perform the actual prediction
-                            recommendationEngine.predict(ctx, predictionCas);
-
-                            // Extract the suggestions from the data which the recommender has 
-                            // written into the CAS
-                            suggestions = extractSuggestions(aUser, predictionCas, document,
-                                    recommender);
-                            
-                            // Calculate the visibility of the suggestions. This happens via the 
-                            // original CAS which contains only the manually created annotations  
-                            // and *not* the suggestions.
-                            Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
-                            calculateVisibility(originalCas.get(), username, layer,
-                                    groups, 0, originalCas.get().getDocumentText().length());
+                            suggestions = generateSuggestions(ctx, engine, activePredictions,
+                                    document, originalCas.get(), predictionCas, username);
                         }
+                        
+                        // Calculate the visibility of the suggestions. This happens via the
+                        // original CAS which contains only the manually created annotations
+                        // and *not* the suggestions.
+                        Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
+                        calculateVisibility(originalCas.get(), username, recommender.getLayer(),
+                                groups, 0, originalCas.get().getDocumentText().length());
 
-                        predictions.putPredictions(layer.getId(), suggestions);
+                        predictions.putPredictions(suggestions);
                     }
+                    // Catching Throwable is intentional here as we want to continue the execution
+                    // even if a particular recommender fails.
                     catch (Throwable e) {
                         log.error(
                                 "Error applying recommender [{}]({}) for user [{}] to document "
@@ -1020,14 +1102,78 @@ public class RecommendationServiceImpl
                     }
                 }
             }
+            
+            // When all recommenders have completed on the document, we mark it as "complete"
+            predictions.markDocumentAsPredictionCompleted(document);
         }
 
         return predictions;
     }
+    
+    /**
+     * Extracts existing predictions from the last prediction run so we do not have to recalculate
+     * them. This is useful when the engine is not trainable.
+     */
+    private List<AnnotationSuggestion> inheritSuggestions(RecommendationEngine engine,
+            Predictions activePredictions, SourceDocument document, String aUsername)
+    {
+        Recommender recommender = engine.getRecommender();
+        
+        List<AnnotationSuggestion> suggestions = activePredictions
+                .getPredictionsByRecommenderAndDocument(recommender, document.getName());
+        
+        log.debug(
+                "[{}]({}) for user [{}] on document "
+                        + "[{}]({}) in project [{}]({}) inherited {} predictions.",
+                recommender.getName(), recommender.getId(), aUsername, document.getName(),
+                document.getId(), recommender.getProject().getName(),
+                recommender.getProject().getId(), suggestions.size());
 
-    private List<AnnotationSuggestion> extractSuggestions(User aUser, CAS aCas,
-                                                          SourceDocument aDocument,
-                                                          Recommender aRecommender)
+        suggestions.forEach(s -> s.show(FLAG_ALL));
+        
+        return suggestions;
+    }
+
+    /**
+     * Extracts existing predictions from the last prediction run so we do not have to recalculate
+     * them. This is useful when the engine is not trainable.
+     */
+    private List<AnnotationSuggestion> inheritSuggestions(Project aProject,
+            Predictions activePredictions, SourceDocument document, String aUsername)
+    {
+        List<AnnotationSuggestion> suggestions = activePredictions
+                .getPredictionsByDocument(document.getName());
+        
+        log.debug(
+                "[{}]({}) for user [{}] on document "
+                        + "[{}]({}) in project [{}]({}) inherited {} predictions.",
+                "ALL", "--", aUsername, document.getName(), document.getId(), aProject.getName(),
+                aProject.getId(), suggestions.size());
+
+        suggestions.forEach(s -> s.show(FLAG_ALL));
+        
+        return suggestions;
+    }
+    /**
+     * Invokes the engine to produce new suggestions.
+     */
+    private List<AnnotationSuggestion> generateSuggestions(RecommenderContext ctx,
+            RecommendationEngine engine, Predictions activePredictions, SourceDocument document,
+            CAS originalCas, CAS predictionCas, String aUsername)
+        throws RecommendationException
+    {
+         // Perform the actual prediction
+        engine.predict(ctx, predictionCas);
+
+        // Extract the suggestions from the data which the recommender has written into the CAS
+        List<AnnotationSuggestion> suggestions = extractSuggestions(aUsername, predictionCas,
+                document, engine.getRecommender());
+                
+        return suggestions;
+    }
+
+    private List<AnnotationSuggestion> extractSuggestions(String aUsername, CAS aCas,
+            SourceDocument aDocument, Recommender aRecommender)
     {
         String typeName = aRecommender.getLayer().getName();
         String featureName = aRecommender.getFeature().getName();
@@ -1043,24 +1189,85 @@ public class RecommendationServiceImpl
         int predictionCount = 0;
 
         Type tokenType = getType(aCas, Token.class);
+        Type sentenceType = getType(aCas, Sentence.class);
 
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
+
         for (AnnotationFS annotationFS : CasUtil.select(aCas, predictedType)) {
             if (!annotationFS.getBooleanValue(predictionFeature)) {
                 continue;
             }
 
-            List<AnnotationFS> tokens = CasUtil.selectCovered(tokenType, annotationFS);
-            if (tokens.isEmpty()) {
-                // This can happen if a recommender uses different token boundaries (e.g. if a 
-                // remote service performs its own tokenization). We might be smart here by looking
-                // for overlapping tokens instead of contained tokens.
-                continue;
+            int begin;
+            int end;
+            switch (aRecommender.getLayer().getAnchoringMode()) {
+            case CHARACTERS: {
+                int[] offsets = { annotationFS.getBegin(), annotationFS.getEnd() };
+                TrimUtils.trim(annotationFS.getCAS().getDocumentText(), offsets);
+                begin = offsets[0];
+                end = offsets[1];
+                break;
             }
-            
-            AnnotationFS firstToken = tokens.get(0);
-            AnnotationFS lastToken = tokens.get(tokens.size() - 1);
+            case SINGLE_TOKEN: {
+                List<AnnotationFS> tokens = selectCovered(tokenType, annotationFS);
+                if (tokens.isEmpty()) {
+                    // This can happen if a recommender uses different token boundaries (e.g. if a
+                    // remote service performs its own tokenization). We might be smart here by
+                    // looking for overlapping tokens instead of contained tokens.
+                    log.trace("Discarding suggestion because no covering token was found: {}",
+                            annotationFS);
+                    continue;
+                }
+                
+                AnnotationFS firstToken = tokens.get(0);
+                AnnotationFS lastToken = tokens.get(tokens.size() - 1);
+                
+                if (!firstToken.equals(lastToken)) {
+                    // We only want to accept single-token suggestions
+                    log.trace("Discarding suggestion because only single-token suggestions are "
+                            + "accepted: {}", annotationFS);
+                    continue;
+                }
+                
+                begin = firstToken.getBegin();
+                end = lastToken.getEnd();
+                break;
+            }
+            case TOKENS: {
+                List<AnnotationFS> tokens = selectCovered(tokenType, annotationFS);
+                if (tokens.isEmpty()) {
+                    // This can happen if a recommender uses different token boundaries (e.g. if a
+                    // remote service performs its own tokenization). We might be smart here by
+                    // looking for overlapping tokens instead of contained tokens.
+                    log.trace("Discarding suggestion because no covering tokens were found: {}",
+                            annotationFS);
+                    continue;
+                }
+                
+                begin = tokens.get(0).getBegin();
+                end = tokens.get(tokens.size() - 1).getEnd();
+                break;
+            }
+            case SENTENCES: {
+                List<AnnotationFS> sentences = selectCovered(sentenceType, annotationFS);
+                if (sentences.isEmpty()) {
+                    // This can happen if a recommender uses different token boundaries (e.g. if a
+                    // remote service performs its own tokenization). We might be smart here by
+                    // looking for overlapping sentences instead of contained sentences.
+                    log.trace("Discarding suggestion because no covering sentences were found: {}",
+                            annotationFS);
+                    continue;
+                }
+                
+                begin = sentences.get(0).getBegin();
+                end = sentences.get(sentences.size() - 1).getEnd();
+                break;
+            }
+            default:
+                throw new IllegalStateException("Unknown anchoring mode: ["
+                        + aRecommender.getLayer().getAnchoringMode() + "]");
+            }
 
             String label = annotationFS.getFeatureValueAsString(predictedFeature);
             double score = annotationFS.getDoubleValue(scoreFeature);
@@ -1068,9 +1275,8 @@ public class RecommendationServiceImpl
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
-                    aRecommender.getLayer().getId(), featureName, aDocument.getName(),
-                    firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
-                    label, score, scoreExplanation);
+                    aRecommender.getLayer().getId(), featureName, aDocument.getName(), begin, end,
+                    annotationFS.getCoveredText(), label, label, score, scoreExplanation);
 
             result.add(ao);
             id++;
@@ -1081,7 +1287,7 @@ public class RecommendationServiceImpl
         log.debug(
                 "[{}]({}) for user [{}] on document "
                         + "[{}]({}) in project [{}]({}) generated {} predictions.",
-                aRecommender.getName(), aRecommender.getId(), aUser.getUsername(),
+                aRecommender.getName(), aRecommender.getId(), aUsername,
                 aDocument.getName(), aDocument.getId(), aRecommender.getProject().getName(),
                 aRecommender.getProject().getId(), predictionCount);
 
@@ -1259,41 +1465,41 @@ public class RecommendationServiceImpl
         return aTargetCas;
     }
     
-    private synchronized IRequestCycleListener triggerTrainingTaskListener()
+    private class TriggerTrainingTaskListener
+        implements IRequestCycleListener
     {
-        if (triggerTraingRunListener == null) {
-            triggerTraingRunListener = new IRequestCycleListener()
-            {
-                @Override
-                public void onEndRequest(RequestCycle cycle)
-                {
-                    Set<RecommendationStateKey> dirties = cycle.getMetaData(DIRTIES);
-                    Set<RecommendationStateKey> committed = cycle.getMetaData(COMMITTED);
-                    
-                    if (dirties == null || committed == null) {
-                        return;
-                    }
-
-                    for (RecommendationStateKey committedKey : committed) {
-                        if (!dirties.contains(committedKey)) {
-                            // Committed but not dirty, so nothing to do.
-                            continue;
-                        }
-                        
-                        Project project = projectService.getProject(committedKey.getProjectId());
-                        if (project == null) {
-                            // Concurrent action has deleted project, so we can ignore this
-                            continue;
-                        }
-                        
-                        triggerTrainingAndClassification(
-                                committedKey.getUser(), project, 
-                                "Committed dirty CAS at end of request");
-                    }
-                };
-            };
-        }
+        private final SourceDocument currentDocument;
         
-        return triggerTraingRunListener;
+        public TriggerTrainingTaskListener(SourceDocument aCurrentDocument)
+        {
+            currentDocument = aCurrentDocument;
+        }
+
+        @Override
+        public void onEndRequest(RequestCycle cycle)
+        {
+            Set<RecommendationStateKey> dirties = cycle.getMetaData(DIRTIES);
+            Set<RecommendationStateKey> committed = cycle.getMetaData(COMMITTED);
+
+            if (dirties == null || committed == null) {
+                return;
+            }
+
+            for (RecommendationStateKey committedKey : committed) {
+                if (!dirties.contains(committedKey)) {
+                    // Committed but not dirty, so nothing to do.
+                    continue;
+                }
+
+                Project project = projectService.getProject(committedKey.getProjectId());
+                if (project == null) {
+                    // Concurrent action has deleted project, so we can ignore this
+                    continue;
+                }
+
+                triggerTrainingAndClassification(committedKey.getUser(), project,
+                        "Committed dirty CAS at end of request", currentDocument);
+            }
+        };
     }
 }

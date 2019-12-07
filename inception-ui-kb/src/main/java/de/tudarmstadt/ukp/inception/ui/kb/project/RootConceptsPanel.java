@@ -71,9 +71,9 @@ public class RootConceptsPanel
             {
                 Form<Void> conceptForm = new Form<Void>("conceptForm");
                 conceptForm.add(buildTextField("textField", item.getModel()));
-                conceptForm.add(new LambdaAjaxLink("removeConcept", t -> {
-                    RootConceptsPanel.this.actionRemoveConcept(t, item.getModelObject());
-                }));
+                conceptForm.add(new LambdaAjaxLink("removeConcept", t -> 
+                    RootConceptsPanel.this.actionRemoveConcept(t, item.getModelObject())
+                ));
                 item.add(conceptForm);
             }
 

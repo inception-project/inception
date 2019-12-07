@@ -49,6 +49,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.SourceDocumentExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -81,7 +82,8 @@ public class LoggedEventExporter implements ProjectExporter
     }
     
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aFile)
         throws Exception
     {
         Project project = aRequest.getProject();
@@ -93,9 +95,9 @@ public class LoggedEventExporter implements ProjectExporter
         // Set up a map of document IDs to document names because we export by name and not
         // by ID.
         Map<Long, String> documentNameIndex = new HashMap<>();
-        documentService.listSourceDocuments(project).forEach(doc -> {
-            documentNameIndex.put(doc.getId(), doc.getName());
-        });
+        documentService.listSourceDocuments(project).forEach(doc -> 
+            documentNameIndex.put(doc.getId(), doc.getName())
+        );
         
         File eventLog = new File(aFile, EVENT_LOG);
         eventLog.createNewFile();

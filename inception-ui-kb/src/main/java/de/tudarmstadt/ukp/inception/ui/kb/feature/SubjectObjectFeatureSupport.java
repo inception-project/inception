@@ -190,7 +190,7 @@ public class SubjectObjectFeatureSupport
     }
     
     @Override
-    public List<LinkWithRoleModel> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
+    public ArrayList<LinkWithRoleModel> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
             Object aValue)
     {
         if (aValue instanceof ArrayFS) {
@@ -201,7 +201,7 @@ public class SubjectObjectFeatureSupport
             Feature targetFeat = linkType
                     .getFeatureByBaseName(aFeature.getLinkTypeTargetFeatureName());
 
-            List<LinkWithRoleModel> links = new ArrayList<>();
+            ArrayList<LinkWithRoleModel> links = new ArrayList<>();
             for (FeatureStructure link : array.toArray()) {
                 LinkWithRoleModel m = new LinkWithRoleModel();
                 m.role = link.getStringValue(roleFeat);

@@ -427,10 +427,17 @@ public interface KnowledgeBaseService
     Optional<KBObject> readItem(KnowledgeBase akb, String aIdentifier);
 
     /**
-     * Obtain basic information about the given identifier.
+     * Obtain basic information about the given identifier. This method always returns a KBHandle,
+     * even if there is no statement about the given identifier present in the knowledge base.
      */
     Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier);
     
+    /**
+     * Obtain basic information about the given identifier. This method always returns a KBHandle,
+     * even if there is no statement about the given identifier present in the knowledge base.
+     */
+    Optional<KBHandle> readHandle(Project aProject, String aIdentifier);
+
     /**
      * Retrieves the distinct parent concepts till the root element for an identifier regardless of
      * it being an instance or concept
