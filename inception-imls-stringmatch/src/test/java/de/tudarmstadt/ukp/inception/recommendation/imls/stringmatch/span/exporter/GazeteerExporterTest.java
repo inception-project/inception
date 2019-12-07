@@ -46,6 +46,7 @@ import org.mockito.Mockito;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -128,9 +129,10 @@ public class GazeteerExporterTest
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, exportedProject, temporaryFolder.getRoot());
+        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder.getRoot());
 
         // Import the project again
         ArgumentCaptor<Gazeteer> gazeteerCaptor = ArgumentCaptor.forClass(Gazeteer.class);

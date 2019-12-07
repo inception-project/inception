@@ -128,6 +128,15 @@ public class SearchAnnotationSidebar
         Collections.emptyList(), new ChoiceRenderer<>("uiName"));
 
     private SearchResult selectedResult;
+    
+    // UI elements for annotation changes
+    private final Form<CreateAnnotationsOptions> annotationOptionsForm;
+    private final LambdaAjaxLink createOptionsLink;
+    private final LambdaAjaxButton<Void> deleteButton;
+    private final Form<DeleteAnnotationsOptions> deleteOptionsForm;
+    private final LambdaAjaxButton<Void> annotateButton;
+    private final LambdaAjaxLink deleteOptionsLink;
+    private final Form<Void> annotationForm;
 
     public SearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -200,14 +209,14 @@ public class SearchAnnotationSidebar
                         .collect(Collectors.toList())));
         resultsGroupContainer.add(searchResultGroups);
 
-        Form<Void> annotationForm = new Form<>("annotateForm");
+        annotationForm = new Form<>("annotateForm");
         // create annotate-button and options form
-        LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<>("annotateAllButton",
+        annotateButton = new LambdaAjaxButton<>("annotateAllButton",
             (target, form) -> actionApplyToSelectedResults(target,
                 this::createAnnotationAtSearchResult));
         annotationForm.add(annotateButton);
 
-        Form<CreateAnnotationsOptions> annotationOptionsForm = new Form<>("createOptions",
+        annotationOptionsForm = new Form<>("createOptions",
             createOptions);
         annotationOptionsForm.add(new CheckBox("overrideExistingAnnotations"));
         annotationOptionsForm
@@ -215,28 +224,30 @@ public class SearchAnnotationSidebar
         annotationOptionsForm.setOutputMarkupPlaceholderTag(true);
         annotationForm.add(annotationOptionsForm);
 
-        annotationForm.add(new LambdaAjaxLink("toggleCreateOptionsVisibility", _target -> {
+        createOptionsLink = new LambdaAjaxLink("toggleCreateOptionsVisibility", _target -> {
             annotationOptionsForm.getModelObject().toggleVisibility();
             _target.add(annotationOptionsForm);
-        }));
+        });
+        annotationForm.add(createOptionsLink);
 
         // create delete-button and options form
-        LambdaAjaxButton<Void> deleteButton = new LambdaAjaxButton<>("deleteButton",
+        deleteButton = new LambdaAjaxButton<>("deleteButton",
             (target, from) -> actionApplyToSelectedResults(target,
                 this::deleteAnnotationAtSearchResult));
         annotationForm.add(deleteButton);
 
-        Form<DeleteAnnotationsOptions> deleteOptionsForm = new Form<>("deleteOptions",
+        deleteOptionsForm = new Form<>("deleteOptions",
             deleteOptions);
         deleteOptionsForm.add(new CheckBox("deleteOnlyMatchingFeatureValues"));
         deleteOptionsForm.add(visibleWhen(() -> deleteOptionsForm.getModelObject().isVisible()));
         deleteOptionsForm.setOutputMarkupPlaceholderTag(true);
         annotationForm.add(deleteOptionsForm);
 
-        annotationForm.add(new LambdaAjaxLink("toggleDeleteOptionsVisibility", _target -> {
+        deleteOptionsLink = new LambdaAjaxLink("toggleDeleteOptionsVisibility", _target -> {
             deleteOptionsForm.getModelObject().toggleVisibility();
             _target.add(deleteOptionsForm);
-        }));
+        });
+        annotationForm.add(deleteOptionsLink);
 
         annotationForm.setDefaultButton(annotateButton);
         annotationForm.add(visibleWhen(() -> !groupedSearchResults.getObject().isEmpty()));
@@ -248,6 +259,32 @@ public class SearchAnnotationSidebar
         
         mainContainer.add(annotationForm);
     }
+
+    
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+        // if an admin is currently searching another's annos, 
+        // the admin should not be able to change anything
+        if (!currentUser.getUsername().equals(getModelObject().getUser().getUsername())) {
+            setChangeAnnotationsElementsEnabled(false);
+            return;
+        }
+        setChangeAnnotationsElementsEnabled(true);
+    }
+
+
+    private void setChangeAnnotationsElementsEnabled(boolean aEnabled)
+    {
+        annotationOptionsForm.setEnabled(aEnabled);
+        createOptionsLink.setEnabled(aEnabled);
+        deleteButton.setEnabled(aEnabled);
+        deleteOptionsForm.setEnabled(aEnabled);
+        annotateButton.setEnabled(aEnabled);
+        deleteOptionsLink.setEnabled(aEnabled);
+    }
+
 
     private Map<String, Boolean> initGroupLevelSelections(
         Set<String> groupKeys)
@@ -342,10 +379,10 @@ public class SearchAnnotationSidebar
                     ? state.getDocument()
                     : null;
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
-                    currentUser.getUsername(), targetQuery.getObject(), limitToDocument));
+                    state.getUser().getUsername(), targetQuery.getObject(), limitToDocument));
             SearchOptions opt = searchOptions.getObject();
             Map<String, ResultsGroup> queryResults = searchService
-                    .query(currentUser, project, targetQuery.getObject(), limitToDocument,
+                    .query(state.getUser(), project, targetQuery.getObject(), limitToDocument,
                             opt.getGroupingLayer(), opt.getGroupingFeature())
                     .entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> 
                             new ResultsGroup(e.getKey(), e.getValue())));
