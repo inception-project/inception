@@ -35,6 +35,7 @@ import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -79,11 +80,12 @@ public class DocumentRepositoryExporterTest {
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(project);
         ExportedProject exportedProject = new ExportedProject();
         File file = mock(File.class);
         
-        sut.exportData(exportRequest, exportedProject, file);
+        sut.exportData(exportRequest, monitor, exportedProject, file);
         
         // Import the project again
         ArgumentCaptor<DocumentRepository> captor =
