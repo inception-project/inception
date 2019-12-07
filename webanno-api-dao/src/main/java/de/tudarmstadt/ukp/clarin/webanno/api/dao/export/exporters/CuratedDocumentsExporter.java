@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -86,7 +87,8 @@ public class CuratedDocumentsExporter
      *            The folder where curated documents are copied to be exported as Zip File
      */
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws Exception
     {
         Project project = aRequest.getProject();
@@ -94,7 +96,7 @@ public class CuratedDocumentsExporter
         // Get all the source documents from the project
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
 
-        int initProgress = aRequest.progress - 1;
+        int initProgress = aMonitor.getProgress() - 1;
         int i = 1;
         for (SourceDocument sourceDocument : documents) {
             File curationCasDir = new File(aStage, CURATION_CAS_FOLDER + sourceDocument.getName());
@@ -123,7 +125,7 @@ public class CuratedDocumentsExporter
                     FormatSupport format = importExportService.getWritableFormatById(formatId)
                             .orElseGet(() -> {
                                 FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
-                                aRequest.addMessage(LogMessage.error(this,"Curation: [%s] No writer"
+                                aMonitor.addMessage(LogMessage.error(this,"Curation: [%s] No writer"
                                         + " found for original format [%s] - exporting as [%s] "
                                         + "instead.", sourceDocument.getName(), formatId, 
                                         fallbackFormat.getName()));
@@ -146,8 +148,8 @@ public class CuratedDocumentsExporter
                 }
             }
 
-            aRequest.progress = initProgress
-                    + (int) Math.ceil(((double) i) / documents.size() * 10.0);
+            aMonitor.setProgress(initProgress
+                    + (int) Math.ceil(((double) i) / documents.size() * 10.0));
             i++;
         }
     }
