@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
@@ -72,11 +73,12 @@ public class AutomationTrainingDocumentExporter
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aCopyDir)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aCopyDir)
         throws Exception
     {
         exportTrainingDocuments(aRequest.getProject(), aExProject);
-        exportTrainingDocumentContents(aRequest, aExProject, aCopyDir);
+        exportTrainingDocumentContents(aRequest, aMonitor, aExProject, aCopyDir);
     }
     
     private void exportTrainingDocuments(Project aProject, ExportedProject aExProject)
@@ -105,7 +107,7 @@ public class AutomationTrainingDocumentExporter
     }
     
     private void exportTrainingDocumentContents(ProjectExportRequest aRequest,
-            ExportedProject aExProject, File aCopyDir)
+            ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aCopyDir)
         throws IOException, ProjectExportException
     {
         Project project = aRequest.getProject();
@@ -119,7 +121,7 @@ public class AutomationTrainingDocumentExporter
                 FileUtils.copyFileToDirectory(
                         automationService.getTrainingDocumentFile(trainingDocument),
                         trainDocumentDir);
-                aRequest.progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
+                aMonitor.setProgress((int) Math.ceil(((double) i) / documents.size() * 10.0));
                 i++;
                 log.info("Imported content for training document [" + trainingDocument.getId()
                         + "] in project [" + project.getName() + "] with id [" + project.getId()
@@ -128,7 +130,7 @@ public class AutomationTrainingDocumentExporter
             catch (FileNotFoundException e) {
                 log.error("Source file [{}] related to project couldn't be located in repository",
                         trainingDocument.getName(), ExceptionUtils.getRootCause(e));
-                aRequest.addMessage(LogMessage.error(this,
+                aMonitor.addMessage(LogMessage.error(this,
                         "Source file [%s] related to project couldn't be located in repository",
                         trainingDocument.getName()));
                 throw new ProjectExportException(

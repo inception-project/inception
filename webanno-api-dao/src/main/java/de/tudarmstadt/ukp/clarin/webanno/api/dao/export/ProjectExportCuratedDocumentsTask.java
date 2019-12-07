@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.export;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
 
@@ -24,37 +24,100 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.uima.UIMAException;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 
-public class ExportUtil
+public class ProjectExportCuratedDocumentsTask
+    extends ProjectExportTask_ImplBase
 {
-    private static final String CURATION_AS_SERIALISED_CAS = "/"
-            + ImportUtil.CURATION_AS_SERIALISED_CAS + "/";
+    private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
     private static final String CURATION_FOLDER = "/curation/";
+    
+    private @Autowired ProjectExportService exportService;
+    private @Autowired DocumentService documentService;
+    private @Autowired ImportExportService importExportService;
 
+    public ProjectExportCuratedDocumentsTask(ProjectExportTaskHandle aHandle,
+            ProjectExportTaskMonitor aMonitor, ProjectExportRequest aRequest, String aUsername)
+    {
+        super(aHandle, aMonitor, aRequest, aUsername);
+    }
+
+    @Override
+    public File export(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
+        throws ProjectExportException
+    {
+        Project project = aRequest.getProject();
+        File exportFile = null;
+        File exportTempDir = null;
+        try {
+            exportTempDir = File.createTempFile("webanno", "export");
+            exportTempDir.delete();
+            exportTempDir.mkdirs();
+
+            boolean curationDocumentExist = documentService.existsCurationDocument(
+                    project);
+
+            if (!curationDocumentExist) {
+                throw new ProjectExportException("No curation document created yet for this document");
+            }
+            
+            ProjectExportRequest request = aRequest;
+            request.setProject(project);
+            exportCuratedDocuments(request, exportTempDir, false, aMonitor);
+            
+            exportFile = new File(exportTempDir.getAbsolutePath() + "_curated_documents.zip");
+            ZipUtils.zipFolder(exportTempDir, exportFile);
+        }
+        catch (Exception e) {
+            if (exportFile != null) {
+                try {
+                    FileUtils.forceDelete(exportTempDir);
+                } catch (IOException ex) {
+                    aMonitor.addMessage(LogMessage.error(this,
+                            "Unable to export file after export failed: %s", ex.getMessage()));
+                }
+            }
+            throw new ProjectExportException(e);
+        }
+        finally {
+            if (exportTempDir != null) {
+                try {
+                    FileUtils.forceDelete(exportTempDir);
+                } catch (IOException e) {
+                    aMonitor.addMessage(LogMessage.error(this, "Unable to delete temp file: %s",
+                            e.getMessage()));
+                }
+            }
+        }
+
+        return exportFile;
+    }
+    
     /**
      * Copy, if exists, curation documents to a folder that will be exported as Zip file
      * 
      * @param aCopyDir
      *            The folder where curated documents are copied to be exported as Zip File
      */
-    @Deprecated
-    public static void exportCuratedDocuments(DocumentService documentService,
-            ImportExportService importExportService, ProjectExportRequest aModel, File aCopyDir,
-            boolean aIncludeInProgress)
-        throws UIMAException, IOException, ClassNotFoundException,
-        ProjectExportException
+    private void exportCuratedDocuments(ProjectExportRequest aModel, File aCopyDir,
+            boolean aIncludeInProgress, ProjectExportTaskMonitor aMonitor)
+        throws ProjectExportException, IOException
     {
         Project project = aModel.getProject();
         
@@ -77,7 +140,7 @@ public class ExportUtil
                     });
         }
 
-        int initProgress = aModel.progress - 1;
+        int initProgress = aMonitor.getProgress() - 1;
         int i = 1;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
             File curationCasDir = new File(aCopyDir + CURATION_AS_SERIALISED_CAS
@@ -117,8 +180,8 @@ public class ExportUtil
                 }
             }
 
-            aModel.progress = initProgress
-                    + (int) Math.ceil(((double) i) / documents.size() * 10.0);
+            aMonitor.setProgress(initProgress
+                    + (int) Math.ceil(((double) i) / documents.size() * 10.0));
             i++;
         }
     }

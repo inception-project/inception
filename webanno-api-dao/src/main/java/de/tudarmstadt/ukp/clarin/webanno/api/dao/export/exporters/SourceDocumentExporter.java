@@ -37,6 +37,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -57,11 +58,12 @@ public class SourceDocumentExporter
     private @Autowired DocumentService documentService;
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws IOException, ProjectExportException
     {
         exportSourceDocuments(aRequest.getProject(), aExProject);
-        exportSourceDocumentContents(aRequest, aExProject, aStage);
+        exportSourceDocumentContents(aRequest, aMonitor, aExProject, aStage);
     }
     
     private void exportSourceDocuments(Project aProject, ExportedProject exProject)
@@ -87,7 +89,7 @@ public class SourceDocumentExporter
     }
 
     private void exportSourceDocumentContents(ProjectExportRequest aRequest,
-            ExportedProject aExProject, File aStage)
+            ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
         throws IOException, ProjectExportException
     {
         Project project = aRequest.getProject();
@@ -100,7 +102,7 @@ public class SourceDocumentExporter
             try {
                 FileUtils.copyFileToDirectory(documentService.getSourceDocumentFile(sourceDocument),
                         sourceDocumentDir);
-                aRequest.progress = (int) Math.ceil(((double) i) / documents.size() * 10.0);
+                aMonitor.setProgress((int) Math.ceil(((double) i) / documents.size() * 10.0));
                 i++;
                 log.info("Exported content for source document [" + sourceDocument.getId()
                         + "] in project [" + project.getName() + "] with id [" + project.getId()
@@ -109,7 +111,7 @@ public class SourceDocumentExporter
             catch (FileNotFoundException e) {
                 log.error("Source file [{}] related to project couldn't be located in repository",
                         sourceDocument.getName(), ExceptionUtils.getRootCause(e));
-                aRequest.addMessage(LogMessage.error(this,
+                aMonitor.addMessage(LogMessage.error(this,
                         "Source file [%s] related to project couldn't be located in repository",
                         sourceDocument.getName()));
                 throw new ProjectExportException(

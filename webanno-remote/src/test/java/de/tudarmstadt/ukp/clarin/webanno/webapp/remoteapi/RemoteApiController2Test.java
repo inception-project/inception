@@ -339,7 +339,7 @@ public class RemoteApiController2Test
         @Bean
         public ProjectExportService exportService()
         {
-            return new ProjectExportServiceImpl(null, projectService());
+            return new ProjectExportServiceImpl(null, null, projectService());
         }
         
         @Bean
