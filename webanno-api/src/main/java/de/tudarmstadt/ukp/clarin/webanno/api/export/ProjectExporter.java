@@ -36,7 +36,8 @@ public interface ProjectExporter
         return Collections.emptyList();
     }
     
-    void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws Exception;
 
     void importData(ProjectImportRequest aRequest, Project aProject, ExportedProject aExProject,

@@ -20,23 +20,19 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.channels.ClosedByInterruptException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Queue;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
@@ -44,14 +40,12 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
-import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.progressbar.ProgressBar;
@@ -65,17 +59,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 
@@ -92,25 +84,17 @@ public class ProjectExportPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
-    //private @SpringBean ExportService exportService;
     private @SpringBean ProjectExportService exportService;
     private @SpringBean ImportExportService importExportService;
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean UserDao userRepository;
 
     private ProgressBar fileGenerationProgress;
-    @SuppressWarnings("unused")
     private AjaxLink<Void> exportProjectLink;
+    private AjaxLink<Void> exportCurateLink;
 
-    private String fileName;
-    private String downloadedFile;
-    @SuppressWarnings("unused")
-    private String projectName;
-
-    private transient Thread thread = null;
-    private transient FileGenerator runnable = null;
-
-    private boolean enabled = true;
+    private boolean exportInProgress = false;
+    private ProjectExportTaskHandle exportTask;
 
     public ProjectExportPanel(String id, final IModel<Project> aProjectModel)
     {
@@ -158,50 +142,25 @@ public class ProjectExportPanel
             format.add(new FormComponentUpdatingBehavior());
             add(format);
             
-            DownloadLink exportCurated = new DownloadLink("exportCurated",
-                    LoadableDetachableModel.of(this::exportCuratedDocumentsOnly),
-                    LoadableDetachableModel.of(this::getExportCuratedDocumentsArchiveName))
-            {
-                private static final long serialVersionUID = 5630612543039605914L;
-
-                @Override
-                public void onClick()
-                {
-                    try {
-                        super.onClick();
-                    }
-                    catch (IllegalStateException e) {
-                        LOG.error("Error: {}", e.getMessage(), e);
-                        error("Unable to export curated documents because of exception while processing.");
-                    }
-                }
-            };
-            exportCurated.add(enabledWhen(() -> enabled));
-            exportCurated.add(visibleWhen(() -> {
-                Project project = ProjectExportPanel.this.getModelObject();
-                return nonNull(project) ? documentService.existsCurationDocument(project) : false;
-            }));
-            exportCurated.setDeleteAfterDownload(true);
-            exportCurated.setOutputMarkupId(true);
-            add(exportCurated);
-
             final AJAXDownload exportProject = new AJAXDownload() {
                 private static final long serialVersionUID = 2005074740832698081L;
 
                 @Override
                 protected String getFileName() {
+                    ProjectExportRequest request = exportService.getExportRequest(exportTask);
                     String name;
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
                     try {
-                        name = URLEncoder.encode(
-                                ProjectExportForm.this.getModelObject().getProject().getName(),
-                                "UTF-8");
+                        name = URLEncoder.encode(request.getProject().getName(), "UTF-8");
                     }
                     catch (UnsupportedEncodingException e) {
                         name = super.getFileName();
                     }
                     
                     name = FilenameUtils.removeExtension(name);
+                    if (isNotBlank(request.getFilenameTag())) {
+                        name += request.getFilenameTag();
+                    }
                     name += "_" + fmt.format(new Date()) + ".zip";
                     
                     return name;
@@ -215,7 +174,17 @@ public class ProjectExportPanel
                 @Override
                 protected Progression getProgression()
                 {
-                    return new Progression(ProjectExportForm.this.getModelObject().progress);
+                    ProjectExportTaskMonitor monitor = exportService
+                            .getTaskMonitor(exportTask);
+                    if (monitor != null) {
+                        Optional<LogMessage> msg = Optional
+                                .ofNullable(monitor.getMessages().peek());
+                        return new Progression(monitor.getProgress(),
+                                msg.map(LogMessage::getMessage).orElse(null));
+                    }
+                    else {
+                        return new Progression(0, "Export not started yet...");
+                    }
                 }
             })
             {
@@ -227,8 +196,11 @@ public class ProjectExportPanel
                     target.addChildren(getPage(), IFeedback.class);
                     target.add(ProjectExportForm.this);
 
-                    while (!runnable.getMessages().isEmpty()) {
-                        LogMessage msg = runnable.getMessages().poll();
+                    ProjectExportTaskMonitor monitor = exportService
+                            .getTaskMonitor(exportTask);
+                    
+                    while (!monitor.getMessages().isEmpty()) {
+                        LogMessage msg = monitor.getMessages().poll();
                         switch (msg.getLevel()) {
                         case INFO:
                             info(msg.getMessage());
@@ -245,30 +217,23 @@ public class ProjectExportPanel
                         }
                     }
                     
-                    switch (runnable.getState()) {
+                    switch (monitor.getState()) {
                     case COMPLETED:
-                        if (!fileName.equals(downloadedFile)) {
-                            exportProject.initiate(target, fileName);
-                            downloadedFile = fileName;
-                            
-                            enabled = true;
-                            info("Project export complete");
-                        }
+                        exportProject.initiate(target, monitor.getExportedFile().getAbsolutePath());
+                        exportInProgress = false;
+                        info("Project export complete");
                         break;
                     case FAILED:
-                        enabled = true;
+                        exportInProgress = false;
                         error("Project export failed");
                         break;
                     case CANCELLED:
-                        enabled = true;
+                        exportInProgress = false;
                         info("Project export cancelled");
                         break;
                     default:
-                        error("Invalid project export state after export: " + runnable.getState());
+                        error("Invalid project export state after export: " + monitor.getState());
                     }
-                    
-                    runnable = null;
-                    thread = null;
                 }
             };
 
@@ -279,171 +244,53 @@ public class ProjectExportPanel
                 private static final long serialVersionUID = -5758406309688341664L;
 
                 @Override
-                public boolean isEnabled() {
-                    return enabled;
-                }
-
-                @Override
                 public void onClick(final AjaxRequestTarget target) {
-                    enabled = false;
-                    ProjectExportForm.this.getModelObject().progress = 0;
                     target.add(ProjectExportPanel.this.getPage());
-                    fileGenerationProgress.start(target);
                     Authentication authentication = SecurityContextHolder.getContext()
                             .getAuthentication();
                     ProjectExportRequest request = ProjectExportForm.this.getModelObject();
                     request.setProject(ProjectExportPanel.this.getModelObject());
-                    runnable = new FileGenerator(request, authentication.getName());
-                    thread = new Thread(runnable);
-                    thread.start();
+                    request.setFilenameTag("_project");
+                    exportInProgress = true;
+                    exportTask = exportService.startProjectExportTask(request,
+                            authentication.getName());
+                    fileGenerationProgress.start(target);
                 }
             });
+            exportProjectLink.add(enabledWhen(() -> !exportInProgress));
+            
+            add(exportCurateLink = new AjaxLink<Void>("exportCurated") {
+                private static final long serialVersionUID = -5758406309688341664L;
+
+                @Override
+                public void onClick(final AjaxRequestTarget target) {
+                    target.add(ProjectExportPanel.this.getPage());
+                    Authentication authentication = SecurityContextHolder.getContext()
+                            .getAuthentication();
+                    ProjectExportRequest request = ProjectExportForm.this.getModelObject();
+                    request.setProject(ProjectExportPanel.this.getModelObject());
+                    request.setFilenameTag("_curated_documents");
+                    exportInProgress = true;
+                    exportTask = exportService.startProjectExportCuratedDocumentsTask(request,
+                            authentication.getName());
+                    fileGenerationProgress.start(target);
+                }
+            });
+            exportCurateLink.add(enabledWhen(() -> !exportInProgress));
+            exportCurateLink.add(visibleWhen(() -> {
+                Project project = ProjectExportPanel.this.getModelObject();
+                return nonNull(project) ? documentService.existsCurationDocument(project) : false;
+            }));
 
             cancelLink = new LambdaAjaxLink("cancel", this::actionCancel);
-            cancelLink.add(LambdaBehavior.enabledWhen(() -> thread != null));
+            cancelLink.add(enabledWhen(() -> exportInProgress));
             add(cancelLink);
         }
 
-        /**
-         * Provide meaningful name to curated documents zip
-         */
-        private String getExportCuratedDocumentsArchiveName()
-        {
-            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
-            return ProjectExportPanel.this.getModelObject().getName() + "_curated_documents_"
-                    + fmt.format(new Date()) + ".zip";
-        }
-
-        private File exportCuratedDocumentsOnly()
-        {
-            Project project = ProjectExportPanel.this.getModelObject();
-            File exportFile = null;
-            File exportTempDir = null;
-            try {
-                exportTempDir = File.createTempFile("webanno", "export");
-                exportTempDir.delete();
-                exportTempDir.mkdirs();
-
-                boolean curationDocumentExist = documentService.existsCurationDocument(
-                        project);
-
-                if (!curationDocumentExist) {
-                    error("No curation document created yet for this document");
-                } else {
-                    ProjectExportRequest request = ProjectExportForm.this.getModelObject();
-                    request.setProject(project);
-                    ExportUtil.exportCuratedDocuments(documentService, importExportService, request,
-                            exportTempDir, false);
-                    ZipUtils.zipFolder(exportTempDir, new File(
-                            exportTempDir.getAbsolutePath() + ".zip"));
-                    exportFile = new File(exportTempDir.getAbsolutePath()
-                            + ".zip");
-
-                }
-            }
-            catch (Exception e) {
-                error("Error: " + e.getMessage());
-                LOG.error("Error: " + e.getMessage(), e);
-                if (thread != null) {
-                    ProjectExportForm.this.getModelObject().progress = 100;
-                    thread.interrupt();
-                }
-            }
-            finally {
-                try {
-                    FileUtils.forceDelete(exportTempDir);
-                } catch (IOException e) {
-                    error("Unable to delete temp file");
-                }
-            }
-
-            return exportFile;
-        }
-        
         private void actionCancel(AjaxRequestTarget aTarget)
         {
-            runnable.cancel();
-            thread.interrupt();
-            // Do not set runnable/thread to null here. This happens when the progressbar calls
-            // onFinished()
+            exportService.cancelTask(exportTask);
             aTarget.add(cancelLink);
-        }
-    }
-    
-    enum State {
-        NOT_STARTED, RUNNING, COMPLETED, CANCELLED, FAILED;
-    }
-    
-    public class FileGenerator
-        implements Runnable
-    {
-        private final String username;
-        private final ProjectExportRequest model;
-        private State state;
-
-        public FileGenerator(ProjectExportRequest aModel, String aUsername)
-        {
-            model = aModel;
-            username = aUsername;
-            synchronized (this) {
-                state = State.NOT_STARTED;
-            }
-        }
-
-        @Override
-        public void run()
-        {
-            File file;
-            try {
-                // We are in a new thread. Set up thread-specific MDC
-                MDC.put(Logging.KEY_USERNAME, username);
-                MDC.put(Logging.KEY_PROJECT_ID, String.valueOf(model.getProject().getId()));
-                MDC.put(Logging.KEY_REPOSITORY_PATH, documentService.getDir().toString());
-                
-                synchronized (this) {
-                    state = State.RUNNING;
-                }
-                file = exportService.exportProject(model);
-                fileName = file.getAbsolutePath();
-                projectName = model.getProject().getName();
-                synchronized (this) {
-                    state = State.COMPLETED;
-                }
-            }
-            catch (ClosedByInterruptException e) {
-                cancel();
-            }
-            catch (Throwable e) {
-                synchronized (this) {
-                    state = State.FAILED;
-                    // This marks the progression as complete and causes ProgressBar#onFinished
-                    // to be called where we display the messages
-                    model.progress = 100; 
-                }
-                LOG.error("Unexpected error during project export", e);
-                model.addMessage(LogMessage.error(this, "Unexpected error during project export: %s",
-                                ExceptionUtils.getRootCauseMessage(e)));
-            }
-        }
-        
-        public Queue<LogMessage> getMessages()
-        {
-            return model.getMessages();
-        }
-
-        public void cancel()
-        {
-            synchronized (this) {
-                state = State.CANCELLED;
-                model.progress = 100;
-            }
-        }
-        
-        public State getState()
-        {
-            synchronized (this) {
-                return state;
-            }
         }
     }
 }
