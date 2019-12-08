@@ -1,6 +1,6 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab
+ * Copyright 2019
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.conll.sequencecodec;
+package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
-import java.util.List;
-
-public interface SequenceCodec
+public enum ProjectExportTaskState
 {
-    List<SequenceItem> decode(List<SequenceItem> aEncoded);
-
-    List<SequenceItem> encode(List<SequenceItem> aDecoded, int aLength);
+    NOT_STARTED, RUNNING, COMPLETED, CANCELLED, FAILED;
 }

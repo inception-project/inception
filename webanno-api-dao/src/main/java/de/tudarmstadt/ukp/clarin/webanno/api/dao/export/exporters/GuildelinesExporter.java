@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -53,7 +54,8 @@ public class GuildelinesExporter
      * Copy Project guidelines from the file system of this project to the export folder
      */
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws Exception
     {
         File guidelineDir = new File(aStage + GUIDELINES_FOLDER);

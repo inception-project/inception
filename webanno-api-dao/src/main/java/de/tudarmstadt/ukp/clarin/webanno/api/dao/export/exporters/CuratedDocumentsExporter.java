@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -86,7 +87,8 @@ public class CuratedDocumentsExporter
      *            The folder where curated documents are copied to be exported as Zip File
      */
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws Exception
     {
         Project project = aRequest.getProject();
@@ -94,22 +96,7 @@ public class CuratedDocumentsExporter
         // Get all the source documents from the project
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
 
-        // Determine which format to use for export
-        FormatSupport format;
-        if (FORMAT_AUTO.equals(aRequest.getFormat())) {
-            format = new WebAnnoTsv3FormatSupport();
-        }
-        else {
-            format = importExportService.getWritableFormatById(aRequest.getFormat())
-                    .orElseGet(() -> {
-                        aRequest.addMessage(LogMessage.error(this, "No writer found for format "
-                                + "[%s] - exporting as WebAnno TSV instead.", 
-                                aRequest.getFormat()));
-                        return new WebAnnoTsv3FormatSupport();
-                    });
-        }
-        
-        int initProgress = aRequest.progress - 1;
+        int initProgress = aMonitor.getProgress() - 1;
         int i = 1;
         for (SourceDocument sourceDocument : documents) {
             File curationCasDir = new File(aStage, CURATION_CAS_FOLDER + sourceDocument.getName());
@@ -130,6 +117,21 @@ public class CuratedDocumentsExporter
                     // Copy CAS - this is used when importing the project again
                     FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
 
+                    // Determine which format to use for export
+                    String formatId = FORMAT_AUTO.equals(aRequest.getFormat())
+                            ? sourceDocument.getFormat()
+                            : aRequest.getFormat();
+                    
+                    FormatSupport format = importExportService.getWritableFormatById(formatId)
+                            .orElseGet(() -> {
+                                FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
+                                aMonitor.addMessage(LogMessage.error(this,"Curation: [%s] No writer"
+                                        + " found for original format [%s] - exporting as [%s] "
+                                        + "instead.", sourceDocument.getName(), formatId, 
+                                        fallbackFormat.getName()));
+                                return fallbackFormat;
+                            });
+                    
                     // Copy secondary export format for convenience - not used during import
                     try {
                         File curationFile = importExportService.exportAnnotationDocument(
@@ -146,8 +148,8 @@ public class CuratedDocumentsExporter
                 }
             }
 
-            aRequest.progress = initProgress
-                    + (int) Math.ceil(((double) i) / documents.size() * 10.0);
+            aMonitor.setProgress(initProgress
+                    + (int) Math.ceil(((double) i) / documents.size() * 10.0));
             i++;
         }
     }
