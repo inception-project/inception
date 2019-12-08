@@ -2,9 +2,11 @@
 
 By now you should have
 
-* {product-name} running on port 18080
+* {product-name} running on port 8080
 * NGINX running with default configurations on port 80
 * your issued SSL certificates
+
+NOTE: If you are running {product-name} on a different port than 8080, please make sure to adjust the configurations below accordingly!
 
 We will now configure NGINX to proxy pass all traffic received at `example.com/webanno` to our {product-name} instance.
 
@@ -53,7 +55,7 @@ server {
         #}
 
         location ^~ /webanno/ {
-            proxy_pass http://127.0.0.1:18080/webanno/;
+            proxy_pass http://127.0.0.1:8080/webanno/;
             proxy_redirect default;
             proxy_http_version 1.1;
 
@@ -102,9 +104,23 @@ $ service nginx restart
 
 = Tell {product-name} that it is running behind a proxy
 
-Edit the {product-name} `server.xml` file at `/opt/webanno/conf/server.xml` and insert the following `<Valve>` property into the `<Host>` block:
+If you are running {product-name} via the JAR file, edit the `settings.properties` file to add these
+settings:
 
 ----
+server.tomcat.internal-proxies=127\.0\.[0-1]\.1
+server.tomcat.remote-ip-header=x-forwarded-for
+server.tomcat.accesslog.request-attributes-enabled=true
+server.tomcat.protocol-header=x-forwarded-proto
+server.tomcat.protocol-header-https-value=https
+----
+
+If you are running {product-name} as a WAR using a separate Tomcat instance, edit `server.xml` file at `/opt/webanno/conf/server.xml` and insert the following `<Valve>` property into the `<Host>` block:
+
+----
+<Server>
+  <Service>
+    <Engine>
       <Host>
         ...
         <!-- Announce NGINX proxy header fields to WebAnno
@@ -129,3 +145,29 @@ $ service webanno restart
 ----
 
 {product-name} now knows how to interpret the proxy header fields from NGINX. With this step, everything is now set up to access {product-name} trough a secure https connection.
+
+= CSRF protection
+
+Depending on your situation, you may get an error message such as this when trying to use
+{product-name}.
+
+[example]
+====
+Whitelabel Error Page
+This application has no explicit mapping for /error, so you are seeing this as a fallback.
+
+Fri Nov 29 14:01:15 BRT 2019
+There was an unexpected error (type=Bad Request, status=400).
+Origin does not correspond to request
+====
+
+If this is the case, then CSRF protection is kicking in. What seems to work in this case is to turn
+off CSRF entirely by adding the following lines to your `settings.properties` file (see <<admin-guide.adoc#sect_settings>>):
+
+----
+wicket.core.csrf.enabled=false
+wicket.core.csrf.no-origin-action=allow
+wicket.core.csrf.conflicting-origin-action=allow
+----
+
+NOTE: **Turning off a security feature is obviously not a great solution.** Better check out the documentation for the link:https://github.com/MarcGiffing/wicket-spring-boot/blob/master/README.adoc#core---prevention-of-csrf-attacks[Wicket Spring Boot CSRF settings] and if you figure out a better solution than the above, please get in touch with use via our link:https://github.com/webanno/webanno/issues[issue tracker].
