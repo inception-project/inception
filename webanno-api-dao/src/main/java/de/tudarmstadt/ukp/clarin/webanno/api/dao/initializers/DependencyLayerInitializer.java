@@ -66,7 +66,7 @@ public class DependencyLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         TagSet depTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/mul-dep-ud.json").getInputStream(),
+                new ClassPathResource("/tagsets/mul-dep-ud2.json").getInputStream(),
                 annotationSchemaService);
         
         // Dependency Layer
