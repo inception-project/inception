@@ -62,7 +62,7 @@ public class PartOfSpeechLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         TagSet posTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/mul-pos-ud.json").getInputStream(),
+                new ClassPathResource("/tagsets/mul-pos-ud2.json").getInputStream(),
                 annotationSchemaService);
 
         AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,

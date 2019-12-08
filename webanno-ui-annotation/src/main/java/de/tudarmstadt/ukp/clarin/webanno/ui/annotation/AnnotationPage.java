@@ -335,8 +335,10 @@ public class AnnotationPage
         }
 
         // If we have a timestamp, then use it to detect if there was a concurrent access
-        verifyAndUpdateDocumentTimestamp(state, documentService
-                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
+        if (!isUserViewingOthersWork()) {
+            verifyAndUpdateDocumentTimestamp(state, documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
+        }
         
         return documentService.readAnnotationCas(state.getDocument(),
                 state.getUser().getUsername());
@@ -345,6 +347,10 @@ public class AnnotationPage
     @Override
     public void writeEditorCas(CAS aCas) throws IOException
     {
+        if (isUserViewingOthersWork()) {
+            throw new IOException("Viewing another users annotations - saving is not permitted!");
+        }
+        
         AnnotatorState state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
@@ -397,14 +403,14 @@ public class AnnotationPage
             CAS editorCas = documentService.readAnnotationCas(annotationDocument,
                     FORCE_CAS_UPGRADE);
 
-            // After creating an new CAS or upgrading the CAS, we need to save it
-            documentService.writeAnnotationCas(editorCas, annotationDocument, false);
-
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
-            
-            // Initialize timestamp in state
+
             if (!isUserViewingOthersWork()) {
+                // After creating an new CAS or upgrading the CAS, we need to save it
+                documentService.writeAnnotationCas(editorCas, annotationDocument, false);
+                
+                // Initialize timestamp in state
                 updateDocumentTimestampAfterWrite(state, documentService.getAnnotationCasTimestamp(
                         state.getDocument(), state.getUser().getUsername()));
             }
@@ -667,6 +673,4 @@ public class AnnotationPage
             super.loadPreferences();
         }
     }
-    
-    
 }
