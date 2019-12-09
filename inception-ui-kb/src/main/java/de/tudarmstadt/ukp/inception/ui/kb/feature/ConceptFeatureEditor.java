@@ -151,7 +151,7 @@ public class ConceptFeatureEditor
         String trimmedInput = input.trim();
         if (trimmedInput.length() > 2 && trimmedInput.startsWith("\"")
                 && trimmedInput.endsWith("\"")) {
-            input = StringUtils.substring(input, 1, -1);
+            input = StringUtils.substring(trimmedInput, 1, -1);
             labelFilter = true;
         }
         
