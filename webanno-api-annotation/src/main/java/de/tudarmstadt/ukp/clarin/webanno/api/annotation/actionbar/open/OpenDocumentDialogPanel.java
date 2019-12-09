@@ -392,20 +392,20 @@ public class OpenDocumentDialogPanel
         
         return allSourceDocuments;
     }
-    
+
     private void actionOpenDocument(AjaxRequestTarget aTarget, Form<?> aForm)
     {
-        if (projectListChoice.getModelObject() != null && docListChoice.getModelObject()  != null) {
+        if (projectListChoice.getModelObject() != null && docListChoice.getModelObject() != null) {
             state.setProject(projectListChoice.getModelObject().get());
             state.setDocument(docListChoice.getModelObject().get(), docListChoice.getChoices()
                     .stream().map(t -> t.get()).collect(Collectors.toList()));
-            
-            // for curation view in inception: when curating into CURATION_USER's CAS and opening new document
-            // it should also be from the CURATION_USER
+
+            // for curation view in inception: when curating into CURATION_USER's CAS
+            // and opening new document it should also be from the CURATION_USER
             if (!state.getUser().getUsername().equals(CURATION_USER)) {
                 state.setUser(userListChoice.getModelObject().get());
             }
-  
+
             modalWindow.close(aTarget);
         }
     }
