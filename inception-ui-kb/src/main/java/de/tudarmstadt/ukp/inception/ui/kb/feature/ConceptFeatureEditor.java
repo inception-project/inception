@@ -181,8 +181,8 @@ public class ConceptFeatureEditor
                     : -1;
             
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
-                    traits.getScope(), traits.getAllowedValueType(), aInput, mention, mentionBegin,
-                    cas, feat.getProject());
+                    traits.getScope(), traits.getAllowedValueType(), finalInput, mention,
+                    mentionBegin, cas, feat.getProject());
         }
         catch (Exception e) {
             choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));
