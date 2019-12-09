@@ -85,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
@@ -445,7 +446,8 @@ public class AeroRemoteApiController
         
         ProjectExportRequest request = new ProjectExportRequest(project,
                 aFormat.orElse(WebAnnoTsv3FormatSupport.ID), true);
-        File exportedFile = exportService.exportProject(request);
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
+        File exportedFile = exportService.exportProject(request, monitor);
         
         // Turn the file into a resource and auto-delete the file when the resource closes the
         // stream.

@@ -267,6 +267,15 @@ public class BratAnnotationEditor
                         }
                     }
                 }
+                catch (AnnotationException e) {
+                    // These are common exceptions happening as part of the user interaction. We do
+                    // not really need to log their stack trace to the log.
+                    error("Error: " + e.getMessage());
+                    // If debug is enabled, we'll also write the error to the log just in case.
+                    if (LOG.isDebugEnabled()) {
+                        LOG.error("Error: {}", e.getMessage(), e);
+                    }
+                }
                 catch (Exception e) {
                     error("Error: " + e.getMessage());
                     LOG.error("Error: {}", e.getMessage(), e);
