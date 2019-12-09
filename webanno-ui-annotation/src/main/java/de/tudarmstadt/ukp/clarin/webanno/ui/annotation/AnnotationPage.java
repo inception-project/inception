@@ -347,7 +347,7 @@ public class AnnotationPage
         }
 
         // If we have a timestamp, then use it to detect if there was a concurrent access
-        if (!isUserViewingOthersWork()) {
+        if (!isUserViewingOthersWork(state, userRepository.getCurrentUser())) {
             verifyAndUpdateDocumentTimestamp(state, documentService
                     .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
         }
@@ -359,7 +359,7 @@ public class AnnotationPage
     @Override
     public void writeEditorCas(CAS aCas) throws IOException
     {
-        if (isUserViewingOthersWork()) {
+        if (isUserViewingOthersWork(getModelObject(), userRepository.getCurrentUser())) {
             throw new IOException("Viewing another users annotations - saving is not permitted!");
         }
         
@@ -416,7 +416,7 @@ public class AnnotationPage
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
 
-            if (!isUserViewingOthersWork()) {
+            if (!isUserViewingOthersWork(state, userRepository.getCurrentUser())) {
                 // After creating an new CAS or upgrading the CAS, we need to save it
                 documentService.writeAnnotationCas(editorCas, annotationDocument, false);
                 
@@ -669,6 +669,14 @@ public class AnnotationPage
         if (aFocusParameter != null) {
             focus = aFocusParameter.toInt(0);
         }
+        // If there is no change in the current document, then there is nothing to do. Mind
+        // that document IDs are globally unique and a change in project does not happen unless
+        // there is also a document change.
+        if (aPreviousDocument != null && aPreviousDocument.equals(currentDocument)
+                && focus == getModelObject().getFocusUnitIndex()) {
+            return;
+        }
+        
         // never had set a document or is a new one
         if (aPreviousDocument == null ||
                 !aPreviousDocument.equals(currentDocument)) { 

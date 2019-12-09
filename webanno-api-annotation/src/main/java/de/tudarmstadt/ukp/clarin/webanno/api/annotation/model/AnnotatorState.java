@@ -87,7 +87,6 @@ public interface AnnotatorState
     // curation, automation, correction, etc. should be local to the respective modules / pages
     Mode getMode();
     
-
     // ---------------------------------------------------------------------------------------------
     // Remembered feature values
     //
