@@ -27,6 +27,7 @@ import org.apache.wicket.model.IModel;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.ITextRenderer;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
@@ -80,12 +81,19 @@ public class KnowledgeBaseItemAutoCompleteField
     public void onConfigure(JQueryBehavior behavior)
     {
         super.onConfigure(behavior);
-
-        behavior.setOption("autoWidth", true);
+        
+        // Use one-third of the browser width but not less than 300 pixels. This is better than 
+        // using the Kendo auto-sizing feature because that sometimes doesn't get the width right.
+        // See: https://github.com/inception-project/inception/issues/1517
+        behavior.setOption("open",
+                "function(e) { $(e.sender.list).width(Math.max($(window).width()*0.3,300)); }");
         behavior.setOption("ignoreCase", false);
         behavior.setOption("delay", 500);
+        behavior.setOption("animation", false);
+        behavior.setOption("footerTemplate",
+                Options.asString("#: instance.dataSource.total() # items found"));
     }
-
+    
     @Override
     protected IJQueryTemplate newTemplate()
     {
@@ -97,8 +105,13 @@ public class KnowledgeBaseItemAutoCompleteField
             public String getText()
             {
                 StringBuilder sb = new StringBuilder();
-                sb.append("<div style=\"max-width: 450px\">");
+                sb.append("<div>");
                 sb.append("  <div class=\"item-title\">");
+                sb.append("  # if (data.rank) { #");
+                sb.append("  <span class=\"item-rank\">");
+                sb.append("    [${ data.rank }]");
+                sb.append("  </span>");
+                sb.append("  # } #");
                 sb.append("    ${ data.name }");
                 sb.append("  </div>");
                 sb.append("  <div class=\"item-identifier\">");
@@ -123,6 +136,7 @@ public class KnowledgeBaseItemAutoCompleteField
                 properties.add("name");
                 properties.add("identifier");
                 properties.add("description");
+                properties.add("rank");
                 if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
                     properties.add("debugInfo");
                 }
