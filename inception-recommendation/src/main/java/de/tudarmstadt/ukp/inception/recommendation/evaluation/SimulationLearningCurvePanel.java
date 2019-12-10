@@ -137,9 +137,9 @@ public class SimulationLearningCurvePanel
         // for the selected recommender is plotted in the hCart Panel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
-            (_target, _form) -> {
-                startEvaluation(_target, _form );
-            });
+            (_target, _form) -> 
+                startEvaluation(_target, _form )
+            );
         
         form.add(startButton);
     }

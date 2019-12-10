@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -36,6 +37,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
@@ -133,6 +135,61 @@ public class StringMatchingRecommenderTest
 
         assertThat(predictions).as("Has all null labels").extracting(NamedEntity::getValue)
                 .containsOnlyNulls();
+    }
+
+    @Test
+    public void thatPredictionForCharacterLevelLayerWorks() throws Exception
+    {
+        recommender.getLayer().setAnchoringMode(CHARACTERS);
+        
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        
+        JCas jcas = JCasFactory.createJCas();
+        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "John Smith. Peter Johnheim .");
+        CAS cas = jcas.getCas();
+        
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("John Smith", "ORG"));
+        gazeteer.add(new GazeteerEntry("Peter John", "LOC"));
+
+        sut.pretrain(gazeteer, context);
+
+        sut.predict(context, cas);
+
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions).extracting(NamedEntity::getCoveredText)
+                .contains("John Smith", "Peter John");
+    }
+
+    @Test
+    public void thatPredictionForCrossSentenceLayerWorks() throws Exception
+    {
+        recommender.getLayer().setCrossSentence(true);
+        
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        
+        JCas jcas = JCasFactory.createJCas();
+        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "John Smith .\nPeter Johnheim .");
+        CAS cas = jcas.getCas();
+        
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("Smith . Peter", "ORG"));
+
+        sut.pretrain(gazeteer, context);
+
+        sut.predict(context, cas);
+
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions).extracting(NamedEntity::getCoveredText)
+                .contains("Smith .\nPeter");
     }
 
     private CAS getTestCasNoLabelLabels() throws Exception

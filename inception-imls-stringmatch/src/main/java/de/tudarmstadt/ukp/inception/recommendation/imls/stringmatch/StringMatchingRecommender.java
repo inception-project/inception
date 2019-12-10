@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -38,6 +39,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,38 +173,54 @@ public class StringMatchingRecommender
 
     private List<Sample> predict(int aDocNo, CAS aCas, Trie<DictEntry> aDict)
     {
+        boolean requireEndAtTokenBoundary = !CHARACTERS
+                .equals(getRecommender().getLayer().getAnchoringMode());
+
+        boolean requireSingleSentence = !getRecommender().getLayer().isCrossSentence();
+
         Type sentenceType = getType(aCas, Sentence.class);
         Type tokenType = getType(aCas, Token.class);
-
+        
         List<Sample> data = new ArrayList<>();
-        String text = aCas.getDocumentText();
-        for (AnnotationFS sentence : select(aCas, sentenceType)) {
-            List<Span> spans = new ArrayList<>();
+        String text = aCas.getDocumentText();   
             
-            Collection<AnnotationFS> tokens = selectCovered(tokenType, sentence);
-            for (AnnotationFS token : tokens) {
+        for (Annotation sentence : aCas.<Annotation>select(sentenceType)) {
+            List<Span> spans = new ArrayList<>();
+            List<Annotation> tokens = aCas.<Annotation>select(tokenType).coveredBy(sentence)
+                    .asList();
+            for (Annotation token : tokens) {
                 Trie<DictEntry>.Node node = aDict.getNode(text, token.getBegin());
                 if (node != null) {
                     int begin = token.getBegin();
                     int end = begin + node.level;
-                    
+
+                    // If the end is not in the same sentence as the start, skip
+                    if (requireSingleSentence && !(end <= sentence.getEnd())) {
+                        continue;
+                    }
+
                     // Need to check that the match actually ends at a token boundary!
-                    if (tokens.stream().filter(t -> t.getEnd() == end).findAny().isPresent()) {
-                        for (LabelStats lc : node.value.getBest(maxRecommendations)) {
-                            String label = lc.getLabel();
-                            // check instance equality to avoid collision with user labels
-                            if (label == UNKNOWN_LABEL) {
-                                label = null;
-                            }
-                            spans.add(new Span(begin, end, text.substring(begin, end), label,
-                                    lc.getRelFreq()));
+                    if (
+                            requireEndAtTokenBoundary && 
+                            !aCas.<Annotation>select(tokenType).startAt(token)
+                                    .filter(t -> t.getEnd() == end).findAny().isPresent()
+                    ) {
+                        continue;
+                    }
+                    
+                    for (LabelStats lc : node.value.getBest(maxRecommendations)) {
+                        String label = lc.getLabel();
+                        // check instance equality to avoid collision with user labels
+                        if (label == UNKNOWN_LABEL) {
+                            label = null;
                         }
+                        spans.add(new Span(begin, end, text.substring(begin, end), label,
+                                lc.getRelFreq()));
                     }
                 }
             }
             
-            data.add(new Sample(aDocNo, sentence.getBegin(), sentence.getEnd(),
-                    sentence.getCoveredText(), tokens, spans));
+            data.add(new Sample(aDocNo, aCas.getDocumentText(), tokens, spans));
         }
         
         return data;
@@ -263,8 +281,7 @@ public class StringMatchingRecommender
         for (Sample sample : testSet) {
 
             for (TokenSpan token : sample.getTokens()) {
-                Trie<DictEntry>.Node node = dict.getNode(sample.getText(),
-                        token.getBegin() - sample.getBegin());
+                Trie<DictEntry>.Node node = dict.getNode(sample.getText(), token.getBegin());
                 int begin = token.getBegin();
                 int end = token.getEnd();
 
@@ -329,8 +346,7 @@ public class StringMatchingRecommender
                 
                 Collection<AnnotationFS> tokens = selectCovered(tokenType, sentence);
 
-                data.add(new Sample(docNo, sentence.getBegin(), sentence.getEnd(),
-                        sentence.getCoveredText(), tokens, spans));
+                data.add(new Sample(docNo, cas.getDocumentText(), tokens, spans));
             }
             
             docNo++;
@@ -344,19 +360,15 @@ public class StringMatchingRecommender
     private static class Sample
     {
         private final int docNo;
-        private final int begin;
-        private final int end;
         private final String text;
         private final List<TokenSpan> tokens;
         private final List<Span> spans;
 
-        public Sample(int aDocNo, int aBegin, int aEnd, String aText,
-                Collection<AnnotationFS> aTokens, Collection<Span> aSpans)
+        public Sample(int aDocNo, String aText, Collection<? extends AnnotationFS> aTokens,
+                Collection<Span> aSpans)
         {
             super();
             docNo = aDocNo;
-            begin = aBegin;
-            end = aEnd;
             text = aText;
             tokens = aTokens.stream().map(fs -> new TokenSpan(fs.getBegin(), fs.getEnd()))
                     .collect(Collectors.toList());
@@ -372,21 +384,6 @@ public class StringMatchingRecommender
         public int getDocNo()
         {
             return docNo;
-        }
-        
-        public int getBegin()
-        {
-            return begin;
-        }
-        
-        public int getEnd()
-        {
-            return end;
-        }
-        
-        public int getLength()
-        {
-            return end - begin;
         }
         
         public String getText()

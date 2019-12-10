@@ -71,6 +71,8 @@ include::{include-dir}pdf-editor.adoc[leveloffset=+1]
 
 include::{include-dir}format-support-extensions.adoc[leveloffset=+1]
 
+include::{include-dir}repository.adoc[leveloffset=+1]
+
 <<<
 
 = {product-name} Development
