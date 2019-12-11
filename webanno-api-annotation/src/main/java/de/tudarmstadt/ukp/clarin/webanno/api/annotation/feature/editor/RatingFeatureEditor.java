@@ -17,9 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static org.apache.wicket.event.Broadcast.BUBBLE;
+
 import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
+import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.form.RadioGroup;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -28,6 +34,7 @@ import org.apache.wicket.model.PropertyModel;
 
 import com.googlecode.wicket.kendo.ui.form.Radio;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 
 public class RatingFeatureEditor
@@ -67,5 +74,31 @@ public class RatingFeatureEditor
                 item.add(radio, label);
             }
         };
+    }
+    
+    @Override
+    public void addFeatureUpdateBehavior()
+    {
+        // Need to use a AjaxFormChoiceComponentUpdatingBehavior here since we use a RadioGroup
+        // here.
+        FormComponent focusComponent = getFocusComponent();
+        focusComponent.add(new AjaxFormChoiceComponentUpdatingBehavior()
+        {
+            private static final long serialVersionUID = -5058365578109385064L;
+
+            @Override
+            protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
+            {
+                super.updateAjaxAttributes(aAttributes);
+                addDelay(aAttributes, 300);
+            }
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget aTarget)
+            {
+                send(focusComponent, BUBBLE,
+                        new FeatureEditorValueChangedEvent(RatingFeatureEditor.this, aTarget));
+            }
+        });
     }
 }

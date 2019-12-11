@@ -19,15 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 
 public class LinkFeatureDeletedEvent
     extends LinkFeatureEvent
 {
-    public LinkFeatureDeletedEvent(FeatureState aFs, AjaxRequestTarget aTarget,
+    public LinkFeatureDeletedEvent(FeatureEditor aEditor, AjaxRequestTarget aTarget,
             LinkWithRoleModel aLinkWithRoleModel)
     {
-        super(aFs, aTarget, aLinkWithRoleModel);
+        super(aEditor, aTarget, aLinkWithRoleModel);
     }
 }
