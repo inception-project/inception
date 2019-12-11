@@ -21,16 +21,22 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -47,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -67,7 +74,8 @@ public class ConceptFeatureEditor
     
     private static final long serialVersionUID = 7763348613632105600L;
 
-    private FormComponent focusComponent;
+    private KnowledgeBaseItemAutoCompleteField focusComponent;
+    private Label description;
     private IriInfoBadge iriBadge;
     private ExternalLink openIriLink;
 
@@ -103,6 +111,11 @@ public class ConceptFeatureEditor
                 // editor is used in a "normal" context and not e.g. in the keybindings 
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
+        
+        description = new Label("description", LoadableDetachableModel.of(this::descriptionValue));
+        description.setOutputMarkupPlaceholderTag(true);
+        description.add(visibleWhen(() -> getLabelComponent().isVisible()));
+        add(description);
     }
 
     @Override
@@ -112,7 +125,17 @@ public class ConceptFeatureEditor
 
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
-    
+
+    private String descriptionValue()
+    {
+        return getModel().map(FeatureState::getValue)
+                .map(value -> (KBHandle) value)
+                .map(KBHandle::getDescription)
+                .map(value -> StringUtils.abbreviate(value, 130))
+                .orElse("no description")
+                .getObject();
+    }
+
     private String iriTooltipValue()
     {
         return getModel().map(FeatureState::getValue)
@@ -173,6 +196,32 @@ public class ConceptFeatureEditor
                 .getFeatureSupport(aAnnotationFeature);
         ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
         return traits;
+    }
+    
+    @Override
+    public void addFeatureUpdateBehavior()
+    {
+        focusComponent.add(new AjaxFormComponentUpdatingBehavior("change")
+        {
+            private static final long serialVersionUID = -8944946839865527412L;
+            
+            @Override
+            protected void updateAjaxAttributes(AjaxRequestAttributes aAttributes)
+            {
+                super.updateAjaxAttributes(aAttributes);
+                aAttributes.getDynamicExtraParameters()
+                        .add(focusComponent.getIdentifierDynamicAttributeScript());
+                addDelay(aAttributes, 250);
+            }
+            
+            @Override
+            protected void onUpdate(AjaxRequestTarget aTarget)
+            {
+                aTarget.add(description);
+                send(focusComponent, BUBBLE,
+                        new FeatureEditorValueChangedEvent(ConceptFeatureEditor.this, aTarget));
+            }
+        });
     }
 
     @Override
