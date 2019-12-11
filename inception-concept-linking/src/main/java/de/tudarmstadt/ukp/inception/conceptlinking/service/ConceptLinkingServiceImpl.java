@@ -346,6 +346,12 @@ public class ConceptLinkingServiceImpl
                 })
                 .limit(properties.getCandidateDisplayLimit())
                 .collect(Collectors.toList());
+        
+        int rank = 1;
+        for (KBHandle handle : results) {
+            handle.setRank(rank);
+            rank++;
+        }
          
         log.debug("Ranked [{}] candidates for mention [{}] and query [{}] in [{}] ms",
                  results.size(), aMention, aQuery, currentTimeMillis() - startTime);
