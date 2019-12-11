@@ -82,24 +82,29 @@ public class KnowledgeBaseItemAutoCompleteField
     {
         super.onConfigure(behavior);
         
-        // Use one-third of the browser width but not less than 300 pixels. This is better than 
-        // using the Kendo auto-sizing feature because that sometimes doesn't get the width right.
-        // See: https://github.com/inception-project/inception/issues/1517
-        behavior.setOption("open", String.join(" ",
-                "function(e) {",
-                "  e.sender.list.width(Math.max($(window).width()*0.3,300));",
-                "}"));
-        behavior.setOption("height", "Math.max($(window).height()*0.5,200)");
         behavior.setOption("ignoreCase", false);
         behavior.setOption("delay", 500);
         behavior.setOption("animation", false);
         behavior.setOption("footerTemplate",
                 Options.asString("#: instance.dataSource.total() # items found"));
+        
+        // Try to smartly set the width and height of the dropdown
+        behavior.setOption("height", "Math.max($(window).height()*0.5,200)");
+        behavior.setOption("open", String.join(" ",
+                "function(e) {",
+                "  e.sender.list.width(Math.max($(window).width()*0.3,300));",
+                "}"));
         // Prevent scrolling action from closing the dropdown while the focus is on the input field
+        // Use one-third of the browser width but not less than 300 pixels. This is better than 
+        // using the Kendo auto-sizing feature because that sometimes doesn't get the width right.
+        // The solution we use here is a NASTY hack, but I didn't find any other way to cancel out
+        // only the closing triggered by scrolling the browser window without having other adverse
+        // side effects such as mouse clicks or enter no longer selecting and closing the dropdown.
+        // See: https://github.com/inception-project/inception/issues/1517
         behavior.setOption("close", String.join(" ",
                 "function(e) {",
-                "  if (document.activeElement == e.sender.element[0]) {", 
-                "    e.preventDefault();" + 
+                "  if (new Error().stack.toString().includes('_resize')) {", 
+                "    e.preventDefault();",
                 "  }",
                 "}"));
     }
