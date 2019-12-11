@@ -34,6 +34,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.util.convert.ConversionException;
 import org.apache.wicket.util.convert.IConverter;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
@@ -104,6 +106,26 @@ public class KendoAutoCompleteTextFeatureEditor
         return new AutoCompleteTextField<Tag>("value") {
             private static final long serialVersionUID = 311286735004237737L;
 
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
+            {
+                super.onConfigure(behavior);
+                
+                behavior.setOption("delay", 500);
+                behavior.setOption("animation", false);
+                behavior.setOption("footerTemplate",
+                        Options.asString("#: instance.dataSource.total() # items found"));
+                // Prevent scrolling action from closing the dropdown while the focus is on the
+                // input field
+                behavior.setOption("close", String.join(" ",
+                        "function(e) {",
+                        "  if (document.activeElement == e.sender.element[0]) {", 
+                        "    e.preventDefault();" + 
+                        "  }",
+                        "}"));
+                behavior.setOption("select", " function (e) { this.trigger('change'); }");
+            }
+            
             @Override
             protected List<Tag> getChoices(String aTerm)
             {
