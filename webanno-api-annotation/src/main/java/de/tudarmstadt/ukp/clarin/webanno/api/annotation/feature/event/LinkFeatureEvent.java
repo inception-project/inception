@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 
 public abstract class LinkFeatureEvent
@@ -27,10 +27,10 @@ public abstract class LinkFeatureEvent
 {
     private final LinkWithRoleModel linkWithRoleModel;
     
-    public LinkFeatureEvent(FeatureState aFs, AjaxRequestTarget aTarget,
+    public LinkFeatureEvent(FeatureEditor aEditor, AjaxRequestTarget aTarget,
             LinkWithRoleModel aLinkWithRoleModel)
     {
-        super(aFs, aTarget);
+        super(aEditor, aTarget);
         linkWithRoleModel = aLinkWithRoleModel;
     }
     

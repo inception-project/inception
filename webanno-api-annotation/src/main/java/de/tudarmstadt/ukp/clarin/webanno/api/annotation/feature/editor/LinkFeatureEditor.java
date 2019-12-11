@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -546,7 +547,7 @@ public class LinkFeatureEditor
             // trigger a reload of the feature editors from the CAS which makes the unfilled slots
             // disappear and leaves behind an armed slot pointing to a removed slot.
             if (m.targetAddr != -1) {
-                send(this, Broadcast.BUBBLE, new FeatureEditorValueChangedEvent(fs, aTarget));
+                send(this, Broadcast.BUBBLE, new FeatureEditorValueChangedEvent(this, aTarget));
             }
         }
     }
@@ -565,8 +566,7 @@ public class LinkFeatureEditor
 
         aTarget.add(content);
         
-        send(this, Broadcast.BUBBLE, 
-                new LinkFeatureDeletedEvent(fs, aTarget, linkWithRoleModel));
+        send(this, BUBBLE, new LinkFeatureDeletedEvent(this, aTarget, linkWithRoleModel));
     }
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget, Item<LinkWithRoleModel> aItem)

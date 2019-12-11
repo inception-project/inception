@@ -19,14 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 
 public class FeatureEditorValueChangedEvent
     extends FeatureEditorEvent
 {
     
-    public FeatureEditorValueChangedEvent(FeatureState aFs, AjaxRequestTarget aTarget)
+    public FeatureEditorValueChangedEvent(FeatureEditor aEditor, AjaxRequestTarget aTarget)
     {
-        super(aFs, aTarget);
+        super(aEditor, aTarget);
     }
 }

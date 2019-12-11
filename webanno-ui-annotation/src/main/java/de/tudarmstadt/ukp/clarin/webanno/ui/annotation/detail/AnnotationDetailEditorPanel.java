@@ -27,9 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
-
 import static java.util.Arrays.asList;
-
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
@@ -72,7 +70,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
@@ -90,8 +87,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedE
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -1712,31 +1707,5 @@ public abstract class AnnotationDetailEditorPanel
     public static class AttachStatus {
         boolean readOnlyAttached;
         int attachCount;
-    }
-    
-    @OnEvent(stop = true)
-    public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
-    {
-        AjaxRequestTarget target = aEvent.getTarget();
-        // Auto-commit if working on existing annotation
-        if (getModelObject().getSelection().getAnnotation().isSet()) {
-            try {
-                actionCreateOrUpdate(target, getEditorCas());
-            }
-            catch (Exception e) {
-                handleException(this, target, e);
-            }
-        }
-    }
-    
-    @OnEvent(stop = true)
-    public void onFeatureUpdatedEvent(FeatureEditorValueChangedEvent aEvent) {
-        AjaxRequestTarget target = aEvent.getTarget();
-        try {
-            actionCreateOrUpdate(target, getEditorCas());
-        }
-        catch (Exception e) {
-            handleException(this, target, e);
-        }
     }
 }
