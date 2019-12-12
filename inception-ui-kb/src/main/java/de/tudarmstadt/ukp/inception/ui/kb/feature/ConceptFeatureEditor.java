@@ -26,12 +26,14 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
+import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
@@ -43,10 +45,17 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.http.WebRequest;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.convert.IConverter;
+import org.apache.wicket.util.string.StringValue;
+import org.danekja.java.util.function.serializable.SerializableFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -74,7 +83,7 @@ public class ConceptFeatureEditor
     
     private static final long serialVersionUID = 7763348613632105600L;
 
-    private KnowledgeBaseItemAutoCompleteField focusComponent;
+    private AutoCompleteField focusComponent;
     private Label description;
     private IriInfoBadge iriBadge;
     private ExternalLink openIriLink;
@@ -100,7 +109,7 @@ public class ConceptFeatureEditor
 
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
 
-        add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
+        add(focusComponent = new AutoCompleteField(MID_VALUE, _query -> 
                 getCandidates(aStateModel, aHandler, _query)));
         
         AnnotationFeature feat = getModelObject().feature;
@@ -228,5 +237,160 @@ public class ConceptFeatureEditor
     public FormComponent getFocusComponent()
     {
         return focusComponent;
+    }
+    
+    /**
+     * Special version of the {@link KnowledgeBaseItemAutoCompleteField} for used in the concept
+     * feature editor. 
+     */
+    public static class AutoCompleteField
+        extends KnowledgeBaseItemAutoCompleteField
+    {
+        private static final long serialVersionUID = 5461442869971269291L;
+        
+        private IConverter<KBHandle> converter;
+        private List<KBHandle> choiceCache;
+        private boolean allowChoiceCache = false;
+
+        public AutoCompleteField(String aId,
+                SerializableFunction<String, List<KBHandle>> aChoiceProvider)
+        {
+            super(aId, aChoiceProvider);
+            converter = newConverter();
+        }
+        
+        @Override
+        public void onConfigure(JQueryBehavior aBehavior)
+        {
+            super.onConfigure(aBehavior);
+            
+            // We need to explicitly trigger the change event on the input element in order to
+            // trigger the Wicket AJAX update (if there is one). If we do not do this, then Kendo
+            // will "forget" to trigger a change event if the label of the newly selected item is
+            // the same as the label of the previously selected item!!!
+            // Using the default select behavior of AutoCompleteTextField which is coupled to the
+            // onSelected(AjaxRequestTarget aTarget) callback does unfortunatle not work well
+            // because onSelected does not tell us when the auto-complete field is CLEARED!
+            aBehavior.setOption("select", String.join(" ",
+                    "function (e) {",
+                    "  e.sender.element.trigger('change');",
+                    "}"));
+        }
+        
+        @Override
+        protected List<KBHandle> getChoices(String aInput)
+        {
+            if (!allowChoiceCache || choiceCache == null) {
+                choiceCache = super.getChoices(aInput);
+            }
+            return choiceCache;
+        }
+        
+        @Override
+        public String[] getInputAsArray()
+        {
+            // If the web request includes the additional "identifier" parameter which is supposed
+            // to contain the IRI of the selected item instead of its label, then we use that as the
+            // value.
+            WebRequest request = getWebRequest();
+            IRequestParameters requestParameters = request.getRequestParameters();
+            StringValue identifier = requestParameters
+                    .getParameterValue(getInputName() + ":identifier");
+            
+            if (!identifier.isEmpty()) {
+                return new String[] { identifier.toString() };
+            }
+            
+            return super.getInputAsArray();
+        }
+        
+        /**
+         * When using this input component with an {@link AjaxFormChoiceComponentUpdatingBehavior},
+         * it is necessary to request the identifier of the selected item as an additional dynamic
+         * attribute, otherwise no distinction can be made between two items with the same label!
+         */
+        public String getIdentifierDynamicAttributeScript()
+        {
+            return String.join(" ", 
+                    "var item = $(attrs.event.target).data('kendoAutoComplete').dataItem();",
+                    "if (item) {",
+                    "  return [{",
+                    "    'name': '" + getInputName() + ":identifier', ",
+                    "    'value': $(attrs.event.target).data('kendoAutoComplete').dataItem().identifier",
+                    "  }]",
+                    "}",
+                    "return [];");
+        }
+        
+        @Override
+        public <C> IConverter<C> getConverter(Class<C> aType)
+        {
+            if (aType != null && aType.isAssignableFrom(this.getType())) {
+                return (IConverter<C>) converter;
+            }
+            
+            return super.getConverter(aType);
+        }
+        
+        private IConverter<KBHandle> newConverter()
+        {
+            return new IConverter<KBHandle>() {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public KBHandle convertToObject(String value, Locale locale)
+                {
+                    if (value == null) {
+                        return null;
+                    }
+                    
+                    if (value.equals(getModelValue())) {
+                        return getModelObject();
+                    }
+                    
+                    // Check choices only here since fetching choices can take some time. If we
+                    // already have choices from a previous query, then we use them instead of
+                    // reloading all the choices. This avoids having to load the choices when
+                    // opening the dropdown AND when selecting one of the items from it.
+                    List<KBHandle> choices; 
+                    try {
+                        allowChoiceCache = true;
+                        choices = getChoices(value);
+                    }
+                    finally {
+                        allowChoiceCache = false;
+                    }
+                    
+                    if (choices.isEmpty()) {
+                        return null;
+                    }
+                    
+                    // Check if we can find a match by the identifier. The identifier is unique
+                    // while the same label may appear on multiple items
+                    for (KBHandle handle : choices) {
+                        if (value.equals(handle.getIdentifier())) {
+                            return handle;
+                        }
+                    }
+                    
+//                    // Check labels if there was no match on the identifier
+//                    for (KBHandle handle : choices) {
+//                        if (value.equals(getRenderer().getText(handle))) {
+//                            return handle;
+//                        }
+//                    }
+                    
+                    // If there was no match at all, return null
+                    return null;
+                }
+
+                @Override
+                public String convertToString(KBHandle value, Locale locale)
+                {
+                    return getRenderer().getText(value);
+                }
+            };
+        } 
     }
 }
