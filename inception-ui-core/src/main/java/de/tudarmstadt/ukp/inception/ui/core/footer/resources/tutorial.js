@@ -112,6 +112,7 @@ $(document).ready(function() {
 							setCookie(cName, 'ended', contextPath);
 						}
 					});
+					
 					enjoyhint_script_steps = createFirstPageRoutinePart2();
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
@@ -285,7 +286,6 @@ function createFirstPageRoutine() {
 function createFirstPageRoutinePart2() {
 	var projectName = getCookie("projectName");
 	var selector = "a:contains('"+projectName+"'):first";
-	
 	var t = $('a').filter(function() {
 		 return $(this).text() == projectName;
     });
@@ -299,8 +299,12 @@ function createFirstPageRoutinePart2() {
 				'next .input-group:last' : "You can filter the projects based on the ownership type",
 			},
 			{
+				onBeforeStart:function(){ 
+					$('.scrolling').scrollTo(selector, 80);
+
+				},
 				"event": "click", 
-				"selector": ".list-group-item", 
+				"selector": selector,
 				"description": "Click on the project to get started.",
 			} 
 			];
