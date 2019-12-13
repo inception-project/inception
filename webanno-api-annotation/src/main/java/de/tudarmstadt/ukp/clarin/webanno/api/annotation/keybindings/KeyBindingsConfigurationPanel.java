@@ -90,6 +90,7 @@ public class KeyBindingsConfigurationPanel
         // which usually goes along with the feature editor. This assumes that there is a sensible
         // focus component... might not be the case for some multi-component editors.
         editor = fs.createEditor("value", this, null, null, featureState);
+        editor.addFeatureUpdateBehavior();
         editor.getLabelComponent().setVisible(false);
         keyBindingsContainer.add(editor);
         
