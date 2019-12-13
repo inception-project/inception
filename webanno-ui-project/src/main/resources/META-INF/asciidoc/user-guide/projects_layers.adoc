@@ -15,7 +15,7 @@ This section provides a short walk-through on the creation of a custom layer. Th
   * Press the *Save layer* button
 . Create the feature _Polarity_
   * Press the *New feature* button
-  * Choose the *type* of the feature: _uima.cas.String_
+  * Choose the *type* of the feature: _Primitive: String_
   * Enter the *name* of the feature: _Polarity_
   * Press *Save feature*
 . Create the tagset _Polarity values_
