@@ -258,10 +258,10 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void deleteQualifier_WithNonExistentQualifier_ShouldDoNothing()
     {
-        assertThatCode(() -> {
+        assertThatCode(() -> 
             sut.deleteQualifier(kb,
-                    testFixtures.buildQualifier(statement, property, "Test qualifier"));
-        }).doesNotThrowAnyException();
+                    testFixtures.buildQualifier(statement, property, "Test qualifier"))
+        ).doesNotThrowAnyException();
     }
 
     @Test
