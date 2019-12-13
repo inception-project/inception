@@ -35,6 +35,9 @@ import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
+/**
+ * Auto-complete field for accessing a knowledge base.
+ */
 public class KnowledgeBaseItemAutoCompleteField
     extends AutoCompleteTextField<KBHandle>
 {
@@ -76,7 +79,7 @@ public class KnowledgeBaseItemAutoCompleteField
     {
         return choiceProvider.apply(aInput);
     }
-
+    
     @Override
     public void onConfigure(JQueryBehavior behavior)
     {
@@ -94,6 +97,14 @@ public class KnowledgeBaseItemAutoCompleteField
                 "function(e) {",
                 "  e.sender.list.width(Math.max($(window).width()*0.3,300));",
                 "}"));
+        
+        // Reset the values in the dropdown listbox to avoid that when opening the dropdown the next
+        // time ALL items with the same label as the selected item appear as selected
+        behavior.setOption("filtering", String.join(" ",
+                "function(e) {",
+                "  e.sender.listView.value([]);",
+                "}"));
+        
         // Prevent scrolling action from closing the dropdown while the focus is on the input field
         // Use one-third of the browser width but not less than 300 pixels. This is better than 
         // using the Kendo auto-sizing feature because that sometimes doesn't get the width right.
@@ -127,7 +138,7 @@ public class KnowledgeBaseItemAutoCompleteField
                 sb.append("    [${ data.rank }]");
                 sb.append("  </span>");
                 sb.append("  # } #");
-                sb.append("    ${ data.name }");
+                sb.append("    ${ data.uiLabel }");
                 sb.append("  </div>");
                 sb.append("  <div class=\"item-identifier\">");
                 sb.append("    ${ data.identifier }");
@@ -148,7 +159,6 @@ public class KnowledgeBaseItemAutoCompleteField
             public List<String> getTextProperties()
             {
                 List<String> properties = new ArrayList<>();
-                properties.add("name");
                 properties.add("identifier");
                 properties.add("description");
                 properties.add("rank");
