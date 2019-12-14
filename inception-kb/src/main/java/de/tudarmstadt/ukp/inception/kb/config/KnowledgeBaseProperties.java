@@ -20,24 +20,12 @@ package de.tudarmstadt.ukp.inception.kb.config;
 
 public interface KnowledgeBaseProperties
 {
-    int getDefaultMaxResults();
+
+    public int getDefaultMaxResults();
     
-    int getHardMaxResults();
+    public void setDefaultMaxResults(int aDefaultMaxResults);
 
-    /**
-     * The cache size in terms of KB items that are being cached. A single query may return a
-     * large number of such items.
-     */
-    long getCacheSize();
+    public int getHardMaxResults();
 
-    /**
-     * The time before KB items are dropped from the cache if they have not been accessed (in
-     * minutes).
-     */
-    int getCacheExpireDelay();
-
-    /**
-     * The time before KB items are asynchronously refreshed (in minutes).
-     */
-    int getCacheRefreshDelay();
+    public void setHardMaxResults(int aHardMaxResults);
 }
