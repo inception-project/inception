@@ -22,12 +22,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties("inception.knowledge-base")
-public class KnowledgeBasePropertiesImpl implements KnowledgeBaseProperties
+public class KnowledgeBasePropertiesImpl
+    implements KnowledgeBaseProperties
 {
     public static final int HARD_MIN_RESULTS = 10;
     
-    private int defaultMaxResults = 1000;
-    private int hardMaxResults = 10000;
+    private int defaultMaxResults = 1_000;
+    private int hardMaxResults = 10_000;
+    private long cacheSize = 100_000;
+    private int cacheExpireDelay = 15;
+    private int cacheRefreshDelay = 5;
 
     @Override
     public int getDefaultMaxResults()
@@ -35,7 +39,6 @@ public class KnowledgeBasePropertiesImpl implements KnowledgeBaseProperties
         return defaultMaxResults;
     }
 
-    @Override
     public void setDefaultMaxResults(int aDefaultMaxResults)
     {
         defaultMaxResults = aDefaultMaxResults;
@@ -47,9 +50,41 @@ public class KnowledgeBasePropertiesImpl implements KnowledgeBaseProperties
         return hardMaxResults;
     }
 
-    @Override
     public void setHardMaxResults(int aHardMaxResults)
     {
         hardMaxResults = aHardMaxResults;
+    }
+
+    @Override
+    public long getCacheSize()
+    {
+        return cacheSize;
+    }
+    
+    public void setCacheSize(long aCacheSize)
+    {
+        cacheSize = aCacheSize;
+    }
+
+    @Override
+    public int getCacheExpireDelay()
+    {
+        return cacheExpireDelay;
+    }
+    
+    public void setCacheExpireDelay(int aCacheExpireDelay)
+    {
+        cacheExpireDelay = aCacheExpireDelay;
+    }
+
+    @Override
+    public int getCacheRefreshDelay()
+    {
+        return cacheRefreshDelay;
+    }
+    
+    public void setCacheRefreshDelay(int aCacheRefreshDelay)
+    {
+        cacheRefreshDelay = aCacheRefreshDelay;
     }
 }
