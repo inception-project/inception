@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.bootstrap;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -25,54 +27,31 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 /**
  * {@code FeedbackPanel} which applies Bootstrap alert styles to feedback messages.
  */
-public class BootstrapFeedbackPanel extends FeedbackPanel {
-
+public class BootstrapFeedbackPanel
+    extends FeedbackPanel
+{
     private static final long serialVersionUID = 5171764027460264375L;
 
-    public BootstrapFeedbackPanel(String id) {
-        super(id);
-        
-        initCloseAll();
-    }
-
-    public BootstrapFeedbackPanel(String id, IFeedbackMessageFilter filter) {
-        super(id, filter);
-        
-        initCloseAll();
-    }
-    
-    private void initCloseAll()
+    public BootstrapFeedbackPanel(String id)
     {
-        WebMarkupContainer messagesContainer = (WebMarkupContainer) get("feedbackul");
-        
-        WebMarkupContainer closeAll = new WebMarkupContainer("closeAll") {
-            private static final long serialVersionUID = -2488179250168075146L;
+        this(id, null);
+    }
 
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                // If there is more than 1 sticky messages, then show the close-all button
-                int stickyMessages = 0;
-                for (FeedbackMessage msg : getCurrentMessages()) {
-                    if (!(msg.isSuccess() || msg.isInfo())) {
-                        stickyMessages ++;
-                    }
-                    if (stickyMessages > 1) {
-                        break;
-                    }
-                }
-                
-                setVisible(stickyMessages > 1);
-            }
-        };
-        
+    public BootstrapFeedbackPanel(String id, IFeedbackMessageFilter filter)
+    {
+        super(id, filter);
+
+        WebMarkupContainer messagesContainer = (WebMarkupContainer) get("feedbackul");
+
+        WebMarkupContainer closeAll = new WebMarkupContainer("closeAll");
+        closeAll.add(visibleWhen(
+            () -> getCurrentMessages().stream().anyMatch(FeedbackMessage::isWarning)));
         messagesContainer.add(closeAll);
     }
-    
+
     @Override
-    protected String getCSSClass(FeedbackMessage message) {
+    protected String getCSSClass(FeedbackMessage message)
+    {
         String cssClass = "alert alert-dismissable";
         switch (message.getLevel()) {
         case FeedbackMessage.ERROR:
@@ -90,7 +69,7 @@ public class BootstrapFeedbackPanel extends FeedbackPanel {
             break;
         default:
             break;
-        }        
+        }
         return cssClass;
     }
 
