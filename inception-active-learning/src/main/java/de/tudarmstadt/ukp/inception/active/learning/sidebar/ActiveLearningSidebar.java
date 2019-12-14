@@ -726,7 +726,7 @@ public class ActiveLearningSidebar
         User user = state.getUser();
         Project project = state.getProject();
 
-        Optional<Delta> recommendationDifference = activeLearningService
+        Optional<Delta<AnnotationSuggestion>> recommendationDifference = activeLearningService
                 .generateNextSuggestion(user, alState);
         Optional<AnnotationSuggestion> prevSuggestion = alState.getSuggestion();
         alState.setCurrentDifference(recommendationDifference);
@@ -925,8 +925,8 @@ public class ActiveLearningSidebar
                 .findFirst();
     }
 
-    private List<AnnotationSuggestion> getMatchingSuggestion(List<SuggestionGroup> aSuggestions,
-            LearningRecord aRecord)
+    private List<AnnotationSuggestion> getMatchingSuggestion(
+            List<SuggestionGroup<AnnotationSuggestion>> aSuggestions, LearningRecord aRecord)
     {
         return getMatchingSuggestion(aSuggestions, aRecord.getSourceDocument().getName(),
                 aRecord.getLayer().getId(), aRecord.getAnnotationFeature().getName(),
@@ -934,7 +934,8 @@ public class ActiveLearningSidebar
                 aRecord.getAnnotation());
     }
 
-    private List<AnnotationSuggestion> getMatchingSuggestion(List<SuggestionGroup> aSuggestions,
+    private List<AnnotationSuggestion> getMatchingSuggestion(
+            List<SuggestionGroup<AnnotationSuggestion>> aSuggestions,
             AnnotationSuggestion aSuggestion)
     {
         return getMatchingSuggestion(aSuggestions, aSuggestion.getDocumentName(),
@@ -942,17 +943,18 @@ public class ActiveLearningSidebar
                 aSuggestion.getEnd(), aSuggestion.getLabel());
     }
 
-    private List<AnnotationSuggestion> getMatchingSuggestion(List<SuggestionGroup> aSuggestions,
-            String aDocumentName, long aLayerId, String aFeature, int aBegin, int aEnd,
-            String aLabel)
+    private List<AnnotationSuggestion> getMatchingSuggestion(
+            List<SuggestionGroup<AnnotationSuggestion>> aSuggestions, String aDocumentName,
+            long aLayerId, String aFeature, int aBegin, int aEnd, String aLabel)
     {
         return aSuggestions.stream()
+                .filter(group -> group.getPosition() instanceof Offset)
                 .filter(group -> 
                         aDocumentName.equals(group.getDocumentName()) &&
                         aLayerId == group.getLayerId() &&
                         (aFeature == null || aFeature == group.getFeature()) &&
-                        (aBegin == -1 || aBegin == group.getOffset().getBegin()) &&
-                        (aEnd == -1 || aEnd == group.getOffset().getEnd()))
+                        (aBegin == -1 || aBegin == ((Offset) group.getPosition()).getBegin()) &&
+                        (aEnd == -1 || aEnd == ((Offset) group.getPosition()).getEnd()))
                 .flatMap(group -> group.stream())
                 .filter(suggestion ->
                         aLabel == null || aLabel.equals(suggestion.getLabel()))
@@ -1088,7 +1090,7 @@ public class ActiveLearningSidebar
             // Update visibility in case the annotation where the feature was set overlaps with 
             // any suggestions that need to be hidden now.
             recommendationService.calculateVisibility(getAnnotationPage().getEditorCas(),
-                    state.getUser().getUsername(), aLayer, alState.getSuggestions(),
+                    state.getUser().getUsername(), aLayer, (List) alState.getSuggestions(),
                     state.getWindowBeginOffset(), state.getWindowEndOffset());
     
             // Update the suggestion in the AL sidebar, but do not jump or touch the right
@@ -1119,7 +1121,9 @@ public class ActiveLearningSidebar
         ) {
             SourceDocument doc = eventState.getDocument();
             VID vid = aEvent.getVid();
-            Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(doc, vid);
+            Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(doc, vid)
+                    .filter(f -> f instanceof AnnotationSuggestion)
+                    .map(f -> (AnnotationSuggestion) f);
 
             if (!prediction.isPresent()) {
                 LOG.error("Could not find prediction in [{}] with id [{}]", doc, vid);
@@ -1164,7 +1168,9 @@ public class ActiveLearningSidebar
         SourceDocument doc = state.getDocument();
         VID vid = aEvent.getVid();
         
-        Optional<AnnotationSuggestion> oRecommendation = predictions.getPredictionByVID(doc, vid);
+        Optional<AnnotationSuggestion> oRecommendation = predictions.getPredictionByVID(doc, vid)
+                .filter(f -> f instanceof AnnotationSuggestion)
+                .map(f -> (AnnotationSuggestion) f);
         if (!oRecommendation.isPresent()) {
             LOG.error("Could not find prediction in [{}] with id [{}]", doc, vid);
             error("Could not find prediction");
@@ -1196,7 +1202,7 @@ public class ActiveLearningSidebar
         ) {
             AnnotationSuggestion suggestion = alState.getSuggestion().get();
             if (
-                    acceptedSuggestion.getOffset().equals(suggestion.getOffset()) && 
+                    acceptedSuggestion.getPosition().equals(suggestion.getPosition()) && 
                     vid.getLayerId() == suggestion.getLayerId() && 
                     acceptedSuggestion.getFeature().equals(suggestion.getFeature())
             ) {

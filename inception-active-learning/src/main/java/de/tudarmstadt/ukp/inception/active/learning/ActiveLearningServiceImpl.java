@@ -73,7 +73,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public List<SuggestionGroup> getSuggestions(User aUser,
+    public List<SuggestionGroup<AnnotationSuggestion>> getSuggestions(User aUser,
             AnnotationLayer aLayer)
     {
         Predictions predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
@@ -82,7 +82,7 @@ public class ActiveLearningServiceImpl
             return Collections.emptyList();
         }
 
-        Map<String, SuggestionDocumentGroup> recommendationsMap = predictions
+        Map<String, SuggestionDocumentGroup<AnnotationSuggestion>> recommendationsMap = predictions
                 .getPredictionsForWholeProject(aLayer, documentService);
 
         return recommendationsMap.values().stream()
@@ -94,9 +94,9 @@ public class ActiveLearningServiceImpl
     public boolean isSuggestionVisible(LearningRecord aRecord)
     {
         User user = userService.get(aRecord.getUser());
-        List<SuggestionGroup> suggestions = getSuggestions(user,
+        List<SuggestionGroup<AnnotationSuggestion>> suggestions = getSuggestions(user,
                 aRecord.getLayer());
-        for (SuggestionGroup listOfAO : suggestions) {
+        for (SuggestionGroup<AnnotationSuggestion> listOfAO : suggestions) {
             if (listOfAO.stream().anyMatch(suggestion -> suggestion.getDocumentName()
                     .equals(aRecord.getSourceDocument().getName())
                     && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
@@ -119,13 +119,13 @@ public class ActiveLearningServiceImpl
     @Override
     public void hideRejectedOrSkippedAnnotations(User aUser,
             AnnotationLayer aLayer, boolean filterSkippedRecommendation,
-            List<SuggestionGroup> aSuggestionGroups)
+            List<SuggestionGroup<AnnotationSuggestion>> aSuggestionGroups)
     {
         List<LearningRecord> records = learningHistoryService
                 .listRecords(aUser.getUsername(),
                         aLayer);
 
-        for (SuggestionGroup group : aSuggestionGroups) {
+        for (SuggestionGroup<AnnotationSuggestion> group : aSuggestionGroups) {
             for (AnnotationSuggestion s : group) {
                 // If a suggestion is already invisible, we don't need to check if it needs hiding.
                 // Mind that this code does not unhide the suggestion immediately if a user
@@ -153,11 +153,12 @@ public class ActiveLearningServiceImpl
     }
     
     @Override
-    public Optional<Delta> generateNextSuggestion(User aUser, ActiveLearningUserState alState)
+    public Optional<Delta<AnnotationSuggestion>> generateNextSuggestion(User aUser,
+            ActiveLearningUserState alState)
     {
         // Fetch the next suggestion to present to the user (if there is any)
         long startTimer = System.currentTimeMillis();
-        List<SuggestionGroup> suggestions = alState.getSuggestions();
+        List<SuggestionGroup<AnnotationSuggestion>> suggestions = alState.getSuggestions();
         long getRecommendationsFromRecommendationService = System.currentTimeMillis();
         log.trace("Getting recommendations from recommender system costs {} ms.",
                 (getRecommendationsFromRecommendationService - startTimer));
@@ -177,10 +178,10 @@ public class ActiveLearningServiceImpl
         return alState.getStrategy().generateNextSuggestion(suggestions);
     }
     
-    private static SuggestionGroup removeDuplicateRecommendations(
-            SuggestionGroup unmodifiedRecommendationList)
+    private static SuggestionGroup<AnnotationSuggestion> removeDuplicateRecommendations(
+            SuggestionGroup<AnnotationSuggestion> unmodifiedRecommendationList)
     {
-        SuggestionGroup cleanRecommendationList = new SuggestionGroup();
+        SuggestionGroup<AnnotationSuggestion> cleanRecommendationList = new SuggestionGroup<>();
 
         unmodifiedRecommendationList.forEach(recommendationItem -> {
             if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
@@ -191,7 +192,8 @@ public class ActiveLearningServiceImpl
         return cleanRecommendationList;
     }
     
-    private static boolean isAlreadyInCleanList(SuggestionGroup cleanRecommendationList,
+    private static boolean isAlreadyInCleanList(
+            SuggestionGroup<AnnotationSuggestion> cleanRecommendationList,
             AnnotationSuggestion_ImplBase recommendationItem)
     {
         String source = recommendationItem.getRecommenderName();
@@ -217,9 +219,9 @@ public class ActiveLearningServiceImpl
         private boolean doExistRecommenders = true;
         private AnnotationLayer layer;
         private ActiveLearningStrategy strategy;
-        private List<SuggestionGroup> suggestions;
+        private List<SuggestionGroup<AnnotationSuggestion>> suggestions;
 
-        private Delta currentDifference;
+        private Delta<AnnotationSuggestion> currentDifference;
         private String leftContext;
         private String rightContext;
 
@@ -249,12 +251,12 @@ public class ActiveLearningServiceImpl
                     : Optional.empty();
         }
 
-        public Optional<Delta> getCurrentDifference()
+        public Optional<Delta<AnnotationSuggestion>> getCurrentDifference()
         {
             return Optional.ofNullable(currentDifference);
         }
 
-        public void setCurrentDifference(Optional<Delta> currentDifference)
+        public void setCurrentDifference(Optional<Delta<AnnotationSuggestion>> currentDifference)
         {
             this.currentDifference = currentDifference.orElse(null);
         }
@@ -279,12 +281,12 @@ public class ActiveLearningServiceImpl
             strategy = aStrategy;
         }
 
-        public void setSuggestions(List<SuggestionGroup> aSuggestions)
+        public void setSuggestions(List<SuggestionGroup<AnnotationSuggestion>> aSuggestions)
         {
             suggestions = aSuggestions;
         }
 
-        public List<SuggestionGroup> getSuggestions()
+        public List<SuggestionGroup<AnnotationSuggestion>> getSuggestions()
         {
             return suggestions;
         }

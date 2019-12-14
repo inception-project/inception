@@ -151,7 +151,9 @@ public class RecommendationEditorExtension
         SourceDocument document = aState.getDocument();
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(document, aVID);
+        Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
+                .filter(f -> f instanceof AnnotationSuggestion)
+                .map(f -> (AnnotationSuggestion) f);
 
         if (!prediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
@@ -211,7 +213,9 @@ public class RecommendationEditorExtension
                 aState.getProject());
         
         SourceDocument document = aState.getDocument();
-        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID);
+        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID)
+                .filter(f -> f instanceof AnnotationSuggestion)
+                .map(f -> (AnnotationSuggestion) f);
         
         if (!oPrediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);

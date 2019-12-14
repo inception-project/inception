@@ -31,10 +31,10 @@ import org.apache.commons.lang3.Validate;
  * Container for {@link SuggestionGroup suggestion groups} all coming from a single document.
  * No guarantees about layers and features though.
  */
-public class SuggestionDocumentGroup
-    extends AbstractCollection<SuggestionGroup>
+public class SuggestionDocumentGroup<T extends AnnotationSuggestion_ImplBase>
+    extends AbstractCollection<SuggestionGroup<T>>
 {
-    private Collection<SuggestionGroup> groups;
+    private Collection<SuggestionGroup<T>> groups;
     private String documentName;
     
     public SuggestionDocumentGroup()
@@ -42,14 +42,14 @@ public class SuggestionDocumentGroup
         groups = new ArrayList<>();
     }
     
-    public SuggestionDocumentGroup(List<AnnotationSuggestion> aSuggestions)
+    public SuggestionDocumentGroup(List<T> aSuggestions)
     {
         this();
         SuggestionGroup.group(aSuggestions).stream().forEachOrdered(this::add);
     }
     
     @Override
-    public boolean add(SuggestionGroup aGroup)
+    public boolean add(SuggestionGroup<T> aGroup)
     {
         boolean empty = isEmpty();
         
@@ -68,7 +68,7 @@ public class SuggestionDocumentGroup
     }
 
     @Override
-    public Iterator<SuggestionGroup> iterator()
+    public Iterator<SuggestionGroup<T>> iterator()
     {
         return unmodifiableIterator(groups.iterator());
     }

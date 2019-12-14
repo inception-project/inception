@@ -24,10 +24,10 @@ import javax.annotation.Nullable;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class AnnotationSuggestion_ImplBase
+public abstract class AnnotationSuggestion_ImplBase
 {
-
     public static final String EXTENSION_ID = "recommendationEditorExtension";
+    
     /**
      * Suggestion is overlapping with an existing annotation
      */
@@ -229,6 +229,7 @@ public class AnnotationSuggestion_ImplBase
     public boolean labelEquals(String aLabel)
     {
         return (aLabel == null && label == null) || (label != null && label.equals(aLabel));
-    
     }
+    
+    public abstract Position getPosition();
 }

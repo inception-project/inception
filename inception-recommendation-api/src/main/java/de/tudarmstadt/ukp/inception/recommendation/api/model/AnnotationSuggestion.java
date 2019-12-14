@@ -21,14 +21,14 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class AnnotationSuggestion extends AnnotationSuggestion_ImplBase
+public class AnnotationSuggestion
+    extends AnnotationSuggestion_ImplBase
     implements Serializable
 {
     private static final long serialVersionUID = -1904645143661843249L;
 
-    final int begin;
-    final int end;
-    final String coveredText;
+    private final Offset position;
+    private final String coveredText;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
         long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
@@ -38,8 +38,7 @@ public class AnnotationSuggestion extends AnnotationSuggestion_ImplBase
         super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
                 aUiLabel, aConfidence, aConfidenceExplanation);
         
-        begin = aBegin;
-        end = aEnd;
+        position = new Offset(aBegin, aEnd);
         coveredText = aCoveredText;
     }
 
@@ -53,8 +52,7 @@ public class AnnotationSuggestion extends AnnotationSuggestion_ImplBase
     {
         super(aObject);
         
-        begin = aObject.begin;
-        end = aObject.end;
+        position = new Offset(aObject.position.getBegin(), aObject.position.getEnd());
         coveredText = aObject.coveredText;
     }
 
@@ -67,21 +65,18 @@ public class AnnotationSuggestion extends AnnotationSuggestion_ImplBase
 
     public int getBegin()
     {
-        return begin;
+        return position.getBegin();
     }
 
     public int getEnd()
     {
-        return end;
+        return position.getEnd();
     }
 
-    /**
-     * @deprecated Better use {@link #getBegin()} and {@link #getEnd()}
-     */
-    @Deprecated
-    public Offset getOffset()
+    @Override
+    public Offset getPosition()
     {
-        return new Offset(begin, end);
+        return position;
     }
     
     @Override
@@ -90,11 +85,10 @@ public class AnnotationSuggestion extends AnnotationSuggestion_ImplBase
         return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
                 .append("recommenderName", recommenderName).append("layerId", layerId)
                 .append("feature", feature).append("documentName", documentName)
-                .append("begin", begin).append("end", end)
-                .append("coveredText", coveredText).append("label", label)
-                .append("uiLabel", uiLabel).append("confidence", confidence)
+                .append("position", position).append("coveredText", coveredText)
+                .append("label", label).append("uiLabel", uiLabel).append("confidence", confidence)
                 .append("confindenceExplanation", confidenceExplanation)
-                .append("visible", isVisible())
-                .append("reasonForHiding", getReasonForHiding()).toString();
+                .append("visible", isVisible()).append("reasonForHiding", getReasonForHiding())
+                .toString();
     }
 }

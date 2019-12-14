@@ -104,8 +104,8 @@ public class RecommendationSpanRenderer
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
-        SuggestionDocumentGroup groups = predictions.getPredictions(sourceDocumentName, layer,
-                aWindowBeginOffset, aWindowEndOffset);
+        SuggestionDocumentGroup<AnnotationSuggestion> groups = predictions
+                .getPredictions(sourceDocumentName, layer, aWindowBeginOffset, aWindowEndOffset);
         
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
@@ -116,7 +116,7 @@ public class RecommendationSpanRenderer
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
         
         recommendationService.calculateVisibility(aCas, aState.getUser().getUsername(), layer,
-                groups, aWindowBeginOffset, aWindowEndOffset);
+                (SuggestionDocumentGroup) groups, aWindowBeginOffset, aWindowEndOffset);
 
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
@@ -125,7 +125,7 @@ public class RecommendationSpanRenderer
         Map<String, AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer)
             .stream().collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
-        for (SuggestionGroup suggestion : groups) {
+        for (SuggestionGroup<AnnotationSuggestion> suggestion : groups) {
             Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,

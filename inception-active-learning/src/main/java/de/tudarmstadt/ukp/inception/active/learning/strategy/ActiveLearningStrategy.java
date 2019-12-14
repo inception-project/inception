@@ -20,10 +20,12 @@ package de.tudarmstadt.ukp.inception.active.learning.strategy;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
 public interface ActiveLearningStrategy
 {
-    public Optional<Delta> generateNextSuggestion(List<SuggestionGroup> suggestions);
+    public Optional<Delta<AnnotationSuggestion>> generateNextSuggestion(
+            List<SuggestionGroup<AnnotationSuggestion>> suggestions);
 }

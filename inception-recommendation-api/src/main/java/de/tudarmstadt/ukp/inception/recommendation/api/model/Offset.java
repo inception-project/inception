@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 import java.io.Serializable;
 
 public class Offset
-    implements Comparable<Offset>, Serializable
+    implements Comparable<Offset>, Serializable, Position
 {
     private static final long serialVersionUID = -3084534351646334021L;
 
-    private int begin = -1;
-    private int end = -1;
+    private final int begin;
+    private final int end;
     
     public Offset(int beginCharacter, int endCharacter)
     {
@@ -46,42 +46,20 @@ public class Offset
     }
 
     @Deprecated
-    public void setBeginCharacter(int beginCharacter)
-    {
-        setBegin(beginCharacter);
-    }
-
-    @Deprecated
     public int getEndCharacter()
     {
         return getEnd();
     }
 
     @Deprecated
-    public void setEndCharacter(int endCharacter)
-    {
-        setEnd(endCharacter);
-    }
-    
-    @Deprecated
     public int getStart()
     {
         return getBegin();
     }
     
-    public void setBegin(int aBegin)
-    {
-        begin = aBegin;
-    }
-    
     public int getBegin()
     {
         return begin;
-    }
-    
-    public void setEnd(int aEnd)
-    {
-        end = aEnd;
     }
     
     public int getEnd()

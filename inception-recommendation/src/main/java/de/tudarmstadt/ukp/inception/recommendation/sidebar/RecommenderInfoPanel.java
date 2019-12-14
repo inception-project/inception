@@ -148,6 +148,8 @@ public class RecommenderInfoPanel
                 .filter(f -> f.getKey().getDocumentName().equals(sourceDocumentName))
                 .filter(f -> f.getKey().getRecommenderId() == aRecommender.getId().longValue())
                 .map(Map.Entry::getValue)
+                .filter(f -> f instanceof AnnotationSuggestion)
+                .map(f -> (AnnotationSuggestion) f)
                 .filter(s -> s.isVisible())
                 .collect(Collectors.toList());
 

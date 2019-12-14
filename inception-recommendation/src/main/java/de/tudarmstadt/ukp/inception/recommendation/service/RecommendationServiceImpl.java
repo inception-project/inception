@@ -18,10 +18,11 @@
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentAnnotation;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_ALL;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_OVERLAP;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
@@ -61,6 +62,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -88,6 +90,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
@@ -119,6 +122,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -959,7 +963,7 @@ public class RecommendationServiceImpl
         if (activePredictions != null) {
             for (SourceDocument document : aInherit) {
                 if (activePredictions.hasRunPredictionOnDocument(document)) {
-                    List<AnnotationSuggestion> suggestions = inheritSuggestions(aProject,
+                    List<AnnotationSuggestion_ImplBase> suggestions = inheritSuggestions(aProject,
                             activePredictions, document, username);
                     predictions.putPredictions(suggestions);
                     predictions.markDocumentAsPredictionCompleted(document);
@@ -1064,7 +1068,7 @@ public class RecommendationServiceImpl
                         
                         cloneAndMonkeyPatchCAS(aProject, originalCas.get(), predictionCas);
 
-                        List<AnnotationSuggestion> suggestions;
+                        List<AnnotationSuggestion_ImplBase> suggestions;
                         
                         // If the recommender is not trainable and not sensitive to annotations, 
                         // we can actually re-use the predictions.
@@ -1084,7 +1088,8 @@ public class RecommendationServiceImpl
                         // Calculate the visibility of the suggestions. This happens via the
                         // original CAS which contains only the manually created annotations
                         // and *not* the suggestions.
-                        Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
+                        SuggestionDocumentGroup<AnnotationSuggestion_ImplBase> groups = 
+                                new SuggestionDocumentGroup<>(suggestions);
                         calculateVisibility(originalCas.get(), username, recommender.getLayer(),
                                 groups, 0, originalCas.get().getDocumentText().length());
 
@@ -1115,12 +1120,12 @@ public class RecommendationServiceImpl
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private List<AnnotationSuggestion> inheritSuggestions(RecommendationEngine engine,
+    private List<AnnotationSuggestion_ImplBase> inheritSuggestions(RecommendationEngine engine,
             Predictions activePredictions, SourceDocument document, String aUsername)
     {
         Recommender recommender = engine.getRecommender();
         
-        List<AnnotationSuggestion> suggestions = activePredictions
+        List<AnnotationSuggestion_ImplBase> suggestions = activePredictions
                 .getPredictionsByRecommenderAndDocument(recommender, document.getName());
         
         log.debug(
@@ -1139,10 +1144,10 @@ public class RecommendationServiceImpl
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private List<AnnotationSuggestion> inheritSuggestions(Project aProject,
+    private List<AnnotationSuggestion_ImplBase> inheritSuggestions(Project aProject,
             Predictions activePredictions, SourceDocument document, String aUsername)
     {
-        List<AnnotationSuggestion> suggestions = activePredictions
+        List<AnnotationSuggestion_ImplBase> suggestions = activePredictions
                 .getPredictionsByDocument(document.getName());
         
         log.debug(
@@ -1158,7 +1163,7 @@ public class RecommendationServiceImpl
     /**
      * Invokes the engine to produce new suggestions.
      */
-    private List<AnnotationSuggestion> generateSuggestions(RecommenderContext ctx,
+    private List<AnnotationSuggestion_ImplBase> generateSuggestions(RecommenderContext ctx,
             RecommendationEngine engine, Predictions activePredictions, SourceDocument document,
             CAS originalCas, CAS predictionCas, String aUsername)
         throws RecommendationException
@@ -1167,19 +1172,20 @@ public class RecommendationServiceImpl
         engine.predict(ctx, predictionCas);
 
         // Extract the suggestions from the data which the recommender has written into the CAS
-        List<AnnotationSuggestion> suggestions = extractSuggestions(aUsername, predictionCas,
-                document, engine.getRecommender());
+        List<AnnotationSuggestion_ImplBase> suggestions = extractSuggestions(aUsername, originalCas,
+                predictionCas, document, engine.getRecommender());
                 
         return suggestions;
     }
 
-    private List<AnnotationSuggestion> extractSuggestions(String aUsername, CAS aCas,
-            SourceDocument aDocument, Recommender aRecommender)
+    private List<AnnotationSuggestion_ImplBase> extractSuggestions(String aUsername,
+            CAS aOriginalCas, CAS aPredictionCas, SourceDocument aDocument,
+            Recommender aRecommender)
     {
         String typeName = aRecommender.getLayer().getName();
         String featureName = aRecommender.getFeature().getName();
 
-        Type predictedType = CasUtil.getType(aCas, typeName);
+        Type predictedType = CasUtil.getType(aPredictionCas, typeName);
         Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
         Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + 
                 FEATURE_NAME_SCORE_SUFFIX);
@@ -1189,99 +1195,44 @@ public class RecommendationServiceImpl
 
         int predictionCount = 0;
 
-        Type tokenType = getType(aCas, Token.class);
-        Type sentenceType = getType(aCas, Sentence.class);
-
-        List<AnnotationSuggestion> result = new ArrayList<>();
+        List<AnnotationSuggestion_ImplBase> result = new ArrayList<>();
         int id = 0;
 
-        for (AnnotationFS annotationFS : CasUtil.select(aCas, predictedType)) {
-            if (!annotationFS.getBooleanValue(predictionFeature)) {
+        for (Annotation predictedAnnotation : aPredictionCas.<Annotation>select(predictedType)) {
+            if (!predictedAnnotation.getBooleanValue(predictionFeature)) {
                 continue;
             }
 
-            int begin;
-            int end;
-            switch (aRecommender.getLayer().getAnchoringMode()) {
-            case CHARACTERS: {
-                int[] offsets = { annotationFS.getBegin(), annotationFS.getEnd() };
-                TrimUtils.trim(annotationFS.getCAS().getDocumentText(), offsets);
-                begin = offsets[0];
-                end = offsets[1];
-                break;
-            }
-            case SINGLE_TOKEN: {
-                List<AnnotationFS> tokens = selectCovered(tokenType, annotationFS);
-                if (tokens.isEmpty()) {
-                    // This can happen if a recommender uses different token boundaries (e.g. if a
-                    // remote service performs its own tokenization). We might be smart here by
-                    // looking for overlapping tokens instead of contained tokens.
-                    log.trace("Discarding suggestion because no covering token was found: {}",
-                            annotationFS);
-                    continue;
-                }
-                
-                AnnotationFS firstToken = tokens.get(0);
-                AnnotationFS lastToken = tokens.get(tokens.size() - 1);
-                
-                if (!firstToken.equals(lastToken)) {
-                    // We only want to accept single-token suggestions
-                    log.trace("Discarding suggestion because only single-token suggestions are "
-                            + "accepted: {}", annotationFS);
-                    continue;
-                }
-                
-                begin = firstToken.getBegin();
-                end = lastToken.getEnd();
-                break;
-            }
-            case TOKENS: {
-                List<AnnotationFS> tokens = selectCovered(tokenType, annotationFS);
-                if (tokens.isEmpty()) {
-                    // This can happen if a recommender uses different token boundaries (e.g. if a
-                    // remote service performs its own tokenization). We might be smart here by
-                    // looking for overlapping tokens instead of contained tokens.
-                    log.trace("Discarding suggestion because no covering tokens were found: {}",
-                            annotationFS);
-                    continue;
-                }
-                
-                begin = tokens.get(0).getBegin();
-                end = tokens.get(tokens.size() - 1).getEnd();
-                break;
-            }
-            case SENTENCES: {
-                List<AnnotationFS> sentences = selectCovered(sentenceType, annotationFS);
-                if (sentences.isEmpty()) {
-                    // This can happen if a recommender uses different token boundaries (e.g. if a
-                    // remote service performs its own tokenization). We might be smart here by
-                    // looking for overlapping sentences instead of contained sentences.
-                    log.trace("Discarding suggestion because no covering sentences were found: {}",
-                            annotationFS);
-                    continue;
-                }
-                
-                begin = sentences.get(0).getBegin();
-                end = sentences.get(sentences.size() - 1).getEnd();
-                break;
-            }
-            default:
-                throw new IllegalStateException("Unknown anchoring mode: ["
-                        + aRecommender.getLayer().getAnchoringMode() + "]");
-            }
-
-            String label = annotationFS.getFeatureValueAsString(predictedFeature);
-            double score = annotationFS.getDoubleValue(scoreFeature);
-            String scoreExplanation = annotationFS.getStringValue(scoreExplanationFeature);
+            String label = predictedAnnotation.getFeatureValueAsString(predictedFeature);
+            double score = predictedAnnotation.getDoubleValue(scoreFeature);
+            String scoreExplanation = predictedAnnotation.getStringValue(scoreExplanationFeature);
             String name = aRecommender.getName();
 
-            AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
-                    aRecommender.getLayer().getId(), featureName, aDocument.getName(), begin, end,
-                    annotationFS.getCoveredText(), label, label, score, scoreExplanation);
+            AnnotationSuggestion_ImplBase suggestion;
+            
+            switch (aRecommender.getLayer().getType()) {
+            case WebAnnoConst.SPAN_TYPE: {
+                Optional<Offset> targetOffsets = getOffsets(aRecommender.getLayer(), aOriginalCas,
+                        predictedAnnotation);
+                
+                if (!targetOffsets.isPresent()) {
+                    continue;
+                }
 
-            result.add(ao);
+                suggestion = new AnnotationSuggestion(id, aRecommender.getId(), name,
+                        aRecommender.getLayer().getId(), featureName, aDocument.getName(),
+                        targetOffsets.get().getBegin(), targetOffsets.get().getEnd(),
+                        predictedAnnotation.getCoveredText(), label, label, score,
+                        scoreExplanation);
+                break;
+            }
+            default: 
+                throw new IllegalStateException(
+                        "Unsupport layer type [" + aRecommender.getLayer().getType() + "]");
+            }
+                        
+            result.add(suggestion);
             id++;
-
             predictionCount++;
         }
 
@@ -1296,11 +1247,119 @@ public class RecommendationServiceImpl
     }
     
     /**
+     * Locates an annotation in the given CAS which is equivalent of the provided annotation.
+     * 
+     * @param aOriginalCas
+     *            the original CAS.
+     * @param aAnnotation
+     *            an annotation in the prediction CAS. return the equivalent in the original CAS.
+     */
+    private Optional<Annotation> findEquivalent(CAS aOriginalCas, Annotation aAnnotation)
+    {
+        return aOriginalCas.<Annotation>select(aAnnotation.getType())
+                .filter(candidate -> isEquivalentAnnotation(candidate, aAnnotation))
+                .findFirst();
+    }
+    
+    /**
+     * Calculates the offsets of the given predicted annotation in the original CAS .
+     * 
+     * @param aLayer
+     *            the prediction layer definition.
+     * @param aOriginalCas
+     *            the original CAS.
+     * @param aPredictedAnnotation
+     *            the predicted annotation.
+     * @return the proper offsets.
+     */
+    private Optional<Offset> getOffsets(AnnotationLayer aLayer, CAS aOriginalCas,
+            Annotation aPredictedAnnotation)
+    {
+        Type tokenType = getType(aOriginalCas, Token.class);
+        Type sentenceType = getType(aOriginalCas, Sentence.class);
+        
+        int begin;
+        int end;
+        switch (aLayer.getAnchoringMode()) {
+        case CHARACTERS: {
+            int[] offsets = { aPredictedAnnotation.getBegin(), aPredictedAnnotation.getEnd() };
+            TrimUtils.trim(aPredictedAnnotation.getCAS().getDocumentText(), offsets);
+            begin = offsets[0];
+            end = offsets[1];
+            break;
+        }
+        case SINGLE_TOKEN: {
+            List<Annotation> tokens = aOriginalCas.<Annotation>select(tokenType)
+                    .coveredBy(aPredictedAnnotation).limit(2).asList();
+            
+            if (tokens.isEmpty()) {
+                // This can happen if a recommender uses different token boundaries (e.g. if a
+                // remote service performs its own tokenization). We might be smart here by
+                // looking for overlapping tokens instead of contained tokens.
+                log.trace("Discarding suggestion because no covering token was found: {}",
+                        aPredictedAnnotation);
+                return Optional.empty();
+            }
+            
+            if (tokens.size() > 1) {
+                // We only want to accept single-token suggestions
+                log.trace("Discarding suggestion because only single-token suggestions are "
+                        + "accepted: {}", aPredictedAnnotation);
+                return Optional.empty();
+            }
+            
+            AnnotationFS token = tokens.get(0);
+            begin = token.getBegin();
+            end = token.getEnd();
+            break;
+        }
+        case TOKENS: {
+            List<Annotation> tokens = aOriginalCas.<Annotation>select(tokenType)
+                    .coveredBy(aPredictedAnnotation).asList();
+            
+            if (tokens.isEmpty()) {
+                // This can happen if a recommender uses different token boundaries (e.g. if a
+                // remote service performs its own tokenization). We might be smart here by
+                // looking for overlapping tokens instead of contained tokens.
+                log.trace("Discarding suggestion because no covering tokens were found: {}",
+                        aPredictedAnnotation);
+                return Optional.empty();
+            }
+            
+            begin = tokens.get(0).getBegin();
+            end = tokens.get(tokens.size() - 1).getEnd();
+            break;
+        }
+        case SENTENCES: {
+            List<AnnotationFS> sentences = selectCovered(sentenceType, aPredictedAnnotation);
+            if (sentences.isEmpty()) {
+                // This can happen if a recommender uses different token boundaries (e.g. if a
+                // remote service performs its own tokenization). We might be smart here by
+                // looking for overlapping sentences instead of contained sentences.
+                log.trace("Discarding suggestion because no covering sentences were found: {}",
+                        aPredictedAnnotation);
+                return Optional.empty();
+            }
+            
+            begin = sentences.get(0).getBegin();
+            end = sentences.get(sentences.size() - 1).getEnd();
+            break;
+        }
+        default:
+            throw new IllegalStateException("Unknown anchoring mode: ["
+                    + aLayer.getAnchoringMode() + "]");
+        }        
+        
+        return Optional.of(new Offset(begin, end));
+    }
+    
+    /**
      * Goes through all AnnotationObjects and determines the visibility of each one
      */
     @Override
     public void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd)
+            Collection<SuggestionGroup<AnnotationSuggestion_ImplBase>> aRecommendations,
+            int aWindowBegin, int aWindowEnd)
     {
         // NOTE: In order to avoid having to upgrade the "original CAS" in computePredictions,this
         // method is implemented in such a way that it gracefully handles cases where the CAS and
@@ -1323,14 +1382,17 @@ public class RecommendationServiceImpl
                 .collect(toList());
 
         // Collect all suggestions of the given layer within the view window
-        List<SuggestionGroup> suggestionsInWindow = aRecommendations.stream()
+        List<SuggestionGroup<AnnotationSuggestion>> suggestionsInWindow = aRecommendations.stream()
                 // Only suggestions for the given layer
                 .filter(group -> group.getLayerId() == aLayer.getId())
                 // ... and in the given window
+                .filter(group -> group.getPosition() instanceof Offset)
                 .filter(group -> {
-                    Offset offset = group.getOffset();
+                    Offset offset = (Offset) group.getPosition();
                     return aWindowBegin <= offset.getBegin() && offset.getEnd() <= aWindowEnd;
-                }).collect(toList());
+                })
+                .map(group -> (SuggestionGroup<AnnotationSuggestion>) (SuggestionGroup) group)
+                .collect(toList());
 
         // Get all the skipped/rejected entries for the current layer
         List<LearningRecord> recordedAnnotations = learningRecordService.listRecords(aUser,
@@ -1359,11 +1421,11 @@ public class RecommendationServiceImpl
 
             // Reduce the suggestions to the ones for the given feature. We can use the tree here
             // since we only have a single SuggestionGroup for every position
-            Map<Offset, SuggestionGroup> suggestions = new TreeMap<>(
+            Map<Offset, SuggestionGroup<AnnotationSuggestion>> suggestions = new TreeMap<>(
                     comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
             suggestionsInWindow.stream()
                     .filter(group -> group.getFeature().equals(feature.getName()))
-                    .forEach(group -> suggestions.put(group.getOffset(), group));
+                    .forEach(group -> suggestions.put((Offset) group.getPosition(), group));
 
             // If there are no suggestions or no annotations, there is nothing to do here
             if (suggestions.isEmpty() || annotations.isEmpty()) {
@@ -1382,7 +1444,7 @@ public class RecommendationServiceImpl
             while (oi.hasNext()) {
                 if (oi.getA().overlaps(oi.getB())) {
                     // Fetch the current suggestion and annotation
-                    SuggestionGroup group = suggestions.get(oi.getA());
+                    SuggestionGroup<AnnotationSuggestion> group = suggestions.get(oi.getA());
                     for (AnnotationFS annotation : annotations.get(oi.getB())) {
                         String label = annotation.getFeatureValueAsString(feat);
                         for (AnnotationSuggestion_ImplBase suggestion : group) {
@@ -1403,7 +1465,7 @@ public class RecommendationServiceImpl
 
             // Anything that was not hidden so far might still have been rejected
             suggestions.values().stream().flatMap(SuggestionGroup::stream)
-                    .filter(AnnotationSuggestion::isVisible)
+                    .filter(AnnotationSuggestion_ImplBase::isVisible)
                     .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
                             recordedAnnotations));
         }
