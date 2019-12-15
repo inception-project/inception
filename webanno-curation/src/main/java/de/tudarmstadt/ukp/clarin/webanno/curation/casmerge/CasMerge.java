@@ -22,10 +22,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentAnnotation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.shouldIgnoreFeatureOnMerge;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
@@ -39,7 +41,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -412,75 +413,11 @@ public class CasMerge
             aCas.addFsToIndexes(createSentence(aCas, s.getBegin(), s.getEnd()));
         }
     }
-    /**
-     * Do not check on agreement on Position and SOfa feature - already checked
-     */
-    private static boolean isBasicFeature(Feature aFeature)
-    {
-        // FIXME The two parts of this OR statement seem to be redundant. Also the order
-        // of the check should be changes such that equals is called on the constant.
-        return aFeature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
-                || aFeature.toString().equals("uima.cas.AnnotationBase:sofa");
-    }
-
-    /**
-     * Return true if these two annotations agree on every non slot features
-     */
-    private static boolean isSameAnno(AnnotationFS aFs1, AnnotationFS aFs2)
-    {
-        // Check offsets (because they are excluded by shouldIgnoreFeatureOnMerge())
-        if (aFs1.getBegin() != aFs2.getBegin() || aFs1.getEnd() != aFs2.getEnd()) {
-            return false;
-        }
-        
-        // Check the features (basically limiting to the primitive features)
-        for (Feature f : aFs1.getType().getFeatures()) {
-            if (shouldIgnoreFeatureOnMerge(aFs1, f)) {
-                continue;
-            }
-
-            Object value1 = getFeatureValue(aFs1, f);
-            Object value2 = getFeatureValue(aFs2, f);
-            
-            if (!Objects.equals(value1, value2)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Get the feature value of this {@code Feature} on this annotation
-     */
-    private static Object getFeatureValue(FeatureStructure aFS, Feature aFeature)
-    {
-        switch (aFeature.getRange().getName()) {
-        case CAS.TYPE_NAME_STRING:
-            return aFS.getFeatureValueAsString(aFeature);
-        case CAS.TYPE_NAME_BOOLEAN:
-            return aFS.getBooleanValue(aFeature);
-        case CAS.TYPE_NAME_FLOAT:
-            return aFS.getFloatValue(aFeature);
-        case CAS.TYPE_NAME_INTEGER:
-            return aFS.getIntValue(aFeature);
-        case CAS.TYPE_NAME_BYTE:
-            return aFS.getByteValue(aFeature);
-        case CAS.TYPE_NAME_DOUBLE:
-            return aFS.getDoubleValue(aFeature);
-        case CAS.TYPE_NAME_LONG:
-            aFS.getLongValue(aFeature);
-        case CAS.TYPE_NAME_SHORT:
-            aFS.getShortValue(aFeature);
-        default:
-            return null;
-        // return aFS.getFeatureValue(aFeature);
-        }
-    }
 
     private static boolean existsSameAt(CAS aCas, AnnotationFS aFs)
     {
         return CasUtil.selectAt(aCas, aFs.getType(), aFs.getBegin(), aFs.getEnd()).stream()
-                .filter(cand -> isSameAnno(aFs, cand))
+                .filter(cand -> isEquivalentAnnotation(aFs, cand))
                 .findAny()
                 .isPresent();
     }
@@ -536,16 +473,8 @@ public class CasMerge
     {
         return selectCovered(aTargetCas, aSource.getType(), aSource.getBegin(), aSource.getEnd())
                 .stream()
-                .filter(fs -> isSameAnno(fs, aSource))
+                .filter(fs -> isEquivalentAnnotation(fs, aSource))
                 .collect(Collectors.toList());
-    }
-
-    private static boolean shouldIgnoreFeatureOnMerge(FeatureStructure aFS, Feature aFeature)
-    {
-        return !WebAnnoCasUtil.isPrimitiveType(aFeature.getRange()) || 
-                isBasicFeature(aFeature) ||
-                aFeature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN) ||
-                aFeature.getName().equals(CAS.FEATURE_FULL_NAME_END);
     }
 
     public CasMergeOpertationResult mergeSpanAnnotation(SourceDocument aDocument, String aUsername,
