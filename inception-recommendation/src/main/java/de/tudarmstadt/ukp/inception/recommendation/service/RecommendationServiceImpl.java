@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentAnnotation;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_ALL;
@@ -1211,7 +1212,7 @@ public class RecommendationServiceImpl
             AnnotationSuggestion_ImplBase suggestion;
             
             switch (aRecommender.getLayer().getType()) {
-            case WebAnnoConst.SPAN_TYPE: {
+            case SPAN_TYPE: {
                 Optional<Offset> targetOffsets = getOffsets(aRecommender.getLayer(), aOriginalCas,
                         predictedAnnotation);
                 
@@ -1225,6 +1226,10 @@ public class RecommendationServiceImpl
                         predictedAnnotation.getCoveredText(), label, label, score,
                         scoreExplanation);
                 break;
+            }
+            case WebAnnoConst.RELATION_TYPE: {
+                throw new IllegalStateException(
+                        "Unsupport layer type [" + aRecommender.getLayer().getType() + "]");
             }
             default: 
                 throw new IllegalStateException(
