@@ -25,7 +25,7 @@ public class LogMessage
     private static final long serialVersionUID = 2002139781814027105L;
 
     public final LogLevel level;
-    public final Class<?> source;
+    public final String source;
     public final String message;
 
     public LogMessage(Object aSource, LogLevel aLevel, String aMessage)
@@ -36,11 +36,14 @@ public class LogMessage
     public LogMessage(Object aSource, LogLevel aLevel, String aFormat, Object... aValues)
     {
         super();
-        if (aSource instanceof Class) {
-            source = (Class) aSource;
+        if (aSource instanceof String) {
+            source = (String) aSource;
+        }
+        else if (aSource instanceof Class) {
+            source = ((Class) aSource).getSimpleName();
         }
         else {
-            source = aSource != null ? aSource.getClass() : null;
+            source = aSource != null ? aSource.getClass().getSimpleName() : null;
         }
         level = aLevel;
         message = String.format(aFormat, aValues);
@@ -56,7 +59,7 @@ public class LogMessage
         return message;
     }
     
-    public Class<?> getSource()
+    public String getSource()
     {
         return source;
     }
@@ -64,8 +67,7 @@ public class LogMessage
     @Override
     public String toString()
     {
-        return String.format("[%s] %s", source != null ? source.getSimpleName() : "<unknown>",
-                message);
+        return String.format("[%s] %s", source != null ? source : "<unknown>", message);
     }
     
     public static LogMessage info(Object aSource, String aFormat, Object... aValues)

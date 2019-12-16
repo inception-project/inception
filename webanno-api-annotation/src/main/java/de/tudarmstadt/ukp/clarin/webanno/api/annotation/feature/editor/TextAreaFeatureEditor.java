@@ -48,8 +48,8 @@ public class TextAreaFeatureEditor
         textarea.add(new AjaxPreventSubmitBehavior());
         try {
             String traitsString = getModelObject().feature.getTraits();
-            UimaStringTraits traits = 
-                    JSONUtil.fromJsonString(UimaStringTraits.class, traitsString);
+            StringFeatureTraits traits = 
+                    JSONUtil.fromJsonString(StringFeatureTraits.class, traitsString);
             textarea.add(new AttributeModifier("rows", traits.getCollapsedRows()));
             textarea.add(new AttributeAppender("onfocus",
                     "this.rows=" + traits.getExpandedRows() + ";"));

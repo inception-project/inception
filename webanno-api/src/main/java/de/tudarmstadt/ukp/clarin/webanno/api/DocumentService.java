@@ -379,6 +379,7 @@ public interface DocumentService
 
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created. 
+     * This method does not perform an upgrade of the type system in the CAS.
      * 
      * @param aDocument
      *            the source document.
@@ -387,6 +388,20 @@ public interface DocumentService
      *             if there was a problem loading the CAS.
      */
     CAS createOrReadInitialCas(SourceDocument aDocument)
+        throws IOException;
+    
+    /**
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created.
+     * 
+     * @param aDocument
+     *            the source document.
+     * @param aUpgradeMode
+     *            whether to upgrade the type system in the CAS.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading the CAS.
+     */
+    CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode)
         throws IOException;
 
     /**

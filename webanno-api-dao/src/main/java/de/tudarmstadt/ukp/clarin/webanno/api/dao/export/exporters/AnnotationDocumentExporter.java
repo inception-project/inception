@@ -44,6 +44,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -94,14 +95,16 @@ public class AnnotationDocumentExporter
     }
     
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        exportAnnotationDocuments(aRequest.getProject(), aExProject);
-        exportAnnotationDocumentContents(aRequest, aExProject, aStage);
+        exportAnnotationDocuments(aMonitor, aRequest.getProject(), aExProject);
+        exportAnnotationDocumentContents(aRequest, aMonitor, aExProject, aStage);
     }
     
-    private void exportAnnotationDocuments(Project aProject, ExportedProject aExProject)
+    private void exportAnnotationDocuments(ProjectExportTaskMonitor aMonitor, Project aProject,
+            ExportedProject aExProject)
     {
         List<ExportedAnnotationDocument> annotationDocuments = new ArrayList<>();
 
@@ -127,14 +130,14 @@ public class AnnotationDocumentExporter
     }
 
     private void exportAnnotationDocumentContents(ProjectExportRequest aRequest,
-            ExportedProject aExProject, File aStage)
+            ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
         throws UIMAException, ClassNotFoundException, IOException
     {
         Project project = aRequest.getProject();
         
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
         int i = 1;
-        int initProgress = aRequest.progress;
+        int initProgress = aMonitor.getProgress();
         for (SourceDocument sourceDocument : documents) {
             //
             // Export initial CASes
@@ -172,10 +175,12 @@ public class AnnotationDocumentExporter
             
             FormatSupport format = importExportService.getWritableFormatById(formatId)
                     .orElseGet(() -> {
-                        aRequest.addMessage(LogMessage.error(this,"[%s] No writer found for "
-                                + "format [%s] - exporting as WebAnno TSV instead.",
-                                sourceDocument.getName(), aRequest.getFormat()));
-                        return new WebAnnoTsv3FormatSupport();
+                        FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
+                        aMonitor.addMessage(LogMessage.error(this,"Annotation: [%s] No writer "
+                                + "found for original format [%s] - exporting as [%s] "
+                                + "instead.",
+                                sourceDocument.getName(), formatId, fallbackFormat.getName()));
+                        return fallbackFormat;
                     });
 
             // Export annotations from regular users
@@ -252,8 +257,8 @@ public class AnnotationDocumentExporter
                 }
             }
             
-            aRequest.progress = initProgress
-                    + (int) Math.ceil(((double) i) / documents.size() * 80.0);
+            aMonitor.setProgress(initProgress
+                    + (int) Math.ceil(((double) i) / documents.size() * 80.0));
             i++;
         }
     }

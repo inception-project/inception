@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
@@ -24,7 +26,10 @@ import org.apache.wicket.model.IModel;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class InputFieldTextFeatureEditor
     extends TextFeatureEditorBase
@@ -32,9 +37,18 @@ public class InputFieldTextFeatureEditor
     private static final long serialVersionUID = 8686646370500180943L;
 
     public InputFieldTextFeatureEditor(String aId, MarkupContainer aItem,
-            IModel<FeatureState> aModel)
+            IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, aModel);
+        
+        AnnotationFeature feat = getModelObject().feature;
+        StringFeatureTraits traits = readFeatureTraits(feat);
+        
+        add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
+                // The key bindings are only visible when the label is also enabled, i.e. when the
+                // editor is used in a "normal" context and not e.g. in the keybindings 
+                // configuration panel
+                .add(visibleWhen(() -> getLabelComponent().isVisible())));
     }
 
     @Override

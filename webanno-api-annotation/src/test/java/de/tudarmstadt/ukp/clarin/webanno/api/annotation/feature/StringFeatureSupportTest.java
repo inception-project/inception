@@ -38,11 +38,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
-public class PrimitiveUimaFeatureSupportTest
+public class StringFeatureSupportTest
 {
     private @Mock AnnotationSchemaService schemaService;
     
-    private PrimitiveUimaFeatureSupport sut;
+    private StringFeatureSupport sut;
     
     private JCas jcas;
     private AnnotationFS spanFS;
@@ -54,7 +54,7 @@ public class PrimitiveUimaFeatureSupportTest
     {
         initMocks(this);
         
-        sut = new PrimitiveUimaFeatureSupport(new PrimitiveUimaFeatureSupportProperties(),
+        sut = new StringFeatureSupport(new PrimitiveUimaFeatureSupportProperties(),
                 schemaService);
         
         valueFeature = new AnnotationFeature("value", CAS.TYPE_NAME_STRING);

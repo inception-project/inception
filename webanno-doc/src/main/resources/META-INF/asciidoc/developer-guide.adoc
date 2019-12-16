@@ -49,6 +49,10 @@ include::{include-dir}annotation-editor.adoc[leveloffset=+1]
 
 include::{include-dir}annotation-editor-paging.adoc[leveloffset=+2]
 
+include::{include-dir}format-support-extensions.adoc[leveloffset=+1]
+
+include::{include-dir}repository.adoc[leveloffset=+1]
+
 <<<
 
 

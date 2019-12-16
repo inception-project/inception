@@ -1,7 +1,7 @@
 {
-  "name" : "UD Universal POS tags",
+  "name" : "UD Universal POS tags (v2)",
   "typeUiName" : null,
-  "description" : "These tags mark the core part-of-speech categories from the Universal Dependencies project. To distinguish additional lexical and grammatical properties of words, use the universal features.\r\n\r\n© 2014 Universal Dependencies contributors\r\n\r\nSee: http://universaldependencies.org/u/pos/index.html",
+  "description" : "These tags mark the core part-of-speech categories from the Universal Dependencies project. To distinguish additional lexical and grammatical properties of words, use the universal features.\r\n\r\n© 2017 Universal Dependencies contributors\r\n\r\nSee: https://universaldependencies.org/u/pos/index.html",
   "language" : "mul",
   "type" : null,
   "type_name" : null,
@@ -17,9 +17,9 @@
     "tag_description" : "adverb"
   }, {
     "tag_name" : "AUX",
-    "tag_description" : "auxiliary verb"
+    "tag_description" : "auxiliary"
   }, {
-    "tag_name" : "CONJ",
+    "tag_name" : "CCONJ",
     "tag_description" : "coordinating conjunction"
   }, {
     "tag_name" : "DET",

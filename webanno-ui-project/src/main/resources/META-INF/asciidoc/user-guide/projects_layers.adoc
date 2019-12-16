@@ -15,7 +15,7 @@ This section provides a short walk-through on the creation of a custom layer. Th
   * Press the *Save layer* button
 . Create the feature _Polarity_
   * Press the *New feature* button
-  * Choose the *type* of the feature: _uima.cas.String_
+  * Choose the *type* of the feature: _Primitive: String_
   * Enter the *name* of the feature: _Polarity_
   * Press *Save feature*
 . Create the tagset _Polarity values_
@@ -216,45 +216,12 @@ _(chain)_
 [[sect_projects_layers_features]]
 == Features
 
-image::layer3.jpg[align="center"]
+image::layer_feature_details.png[align="center"]
 
 In this section, features and their properties can be configured. 
 
 NOTE: When a feature is first created, only ASCII characters are allowed for the feature name because the internal UIMA name is derived from the initial layer name. After the feature has been created, the name can be changed arbitrarily. The internal UIMA feature name will not be updated. The internal UIMA name is
 e.g. used when exporting data or in constraint rules.
-
-.Feature properties
-[cols="1v,2", options="header"]
-|====
-| Property | Description
-
-| Internal name
-| Internal UIMA feature name
-
-| Type
-| The type of the feature (obligatory, see below)
-
-| Name
-| The name of the feature (obligatory)
-
-| Description
-| A description that is shown when the mouse hovers over the feature name in the annotation detail editor panel.
-
-| Enabled
-| Features cannot be deleted, but they can be disabled
-
-| Show
-| Whether the feature value is shown in the annotation label. If this is disabled, the feature is only visible in the annotation detail editor panel.
-
-| Remember
-| Whether the annotation detail editor should carry values of this feature
-over when creating a new annotation of the same type. This can be useful when creating many annotations
-of the same type in a row.
-
-| Tagset
-_(String)_
-| The tagset controlling the possible values for a string feature.
-|====
 
 The following feature types are supported.
 
@@ -284,10 +251,54 @@ _(Span layers)_
 | Link feature that can point only to the selected span layer.
 |====
 
+
+.General feature properties
+[cols="1v,2", options="header"]
+|====
+| Property | Description
+
+| Internal name
+| Internal UIMA feature name
+
+| Type
+| The type of the feature (obligatory, see below)
+
+| Name
+| The name of the feature (obligatory)
+
+| Description
+| A description that is shown when the mouse hovers over the feature name in the annotation detail editor panel.
+
+| Enabled
+| Features cannot be deleted, but they can be disabled
+
+| Show
+| Whether the feature value is shown in the annotation label. If this is disabled, the feature is only visible in the annotation detail editor panel.
+
+| Remember
+| Whether the annotation detail editor should carry values of this feature
+over when creating a new annotation of the same type. This can be useful when creating many annotations
+of the same type in a row.
+|====
+
+
+=== String features
+
+A string feature uses a simple input field to enter text. When enabling *multiple rows*, then a
+multi-line text area is used instead - in this case, no tagset can be assigned to the feature.
+
+If a tagset is assigned, then a combo box or auto-complete input field will be used - depending
+on the number of tags in the tagset. The instance administrator can globally configure the threshold
+for switching from a combo box to an auto-complete via the 
+`annotation.feature-support.string.autoCompleteThreshold` in the `settings.properties` file.
+
 .String feature properties
 [cols="1v,2", options="header"]
 |====
 | Property | Description
+
+| Tagset
+| The tagset controlling the possible values for a string feature.
 
 | Multiple Rows
 | If enabled the textfield will be replaced by a textarea which expands on focus. This also enables options to set the size of the textarea and disables tagsets.
@@ -302,6 +313,9 @@ _(Span layers)_
 | Set the number of rows for the textarea when it is expanded and not focused.
 |====
 
+
+=== Number features
+
 .Number feature properties
 [cols="1v,2", options="header"]
 |====
@@ -311,22 +325,60 @@ _(Span layers)_
 | If enabled a minimum and maximum value can be set for the number feature.
 
 | Minimum
-| Only visible if `Limited` is enabled. Determines the minimum value of the limited number feature.
+| Only visible if *Limited* is enabled. Determines the minimum value of the limited number feature.
 
 | Maximum
-| Only visible if `Limited` is enabled. Determines the maximum value of the limited number feature.
+| Only visible if *Limited* is enabled. Determines the maximum value of the limited number feature.
 
 | Editor Type
 | Select which editor should be used for modifying this features value.
 |====
+
+=== Boolean features
+
+=== Link features
 
 .Link feature properties
 [cols="1v,2", options="header"]
 |====
 | Property | Description
 
+| Tagset
+| The tagset controlling the possible values for the link roles.
+
 | Enable Role Labels
 | Allows users to add a role label to each slot when linking anntations. If disabled the UI labels of annotations will be displayed instead of role labels. This property is enabled by default.
 |====
 
-NOTE: Please take care that when working with non-custom layers, they have to be ex- and imported, if you want to use the resulting files in e.g. correction projects.
+=== Key bindings
+
+Some types of features support key bindings. This means, you can assing a combination of keys to a
+particular feature value. Pressing these keys on the annotation page while a annotation is selected
+will set the feature to the assigned value. E.g. you could assign the key combo `CTRL P` to the 
+value `PER` for the `value` feature on the *Named Entity* layer. So when you create a *Named Entity*
+annotation and then press the `CTRL P`, the value would be set to `PER`.
+
+If the focus is on an input field, the key bindings are suppressed. That means, you could even
+assign single key shortcuts like `p` for `PER` while still be able to use `p` when entering text 
+manually into an input field. Normally, the focus would jump directly to the first feature editor
+after selecting an annotation. But this is not the case if any features have key bindings defined,
+because it would render the key bindings useless (i.e. you would have to click outside of the
+feature editor input field so it looses the focus, thus activating the key bindings).
+
+When defining a key binding, you have to enter a key combo consisting of one or more of the 
+following key names:
+
+* Modifier keys: `Ctrl`, `Shift`, `Alt`, `Meta`
+* Letter keys: `a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`, `i`, `j`, `k`, `l`, `m`, `n`, `o`, `p`, `q`, `r`, `s`, `t`, `u`, `v`, `w`, `x`, `y`, `z`
+* Number keys: `0`, `1`, `2`, `3`, `4`, `5`, `6`, `7`, `8`, `9`
+* Function keys: `F1`, `F2`, `F3`, `F4`, `F5`, `F6`, `F7`, `F8`, `F9`, `F10`, `F11`, `F12`
+* Navigation keys: `Home`, `End`, `Page_up`, `Page_down`, `Left`, `Up`, `Right`, `Down`
+* Other keys: `Escape`, `Tab`, `Space`, `Return`, `Enter`, `Backspace`, `Scroll_lock`, `Caps_lock`, `Num_lock`, `Pause`, `Insert`, `Delete`
+
+Typically you would combine zero or more modifier keys with a *regular* key (letter, number, 
+function key, etc). A combination of multiple number or letter keys does not work.
+
+NOTE: Mind that you need to take care not to define the same key binding multiple times. Duplicate
+      definitions are only sensible if you can ensure that the features on which they are defined will never
+      be visible on screen simultaneously. 
+
