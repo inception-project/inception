@@ -138,6 +138,8 @@ public class ConceptLinkingServiceImpl
             return SPARQLQueryBuilder.forClasses(aKB);
         case INSTANCE:
             return SPARQLQueryBuilder.forInstances(aKB);
+        case PROPERTY:
+            return SPARQLQueryBuilder.forProperties(aKB);
         default:
             throw new IllegalArgumentException("Unknown item type: [" + aValueType + "]");
         }
