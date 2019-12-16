@@ -24,9 +24,10 @@ about: Release checklist for feature releases (first or second digit increase)
       maintenance branch and updating the branch info.
 - [ ] Remove auto-deploy configuration from the old maintenance branch
 
-**Test server**
+**Demo/test server**
 - [ ] *stable instance*: Update to release version
 - [ ] *testing instance*: Update auto-deployment script to match new SNAPSHOT version
+- [ ] *demo instance*: Update to release version
 
 **Docker**
 - [ ] Push the release to Docker
