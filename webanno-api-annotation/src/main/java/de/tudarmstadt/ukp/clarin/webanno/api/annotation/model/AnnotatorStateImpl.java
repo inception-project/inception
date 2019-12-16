@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.Serializable;
@@ -640,5 +641,12 @@ public class AnnotatorStateImpl
     public void setPagingStrategy(PagingStrategy aPagingStrategy)
     {
         pagingStrategy = aPagingStrategy;
+    }
+
+    @Override
+    public boolean isUserViewingOthersWork(User aCurrentUser)
+    {
+        return !user.getUsername().equals(CURATION_USER) && 
+                !user.equals(aCurrentUser);
     }
 }

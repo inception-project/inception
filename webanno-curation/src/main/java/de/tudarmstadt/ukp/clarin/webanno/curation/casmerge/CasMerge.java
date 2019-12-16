@@ -477,7 +477,7 @@ public class CasMerge
                 .collect(Collectors.toList());
     }
 
-    public CasMergeOpertationResult mergeSpanAnnotation(SourceDocument aDocument, String aUsername,
+    public CasMergeOperationResult mergeSpanAnnotation(SourceDocument aDocument, String aUsername,
             AnnotationLayer aAnnotationLayer, CAS aTargetCas, AnnotationFS aSourceFs,
             boolean aAllowStacking)
         throws AnnotationException

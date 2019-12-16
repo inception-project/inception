@@ -479,8 +479,7 @@ public abstract class AnnotationDetailEditorPanel
 
         AnnotatorState state = getModelObject();
         
-        if (AnnotationPageBase.isUserViewingOthersWork(getModelObject(),
-                userRepository.getCurrentUser())) {
+        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
             throw new NotEditableException("This document belongs to another user.");
         }
 
@@ -577,8 +576,7 @@ public abstract class AnnotationDetailEditorPanel
     {
         LOG.trace("actionAnnotate");
         
-        if (AnnotationPageBase.isUserViewingOthersWork(getModelObject(), 
-                userRepository.getCurrentUser())) {
+        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
             return;
         }
 
@@ -692,8 +690,7 @@ public abstract class AnnotationDetailEditorPanel
     {
         LOG.trace("actionCreateForward()");
         
-        if (AnnotationPageBase.isUserViewingOthersWork(getModelObject(), 
-                userRepository.getCurrentUser())) {
+        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
             return;
         }
 

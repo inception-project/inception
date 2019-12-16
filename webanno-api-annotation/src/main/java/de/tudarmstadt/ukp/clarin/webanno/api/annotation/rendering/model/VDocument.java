@@ -146,5 +146,8 @@ public class VDocument
         else if (aVobj instanceof VArc) {
             add((VArc) aVobj);
         }
+        else {
+            throw new IllegalArgumentException("VObject is neither VSpan nor VArc.");
+        }
     }
 }

@@ -347,7 +347,7 @@ public class AnnotationPage
         }
 
         // If we have a timestamp, then use it to detect if there was a concurrent access
-        if (!isUserViewingOthersWork(state, userRepository.getCurrentUser())) {
+        if (!state.isUserViewingOthersWork(userRepository.getCurrentUser())) {
             verifyAndUpdateDocumentTimestamp(state, documentService
                     .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
         }
@@ -359,7 +359,7 @@ public class AnnotationPage
     @Override
     public void writeEditorCas(CAS aCas) throws IOException
     {
-        if (isUserViewingOthersWork(getModelObject(), userRepository.getCurrentUser())) {
+        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
             throw new IOException("Viewing another users annotations - saving is not permitted!");
         }
         
@@ -416,7 +416,7 @@ public class AnnotationPage
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
 
-            if (!isUserViewingOthersWork(state, userRepository.getCurrentUser())) {
+            if (!state.isUserViewingOthersWork(userRepository.getCurrentUser())) {
                 // After creating an new CAS or upgrading the CAS, we need to save it
                 documentService.writeAnnotationCas(editorCas, annotationDocument, false);
                 
@@ -447,7 +447,7 @@ public class AnnotationPage
             state.moveToUnit(editorCas, aFocus + 1, TOP);
 
             // Update document state
-            if (!isUserViewingOthersWork(state, userRepository.getCurrentUser())) {
+            if (!state.isUserViewingOthersWork(userRepository.getCurrentUser())) {
                 if (SourceDocumentState.NEW.equals(state.getDocument().getState())) {
                     documentService.transitionSourceDocumentState(state.getDocument(),
                             NEW_TO_ANNOTATION_IN_PROGRESS);
@@ -627,8 +627,7 @@ public class AnnotationPage
             AnnotationDocument adoc = documentService.getAnnotationDocument(document,
                     getModelObject().getUser());
             if (AnnotationDocumentState.IGNORE.equals(adoc.getState())
-                    && !isUserViewingOthersWork(getModelObject(), 
-                            userRepository.getCurrentUser())) {
+                    && !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
                 error("Document [" + document.getId() + "] in project [" + project.getId()
                         + "] is locked for user [" + getModelObject().getUser().getUsername()
                         + "]");
@@ -699,7 +698,7 @@ public class AnnotationPage
     protected void loadPreferences() throws BeansException, IOException
     {
         AnnotatorState state = getModelObject();
-        if (isUserViewingOthersWork(state, userRepository.getCurrentUser()) || 
+        if (state.isUserViewingOthersWork(userRepository.getCurrentUser()) || 
                 state.getUser().getUsername().equals(CURATION_USER)) {
             PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
                     state, userRepository.getCurrentUser().getUsername());

@@ -115,6 +115,11 @@ public interface AnnotatorState
     User getUser();
 
     void setUser(User aUser);
+    
+    /**
+     * User is viewing other people's work (read-only), but not as Curation User
+     */
+    boolean isUserViewingOthersWork(User aCurrentUser);
 
     // ---------------------------------------------------------------------------------------------
     // Project
