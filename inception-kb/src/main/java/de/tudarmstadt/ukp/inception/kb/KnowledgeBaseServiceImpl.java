@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -147,8 +146,8 @@ public class KnowledgeBaseServiceImpl
     {
         Caffeine<QueryKey, List<KBHandle>> cacheBuilder = Caffeine.newBuilder()
                 .maximumWeight(aKBProperties.getCacheSize())
-                .expireAfterAccess(aKBProperties.getCacheExpireDelay(), TimeUnit.MINUTES)
-                .refreshAfterWrite(aKBProperties.getCacheRefreshDelay(), TimeUnit.MINUTES)
+                .expireAfterAccess(aKBProperties.getCacheExpireDelay())
+                .refreshAfterWrite(aKBProperties.getCacheRefreshDelay())
                 .weigher((QueryKey key, List<KBHandle> value) -> value.size());
         
         if (log.isTraceEnabled()) {

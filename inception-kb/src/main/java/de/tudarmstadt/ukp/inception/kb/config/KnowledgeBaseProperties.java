@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.config;
 
+import java.time.Duration;
 
 public interface KnowledgeBaseProperties
 {
@@ -34,10 +35,10 @@ public interface KnowledgeBaseProperties
      * The time before KB items are dropped from the cache if they have not been accessed (in
      * minutes).
      */
-    int getCacheExpireDelay();
+    Duration getCacheExpireDelay();
 
     /**
      * The time before KB items are asynchronously refreshed (in minutes).
      */
-    int getCacheRefreshDelay();
+    Duration getCacheRefreshDelay();
 }

@@ -47,4 +47,19 @@ an example of how the parameter can be configured below:
 | hard limit for the maximum number of results from a query
 | 10000
 | 5000
+
+| inception.knowledge-base.cacheSize
+| number of items (classes, instances and properties) to cache
+| 100000
+| 500000
+
+| inception.knowledge-base.cacheExpireDelay
+| time before items are expunged from the cache
+| 15m
+| 1h
+
+| inception.knowledge-base.cacheRefreshDelay
+| time before items are asynchronously refreshed
+| 5m
+| 30m
 |===

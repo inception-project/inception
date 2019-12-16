@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.kb.config;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.convert.DurationUnit;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -30,8 +34,12 @@ public class KnowledgeBasePropertiesImpl
     private int defaultMaxResults = 1_000;
     private int hardMaxResults = 10_000;
     private long cacheSize = 100_000;
-    private int cacheExpireDelay = 15;
-    private int cacheRefreshDelay = 5;
+    
+    @DurationUnit(ChronoUnit.MINUTES)
+    private Duration cacheExpireDelay = Duration.ofMinutes(15);
+    
+    @DurationUnit(ChronoUnit.MINUTES)
+    private Duration cacheRefreshDelay = Duration.ofMinutes(5);
 
     @Override
     public int getDefaultMaxResults()
@@ -67,23 +75,23 @@ public class KnowledgeBasePropertiesImpl
     }
 
     @Override
-    public int getCacheExpireDelay()
+    public Duration getCacheExpireDelay()
     {
         return cacheExpireDelay;
     }
     
-    public void setCacheExpireDelay(int aCacheExpireDelay)
+    public void setCacheExpireDelay(Duration aCacheExpireDelay)
     {
         cacheExpireDelay = aCacheExpireDelay;
     }
 
     @Override
-    public int getCacheRefreshDelay()
+    public Duration getCacheRefreshDelay()
     {
         return cacheRefreshDelay;
     }
     
-    public void setCacheRefreshDelay(int aCacheRefreshDelay)
+    public void setCacheRefreshDelay(Duration aCacheRefreshDelay)
     {
         cacheRefreshDelay = aCacheRefreshDelay;
     }
