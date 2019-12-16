@@ -196,4 +196,11 @@ public class StringFeatureSupport
             log.error("Unable to write traits", e);
         }
     }
+    
+    @Override
+    public boolean suppressAutoFocus(AnnotationFeature aFeature)
+    {
+        StringFeatureTraits traits = readTraits(aFeature);
+        return !traits.getKeyBindings().isEmpty();
+    }
 }
