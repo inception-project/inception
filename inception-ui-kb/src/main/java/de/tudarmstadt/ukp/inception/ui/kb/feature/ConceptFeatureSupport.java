@@ -138,11 +138,11 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
+    public String renderFeatureValue(AnnotationFeature aFeature, String aIdentifier)
     {
         String renderValue = null;
-        if (aLabel != null) {
-            return labelCache.get(new Key(aFeature, aLabel)).getUiLabel();
+        if (aIdentifier != null) {
+            return labelCache.get(new Key(aFeature, aIdentifier)).getUiLabel();
         }
         return renderValue;
     }
@@ -202,7 +202,10 @@ public class ConceptFeatureSupport
     {
         if (aValue instanceof String) {
             String identifier = (String) aValue;
-            return new KBHandle(identifier, renderFeatureValue(aFeature, identifier));
+            String label = renderFeatureValue(aFeature, identifier);
+            String description = labelCache.get(new Key(aFeature, identifier)).getDescription();
+            
+            return new KBHandle(identifier, label, description);
         }
         else if (aValue instanceof KBHandle) {
             return (KBHandle) aValue;
