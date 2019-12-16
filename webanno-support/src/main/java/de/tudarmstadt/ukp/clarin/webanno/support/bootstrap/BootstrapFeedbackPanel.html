@@ -21,7 +21,8 @@
 <wicket:panel>
   <ul wicket:id="feedbackul" class="feedbackPanel">
     <li wicket:id="closeAll" class="alert alert-warning">
-      <a href="#" onClick="$('.alert').alert('close')">Dismiss all messages</a>
+      <button class="btn btn-primary" onClick="$('.alert').alert('close')">Dismiss all messages</button>
+      After checking the messages below, you can use this button to dismiss all messages at once.
     </li>
     <li wicket:id="messages">
       <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
@@ -30,7 +31,7 @@
   </ul>
   <script>
     setTimeout(function() {
-      	$(".alert.alert-success").fadeTo(600, 0, function(){
+      $(".alert.alert-success").fadeTo(600, 0, function(){
         $(".alert.alert-success").alert('close');
       });
       $(".alert.alert-info").fadeTo(600, 0, function(){
