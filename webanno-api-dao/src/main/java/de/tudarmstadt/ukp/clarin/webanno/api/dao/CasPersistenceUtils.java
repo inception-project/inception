@@ -29,11 +29,20 @@ import java.io.ObjectOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.SerialFormat;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCreationUtils;
+import org.apache.uima.util.CasIOUtils;
+import org.apache.uima.util.TypeSystemUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class CasPersistenceUtils
 {
+    private final static Logger LOG = LoggerFactory.getLogger(CasPersistenceUtils.class);
+    
     private CasPersistenceUtils()
     {
         // No instances
@@ -43,10 +52,60 @@ public final class CasPersistenceUtils
         throws IOException
     {
         FileUtils.forceMkdir(aFile.getParentFile());
+        
+        CASCompleteSerializer serializer = null;
+        
+        try {
+            serializer = serializeCASComplete((CASImpl) aCas);
+
+            // BEGIN SAFEGUARD --------------
+            // Safeguard that we do NOT write a CAS which can afterwards not be read and thus would
+            // render the document broken within the project
+            // Reason we do this: https://issues.apache.org/jira/browse/UIMA-6162
+            CAS dummy = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+
+            deserializeCASComplete(serializer, (CASImpl) dummy);
+            // END SAFEGUARD --------------
+        }
+        catch (Exception e) {
+            if (LOG.isDebugEnabled()) {
+                preserveForDebugging(aFile, aCas, serializer);
+            }
+            throw new IOException(e);
+        }
 
         try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
-            CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aCas);
             os.writeObject(serializer);
+        }
+    }
+        
+    private static void preserveForDebugging(File aFile, CAS aCas,
+            CASCompleteSerializer aSerializer)
+    {
+        long ts = System.currentTimeMillis();
+        
+        try (FileOutputStream xmiout = new FileOutputStream(
+                new File(aFile.getPath() + ".borked-" + ts + ".xmi"))) {
+            CasIOUtils.save(aCas, xmiout, SerialFormat.XMI);
+        }
+        catch (Exception e2) {
+            LOG.error("Debug XMI serialization failed: {}", e2.getMessage(), e2);
+        }
+
+        try (FileOutputStream tsout = new FileOutputStream(
+                new File(aFile.getPath() + ".borked-" + ts + ".ts.xml"))) {
+            TypeSystemUtil.typeSystem2TypeSystemDescription(aCas.getTypeSystem()).toXML(tsout);
+        }
+        catch (Exception e2) {
+            LOG.error("Debug type system serialization failed: {}", e2.getMessage(), e2);
+        }
+        
+        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(
+                new File(aFile.getPath() + ".borked-" + ts + ".ser")))) {
+            os.writeObject(aSerializer);
+        }
+        catch (Exception e2) {
+            LOG.error("Debug serialization failed: {}", e2.getMessage(), e2);
         }
     }
 
