@@ -883,6 +883,11 @@ public class RecommendationServiceImpl
         public boolean switchPredictions()
         {
             if (incomingPredictions != null) {
+                // This can be used for debugging purposes to get a longer history - do not 
+                // enable this for production!
+                if (activePredictions != null) {
+                    activePredictions.getLog().forEach(incomingPredictions::log);
+                }
                 activePredictions = incomingPredictions;
                 incomingPredictions = null;
                 return true;
@@ -1095,15 +1100,17 @@ public class RecommendationServiceImpl
                             
                             // If possible, we inherit recommendations from a previous run while
                             // the recommender is still busy
-                            List<AnnotationSuggestion> suggestions = inheritSuggestions(recommender,
-                                    activePredictions, document, username);
-                            if (!suggestions.isEmpty()) {
-                                predictions.putPredictions(suggestions);
+                            if (activePredictions != null) {
+                                List<AnnotationSuggestion> suggestions = inheritSuggestions(
+                                        recommender, activePredictions, document, username);
+                                if (!suggestions.isEmpty()) {
+                                    predictions.putPredictions(suggestions);
+                                }
+    
+                                predictions.log(LogMessage.info(r.getRecommender().getName(),
+                                        "Inherited [%d] predictions from previous run",
+                                        suggestions.size()));
                             }
-
-                            predictions.log(LogMessage.info(r.getRecommender().getName(),
-                                    "Inherited [%d] predictions from previous run",
-                                    suggestions.size()));
 
                             continue nextRecommender;
                         }
@@ -1161,14 +1168,16 @@ public class RecommendationServiceImpl
                         // If there was a previous successful run of the recommender, inherit its
                         // suggestions to avoid that all the suggestions of the recommende simply
                         // disappear.
-                        List<AnnotationSuggestion> suggestions = inheritSuggestions(recommender,
-                                activePredictions, document, username);
-                        if (!suggestions.isEmpty()) {
-                            predictions.putPredictions(suggestions);
+                        if (activePredictions != null) {
+                            List<AnnotationSuggestion> suggestions = inheritSuggestions(recommender,
+                                    activePredictions, document, username);
+                            if (!suggestions.isEmpty()) {
+                                predictions.putPredictions(suggestions);
+                            }
+                            predictions.log(LogMessage.info(r.getRecommender().getName(),
+                                    "Inherited [%d] predictions from previous run",
+                                    suggestions.size()));
                         }
-                        predictions.log(LogMessage.info(r.getRecommender().getName(),
-                                "Inherited [%d] predictions from previous run",
-                                suggestions.size()));
 
                         continue nextRecommender;
                     }
