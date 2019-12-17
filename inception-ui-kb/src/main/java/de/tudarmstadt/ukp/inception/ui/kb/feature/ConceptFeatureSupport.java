@@ -81,7 +81,7 @@ public class ConceptFeatureSupport
     
     private LoadingCache<Key, KBHandle> labelCache = Caffeine.newBuilder()
         .maximumSize(10_000)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
         .refreshAfterWrite(1, TimeUnit.MINUTES)
         .build(key -> loadLabelValue(key));
     
