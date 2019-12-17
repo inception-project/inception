@@ -44,8 +44,10 @@ public class BootstrapFeedbackPanel
         WebMarkupContainer messagesContainer = (WebMarkupContainer) get("feedbackul");
 
         WebMarkupContainer closeAll = new WebMarkupContainer("closeAll");
+        // Show the bulk-dismiss option if there are at least two sticky messages t
         closeAll.add(visibleWhen(
-            () -> getCurrentMessages().stream().anyMatch(FeedbackMessage::isWarning)));
+            () -> getCurrentMessages().stream().filter(FeedbackMessage::isWarning)
+                .limit(2).count() > 1));
         messagesContainer.add(closeAll);
     }
 
