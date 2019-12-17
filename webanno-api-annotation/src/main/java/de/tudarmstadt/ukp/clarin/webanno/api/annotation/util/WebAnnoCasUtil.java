@@ -62,19 +62,33 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class WebAnnoCasUtil
 {
+    private static final String PROP_ENFORCE_CAS_THREAD_LOCK = "inception.enforce_cas_thread_lock";
+
+    private static final boolean ENFORCE_CAS_THREAD_LOCK = System
+            .getProperty(PROP_ENFORCE_CAS_THREAD_LOCK, "false").equals("true");
+    
     public static CAS createCas() throws ResourceInitializationException
     {
         CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        cas = (CAS) Proxy.newProxyInstance(cas.getClass().getClassLoader(),
-                new Class[] { CAS.class }, new ThreadLockingInvocationHandler(cas));
+        
+        if (ENFORCE_CAS_THREAD_LOCK) {
+            cas = (CAS) Proxy.newProxyInstance(cas.getClass().getClassLoader(),
+                    new Class[] { CAS.class }, new ThreadLockingInvocationHandler(cas));
+        }
+        
         return cas;
     }
     
-    public static CAS getRealCas(CAS aCas)  {
-        if (!Proxy.isProxyClass(aCas.getClass())) {
+    public static CAS getRealCas(CAS aCas)
+    {
+        if (!ENFORCE_CAS_THREAD_LOCK) {
             return aCas;
         }
         
+        if (!Proxy.isProxyClass(aCas.getClass())) {
+            return aCas;
+        }
+
         ThreadLockingInvocationHandler handler = (ThreadLockingInvocationHandler) Proxy
                 .getInvocationHandler(aCas);
         return (CAS) handler.getTarget();
