@@ -27,6 +27,7 @@ import org.apache.wicket.model.IModel;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.ITextRenderer;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
@@ -34,6 +35,9 @@ import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
+/**
+ * Auto-complete field for accessing a knowledge base.
+ */
 public class KnowledgeBaseItemAutoCompleteField
     extends AutoCompleteTextField<KBHandle>
 {
@@ -77,18 +81,46 @@ public class KnowledgeBaseItemAutoCompleteField
     {
         return choiceProvider.apply(aInput);
     }
-
+    
     @Override
     public void onConfigure(JQueryBehavior behavior)
     {
         super.onConfigure(behavior);
-
-        behavior.setOption("autoWidth", true);
+        
         behavior.setOption("ignoreCase", false);
         behavior.setOption("delay", 500);
-        behavior.setOption("height", 500);
+        behavior.setOption("animation", false);
+        behavior.setOption("footerTemplate",
+                Options.asString("#: instance.dataSource.total() # items found"));
+        
+        // Use one-third of the browser width but not less than 300 pixels. This is better than 
+        // using the Kendo auto-sizing feature because that sometimes doesn't get the width right.
+        behavior.setOption("height", "Math.max($(window).height()*0.5,200)");
+        behavior.setOption("open", String.join(" ",
+                "function(e) {",
+                "  e.sender.list.width(Math.max($(window).width()*0.3,300));",
+                "}"));
+        
+        // Reset the values in the dropdown listbox to avoid that when opening the dropdown the next
+        // time ALL items with the same label as the selected item appear as selected
+        behavior.setOption("filtering", String.join(" ",
+                "function(e) {",
+                "  e.sender.listView.value([]);",
+                "}"));
+        
+        // Prevent scrolling action from closing the dropdown while the focus is on the input field
+        // The solution we use here is a NASTY hack, but I didn't find any other way to cancel out
+        // only the closing triggered by scrolling the browser window without having other adverse
+        // side effects such as mouse clicks or enter no longer selecting and closing the dropdown.
+        // See: https://github.com/inception-project/inception/issues/1517
+        behavior.setOption("close", String.join(" ",
+                "function(e) {",
+                "  if (new Error().stack.toString().includes('_resize')) {", 
+                "    e.preventDefault();",
+                "  }",
+                "}"));
     }
-
+    
     @Override
     protected IJQueryTemplate newTemplate()
     {
@@ -100,9 +132,14 @@ public class KnowledgeBaseItemAutoCompleteField
             public String getText()
             {
                 StringBuilder sb = new StringBuilder();
-                sb.append("<div style=\"max-width: 450px\">");
+                sb.append("<div>");
                 sb.append("  <div class=\"item-title\">");
-                sb.append("    ${ data.name }");
+                sb.append("  # if (data.rank) { #");
+                sb.append("  <span class=\"item-rank\">");
+                sb.append("    [${ data.rank }]");
+                sb.append("  </span>");
+                sb.append("  # } #");
+                sb.append("    ${ data.uiLabel }");
                 sb.append("  </div>");
                 sb.append("  <div class=\"item-identifier\">");
                 sb.append("    ${ data.identifier }");
@@ -123,9 +160,9 @@ public class KnowledgeBaseItemAutoCompleteField
             public List<String> getTextProperties()
             {
                 List<String> properties = new ArrayList<>();
-                properties.add("name");
                 properties.add("identifier");
                 properties.add("description");
+                properties.add("rank");
                 if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
                     properties.add("debugInfo");
                 }

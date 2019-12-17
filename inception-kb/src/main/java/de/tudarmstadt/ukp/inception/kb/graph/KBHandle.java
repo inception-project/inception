@@ -39,6 +39,8 @@ public class KBHandle
     private KnowledgeBase kb;
     private String language;
     
+    private int rank;
+    private double score;
     private String debugInfo;
     
     // domain and range for cases in which the KBHandle represents a property
@@ -114,11 +116,13 @@ public class KBHandle
         range = aRange;
     }
 
+    @Override
     public String getDescription()
     {
         return description;
     }
 
+    @Override
     public void setDescription(String aDescription)
     {
         description = aDescription;
@@ -180,6 +184,26 @@ public class KBHandle
     public String getDebugInfo()
     {
         return debugInfo;
+    }
+    
+    public int getRank()
+    {
+        return rank;
+    }
+
+    public void setRank(int aRank)
+    {
+        rank = aRank;
+    }
+
+    public double getScore()
+    {
+        return score;
+    }
+
+    public void setScore(double aScore)
+    {
+        score = aScore;
     }
 
     public static KBHandle of(KBObject aObject)

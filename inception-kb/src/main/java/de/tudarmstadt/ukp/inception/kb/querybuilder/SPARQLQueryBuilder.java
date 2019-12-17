@@ -502,6 +502,12 @@ public class SPARQLQueryBuilder
     {
         kb = aKB;
         mode = aMode;
+        
+        // The Wikidata search service we are using does not return properties, so we have to do 
+        // this the old-fashioned way...
+        if (Mode.PROPERTY.equals(mode) && FTS_WIKIDATA.equals(aKB.getFullTextSearchIri())) {
+            forceDisableFTS = true;
+        }
     }
     
     private void addPattern(Priority aPriority, GraphPattern aPattern)
@@ -683,6 +689,8 @@ public class SPARQLQueryBuilder
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Wikidata_FTS(values));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
+            // For exact matching, we do not make use of regexes, so we keep this as a primary
+            // condition - unlike in withLabelContainingAnyOf or withLabelStartingWith
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_No_FTS(values));
         }
         else {
@@ -1016,7 +1024,10 @@ public class SPARQLQueryBuilder
             addPattern(PRIMARY, withLabelContainingAnyOf_Wikidata_FTS(values));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_No_FTS(values));
+            // Label matching without FTS is slow, so we add this with low prio and hope that some
+            // other higher-prio condition exists which limites the number of candidates to a
+            // manageable level
+            addPattern(SECONDARY, withLabelContainingAnyOf_No_FTS(values));
         }
         else {
             throw new IllegalStateException(
@@ -1178,7 +1189,10 @@ public class SPARQLQueryBuilder
             addPattern(PRIMARY, withLabelStartingWith_Wikidata_FTS(value));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelStartingWith_No_FTS(value));
+            // Label matching without FTS is slow, so we add this with low prio and hope that some
+            // other higher-prio condition exists which limites the number of candidates to a
+            // manageable level
+            addPattern(SECONDARY, withLabelStartingWith_No_FTS(value));
         }
         else {
             throw new IllegalStateException(
@@ -1701,7 +1715,7 @@ public class SPARQLQueryBuilder
                 GraphPatterns.and(concat(primaryPatterns.stream(), primaryRestrictions.stream())
                         .toArray(GraphPattern[]::new)).getQueryString()));
         
-        // Then add the optional elements
+        // Then add the optional or lower-prio elements 
         secondaryPatterns.stream().forEach(query::where);
         
         if (serverSideReduce) {
@@ -2013,5 +2027,24 @@ public class SPARQLQueryBuilder
                 // \u00AD : SOFT HYPHEN
                 .replaceAll("[\\u00AD]", "")
                 .trim();
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof SPARQLQueryBuilder)) {
+            return false;
+        }
+        
+        SPARQLQueryBuilder castOther = (SPARQLQueryBuilder) other;
+        String query = selectQuery().getQueryString();
+        String otherQuery = castOther.selectQuery().getQueryString();
+        return query.equals(otherQuery);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return selectQuery().getQueryString().hashCode();
     }
 }
