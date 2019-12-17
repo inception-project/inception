@@ -46,7 +46,6 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +110,7 @@ public class TypeSystemAnalysis
     {
         // We create a CAS from which we can obtain an instantiated type system. With that, it
         // is easier to check type inheritance.
-        CAS cas = CasCreationUtils.createCas(aTSD, null, null);
+        CAS cas = WebAnnoCasUtil.createCas();
         TypeSystem ts = cas.getTypeSystem();
 
         for (TypeDescription td : aTSD.getTypes()) {

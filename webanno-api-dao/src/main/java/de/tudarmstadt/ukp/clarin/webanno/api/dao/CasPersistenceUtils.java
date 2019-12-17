@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 
@@ -32,12 +33,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.SerialFormat;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.apache.uima.util.TypeSystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 
 public final class CasPersistenceUtils
 {
@@ -56,15 +57,14 @@ public final class CasPersistenceUtils
         CASCompleteSerializer serializer = null;
         
         try {
-            serializer = serializeCASComplete((CASImpl) aCas);
+            serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
 
             // BEGIN SAFEGUARD --------------
             // Safeguard that we do NOT write a CAS which can afterwards not be read and thus would
             // render the document broken within the project
             // Reason we do this: https://issues.apache.org/jira/browse/UIMA-6162
-            CAS dummy = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-
-            deserializeCASComplete(serializer, (CASImpl) dummy);
+            CAS dummy = WebAnnoCasUtil.createCas();
+            deserializeCASComplete(serializer, (CASImpl) getRealCas(dummy));
             // END SAFEGUARD --------------
         }
         catch (Exception e) {
@@ -114,7 +114,7 @@ public final class CasPersistenceUtils
     {
         try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
             CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
-            deserializeCASComplete(serializer, (CASImpl) aCas);
+            deserializeCASComplete(serializer, (CASImpl) getRealCas(aCas));
         }
         catch (ClassNotFoundException e) {
             throw new IOException(e);
