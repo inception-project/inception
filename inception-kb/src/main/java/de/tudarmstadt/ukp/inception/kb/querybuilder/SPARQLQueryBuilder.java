@@ -1784,4 +1784,23 @@ public class SPARQLQueryBuilder
                 .replaceAll("[\\u00AD]", "")
                 .trim();
     }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof SPARQLQueryBuilder)) {
+            return false;
+        }
+        
+        SPARQLQueryBuilder castOther = (SPARQLQueryBuilder) other;
+        String query = selectQuery().getQueryString();
+        String otherQuery = castOther.selectQuery().getQueryString();
+        return query.equals(otherQuery);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return selectQuery().getQueryString().hashCode();
+    }
 }

@@ -45,6 +45,8 @@ import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -74,10 +76,11 @@ public class ConceptLinkingServiceImplTest
     public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
+        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
-        kbService = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        kbService = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         sut = new ConceptLinkingServiceImpl(kbService, new EntityLinkingProperties(), repoProps,
                 emptyList());
         sut.afterPropertiesSet();
