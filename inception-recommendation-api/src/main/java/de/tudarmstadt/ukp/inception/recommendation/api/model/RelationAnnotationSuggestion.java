@@ -31,18 +31,16 @@ public class RelationAnnotationSuggestion
     private static final long serialVersionUID = -1904645143661843249L;
 
     private final RelationPosition position;
-    private final String coveredText;
 
     public RelationAnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
             long aLayerId, String aFeature, String aDocumentName, AnnotationFS aSource,
-            AnnotationFS aTarget, String aCoveredText, String aLabel, String aUiLabel,
+            AnnotationFS aTarget, String aLabel, String aUiLabel,
             double aConfidence, String aConfidenceExplanation)
     {
         super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
                 aUiLabel, aConfidence, aConfidenceExplanation);
         
         position = new RelationPosition(getAddr(aSource), getAddr(aTarget));
-        coveredText = aCoveredText;
     }
 
     /**
@@ -56,15 +54,9 @@ public class RelationAnnotationSuggestion
         super(aObject);
         
         position = new RelationPosition(aObject.position);
-        coveredText = aObject.coveredText;
     }
 
     // Getter and setter
-
-    public String getCoveredText()
-    {
-        return coveredText;
-    }
 
     @Override
     public RelationPosition getPosition()
@@ -78,7 +70,7 @@ public class RelationAnnotationSuggestion
         return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
                 .append("recommenderName", recommenderName).append("layerId", layerId)
                 .append("feature", feature).append("documentName", documentName)
-                .append("position", position).append("coveredText", coveredText)
+                .append("position", position)
                 .append("label", label).append("uiLabel", uiLabel).append("confidence", confidence)
                 .append("confindenceExplanation", confidenceExplanation)
                 .append("visible", isVisible()).append("reasonForHiding", getReasonForHiding())

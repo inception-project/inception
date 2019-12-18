@@ -123,6 +123,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationAnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -1183,11 +1184,15 @@ public class RecommendationServiceImpl
             CAS aOriginalCas, CAS aPredictionCas, SourceDocument aDocument,
             Recommender aRecommender)
     {
-        String typeName = aRecommender.getLayer().getName();
+        AnnotationLayer layer = aRecommender.getLayer();
+        String typeName = layer.getName();
         String featureName = aRecommender.getFeature().getName();
 
         Type predictedType = CasUtil.getType(aPredictionCas, typeName);
         Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
+        Feature dependentFeature =  predictedType.getFeatureByBaseName("Dependent");
+        Feature governorFeature = predictedType.getFeatureByBaseName("Governor");
+
         Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + 
                 FEATURE_NAME_SCORE_SUFFIX);
         Feature scoreExplanationFeature = predictedType.getFeatureByBaseName(featureName + 
@@ -1211,9 +1216,9 @@ public class RecommendationServiceImpl
 
             AnnotationSuggestion_ImplBase suggestion;
             
-            switch (aRecommender.getLayer().getType()) {
+            switch (layer.getType()) {
             case SPAN_TYPE: {
-                Optional<Offset> targetOffsets = getOffsets(aRecommender.getLayer(), aOriginalCas,
+                Optional<Offset> targetOffsets = getOffsets(layer, aOriginalCas,
                         predictedAnnotation);
                 
                 if (!targetOffsets.isPresent()) {
@@ -1221,19 +1226,26 @@ public class RecommendationServiceImpl
                 }
 
                 suggestion = new AnnotationSuggestion(id, aRecommender.getId(), name,
-                        aRecommender.getLayer().getId(), featureName, aDocument.getName(),
+                        layer.getId(), featureName, aDocument.getName(),
                         targetOffsets.get().getBegin(), targetOffsets.get().getEnd(),
                         predictedAnnotation.getCoveredText(), label, label, score,
                         scoreExplanation);
                 break;
             }
             case WebAnnoConst.RELATION_TYPE: {
-                throw new IllegalStateException(
-                        "Unsupport layer type [" + aRecommender.getLayer().getType() + "]");
+                layer.getAttachFeature();
+                AnnotationFS governor = (AnnotationFS) predictedAnnotation.getFeatureValue(governorFeature);
+                AnnotationFS depedent = (AnnotationFS) predictedAnnotation.getFeatureValue(dependentFeature);
+
+                suggestion = new RelationAnnotationSuggestion(id, aRecommender.getId(), name,
+                        layer.getId(), featureName, aDocument.getName(),
+                        governor, depedent, label, label, score, scoreExplanation);
+
+                break;
             }
             default: 
                 throw new IllegalStateException(
-                        "Unsupport layer type [" + aRecommender.getLayer().getType() + "]");
+                        "Unsupport layer type [" + layer.getType() + "]");
             }
                         
             result.add(suggestion);
