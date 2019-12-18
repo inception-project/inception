@@ -972,7 +972,8 @@ public class RecommendationServiceImpl
 
         CAS predictionCas = null;
         try {
-            predictionCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+            predictionCas = WebAnnoCasUtil.createCas();
+
         }
         catch (ResourceInitializationException e) {
             predictions.log(

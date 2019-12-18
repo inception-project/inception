@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.uima.cas.CAS;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -69,9 +67,9 @@ public interface SearchService
 
     boolean isIndexValid(Project aProject);
     
-    void indexDocument(SourceDocument aSourceDocument, CAS aJCas);
+    void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas);
 
-    void indexDocument(AnnotationDocument aAnnotationDocument, CAS aJCas);
+    void indexDocument(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas);
 
     boolean isIndexInProgress(Project aProject);
 }
