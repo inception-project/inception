@@ -45,6 +45,7 @@ import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -133,19 +134,19 @@ public class ExternalRecommender
         RequestBody body = RequestBody.create(JSON, toJson(trainingRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
-        Response response = sendRequest(request);
-
+        try (Response response = sendRequest(request)) {
             // If the response indicates that the request was not successful,
             // then it does not make sense to go on and try to decode the XMI
-        if (!response.isSuccessful()) {
-            int code = response.code();
-            String responseBody = getResponseBody(response);
-            String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
-            throw new RecommendationException(msg);
-        }
-        
+            if (!response.isSuccessful()) {
+                int code = response.code();
+                String responseBody = getResponseBody(response);
+                String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
+                throw new RecommendationException(msg);
+            }
+            
             aContext.put(KEY_TRAINING_COMPLETE, true);
         }
+    }
 
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
@@ -165,24 +166,24 @@ public class ExternalRecommender
         RequestBody body = RequestBody.create(JSON, toJson(predictionRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
-        Response response = sendRequest(request);
-
-        // If the response indicates that the request was not successful,
-        // then it does not make sense to go on and try to decode the XMI
-        if (!response.isSuccessful()) {
-            int code = response.code();
-            String responseBody = getResponseBody(response);
-            String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
-            throw new RecommendationException(msg);
-        }
-
-        PredictionResponse predictionResponse = deserializePredictionResponse(response);
-
-        try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
-            XmiCasDeserializer.deserialize(is, getRealCas(aCas), true);
-        }
-        catch (SAXException | IOException e) {
-            throw new RecommendationException("Error while deserializing CAS!", e);
+        try (Response response = sendRequest(request)) {
+            // If the response indicates that the request was not successful,
+            // then it does not make sense to go on and try to decode the XMI
+            if (!response.isSuccessful()) {
+                int code = response.code();
+                String responseBody = getResponseBody(response);
+                String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
+                throw new RecommendationException(msg);
+            }
+    
+            PredictionResponse predictionResponse = deserializePredictionResponse(response);
+    
+            try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
+                XmiCasDeserializer.deserialize(is, WebAnnoCasUtil.getRealCas(aCas), true);
+            }
+            catch (SAXException | IOException e) {
+                throw new RecommendationException("Error while deserializing CAS!", e);
+            }
         }
     }
 
