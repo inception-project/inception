@@ -62,7 +62,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class WebAnnoCasUtil
 {
-    private static final String PROP_ENFORCE_CAS_THREAD_LOCK = "inception.enforce_cas_thread_lock";
+    private static final String PROP_ENFORCE_CAS_THREAD_LOCK = "webanno.debug.enforce_cas_thread_lock";
 
     private static final boolean ENFORCE_CAS_THREAD_LOCK = System
             .getProperty(PROP_ENFORCE_CAS_THREAD_LOCK, "false").equals("true");
