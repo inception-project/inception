@@ -23,6 +23,7 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
@@ -89,6 +90,8 @@ public class RecommendationRenderer
     public static RecommendationTypeRenderer getRenderer(TypeAdapter aTypeAdapter) {
         if (aTypeAdapter instanceof SpanAdapter) {
             return new RecommendationSpanRenderer((SpanAdapter) aTypeAdapter);
+        } else if (aTypeAdapter instanceof RelationAdapter) {
+            return new RecommendationRelationRenderer((RelationAdapter) aTypeAdapter);
         }
         return null;
     }

@@ -100,7 +100,18 @@ public class Predictions
 
         return result;
     }
-    
+
+    public List<RelationAnnotationSuggestion> getRelationPredictionsForLayer(
+            String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+    {
+        return predictions.entrySet().stream()
+                .filter(f -> f.getValue() instanceof RelationAnnotationSuggestion)
+                .map(f -> (Entry<ExtendedId, RelationAnnotationSuggestion>) (Entry) f)
+                .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
+                .filter(f -> f.getKey().getLayerId() == aLayer.getId())
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+    }
     /**
      * TODO #176 use the document Id once it it available in the CAS
      *         
