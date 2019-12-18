@@ -110,7 +110,7 @@ public class TypeSystemAnalysis
     {
         // We create a CAS from which we can obtain an instantiated type system. With that, it
         // is easier to check type inheritance.
-        CAS cas = WebAnnoCasUtil.createCas();
+        CAS cas = WebAnnoCasUtil.createCas(aTSD);
         TypeSystem ts = cas.getTypeSystem();
 
         for (TypeDescription td : aTSD.getTypes()) {

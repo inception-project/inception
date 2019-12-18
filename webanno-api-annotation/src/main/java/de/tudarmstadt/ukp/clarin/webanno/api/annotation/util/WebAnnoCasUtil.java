@@ -67,9 +67,9 @@ public class WebAnnoCasUtil
     private static final boolean ENFORCE_CAS_THREAD_LOCK = System
             .getProperty(PROP_ENFORCE_CAS_THREAD_LOCK, "false").equals("true");
     
-    public static CAS createCas() throws ResourceInitializationException
+    public static CAS createCas(TypeSystemDescription aTSD) throws ResourceInitializationException
     {
-        CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        CAS cas = CasCreationUtils.createCas(aTSD, null, null);
         
         if (ENFORCE_CAS_THREAD_LOCK) {
             cas = (CAS) Proxy.newProxyInstance(cas.getClass().getClassLoader(),
@@ -77,6 +77,11 @@ public class WebAnnoCasUtil
         }
         
         return cas;
+    }
+    
+    public static CAS createCas() throws ResourceInitializationException
+    {
+        return createCas(null);
     }
     
     public static CAS getRealCas(CAS aCas)
