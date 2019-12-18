@@ -132,18 +132,18 @@ public class ExternalRecommender
         RequestBody body = RequestBody.create(JSON, toJson(trainingRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
-        Response response = sendRequest(request);
-
-        // If the response indicates that the request was not successful,
-        // then it does not make sense to go on and try to decode the XMI
-        if (!response.isSuccessful()) {
-            int code = response.code();
-            String responseBody = getResponseBody(response);
-            String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
-            throw new RecommendationException(msg);
+        try (Response response = sendRequest(request)) {
+            // If the response indicates that the request was not successful,
+            // then it does not make sense to go on and try to decode the XMI
+            if (!response.isSuccessful()) {
+                int code = response.code();
+                String responseBody = getResponseBody(response);
+                String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
+                throw new RecommendationException(msg);
+            }
+            
+            aContext.put(KEY_TRAINING_COMPLETE, true);
         }
-        
-        aContext.put(KEY_TRAINING_COMPLETE, true);
     }
 
     @Override
@@ -164,24 +164,24 @@ public class ExternalRecommender
         RequestBody body = RequestBody.create(JSON, toJson(predictionRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
-        Response response = sendRequest(request);
-
-        // If the response indicates that the request was not successful,
-        // then it does not make sense to go on and try to decode the XMI
-        if (!response.isSuccessful()) {
-            int code = response.code();
-            String responseBody = getResponseBody(response);
-            String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
-            throw new RecommendationException(msg);
-        }
-
-        PredictionResponse predictionResponse = deserializePredictionResponse(response);
-
-        try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
-            XmiCasDeserializer.deserialize(is, aCas, true);
-        }
-        catch (SAXException | IOException e) {
-            throw new RecommendationException("Error while deserializing CAS!", e);
+        try (Response response = sendRequest(request)) {
+            // If the response indicates that the request was not successful,
+            // then it does not make sense to go on and try to decode the XMI
+            if (!response.isSuccessful()) {
+                int code = response.code();
+                String responseBody = getResponseBody(response);
+                String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
+                throw new RecommendationException(msg);
+            }
+    
+            PredictionResponse predictionResponse = deserializePredictionResponse(response);
+    
+            try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
+                XmiCasDeserializer.deserialize(is, aCas, true);
+            }
+            catch (SAXException | IOException e) {
+                throw new RecommendationException("Error while deserializing CAS!", e);
+            }
         }
     }
 
