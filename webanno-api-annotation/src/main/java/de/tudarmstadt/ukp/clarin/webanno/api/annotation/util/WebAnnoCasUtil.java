@@ -26,6 +26,7 @@ import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovering;
 import static org.apache.uima.fit.util.CasUtil.selectSingle;
 
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -45,6 +46,9 @@ import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCreationUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -58,6 +62,43 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class WebAnnoCasUtil
 {
+    private static final String PROP_ENFORCE_CAS_THREAD_LOCK = "inception.enforce_cas_thread_lock";
+
+    private static final boolean ENFORCE_CAS_THREAD_LOCK = System
+            .getProperty(PROP_ENFORCE_CAS_THREAD_LOCK, "false").equals("true");
+    
+    public static CAS createCas(TypeSystemDescription aTSD) throws ResourceInitializationException
+    {
+        CAS cas = CasCreationUtils.createCas(aTSD, null, null);
+        
+        if (ENFORCE_CAS_THREAD_LOCK) {
+            cas = (CAS) Proxy.newProxyInstance(cas.getClass().getClassLoader(),
+                    new Class[] { CAS.class }, new ThreadLockingInvocationHandler(cas));
+        }
+        
+        return cas;
+    }
+    
+    public static CAS createCas() throws ResourceInitializationException
+    {
+        return createCas(null);
+    }
+    
+    public static CAS getRealCas(CAS aCas)
+    {
+        if (!ENFORCE_CAS_THREAD_LOCK) {
+            return aCas;
+        }
+        
+        if (!Proxy.isProxyClass(aCas.getClass())) {
+            return aCas;
+        }
+
+        ThreadLockingInvocationHandler handler = (ThreadLockingInvocationHandler) Proxy
+                .getInvocationHandler(aCas);
+        return (CAS) handler.getTarget();
+    }
+    
     /**
      * Return true if these two annotations agree on every non slot features
      */

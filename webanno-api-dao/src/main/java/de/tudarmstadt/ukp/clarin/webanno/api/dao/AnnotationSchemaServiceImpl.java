@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
@@ -58,7 +59,6 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
-import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -944,7 +945,7 @@ public class AnnotationSchemaServiceImpl
     public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
         throws ResourceInitializationException, UIMAException, IOException
     {
-        CAS exportCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        CAS exportCas = WebAnnoCasUtil.createCas();
         upgradeCas(aCas, exportCas, getFullProjectTypeSystem(aSourceDocument.getProject(), false));
         return exportCas;
     }
@@ -970,16 +971,17 @@ public class AnnotationSchemaServiceImpl
 
         // Save source CAS contents
         ByteArrayOutputStream serializedCasContents = new ByteArrayOutputStream();
-        Serialization.serializeWithCompression(aSourceCas, serializedCasContents, sourceTypeSystem);
+        Serialization.serializeWithCompression(getRealCas(aSourceCas), serializedCasContents,
+                sourceTypeSystem);
 
         // Re-initialize the target CAS with new type system
         CAS tempCas = CasFactory.createCas(aTargetTypeSystem);
         CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) tempCas);
-        Serialization.deserializeCASComplete(serializer, (CASImpl) aTargetCas);
+        Serialization.deserializeCASComplete(serializer, (CASImpl) getRealCas(aTargetCas));
 
         // Leniently load the source CAS contents into the target CAS
-        CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()), aTargetCas,
-                sourceTypeSystem);
+        CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()),
+                getRealCas(aTargetCas), sourceTypeSystem);
     }
     
     /**

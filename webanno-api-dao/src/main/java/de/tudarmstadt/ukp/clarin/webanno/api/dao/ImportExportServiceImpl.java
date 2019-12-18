@@ -55,7 +55,6 @@ import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.ConfigurationParameterFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 import org.slf4j.Logger;
@@ -74,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -226,7 +226,7 @@ public class ImportExportServiceImpl
                     + "] not found in [" + annotationFolder + "]");
         }
 
-        CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        CAS cas = WebAnnoCasUtil.createCas();
         CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
 
         File exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension);

@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
@@ -89,8 +90,8 @@ public class BratAnnotatorUtility
         }
         
         // Copy the CAS - basically we do this just to keep the full type system information
-        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aCas);
-        deserializeCASComplete(serializer, (CASImpl) target);
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+        deserializeCASComplete(serializer, (CASImpl) getRealCas(target));
 
         // Remove all annotations from the target CAS but we keep the type system!
         target.reset();
