@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -187,8 +188,8 @@ public class ConceptLinkingServiceImpl
                     iriMatches = kbService.read(aKB, conn -> iriMatchBuilder.asHandles(conn, true));
                 }
                 
-                log.debug("Found [{}] candidates exactly matching IRI {}",
-                        iriMatches.size(), asList(aQuery));
+                log.debug("Found [{}] candidates exactly matching IRI [{}]", iriMatches.size(),
+                        aQuery);
 
                 result.addAll(iriMatches);
             }
@@ -205,32 +206,38 @@ public class ConceptLinkingServiceImpl
         // set of containing matches, due to the ranking performed by the KB/FTS, we might
         // not actually see the exact matches within the first N results. So we query for
         // the exact matches separately to ensure we have them.
-        String[] exactLabels = asList(
-                (aQuery != null && aQuery.length() <= threshold) ? aQuery : null, aMention)
-                .stream()
-                .filter(Objects::nonNull)
+        // Mind, we use the query and the mention text here - of course we don't only want 
+        // exact matches of the query but also of the mention :)
+        String[] exactLabels = asList(aQuery, aMention).stream()
+                .filter(StringUtils::isNotBlank)
                 .toArray(String[]::new);
-        exactBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
         
-        exactBuilder
-                .retrieveLabel()
-                .retrieveDescription();
-
-        List<KBHandle> exactMatches;
-        if (aKB.isReadOnly()) {
-            exactMatches = kbService.listHandlesCaching(aKB, exactBuilder, true);
+        if (exactLabels.length > 0) {
+            exactBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
+            
+            exactBuilder
+                    .retrieveLabel()
+                    .retrieveDescription();
+    
+            List<KBHandle> exactMatches;
+            if (aKB.isReadOnly()) {
+                exactMatches = kbService.listHandlesCaching(aKB, exactBuilder, true);
+            }
+            else {
+                exactMatches = kbService.read(aKB, conn -> exactBuilder.asHandles(conn, true));
+            }
+            
+            
+            log.debug("Found [{}] candidates exactly matching {}",
+                    exactMatches.size(), asList(exactLabels));
+    
+            result.addAll(exactMatches);
         }
-        else {
-            exactMatches = kbService.read(aKB, conn -> exactBuilder.asHandles(conn, true));
-        }
-        
-        
-        log.debug("Found [{}] candidates exactly matching {}",
-                exactMatches.size(), asList(exactLabels));
 
-        result.addAll(exactMatches);
-
-        if (aQuery != null && aQuery.length() > threshold) {
+        // Next we also do a "starting with" search - but only if the user's query is longer than
+        // the threshold - this is because for short queries, we'd get way too many results which
+        // would be slow - and also the results would likely not be very accurate
+        if (aQuery != null && aQuery.trim().length() >= threshold) {
             SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB);
             
             if (aConceptScope != null) {
@@ -261,39 +268,44 @@ public class ConceptLinkingServiceImpl
             result.addAll(startingWithMatches);
         }
         
-        
-        // Collect containing matches
-        SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
-
-        if (aConceptScope != null) {
-            // Scope-limiting must always happen before label matching!
-            containingBuilder.descendantsOf(aConceptScope);
-        }
-        
-        String[] containingLabels = asList(
-                (aQuery != null && aQuery.length() > threshold) ? aQuery : null, aMention)
-                .stream()
+        // Finally, we use the query and mention also for a "containing" search - but only if they
+        // are longer than the threshold. Again, for very short query/mention, we'd otherwise get 
+        // way too many matches, being slow and not accurate.
+        String[] longLabels = asList(aQuery, aMention).stream()
                 .filter(Objects::nonNull)
+                .map(s -> s.trim())
+                .filter(s -> s.length() >= threshold)
                 .toArray(String[]::new);
-        containingBuilder.withLabelContainingAnyOf(containingLabels);
         
-        containingBuilder
-                .retrieveLabel()
-                .retrieveDescription();
-        
-        List<KBHandle> containingMatches;
-        if (aKB.isReadOnly()) {
-            containingMatches = kbService.listHandlesCaching(aKB, containingBuilder, true);
+        if (longLabels.length > 0) {
+            // Collect containing matches
+            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
+    
+            if (aConceptScope != null) {
+                // Scope-limiting must always happen before label matching!
+                containingBuilder.descendantsOf(aConceptScope);
+            }
+            
+            containingBuilder.withLabelContainingAnyOf(longLabels);
+            
+            containingBuilder
+                    .retrieveLabel()
+                    .retrieveDescription();
+            
+            List<KBHandle> containingMatches;
+            if (aKB.isReadOnly()) {
+                containingMatches = kbService.listHandlesCaching(aKB, containingBuilder, true);
+            }
+            else {
+                containingMatches = kbService.read(aKB,
+                    conn -> containingBuilder.asHandles(conn, true));
+            }
+            
+            log.debug("Found [{}] candidates using containing {}", containingMatches.size(),
+                    asList(longLabels));
+            
+            result.addAll(containingMatches);
         }
-        else {
-            containingMatches = kbService.read(aKB,
-                conn -> containingBuilder.asHandles(conn, true));
-        }
-        
-        log.debug("Found [{}] candidates using containing {}",
-                containingMatches.size(), asList(containingLabels));
-        
-        result.addAll(containingMatches);
 
         log.debug("Generated [{}] candidates in {}ms", result.size(),
                 currentTimeMillis() - startTime);
