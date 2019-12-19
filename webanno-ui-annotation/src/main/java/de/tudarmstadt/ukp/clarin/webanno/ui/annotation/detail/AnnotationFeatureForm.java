@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
@@ -154,9 +155,13 @@ public class AnnotationFeatureForm
         layerContainer.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
         layerContainer.add(relationHint = createRelationHint());
         layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
+        // Visible if there is more than one selectable layer and if either "remember layer" is off
+        // (meaning that the dropdown indicates the currently selected layer) or "remember layer"
+        // is on and the document is editable (meaning we need to be able to change the layer)
         layerContainer.add(visibleWhen(() -> layerSelector.getChoicesModel()
-                .map(layerChoices -> layerChoices.size() > 1)
-                .orElse(false).getObject()));
+                .map(layerChoices -> layerChoices.size() > 1).orElse(false).getObject()
+                && (!getModelObject().getPreferences().isRememberLayer()
+                        || editorPanel.getEditorPage().isEditable())));
         add(layerContainer);
 
         infoContainer = new WebMarkupContainer("infoContainer");
@@ -410,7 +415,8 @@ public class AnnotationFeatureForm
     {
         LambdaAjaxLink link = new LambdaAjaxLink("clear", editorPanel::actionClear);
         link.setOutputMarkupPlaceholderTag(true);
-        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
+                && editorPanel.getEditorPage().isEditable()));
         return link;
     }
 
@@ -421,9 +427,10 @@ public class AnnotationFeatureForm
         link.add(LambdaBehavior.onConfigure(_this -> {
             AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
             
-            _this.setVisible(state.getSelection().getAnnotation().isSet()
-                    && state.getSelection().isArc() && state.getSelectedAnnotationLayer()
-                            .getType().equals(WebAnnoConst.RELATION_TYPE));
+            _this.setVisible(state.getSelection().getAnnotation().isSet() 
+                    && state.getSelection().isArc()
+                    && RELATION_TYPE.equals(state.getSelectedAnnotationLayer().getType())
+                    && editorPanel.getEditorPage().isEditable());
 
             // Avoid reversing in read-only layers
             _this.setEnabled(state.getSelectedAnnotationLayer() != null
@@ -436,7 +443,8 @@ public class AnnotationFeatureForm
     {
         LambdaAjaxLink link = new LambdaAjaxLink("delete", this::actionDelete);
         link.setOutputMarkupPlaceholderTag(true);
-        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
+                && editorPanel.getEditorPage().isEditable()));
         // Avoid deleting in read-only layers
         link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
                 && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
@@ -664,9 +672,7 @@ public class AnnotationFeatureForm
         super.onConfigure();
         
         // set read only if annotation is finished or the user is viewing other's work
-        setEnabled(getModelObject().getDocument() != null 
-                && !editorPanel.isAnnotationFinished()
-                && getModelObject().getUser().equals(userDao.getCurrentUser()));
+        setEnabled(editorPanel.getEditorPage().isEditable());
     }
 
     public void updateLayersDropdown()

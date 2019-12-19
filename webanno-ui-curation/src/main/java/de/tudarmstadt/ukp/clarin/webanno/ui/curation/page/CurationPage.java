@@ -540,8 +540,10 @@ public class CurationPage
     }
 
     @Override
-    public void writeEditorCas(CAS aCas) throws IOException
+    public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
+        ensureIsEditable(); 
+        
         AnnotatorState state = getModelObject();
         curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
