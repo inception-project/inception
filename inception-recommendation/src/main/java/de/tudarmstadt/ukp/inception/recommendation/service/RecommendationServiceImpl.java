@@ -1237,9 +1237,12 @@ public class RecommendationServiceImpl
                 AnnotationFS governor = (AnnotationFS) predictedAnnotation.getFeatureValue(governorFeature);
                 AnnotationFS depedent = (AnnotationFS) predictedAnnotation.getFeatureValue(dependentFeature);
 
+                AnnotationFS originalGovernor = findEquivalent(aOriginalCas, governor).get();
+                AnnotationFS originalDependent = findEquivalent(aOriginalCas, depedent).get();
+
                 suggestion = new RelationAnnotationSuggestion(id, aRecommender.getId(), name,
                         layer.getId(), featureName, aDocument.getName(),
-                        governor, depedent, label, label, score, scoreExplanation);
+                        originalGovernor, originalDependent, label, label, score, scoreExplanation);
 
                 break;
             }
@@ -1271,7 +1274,7 @@ public class RecommendationServiceImpl
      * @param aAnnotation
      *            an annotation in the prediction CAS. return the equivalent in the original CAS.
      */
-    private Optional<Annotation> findEquivalent(CAS aOriginalCas, Annotation aAnnotation)
+    private Optional<Annotation> findEquivalent(CAS aOriginalCas, AnnotationFS aAnnotation)
     {
         return aOriginalCas.<Annotation>select(aAnnotation.getType())
                 .filter(candidate -> isEquivalentAnnotation(candidate, aAnnotation))

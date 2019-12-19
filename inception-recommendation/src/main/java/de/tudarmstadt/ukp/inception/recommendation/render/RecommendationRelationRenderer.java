@@ -97,10 +97,9 @@ public class RecommendationRelationRenderer
 
             VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName,
                     new VID(source), new VID(target),
-                   "hint", Collections.emptyMap(), "#cccccc");
+                   suggestion.getUiLabel(), Collections.emptyMap(), "#cccccc");
 
             vdoc.add(arc);
-
         }
     }
 }
