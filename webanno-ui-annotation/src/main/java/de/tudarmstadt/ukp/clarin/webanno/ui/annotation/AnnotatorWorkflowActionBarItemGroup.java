@@ -67,7 +67,7 @@ public class AnnotatorWorkflowActionBarItemGroup
         add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
                 this::actionFinishDocument));
         finishDocumentLink.setOutputMarkupId(true);
-        finishDocumentLink.add(enabledWhen(this::isEditable));
+        finishDocumentLink.add(enabledWhen(() -> page.isEditable()));
         finishDocumentLink.add(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
 
@@ -81,7 +81,7 @@ public class AnnotatorWorkflowActionBarItemGroup
 
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
                 resetDocumentDialog::show));
-        resetDocumentLink.add(enabledWhen(this::isEditable));
+        resetDocumentLink.add(enabledWhen(() -> page.isEditable()));
     }
     
     public String getStateClass()
@@ -96,18 +96,10 @@ public class AnnotatorWorkflowActionBarItemGroup
         }
     }
 
-    protected boolean isEditable()
-    {
-        AnnotatorState state = page.getModelObject();
-        return state.getDocument() != null 
-                && !documentService.isAnnotationFinished(state.getDocument(), state.getUser())
-                && !isUserViewingOthersWork();
-    }
-    
     protected void actionFinishDocument(AjaxRequestTarget aTarget)
     {
-        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            page.actionValidateDocument(aCallbackTarget, page.getEditorCas());
+        finishDocumentDialog.setConfirmAction((_target) -> {
+            page.actionValidateDocument(_target, page.getEditorCas());
 
             AnnotatorState state = page.getModelObject();
             AnnotationDocument annotationDocument = documentService
@@ -120,9 +112,7 @@ public class AnnotatorWorkflowActionBarItemGroup
             // without calling createAnnotationDocument(...)
             documentService.createAnnotationDocument(annotationDocument);
 
-            page.actionRefreshDocument(aCallbackTarget);
-            aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(resetDocumentLink);
+            _target.add(page);
         });
         finishDocumentDialog.show(aTarget);
     }
@@ -132,10 +122,5 @@ public class AnnotatorWorkflowActionBarItemGroup
         AnnotatorState state = page.getModelObject();
         documentService.resetAnnotationCas(state.getDocument(), state.getUser());
         page.actionLoadDocument(aTarget);
-    }
-
-    private boolean isUserViewingOthersWork()
-    {
-        return !page.getModelObject().getUser().equals(userRepository.getCurrentUser());
     }
 }
