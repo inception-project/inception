@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
@@ -44,6 +45,7 @@ import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -177,7 +179,7 @@ public class ExternalRecommender
             PredictionResponse predictionResponse = deserializePredictionResponse(response);
     
             try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
-                XmiCasDeserializer.deserialize(is, aCas, true);
+                XmiCasDeserializer.deserialize(is, WebAnnoCasUtil.getRealCas(aCas), true);
             }
             catch (SAXException | IOException e) {
                 throw new RecommendationException("Error while deserializing CAS!", e);
@@ -203,7 +205,8 @@ public class ExternalRecommender
             // to serialize all types (i.e. no filtering for a specific target type system).
             XmiCasSerializer xmiCasSerializer = new XmiCasSerializer(null);
             XMLSerializer sax2xml = new XMLSerializer(out, true);
-            xmiCasSerializer.serialize(aCas, sax2xml.getContentHandler(), null, null, null);
+            xmiCasSerializer.serialize(getRealCas(aCas), sax2xml.getContentHandler(), null, null,
+                    null);
             return out.toString();
         }
         catch (CASRuntimeException | SAXException | IOException e) {

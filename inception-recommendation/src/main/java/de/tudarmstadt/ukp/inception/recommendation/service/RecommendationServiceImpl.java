@@ -65,7 +65,6 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
@@ -94,6 +93,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEven
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -972,7 +972,8 @@ public class RecommendationServiceImpl
 
         CAS predictionCas = null;
         try {
-            predictionCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+            predictionCas = WebAnnoCasUtil.createCas();
+
         }
         catch (ResourceInitializationException e) {
             predictions.log(
