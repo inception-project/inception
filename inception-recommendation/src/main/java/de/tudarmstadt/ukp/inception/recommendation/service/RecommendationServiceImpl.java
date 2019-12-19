@@ -92,12 +92,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -741,14 +743,13 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
-            String aValue, int aBegin, int aEnd)
+    public int upsertSpanFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
+           String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
+           String aValue, int aBegin, int aEnd)
         throws AnnotationException
     {
-        // The feature of the predicted label
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
-        
+
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
         AnnotationFS annoFS = selectAt(aCas, type, aBegin, aEnd).stream().findFirst().orElse(null);
@@ -759,7 +760,7 @@ public class RecommendationServiceImpl
             address = getAddr(annoFS);
         }
         else {
-            // ... if not, then we create a new annotation - this also takes care of attaching to 
+            // ... if not, then we create a new annotation - this also takes care of attaching to
             // an annotation if necessary
             address = getAddr(adapter.add(aDocument, aUsername, aCas, aBegin, aEnd));
         }
@@ -767,6 +768,26 @@ public class RecommendationServiceImpl
         // Update the feature value
         adapter.setFeatureValue(aDocument, aUsername, aCas, address, aFeature, aValue);
         
+        return address;
+    }
+
+    @Override
+    public int upsertRelationFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
+           String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature, String aValue,
+           int aSourceAddr, int aTargetAddr)
+        throws AnnotationException
+    {
+        RelationAdapter adapter = (RelationAdapter) annotationService.getAdapter(layer);
+
+        AnnotationFS source = WebAnnoCasUtil.selectAnnotationByAddr(aCas, aSourceAddr);
+        AnnotationFS target = WebAnnoCasUtil.selectAnnotationByAddr(aCas, aTargetAddr);
+
+        // TODO: Check if there is already an annotation of the target type at the given location
+        int address = getAddr(adapter.add(aDocument, aUsername, source, target, aCas));
+
+        // Update the feature value
+        adapter.setFeatureValue(aDocument, aUsername, aCas, address, aFeature, aValue);
+
         return address;
     }
 

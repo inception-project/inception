@@ -161,7 +161,7 @@ public class RecommenderInfoPanel
                 AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
                 AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
                         layer);
-                int address = recommendationService.upsertFeature(annotationService,
+                int address = recommendationService.upsertSpanFeature(annotationService,
                         state.getDocument(), state.getUser().getUsername(), cas, layer, feature,
                         suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
         

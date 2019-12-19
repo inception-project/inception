@@ -126,9 +126,14 @@ public interface RecommendationService
      * 
      * @return the CAS address of the created/updated annotation.
      */
-    public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
-            String aValue, int aBegin, int aEnd)
+    int upsertSpanFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
+                          String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
+                          String aValue, int aBegin, int aEnd)
+        throws AnnotationException;
+
+    int upsertRelationFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
+                              String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
+                              String aValue, int aSourceAddr, int aTargetAddr)
         throws AnnotationException;
     
     /**

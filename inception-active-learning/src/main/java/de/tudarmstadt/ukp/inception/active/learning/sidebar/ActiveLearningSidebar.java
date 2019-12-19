@@ -659,7 +659,7 @@ public class ActiveLearningSidebar
                 .orElseThrow(() -> new IllegalArgumentException("No such layer: [" + 
                         suggestion.getLayerId() + "]"));
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-        recommendationService.upsertFeature(annotationService, sourceDoc, username, cas, layer,
+        recommendationService.upsertSpanFeature(annotationService, sourceDoc, username, cas, layer,
                 feature, selectedValue, suggestion.getBegin(), suggestion.getEnd());
         
         // Save CAS after annotation has been created
