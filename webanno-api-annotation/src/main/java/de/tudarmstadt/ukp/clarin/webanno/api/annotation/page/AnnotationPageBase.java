@@ -293,7 +293,7 @@ public abstract class AnnotationPageBase
                     + "project manager to re-open it via the monitoring page.");
         }
 
-        if (isUserViewingOthersWork()) {
+        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
             throw new NotEditableException(
                     "Viewing another users annotations - document is read-only!");
         }
@@ -315,12 +315,8 @@ public abstract class AnnotationPageBase
         // If annotating normally, then it is editable unless marked as finished and unless
         // viewing another users annotations
         return !documentService.isAnnotationFinished(state.getDocument(), state.getUser())
-                && !isUserViewingOthersWork();
+                && !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser());
     }
     
-    public boolean isUserViewingOthersWork()
-    {
-        return !getModelObject().getUser().equals(userRepository.getCurrentUser());
-    }
 
 }
