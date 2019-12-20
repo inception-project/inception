@@ -360,8 +360,10 @@ public class CorrectionPage
     }
 
     @Override
-    public void writeEditorCas(CAS aCas) throws IOException
+    public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
+        ensureIsEditable(); 
+        
         AnnotatorState state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 

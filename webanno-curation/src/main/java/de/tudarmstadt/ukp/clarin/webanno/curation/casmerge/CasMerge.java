@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentAnnotation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
@@ -387,8 +388,8 @@ public class CasMerge
         CAS backup = CasFactory.createCas((TypeSystemDescription) null);
         
         // Copy the CAS - basically we do this just to keep the full type system information
-        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aCas);
-        deserializeCASComplete(serializer, (CASImpl) backup);
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+        deserializeCASComplete(serializer, (CASImpl) getRealCas(backup));
 
         // Remove all annotations from the target CAS but we keep the type system!
         aCas.reset();

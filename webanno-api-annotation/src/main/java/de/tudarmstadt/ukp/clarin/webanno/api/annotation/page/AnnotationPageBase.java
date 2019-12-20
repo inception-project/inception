@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
@@ -39,6 +41,8 @@ import org.springframework.beans.BeansException;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -163,7 +167,7 @@ public abstract class AnnotationPageBase
 
     public abstract CAS getEditorCas() throws IOException;
     
-    public abstract void writeEditorCas(CAS aCas) throws IOException;
+    public abstract void writeEditorCas(CAS aCas) throws IOException, AnnotationException;
     
     /**
      * Open a document or to a different document. This method should be used only the first time
@@ -269,4 +273,54 @@ public abstract class AnnotationPageBase
         PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
                 state, state.getUser().getUsername());
     }
+    
+    public void ensureIsEditable() throws NotEditableException
+    {
+        AnnotatorState state = getModelObject();
+        
+        if (state.getDocument() == null) {
+            throw new NotEditableException("No document selected");
+        }
+
+        if (state.getMode().equals(CURATION)
+                && state.getDocument().getState().equals(CURATION_FINISHED)) {
+            throw new NotEditableException("Curation is already finished. You can put it back into "
+                    + "progress via the monitoring page.");
+        }
+
+        if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
+            throw new NotEditableException("This document is already closed. Please ask your "
+                    + "project manager to re-open it via the monitoring page.");
+        }
+
+        if (isUserViewingOthersWork()) {
+            throw new NotEditableException(
+                    "Viewing another users annotations - document is read-only!");
+        }
+    }
+    
+    public boolean isEditable()
+    {
+        AnnotatorState state = getModelObject();
+        
+        if (state.getDocument() == null) {
+            return false;
+        }
+        
+        // If curating, then it is editable unless the curation is finished
+        if (state.getMode().equals(CURATION)) {
+            return state.getDocument().getState().equals(CURATION_FINISHED);
+        }
+        
+        // If annotating normally, then it is editable unless marked as finished and unless
+        // viewing another users annotations
+        return !documentService.isAnnotationFinished(state.getDocument(), state.getUser())
+                && !isUserViewingOthersWork();
+    }
+    
+    public boolean isUserViewingOthersWork()
+    {
+        return !getModelObject().getUser().equals(userRepository.getCurrentUser());
+    }
+
 }

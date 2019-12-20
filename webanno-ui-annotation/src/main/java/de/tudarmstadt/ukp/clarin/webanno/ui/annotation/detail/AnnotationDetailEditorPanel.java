@@ -86,7 +86,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -103,11 +102,9 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -365,18 +362,6 @@ public abstract class AnnotationDetailEditorPanel
         return form;
     }
 
-    boolean isAnnotationFinished()
-    {
-        AnnotatorState state = getModelObject();
-
-        if (state.getMode().equals(Mode.CURATION)) {
-            return state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED);
-        }
-        else {
-            return documentService.isAnnotationFinished(state.getDocument(), state.getUser());
-        }
-    }
-
     private void createNewAnnotation(AjaxRequestTarget aTarget, TypeAdapter aAdapter, CAS aCas)
         throws AnnotationException, IOException
     {
@@ -478,15 +463,8 @@ public abstract class AnnotationDetailEditorPanel
         assert aCas != null;
 
         AnnotatorState state = getModelObject();
-        
-        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
-            throw new NotEditableException("This document belongs to another user.");
-        }
 
-        if (isAnnotationFinished()) {
-            throw new NotEditableException("This document is already closed. Please ask your "
-                + "project manager to re-open it via the Monitoring page.");
-        }
+        page.ensureIsEditable(); 
     
         // If this method is called when no slot is armed, it must be a bug!
         if (!state.isSlotArmed()) {
@@ -575,15 +553,8 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         LOG.trace("actionAnnotate");
-        
-        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
-            return;
-        }
 
-        if (isAnnotationFinished()) {
-            throw new NotEditableException("This document is already closed. Please ask your "
-                + "project manager to re-open it via the Monitoring page");
-        }
+        page.ensureIsEditable(); 
 
         AnnotatorState state = getModelObject();
 
@@ -689,15 +660,8 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         LOG.trace("actionCreateForward()");
-        
-        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
-            return;
-        }
 
-        if (isAnnotationFinished()) {
-            throw new NotEditableException("This document is already closed. Please ask your "
-                    + "project manager to re-open it via the Monitoring page");
-        }
+        page.ensureIsEditable();
 
         AnnotatorState state = getModelObject();
 

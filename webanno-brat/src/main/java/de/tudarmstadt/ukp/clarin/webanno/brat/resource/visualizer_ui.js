@@ -319,7 +319,7 @@ var VisualizerUI = (function($, window, undefined) {
 /* slight "tooltip" delay to allow highlights to be seen
            before the popup obstructs them. */
                     displayCommentTimer = setTimeout(function() {
-                        commentPopup.stop(true, true).fadeIn();
+                        commentPopup.stop(true, true).fadeIn(0);
                         commentDisplayed = true;
                     }, immediately ? 0 : 500);
                 };
@@ -526,7 +526,7 @@ var VisualizerUI = (function($, window, undefined) {
             var hideComment = function() {
                     clearTimeout(displayCommentTimer);
                     if (commentDisplayed) {
-                        commentPopup.stop(true, true).fadeOut(function() {
+                        commentPopup.stop(true, true).fadeOut(0, function() {
                             commentDisplayed = false;
                         });
                     }
