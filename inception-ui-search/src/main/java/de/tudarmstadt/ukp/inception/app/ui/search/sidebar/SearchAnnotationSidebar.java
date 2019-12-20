@@ -568,7 +568,7 @@ public class SearchAnnotationSidebar
     }
 
     private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, CAS aCas)
-        throws IOException
+        throws IOException, AnnotationException
     {
         AnnotatorState state = getModelObject();
 

@@ -58,7 +58,8 @@ public class AutomaticMergeStrategy
      */
     public void merge(AnnotatorState aState, CAS aTargetCas, Map<String, CAS> aUserCasses)
     {
-        //FIXME: should merging not overwrite the current users annos? (can result in deleting the users annos!!!)
+        // FIXME: should merging not overwrite the current users annos? (can result in deleting the
+        // users annos!!!)
         // prepare merged cas
         List<AnnotationLayer> layers = aState.getAnnotationLayers();
         List<Type> entryTypes = SuggestionBuilder.getEntryTypes(aTargetCas, layers,

@@ -46,6 +46,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.value.AttributeMap;
@@ -65,10 +66,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
+import de.tudarmstadt.ukp.inception.curation.merge.AutomaticMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
 
@@ -96,6 +99,7 @@ public class CurationSidebar
     private Label noDocsLabel;
     
     private AnnotationPage annoPage;
+    private final ConfirmationDialog mergeConfirm;
     
     
     public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
@@ -118,6 +122,11 @@ public class CurationSidebar
         settingsForm.setOutputMarkupId(true);
         settingsForm.setVisible(false);
         mainContainer.add(settingsForm);
+        // confirmation dialog when using automatic merging (might change user's annos)
+        mergeConfirm = new ConfirmationDialog("mergeConfirmDialog",
+                new StringResourceModel("mergeConfirmTitle", this, null),
+                new StringResourceModel("mergeConfirmText", this, null));
+        mainContainer.add(mergeConfirm);
         
         // Add empty space message
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
@@ -260,26 +269,44 @@ public class CurationSidebar
             return;
         }
         curationService.updateMergeStrategy(currentUsername, projectId, mergeStrat);
+        // if automatic merge is selected, warn user
+        String curatorName = curator.getUsername();
+        if (mergeStrat instanceof AutomaticMergeStrategy) {
+            mergeConfirm.setConfirmAction(
+                (target) -> {
+                    doMerge(state, curatorName, users);
+                    target.add(annoPage);
+                });
+            mergeConfirm.show(aTarget);
+        }
+        else {
+            doMerge(state, curatorName, users);
+            aTarget.add(mainContainer);
+            //open curation doc
+            annoPage.actionLoadDocument(aTarget);
+        }
+    }
+
+    private void doMerge(AnnotatorState state, String aCurator,
+            Collection<User> aUsers)
+    {
         // merge cases
         try {
             SourceDocument doc = state.getDocument();
-            Map<String, CAS> userCases = curationService.retrieveUserCases(users, doc);
-            Optional<CAS> targetCas = curationService.retrieveCurationCAS(curator.getUsername(), 
+            Map<String, CAS> userCases = curationService.retrieveUserCases(aUsers, doc);
+            Optional<CAS> targetCas = curationService.retrieveCurationCAS(aCurator, 
                     state.getProject().getId(), doc);
             if (targetCas.isPresent()) {
+                MergeStrategy mergeStrat = ((MergeStrategy) mergeChoice.getDefaultModelObject());
                 mergeStrat.merge(state, targetCas.get(), userCases);
                 log.debug("{} merge done", mergeStrat.getUiName()); 
             }
         }
         catch (IOException e) {
             log.error(String.format("Could not retrieve CAS for user %s and project %d",
-                        curator.getUsername(), state.getProject().getId()));
+                        aCurator, state.getProject().getId()));
             e.printStackTrace();
-        }
-        
-        aTarget.add(mainContainer);
-        //open curation doc
-        annoPage.actionLoadDocument(aTarget);
+        } 
     }
     
     private Form<List<User>> createUserSelection()
