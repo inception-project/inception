@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 
 import java.util.Map;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
 import org.springframework.stereotype.Component;
 
@@ -28,6 +30,22 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 public class ManualMergeStrategy implements MergeStrategy
 {
     private String uiName = "Manual";
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof ManualMergeStrategy)) {
+            return false;
+        }
+        ManualMergeStrategy castOther = (ManualMergeStrategy) other;
+        return new EqualsBuilder().append(uiName, castOther.uiName).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder().append(uiName).toHashCode();
+    }
 
     @Override
     public void merge(AnnotatorState aState, CAS aCas, Map<String, CAS> aUserCases)
@@ -45,5 +63,6 @@ public class ManualMergeStrategy implements MergeStrategy
     {
         uiName = aUiName;
     }
+    
 
 }

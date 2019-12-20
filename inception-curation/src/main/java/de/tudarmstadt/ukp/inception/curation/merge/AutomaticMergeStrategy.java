@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBeha
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -40,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
 
+
 @Component("automaticStartegy")
 public class AutomaticMergeStrategy
     implements MergeStrategy
@@ -50,6 +53,22 @@ public class AutomaticMergeStrategy
     
     private @Autowired CurationService curationService;
     private @Autowired AnnotationSchemaService annotationService;
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof AutomaticMergeStrategy)) {
+            return false;
+        }
+        AutomaticMergeStrategy castOther = (AutomaticMergeStrategy) other;
+        return new EqualsBuilder().append(uiName, castOther.uiName).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder().append(uiName).toHashCode();
+    }
 
     @Override
     /**
@@ -92,4 +111,6 @@ public class AutomaticMergeStrategy
     {
         uiName = aUiName;
     }
+    
+    
 }
