@@ -1,4 +1,4 @@
-// Copyright 2015
+// Copyright 2019
 // Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 // Technische Universität Darmstadt
 // 
@@ -14,5 +14,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_formats]]
-= Formats
+[[sect_formats_webannotsv1]]
+= WebAnno TSV 1
+
+The file format used by WebAnno version 1 and earlier.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| WebAnno TSV 1
+| yes
+| no
+| no
+| 
+|====
