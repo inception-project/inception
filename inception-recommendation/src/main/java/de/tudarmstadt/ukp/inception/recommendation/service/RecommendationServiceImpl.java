@@ -65,7 +65,6 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
@@ -94,6 +93,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEven
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -883,6 +883,11 @@ public class RecommendationServiceImpl
         public boolean switchPredictions()
         {
             if (incomingPredictions != null) {
+                // This can be used for debugging purposes to get a longer history - do not 
+                // enable this for production!
+                if (activePredictions != null) {
+                    activePredictions.getLog().forEach(incomingPredictions::log);
+                }
                 activePredictions = incomingPredictions;
                 incomingPredictions = null;
                 return true;
@@ -967,7 +972,8 @@ public class RecommendationServiceImpl
 
         CAS predictionCas = null;
         try {
-            predictionCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+            predictionCas = WebAnnoCasUtil.createCas();
+
         }
         catch (ResourceInitializationException e) {
             predictions.log(
@@ -1095,15 +1101,17 @@ public class RecommendationServiceImpl
                             
                             // If possible, we inherit recommendations from a previous run while
                             // the recommender is still busy
-                            List<AnnotationSuggestion> suggestions = inheritSuggestions(recommender,
-                                    activePredictions, document, username);
-                            if (!suggestions.isEmpty()) {
-                                predictions.putPredictions(suggestions);
+                            if (activePredictions != null) {
+                                List<AnnotationSuggestion> suggestions = inheritSuggestions(
+                                        recommender, activePredictions, document, username);
+                                if (!suggestions.isEmpty()) {
+                                    predictions.putPredictions(suggestions);
+                                }
+    
+                                predictions.log(LogMessage.info(r.getRecommender().getName(),
+                                        "Inherited [%d] predictions from previous run",
+                                        suggestions.size()));
                             }
-
-                            predictions.log(LogMessage.info(r.getRecommender().getName(),
-                                    "Inherited [%d] predictions from previous run",
-                                    suggestions.size()));
 
                             continue nextRecommender;
                         }
@@ -1161,14 +1169,16 @@ public class RecommendationServiceImpl
                         // If there was a previous successful run of the recommender, inherit its
                         // suggestions to avoid that all the suggestions of the recommende simply
                         // disappear.
-                        List<AnnotationSuggestion> suggestions = inheritSuggestions(recommender,
-                                activePredictions, document, username);
-                        if (!suggestions.isEmpty()) {
-                            predictions.putPredictions(suggestions);
+                        if (activePredictions != null) {
+                            List<AnnotationSuggestion> suggestions = inheritSuggestions(recommender,
+                                    activePredictions, document, username);
+                            if (!suggestions.isEmpty()) {
+                                predictions.putPredictions(suggestions);
+                            }
+                            predictions.log(LogMessage.info(r.getRecommender().getName(),
+                                    "Inherited [%d] predictions from previous run",
+                                    suggestions.size()));
                         }
-                        predictions.log(LogMessage.info(r.getRecommender().getName(),
-                                "Inherited [%d] predictions from previous run",
-                                suggestions.size()));
 
                         continue nextRecommender;
                     }
