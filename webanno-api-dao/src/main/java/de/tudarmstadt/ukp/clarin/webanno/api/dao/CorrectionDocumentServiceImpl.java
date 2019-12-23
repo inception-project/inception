@@ -29,7 +29,6 @@ import javax.persistence.PersistenceContext;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
@@ -69,14 +68,14 @@ public class CorrectionDocumentServiceImpl
 
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    public void writeCorrectionCas(JCas aJcas, SourceDocument aDocument)
+    public void writeCorrectionCas(CAS aCas, SourceDocument aDocument)
         throws IOException
     {
-        casStorageService.writeCas(aDocument, aJcas, CORRECTION_USER);
+        casStorageService.writeCas(aDocument, aCas, CORRECTION_USER);
     }
 
     @Override
-    public JCas readCorrectionCas(SourceDocument aDocument)
+    public CAS readCorrectionCas(SourceDocument aDocument)
         throws IOException
     {
         return casStorageService.readCas(aDocument, CORRECTION_USER);

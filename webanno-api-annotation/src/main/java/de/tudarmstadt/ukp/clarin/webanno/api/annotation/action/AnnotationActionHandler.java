@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
 
 import java.io.IOException;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -28,19 +28,19 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
 {
-    void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
+    void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException;
 
     /**
      * Create annotation on the next token for forward annotation
      */
-    void actionCreateForward(AjaxRequestTarget aTarget, JCas aJCas)
+    void actionCreateForward(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException;
 
     /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
      */
-    void actionSelect(AjaxRequestTarget aTarget, JCas aJCas)
+    void actionSelect(AjaxRequestTarget aTarget, CAS aCas)
         throws AnnotationException;
 
     /**
@@ -63,11 +63,25 @@ public interface AnnotationActionHandler
     
     /**
      * Fill the currently armed slot with the given annotation.
+     * 
+     * @param aTarget
+     *            the AJAX request target.
+     * @param aCas
+     *            the CAS in which the slot is going to be filled.
+     * @param aSlotFillerBegin
+     *            the begin of the span selected by the user to create a new annotation or the begin
+     *            of the span of the selected existing annotation.
+     * @param aSlotFillerEnd
+     *            the corresponding end.
+     * @param aExistingSlotFillerId
+     *            the {@link VID} of a selected existing annotation. If no annotation has been
+     *            selected, this is {@link VID#NONE_ID} and {@link VID#isSet()} returns
+     *            {@code false}.
      */
-    void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
-            VID paramId)
+    void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
+            int aSlotFillerEnd, VID aExistingSlotFillerId)
         throws IOException, AnnotationException;
     
-    JCas getEditorCas()
+    CAS getEditorCas()
             throws IOException;
 }

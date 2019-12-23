@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -33,11 +33,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
@@ -82,25 +82,25 @@ public class RelationRenderer
     }
     
     @Override
-    public void render(final JCas aJcas, List<AnnotationFeature> aFeatures,
+    public void render(final CAS aCas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
                 .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
         
         RelationAdapter typeAdapter = getTypeAdapter();
-        Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
+        Type type = getType(aCas, typeAdapter.getAnnotationTypeName());
         
         Feature dependentFeature = type.getFeatureByBaseName(typeAdapter.getTargetFeatureName());
         Feature governorFeature = type.getFeatureByBaseName(typeAdapter.getSourceFeatureName());
 
-        Type spanType = getType(aJcas.getCas(), typeAdapter.getAttachTypeName());
+        Type spanType = getType(aCas, typeAdapter.getAttachTypeName());
         Feature arcSpanFeature = spanType.getFeatureByBaseName(typeAdapter.getAttachFeatureName());
 
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
 
-        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aJcas, aWindowBegin, aWindowEnd,
+        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBegin, aWindowEnd,
                 type, dependentFeature, governorFeature, arcSpanFeature);
 
         // if this is a governor for more than one dependent, avoid duplicate yield
@@ -109,7 +109,7 @@ public class RelationRenderer
         // Index mapping annotations to the corresponding rendered arcs
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
         
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, aWindowBegin, aWindowEnd)) {
+        for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
             if (typeAdapter.getAttachFeatureName() != null) {
                 dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
                 governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
@@ -159,9 +159,10 @@ public class RelationRenderer
 
                 // sort the annotations (begin, end)
                 List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
-                sortedDepFs.sort(comparingInt(arg0 -> selectByAddr(aJcas, arg0).getBegin()));
+                sortedDepFs
+                        .sort(comparingInt(arg0 -> selectAnnotationByAddr(aCas, arg0).getBegin()));
 
-                String cm = getYieldMessage(aJcas, sortedDepFs);
+                String cm = getYieldMessage(aCas, sortedDepFs);
                 aResponse.add(new VComment(governorFs, VCommentType.YIELD, cm));
             }
         }
@@ -175,27 +176,27 @@ public class RelationRenderer
     /**
      * The relations yield message
      */
-    private String getYieldMessage(JCas aJCas, List<Integer> sortedDepFs)
+    private String getYieldMessage(CAS aCas, List<Integer> sortedDepFs)
     {
         StringBuilder cm = new StringBuilder();
         int end = -1;
         for (Integer depFs : sortedDepFs) {
             if (end == -1) {
-                cm.append(selectByAddr(aJCas, depFs).getCoveredText());
-                end = selectByAddr(aJCas, depFs).getEnd();
+                cm.append(selectAnnotationByAddr(aCas, depFs).getCoveredText());
+                end = selectAnnotationByAddr(aCas, depFs).getEnd();
             }
             // if no space between token and punct
-            else if (end == selectByAddr(aJCas, depFs).getBegin()) {
-                cm.append(selectByAddr(aJCas, depFs).getCoveredText());
-                end = selectByAddr(aJCas, depFs).getEnd();
+            else if (end == selectAnnotationByAddr(aCas, depFs).getBegin()) {
+                cm.append(selectAnnotationByAddr(aCas, depFs).getCoveredText());
+                end = selectAnnotationByAddr(aCas, depFs).getEnd();
             }
-            else if (end + 1 != selectByAddr(aJCas, depFs).getBegin()) {
-                cm.append(" ... ").append(selectByAddr(aJCas, depFs).getCoveredText());
-                end = selectByAddr(aJCas, depFs).getEnd();
+            else if (end + 1 != selectAnnotationByAddr(aCas, depFs).getBegin()) {
+                cm.append(" ... ").append(selectAnnotationByAddr(aCas, depFs).getCoveredText());
+                end = selectAnnotationByAddr(aCas, depFs).getEnd();
             }
             else {
-                cm.append(" ").append(selectByAddr(aJCas, depFs).getCoveredText());
-                end = selectByAddr(aJCas, depFs).getEnd();
+                cm.append(" ").append(selectAnnotationByAddr(aCas, depFs).getCoveredText());
+                end = selectAnnotationByAddr(aCas, depFs).getEnd();
             }
 
         }
@@ -205,7 +206,7 @@ public class RelationRenderer
     /**
      * Get relation links to display in relation yield
      */
-    private Map<Integer, Set<Integer>> getRelationLinks(JCas aJcas, int aWindowBegin,
+    private Map<Integer, Set<Integer>> getRelationLinks(CAS aCas, int aWindowBegin,
             int aWindowEnd, Type type, Feature dependentFeature, Feature governorFeature,
             Feature arcSpanFeature)
     {
@@ -214,7 +215,7 @@ public class RelationRenderer
         FeatureStructure governorFs;
         Map<Integer, Set<Integer>> relations = new ConcurrentHashMap<>();
 
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, aWindowBegin, aWindowEnd)) {
+        for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
             if (typeAdapter.getAttachFeatureName() != null) {
                 dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
                 governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);

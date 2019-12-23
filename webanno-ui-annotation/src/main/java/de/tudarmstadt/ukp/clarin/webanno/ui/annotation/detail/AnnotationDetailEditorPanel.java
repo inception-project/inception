@@ -17,14 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+import static java.util.Arrays.asList;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -35,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.NoResultException;
@@ -48,7 +53,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -78,13 +82,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
@@ -95,10 +104,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 /**
  * Annotation Detail Editor Panel.
@@ -118,6 +128,7 @@ public abstract class AnnotationDetailEditorPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean UserDao userRepository;
     
     private AnnotationPageBase page;
     private AnnotationFeatureForm annotationFeatureForm;
@@ -186,8 +197,8 @@ public abstract class AnnotationDetailEditorPanel
                             .getParameterValue("keycode").toString("");
                     
                     if (KEY_ENTER.equals(jsKeycode)) {
-                        JCas jCas = getEditorCas();
-                        actionCreateForward(aTarget, jCas);
+                        CAS cas = getEditorCas();
+                        actionCreateForward(aTarget, cas);
                         setForwardAnnotationKeySequence(null, "complete annotation (space)");
                         return;
                     }
@@ -195,8 +206,8 @@ public abstract class AnnotationDetailEditorPanel
                         FeatureState featureState = getModelObject().getFeatureStates().get(0);
                         featureState.value = null;
                         setForwardAnnotationKeySequence(null, "delete annotation (backspace)");
-                        JCas jCas = getEditorCas();
-                        actionCreateForward(aTarget, jCas);
+                        CAS cas = getEditorCas();
+                        actionCreateForward(aTarget, cas);
                     }
                     else {
                         String newTag = (textfield.getModelObject() == null ? ""
@@ -341,8 +352,8 @@ public abstract class AnnotationDetailEditorPanel
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget) {
                 try {
-                    JCas jCas = getEditorCas();
-                    actionCreateOrUpdate(aTarget, jCas);
+                    CAS cas = getEditorCas();
+                    actionCreateOrUpdate(aTarget, cas);
                 }
                 catch (Exception e) {
                     handleException(form, aTarget, e);
@@ -364,7 +375,7 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private void createNewAnnotation(AjaxRequestTarget aTarget, TypeAdapter aAdapter, JCas aJCas)
+    private void createNewAnnotation(AjaxRequestTarget aTarget, TypeAdapter aAdapter, CAS aCas)
         throws AnnotationException, IOException
     {
         AnnotatorState state = getModelObject();
@@ -376,10 +387,10 @@ public abstract class AnnotationDetailEditorPanel
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
             else if (aAdapter instanceof RelationAdapter) {
-                createNewRelationAnnotation((RelationAdapter) aAdapter, aJCas);
+                createNewRelationAnnotation((RelationAdapter) aAdapter, aCas);
             }
             else if (aAdapter instanceof ChainAdapter) {
-                createNewChainLinkAnnotation((ChainAdapter) aAdapter, aJCas);
+                createNewChainLinkAnnotation((ChainAdapter) aAdapter, aCas);
             }
             else {
                 throw new IllegalStateException("I don't know how to use ["
@@ -388,10 +399,10 @@ public abstract class AnnotationDetailEditorPanel
         }
         else {
             if (aAdapter instanceof SpanAdapter) {
-                createNewSpanAnnotation(aTarget, (SpanAdapter) aAdapter, aJCas);
+                createNewSpanAnnotation(aTarget, (SpanAdapter) aAdapter, aCas);
             }
             else if (aAdapter instanceof ChainAdapter) {
-                createNewChainElement(aTarget, (ChainAdapter) aAdapter, aJCas);
+                createNewChainElement(aTarget, (ChainAdapter) aAdapter, aCas);
             }
             else {
                 throw new IllegalStateException("I don't know how to use ["
@@ -400,8 +411,7 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private void createNewRelationAnnotation(RelationAdapter aAdapter,
-            JCas aJCas)
+    private void createNewRelationAnnotation(RelationAdapter aAdapter, CAS aCas)
         throws AnnotationException
     {
         LOG.trace("createNewRelationAnnotation()");
@@ -409,18 +419,17 @@ public abstract class AnnotationDetailEditorPanel
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
 
-        AnnotationFS originFs = selectByAddr(aJCas, selection.getOrigin());
-        AnnotationFS targetFs = selectByAddr(aJCas, selection.getTarget());
+        AnnotationFS originFs = selectAnnotationByAddr(aCas, selection.getOrigin());
+        AnnotationFS targetFs = selectAnnotationByAddr(aCas, selection.getTarget());
 
         // Creating a relation
         AnnotationFS arc = aAdapter.add(state.getDocument(), state.getUser().getUsername(),
-                originFs, targetFs, aJCas, state.getWindowBeginOffset(),
-                state.getWindowEndOffset());
+                originFs, targetFs, aCas);
         selection.selectArc(new VID(arc), originFs, targetFs);
     }
 
     private void createNewSpanAnnotation(AjaxRequestTarget aTarget, SpanAdapter aAdapter,
-        JCas aJCas)
+        CAS aCas)
         throws IOException, AnnotationException
     {
         AnnotatorState state = getModelObject();
@@ -428,104 +437,149 @@ public abstract class AnnotationDetailEditorPanel
         Selection selection = state.getSelection();
         
         AnnotationFS annoFs = aAdapter.add(state.getDocument(), state.getUser().getUsername(),
-                aJCas, selection.getBegin(), selection.getEnd());
+                aCas, selection.getBegin(), selection.getEnd());
         selection.selectSpan(annoFs);
     }
     
-    private void createNewChainElement(AjaxRequestTarget aTarget, ChainAdapter aAdapter, JCas aJCas)
+    private void createNewChainElement(AjaxRequestTarget aTarget, ChainAdapter aAdapter, CAS aCas)
         throws AnnotationException
     {
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
 
         AnnotationFS annoFs = aAdapter.addSpan(state.getDocument(), state.getUser().getUsername(),
-                aJCas, selection.getBegin(), selection.getEnd());
+                aCas, selection.getBegin(), selection.getEnd());
         selection.selectSpan(annoFs);
     }
 
-    private void createNewChainLinkAnnotation(ChainAdapter aAdapter,
-            JCas aJCas) {
+    private void createNewChainLinkAnnotation(ChainAdapter aAdapter, CAS aCas)
+    {
         LOG.trace("createNewChainLinkAnnotation()");
 
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
 
-        AnnotationFS originFs = selectByAddr(aJCas, selection.getOrigin());
-        AnnotationFS targetFs = selectByAddr(aJCas, selection.getTarget());
+        AnnotationFS originFs = selectAnnotationByAddr(aCas, selection.getOrigin());
+        AnnotationFS targetFs = selectAnnotationByAddr(aCas, selection.getTarget());
 
         // Creating a new chain link
-        int addr = aAdapter.addArc(state.getDocument(), state.getUser().getUsername(), aJCas,
+        int addr = aAdapter.addArc(state.getDocument(), state.getUser().getUsername(), aCas,
                 originFs, targetFs);
         selection.selectArc(new VID(addr), originFs, targetFs);
     }
 
     @Override
-    public void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
-        VID aVID)
+    public void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
+            int aSlotFillerEnd, VID aExistingSlotFillerId)
         throws AnnotationException, IOException
     {
-        assert aJCas != null;
+        assert aCas != null;
 
         AnnotatorState state = getModelObject();
-    
-        // REC: I'm not sure this should be fired here. Leaving it commented in case we need it.
-        // Otherwise, should be removed in due time.
-        // extensionRegistry.fireAction(AnnotationDetailEditorPanel.this, getModelObject(), aTarget,
-        // aJCas, aVID, aBegin, aEnd);
         
+        if (isUserViewingOthersWork()) {
+            throw new NotEditableException("This document belongs to another user.");
+        }
+
+        if (isAnnotationFinished()) {
+            throw new NotEditableException("This document is already closed. Please ask your "
+                + "project manager to re-open it via the Monitoring page.");
+        }
+    
         // If this method is called when no slot is armed, it must be a bug!
         if (!state.isSlotArmed()) {
             throw new IllegalStateException("No slot is armed.");
         }
 
-        // Fill slot with new annotation (only works if a concrete type is set for the link feature!
-        int id;
-        if (aVID.isNotSet()) {
-            if (!CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().getType())) {
-                SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
-                        .getLayer(state.getArmedFeature().getType(), state.getProject()));
+        // If the user did not select an existing annotation but simply marked a span of text to
+        // fill a slot, then we try to create a new span annotation corresponding to the slot
+        // filler type defined in the feature. However, this only works if the slot filler is a
+        // concrete span type defined in the project, not if the user simply defined
+        // CAS.TYPE_NAME_ANNOTATION to allow for arbitrary slot fillers. In the latter case, we
+        // abort the operation with an IllegalPlacementException.
+        int slotFillerAddr;
+        if (aExistingSlotFillerId.isNotSet()) {
+            if (!CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().feature.getType())) {
+                SpanAdapter adapter = (SpanAdapter) annotationService
+                        .getAdapter(annotationService.findLayer(state.getProject(),
+                                state.getArmedFeature().feature.getType()));
 
-                id = getAddr(adapter.add(state.getDocument(), state.getUser().getUsername(), aJCas,
-                        aBegin, aEnd));
+                slotFillerAddr = getAddr(adapter.add(state.getDocument(),
+                        state.getUser().getUsername(), aCas, aSlotFillerBegin, aSlotFillerEnd));
             }
             else {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                     "Unable to create annotation of type [" + CAS.TYPE_NAME_ANNOTATION
                         + "]. Please click an annotation in stead of selecting new text.");
             }
         }
         else {
-            id = aVID.getId();
+            slotFillerAddr = aExistingSlotFillerId.getId();
         }
 
-        // Fill the annotation into the slow
-        try {
-            setSlot(aTarget, aJCas, id);
+        // Inject the slot filler into the respective slot
+        FeatureStructure slotHostFS = selectFsByAddr(aCas, state.getArmedFeature().vid.getId());
+        AnnotationLayer slotHostLayer = annotationService.findLayer(state.getProject(), slotHostFS);
+        TypeAdapter slotHostAdapter = annotationService.getAdapter(slotHostLayer);
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) state.getArmedFeature().value;
+        LinkWithRoleModel link = links.get(state.getArmedSlot());
+        link.targetAddr = slotFillerAddr;
+        link.label = selectAnnotationByAddr(aCas, slotFillerAddr).getCoveredText();
+        commitFeatureStatesToFeatureStructure(state.getDocument(), state.getUser().getUsername(),
+                aCas, state.getArmedFeature().vid.getId(), slotHostAdapter,
+                asList(state.getArmedFeature()));
+        
+        // NOTE: we do NOT delegate to actionCreateOrUpdate here because most of the things
+        // that actionCreateOrUpdate does are not required for slot filling and we also because
+        // slot filling requires special treatment. This also means, we don't delegate to
+        // internalCommitAnnotation and repeat the necessary code here. However, we DO delegate
+        // to internalCompleteAnnotation to save the CAS after the annotation.
+
+        internalCompleteAnnotation(aTarget, aCas);
+
+        // If the armed slot is located in the annotation detail editor panel (right side), then 
+        // we need to re-render it and also update the annotator state with the changes that we made
+        // to the CAS
+        if (state.getSelection().getAnnotation().equals(state.getArmedFeature().vid)) {
+            // Make sure that panel is re-rendered when a slot is filled
+            aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
+                        
+            // Loading feature editor values from CAS
+            loadFeatureEditorModels(aCas, aTarget);
         }
-        catch (Exception e) {
-            handleException(this, aTarget, e);
+        // ... if the SLOT HOST annotation is NOT open in the detail panel on the right, then 
+        // select SLOT FILLER an open it there
+        else {
+            state.getSelection().selectSpan(selectAnnotationByAddr(aCas, slotFillerAddr));
+            actionSelect(aTarget, aCas);
         }
+        
+        state.clearArmedSlot();
     }
 
     @Override
-    public void actionSelect(AjaxRequestTarget aTarget, JCas aJCas)
+    public void actionSelect(AjaxRequestTarget aTarget, CAS aCas)
         throws AnnotationException
     {
         // Edit existing annotation
-        loadFeatureEditorModels(aJCas, aTarget);
+        loadFeatureEditorModels(aCas, aTarget);
 
         // Ensure we re-render and update the highlight
         onChange(aTarget);
     }
 
     @Override
-    public void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
+    public void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException
     {
         LOG.trace("actionAnnotate");
+        
+        if (isUserViewingOthersWork()) {
+            return;
+        }
 
         if (isAnnotationFinished()) {
-            throw new AnnotationException("This document is already closed. Please ask your "
+            throw new NotEditableException("This document is already closed. Please ask your "
                 + "project manager to re-open it via the Monitoring page");
         }
 
@@ -539,16 +593,18 @@ public abstract class AnnotationDetailEditorPanel
             // FIXME REC I think this whole section which meddles around with the selected
             // annotation layer should be moved out of there to the place where we originally set
             // the annotation layer...!
-            AnnotationFS originFS = selectByAddr(aJCas, state.getSelection().getOrigin());
-            AnnotationLayer spanLayer = annotationService.getLayer(state.getProject(), originFS);
-            if (
-                    state.getPreferences().isRememberLayer() &&
-                    state.getSelection().getAnnotation().isNotSet() && // i.e. new annotation
-                    !spanLayer.equals(state.getDefaultAnnotationLayer())
-            ) {
-                throw new AnnotationException("No relation annotation allowed on layer ["
-                        + state.getDefaultAnnotationLayer().getUiName() + "]");
+            
+            // Fetch the annotation representing the origin endpoint of the relation
+            AnnotationFS originFS = selectAnnotationByAddr(aCas, state.getSelection().getOrigin());
+            AnnotationFS targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
+            
+            if (!originFS.getType().equals(targetFS.getType())) {
+                throw new IllegalPlacementException(
+                        "Cannot create relation between spans on different layers");
             }
+            
+            // Fetch the annotation layer for the origin annotation
+            AnnotationLayer originLayer = annotationService.findLayer(state.getProject(), originFS);
 
             AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
 
@@ -560,37 +616,24 @@ public abstract class AnnotationDetailEditorPanel
 
             // If we drag an arc in a chain layer, then the arc is of the same layer as the span
             // Chain layers consist of arcs and spans
-            if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+            if (originLayer.getType().equals(CHAIN_TYPE)) {
                 // one layer both for the span and arc annotation
-                state.setSelectedAnnotationLayer(spanLayer);
+                state.setSelectedAnnotationLayer(originLayer);
             }
             // Otherwise, look up the possible relation layer(s) in the database.
             else {
-                for (AnnotationLayer l : annotationService.listAnnotationLayer(state
-                    .getProject())) {
-                    if (
-                            (l.getAttachType() != null && l.getAttachType().equals(spanLayer)) ||
-                            (l.getAttachFeature() != null && 
-                                    l.getAttachFeature().getType().equals(spanLayer.getName()))
-                    ) {
-                        if (state.getAnnotationLayers().contains(l)) {
-                            state.setSelectedAnnotationLayer(l);
-                        }
-                        else {
-                            state.setSelectedAnnotationLayer(null);
-                        }
-                        break;
-                    }
-                }
+                state.setSelectedAnnotationLayer(getRelationLayerFor(originLayer).orElseThrow(
+                    () -> new IllegalPlacementException("No relation annotation allowed on layer ["
+                            + state.getDefaultAnnotationLayer().getUiName() + "]")));
             }
 
-            state.setDefaultAnnotationLayer(spanLayer);
+            state.setDefaultAnnotationLayer(originLayer);
 
             // If we switched layers, we need to initialize the feature editors for the new layer
             if (!Objects.equals(previousLayer, state.getSelectedAnnotationLayer())) {
                 LOG.trace("Layer changed from {} to {} - need to reload feature editors",
                         previousLayer, state.getSelectedAnnotationLayer());
-                loadFeatureEditorModels(aJCas, aTarget);
+                loadFeatureEditorModels(aCas, aTarget);
             }
         }
         else {
@@ -600,9 +643,31 @@ public abstract class AnnotationDetailEditorPanel
                     annotationFeatureForm.getLayerSelector().getModelObject());
         }
         
-        internalCommitAnnotation(aTarget, aJCas);
+        internalCommitAnnotation(aTarget, aCas);
 
-        internalCompleteAnnotation(aTarget, aJCas);
+        internalCompleteAnnotation(aTarget, aCas);
+    }
+    
+    private Optional<AnnotationLayer> getRelationLayerFor(AnnotationLayer aSpanLayer)
+    {
+        for (AnnotationLayer l : annotationService.listAnnotationLayer(aSpanLayer.getProject())) {
+            if (!RELATION_TYPE.equals(l.getType())) {
+                continue;
+            }
+            
+            if (aSpanLayer.equals(l.getAttachType())) {
+                return Optional.of(l);
+            }
+            
+            if (
+                    l.getAttachFeature() != null && 
+                    l.getAttachFeature().getType().equals(aSpanLayer.getName())
+            ) {
+                return Optional.of(l);
+            }
+        }
+        
+        return Optional.empty();
     }
     
     public TextField<String> getForwardAnnotationTextField()
@@ -611,13 +676,17 @@ public abstract class AnnotationDetailEditorPanel
     }
     
     @Override
-    public void actionCreateForward(AjaxRequestTarget aTarget, JCas aJCas)
+    public void actionCreateForward(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException
     {
         LOG.trace("actionCreateForward()");
+        
+        if (isUserViewingOthersWork()) {
+            return;
+        }
 
         if (isAnnotationFinished()) {
-            throw new AnnotationException("This document is already closed. Please ask your "
+            throw new NotEditableException("This document is already closed. Please ask your "
                     + "project manager to re-open it via the Monitoring page");
         }
 
@@ -628,7 +697,7 @@ public abstract class AnnotationDetailEditorPanel
         state.setSelectedAnnotationLayer(
                 annotationFeatureForm.getLayerSelector().getModelObject());
 
-        internalCommitAnnotation(aTarget, aJCas);
+        internalCommitAnnotation(aTarget, aCas);
 
         // Forward annotation mode requires that there is exactly a single feature, so we
         // can simply call `get(0)` here.
@@ -639,20 +708,20 @@ public abstract class AnnotationDetailEditorPanel
         if (featureState.value == null) {
             TypeAdapter adapter = annotationService
                     .getAdapter(state.getSelectedAnnotationLayer());
-            AnnotationFS fs = selectByAddr(aJCas,
+            AnnotationFS fs = selectAnnotationByAddr(aCas,
                     state.getSelection().getAnnotation().getId());
-            deleteAnnotation(aJCas, state, fs, featureState.feature.getLayer(), adapter);
+            deleteAnnotation(aCas, state, fs, featureState.feature.getLayer(), adapter);
         }
         
         // Move on to the next token
         Selection selection = state.getSelection();
-        AnnotationFS nextToken = getNextToken(aJCas, selection.getBegin(), selection.getEnd());
+        AnnotationFS nextToken = getNextToken(aCas, selection.getBegin(), selection.getEnd());
         if (nextToken != null) {
-            state.getSelection().selectSpan(aJCas, nextToken.getBegin(), nextToken.getEnd());
+            state.getSelection().selectSpan(aCas, nextToken.getBegin(), nextToken.getEnd());
 
             // If the new annotation is outside the view window then move forward
             if (state.getWindowEndOffset() <= nextToken.getBegin()) {
-                state.moveForward(aJCas);
+                state.moveForward(aCas);
             }
             
             // Re-set the selected layer from the drop-down since it might have changed if we
@@ -665,13 +734,13 @@ public abstract class AnnotationDetailEditorPanel
             // into the {@link AnnotationFeatureForm#setSelectedTag(String) selected tag}.
             SpanAdapter adapter = (SpanAdapter) annotationService
                     .getAdapter(state.getDefaultAnnotationLayer());
-            Type type = CasUtil.getType(aJCas.getCas(), adapter.getAnnotationTypeName());
-            AnnotationFS annotation = selectSingleFsAt(aJCas, type, nextToken.getBegin(),
-                    nextToken.getEnd());
+            Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
+            AnnotationFS annotation = selectAt(aCas, type, nextToken.getBegin(), nextToken.getEnd())
+                    .stream().findFirst().orElse(null);
             
             // If there is no existing annotation of if stacking is allowed then we create a new one
             if (adapter.getLayer().isAllowStacking() || annotation == null) {
-                internalCommitAnnotation(aTarget, aJCas);
+                internalCommitAnnotation(aTarget, aCas);
             }
             // ... if there is an existing annotation, then select it
             else {
@@ -699,44 +768,49 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("onAutoForward()");
         onAutoForward(aTarget);
         
-        internalCompleteAnnotation(aTarget, aJCas);
+        internalCompleteAnnotation(aTarget, aCas);
         
         aTarget.add(annotationFeatureForm);
     }
-    
+
+
+    private boolean isUserViewingOthersWork()
+    {
+        return !getModelObject().getUser().equals(userRepository.getCurrentUser());
+    }
+
     /**
      * Persists the potentially modified CAS, remembers feature values, reloads the feature editors
      * using the latest info from the CAS, updates the sentence number and focus unit, performs
      * auto-scrolling.
      */
-    private void internalCompleteAnnotation(AjaxRequestTarget aTarget, JCas aJCas)
+    private void internalCompleteAnnotation(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException
     {
         AnnotatorState state = getModelObject();
 
         // Update progress information
         LOG.trace("actionAnnotate() updating progress information");
-        int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
+        int sentenceNumber = getSentenceNumber(aCas, state.getSelection().getBegin());
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         // persist changes
-        page.writeEditorCas(aJCas);
+        page.writeEditorCas(aCas);
 
         // Remember the current feature values independently for spans and relations
         LOG.trace("actionAnnotate() remembering feature editor values");
         state.rememberFeatures();
 
         // Loading feature editor values from CAS
-        loadFeatureEditorModels(aJCas, aTarget);
+        loadFeatureEditorModels(aCas, aTarget);
 
         // onAnnotate callback
-        LOG.trace("onAnnotate()");
         onAnnotate(aTarget);
         
         // Perform auto-scroll if it is enabled
         if (state.getPreferences().isScrollPage()) {
-            autoScroll(aJCas);
+            autoScroll(aCas);
         }
 
         getForwardAnnotationTextField().setModelObject(null);
@@ -785,7 +859,7 @@ public abstract class AnnotationDetailEditorPanel
     /**
      * Creates or updates an annotation using the information from the feature editors.
      */
-    private void internalCommitAnnotation(AjaxRequestTarget aTarget, JCas aJCas)
+    private void internalCommitAnnotation(AjaxRequestTarget aTarget, CAS aCas)
         throws AnnotationException, IOException
     {
         AnnotatorState state = getModelObject();
@@ -807,28 +881,6 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("actionAnnotate() defaultLayer: {}",
                 state.getDefaultAnnotationLayer().getUiName());
 
-        // Verify if input is valid according to tagset
-        LOG.trace("actionAnnotate() verifying feature values in editors");
-        List<FeatureState> featureStates = getModelObject().getFeatureStates();
-        for (FeatureState featureState : featureStates) {
-            AnnotationFeature feature = featureState.feature;
-            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
-                String value = (String) featureState.value;
-
-                // Check if tag is necessary, set, and correct
-                if (
-                        value != null &&
-                        feature.getTagset() != null &&
-                        !feature.getTagset().isCreateTag() &&
-                        !annotationService.existsTag(value, feature.getTagset())
-                ) {
-                    error("[" + value
-                        + "] is not in the tag list. Please choose from the existing tags");
-                    return;
-                }
-            }
-        }
-
         // #186 - After filling a slot, the annotation detail panel is not updated
         aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
 
@@ -838,28 +890,55 @@ public abstract class AnnotationDetailEditorPanel
         // point to the span type to which the relation attaches, not to the relation type!
         TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
 
-        // If this is an annotation creation action, create the annotation
+        // If no annotation is selected, then we assume this is an annotation creation action,
+        // create the annotation
         if (state.getSelection().getAnnotation().isNotSet()) {
             // Load the feature editors with the remembered values (if any)
-            loadFeatureEditorModels(aJCas, aTarget);
-            createNewAnnotation(aTarget, adapter, aJCas);
+            loadFeatureEditorModels(aCas, aTarget);
+            createNewAnnotation(aTarget, adapter, aCas);
         }
 
         // Update the features of the selected annotation from the values presently in the
         // feature editors
-        writeFeatureEditorModelsToCas(adapter, aJCas);
+        List<FeatureState> featureStates = state.getFeatureStates();
+        commitFeatureStatesToFeatureStructure(state.getDocument(), state.getUser().getUsername(),
+                aCas, state.getSelection().getAnnotation().getId(), adapter, featureStates);
+    }
+    
+    /**
+     * Commits the values from the given feature states into the annotation with the given
+     * target FS address in the given target CAS using the provided type adapter.
+     */
+    private void commitFeatureStatesToFeatureStructure(SourceDocument aDocment, String aUsername,
+            CAS aTargetCas, int aTargetFsAddr, TypeAdapter aAdapter,
+            List<FeatureState> aFeatureStates)
+    {
+        List<AnnotationFeature> features = new ArrayList<>();
+        for (FeatureState featureState : aFeatureStates) {
+            features.add(featureState.feature);
+            
+            LOG.trace("Committing feature states to CAS: {} = {}", featureState.feature.getUiName(),
+                    featureState.value);
+            aAdapter.setFeatureValue(aDocment, aUsername, aTargetCas,
+                    aTargetFsAddr, featureState.feature,
+                    featureState.value);
+        }
+        
+        String bratLabelText = TypeUtil.getUiLabelText(aAdapter,
+                selectFsByAddr(aTargetCas, aTargetFsAddr), features);
+        info(generateMessage(aAdapter.getLayer(), bratLabelText, false));
     }
 
     public AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
             AnnotationFS aFS)
     {
-        AnnotationLayer layer = annotationService.getLayer(aProject, aFS);
+        AnnotationLayer layer = annotationService.findLayer(aProject, aFS);
         
         AttachStatus attachStatus = new AttachStatus();
         
         Set<AnnotationFS> attachedRels = getAttachedRels(aFS, layer);
         boolean attachedToReadOnlyRels = attachedRels.stream().anyMatch(relFS -> {
-            AnnotationLayer relLayer = annotationService.getLayer(aProject, relFS);
+            AnnotationLayer relLayer = annotationService.findLayer(aProject, relFS);
             return relLayer.isReadonly();
         });
         if (attachedToReadOnlyRels) {
@@ -881,9 +960,9 @@ public abstract class AnnotationDetailEditorPanel
         attachStatus.attachCount += attachedSpans.size();
         */
 
-        Set<AnnotationFS> attachedLinks = getAttachedLinks(aFS, layer);
+        Set<FeatureStructure> attachedLinks = getAttachedLinks(aFS, layer);
         boolean attachedToReadOnlyLinks = attachedLinks.stream().anyMatch(relFS -> {
-            AnnotationLayer relLayer = annotationService.getLayer(aProject, relFS);
+            AnnotationLayer relLayer = annotationService.findLayer(aProject, relFS);
             return relLayer.isReadonly();
         });
         if (attachedToReadOnlyLinks) {
@@ -898,12 +977,13 @@ public abstract class AnnotationDetailEditorPanel
     public void actionDelete(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        JCas jCas = getEditorCas();
+        CAS cas = getEditorCas();
 
         AnnotatorState state = getModelObject();
 
-        AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
-        AnnotationLayer layer = annotationService.getLayer(state.getProject(), fs);
+        AnnotationFS fs = selectAnnotationByAddr(cas,
+                state.getSelection().getAnnotation().getId());
+        AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
         if (layer.isReadonly()) {
@@ -918,19 +998,19 @@ public abstract class AnnotationDetailEditorPanel
             return;
         }
         
-        deleteAnnotation(jCas, state, fs, layer, adapter);
+        deleteAnnotation(cas, state, fs, layer, adapter);
 
         // Store CAS again
-        page.writeEditorCas(jCas);
+        page.writeEditorCas(cas);
 
         // Update progress information
-        int sentenceNumber = getSentenceNumber(jCas, state.getSelection().getBegin());
+        int sentenceNumber = getSentenceNumber(cas, state.getSelection().getBegin());
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         // Auto-scroll
         if (state.getPreferences().isScrollPage()) {
-            autoScroll(jCas);
+            autoScroll(cas);
         }
 
         state.rememberFeatures();
@@ -946,7 +1026,7 @@ public abstract class AnnotationDetailEditorPanel
         onDelete(aTarget, fs);
     }
 
-    private void deleteAnnotation(JCas jCas, AnnotatorState state, AnnotationFS fs,
+    private void deleteAnnotation(CAS aCas, AnnotatorState state, AnnotationFS fs,
             AnnotationLayer layer, TypeAdapter adapter) {
         // == DELETE ATTACHED RELATIONS ==
         // If the deleted FS is a span, we must delete all relations that
@@ -956,9 +1036,9 @@ public abstract class AnnotationDetailEditorPanel
         // is no longer set after UNATTACH SPANS!
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFS attachedFs : getAttachedRels(fs, layer)) {
-                jCas.getCas().removeFsFromIndexes(attachedFs);
+                aCas.removeFsFromIndexes(attachedFs);
                 info("The attached annotation for relation type [" + annotationService
-                    .getLayer(attachedFs.getType().getName(), state.getProject()).getUiName()
+                    .findLayer(state.getProject(), attachedFs.getType().getName()).getUiName()
                     + "] is deleted");
             }
         }
@@ -978,7 +1058,7 @@ public abstract class AnnotationDetailEditorPanel
                 layer.getAttachType() != null && 
                 layer.getAttachFeature() != null
         ) {
-            Type spanType = CasUtil.getType(jCas.getCas(), layer.getAttachType().getName());
+            Type spanType = CasUtil.getType(aCas, layer.getAttachType().getName());
             Feature attachFeature = spanType.getFeatureByBaseName(layer.getAttachFeature()
                 .getName());
             for (AnnotationFS attachedFs : getAttachedSpans(fs, layer)) {
@@ -996,10 +1076,11 @@ public abstract class AnnotationDetailEditorPanel
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFeature linkFeature : annotationService
                     .listAttachedLinkFeatures(layer)) {
-                Type linkType = CasUtil.getType(jCas.getCas(), linkFeature.getLayer().getName());
+                Type linkHostType = CasUtil.getType(aCas, linkFeature.getLayer().getName());
 
-                for (AnnotationFS linkFS : CasUtil.select(jCas.getCas(), linkType)) {
-                    List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature, linkFS);
+                for (FeatureStructure linkHostFS : CasUtil.selectFS(aCas, linkHostType)) {
+                    List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
+                            linkHostFS);
                     Iterator<LinkWithRoleModel> i = links.iterator();
                     boolean modified = false;
                     while (i.hasNext()) {
@@ -1007,13 +1088,25 @@ public abstract class AnnotationDetailEditorPanel
                         if (link.targetAddr == getAddr(fs)) {
                             i.remove();
                             LOG.debug("Cleared slot [" + link.role + "] in feature ["
-                                + linkFeature.getName() + "] on annotation [" + getAddr(linkFS)
+                                + linkFeature.getName() + "] on annotation [" + getAddr(linkHostFS)
                                 + "]");
                             modified = true;
                         }
                     }
                     if (modified) {
-                        setFeature(linkFS, linkFeature, links);
+                        setFeature(linkHostFS, linkFeature, links);
+                        
+                        // If the currently armed slot is part of this link, then we disarm the slot
+                        // to avoid the armed slot no longer pointing at the index which the user 
+                        // had selected it to point at.
+                        FeatureState armedFeature = state.getArmedFeature();
+                        if (
+                                armedFeature != null && 
+                                WebAnnoCasUtil.getAddr(linkHostFS) == armedFeature.vid.getId() &&
+                                armedFeature.feature.equals(linkFeature)
+                        ) {
+                            state.clearArmedSlot();
+                        }
                     }
                 }
             }
@@ -1026,7 +1119,8 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // Actually delete annotation
-        adapter.delete(state, jCas, state.getSelection().getAnnotation());
+        adapter.delete(state.getDocument(), state.getUser().getUsername(), aCas,
+                state.getSelection().getAnnotation());
     }
 
     @Override
@@ -1035,16 +1129,17 @@ public abstract class AnnotationDetailEditorPanel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
         
-        JCas jCas = getEditorCas();
+        CAS cas = getEditorCas();
 
         AnnotatorState state = getModelObject();
 
-        AnnotationFS idFs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
+        AnnotationFS idFs = selectAnnotationByAddr(cas,
+                state.getSelection().getAnnotation().getId());
 
-        jCas.removeFsFromIndexes(idFs);
+        cas.removeFsFromIndexes(idFs);
 
-        AnnotationFS originFs = selectByAddr(jCas, state.getSelection().getOrigin());
-        AnnotationFS targetFs = selectByAddr(jCas, state.getSelection().getTarget());
+        AnnotationFS originFs = selectAnnotationByAddr(cas, state.getSelection().getOrigin());
+        AnnotationFS targetFs = selectAnnotationByAddr(cas, state.getSelection().getTarget());
 
         List<FeatureState> featureStates = getModelObject().getFeatureStates();
 
@@ -1052,12 +1147,11 @@ public abstract class AnnotationDetailEditorPanel
         if (adapter instanceof RelationAdapter) {
             // If no features, still create arc #256
             AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
-                    state.getUser().getUsername(), targetFs, originFs, jCas,
-                    state.getWindowBeginOffset(), state.getWindowEndOffset());
+                    state.getUser().getUsername(), targetFs, originFs, cas);
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
             
             for (FeatureState featureState : featureStates) {
-                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), jCas,
+                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), cas,
                         getAddr(arc), featureState.feature, featureState.value);
             }
         }
@@ -1067,13 +1161,13 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // persist changes
-        page.writeEditorCas(jCas);
-        int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
+        page.writeEditorCas(cas);
+        int sentenceNumber = getSentenceNumber(cas, originFs.getBegin());
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (state.getPreferences().isScrollPage()) {
-            autoScroll(jCas);
+            autoScroll(cas);
         }
 
         info("The arc has been reversed");
@@ -1098,43 +1192,16 @@ public abstract class AnnotationDetailEditorPanel
     /**
      * Scroll the window of visible annotations.
      */
-    private void autoScroll(JCas jCas)
+    private void autoScroll(CAS aCas)
     {
-        getModelObject().moveToSelection(jCas);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void setSlot(AjaxRequestTarget aTarget, JCas aJCas, int aAnnotationId)
-    {
-        AnnotatorState state = getModelObject();
-
-        // Set an armed slot
-        if (!state.getSelection().isArc() && state.isSlotArmed()) {
-            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) state.getFeatureState(state
-                .getArmedFeature()).value;
-            LinkWithRoleModel link = links.get(state.getArmedSlot());
-            link.targetAddr = aAnnotationId;
-            link.label = selectByAddr(aJCas, aAnnotationId).getCoveredText();
-        }
-
-        // Auto-commit if working on existing annotation
-        if (state.getSelection().getAnnotation().isSet()) {
-            try {
-                actionCreateOrUpdate(aTarget, aJCas);
-            }
-            catch (Exception e) {
-                handleException(this, aTarget, e);
-            }
-        }
-
-        state.clearArmedSlot();
+        getModelObject().moveToSelection(aCas);
     }
 
     public void loadFeatureEditorModels(AjaxRequestTarget aTarget)
         throws AnnotationException
     {
         try {
-            JCas annotationCas = getEditorCas();
+            CAS annotationCas = getEditorCas();
             loadFeatureEditorModels(annotationCas, aTarget);
         }
         catch (AnnotationException e) {
@@ -1145,7 +1212,11 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    public void loadFeatureEditorModels(JCas aJCas, AjaxRequestTarget aTarget)
+    /**
+     * Loads the feature states either from the CAS (if an annotation is selected) or from the
+     * remembered values (if no annotation is selected).
+     */
+    public void loadFeatureEditorModels(CAS aCas, AjaxRequestTarget aTarget)
         throws AnnotationException
     {
         LOG.trace("loadFeatureEditorModels()");
@@ -1168,17 +1239,16 @@ public abstract class AnnotationDetailEditorPanel
             if (selection.getAnnotation().isSet()) {
                 // If an existing annotation was selected, take the feature editor model values from
                 // there
-                AnnotationFS annoFs = selectByAddr(aJCas, state.getSelection().getAnnotation()
-                    .getId());
+                AnnotationFS annoFs = selectAnnotationByAddr(aCas,
+                        state.getSelection().getAnnotation().getId());
 
                 // Try obtaining the layer from the feature structure
                 AnnotationLayer layer;
                 try {
-                    layer = annotationService.getLayer(state.getProject(), annoFs);
+                    layer = annotationService.findLayer(state.getProject(), annoFs);
                     state.setSelectedAnnotationLayer(layer);
-                    LOG.trace(String.format(
-                        "loadFeatureEditorModels() selectedLayer set from selection: %s",
-                        state.getSelectedAnnotationLayer().getUiName()));
+                    LOG.trace("loadFeatureEditorModels() selectedLayer set from selection: {}",
+                            state.getSelectedAnnotationLayer().getUiName());
                 }
                 catch (NoResultException e) {
                     clearFeatureEditorModels(aTarget);
@@ -1194,7 +1264,7 @@ public abstract class AnnotationDetailEditorPanel
                     state.setSelectedAnnotationLayer(layer);
                 }
 
-                loadFeatureEditorModelsCommon(aTarget, aJCas, layer, annoFs, null);
+                loadFeatureEditorModelsCommon(aTarget, aCas, layer, annoFs, null);
             }
             else {
                 // If a new annotation is being created, populate the feature editors from the
@@ -1207,13 +1277,13 @@ public abstract class AnnotationDetailEditorPanel
                         state.setSelectedAnnotationLayer(new AnnotationLayer());
                     }
                     else {
-                        loadFeatureEditorModelsCommon(aTarget, aJCas,
+                        loadFeatureEditorModelsCommon(aTarget, aCas,
                             state.getSelectedAnnotationLayer(), null,
                             state.getRememberedArcFeatures());
                     }
                 }
                 else {
-                    loadFeatureEditorModelsCommon(aTarget, aJCas,
+                    loadFeatureEditorModelsCommon(aTarget, aCas,
                         state.getSelectedAnnotationLayer(), null,
                         state.getRememberedSpanFeatures());
                 }
@@ -1230,7 +1300,7 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private void loadFeatureEditorModelsCommon(AjaxRequestTarget aTarget, JCas aJCas,
+    private void loadFeatureEditorModelsCommon(AjaxRequestTarget aTarget, CAS aCas,
             AnnotationLayer aLayer, FeatureStructure aFS,
             Map<AnnotationFeature, Serializable> aRemembered)
     {
@@ -1245,8 +1315,10 @@ public abstract class AnnotationDetailEditorPanel
             }
 
             Serializable value = null;
+            VID vid = null;
             if (aFS != null) {
                 value = annotationService.getAdapter(aLayer).getFeatureValue(feature, aFS);
+                vid = new VID(aFS);
             }
             else if (aRemembered != null) {
                 value = aRemembered.get(feature);
@@ -1258,18 +1330,18 @@ public abstract class AnnotationDetailEditorPanel
                     if (feature.getLayer().isLinkedListBehavior()
                         && WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature
                         .getName())) {
-                        featureState = new FeatureState(feature, value);
+                        featureState = new FeatureState(vid, feature, value);
                     }
                 }
                 else {
                     if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(feature.getName())) {
-                        featureState = new FeatureState(feature, value);
+                        featureState = new FeatureState(vid, feature, value);
                     }
                 }
 
             }
             else {
-                featureState = new FeatureState(feature, value);
+                featureState = new FeatureState(vid, feature, value);
             }
 
             if (featureState != null) {
@@ -1279,7 +1351,7 @@ public abstract class AnnotationDetailEditorPanel
                 if (state.getConstraints() != null
                         && state.getSelection().getAnnotation().isSet()) {
                     // indicator.setRulesExist(true);
-                    populateTagsBasedOnRules(aJCas, featureState);
+                    populateTagsBasedOnRules(aCas, featureState);
                 }
                 else {
                     // indicator.setRulesExist(false);
@@ -1287,46 +1359,6 @@ public abstract class AnnotationDetailEditorPanel
                             .listTags(featureState.feature.getTagset());
                 }
             }
-        }
-    }
-
-    private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, JCas aJCas)
-        throws IOException
-    {
-        AnnotatorState state = getModelObject();
-        List<FeatureState> featureStates = state.getFeatureStates();
-
-        LOG.trace("writeFeatureEditorModelsToCas()");
-        List<AnnotationFeature> features = new ArrayList<>();
-        for (FeatureState featureState : featureStates) {
-            features.add(featureState.feature);
-            
-            // For string features with extensible tagsets, extend the tagset
-            if (CAS.TYPE_NAME_STRING.equals(featureState.feature.getType())) {
-                String value = (String) featureState.value;
-               
-                if (value != null && featureState.feature.getTagset() != null
-                        && featureState.feature.getTagset().isCreateTag()
-                        && !annotationService.existsTag(value, featureState.feature.getTagset())) {
-                    Tag selectedTag = new Tag();
-                    selectedTag.setName(value);
-                    selectedTag.setTagSet(featureState.feature.getTagset());
-                    annotationService.createTag(selectedTag);
-                }
-            }
-            
-            LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName() + " = "
-                    + featureState.value);
-            aAdapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), aJCas,
-                    state.getSelection().getAnnotation().getId(), featureState.feature,
-                    featureState.value);
-        }
-
-        // Generate info message
-        if (state.getSelection().getAnnotation().isSet()) {
-            String bratLabelText = TypeUtil.getUiLabelText(aAdapter,
-                selectByAddr(aJCas, state.getSelection().getAnnotation().getId()), features);
-            info(generateMessage(state.getSelectedAnnotationLayer(), bratLabelText, false));
         }
     }
 
@@ -1349,6 +1381,13 @@ public abstract class AnnotationDetailEditorPanel
         // Overriden in CurationPanel
     }
 
+    /**
+     * This is used only on the AutomationPage.
+     * 
+     * @deprecated A reasonable replacement for this should be an event listener for
+     *             {@link AnnotationCreatedEvent}.
+     */
+    @Deprecated
     protected void onAnnotate(AjaxRequestTarget aTarget)
     {
         // Overriden in AutomationPage
@@ -1385,7 +1424,7 @@ public abstract class AnnotationDetailEditorPanel
     /**
      * Adds and sorts tags based on Constraints rules
      */
-    private void populateTagsBasedOnRules(JCas aJCas, FeatureState aModel)
+    private void populateTagsBasedOnRules(CAS aCas, FeatureState aModel)
     {
         LOG.trace("populateTagsBasedOnRules(feature: " + aModel.feature.getUiName() + ")");
 
@@ -1412,7 +1451,7 @@ public abstract class AnnotationDetailEditorPanel
         // Fetch possible values from the constraint rules
         List<PossibleValue> possibleValues;
         try {
-            FeatureStructure featureStructure = selectByAddr(aJCas, state.getSelection()
+            FeatureStructure featureStructure = selectFsByAddr(aCas, state.getSelection()
                 .getAnnotation().getId());
 
             Evaluator evaluator = new ValuesGenerator();
@@ -1499,10 +1538,10 @@ public abstract class AnnotationDetailEditorPanel
         clearFeatureEditorModels(aTarget);
     }
 
-    private Set<AnnotationFS> getAttachedLinks(AnnotationFS aFs, AnnotationLayer aLayer)
+    private Set<FeatureStructure> getAttachedLinks(AnnotationFS aFs, AnnotationLayer aLayer)
     {
         CAS cas = aFs.getCAS();
-        Set<AnnotationFS> attachedLinks = new HashSet<>();
+        Set<FeatureStructure> attachedLinks = new HashSet<>();
         TypeAdapter adapter = annotationService.getAdapter(aLayer);
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFeature linkFeature : annotationService
@@ -1511,8 +1550,8 @@ public abstract class AnnotationDetailEditorPanel
                         && LinkMode.WITH_ROLE.equals(linkFeature.getLinkMode())) {
                     // Fetch slot hosts that could link to the current FS and check if any of
                     // them actually links to the current FS
-                    Type linkType = CasUtil.getType(cas, linkFeature.getLayer().getName());
-                    for (AnnotationFS linkFS : CasUtil.select(cas, linkType)) {
+                    Type linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
+                    for (FeatureStructure linkFS : CasUtil.selectFS(cas, linkHost)) {
                         List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
                                 linkFS);
                         for (int li = 0; li < links.size(); li++) {
@@ -1541,8 +1580,9 @@ public abstract class AnnotationDetailEditorPanel
             Type spanType = CasUtil.getType(cas, aLayer.getAttachType().getName());
             Feature attachFeature = spanType.getFeatureByBaseName(aLayer.getAttachFeature()
                 .getName());
+            final Type type = spanType;
 
-            for (AnnotationFS attachedFs : selectAt(cas, spanType, aFs.getBegin(), aFs.getEnd())) {
+            for (AnnotationFS attachedFs : selectAt(cas, type, aFs.getBegin(), aFs.getEnd())) {
                 if (isSame(attachedFs.getFeatureValue(attachFeature), aFs)) {
                     attachedSpans.add(attachedFs);
                 }

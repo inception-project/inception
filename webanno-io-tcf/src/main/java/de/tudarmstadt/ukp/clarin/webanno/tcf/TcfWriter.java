@@ -22,6 +22,7 @@ import static org.apache.uima.fit.util.JCasUtil.exists;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,15 +34,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.TypeCapability;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
+import org.dkpro.core.api.io.JCasFileWriter_ImplBase.NamedOutputStream;
+import org.dkpro.core.api.parameter.ComponentParameters;
 
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
-import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
@@ -71,7 +75,6 @@ import eu.clarin.weblicht.wlfxb.xb.WLData;
 
 /**
  * Writer for the WebLicht TCF format.
- *
  */
 @TypeCapability(inputs = { 
         "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
@@ -92,22 +95,21 @@ public class TcfWriter
      * Specify the suffix of output files. Default value <code>.tcf</code>. If the suffix is not
      * needed, provide an empty string as value.
      */
-    public static final String PARAM_FILENAME_SUFFIX = "filenameSuffix";
-    @ConfigurationParameter(name = PARAM_FILENAME_SUFFIX, mandatory = true, defaultValue = ".tcf")
+    public static final String PARAM_FILENAME_EXTENSION = 
+            ComponentParameters.PARAM_FILENAME_EXTENSION;
+    @ConfigurationParameter(name = PARAM_FILENAME_EXTENSION, mandatory = true, defaultValue = ".tcf")
     private String filenameSuffix;
 
     /**
      * If there are no annotations for a particular layer in the CAS, preserve any potentially
-     * existing annotations in the original TCF.<br>
-     * Default: {@code false}
+     * existing annotations in the original TCF.
      */
     public static final String PARAM_PRESERVE_IF_EMPTY = "preserveIfEmpty";
     @ConfigurationParameter(name = PARAM_PRESERVE_IF_EMPTY, mandatory = true, defaultValue = "false")
     private boolean preserveIfEmpty;
     
     /**
-     * Merge with source TCF file if one is available.<br>
-     * Default: {@code true}
+     * Merge with source TCF file if one is available.
      */
     public static final String PARAM_MERGE = "merge";
     @ConfigurationParameter(name = PARAM_MERGE, mandatory = true, defaultValue = "true")
@@ -121,7 +123,7 @@ public class TcfWriter
         try {
             boolean writeWithoutMerging = true;
             if (merge) {
-                OutputStream docOS = null;
+                NamedOutputStream docOS = null;
                 try {
                     docOS = getOutputStream(aJCas, filenameSuffix);
                     // Get the original TCF file and preserve it
@@ -151,6 +153,14 @@ public class TcfWriter
                     }
                 }
                 finally {
+                    if (writeWithoutMerging) {
+                        // Have to delete the output file from this try and will try again without
+                        // merging. Deleting is necessary as not to trigger the overwrite safeguard
+                        // in JCasFileWriter_ImplBase
+                        if ((docOS != null) && (docOS.getName() != null)) {
+                            FileUtils.deleteQuietly(new File(docOS.getName()));
+                        }
+                    }
                     closeQuietly(docOS);
                 }
             }
@@ -160,13 +170,8 @@ public class TcfWriter
             
             // If merging failed or is disabled, go on without merging
             if (writeWithoutMerging) {
-                OutputStream docOS = null;
-                try {
-                    docOS = getOutputStream(aJCas, filenameSuffix);
+                try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
                     casToTcfWriter(aJCas, docOS);
-                }
-                finally {
-                    closeQuietly(docOS);
                 }
             }
         }
@@ -246,22 +251,10 @@ public class TcfWriter
             layersToReplace.add(TextCorpusLayerTag.REFERENCES);
         }
                 
-        TextCorpusStreamedWithReplaceableLayers textCorpus = null;
-        try {
-            textCorpus = new TextCorpusStreamedWithReplaceableLayers(
-                aIs, layersToRead, EnumSet.copyOf(layersToReplace), aOs);
-        
+        try (TextCorpusStreamedWithReplaceableLayers textCorpus = 
+                new TextCorpusStreamedWithReplaceableLayers(aIs, layersToRead, 
+                        EnumSet.copyOf(layersToReplace), aOs)) {
             write(aJCas, textCorpus);
-        }
-        finally {
-            if (textCorpus != null) {
-                try {
-                    textCorpus.close();
-                }
-                catch (IOException e) {
-                    // Ignore exception while closing
-                }
-            }
         }
     }
 

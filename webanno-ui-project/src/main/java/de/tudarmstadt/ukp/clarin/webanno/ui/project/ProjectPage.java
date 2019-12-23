@@ -67,14 +67,13 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFa
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.detail.ProjectDetailPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.guidelines.ProjectGuidelinesPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.tagsets.ProjectTagSetsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUsersPanel;
 
 /**
  * This is the main page for Project Settings. The Page has Four Panels. The
  * {@link ProjectGuidelinesPanel} is used to update documents to a project. The
  * {@code ProjectDetailsPanel} used for updating Project details such as descriptions of a project
- * and name of the Project The {@link ProjectTagSetsPanel} is used to add {@link TagSet} and
+ * and name of the Project The {@code ProjectTagSetsPanel} is used to add {@link TagSet} and
  * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
  * to update {@link User} to a Project
  */

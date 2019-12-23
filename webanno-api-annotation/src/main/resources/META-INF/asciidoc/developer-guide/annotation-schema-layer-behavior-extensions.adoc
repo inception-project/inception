@@ -1,7 +1,8 @@
 = Layers Behaviors
 
 Layer behaviors allow to customize the way a layer of a particular span behaves, e.g. whether
-a span is allowed to cross sentence boundaries, whether it anchors to characters or tokens, etc.
+a span is allowed to cross sentence boundaries, whether it anchors to characters or tokens,
+whether the tree of relations among annotations is valid, etc.
 The layer behaviors tie in with the specific `LayerSupport` implementations. The mechanism itself
 consists of the following classes and interfaces:
 
@@ -10,8 +11,12 @@ consists of the following classes and interfaces:
   behaviors of specific layer types.
 * The `LayerBehaviorRegistry` and its default implementation `LayerBehaviorRegistryImpl` 
   serve as an access point to the different supported layer behaviors.
+  Any Spring component implementing the `LayerBehavior` interface is
+  loaded, and will be named in the logs when the web app is launched. The classpath scanning
+  used to locate Spring beans is limited to specific Java packages, e.g. any packages starting
+  with `de.tudarmstadt.ukp.clarin.webanno`.
 
-A layer behavior has the following responsibilities:
+A layer behavior may have any of the following responsibilities:
 
 * Ensure that new annotations that are created conform with the behavior. This is done via the 
   `onCreate` method. If the annotation to be created does not conform with the behavior, the
@@ -19,10 +24,16 @@ A layer behavior has the following responsibilities:
 * Highlight annotations not conforming with the behavior. This is relevant when importing 
   pre-annotated files or when changing the behavior configuration of an existing layer. The
   relevant method is `onRender`. If an annotation does not conform with the behavior, a error
-  marker should be added for problematic annotation.
-////
+  marker should be added for problematic annotation. This is done by creating a `VComment`
+  which attaches an error message to a specified visual element, then adding that to the
+  repsonse `VDocument`. Note that `onRender` is unlike `onCreate` and `onValidate` in that it
+  only has indirect access to the CAS: it is passed a mapping from `AnnotationFS` instances to
+  their corresponding visual elements, and can use `.getCAS()` on the FS. The annotation layer
+  can be identified from the visual element with `.getLayer().getName()`.
 * Ensure that documents being marked as *finished* conform with the behavior. This is done
-  via the `onFinish` method.
+  via the `onValidate` method, which returns a list of `LogMessage, AnnotationFS` pairs
+  to report errors associated with each FS.
+////
 * Provide a UI to configure the behavior in the layer detail configuration in the project settings.
   This is done via the `createEditor` method.
 ////

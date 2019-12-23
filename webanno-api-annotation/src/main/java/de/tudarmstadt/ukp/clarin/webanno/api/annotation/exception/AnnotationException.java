@@ -25,14 +25,14 @@ public class AnnotationException
 {
     private static final long serialVersionUID = 1280015349963924638L;
 
-    public AnnotationException(String message)
-    {
-        super(message);
-    }
-
     public AnnotationException()
     {
         super();
+    }
+    
+    public AnnotationException(String message)
+    {
+        super(message);
     }
 
     public AnnotationException(String aMessage, Throwable aCause)

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.5.9-SNAPSHOT</version>
+    <version>3.6.5-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-ui-core</artifactId>
   <name>WebAnno - UI - Core</name>
@@ -51,10 +51,6 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-model</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-remote</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -75,6 +71,10 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
     </dependency>
 
     <!-- Spring security dependencies -->

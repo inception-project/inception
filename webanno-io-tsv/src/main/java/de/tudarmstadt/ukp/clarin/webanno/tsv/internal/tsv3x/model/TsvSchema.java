@@ -28,13 +28,17 @@ import static org.apache.commons.lang3.StringUtils.compare;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.TypeSystem;
 
 public class TsvSchema
 {
@@ -55,6 +59,7 @@ public class TsvSchema
     private List<TsvColumn> columns = new ArrayList<>();
     private Set<Type> chainHeadTypes = new HashSet<>();
     private Set<Type> ignoredTypes = new HashSet<>();
+    private Map<Type, Type> effectiveTypes = new HashMap<>();
     
     public void ignoreType(Type aType)
     {
@@ -196,5 +201,24 @@ public class TsvSchema
     public Set<Type> getChainHeadTypes()
     {
         return chainHeadTypes;
+    }
+
+    /**
+     * Locate a type which is known to the schema and which is equal to or a super-type of the type
+     * of the given {@link FeatureStructure}. If no such type is found, the actual type is returned.
+     * The results are cached for faster lookups.
+     * 
+     * @param aFS
+     *            a feature structure.
+     * @return the effective type.
+     */
+    public Type getEffectiveType(FeatureStructure aFS)
+    {
+        TypeSystem typeSystem = aFS.getCAS().getTypeSystem();
+        
+        return effectiveTypes.computeIfAbsent(aFS.getType(), type -> getUimaTypes().stream()
+                .filter(t -> typeSystem.subsumes(t, type))
+                .findFirst()
+                .orElse(aFS.getType()));
     }
 }

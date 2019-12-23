@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,7 +28,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -41,6 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -105,20 +107,6 @@ public interface FeatureSupport<T>
     void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature);
 
-    /**
-     * Checks whether tagsets are supported on the given feature which must be provided by the
-     * current feature support (i.e. {@link #accepts(AnnotationFeature)} must have returned
-     * {@code true} on this feature.
-     * 
-     * @param aFeature
-     *            a feature definition.
-     * @return whether tagsets are supported on the given feature.
-     */
-    default boolean isTagsetSupported(AnnotationFeature aFeature)
-    {
-        return false;
-    }
-    
     /**
      * Called when the user selects a feature in the feature detail form. It allows the feature
      * support to fill in settings which are not configurable through the UI, e.g. link feature
@@ -223,6 +211,24 @@ public interface FeatureSupport<T>
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
         return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
     }
+    
+    default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        
+        if (labelFeature.getRange().isPrimitive()) {
+            return getLazyDetails(aFeature, aFs.getFeatureValueAsString(labelFeature));
+        }
+        else {
+            return Collections.emptyList();
+        }
+        
+    }
+
+    default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
+    {
+        return Collections.emptyList();
+    }
 
     /**
      * Gets the label that should be displayed for the given feature value in the UI. {@code null}
@@ -238,6 +244,11 @@ public interface FeatureSupport<T>
     {
         return aLabel;
     }
+    
+    default List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
+    {
+        return Collections.emptyList();
+    }
 
     /**
      * Update this feature with a new value. This method should not be called directly but
@@ -250,8 +261,8 @@ public interface FeatureSupport<T>
      * {@code Pair<Integer, String>} and then stores the integer key to the CAS, then it should
      * also accept {@code Integer} values.
      *
-     * @param aJcas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param aFeature
      *            the feature.
      * @param aAddress
@@ -259,10 +270,10 @@ public interface FeatureSupport<T>
      * @param aValue
      *            the value.
      */
-    default void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress,
+    default void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress,
             Object aValue)
     {
-        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
         
         Object value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
         setFeature(fs, aFeature, value);

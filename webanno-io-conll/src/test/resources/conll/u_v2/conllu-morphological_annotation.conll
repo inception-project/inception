@@ -1,7 +1,7 @@
 # text = Då var han elva år .
-1	Då	då	AB	AB	_	_	_	_	_
-2	var	vara	VB.PRET.ACT	VB.PRET.ACT	Tense=Past|Voice=Act	_	_	_	_
-3	han	han	PN.UTR.SIN.DEF.NOM	PN.UTR.SIN.DEF.NOM	Case=Nom|Definite=Def|Gender=Com|Number=Sing	_	_	_	_
-4	elva	elva	RG.NOM	RG.NOM	Case=Nom|NumType=Card	_	_	_	_
-5	år	år	NN.NEU.PLU.IND.NOM	NN.NEU.PLU.IND.NOM	Case=Nom|Definite=Ind|Gender=Neut|Number=Plur	_	_	_	_
-6	.	.	DL.MAD	DL.MAD	_	_	_	_	_
+1	Då	då	ADV	AB	_	_	_	_	_
+2	var	vara	VERB	VB.PRET.ACT	Tense=Past|Voice=Act	_	_	_	_
+3	han	han	PRON	PN.UTR.SIN.DEF.NOM	Case=Nom|Definite=Def|Gender=Com|Number=Sing	_	_	_	_
+4	elva	elva	NUM	RG.NOM	Case=Nom|NumType=Card	_	_	_	_
+5	år	år	NOUN	NN.NEU.PLU.IND.NOM	Case=Nom|Definite=Ind|Gender=Neut|Number=Plur	_	_	_	_
+6	.	.	PUNCT	DL.MAD	_	_	_	_	_

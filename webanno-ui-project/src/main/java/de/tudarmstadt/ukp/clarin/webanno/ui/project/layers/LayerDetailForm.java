@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -29,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -53,6 +56,8 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
@@ -64,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -79,12 +85,16 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.LayerExportMode;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class LayerDetailForm
     extends Form<AnnotationLayer>
 {
     private static final long serialVersionUID = -1L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(LayerDetailForm.class);
 
     private static final String TYPE_PREFIX = "webanno.custom.";
 
@@ -92,16 +102,17 @@ public class LayerDetailForm
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
-    private DropDownChoice<LayerType> layerTypes;
-    private DropDownChoice<AnnotationLayer> attachTypes;
+    private DropDownChoice<LayerType> layerTypeSelect;
+    private DropDownChoice<AnnotationLayer> attachTypeSelect;
+    private Label effectiveAttachType;
 
     private DropDownChoice<AnchoringMode> anchoringMode;
+    private DropDownChoice<OverlapMode> overlapMode;
     private DropDownChoice<ValidationMode> validationMode;
 
     private FeatureSelectionForm featureSelectionForm;
     private FeatureDetailForm featureDetailForm;
     
-    private CheckBox allowStacking;
     private CheckBox crossSentence;
     private CheckBox showTextInHover;
     private CheckBox linkedListBehavior;
@@ -136,97 +147,48 @@ public class LayerDetailForm
         });
 
         add(new CheckBox("enabled"));
-        add(layerTypes = new BootstrapSelect<>("type"));
-        layerTypes.setChoices(layerSupportRegistry::getAllTypes);
-        layerTypes.add(LambdaBehavior
+        add(layerTypeSelect = new BootstrapSelect<>("type"));
+        layerTypeSelect.setChoices(layerSupportRegistry::getAllTypes);
+        layerTypeSelect.add(LambdaBehavior
                 .enabledWhen(() -> isNull(LayerDetailForm.this.getModelObject().getId())));
-        layerTypes.setRequired(true);
-        layerTypes.setNullValid(false);
-        layerTypes.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-        layerTypes.setModel(LambdaModelAdapter.of(
+        layerTypeSelect.setRequired(true);
+        layerTypeSelect.setNullValid(false);
+        layerTypeSelect.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+        layerTypeSelect.setModel(LambdaModelAdapter.of(
             () -> layerSupportRegistry.getLayerType(LayerDetailForm.this.getModelObject()), 
             (v) -> LayerDetailForm.this.getModelObject().setType(v.getName())));
-        layerTypes.add(new AjaxFormComponentUpdatingBehavior("change")
+        layerTypeSelect.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             private static final long serialVersionUID = 6790949494089940303L;
 
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                target.add(allowStacking);
                 target.add(crossSentence);
                 target.add(showTextInHover);
                 target.add(linkedListBehavior);
-                target.add(attachTypes);
+                target.add(attachTypeSelect);
                 target.add(anchoringMode);
+                target.add(overlapMode);
             }
         });
 
-        attachTypes = new BootstrapSelect<AnnotationLayer>("attachType")
-        {
-            private static final long serialVersionUID = -6705445053442011120L;
+        attachTypeSelect = new BootstrapSelect<AnnotationLayer>("attachType",
+                LoadableDetachableModel.of(this::getAttachLayerChoices),
+                new ChoiceRenderer<>("uiName"));
+        attachTypeSelect.setNullValid(true);
+        attachTypeSelect.add(visibleWhen(() -> isNull(getModelObject().getId())
+                && RELATION_TYPE.equals(getModelObject().getType())));
+        attachTypeSelect.setOutputMarkupPlaceholderTag(true);
+        add(attachTypeSelect);
 
-            {
-                setChoices(new LoadableDetachableModel<List<AnnotationLayer>>()
-                {
-                    private static final long serialVersionUID = 1784646746122513331L;
-
-                    @Override
-                    protected List<AnnotationLayer> load()
-                    {
-                        AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-                        
-                        List<AnnotationLayer> allLayers = annotationService.listAnnotationLayer(
-                                LayerDetailForm.this.getModelObject().getProject());
-
-                        if (layer.getId() != null) {
-                            if (layer.getAttachType() == null) {
-                                return new ArrayList<>();
-                            }
-
-                            return Arrays.asList(
-                                    layer.getAttachType());
-                        }
-                        if (!RELATION_TYPE
-                                .equals(layer.getType())) {
-                            return new ArrayList<>();
-                        }
-
-                        List<AnnotationLayer> attachTeypes = new ArrayList<>();
-                        // remove a span layer which is already used as attach type for the
-                        // other
-                        List<AnnotationLayer> usedLayers = new ArrayList<>();
-                        for (AnnotationLayer l : allLayers) {
-                            if (l.getAttachType() != null) {
-                                usedLayers.add(l.getAttachType());
-                            }
-                        }
-                        allLayers.removeAll(usedLayers);
-
-                        for (AnnotationLayer l : allLayers) {
-                            if (l.getType().equals(SPAN_TYPE) && !l.isBuiltIn()) {
-                                attachTeypes.add(l);
-                            }
-                        }
-
-                        return attachTeypes;
-                    }
-                });
-                setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-            }
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setEnabled(isNull(LayerDetailForm.this.getModelObject().getId()));
-                setNullValid(isVisible());
-            }
-        };
-        attachTypes.setOutputMarkupPlaceholderTag(true);
-        add(attachTypes);
-
+        effectiveAttachType = new Label("effectiveAttachType",
+                LoadableDetachableModel.of(this::getEffectiveAttachTypeName));
+        effectiveAttachType.setOutputMarkupPlaceholderTag(true);
+        effectiveAttachType.add(visibleWhen(() -> !isNull(getModelObject().getId())
+                && RELATION_TYPE.equals(getModelObject().getType())));
+        add(effectiveAttachType);
+        
         // Behaviors of layers
         add(new CheckBox("readonly"));
 
@@ -253,15 +215,16 @@ public class LayerDetailForm
                     // that is the only layer on which we use the attach feature)
                     layer.getAttachFeature() == null);
         }));
-        
-        add(allowStacking = new CheckBox("allowStacking"));
-        allowStacking.setOutputMarkupPlaceholderTag(true);
-        allowStacking.add(LambdaBehavior.onConfigure(_this -> {
+
+        add(overlapMode = new BootstrapSelect<OverlapMode>("overlapMode"));
+        overlapMode.setOutputMarkupPlaceholderTag(true);
+        overlapMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
+        overlapMode.setChoices(Arrays.asList(OverlapMode.values()));
+        overlapMode.add(LambdaBehavior.onConfigure(_this -> {
             AnnotationLayer layer = LayerDetailForm.this.getModelObject();
             _this.setVisible(!isBlank(layer.getType()));
             _this.setEnabled(
-                    // Surface form must be locked to token boundaries for CONLL-U writer
-                    // to work.
+                    // Surface form must be non-stacking for CONLL-U writer to work.
                     !SurfaceForm.class.getName().equals(layer.getName()) &&
                     // Not configurable for layers that attach to tokens (currently that is
                     // the only layer on which we use the attach feature)
@@ -324,6 +287,90 @@ public class LayerDetailForm
 
         add(new LambdaAjaxButton<>("save", this::actionSave));
         add(new LambdaAjaxLink("cancel", this::actionCancel));
+    }
+    
+    private String getEffectiveAttachTypeName()
+    {
+        AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+        
+        if (layer.getAttachType() == null) {
+            return null;
+        }
+        
+        
+        if (layer.getAttachFeature() != null) {
+            Project project = getModelObject().getProject();
+            AnnotationLayer actualAttachLayer = annotationService.findLayer(project,
+                    layer.getAttachFeature().getType());
+            return String.format("%s :: %s -> %s", layer.getAttachType().getUiName(),
+                    layer.getAttachFeature().getUiName(), actualAttachLayer.getUiName());
+        }
+        else {
+            return layer.getAttachType().getUiName();
+        }
+    }
+    
+    /**
+     * Gets the list of annotation layers to which a relation layer may attach.
+     */
+    private List<AnnotationLayer> getAttachLayerChoices()
+    {
+        Project project = getModelObject().getProject();
+        AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+
+        // If the layer has already been created, the attach layer cannot be changed anymore. 
+        // So in this case, we return either an empty list of a list with exactly the configured
+        // attach layer in it.
+        if (layer.getId() != null) {
+            if (layer.getAttachType() == null) {
+                return emptyList();
+            }
+
+            if (layer.getAttachFeature() != null) {
+                AnnotationLayer actualAttachLayer = annotationService.findLayer(project,
+                        layer.getAttachFeature().getType());
+                return asList(actualAttachLayer);
+            }
+            else {
+                return asList(layer.getAttachType());
+            }
+        }
+        
+        // Attach layers are only valid for relation layers.
+        if (!RELATION_TYPE.equals(layer.getType())) {
+            return emptyList();
+        }
+
+        // Get all the layers
+        List<AnnotationLayer> allLayers = annotationService.listAnnotationLayer(project);
+        
+        // Candidates for attach-layers are only span layers, so lets filter these
+        List<AnnotationLayer> candidateLayers = allLayers.stream()
+                .filter(l -> SPAN_TYPE.equals(l.getType()))
+                .filter(l -> !Token.class.getName().equals(l.getName())
+                        && !Sentence.class.getName().equals(l.getName()))
+                .collect(Collectors.toCollection(ArrayList::new));
+        
+        // Further narrow down the candidates by removing all layers which are already the target
+        // of an attachment
+        for (AnnotationLayer l : allLayers) {
+            if (l.getAttachType() != null) {
+                // If an attach-feature is configured, then remove the layer to which this feature
+                // points from the candidate list
+                if (l.getAttachFeature() != null) {
+                    AnnotationLayer actualAttachLayer = annotationService.findLayer(project,
+                            l.getAttachFeature().getType());
+                    candidateLayers.remove(actualAttachLayer);
+                }
+                // If no attach-feature is configured, the the attach-layer is the target layer of
+                // the attachment, so remove it from the candidate list
+                else {
+                    candidateLayers.remove(l.getAttachType());
+                }
+            }
+        }
+
+        return candidateLayers;
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -400,7 +447,7 @@ public class LayerDetailForm
         case JSON:
             return "layer.json";
         case UIMA:
-            return "typesytem.xml";
+            return "typesystem.xml";
         default:
             throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
         }

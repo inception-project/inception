@@ -21,15 +21,16 @@ higher. If you do not have Java installed yet, please the latest link:https://ww
 
 Download the stand-alone JAR from the link:https://webanno.github.io/webanno/downloads/[WebAnno downloads page]. 
 
-Start the application simply by *double-clicking* on the downloadd JAR file in your file manager.
+Start the application simply by *double-clicking* on the download JAR file in your file manager.
 After a moment, a splash screen will be displayed while the application is initializing. Once the
 initialization is complete, a dialog will appear which you can use to open the application in your
 default browser or to shut down the application.
 
 Alternatively, you can start it on the command line using
 
+[subs="+attributes"]
 ----
-java -jar webanno-XXX-standalone.jar
+$ java -jar webanno-{revnumber}.standalone.jar
 ----
 
 The splash screen and dialog will not appear in this case and you have to manually point your browser at `http://localhost:8080`.

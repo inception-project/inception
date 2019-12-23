@@ -57,8 +57,6 @@ public class AnnotationPreference
     
     private int windowSize;
 
-    private int curationWindowSize = 10;
-
     private boolean scrollPage = true;
     
     // if a default layer is to be set
@@ -79,6 +77,8 @@ public class AnnotationPreference
     private int fontZoom;
     
     private String editor;
+    
+    private boolean collapseArcs = false;
 
     /**
      * working with preferred layers is deprecated, use hidden layers instead
@@ -126,24 +126,7 @@ public class AnnotationPreference
     {
         windowSize = aWindowSize;
     }
-
-    /**
-     * Get the number of sentences curation window display at the left side.
-     */
-    public int getCurationWindowSize()
-    {
-        return curationWindowSize;
-    }
-
-    /**
-     * set the number of sentences curation window display at the left side
-     *
-     */
-    public void setCurationWindowSize(int curationWindowSize)
-    {
-        this.curationWindowSize = curationWindowSize;
-    }
-
+    
     /**
      * Used to enable/disable auto-scrolling while annotation
      */
@@ -261,5 +244,15 @@ public class AnnotationPreference
     public long getDefaultLayer()
     {
         return defaultLayer;
+    }
+
+    public boolean isCollapseArcs()
+    {
+        return collapseArcs;
+    }
+
+    public void setCollapseArcs(boolean aCollapseArcs)
+    {
+        collapseArcs = aCollapseArcs;
     }
 }

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.ComponentTag;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -38,8 +37,6 @@ public class BooleanFeatureEditor
     public BooleanFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-
-        add(new Label("feature", getModelObject().feature.getUiName()));
 
         BootstrapCheckBoxPickerConfig config = new BootstrapCheckBoxPickerConfig();
         config.withReverse(true);

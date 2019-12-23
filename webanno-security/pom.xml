@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.5.9-SNAPSHOT</version>
+    <version>3.6.5-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-security</artifactId>
   <name>WebAnno - Core - Security</name>
@@ -65,6 +65,10 @@
     </dependency>
 
     <!-- SPRING -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>

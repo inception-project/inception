@@ -17,11 +17,14 @@
  */ 
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+
 import java.util.List;
 
 import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.util.string.AppendingStringBuffer;
 
 public class OverviewListChoice<T>
     extends ListChoice<T>
@@ -102,4 +105,19 @@ public class OverviewListChoice<T>
     {
         return "";
     }
+
+    @Override
+    protected void setOptionAttributes(AppendingStringBuffer aBuffer, T aChoice, int aIndex,
+            String aSelected)
+    {
+        super.setOptionAttributes(aBuffer, aChoice, aIndex, aSelected);
+        // if the choice was decorated with color, add this option to the html
+        if (aChoice instanceof DecoratedObject) {
+            DecoratedObject decorated = (DecoratedObject) aChoice;
+            String color = defaultIfEmpty(decorated.getColor(), "black");
+            aBuffer.append("style=\"color:" + color + ";\"");
+        }
+    }
+    
+    
 }

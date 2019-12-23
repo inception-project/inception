@@ -20,7 +20,7 @@
 
 | database.url
 | JDBC connection string
-| _location in WebAnno home_
+| _location in application home_
 | jdbc:mysql://localhost:3306/weblab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
 
 | database.username
@@ -78,8 +78,8 @@ The following environment variables can be used:
 
 | `WEBANNO_DB_URL`
 | JDBC connection string
-| _location in WebAnno home_
-| jdbc:mysql://localhost:3306/weblab?useUnicode=true&characterEncoding=UTF-8
+| _location in application home_
+| jdbc:mysql://localhost:3306/webanno?useUnicode=true&characterEncoding=UTF-8
 
 | `WEBANNO_DB_USERNAME`
 | Database username

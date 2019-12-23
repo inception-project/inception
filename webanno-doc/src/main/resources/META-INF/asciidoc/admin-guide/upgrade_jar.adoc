@@ -16,7 +16,7 @@
 
 = Upgrading with embedded Tomcat
 
-* Stop the WebAnno service
+* Stop the {product-name} service
 * Replace the `webanno.jar` file with the new version
 * Ensure that the file has the right owner/group (usually `www-data`)
-* Start the WebAnno service again
+* Start the {product-name} service again

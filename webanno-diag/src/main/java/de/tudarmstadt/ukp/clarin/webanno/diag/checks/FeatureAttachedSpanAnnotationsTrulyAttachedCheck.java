@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -55,8 +55,8 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
             Type attachType;
 
             try {
-                layerType = getType(aCas, layer.getName());
-                attachType = getType(aCas, layer.getAttachType().getName());
+                layerType = getAnnotationType(aCas, layer.getName());
+                attachType = getAnnotationType(aCas, layer.getAttachType().getName());
             }
             catch (IllegalArgumentException e) {
                 // This happens if the types do not (yet) exist in the CAS because the types are

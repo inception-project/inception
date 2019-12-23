@@ -51,8 +51,8 @@ public class UpgradeCasRepair
             aMessages.add(LogMessage.info(this, "CAS upgraded."));
         }
         catch (UIMAException | IOException e) {
-            log.error("Unabled to access JCas", e);
-            aMessages.add(LogMessage.error(this, "Unabled to access JCas", e.getMessage()));
+            log.error("Unabled to access CAS", e);
+            aMessages.add(LogMessage.error(this, "Unabled to access CAS", e.getMessage()));
         }
     }
 }

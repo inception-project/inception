@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import java.util.Optional;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -28,33 +28,27 @@ public class CreateRelationAnnotationRequest
 {
     private final SourceDocument document;
     private final String username;
-    private final JCas jcas;
+    private final CAS cas;
     private final AnnotationFS originFs;
     private final AnnotationFS targetFs;
     private final CreateRelationAnnotationRequest originalRequest;
 
-    private final int windowBegin;
-    private final int windowEnd;
-
-    public CreateRelationAnnotationRequest(SourceDocument aDocument, String aUsername, JCas aJCas,
-            AnnotationFS aOriginFs, AnnotationFS aTargetF, int aWindowBegin, int aWindowEnd)
+    public CreateRelationAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aCas,
+            AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
-        this(null, aDocument, aUsername, aJCas, aOriginFs, aTargetF, aWindowBegin, aWindowEnd);
+        this(null, aDocument, aUsername, aCas, aOriginFs, aTargetFs);
     }
 
     public CreateRelationAnnotationRequest(CreateRelationAnnotationRequest aOriginal,
-            SourceDocument aDocument, String aUsername, JCas aJCas, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, int aWindowBegin, int aWindowEnd)
+            SourceDocument aDocument, String aUsername, CAS aCas, AnnotationFS aOriginFs,
+            AnnotationFS aTargetFs)
     {
         originalRequest = aOriginal;
         document = aDocument;
         username = aUsername;
-        jcas = aJCas;
+        cas = aCas;
         originFs = aOriginFs;
         targetFs = aTargetFs;
-
-        windowBegin = aWindowBegin;
-        windowEnd = aWindowEnd;
     }
 
     public SourceDocument getDocument()
@@ -67,9 +61,9 @@ public class CreateRelationAnnotationRequest
         return username;
     }
 
-    public JCas getJcas()
+    public CAS getCas()
     {
-        return jcas;
+        return cas;
     }
 
     public AnnotationFS getOriginFs()
@@ -82,16 +76,6 @@ public class CreateRelationAnnotationRequest
         return targetFs;
     }
 
-    public int getWindowBegin()
-    {
-        return windowBegin;
-    }
-
-    public int getWindowEnd()
-    {
-        return windowEnd;
-    }
-
     public Optional<CreateRelationAnnotationRequest> getOriginalRequest()
     {
         return Optional.ofNullable(originalRequest);
@@ -100,7 +84,6 @@ public class CreateRelationAnnotationRequest
     public CreateRelationAnnotationRequest changeRelation(AnnotationFS aOrigin,
             AnnotationFS aTarget)
     {
-        return new CreateRelationAnnotationRequest(this, document, username, jcas, aOrigin, aTarget,
-                windowBegin, windowEnd);
+        return new CreateRelationAnnotationRequest(this, document, username, cas, aOrigin, aTarget);
     }
 }

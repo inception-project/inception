@@ -33,10 +33,10 @@ import java.util.TreeMap;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.util.Level;
+import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
-import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -60,11 +60,10 @@ import eu.clarin.weblicht.wlfxb.xb.WLData;
  * CAS annotation. Hence, addresses are manually calculated per tokens and
  * stored in a map (token_id, token(CAS object)) where later we get can get the
  * offset from the token
- *
  */
-public class TcfReader extends JCasResourceCollectionReader_ImplBase {
-    int j = 0;
-
+public class TcfReader
+    extends JCasResourceCollectionReader_ImplBase
+{
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException {
         Resource res = nextFile();
@@ -80,7 +79,6 @@ public class TcfReader extends JCasResourceCollectionReader_ImplBase {
             throw new CollectionException(e);
         } finally {
             closeQuietly(is);
-
         }
     }
 

@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation;
@@ -58,8 +59,8 @@ public class OrthographyLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer orthography = new AnnotationLayer(SofaChangeAnnotation.class.getName(),
-                "Orthography Correction", SPAN_TYPE, aProject, true, AnchoringMode.SINGLE_TOKEN);
-        orthography.setAllowStacking(false);
+                "Orthography Correction", SPAN_TYPE, aProject, true, AnchoringMode.SINGLE_TOKEN,
+                OverlapMode.NO_OVERLAP);
         annotationSchemaService.createLayer(orthography);
 
         AnnotationFeature correction = new AnnotationFeature();

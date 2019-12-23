@@ -18,14 +18,18 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -50,7 +54,7 @@ public class SpanAnchoringModeBehavior
     {
         if (aRequest.getBegin() == aRequest.getEnd()) {
             if (!aAdapter.getLayer().getAnchoringMode().isZeroSpanAllowed()) {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                         "Cannot create zero-width annotation on layers that lock to token boundaries.");
             }
 
@@ -58,7 +62,7 @@ public class SpanAnchoringModeBehavior
         }
         
         int[] originalRange = new int[] { aRequest.getBegin(), aRequest.getEnd() };
-        int[] adjustedRange = adjust(aRequest.getJcas(), aAdapter.getLayer().getAnchoringMode(),
+        int[] adjustedRange = adjust(aRequest.getCas(), aAdapter.getLayer().getAnchoringMode(),
                 originalRange);
         
         if (adjustedRange.equals(originalRange)) {
@@ -69,7 +73,7 @@ public class SpanAnchoringModeBehavior
         }
     }
     
-    public static int[] adjust(JCas aJCas, AnchoringMode aMode, int[] aRange)
+    public static int[] adjust(CAS aCas, AnchoringMode aMode, int[] aRange)
         throws AnnotationException
     {
         switch (aMode) {
@@ -77,20 +81,22 @@ public class SpanAnchoringModeBehavior
             return aRange;
         }
         case SINGLE_TOKEN: {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aRange[0], aRange[1]);
+            Type tokenType = getType(aCas, Token.class);
+            List<AnnotationFS> tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                         "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
             }
                         
             return new int[] { tokens.get(0).getBegin(), tokens.get(0).getEnd() };
         }
         case TOKENS: {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aRange[0], aRange[1]);
+            Type tokenType = getType(aCas, Token.class);
+            List<AnnotationFS> tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                         "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
             }
 
@@ -101,11 +107,12 @@ public class SpanAnchoringModeBehavior
             return new int[] { begin, end };
         }
         case SENTENCES: {
-            List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class, aRange[0],
+            Type sentenceType = getType(aCas, Sentence.class);
+            List<AnnotationFS> sentences = selectOverlapping(aCas, sentenceType, aRange[0],
                     aRange[1]);
             
             if (sentences.isEmpty()) {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                         "No sentences found int range [" + aRange[0] + "-" + aRange[1] + "]");
             }
             

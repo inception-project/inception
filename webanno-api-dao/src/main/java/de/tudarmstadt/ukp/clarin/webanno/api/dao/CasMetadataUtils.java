@@ -24,11 +24,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,13 +49,13 @@ public class CasMetadataUtils
                 "de/tudarmstadt/ukp/clarin/webanno/api/type/webanno-internal");
     }
     
-    public static void failOnConcurrentModification(JCas aJcas, File aCasFile,
+    public static void failOnConcurrentModification(CAS aCas, File aCasFile,
             SourceDocument aDocument, String aUsername)
         throws IOException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
-        if (aJcas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
+        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
             LOG.info("Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
                     + "does not support CASMetadata yet - unable to detect concurrent modifications",
                     aCasFile.getName(), aUsername, aDocument.getName(),
@@ -61,16 +64,18 @@ public class CasMetadataUtils
             return;
         }
         
-        List<CASMetadata> cmds = new ArrayList<>(JCasUtil.select(aJcas, CASMetadata.class));
+        List<AnnotationFS> cmds = new ArrayList<>(
+                CasUtil.select(aCas, getType(aCas, CASMetadata.class)));
         if (cmds.size() > 1) {
             throw new IOException("CAS contains more than one CASMetadata instance");
         }
         else if (cmds.size() == 1) {
-            CASMetadata cmd = cmds.get(0);
-            if (aCasFile.lastModified() != cmd.getLastChangedOnDisk()) {
+            AnnotationFS cmd = cmds.get(0);
+            long lastChangedOnDisk = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
+            if (aCasFile.lastModified() != lastChangedOnDisk) {
                 throw new IOException(
                         "Detected concurrent modification to file on disk (expected timestamp: "
-                                + cmd.getLastChangedOnDisk() + "; actual timestamp "
+                                + lastChangedOnDisk + "; actual timestamp "
                                 + aCasFile.lastModified() + ") - "
                                 + "please try reloading before saving again.");
             }
@@ -85,7 +90,7 @@ public class CasMetadataUtils
         }
     }
     
-    public static void clearCasMetadata(JCas aCas) throws IllegalStateException
+    public static void clearCasMetadata(CAS aCas) throws IllegalStateException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
@@ -94,7 +99,7 @@ public class CasMetadataUtils
         }
         
         List<AnnotationFS> cmds = new ArrayList<>(
-                CasUtil.select(aCas.getCas(), getType(aCas.getCas(), CASMetadata.class)));
+                CasUtil.select(aCas, getType(aCas, CASMetadata.class)));
         if (cmds.size() > 1) {
             throw new IllegalStateException("CAS contains more than one CASMetadata instance");
         }
@@ -102,13 +107,13 @@ public class CasMetadataUtils
         cmds.forEach(aCas::removeFsFromIndexes);
     }
     
-    public static void addOrUpdateCasMetadata(JCas aJCas, File aCasFile, SourceDocument aDocument,
+    public static void addOrUpdateCasMetadata(CAS aCas, File aCasFile, SourceDocument aDocument,
             String aUsername)
         throws IOException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
-        if (aJCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
+        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
             LOG.info("Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
                     + "does not support CASMetadata yet - not adding",
                     aCasFile.getName(), aUsername, aDocument.getName(),
@@ -117,8 +122,9 @@ public class CasMetadataUtils
             return;
         }
         
-        CASMetadata cmd;
-        List<CASMetadata> cmds = new ArrayList<>(JCasUtil.select(aJCas, CASMetadata.class));
+        Type casMetadataType = getType(aCas, CASMetadata.class);
+        FeatureStructure cmd;
+        List<AnnotationFS> cmds = new ArrayList<>(CasUtil.select(aCas, casMetadataType));
         if (cmds.size() > 1) {
             throw new IOException("CAS contains more than one CASMetadata instance!");
         }
@@ -126,12 +132,44 @@ public class CasMetadataUtils
             cmd = cmds.get(0);
         }
         else {
-            cmd = new CASMetadata(aJCas, 0, 0);
+            cmd = aCas.createAnnotation(casMetadataType, 0, 0);
         }
-        cmd.setUsername(aUsername);
-        cmd.setSourceDocumentId(aDocument.getId());
-        cmd.setProjectId(aDocument.getProject().getId());
-        cmd.setLastChangedOnDisk(aCasFile.lastModified());
-        aJCas.addFsToIndexes(cmd);
+        
+        if (cmd.getType().getFeatureByBaseName("username") != null) {
+            FSUtil.setFeature(cmd, "username", aUsername);
+        }
+        
+        if (cmd.getType().getFeatureByBaseName("sourceDocumentId") != null) {
+            FSUtil.setFeature(cmd, "sourceDocumentId", aDocument.getId());
+        }
+
+        if (cmd.getType().getFeatureByBaseName("sourceDocumentName") != null) {
+            FSUtil.setFeature(cmd, "sourceDocumentName", aDocument.getName());
+        }
+
+        if (cmd.getType().getFeatureByBaseName("projectId") != null) {
+            FSUtil.setFeature(cmd, "projectId", aDocument.getProject().getId());
+        }
+
+        if (cmd.getType().getFeatureByBaseName("projectName") != null) {
+            FSUtil.setFeature(cmd, "projectName", aDocument.getProject().getName());
+        }
+
+        if (cmd.getType().getFeatureByBaseName("lastChangedOnDisk") != null) {
+            FSUtil.setFeature(cmd, "lastChangedOnDisk", aCasFile.lastModified());
+        }
+        
+        aCas.addFsToIndexes(cmd);
+    }
+    
+    public static Optional<String> getSourceDocumentName(CAS aCas)
+    {
+        try {
+            FeatureStructure fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(FSUtil.getFeature(fs, "sourceDocumentName", String.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 }

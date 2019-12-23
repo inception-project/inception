@@ -18,20 +18,26 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.linesOf;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 
+import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
-import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
+import org.dkpro.core.io.text.TextReader;
+import org.dkpro.core.tokit.BreakIteratorSegmenter;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -47,12 +53,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSuppo
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -82,7 +89,7 @@ public class BratRendererTest
         project = new Project();
         
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-                AnchoringMode.SINGLE_TOKEN);
+                SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
 
         tokenPosFeature = new AnnotationFeature();
@@ -96,7 +103,7 @@ public class BratRendererTest
         tokenPosFeature.setVisible(true);
 
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-                AnchoringMode.SINGLE_TOKEN);
+                SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
@@ -143,33 +150,69 @@ public class BratRendererTest
      * generate brat JSON data for the document
      */
     @Test
-    public void testGenerateBratJsonGetDocument() throws Exception
+    public void thatSentenceOrientedStrategyRenderCorrectly() throws Exception
     {
-        String jsonFilePath = "target/test-output/output_cas_to_json_document.json";
+        String jsonFilePath = "target/test-output/output-sentence-oriented.json";
         String file = "src/test/resources/tcf04-karin-wl.xml";
         
         CAS cas = JCasFactory.createJCas().getCas();
-        CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
+        CollectionReader reader = createReader(TcfReader.class,
                 TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        JCas jCas = cas.getJCas();
-
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
+        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
 
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(),
-                jCas, schemaService.listAnnotationLayer(project));
+                cas, schemaService.listAnnotationLayer(project));
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, state, vdoc, jCas, schemaService);
+        BratRenderer.render(response, state, vdoc, cas, schemaService);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
-        assertThat(linesOf(new File("src/test/resources/output_cas_to_json_document_expected.json"),
-                "UTF-8")).isEqualTo(linesOf(new File(jsonFilePath), "UTF-8"));
+        assertThat(contentOf(
+                new File("src/test/resources/output-sentence-oriented.json"), UTF_8))
+                        .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
+    }
+    
+    /**
+     * generate brat JSON data for the document
+     */
+    @Test
+    public void thatLineOrientedStrategyRenderCorrectly() throws Exception
+    {
+        String jsonFilePath = "target/test-output/multiline.json";
+        String file = "src/test/resources/multiline.txt";
+        
+        CAS cas = JCasFactory.createJCas().getCas();
+        CollectionReader reader = createReader(TextReader.class,
+                TextReader.PARAM_SOURCE_LOCATION, file);
+        reader.getNext(cas);
+        AnalysisEngine segmenter = createEngine(BreakIteratorSegmenter.class);
+        segmenter.process(cas);
+        AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setPagingStrategy(new LineOrientedPagingStrategy());
+        state.getPreferences().setWindowSize(10);
+        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
+
+        state.setProject(project);
+
+        VDocument vdoc = new VDocument();
+        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(),
+                cas, schemaService.listAnnotationLayer(project));
+
+        GetDocumentResponse response = new GetDocumentResponse();
+        BratRenderer.render(response, state, vdoc, cas, schemaService);
+
+        JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
+
+        assertThat(contentOf(
+                new File("src/test/resources/multiline.json"), UTF_8))
+                        .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 }

@@ -20,6 +20,6 @@
 Upon opening the application in the browser, the login screen opens. Please enter your
 credentials to  proceed.
 
-NOTE: When {product-name} is started for the first time, a default user called *admin* with the password *admin* is automatically created. Be sure to change the passwort for this user after logging in (see <<sect_users>>). 
+NOTE: When {product-name} is started for the first time, a default user called *admin* with the password *admin* is automatically created. Be sure to change the password for this user after logging in (see <<sect_users>>). 
 
 image::version3_login.png[align="center"]

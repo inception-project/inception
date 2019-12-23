@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -57,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrateg
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ReadonlyColoringBehaviour;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -64,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelec
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -122,7 +123,8 @@ public class AnnotationPreferencesDialogContent
         DropDownChoice<Pair<String, String>> editor = new BootstrapSelect<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
         editor.setChoices(editorChoices);
-        editor.add(visibleWhen(() -> editor.getChoices().size() > 1));
+        editor.add(visibleWhen(() -> editor.getChoices().size() > 1
+                && ANNOTATION.equals(stateModel.getObject().getMode())));
         form.add(editor);
 
         // Add layer check boxes and combo boxes
@@ -130,7 +132,10 @@ public class AnnotationPreferencesDialogContent
 
         // Add a check box to enable/disable automatic page navigations while annotating
         form.add(new CheckBox("scrollPage"));
-        
+
+        // Add a check box to enable/disable arc collapsing
+        form.add(new CheckBox("collapseArcs"));
+
         form.add(new CheckBox("rememberLayer"));
 
         // Add global read-only coloring strategy combo box
@@ -163,6 +168,7 @@ public class AnnotationPreferencesDialogContent
             prefs.setColorPerLayer(model.colorPerLayer);
             prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
             prefs.setEditor(model.editor.getKey());
+            prefs.setCollapseArcs(model.collapseArcs);
 
             state.setAnnotationLayers(model.annotationLayers.stream()
                     .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
@@ -196,6 +202,7 @@ public class AnnotationPreferencesDialogContent
         model.colorPerLayer = prefs.getColorPerLayer();
         model.readonlyLayerColoringBehaviour = prefs.getReadonlyLayerColoringBehaviour();
         model.rememberLayer = prefs.isRememberLayer();
+        model.collapseArcs = prefs.isCollapseArcs();
 
         AnnotationEditorFactory editorFactory = annotationEditorRegistry
                 .getEditorFactory(state.getPreferences().getEditor());
@@ -280,5 +287,6 @@ public class AnnotationPreferencesDialogContent
         private List<AnnotationLayer> annotationLayers;
         private ReadonlyColoringBehaviour readonlyLayerColoringBehaviour;
         private Map<Long, ColoringStrategyType> colorPerLayer;
+        private boolean collapseArcs;
     }
 }

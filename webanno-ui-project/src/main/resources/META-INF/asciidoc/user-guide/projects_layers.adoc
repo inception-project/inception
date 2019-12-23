@@ -43,7 +43,7 @@ Now you have created your first custom layer.
 | Chunk
 | Span
 | Lock to multiple tokens,
-no stacking,
+no overlap,
 no sentence boundary crossing
 
 | Coreference
@@ -52,13 +52,13 @@ no sentence boundary crossing
 
 | Dependency
 | Relation over POS,
-| No stacking,
+| Any overlap,
 no sentence boundary crossing
 
 | Lemma
 | Span
 | Locked to token offsets,
-no stacking,
+no overlap,
 no sentence boundary crossing
 
 | Named Entity
@@ -68,7 +68,7 @@ no sentence boundary crossing
 | Part of Speech (POS)
 | Span
 | Locked to token offsets,
-no stacking,
+no overlap,
 no sentence boundary crossing
 |====
 
@@ -202,8 +202,8 @@ in order for the **Sentence-level** mode to allow annotating multiple sentences,
 **Allow crossing sentence boundary** setting must be enabled, otherwise only individual sentences
 can be annotated.
 
-| Allow stacking
-| Allow multiple annotations in this layer to be made at exactly the same position. If this option is disabled, a new annotation made at the same location as an existing annotation will replace the existing annotation.
+| Overlap
+| This setting controls if and how annotations may overlap. For **span layers**, overlap is defined in terms of the span offsets. If any character offset that is part of span A is also part of span B, then they are considered to be **overlapping**. If two spans have exactly the same offsets, then they are considered to be **stacking**. For **relation layers**, overlap is defined in terms of the end points of the relation. If two relations share any end point (source or target), they are considered to be **overlapping**. If two relations have exactly the same end points, they are considered to be **stacking**. Note that some export formats are unable to deal with stacked or overlapping annotations. E.g. the CoNLL formats cannot deal with overlapping or stacked named entities.
 
 | Allow crossing sentence boundary
 _(chain)_

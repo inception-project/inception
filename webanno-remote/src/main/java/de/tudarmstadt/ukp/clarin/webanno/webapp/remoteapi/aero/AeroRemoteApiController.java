@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
-import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
@@ -60,7 +61,6 @@ import org.apache.uima.cas.impl.TypeImpl;
 import org.apache.uima.cas.impl.TypeSystemImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
@@ -116,8 +117,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
@@ -449,7 +448,8 @@ public class AeroRemoteApiController
         
         ProjectExportRequest request = new ProjectExportRequest(project,
                 aFormat.orElse(WebAnnoTsv3FormatSupport.ID), true);
-        File exportedFile = exportService.exportProject(request);
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
+        File exportedFile = exportService.exportProject(request, monitor);
         
         // Turn the file into a resource and auto-delete the file when the resource closes the
         // stream.
@@ -626,12 +626,12 @@ public class AeroRemoteApiController
                                     .collect(Collectors.toList()).toString()));
             
             // Create a temporary export file from the annotations
-            JCas jcas = documentService.createOrReadInitialCas(doc);
+            CAS cas = documentService.createOrReadInitialCas(doc);
             
             File exportedFile = null;
             try {
                 // Load the converted file into memory
-                exportedFile = importExportService.exportCasToFile(jcas.getCas(), doc,
+                exportedFile = importExportService.exportCasToFile(cas, doc,
                         doc.getName(), format, true);
                 byte[] resource = FileUtils.readFileToByteArray(exportedFile);
                 
@@ -724,7 +724,7 @@ public class AeroRemoteApiController
         SourceDocument document = getDocument(project, aDocumentId);
         AnnotationDocument anno = getAnnotation(document, aAnnotatorId, true);
         
-        JCas annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
+        CAS annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
         
         // If they are compatible, then we can store the new annotations
         documentService.writeAnnotationCas(annotationCas, document, annotator, false);
@@ -814,7 +814,7 @@ public class AeroRemoteApiController
         Project project = getProject(aProjectId);
         SourceDocument document = getDocument(project, aDocumentId);
         
-        JCas annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
+        CAS annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
         
         // If they are compatible, then we can store the new annotations
         curationService.writeCurationCas(annotationCas, document, false);
@@ -969,7 +969,7 @@ public class AeroRemoteApiController
         return new ResponseEntity<>(resource, httpHeaders, OK);
     }
     
-    private JCas createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
+    private CAS createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
             Optional<String> aFormatId)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
@@ -987,7 +987,7 @@ public class AeroRemoteApiController
 
         // Convert the uploaded annotation document into a CAS
         File tmpFile = null;
-        JCas annotationCas;
+        CAS annotationCas;
         try {
             tmpFile = File.createTempFile("upload", ".bin");
             aFile.transferTo(tmpFile);
@@ -1002,7 +1002,7 @@ public class AeroRemoteApiController
         // Check if the uploaded file is compatible with the source document. They are compatible
         // if the text is the same and if all the token and sentence annotations have the same
         // offsets.
-        JCas initialCas = documentService.createOrReadInitialCas(document);
+        CAS initialCas = documentService.createOrReadInitialCas(document);
         String initialText = initialCas.getDocumentText();
         String annotationText = annotationCas.getDocumentText();
         
@@ -1029,11 +1029,11 @@ public class AeroRemoteApiController
         // SETTING THE SOFA STRING FORCEFULLY FOLLOWING THE DARK SIDE IS!
         forceSetFeatureValue(annotationCas.getSofa(), CAS.FEATURE_BASE_NAME_SOFASTRING,
                 initialCas.getDocumentText());
-        FSUtil.setFeature(annotationCas.getDocumentAnnotationFs(), CAS.FEATURE_BASE_NAME_END,
+        FSUtil.setFeature(annotationCas.getDocumentAnnotation(), CAS.FEATURE_BASE_NAME_END,
                 initialCas.getDocumentText().length());
         
-        Collection<Sentence> annotationSentences = select(annotationCas, Sentence.class);
-        Collection<Sentence> initialSentences = select(initialCas, Sentence.class);
+        Collection<AnnotationFS> annotationSentences = selectSentences(annotationCas);
+        Collection<AnnotationFS> initialSentences = selectSentences(initialCas);
         if (annotationSentences.size() != initialSentences.size()) {
             throw new IncompatibleDocumentException(
                     "Expected [%d] sentences, but annotation document contains [%d] sentences.",
@@ -1041,8 +1041,8 @@ public class AeroRemoteApiController
         }
         assertCompatibleOffsets(initialSentences, annotationSentences);
         
-        Collection<Token> annotationTokens = select(annotationCas, Token.class);
-        Collection<Token> initialTokens = select(initialCas, Token.class);
+        Collection<AnnotationFS> annotationTokens = selectTokens(annotationCas);
+        Collection<AnnotationFS> initialTokens = selectTokens(initialCas);
         if (annotationTokens.size() != initialTokens.size()) {
             throw new IncompatibleDocumentException(
                     "Expected [%d] sentences, but annotation document contains [%d] sentences.",

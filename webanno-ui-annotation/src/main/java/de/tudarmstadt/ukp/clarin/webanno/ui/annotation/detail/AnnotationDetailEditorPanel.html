@@ -67,7 +67,7 @@
           class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
         <div wicket:id=deleteAnnotationDialog></div>
         <div wicket:id=replaceAnnotationDialog></div>
-        <div class="panel panel-default">
+        <div wicket:id="layerContainer" class="panel panel-default">
           <div class="panel-body">
             <div class="col-sm-12">
               <div class="form-horizontal">
@@ -134,7 +134,7 @@
                 </div>
                 <hr/>
                 <div wicket:id="noFeaturesWarning"></div>
-                <div id="featureValues" wicket:id="featureValues">
+                <div wicket:id="featureValues">
                   <div wicket:id="editor"></div>
                 </div>
                 <div style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">

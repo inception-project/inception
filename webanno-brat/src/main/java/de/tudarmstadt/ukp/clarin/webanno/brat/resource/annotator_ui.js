@@ -2953,10 +2953,39 @@ var AnnotatorUI = (function($, window, undefined) {
 */
 // WEBANNO EXTENSION END
 
-
       var preventDefault = function(evt) {
         evt.preventDefault();
       }
+
+// WEBANNO EXTENSION BEGIN - #1388 Support context menu
+      var contextMenu = function(evt) {
+        // If the user shift-right-clicks, open the normal browser context menu. This is useful
+        // e.g. during debugging / developing
+        if (evt.shiftKey) {
+          return;
+        }
+
+        stopArcDrag();
+        
+        var target = $(evt.target);
+        var id;
+        if (id = target.attr('data-span-id')) {
+          preventDefault(evt);
+          var offsets = [];
+          $.each(data.spans[id], function(fragmentNo, fragment) {
+            offsets.push([fragment.from, fragment.to]);
+          });
+          dispatcher.post('ajax', [ {
+            action: 'contextMenu',
+            offsets: $.toJSON(offsets),
+            id: id,
+            type: data.spans[id].type,
+            clientX: evt.clientX,
+            clientY: evt.clientY
+          }, 'serverResult']);
+        }
+      }
+// WEBANNO EXTENSION END - #1388 Support context menu
 
       var $waiter = $('#waiter');
       $waiter.dialog({
@@ -3027,7 +3056,7 @@ var AnnotatorUI = (function($, window, undefined) {
           on('mousedown', onMouseDown).
           on('mouseup', onMouseUp).
           on('mousemove', onMouseMove).
-          on('annotationSpeed', setAnnotationSpeed);
+          on('annotationSpeed', setAnnotationSpeed).
 // WEBANNO EXTENSION BEGIN
 // We do not use this
 /*
@@ -3037,6 +3066,9 @@ var AnnotatorUI = (function($, window, undefined) {
           on('normSearchResult', setSpanNormSearchResults);
 */
 // WEBANNO EXTENSION END
+// WEBANNO EXTENSION BEGIN - #1388 Support context menu
+          on('contextmenu', contextMenu);
+// WEBANNO EXTENSION END - #1388 Support context menu
     };
 
     return AnnotatorUI;

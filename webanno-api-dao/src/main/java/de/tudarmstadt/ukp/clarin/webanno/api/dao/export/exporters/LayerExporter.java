@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static java.util.Arrays.asList;
 
 import java.io.File;
@@ -34,6 +36,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationFeature;
@@ -71,7 +74,8 @@ public class LayerExporter
     }
     
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws Exception
     {
         List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
@@ -116,6 +120,7 @@ public class LayerExporter
         exLayer.setEnabled(aLayer.isEnabled());
         exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
         exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
+        exLayer.setOverlapMode(aLayer.getOverlapMode());
         exLayer.setAnchoringMode(aLayer.getAnchoringMode());
         exLayer.setValidationMode(aLayer.getValidationMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
@@ -208,7 +213,7 @@ public class LayerExporter
         // Round 1: layers and features
         for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
             if (annotationService.existsLayer(exLayer.getName(), exLayer.getType(), aProject)) {
-                AnnotationLayer layer = annotationService.getLayer(exLayer.getName(), aProject);
+                AnnotationLayer layer = annotationService.findLayer(aProject, exLayer.getName());
                 importLayer(layer, exLayer, aProject);
                 for (ExportedAnnotationFeature exfeature : exLayer.getFeatures()) {
                     if (annotationService.existsFeature(exfeature.getName(), layer)) {
@@ -236,9 +241,9 @@ public class LayerExporter
         // Round 2: attach-layers, attach-features
         for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
             if (exLayer.getAttachType() != null) {
-                AnnotationLayer layer = annotationService.getLayer(exLayer.getName(), aProject);
-                AnnotationLayer attachLayer = annotationService.getLayer(exLayer.getAttachType()
-                        .getName(), aProject);
+                AnnotationLayer layer = annotationService.findLayer(aProject, exLayer.getName());
+                AnnotationLayer attachLayer = annotationService.findLayer(aProject,
+                        exLayer.getAttachType().getName());
                 layer.setAttachType(attachLayer);
                 if (exLayer.getAttachFeature() != null) {
                     AnnotationFeature attachFeature = annotationService
@@ -266,6 +271,13 @@ public class LayerExporter
         }
         else {
             aLayer.setAnchoringMode(aExLayer.getAnchoringMode());
+        }
+        if (aExLayer.getOverlapMode() == null) {
+            // This allows importing old projects which did not have the overlap mode yet
+            aLayer.setOverlapMode(aExLayer.isAllowStacking() ? ANY_OVERLAP : OVERLAP_ONLY);
+        }
+        else {
+            aLayer.setOverlapMode(aExLayer.getOverlapMode());
         }
         aLayer.setValidationMode(aExLayer.getValidationMode() != null ? aExLayer.getValidationMode()
                 : ValidationMode.NEVER);

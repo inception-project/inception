@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 
@@ -57,8 +58,7 @@ public class ChunkLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
-                aProject, true, AnchoringMode.TOKENS);
-        chunkLayer.setAllowStacking(false);
+                aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
         annotationSchemaService.createLayer(chunkLayer);
 
         AnnotationFeature chunkValueFeature = new AnnotationFeature();

@@ -74,7 +74,8 @@ public class DocumentServiceImplTest
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
 
-        storageService = new CasStorageServiceImpl(null, repositoryProperties, backupProperties);
+        storageService = new CasStorageServiceImpl(null, null, repositoryProperties,
+                backupProperties);
 
         sut = new DocumentServiceImpl(repositoryProperties, userRepository, storageService,
                 importExportService, projectService, applicationEventPublisher, entityManager);
@@ -84,11 +85,11 @@ public class DocumentServiceImplTest
     public void thatCreatingOrReadingInitialCasForNewDocumentCreatesNewCas() throws Exception
     {
         when(importExportService.importCasFromFile(any(File.class), any(Project.class),
-                any())).thenReturn(JCasFactory.createText("Test"));
+                any())).thenReturn(JCasFactory.createText("Test").getCas());
 
         SourceDocument doc = makeSourceDocument(1l, 1l, "test");
 
-        JCas cas = sut.createOrReadInitialCas(doc);
+        JCas cas = sut.createOrReadInitialCas(doc).getJCas();
 
         assertThat(cas).isNotNull();
         assertThat(cas.getDocumentText()).isEqualTo("Test");
@@ -103,9 +104,9 @@ public class DocumentServiceImplTest
         when(userRepository.get(user.getUsername())).thenReturn(user);
         when(entityManager.createQuery(anyString(), any())).thenThrow(NoResultException.class);
         when(importExportService.importCasFromFile(any(File.class), any(Project.class),
-                any())).thenReturn(JCasFactory.createText("Test"));
+                any())).thenReturn(JCasFactory.createText("Test").getCas());
 
-        JCas cas = sut.readAnnotationCas(sourceDocument, user.getUsername());
+        JCas cas = sut.readAnnotationCas(sourceDocument, user.getUsername()).getJCas();
 
         assertThat(cas).isNotNull();
         assertThat(cas.getDocumentText()).isEqualTo("Test");

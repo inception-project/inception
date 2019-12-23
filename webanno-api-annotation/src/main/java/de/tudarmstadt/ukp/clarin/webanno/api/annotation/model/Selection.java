@@ -23,7 +23,6 @@ import java.io.Serializable;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,9 +90,9 @@ public class Selection
         LOG.debug("Span: {}", this);
     }
 
-    public void selectSpan(JCas aJCas, int aBegin, int aEnd)
+    public void selectSpan(CAS aCas, int aBegin, int aEnd)
     {
-        selectSpan(VID.NONE_ID, aJCas.getCas(), aBegin, aEnd);
+        selectSpan(VID.NONE_ID, aCas, aBegin, aEnd);
     }
     
     public void clear()

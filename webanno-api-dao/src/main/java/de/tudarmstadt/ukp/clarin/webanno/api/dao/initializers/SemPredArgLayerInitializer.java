@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArg;
 import de.tudarmstadt.ukp.dkpro.core.api.semantics.type.SemArgLink;
@@ -61,15 +62,13 @@ public class SemPredArgLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer semArgLayer = new AnnotationLayer(SemArg.class.getName(), "SemArg",
-                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS);
-        semArgLayer.setAllowStacking(true);
+                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         semArgLayer.setCrossSentence(false);
         
         annotationSchemaService.createLayer(semArgLayer);
         
         AnnotationLayer semPredLayer = new AnnotationLayer(SemPred.class.getName(), "SemPred",
-                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS);
-        semPredLayer.setAllowStacking(true);
+                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         semPredLayer.setCrossSentence(false);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, semPredLayer,

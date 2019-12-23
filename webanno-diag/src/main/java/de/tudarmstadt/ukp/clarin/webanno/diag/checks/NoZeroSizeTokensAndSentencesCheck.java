@@ -17,55 +17,42 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class NoZeroSizeTokensAndSentencesCheck
     implements Check
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
-   
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        try {
-            boolean ok = true;
-            
-            for (Token t : select(aCas.getJCas(), Token.class)) {
-                if (t.getBegin() >= t.getEnd()) {
-                    aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                            "Token with illegal span: %s", t));
-                    ok = false;
-                }
+        boolean ok = true;
+        
+        for (AnnotationFS t : selectTokens(aCas)) {
+            if (t.getBegin() >= t.getEnd()) {
+                aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                        "Token with illegal span: %s", t));
+                ok = false;
             }
+        }
 
-            for (Sentence s : select(aCas.getJCas(), Sentence.class)) {
-                if (s.getBegin() >= s.getEnd()) {
-                    aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                            "Sentence with illegal span: %s", s));
-                    ok = false;
-                }
+        for (AnnotationFS s : selectSentences(aCas)) {
+            if (s.getBegin() >= s.getEnd()) {
+                aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                        "Sentence with illegal span: %s", s));
+                ok = false;
             }
-            
-            return ok;
         }
-        catch (CASException e) {
-            log.error("Unabled to access JCas", e);
-            aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                    "Unabled to access JCas", e.getMessage()));
-            return false;
-        }
+        
+        return ok;
     }
 }

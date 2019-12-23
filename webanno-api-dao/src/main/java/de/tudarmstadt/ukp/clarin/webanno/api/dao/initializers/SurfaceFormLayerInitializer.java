@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -28,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -58,8 +59,7 @@ public class SurfaceFormLayerInitializer
     {
         // The surface form must be locked to tokens for CoNLL-U writer to work properly
         AnnotationLayer surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(),
-                "Surface form", SPAN_TYPE, aProject, true, AnchoringMode.TOKENS);
-        surfaceFormLayer.setAllowStacking(false);
+                "Surface form", SPAN_TYPE, aProject, true, TOKENS, NO_OVERLAP);
         annotationSchemaService.createLayer(surfaceFormLayer);
 
         AnnotationFeature surfaceFormValueFeature = new AnnotationFeature();

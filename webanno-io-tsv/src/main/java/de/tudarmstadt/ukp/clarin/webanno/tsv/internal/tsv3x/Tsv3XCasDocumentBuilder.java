@@ -121,7 +121,8 @@ public class Tsv3XCasDocumentBuilder
             boolean addDisambiguationIdIfStacked = SPAN.equals(layerType);
             
             for (AnnotationFS annotation : CasUtil.select(aJCas.getCas(), type)) {
-                doc.activateType(annotation.getType());
+                // Mind that we might actually get an annotation here which is a subtype of `type`!
+                doc.activateType(type);
                 
                 // Get the relevant begin and end offsets for the current annotation
                 int begin = annotation.getBegin();
@@ -348,7 +349,8 @@ public class Tsv3XCasDocumentBuilder
                                 .getType(POS.class.getName()));
                     }
                     else {
-                        col.setTargetTypeHint(target.getType());
+                        TsvSchema schema = aUnit.getDocument().getSchema();
+                        col.setTargetTypeHint(schema.getEffectiveType(target));
                     }
                 }
             }

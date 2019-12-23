@@ -22,7 +22,6 @@ import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -34,18 +33,18 @@ public interface CorrectionDocumentService
     /**
      * Create an annotation document under a special user named "CORRECTION_USER"
      *
-     * @param jCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param document
      *            the source document.
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeCorrectionCas(JCas jCas, SourceDocument document)
+    void writeCorrectionCas(CAS aCas, SourceDocument document)
         throws IOException;
 
-    JCas readCorrectionCas(SourceDocument document)
+    CAS readCorrectionCas(SourceDocument document)
         throws IOException;
 
     void upgradeCorrectionCas(CAS aCurCas, SourceDocument document)

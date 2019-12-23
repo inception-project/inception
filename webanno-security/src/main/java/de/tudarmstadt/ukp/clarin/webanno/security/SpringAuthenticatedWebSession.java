@@ -91,6 +91,10 @@ public class SpringAuthenticatedWebSession
         // signOut();
         
         try {
+            // Kill current session and create a new one as part of the authentication
+            ((ServletWebRequest) RequestCycle.get().getRequest()).getContainerRequest().getSession()
+                    .invalidate();
+            
             Authentication authentication = authenticationManager
                     .authenticate(new UsernamePasswordAuthenticationToken(username, password));
 

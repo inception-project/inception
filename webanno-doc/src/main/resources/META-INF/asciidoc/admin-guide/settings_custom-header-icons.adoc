@@ -16,7 +16,7 @@
 
 = Custom header icons
 
-WebAnno allows adding custom icons to the page header. You can declare such custom icons in the WebAnno settings file as shown in the example below. Each declaration begins with the prefix `style.header.icon.` followed by an identifier (here `myOrganization` and `mySupport`). The suffixes `.linkUrl` and `.imageUrl` indicate the URL of the target page and of the icon image respectively. Images are automatically resized via CSS. However, to keep loading times low, you should point to a reasonably small image.
+{product-name} allows adding custom icons to the page header. You can declare such custom icons in the  `settings.properties` file as shown in the example below. Each declaration begins with the prefix `style.header.icon.` followed by an identifier (here `myOrganization` and `mySupport`). The suffixes `.linkUrl` and `.imageUrl` indicate the URL of the target page and of the icon image respectively. Images are automatically resized via CSS. However, to keep loading times low, you should point to a reasonably small image.
 
 The order of the icons is controlled by the ID, not by the order in the configuration file!
 

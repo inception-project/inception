@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.Test;
 
 public class BratAnnotatorUtilityTest
@@ -26,8 +26,7 @@ public class BratAnnotatorUtilityTest
     @Test
     public void testClearJCasWithoutDocumentMetadata() throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
-
-        BratAnnotatorUtility.clearJcasAnnotations(jcas);
+        CAS jcas = JCasFactory.createJCas().getCas();
+        BratAnnotatorUtility.clearAnnotations(jcas);
     }
 }

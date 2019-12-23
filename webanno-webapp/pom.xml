@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.5.9-SNAPSHOT</version>
+    <version>3.6.5-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-webapp</artifactId>
   <name>WebAnno - Application</name>
@@ -76,6 +76,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-ui-correction</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-tagsets</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -197,7 +201,7 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>8.0.12</version>
+      <version>8.0.15</version>
     </dependency>
     <dependency>
       <groupId>org.hsqldb</groupId>
@@ -419,6 +423,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-automation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-correction</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-tagsets</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
@@ -465,7 +470,6 @@
               -->
               <!-- Spring Security -->
               <usedDependency>org.springframework.security:spring-security-config</usedDependency>
-              <usedDependency>org.springframework.security:spring-security-web</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

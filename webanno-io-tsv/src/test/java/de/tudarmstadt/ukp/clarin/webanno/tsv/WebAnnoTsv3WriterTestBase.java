@@ -51,13 +51,15 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
+import org.dkpro.core.io.xmi.XmiWriter;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiWriter;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS_NOUN;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -65,7 +67,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import webanno.custom.Span;
 
 public abstract class WebAnnoTsv3WriterTestBase
@@ -1149,6 +1150,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.FlexLinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
+    
     @Test
     public void testSimpleSlotFeatureWithoutValues() throws Exception
     {
@@ -1817,6 +1819,29 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         writeAndAssertEquals(jcas);
     }
+    
+    @Test
+    public void testElevatedType() throws Exception {
+        JCas jcas = JCasFactory.createJCas();
+        
+        DocumentMetaData.create(jcas).setDocumentId("doc");
+        jcas.setDocumentText("John");
+        
+        // Add an elevated type which is not a direct subtype of Annotation. This type not be picked
+        // up by the schema analyzer but should still be serialized as the POS type which is in fact
+        // picked up.
+        POS_NOUN pos = new POS_NOUN(jcas, 0, 4);
+        pos.setPosValue("NN");
+        pos.setCoarseValue("NOUN");
+        pos.addToIndexes();
+        
+        Token t = new Token(jcas, 0, 4);
+        t.setPos(pos);
+        t.addToIndexes();
+        new Sentence(jcas, 0, 4).addToIndexes();
+                
+        writeAndAssertEquals(jcas);
+    }
 
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException
@@ -1832,6 +1857,8 @@ public abstract class WebAnnoTsv3WriterTestBase
         params.addAll(asList(aParams));
         params.add(WebannoTsv3Writer.PARAM_TARGET_LOCATION);
         params.add(targetFolder);
+        params.add(WebannoTsv3Writer.PARAM_OVERWRITE);
+        params.add(true);
         
         AnalysisEngineDescription tsv = makeWriter();
         for (int i = 0; i < params.size(); i += 2) {
@@ -1843,7 +1870,8 @@ public abstract class WebAnnoTsv3WriterTestBase
         }
         
         AnalysisEngineDescription xmi = createEngineDescription(XmiWriter.class,
-                XmiWriter.PARAM_TARGET_LOCATION, targetFolder);
+                XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
+                XmiWriter.PARAM_OVERWRITE, true);
         
         SimplePipeline.runPipeline(aJCas, tsv, xmi);
         

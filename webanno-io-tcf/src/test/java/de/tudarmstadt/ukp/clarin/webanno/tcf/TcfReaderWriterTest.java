@@ -33,11 +33,11 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.component.CasDumpWriter;
 import org.custommonkey.xmlunit.XMLAssert;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Rule;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import eu.clarin.weblicht.wlfxb.io.WLDObjector;
 import eu.clarin.weblicht.wlfxb.tc.api.TextCorpus;
 import eu.clarin.weblicht.wlfxb.tc.api.TextCorpusLayer;
@@ -70,8 +70,9 @@ public class TcfReaderWriterTest
         AnalysisEngineDescription writer = createEngineDescription(
                 TcfWriter.class,
                 TcfWriter.PARAM_TARGET_LOCATION, "target/test-output/oneway",
-                TcfWriter.PARAM_FILENAME_SUFFIX, ".xml",
-                TcfWriter.PARAM_STRIP_EXTENSION, true);
+                TcfWriter.PARAM_FILENAME_EXTENSION, ".xml",
+                TcfWriter.PARAM_STRIP_EXTENSION, true,
+                TcfWriter.PARAM_OVERWRITE, true);
 
         AnalysisEngineDescription dumper = createEngineDescription(CasDumpWriter.class,
                 CasDumpWriter.PARAM_OUTPUT_FILE, "target/test-output/oneway/dump.txt");
@@ -126,8 +127,9 @@ public class TcfReaderWriterTest
         AnalysisEngineDescription writer = createEngineDescription(
                 TcfWriter.class,
                 TcfWriter.PARAM_TARGET_LOCATION, "target/test-output/roundtrip",
-                TcfWriter.PARAM_FILENAME_SUFFIX, ".xml",
-                TcfWriter.PARAM_STRIP_EXTENSION, true);
+                TcfWriter.PARAM_FILENAME_EXTENSION, ".xml",
+                TcfWriter.PARAM_STRIP_EXTENSION, true,
+                TcfWriter.PARAM_OVERWRITE, true);
 
         runPipeline(reader, writer);
 

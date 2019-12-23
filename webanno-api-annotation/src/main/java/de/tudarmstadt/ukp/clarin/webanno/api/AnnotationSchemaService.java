@@ -196,17 +196,31 @@ public interface AnnotationSchemaService
     AnnotationLayer getLayer(long id);
 
     /**
-     * Get an {@link AnnotationLayer}
+     * Get an annotation layer using its id. This method additionally ensures that the retrieved
+     * layer is part of the given project. For security reasons, this method should be preferred
+     * over {@link #getLayer(long)} if a project context is available.
      * 
-     * @param name
-     *            the layer name.
-     * @param project
+     * @param aProject
      *            the project.
+     * @param aLayerId
+     *            the layer id.
      * @return the layer.
      */
-    AnnotationLayer getLayer(String name, Project project);
+    Optional<AnnotationLayer> getLayer(Project aProject, long aLayerId);
 
-    AnnotationLayer getLayer(Project aProject, FeatureStructure aFS);
+    /**
+     * Get an {@link AnnotationLayer}
+     * 
+     * @param aProject
+     *            the project.
+     * @param aName
+     *            the layer name.
+     * 
+     * @return the layer.
+     */
+    AnnotationLayer findLayer(Project aProject, String aName);
+
+    AnnotationLayer findLayer(Project aProject, FeatureStructure aFS);
     
     /**
      * Get a {@link AnnotationFeature} name using its ID.
@@ -417,6 +431,17 @@ public interface AnnotationSchemaService
      */
     void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
             throws UIMAException, IOException;
+
+    /**
+     * In-place upgrade of the given CAS to the target type system. It is
+     * a slow call. The CAS is not automatically persisted - the calling code
+     * needs to take care of this.
+     */
+    void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
+            throws UIMAException, IOException;
+    
+    void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
+        throws UIMAException, IOException;
     
     /**
      * @see #upgradeCas(CAS, SourceDocument, String)
@@ -424,6 +449,9 @@ public interface AnnotationSchemaService
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
             throws UIMAException, IOException;
 
+    void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser, CasUpgradeMode aMode)
+            throws UIMAException, IOException;
+    
     /**
      * Better call {@link #upgradeCas(CAS, SourceDocument, String)} which also logs the action
      * nicely to the log files. This method here is rather for unconditional bulk use such as

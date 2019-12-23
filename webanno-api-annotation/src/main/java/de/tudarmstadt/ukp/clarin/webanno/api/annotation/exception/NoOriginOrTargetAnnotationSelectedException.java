@@ -19,12 +19,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
 
 /**
- * Throw an exception if either a target or orgin span annotation is not merged before the arc
+ * Throw an exception if either a target or origin span annotation is not merged before the arc
  * annotation merging is attempted
  *
  */
 public class NoOriginOrTargetAnnotationSelectedException
-    extends AnnotationException
+    extends IllegalPlacementException
 {
     private static final long serialVersionUID = 1280015349963924638L;
 

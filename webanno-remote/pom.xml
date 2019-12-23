@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.5.9-SNAPSHOT</version>
+    <version>3.6.5-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-remote</artifactId>
   <name>WebAnno - Core - Remote API</name>
@@ -101,11 +101,6 @@
     <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
     </dependency>
 
     <!-- Spring -->
@@ -209,22 +204,14 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
+      <groupId>com.jayway.jsonpath</groupId>
+      <artifactId>json-path</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
       <scope>test</scope>
-      <!--  
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-logging</artifactId>
-        </exclusion>
-      </exclusions>
-      -->
       <exclusions>
         <exclusion>
           <groupId>org.springframework.boot</groupId>
@@ -281,9 +268,9 @@
                -->
               <ignoredDependency>org.apache.tomcat:tomcat-annotations-api</ignoredDependency>
               <ignoredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredDependency>
-              <ignoredDependency>org.springframework.boot:spring-boot-starter-test</ignoredDependency>
               <ignoredDependency>org.springframework.boot:spring-boot-starter-web</ignoredDependency>
               <ignoredDependency>org.springframework.boot:spring-boot-starter-data-jpa</ignoredDependency>
+              <ignoredDependency>com.jayway.jsonpath:json-path</ignoredDependency>
               <ignoredDependency>com.h2database:h2</ignoredDependency>
             </ignoredDependencies>
             <usedDependencies combine.children="append">

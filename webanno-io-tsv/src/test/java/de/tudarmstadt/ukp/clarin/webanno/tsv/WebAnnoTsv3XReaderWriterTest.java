@@ -27,6 +27,7 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -36,7 +37,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 public class WebAnnoTsv3XReaderWriterTest
 {
@@ -54,7 +54,8 @@ public class WebAnnoTsv3XReaderWriterTest
         AnalysisEngineDescription writer = createEngineDescription(
                 WebannoTsv3XWriter.class,
                 WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
-                WebannoTsv3XWriter.PARAM_STRIP_EXTENSION, true);
+                WebannoTsv3XWriter.PARAM_STRIP_EXTENSION, true,
+                WebannoTsv3XWriter.PARAM_OVERWRITE, true);
 
         runPipeline(reader, writer);
 

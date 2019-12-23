@@ -20,7 +20,7 @@
 
 To create an annotation over a span of text, click with the mouse on the text and drag the mouse to create a selection. When you release the mouse, the selected span is activated and highlighted in orange. The annotation detail editor is updated to display the text you have currently selected and to offer a choice on which layer the annotation is to be created. As soon as a layer has been selected, it is automatically assigned to the selected span. To delete an annotation, select a span and click on *Delete*. To deactivate a selected span, click on *Clear*.
 
-Depending on the layer behavior configuration, spans annotations can have any length, can overlap,
+Depending on the layer behavior configuration, span annotations can have any length, can overlap,
 can stack, can nest, and can cross sentence boundaries. 
 
 .Example
@@ -46,6 +46,6 @@ To create a zero-length annotation, hold *SHIFT* and click on the position where
 NOTE: A zero-width span between two tokens that are directly adjacent, e.g. the full stop at the
       end of a sentence and the token before it (`end.`) is always considered to be *at the end of the
       first token* rather than at the beginning of the next token. So an annotation between `d` and `.`
-      in this example would rendered at the right side of `end` rather than at the left side of `.`. 
+      in this example would be rendered at the right side of `end` rather than at the left side of `.`. 
 
-link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be made over several tokens within one sentence. A single token sequence has several co-ref spans simultaneously.
+link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be made over several tokens within one sentence. A single token sequence can have several co-ref spans simultaneously.

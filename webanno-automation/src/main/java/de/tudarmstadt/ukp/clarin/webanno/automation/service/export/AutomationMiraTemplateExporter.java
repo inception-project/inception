@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
@@ -59,7 +60,8 @@ public class AutomationMiraTemplateExporter
     }
     
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws Exception
     {
         List<ExportedMiraTemplate> exTemplates = new ArrayList<>();
@@ -100,14 +102,14 @@ public class AutomationMiraTemplateExporter
             template.setCurrentLayer(exTemplate.isCurrentLayer());
             template.setResult("---");
             AnnotationLayer trainingLayer = annotationService
-                    .getLayer(exTemplate.getTrainFeature().getLayer(), aProject);
+                    .findLayer(aProject, exTemplate.getTrainFeature().getLayer());
             AnnotationFeature trainingFeature = annotationService
                     .getFeature(exTemplate.getTrainFeature().getName(), trainingLayer);
             template.setTrainFeature(trainingFeature);
             Set<AnnotationFeature> otherFeatures = new HashSet<>();
             if (exTemplate.getOtherFeatures() != null) {
                 for (ExportedAnnotationFeatureReference other : exTemplate.getOtherFeatures()) {
-                    AnnotationLayer layer = annotationService.getLayer(other.getLayer(), aProject);
+                    AnnotationLayer layer = annotationService.findLayer(aProject, other.getLayer());
                     AnnotationFeature feature = annotationService.getFeature(other.getName(),
                             layer);
                     otherFeatures.add(feature);

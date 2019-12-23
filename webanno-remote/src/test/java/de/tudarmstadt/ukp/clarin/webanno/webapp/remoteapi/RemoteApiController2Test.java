@@ -200,7 +200,8 @@ public class RemoteApiController2Test
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .param("name", "test.txt")
-                .param("format", "text"))
+                .param("format", "text")
+                .param("state", "IN-PROGRESS"))
             .andExpect(status().isCreated())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.body.user").value("admin"))
@@ -318,7 +319,8 @@ public class RemoteApiController2Test
         @Bean
         public CasStorageService casStorageService()
         {
-            return new CasStorageServiceImpl(null, repositoryProperties(), backupProperties());
+            return new CasStorageServiceImpl(null, null, repositoryProperties(),
+                    backupProperties());
         }
         
         @Bean
@@ -337,7 +339,7 @@ public class RemoteApiController2Test
         @Bean
         public ProjectExportService exportService()
         {
-            return new ProjectExportServiceImpl(null, projectService());
+            return new ProjectExportServiceImpl(null, null, projectService());
         }
         
         @Bean

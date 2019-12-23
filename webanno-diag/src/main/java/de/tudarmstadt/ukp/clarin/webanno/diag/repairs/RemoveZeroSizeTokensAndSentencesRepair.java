@@ -17,24 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel.INFO;
 
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 @Safe(false)
 public class RemoveZeroSizeTokensAndSentencesRepair
@@ -45,49 +42,40 @@ public class RemoveZeroSizeTokensAndSentencesRepair
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        try {
-            for (Sentence s : select(aCas.getJCas(), Sentence.class)) {
-                if (s.getBegin() >= s.getEnd()) {
-                    s.removeFromIndexes();
-                    aMessages.add(new LogMessage(this, LogLevel.INFO,
-                            "Removed sentence with illegal span: %s", s));
-                }
+        for (AnnotationFS s : selectSentences(aCas)) {
+            if (s.getBegin() >= s.getEnd()) {
+                aCas.removeFsFromIndexes(s);
+                aMessages.add(
+                        new LogMessage(this, INFO, "Removed sentence with illegal span: %s", s));
             }
-
-            for (Token t : select(aCas.getJCas(), Token.class)) {
-                if (t.getBegin() >= t.getEnd()) {
-                    Lemma lemma = t.getLemma();
-                    if (lemma != null) {
-                        lemma.removeFromIndexes();
-                        aMessages.add(new LogMessage(this, LogLevel.INFO,
-                                "Removed lemma attached to token with illegal span: %s", t));
-                    }
-
-                    POS pos = t.getPos();
-                    if (pos != null) {
-                        pos.removeFromIndexes();
-                        aMessages.add(new LogMessage(this, LogLevel.INFO,
-                                "Removed POS attached to token with illegal span: %s", t));
-                    }
-
-                    Stem stem = t.getStem();
-                    if (stem != null) {
-                        stem.removeFromIndexes();
-                        aMessages.add(new LogMessage(this, LogLevel.INFO,
-                                "Removed stem attached to token with illegal span: %s", t));
-                    }
-
-                    t.removeFromIndexes();
-                    aMessages.add(new LogMessage(this, LogLevel.INFO,
-                            "Removed token with illegal span: %s", t));
-                }
-            }
-
         }
-        catch (CASException e) {
-            log.error("Unabled to access JCas", e);
-            aMessages.add(
-                    new LogMessage(this, LogLevel.ERROR, "Unabled to access JCas", e.getMessage()));
+
+        for (AnnotationFS t : WebAnnoCasUtil.selectTokens(aCas)) {
+            if (t.getBegin() >= t.getEnd()) {
+                AnnotationFS lemma = FSUtil.getFeature(t, "lemma", AnnotationFS.class);
+                if (lemma != null) {
+                    aCas.removeFsFromIndexes(lemma);
+                    aMessages.add(new LogMessage(this, INFO,
+                            "Removed lemma attached to token with illegal span: %s", t));
+                }
+
+                AnnotationFS pos = FSUtil.getFeature(t, "pos", AnnotationFS.class);
+                if (pos != null) {
+                    aCas.removeFsFromIndexes(pos);
+                    aMessages.add(new LogMessage(this, INFO,
+                            "Removed POS attached to token with illegal span: %s", t));
+                }
+
+                AnnotationFS stem = FSUtil.getFeature(t, "stem", AnnotationFS.class);
+                if (stem != null) {
+                    aCas.removeFsFromIndexes(stem);
+                    aMessages.add(new LogMessage(this, INFO,
+                            "Removed stem attached to token with illegal span: %s", t));
+                }
+
+                aCas.removeFsFromIndexes(t);
+                aMessages.add(new LogMessage(this, INFO, "Removed token with illegal span: %s", t));
+            }
         }
     }
 }

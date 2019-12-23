@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
@@ -53,7 +54,6 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
-import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -75,6 +75,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -364,14 +365,33 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public AnnotationLayer getLayer(long aId)
     {
-        return entityManager
-                .createQuery("FROM AnnotationLayer WHERE id = :id", AnnotationLayer.class)
-                .setParameter("id", aId).getSingleResult();
+        String query = String.join("\n",
+                "FROM AnnotationLayer",
+                "WHERE id = :id");
+        
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("id", aId)
+                .getSingleResult();
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationLayer getLayer(String aName, Project aProject)
+    public Optional<AnnotationLayer> getLayer(Project aProject, long aLayerId)
+    {
+        String query = String.join("\n",
+                "FROM AnnotationLayer",
+                "WHERE id = :id",
+                "AND project = :project");
+        
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("id", aLayerId)
+                .setParameter("project", aProject)
+                .getResultStream().findFirst();
+    }
+    
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public AnnotationLayer findLayer(Project aProject, String aName)
     {
         // If there is a layer definition for the given name, then return it immediately
         Optional<AnnotationLayer> layer = getLayerInternal(aName, aProject);
@@ -442,12 +462,12 @@ public class AnnotationSchemaServiceImpl
     
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationLayer getLayer(Project aProject, FeatureStructure aFS)
+    public AnnotationLayer findLayer(Project aProject, FeatureStructure aFS)
     {
         String layerName = aFS.getType().getName();
         AnnotationLayer layer;
         try {
-            layer = getLayer(layerName, aProject);
+            layer = findLayer(aProject, layerName);
         }
         catch (NoResultException e) {
             if (layerName.endsWith("Chain")) {
@@ -456,7 +476,7 @@ public class AnnotationSchemaServiceImpl
             if (layerName.endsWith("Link")) {
                 layerName = layerName.substring(0, layerName.length() - 4);
             }
-            layer = getLayer(layerName, aProject);
+            layer = findLayer(aProject, layerName);
         }
 
         return layer;
@@ -826,11 +846,29 @@ public class AnnotationSchemaServiceImpl
 
         return (TypeSystemDescription_impl) mergeTypeSystems(typeSystems);
     }
+    
     @Override
     public void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException
     {
         upgradeCas(aCas, aAnnotationDocument.getDocument(), aAnnotationDocument.getUser());
+    }
+
+    @Override
+    public void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser,
+            CasUpgradeMode aMode)
+        throws UIMAException, IOException
+    {
+        switch (aMode) {
+        case NO_CAS_UPGRADE:
+            return;
+        case AUTO_CAS_UPGRADE:
+            upgradeCasIfRequired(aCas, aSourceDocument, aUser);
+            return;
+        case FORCE_CAS_UPGRADE:
+            upgradeCas(aCas, aSourceDocument, aUser);
+            return;
+        }
     }
 
     @Override
@@ -885,6 +923,8 @@ public class AnnotationSchemaServiceImpl
         upgradeCas(aCas, ts);
     }
     
+    
+    
     @Override
     public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
         throws ResourceInitializationException, UIMAException, IOException
@@ -894,10 +934,8 @@ public class AnnotationSchemaServiceImpl
         return exportCas;
     }
     
-    /**
-     * In-place upgrade of the given CAS to the target type system.
-     */
-    private void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
+    @Override
+    public void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException
     {
         upgradeCas(aCas, aCas, aTargetTypeSystem);
@@ -908,7 +946,8 @@ public class AnnotationSchemaServiceImpl
      * results to the target CAS. An in-place upgrade can be achieved by using the same CAS as
      * source and target.
      */
-    private void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
+    @Override
+    public void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException
     {
         // Save source CAS type system (do this early since we might do an in-place upgrade)
@@ -919,16 +958,13 @@ public class AnnotationSchemaServiceImpl
         Serialization.serializeWithCompression(aSourceCas, serializedCasContents, sourceTypeSystem);
 
         // Re-initialize the target CAS with new type system
-        CAS tempCas = JCasFactory.createJCas(aTargetTypeSystem).getCas();
+        CAS tempCas = createCas(aTargetTypeSystem);
         CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) tempCas);
         Serialization.deserializeCASComplete(serializer, (CASImpl) aTargetCas);
 
         // Leniently load the source CAS contents into the target CAS
         CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()), aTargetCas,
                 sourceTypeSystem);
-
-        // Make sure JCas is properly initialized too
-        aTargetCas.getJCas();
     }
     
     /**
@@ -1028,8 +1064,8 @@ public class AnnotationSchemaServiceImpl
                     AnnotationLayer attachLayer;
                     try {
                         // First check if this type is already in the project
-                        attachLayer = getLayer(relDetails.getAttachLayer(),
-                                aProject);
+                        attachLayer = findLayer(aProject,
+                                relDetails.getAttachLayer());
                     }
                     catch (NoResultException e) {
                         // If it does not exist in the project yet, then we create it
@@ -1048,7 +1084,7 @@ public class AnnotationSchemaServiceImpl
             // We must not touch the built-in layers because WebAnno may rely on their
             // structure. This is a conservative measure for now any may be relaxed in the
             // future.
-            AnnotationLayer persistedLayer = getLayer(l.getName(), aProject);
+            AnnotationLayer persistedLayer = findLayer(aProject, l.getName());
             if (!persistedLayer.isBuiltIn()) {
                 for (AnnotationFeature f : analysis.getFeatures(l.getName())) {
                     if (!existsFeature(f.getName(), persistedLayer)) {

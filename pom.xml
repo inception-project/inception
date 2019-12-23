@@ -19,12 +19,12 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>20</version>
+    <version>23</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
   <artifactId>webanno</artifactId>
-  <version>3.5.9-SNAPSHOT</version>
+  <version>3.6.5-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>WebAnno</name>
   <url>https://webanno.github.io/</url>
@@ -54,13 +54,13 @@
     </repository>
   </distributionManagement>
   <properties>
-    <jackson.version>2.9.9</jackson.version>
-    <uima.version>2.10.2</uima.version>
+    <jackson.version>2.9.10</jackson.version>
+    <uima.version>2.10.4</uima.version>
     <uimafit.version>2.4.0</uimafit.version>
     <spring.version>5.1.9.RELEASE </spring.version>
     <spring.boot.version>1.5.22.RELEASE</spring.boot.version>
     <spring.security.version>4.2.13.RELEASE</spring.security.version>
-    <slf4j.version>1.7.25</slf4j.version>
+    <slf4j.version>1.7.26</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
     <wicket.version>8.5.0</wicket.version>
@@ -70,13 +70,13 @@
     <wicket-jquery-selectors.version>2.0.6</wicket-jquery-selectors.version>
     <wicket-webjars.version>2.0.15</wicket-webjars.version>    
     <wicket-spring-boot.version>2.1.7</wicket-spring-boot.version>
-    <hibernate.version>5.3.7.Final</hibernate.version>
+    <hibernate.version>5.3.10.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
-    <dkpro.version>1.7.0</dkpro.version>
-    <springfox.version>2.7.0</springfox.version>
+    <dkpro.version>1.12.0</dkpro.version>
+    <springfox.version>2.9.2</springfox.version>
     <batik.version>1.9.1</batik.version>
-    <json.version>20180130</json.version>
-    <mockito.version>2.23.4</mockito.version>
+    <json.version>20180813</json.version>
+    <mockito.version>2.27.0</mockito.version>
     <assertj.version>3.13.2</assertj.version>
   </properties>
   <repositories>
@@ -188,192 +188,192 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-annotation</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-formats</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-dao</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-brat</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-doc</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-json</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-text</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-tsv</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-conll</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-dkprocore</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-diag</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-telemetry</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-remote</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-security</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-model</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-project</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-monitoring</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-curation</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-curation</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-correction</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-tcf</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-tei</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-webapp</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-support</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-support-standalone</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-core</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-menu</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-annotation</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-automation</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-automation</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-automation-model</artifactId>
-        <version>3.5.0-SNAPSHOT</version>
+        <version>3.6.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-automation</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-ui-project</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-constraints</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-model-export</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-export</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-io-xmi</artifactId>
-        <version>3.5.9-SNAPSHOT</version>
+        <version>3.6.5-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-ui-tagsets</artifactId>
+        <version>3.6.5-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>
@@ -508,29 +508,24 @@
         <version>0.13</version>
       </dependency>
       <dependency>
-        <groupId>commons-logging</groupId>
-        <artifactId>commons-logging-api</artifactId>
-        <version>1.1</version>
-      </dependency>
-      <dependency>
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
-        <version>1.8.3</version>
+        <version>1.9.3</version>
       </dependency>
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.5</version>
+        <version>2.6</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-collections4</artifactId>
-        <version>4.1</version>
+        <version>4.3</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
-        <version>1.4</version>
+        <version>1.6</version>
       </dependency>
       <dependency>
         <groupId>commons-fileupload</groupId>
@@ -647,9 +642,14 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.7</version>
+        <version>3.9</version>
       </dependency>
 
+      <dependency>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging-api</artifactId>
+        <version>1.1</version>
+      </dependency>
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
@@ -750,12 +750,12 @@
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
-        <version>3.19.0-GA</version>
+        <version>3.25.0-GA</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.8.17</version>
+        <version>1.9.12</version>
       </dependency>
 
       <!-- SPRING -->
@@ -852,27 +852,27 @@
         <artifactId>hsqldb</artifactId>
         <version>2.4.1</version>
       </dependency>
-      <!--  
-      <dependency>
-        <groupId>commons-dbcp</groupId>
-        <artifactId>commons-dbcp</artifactId>
-        <version>1.4</version>
-      </dependency>
-      <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
-        <version>5.1.40</version>
-      </dependency>
-      -->
 
       <dependency>
         <!-- Import dependency management from DKPro Core -->
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-asl</artifactId>
         <version>${dkpro.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-testing-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
       <dependency>
         <!-- Import dependency management from Wicket -->
         <groupId>org.apache.wicket</groupId>
@@ -912,7 +912,6 @@
     <module>webanno-model-export</module>
     <module>webanno-support</module>
     <module>webanno-support-standalone</module>
-    <module>webanno-dkprocore</module>
     <module>webanno-diag</module>
     <module>webanno-remote</module>
     <module>webanno-security</module>
@@ -931,6 +930,7 @@
     <module>webanno-ui-monitoring</module>
     <module>webanno-ui-annotation</module>
     <module>webanno-ui-automation</module>
+    <module>webanno-ui-tagsets</module>
     <module>webanno-webapp</module>
     <!-- Documentation -->
     <module>webanno-doc</module>
@@ -1249,7 +1249,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.0.0</version>
+              <version>3.1.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>
@@ -1260,7 +1260,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>8.9</version>
+                  <version>8.26</version>
                 </dependency>
               </dependencies>
               <configuration>

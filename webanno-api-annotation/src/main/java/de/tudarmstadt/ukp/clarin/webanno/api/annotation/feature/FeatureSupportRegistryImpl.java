@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,6 +87,8 @@ public class FeatureSupportRegistryImpl
     @Override
     public FeatureSupport getFeatureSupport(AnnotationFeature aFeature)
     {
+        Validate.notNull(aFeature, "Annotation feature must be specified");
+        
         // This method is called often during rendering, so we try to make it fast by caching
         // the supports by feature. Since the set of annotation features is relatively stable,
         // this should not be a memory leak - even if we don't remove entries if annotation

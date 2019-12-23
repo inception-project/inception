@@ -29,16 +29,17 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -117,22 +118,18 @@ public class RelationAdapter
      *            the origin FS.
      * @param aTargetFs
      *            the target FS.
-     * @param aJCas
-     *            the JCas.
-     * @param aWindowBegin
-     *            begin offset of the first visible sentence
-     * @param aWindowEnd
-     *            end offset of the last visible sentence
+     * @param aCas
+     *            the CAS.
      * @return the ID.
      * @throws AnnotationException
      *             if the annotation could not be created/updated.
      */
     public AnnotationFS add(SourceDocument aDocument, String aUsername, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, JCas aJCas, int aWindowBegin, int aWindowEnd)
+            AnnotationFS aTargetFs, CAS aCas)
         throws AnnotationException
     {
-        return handle(new CreateRelationAnnotationRequest(aDocument, aUsername, aJCas, aOriginFs,
-                aTargetFs, aWindowBegin, aWindowEnd));
+        return handle(new CreateRelationAnnotationRequest(aDocument, aUsername, aCas, aOriginFs,
+                aTargetFs));
     }
 
     public AnnotationFS handle(CreateRelationAnnotationRequest aRequest)
@@ -143,9 +140,14 @@ public class RelationAdapter
         for (RelationLayerBehavior behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
-        
-        return createRelationAnnotation(request.getJcas().getCas(), request.getOriginFs(),
-                request.getTargetFs());
+
+        AnnotationFS relationAnno = createRelationAnnotation(request.getCas(),
+                request.getOriginFs(), request.getTargetFs());
+        publishEvent(new RelationCreatedEvent(this, request.getDocument(), request.getUsername(),
+                getLayer(), relationAnno, getTargetAnnotation(relationAnno),
+                getSourceAnnotation(relationAnno)));
+
+        return relationAnno;
     }
 
     private AnnotationFS createRelationAnnotation(CAS cas, AnnotationFS originFS,
@@ -153,7 +155,7 @@ public class RelationAdapter
         throws AnnotationException
     {
         if (targetFS == null || originFS == null) {
-            throw new AnnotationException("Relation must have a source and a target!");
+            throw new IllegalPlacementException("Relation must have a source and a target!");
         }
 
         // Set the relation offsets in DKPro Core style - the relation recieves the offsets from
@@ -174,10 +176,26 @@ public class RelationAdapter
     }
 
     @Override
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
-        aJCas.removeFsFromIndexes(fs);
+        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        aCas.removeFsFromIndexes(fs);
+        publishEvent(new RelationDeletedEvent(this, aDocument, aUsername, getLayer(),
+                fs, getTargetAnnotation(fs), getSourceAnnotation(fs)));
+    }
+
+    private AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
+    {
+        Feature sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
+        AnnotationFS sourceToken = (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
+        return sourceToken;
+    }
+
+    private AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
+    {
+        Feature targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
+        AnnotationFS targetToken = (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
+        return targetToken;
     }
 
     public String getSourceFeatureName()
@@ -191,12 +209,12 @@ public class RelationAdapter
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         for (RelationLayerBehavior behavior : behaviors) {
             long startTime = currentTimeMillis();
-            messages.addAll(behavior.onValidate(this, aJCas));
+            messages.addAll(behavior.onValidate(this, aCas));
             log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }

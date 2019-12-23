@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
+import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.ComponentTag;
 import org.danekja.java.util.function.serializable.SerializableBiConsumer;
 import org.danekja.java.util.function.serializable.SerializableBooleanSupplier;
@@ -50,6 +51,23 @@ public class LambdaBehavior
             public void onRemove(Component aComponent)
             {
                 aAction.accept(aComponent);
+            }
+        };
+    }
+    
+    public static <T> Behavior onEvent(Class<T> aEventClass,
+            SerializableBiConsumer<Component, T> aAction)
+    {
+        return new Behavior()
+        {
+            private static final long serialVersionUID = -1956074724077271777L;
+
+            @Override
+            public void onEvent(Component aComponent, IEvent<?> aEvent)
+            {
+                if (aEventClass.isAssignableFrom(aEvent.getPayload().getClass())) {
+                    aAction.accept(aComponent, (T) aEvent.getPayload());
+                }
             }
         };
     }

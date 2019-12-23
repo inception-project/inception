@@ -17,12 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,13 +31,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -44,8 +46,6 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
@@ -66,13 +66,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratPropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -86,10 +91,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
@@ -104,7 +108,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationCon
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
@@ -119,6 +122,8 @@ import wicket.contrib.input.events.key.KeyType;
 public class AutomationPage
     extends AnnotationPageBase
 {
+    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
+
     private static final Logger LOG = LoggerFactory.getLogger(AutomationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
@@ -127,16 +132,13 @@ public class AutomationPage
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean BratPropertiesImpl defaultPreferences;
+    private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean AutomationService automationService;
 
-    private NumberTextField<Integer> gotoPageTextField;
-    private DocumentNamePanel documentNamePanel;
-    
     private long currentprojectId;
 
     // Open the dialog window on first load
@@ -172,9 +174,17 @@ public class AutomationPage
         setVersioned(false);
         
         setModel(Model.of(new AnnotatorStateImpl(Mode.AUTOMATION)));
+        
+        getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
+        add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
+        add(getModelObject().getPagingStrategy()
+                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
+                .add(visibleWhen(() -> getModelObject().getDocument() != null))
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
+                    (c, e) -> e.getRequestHandler().add(c))));
 
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
-        // Override sidebar width from preferences
+        // Override sidebar width from preferencesa
         rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
                 .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
         rightSidebar.setOutputMarkupId(true);
@@ -201,15 +211,14 @@ public class AutomationPage
                     // (like sentence change in auto-scroll mode,....
                     aTarget.addChildren(getPage(), IFeedback.class);
                     AnnotatorState state = AutomationPage.this.getModelObject();
-                    curationContainer.setBratAnnotatorModel(state);
-                    JCas editorCas = getEditorCas();
+                    curationContainer.setState(state);
+                    CAS editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
                     suggestionView.updatePanel(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
                     
                     annotationEditor.requestRender(aTarget);
-                    aTarget.add(getOrCreatePositionInfoLabel());
                     update(aTarget);
                 }
                 catch (Exception e) {
@@ -226,11 +235,9 @@ public class AutomationPage
         add(annotationEditor);
 
         curationContainer = new CurationContainer();
-        curationContainer.setBratAnnotatorModel(getModelObject());
+        curationContainer.setState(getModelObject());
 
-        add(documentNamePanel = new DocumentNamePanel("documentNamePanel", getModel()));
-
-        add(getOrCreatePositionInfoLabel());
+        add(new DocumentNamePanel("documentNamePanel", getModel()));
 
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
                 getAllowedProjects())
@@ -280,18 +287,6 @@ public class AutomationPage
 
         add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
         
-        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
-        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
-        // FIXME minimum and maximum should be obtained from the annotator state
-        gotoPageTextField.setMinimum(1); 
-        gotoPageTextField.setOutputMarkupId(true); 
-        gotoPageTextFieldForm.add(gotoPageTextField);
-        LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink",
-                gotoPageTextFieldForm, this::actionGotoPage);
-        gotoPageTextFieldForm.setDefaultButton(gotoPageLink);
-        gotoPageTextFieldForm.add(gotoPageLink);
-        add(gotoPageTextFieldForm);
-
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
        
         add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
@@ -325,18 +320,6 @@ public class AutomationPage
         add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
                         EventType.click)));
-
-        add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
-
-        add(new LambdaAjaxLink("showPrevious", t -> actionShowPreviousPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
-
-        add(new LambdaAjaxLink("showFirst", t -> actionShowFirstPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
-
-        add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
@@ -373,18 +356,12 @@ public class AutomationPage
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
                 if (projectService.isAnnotator(project, user)
-                        && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(project.getMode())) {
+                        && PROJECT_TYPE_AUTOMATION.equals(project.getMode())) {
                     allowedProject.add(DecoratedObject.of(project));
                 }
             }
             return allowedProject;
         });
-    }
-
-    @Override
-    public NumberTextField<Integer> getGotoPageTextField()
-    {
-        return gotoPageTextField;
     }
 
     private AnnotationDetailEditorPanel createDetailEditor()
@@ -414,7 +391,7 @@ public class AutomationPage
                             annotationService, userRepository);
                     curationContainer = builder.buildCurationContainer(state);
                     setCurationSegmentBeginEnd(getEditorCas());
-                    curationContainer.setBratAnnotatorModel(state);
+                    curationContainer.setState(state);
 
                     suggestionView.updatePanel(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
@@ -437,8 +414,8 @@ public class AutomationPage
                 AnnotationLayer layer = state.getSelectedAnnotationLayer();
                 int address = state.getSelection().getAnnotation().getId();
                 try {
-                    JCas jCas = getEditorCas();
-                    AnnotationFS fs = selectByAddr(jCas, address);
+                    CAS cas = getEditorCas();
+                    AnnotationFS fs = selectAnnotationByAddr(cas, address);
 
                     for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
                         Type type = CasUtil.getType(fs.getCAS(), layer.getName());
@@ -526,7 +503,7 @@ public class AutomationPage
             }
             
             @Override
-            public JCas getEditorCas() throws IOException
+            public CAS getEditorCas() throws IOException
             {
                 return AutomationPage.this.getEditorCas();
             }
@@ -557,7 +534,7 @@ public class AutomationPage
     }
     
     @Override
-    protected JCas getEditorCas()
+    public CAS getEditorCas()
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -574,7 +551,21 @@ public class AutomationPage
                 state.getUser().getUsername());
     }
     
-    private void setCurationSegmentBeginEnd(JCas aEditorCas)
+    @Override
+    public void writeEditorCas(CAS aCas) throws IOException
+    {
+        AnnotatorState state = getModelObject();
+        documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
+
+        // Update timestamp in state
+        Optional<Long> diskTimestamp = documentService
+                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
+        if (diskTimestamp.isPresent()) {
+            state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+        }
+    }
+    
+    private void setCurationSegmentBeginEnd(CAS aEditorCas)
         throws UIMAException, ClassNotFoundException, IOException
     {
         AnnotatorState state = getModelObject();
@@ -587,11 +578,6 @@ public class AutomationPage
     {
         suggestionView.updatePanel(target, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
-
-        gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
-
-        target.add(gotoPageTextField);
-        target.add(getOrCreatePositionInfoLabel());
     }
 
     
@@ -607,39 +593,13 @@ public class AutomationPage
         preferencesModal.show(aTarget);
     }
     
-    private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
-        throws Exception
-    {
-        AnnotatorState state = getModelObject();
-        
-        JCas editorCas = getEditorCas();
-        List<Sentence> sentences = new ArrayList<>(select(editorCas, Sentence.class));
-        int selectedSentence = gotoPageTextField.getModelObject();
-        selectedSentence = Math.min(selectedSentence, sentences.size());
-        gotoPageTextField.setModelObject(selectedSentence);
-        
-        state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
-        state.setFocusUnitIndex(selectedSentence);        
-        
-        SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
-                correctionDocumentService, curationDocumentService, annotationService,
-                userRepository);
-        curationContainer = builder.buildCurationContainer(state);
-        setCurationSegmentBeginEnd(editorCas);
-        curationContainer.setBratAnnotatorModel(state);
-        update(aTarget);
-        
-        aTarget.add(gotoPageTextField);
-        annotationEditor.requestRender(aTarget);
-    }
-
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
             throws Exception
     {
         getModelObject().toggleScriptDirection();
         annotationEditor.requestRender(aTarget);
 
-        curationContainer.setBratAnnotatorModel(getModelObject());
+        curationContainer.setState(getModelObject());
         suggestionView.updatePanel(aTarget, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
     }
@@ -649,20 +609,18 @@ public class AutomationPage
         try {
             AnnotatorState state = getModelObject();
 
-            JCas editorCas = getEditorCas();
+            CAS editorCas = getEditorCas();
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            Sentence sentence = selectByAddr(editorCas, Sentence.class,
-                    state.getFirstVisibleUnitAddress());
-            state.setFirstVisibleUnit(sentence);
+            state.getPagingStrategy().recalculatePage(state, editorCas);
             
             SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             setCurationSegmentBeginEnd(editorCas);
-            curationContainer.setBratAnnotatorModel(state);
+            curationContainer.setState(state);
             
             update(aTarget);
             aTarget.appendJavaScript(
@@ -713,7 +671,7 @@ public class AutomationPage
                     .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
 
             // Read the correction CAS - if it does not exist yet, from the initial CAS
-            JCas correctionCas;
+            CAS correctionCas;
             if (correctionDocumentService.existsCorrectionCas(state.getDocument())) {
                 correctionCas = correctionDocumentService.readCorrectionCas(state.getDocument());
             }
@@ -723,25 +681,22 @@ public class AutomationPage
 
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
             // annotations
-            JCas editorCas;
+            CAS editorCas;
             if (documentService.existsCas(state.getDocument(), state.getUser().getUsername())) {
                 editorCas = documentService.readAnnotationCas(annotationDocument);
             }
             else {
                 editorCas = documentService.createOrReadInitialCas(state.getDocument());
                 // In automation mode, we do not remove the existing annotations from the documents
-                // annotationCas = BratAnnotatorUtility.clearJcasAnnotations(annotationCas,
-                //        state.getDocument(), user, repository);
             }
 
             // Update the CASes
-            annotationService.upgradeCas(editorCas.getCas(), annotationDocument);
-            correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(),
-                    state.getDocument());
+            annotationService.upgradeCas(editorCas, annotationDocument);
+            correctionDocumentService.upgradeCorrectionCas(correctionCas, state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
-                    annotationDocument.getDocument(), state.getUser(), false);
+            documentService.writeAnnotationCas(editorCas, annotationDocument.getDocument(),
+                    state.getUser(), false);
             correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument());
 
             // (Re)initialize brat model after potential creating / upgrading CAS
@@ -767,13 +722,6 @@ public class AutomationPage
 
             currentprojectId = state.getProject().getId();
 
-            LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser() + "] f:["
-                    + state.getFirstVisibleUnitIndex() + "] l:["
-                    + state.getLastVisibleUnitIndex() + "] s:["
-                    + state.getFocusUnitIndex() + "]");
-
-            gotoPageTextField.setModelObject(1);
-
             setCurationSegmentBeginEnd(editorCas);
             suggestionView.init(aTarget, curationContainer, annotationSelectionByUsernameAndAddress,
                     curationSegment);
@@ -789,6 +737,11 @@ public class AutomationPage
                 documentService.transitionSourceDocumentState(state.getDocument(),
                         NEW_TO_ANNOTATION_IN_PROGRESS);
             }
+
+            if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
+                documentService.transitionAnnotationDocumentState(annotationDocument,
+                        AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+            }
             
             // Reset the editor
             detailEditor.reset(aTarget);
@@ -803,7 +756,7 @@ public class AutomationPage
     }
     
     @Override
-    protected void actionRefreshDocument(AjaxRequestTarget aTarget)
+    public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
             AnnotatorState state = getModelObject();
@@ -812,9 +765,10 @@ public class AutomationPage
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             setCurationSegmentBeginEnd(getEditorCas());
-            curationContainer.setBratAnnotatorModel(state);
+            curationContainer.setState(state);
             update(aTarget);
             annotationEditor.requestRender(aTarget);
+            aTarget.add(get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);

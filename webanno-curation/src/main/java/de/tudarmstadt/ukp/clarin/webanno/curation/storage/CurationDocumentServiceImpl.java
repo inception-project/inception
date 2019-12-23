@@ -33,7 +33,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -48,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(CurationDocumentService.SERVICE_NAME)
@@ -89,10 +89,10 @@ public class CurationDocumentServiceImpl
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     @Transactional
-    public void writeCurationCas(JCas aJcas, SourceDocument aDocument, boolean aUpdateTimestamp)
+    public void writeCurationCas(CAS aCas, SourceDocument aDocument, boolean aUpdateTimestamp)
         throws IOException
     {
-        casStorageService.writeCas(aDocument, aJcas, CURATION_USER);
+        casStorageService.writeCas(aDocument, aCas, CURATION_USER);
         if (aUpdateTimestamp) {
             aDocument.setTimestamp(new Timestamp(new Date().getTime()));
             entityManager.merge(aDocument);
@@ -100,7 +100,7 @@ public class CurationDocumentServiceImpl
     }
 
     @Override
-    public JCas readCurationCas(SourceDocument aDocument)
+    public CAS readCurationCas(SourceDocument aDocument)
         throws IOException
     {
         return casStorageService.readCas(aDocument, CURATION_USER);
@@ -123,6 +123,8 @@ public class CurationDocumentServiceImpl
     @Override
     public List<SourceDocument> listCuratableSourceDocuments(Project aProject)
     {
+        Validate.notNull(aProject, "Project must be specified");
+        
         List<SourceDocument> docs = entityManager
                 .createQuery(
                         "SELECT DISTINCT adoc.document FROM AnnotationDocument AS adoc "
@@ -141,5 +143,22 @@ public class CurationDocumentServiceImpl
         Validate.notNull(aDocument, "Source document must be specified");
         
         return casStorageService.getCasTimestamp(aDocument, CURATION_USER);
+    }
+    
+    @Override
+    public List<SourceDocument> listCuratedDocuments(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        
+        String query = String.join("\n",
+                "FROM SourceDocument WHERE",
+                "  project = :project AND",
+                "  state = :state");
+        
+        return entityManager
+                .createQuery(query, SourceDocument.class)
+                .setParameter("project", aProject)
+                .setParameter("state", SourceDocumentState.CURATION_FINISHED)
+                .getResultList();
     }
 }

@@ -20,7 +20,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -32,10 +32,10 @@ public class DocumentInfoSidebar
     private static final long serialVersionUID = 6127948490101336779L;
 
     public DocumentInfoSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         add(new Label("id", PropertyModel.of(aModel, "document.name")));
         add(new Label("format", PropertyModel.of(aModel, "document.format")));

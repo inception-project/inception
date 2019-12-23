@@ -16,7 +16,7 @@
 
 = Running via separate Tomcat (WAR)
 
->ou can also  deploy the WebAnno WAR archive into a separately installed Tomcat instance. 
+You can also  deploy the {product-name} WAR archive into a separately installed Tomcat instance. 
 
 == Installing Tomcat
 
@@ -35,8 +35,8 @@ $ tomcat8-instance-create -p 18080 -c 18005 webanno
 $ chown -R www-data /opt/webanno
 ----
 
-NOTE: If WebAnno is the only application you install on your server, then you can also have WebAnno running on port 80 or port 443. In that case, substitute all instances of port `18080` in these
-guidelines with the respective port. Mind that running via SSL on port 443 requires additional steps that we have not yet documented. Ports lower than 1024 are privileged and the WebAnno init script will automatically use a tool called *authbind* to allow WebAnno to operate on these ports as the unprivileged www-data user.
+NOTE: If {product-name} is the only application you install on your server, then you can also have {product-name} running on port 80 or port 443. In that case, substitute all instances of port `18080` in these
+guidelines with the respective port. Mind that running via SSL on port 443 requires additional steps that we have not yet documented. Ports lower than 1024 are privileged and the {product-name} init script will automatically use a tool called *authbind* to allow {product-name} to operate on these ports as the unprivileged www-data user.
 
 * Configure the startup script. Edit `/etc/init.d/webanno` and add the following contents or just download the file from link:admin-guide/scripts/webanno[here] and place it in `/etc/init.d`.
 +
@@ -52,29 +52,29 @@ $ chmod +x /etc/init.d/webanno
 $ update-rc.d webanno defaults
 ----
 
-NOTE: If you deploy WebAnno on a Linux machine that is short on entropy, you can significantly 
+NOTE: If you deploy {product-name} on a Linux machine that is short on entropy, you can significantly 
       decrease startup time by adding `-Djava.security.egd=file:/dev/urandom` to the `JAVA_OPTS`
       variable in the init script.
 
-Now we have a dedicated Apache Tomcat instance for WebAnno installed at `/opt/webanno/` that automatically starts when the system boots and that can be managed through the usual `service` commands.
+Now we have a dedicated Apache Tomcat instance for {product-name} installed at `/opt/webanno/` that automatically starts when the system boots and that can be managed through the usual `service` commands.
 
 == Deploying the WAR file
 
-* Place the WebAnno WAR into the Tomcat `webapps` folder:
+* Place the {product-name} WAR into the Tomcat `webapps` folder:
 +
 [source,bash,subs="+attributes"]
 ----
 $ cp webanno-webapp-{revnumber}.war /opt/webanno/webapps/webanno.war
 ----
 +
-NOTE: Mind that the copy command above renames the WAR file to `webanno.war`! This is important so that WebAnno is accessible at the URL noted later in the present guidelines.
-* Start WebAnno
+NOTE: Mind that the copy command above renames the WAR file to `webanno.war`! This is important so that {product-name} is accessible at the URL noted later in the present guidelines.
+* Start {product-name}
 +
 [source,bash]
 ----
 $ service webanno start
 ----
-* Open it with your browser at `http://localhost:18080/webanno`. If you chose to run WebAnno behind the Apache web-server use `http://localhost/webanno`.
+* Open it with your browser at `http://localhost:18080/webanno`. If you chose to run {product-name} behind the Apache web-server use `http://localhost/webanno`.
 The first time, it will create a username `admin` with password `admin`. Log in with this username and proceed.
 
 == Running the WAR behind Apache HTTPD

@@ -41,7 +41,7 @@ public abstract class SpanLayerBehavior
         throws AnnotationException;
 
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VSpan> annoToSpanIdx)
+            Map<AnnotationFS, VSpan> annoToSpanIdx, int aPageBegin, int aPageEnd)
     {
         // Nothing to do by default
     }

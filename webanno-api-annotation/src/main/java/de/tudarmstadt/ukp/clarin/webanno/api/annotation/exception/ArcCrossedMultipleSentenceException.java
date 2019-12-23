@@ -21,7 +21,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
  * Throw an exception if the arc annotation is not in the same sentence
  */
 public class ArcCrossedMultipleSentenceException
-    extends AnnotationException
+    extends IllegalPlacementException
 {
     private static final long serialVersionUID = 1280015349963924638L;
 

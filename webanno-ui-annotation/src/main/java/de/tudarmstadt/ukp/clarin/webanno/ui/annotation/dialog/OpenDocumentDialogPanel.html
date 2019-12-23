@@ -18,47 +18,41 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="w_flex_container">
-    <div class="w_flex_content">
-      <div class="fluid-container">
-        <div class="row">
-          <div class="col-sm-12" style="display: flex;">
-            <div style="flex: 1; margin-right: 15px;" wicket:enclosure="projectSelectionForm">
-              <form wicket:id="projectSelectionForm">
-                <div class="form-group">
-                  <label>Projects:</label>
-                  <select wicket:id="projectSelection" size="18" class="form-control" style="overflow: auto">
-                    <span wicket:id="projects">
-                      <option wicket:id="project"></option>
-                    </span>
-                  </select>
-                </div>
-              </form>
-            </div>
-            <div style="flex: 1;" wicket:enclosure="documentSelectionForm">
-              <form wicket:id="documentSelectionForm">
-                <div class="form-group">
-                  <label>Documents:</label>
-                  <select wicket:id="documentSelection" size="18" class="form-control" style="overflow: auto">
-                    <span wicket:id="documents">
-                      <option wicket:id="document"></option>
-                    </span>
-                  </select>
-                </div>
-              </form>
-            </div>
+  <form wicket:id="form" class="w_flex_container">
+    <div class="w_flex_content flex-h-container" style="padding: 0px;">
+      <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
+        <div class="flex-content flex-v-container" wicket:enclosure="project">
+          <label style="padding: 5px 0px 0px 15px;">
+            <wicket:message key="projects"/>
+          </label>
+          <div class="flex-content scrolling fit-child-snug">
+            <select wicket:id="project" class="form-control"></select>
+          </div>
+        </div>
+        <div class="flex-content flex-v-container" wicket:enclosure="user">
+          <label style="padding: 5px 0px 0px 15px;">
+            <wicket:message key="users"/>
+          </label>
+          <div class="flex-content scrolling fit-child-snug">
+            <select wicket:id="user" class="form-control"></select>
+          </div>
+        </div>
+        <div class="flex-content flex-v-container" wicket:enclosure="documents">
+            <label style="padding: 5px 0px 0px 15px;">
+              <wicket:message key="docs"/>
+            </label>
+          <div class="flex-content scrolling fit-child-snug">
+            <select wicket:id="documents" class="form-control"></select>
           </div>
         </div>
       </div>
     </div>
     <div class="w_flex_footer panel-footer">
-      <form wicket:id="buttonsForm">
-        <div class="form-group pull-right">
-          <button wicket:id="openButton" class="btn btn-primary">Open</button>
-          <button wicket:id="cancelButton" class="btn btn-default">Cancel</button>
-        </div>
-      </form>
+      <div wicket:id="buttons" class="form-group pull-right">
+        <button wicket:id="openButton" class="btn btn-primary">Open</button>
+        <button wicket:id="cancelButton" class="btn btn-default">Cancel</button>
+      </div>
     </div>
-  </div>
+  </form>
 </wicket:panel>
 </html>

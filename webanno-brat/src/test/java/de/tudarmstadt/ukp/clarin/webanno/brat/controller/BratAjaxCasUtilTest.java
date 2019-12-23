@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -44,22 +45,24 @@ public class BratAjaxCasUtilTest
         Sentence s3 = jb.add(".", Sentence.class);
         Sentence s4 = jb.add(".", Sentence.class);
         jb.close();
+        
+        CAS cas = jcas.getCas();
 
-        assertFalse(isBeginInSameSentence(jcas, s2.getBegin(), s2.getEnd()));
-        assertFalse(isBeginInSameSentence(jcas, s2.getEnd(), s2.getBegin()));
+        assertFalse(isBeginInSameSentence(cas, s2.getBegin(), s2.getEnd()));
+        assertFalse(isBeginInSameSentence(cas, s2.getEnd(), s2.getBegin()));
 
-        assertTrue(isBeginInSameSentence(jcas, s1.getBegin() + 1, s1.getEnd() - 1));
-        assertTrue(isBeginInSameSentence(jcas, s1.getEnd() - 1, s1.getBegin() + 1));
+        assertTrue(isBeginInSameSentence(cas, s1.getBegin() + 1, s1.getEnd() - 1));
+        assertTrue(isBeginInSameSentence(cas, s1.getEnd() - 1, s1.getBegin() + 1));
 
-        assertFalse(isBeginInSameSentence(jcas, s1.getBegin(), s1.getEnd()));
-        assertFalse(isBeginInSameSentence(jcas, s1.getEnd(), s1.getBegin()));
+        assertFalse(isBeginInSameSentence(cas, s1.getBegin(), s1.getEnd()));
+        assertFalse(isBeginInSameSentence(cas, s1.getEnd(), s1.getBegin()));
 
-        assertFalse(isBeginInSameSentence(jcas, s2.getBegin(), s1.getBegin()));
-        assertFalse(isBeginInSameSentence(jcas, s1.getBegin(), s2.getBegin()));
+        assertFalse(isBeginInSameSentence(cas, s2.getBegin(), s1.getBegin()));
+        assertFalse(isBeginInSameSentence(cas, s1.getBegin(), s2.getBegin()));
 
-        assertFalse(isBeginInSameSentence(jcas, s3.getBegin(), s4.getBegin()));
+        assertFalse(isBeginInSameSentence(cas, s3.getBegin(), s4.getBegin()));
 
-        assertTrue(isBeginInSameSentence(jcas, 0, 0));
+        assertTrue(isBeginInSameSentence(cas, 0, 0));
     }
 
     @Test
@@ -76,25 +79,27 @@ public class BratAjaxCasUtilTest
         Sentence s4 = jb.add(".", Sentence.class);
         jb.close();
 
-        assertTrue(isBeginEndInSameSentence(jcas, s2.getBegin(), s2.getEnd()));
+        CAS cas = jcas.getCas();
+        
+        assertTrue(isBeginEndInSameSentence(cas, s2.getBegin(), s2.getEnd()));
 
-        assertTrue(isBeginEndInSameSentence(jcas, s1.getBegin() + 1, s1.getEnd() - 1));
-        assertTrue(isBeginEndInSameSentence(jcas, s1.getEnd() - 1, s1.getBegin() + 1));
+        assertTrue(isBeginEndInSameSentence(cas, s1.getBegin() + 1, s1.getEnd() - 1));
+        assertTrue(isBeginEndInSameSentence(cas, s1.getEnd() - 1, s1.getBegin() + 1));
 
-        assertTrue(isBeginEndInSameSentence(jcas, s1.getBegin(), s1.getEnd()));
+        assertTrue(isBeginEndInSameSentence(cas, s1.getBegin(), s1.getEnd()));
 
-        assertFalse(isBeginEndInSameSentence(jcas, s2.getBegin(), s1.getBegin()));
-        assertFalse(isBeginEndInSameSentence(jcas, s1.getBegin(), s2.getBegin()));
+        assertFalse(isBeginEndInSameSentence(cas, s2.getBegin(), s1.getBegin()));
+        assertFalse(isBeginEndInSameSentence(cas, s1.getBegin(), s2.getBegin()));
 
-        assertTrue(isBeginEndInSameSentence(jcas, 0, 0));
+        assertTrue(isBeginEndInSameSentence(cas, 0, 0));
 
         // Note that this is an invalid use of isBeginEndInSameSentence because two begin offsets
         // are compared with each other
-        assertTrue(isBeginEndInSameSentence(jcas, s3.getBegin(), s4.getBegin()));
+        assertTrue(isBeginEndInSameSentence(cas, s3.getBegin(), s4.getBegin()));
         
         // Note that these are invalid uses of isBeginEndInSameSentence because the first offset
         // must be a begin offset
-        assertFalse(isBeginEndInSameSentence(jcas, s1.getEnd(), s1.getBegin()));
-        assertFalse(isBeginEndInSameSentence(jcas, s2.getEnd(), s2.getBegin()));
+        assertFalse(isBeginEndInSameSentence(cas, s1.getEnd(), s1.getBegin()));
+        assertFalse(isBeginEndInSameSentence(cas, s2.getEnd(), s2.getBegin()));
     }
 }

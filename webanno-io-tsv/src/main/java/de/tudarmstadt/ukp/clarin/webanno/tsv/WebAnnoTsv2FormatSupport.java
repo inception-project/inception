@@ -30,7 +30,7 @@ public class WebAnnoTsv2FormatSupport
     implements FormatSupport
 {
     public static final String ID = "ctsv";
-    public static final String NAME = "WebAnno TSV2 (WebAnno v2)";
+    public static final String NAME = "WebAnno TSV v2 (WebAnno v2.x)";
     
     @Override
     public String getId()

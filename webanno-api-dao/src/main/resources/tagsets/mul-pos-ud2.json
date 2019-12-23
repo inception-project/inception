@@ -1,0 +1,62 @@
+{
+  "name" : "UD Universal POS tags (v2)",
+  "typeUiName" : null,
+  "description" : "These tags mark the core part-of-speech categories from the Universal Dependencies project. To distinguish additional lexical and grammatical properties of words, use the universal features.\r\n\r\n© 2017 Universal Dependencies contributors\r\n\r\nSee: https://universaldependencies.org/u/pos/index.html",
+  "language" : "mul",
+  "type" : null,
+  "type_name" : null,
+  "type_description" : null,
+  "tags" : [ {
+    "tag_name" : "ADJ",
+    "tag_description" : "adjective"
+  }, {
+    "tag_name" : "ADP",
+    "tag_description" : "adposition"
+  }, {
+    "tag_name" : "ADV",
+    "tag_description" : "adverb"
+  }, {
+    "tag_name" : "AUX",
+    "tag_description" : "auxiliary"
+  }, {
+    "tag_name" : "CCONJ",
+    "tag_description" : "coordinating conjunction"
+  }, {
+    "tag_name" : "DET",
+    "tag_description" : "determiner"
+  }, {
+    "tag_name" : "INTJ",
+    "tag_description" : "interjection"
+  }, {
+    "tag_name" : "NOUN",
+    "tag_description" : "noun"
+  }, {
+    "tag_name" : "NUM",
+    "tag_description" : "numeral"
+  }, {
+    "tag_name" : "PART",
+    "tag_description" : "particle"
+  }, {
+    "tag_name" : "PRON",
+    "tag_description" : "pronoun"
+  }, {
+    "tag_name" : "PROPN",
+    "tag_description" : "proper noun"
+  }, {
+    "tag_name" : "PUNCT",
+    "tag_description" : "punctuation"
+  }, {
+    "tag_name" : "SCONJ",
+    "tag_description" : "subordinating conjunction"
+  }, {
+    "tag_name" : "SYM",
+    "tag_description" : "symbol"
+  }, {
+    "tag_name" : "VERB",
+    "tag_description" : "verb"
+  }, {
+    "tag_name" : "X",
+    "tag_description" : "other"
+  } ],
+  "create_tag" : false
+}

@@ -14,7 +14,7 @@ and that the `lemma` feature of the token will point to the newly created lemma 
 Deleting an annotation that has other annotations attached to it will also cause the attached 
 annotations to be deleted.
 
-NOTE: This case is currently not implemented because WebAnno currently does not allow to 
+NOTE: This case is currently not implemented because it is currently not allowed to 
       create spans that attach to other spans. The only span type for which this is relevant
       is the `Token` type which cannot be deleted.
 

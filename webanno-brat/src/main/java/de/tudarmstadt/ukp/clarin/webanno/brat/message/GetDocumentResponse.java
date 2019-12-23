@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Marker;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Normalization;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 
@@ -86,6 +87,7 @@ public class GetDocumentResponse
     private List<String> attributes = new ArrayList<>();
     private List<String> equivs = new ArrayList<>();
     private List<Comment> comments = new ArrayList<>();
+    private List<Normalization> normalizations = new ArrayList<>();
     
     private Map<String, List<Marker>> args = new HashMap<>(); 
     
@@ -134,7 +136,6 @@ public class GetDocumentResponse
         text = aText;
     }
 
-
     public List<Comment> getComments()
     {
         return comments;
@@ -142,7 +143,7 @@ public class GetDocumentResponse
 
     public void setComments(List<Comment> aComments)
     {
-        this.comments = aComments;
+        comments = aComments;
     }
 
     public void addComment(Comment aComment)
@@ -150,6 +151,21 @@ public class GetDocumentResponse
         comments.add(aComment);
     }
 
+    public List<Normalization> getNormalizations()
+    {
+        return normalizations;
+    }
+
+    public void setNormalizations(List<Normalization> aNormalizations)
+    {
+        normalizations = aNormalizations;
+    }
+
+    public void addNormalization(Normalization aNormalization)
+    {
+        normalizations.add(aNormalization);
+    }
+    
     /**
      * Get source files for the annotations.
      * @return the source files.

@@ -109,6 +109,19 @@ public class SettingsUtil
         }
     }
     
+    public static File getApplicationHome()
+    {
+        String appHome = System.getProperty(propApplicationHome);
+        String userHome = System.getProperty(PROP_USER_HOME);
+
+        if (appHome != null) {
+            return new File(appHome);
+        }
+        else {
+            return new File(userHome + "/" + applicationUserHomeSubdir);
+        }
+    }
+    
     /**
      * Locate the settings file and return its location.
      * 

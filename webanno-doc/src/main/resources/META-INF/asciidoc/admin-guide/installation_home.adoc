@@ -16,16 +16,16 @@
 
 = Application home folder
 
-The WebAnno home folder is the place where WebAnno's configuration file `settings.properties`
-resides and where WebAnno stores its data. Mind that if you are using a MySQL database server
-(recommended), then WebAnno also stores some data in the MySQL database. This is important when
+The {product-name} home folder is the place where {product-name}'s configuration file `settings.properties`
+resides and where {product-name} stores its data. Mind that if you are using a MySQL database server
+(recommended), then {product-name} also stores some data in the MySQL database. This is important when
 you plan to perform a backup, as both the home folder and the database content need to be
 included in the backup.
 
-Now, let's go through the steps of setting up a home folder for WebAnno and creating a
-configuration file instructing WebAnno to access the previously prepared MySQL database.
+Now, let's go through the steps of setting up a home folder for {product-name} and creating a
+configuration file instructing {product-name} to access the previously prepared MySQL database.
 
-* Create WebAnno home folder. This is the directory where WebAnno settings files and projects (documents, annotations, etc.) are stored
+* Create {product-name} home folder. This is the directory where {product-name} settings files and projects (documents, annotations, etc.) are stored
 +
 [source,bash]
 ----
@@ -33,7 +33,7 @@ $ mkdir /srv/webanno
 ----
 ////
 // FIXME How to reference to sample data?
-* *Optional* If you want to test WebAnno with some sample data, skip the _Users and permissions_ section and follow the instruction at [Sampledata], then come back here.
+* *Optional* If you want to test {product-name} with some sample data, skip the _Users and permissions_ section and follow the instruction at [Sampledata], then come back here.
 ////
 * Edit `/srv/webanno/settings.properties` to define the database connection as well as internal backup properties:
 +
@@ -54,7 +54,7 @@ backup.interval=300
 backup.keep.number=10
 ----
 +
-* Fix permissions in WebAnno home folder
+* Fix permissions in {product-name} home folder
 +
 [source,bash]
 ----

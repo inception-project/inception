@@ -59,6 +59,12 @@ public class Tag
     {
         // Nothing to do
     }
+
+    public Tag(TagSet aTagSet, String aName)
+    {
+        tagSet = aTagSet;
+        name = aName;
+    }
     
     public Tag(String aName, String aDescription)
     {

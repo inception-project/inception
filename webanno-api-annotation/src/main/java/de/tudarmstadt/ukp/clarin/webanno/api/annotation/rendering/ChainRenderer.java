@@ -28,12 +28,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -69,8 +69,8 @@ public class ChainRenderer
     }
 
     @Override
-    public void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int windowBeginOffset, int windowEndOffset)
+    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
+            int aPageBegin, int aPageEnd)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
                 .filter(f -> f.isVisible() && f.isEnabled())
@@ -92,7 +92,7 @@ public class ChainRenderer
         // will crash.
 
         ChainAdapter typeAdapter = getTypeAdapter();
-        Type chainType = CasUtil.getType(aJcas.getCas(), typeAdapter.getChainTypeName());
+        Type chainType = CasUtil.getType(aCas, typeAdapter.getChainTypeName());
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
         // Sorted index mapping annotations to the corresponding rendered spans
@@ -100,7 +100,7 @@ public class ChainRenderer
         
         int colorIndex = 0;
         // Iterate over the chains
-        for (FeatureStructure chainFs : selectFS(aJcas.getCas(), chainType)) {
+        for (FeatureStructure chainFs : selectFS(aCas, chainType)) {
             AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
             AnnotationFS prevLinkFs = null;
 
@@ -111,14 +111,14 @@ public class ChainRenderer
                 AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
-                if (linkFs.getBegin() >= windowEndOffset) {
+                if (linkFs.getBegin() >= aPageEnd) {
                     break; // Go to next chain
                 }
 
                 // Is link before window? We only need links that being within the window and that
                 // end within the window
-                if (!(linkFs.getBegin() >= windowBeginOffset)
-                        && (linkFs.getEnd() <= windowEndOffset)) {
+                if (!(linkFs.getBegin() >= aPageBegin)
+                        && (linkFs.getEnd() <= aPageEnd)) {
                     // prevLinkFs remains null until we enter the window
                     linkFs = nextLinkFs;
                     continue; // Go to next link
@@ -132,8 +132,8 @@ public class ChainRenderer
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
                     String bratHoverText = TypeUtil.getUiHoverText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
-                    VRange offsets = new VRange(linkFs.getBegin() - windowBeginOffset,
-                            linkFs.getEnd() - windowBeginOffset);
+                    VRange offsets = new VRange(linkFs.getBegin() - aPageBegin,
+                            linkFs.getEnd() - aPageBegin);
 
                     VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
                             colorIndex, singletonMap("label", bratLabelText), 
@@ -179,7 +179,7 @@ public class ChainRenderer
         }
         
         for (SpanLayerBehavior behavior : behaviors) {
-            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx);
+            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aPageBegin, aPageEnd);
         }
     }
 }

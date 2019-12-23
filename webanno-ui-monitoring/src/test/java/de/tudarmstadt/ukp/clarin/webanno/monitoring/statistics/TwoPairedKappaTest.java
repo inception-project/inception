@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.monitoring.statistics;
 
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.junit.Assert.assertEquals;
@@ -30,24 +34,23 @@ import java.util.Map.Entry;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ArcDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.SpanDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 /**
  * Unit Test for Kappa Agreement. The example reads two TSV files with POS and DEP annotations for
@@ -108,15 +111,16 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappatestCas.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappatestCas);
         
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = CasDiff2.doDiff(POS.class, new SpanDiffAdapter(POS.class, "PosValue"),
+        DiffResult diff = CasDiff.doDiff(POS.class.getName(),
+                new SpanDiffAdapter(POS.class.getName(), "PosValue"),
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, POS.class.getName(),
                 "PosValue", convert(userCases));
@@ -131,9 +135,9 @@ public class TwoPairedKappaTest
         assertEquals(0, diff.getIncompleteConfigurationSets().size());
     }
 
-    private Map<String, List<JCas>> convert(Map<User, JCas> aMap) {
-        Map<String, List<JCas>> map = new LinkedHashMap<>();
-        for (Entry<User, JCas> e : aMap.entrySet()) {
+    private Map<String, List<CAS>> convert(Map<User, CAS> aMap) {
+        Map<String, List<CAS>> map = new LinkedHashMap<>();
+        for (Entry<User, CAS> e : aMap.entrySet()) {
             map.put(e.getKey().getUsername(), asList(e.getValue()));
         }
         return map;
@@ -147,16 +151,17 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappaarcdiff.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappaarcdiff);
         
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = CasDiff2.doDiff(Dependency.class, new ArcDiffAdapter(Dependency.class,
-                "Dependent", "Governor", "DependencyType"),
+        DiffResult diff = CasDiff.doDiff(Dependency.class.getName(),
+                new RelationDiffAdapter(Dependency.class.getName(), "Dependent", "Governor",
+                        "DependencyType"),
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", convert(userCases));
@@ -179,16 +184,17 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappaspandiff.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappaspandiff);
 
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = CasDiff2.doDiff(POS.class, new SpanDiffAdapter(POS.class, "PosValue"),
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
+        DiffResult diff = doDiff(POS.class.getName(),
+                new SpanDiffAdapter(POS.class.getName(), "PosValue"), LINK_TARGET_AS_LABEL,
+                convert(userCases));
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, POS.class.getName(),
                 "PosValue", convert(userCases));
         
@@ -210,17 +216,18 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappaspanarcdiff.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappaspanarcdiff);
 
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = CasDiff2.doDiff(Dependency.class, new ArcDiffAdapter(Dependency.class,
-                "Dependent", "Governor", "DependencyType"),
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
+        DiffResult diff = doDiff(
+                Dependency.class.getName(), new RelationDiffAdapter(Dependency.class.getName(),
+                        "Dependent", "Governor", "DependencyType"),
+                LINK_TARGET_AS_LABEL, convert(userCases));
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", convert(userCases));
         
@@ -244,31 +251,31 @@ public class TwoPairedKappaTest
         userDocs.put(user2, asList(document));
         userDocs.put(user3, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappaspandiff.getJCas());
-        userCases.put(user3, kappaspanarcdiff.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappaspandiff);
+        userCases.put(user3, kappaspanarcdiff);
         
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
 
         // Check against new impl
-        DiffResult diff = CasDiff2.doDiff(
+        DiffResult diff = CasDiff.doDiff(
                 asList(POS.class.getName(), Dependency.class.getName()), 
-                asList(SpanDiffAdapter.POS, ArcDiffAdapter.DEPENDENCY), 
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
+                asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER), 
+                LINK_TARGET_AS_LABEL, convert(userCases));
         
-        Map<String, List<JCas>> user1and2 = convert(userCases);
+        Map<String, List<CAS>> user1and2 = convert(userCases);
         user1and2.remove("user3");
         AgreementResult agreement12 = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user1and2);
 
-        Map<String, List<JCas>> user2and3 = convert(userCases);
+        Map<String, List<CAS>> user2and3 = convert(userCases);
         user2and3.remove("user1");
         AgreementResult agreement23 = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user2and3);
 
-        Map<String, List<JCas>> user1and3 = convert(userCases);
+        Map<String, List<CAS>> user1and3 = convert(userCases);
         user1and3.remove("user2");
         AgreementResult agreement13 = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user1and3);

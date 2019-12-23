@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -91,20 +92,21 @@ public class SlotFeatureSupport
         List<FeatureType> types = new ArrayList<>();
         
         // Slot features are only supported on span layers
-        if (WebAnnoConst.SPAN_TYPE.equals(aAnnotationLayer.getType())) {
+        if (!WebAnnoConst.CHAIN_TYPE.equals(aAnnotationLayer.getType())
+                && !WebAnnoConst.RELATION_TYPE.equals(aAnnotationLayer.getType())) {
             // Add layers of type SPAN available in the project
             for (AnnotationLayer spanLayer : annotationService
                     .listAnnotationLayer(aAnnotationLayer.getProject())) {
                 
                 if (
-                        Token.class.getName().equals(spanLayer.getName()) || 
-                        Sentence.class.getName().equals(spanLayer.getName())) 
+                        Token.class.getName().equals(spanLayer.getName()) ||
+                        Sentence.class.getName().equals(spanLayer.getName()))
                 {
                     continue;
                 }
 
                 if (WebAnnoConst.SPAN_TYPE.equals(spanLayer.getType())) {
-                    types.add(new FeatureType(spanLayer.getName(), 
+                    types.add(new FeatureType(spanLayer.getName(),
                             "Link: " + spanLayer.getUiName(), featureSupportId));
                 }
             }
@@ -180,12 +182,6 @@ public class SlotFeatureSupport
     }
     
     @Override
-    public boolean isTagsetSupported(AnnotationFeature aFeature)
-    {
-        return true;
-    }
-    
-    @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
@@ -205,6 +201,32 @@ public class SlotFeatureSupport
     {
         Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
+    }
+    
+    @Override
+    public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+    {
+        if (
+                aValue instanceof List &&
+                aFeature.getTagset() != null
+        ) {
+            for (LinkWithRoleModel link : (List<LinkWithRoleModel>) aValue) {
+                if (!annotationService.existsTag(link.role, aFeature.getTagset())) {
+                    if (!aFeature.getTagset().isCreateTag()) {
+                        throw new IllegalArgumentException("[" + link.role
+                                + "] is not in the tag list. Please choose from the existing tags");
+                    }
+                    else {
+                        Tag selectedTag = new Tag();
+                        selectedTag.setName(link.role);
+                        selectedTag.setTagSet(aFeature.getTagset());
+                        annotationService.createTag(selectedTag);
+                    }
+                }
+            }
+        }
+        
+        FeatureSupport.super.setFeatureValue(aCas, aFeature, aAddress, aValue);
     }
     
     @Override
