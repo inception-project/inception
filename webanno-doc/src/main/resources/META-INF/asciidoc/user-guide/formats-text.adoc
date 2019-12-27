@@ -1,4 +1,4 @@
-// Copyright 2015
+// Copyright 2019
 // Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 // Technische Universität Darmstadt
 // 
@@ -14,5 +14,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_formats]]
-= Formats
+[[sect_formats_text]]
+= Plain Text
+
+Basic UTF-8 plain text.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| Plain text
+| yes
+| yes
+| no
+| No annotations
+|====

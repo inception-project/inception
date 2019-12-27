@@ -71,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
@@ -334,8 +335,8 @@ public class AnnotationPage
             throw new IllegalStateException("Please open a document first!");
         }
 
-        // If we have a timestamp, then use it to detect if there was a concurrent access
-        if (!isUserViewingOthersWork()) {
+        if (isEditable()) {
+            // If we have a timestamp, then use it to detect if there was a concurrent access
             verifyAndUpdateDocumentTimestamp(state, documentService
                     .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
         }
@@ -345,12 +346,10 @@ public class AnnotationPage
     }
     
     @Override
-    public void writeEditorCas(CAS aCas) throws IOException
+    public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
-        if (isUserViewingOthersWork()) {
-            throw new IOException("Viewing another users annotations - saving is not permitted!");
-        }
-        
+        ensureIsEditable(); 
+
         AnnotatorState state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
@@ -406,7 +405,7 @@ public class AnnotationPage
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
 
-            if (!isUserViewingOthersWork()) {
+            if (isEditable()) {
                 // After creating an new CAS or upgrading the CAS, we need to save it
                 documentService.writeAnnotationCas(editorCas, annotationDocument, false);
                 
@@ -437,7 +436,7 @@ public class AnnotationPage
             state.moveToUnit(editorCas, aFocus + 1, TOP);
 
             // Update document state
-            if (!isUserViewingOthersWork()) {
+            if (isEditable()) {
                 if (SourceDocumentState.NEW.equals(state.getDocument().getState())) {
                     documentService.transitionSourceDocumentState(state.getDocument(),
                             NEW_TO_ANNOTATION_IN_PROGRESS);
@@ -616,8 +615,7 @@ public class AnnotationPage
                 .existsAnnotationDocument(document, getModelObject().getUser())) {
             AnnotationDocument adoc = documentService.getAnnotationDocument(document,
                     getModelObject().getUser());
-            if (AnnotationDocumentState.IGNORE.equals(adoc.getState())
-                    && !isUserViewingOthersWork()) {
+            if (AnnotationDocumentState.IGNORE.equals(adoc.getState()) && isEditable()) {
                 error("Document [" + document.getId() + "] in project [" + project.getId()
                         + "] is locked for user [" + getModelObject().getUser().getUsername()
                         + "]");
@@ -654,11 +652,6 @@ public class AnnotationPage
                 }
             }
         }
-    }
-
-    private boolean isUserViewingOthersWork()
-    {
-        return !getModelObject().getUser().equals(userRepository.getCurrentUser());
     }
 
     @Override

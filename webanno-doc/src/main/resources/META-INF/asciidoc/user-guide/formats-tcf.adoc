@@ -1,4 +1,4 @@
-// Copyright 2015
+// Copyright 2019
 // Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 // Technische Universität Darmstadt
 // 
@@ -14,5 +14,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_formats]]
-= Formats
+[[sect_formats_tcf]]
+= WebLicht TCF
+
+The TCF (Text Corpus Format) was created in the context of the CLARIN project. It is
+mainly used to exchange data between the different web-services that are part of the
+WebLicht platform.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| link:http://weblicht.sfs.uni-tuebingen.de/weblichtwiki/index.php/The_TCF_Format[TCF]
+| yes
+| no
+| no
+| Lemma, POS, dependencies (basic), coreference, named entities
+|====

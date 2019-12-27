@@ -223,7 +223,6 @@ public class BratAnnotationEditor
                     }
                     else if (DoActionResponse.is(action)) {
                         if (paramId.isSynthetic()) {
-                            Offsets offsets = getOffsetsFromRequest(request, cas, paramId);
                             extensionRegistry.fireAction(getActionHandler(), getModelObject(),
                                     aTarget, cas, paramId, action);
                         }
@@ -233,7 +232,6 @@ public class BratAnnotationEditor
                     }
                     else {
                         if (paramId.isSynthetic()) {
-                            Offsets offsets = getOffsetsFromRequest(request, cas, paramId);
                             extensionRegistry.fireAction(getActionHandler(), getModelObject(),
                                     aTarget, cas, paramId, action);
                         }

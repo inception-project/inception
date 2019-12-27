@@ -111,8 +111,8 @@ public class CuratorWorkflowActionBarItemGroup
     
     protected void actionFinishDocument(AjaxRequestTarget aTarget)
     {
-        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            page.actionValidateDocument(aCallbackTarget, page.getEditorCas());
+        finishDocumentDialog.setConfirmAction((_target) -> {
+            page.actionValidateDocument(_target, page.getEditorCas());
             
             AnnotatorState state = page.getModelObject();
             SourceDocument sourceDocument = state.getDocument();
@@ -122,9 +122,7 @@ public class CuratorWorkflowActionBarItemGroup
                         CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
             }
             
-            page.actionRefreshDocument(aCallbackTarget);
-            aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(resetDocumentLink);
+            _target.add(page);
         });
         finishDocumentDialog.show(aTarget);
     }
