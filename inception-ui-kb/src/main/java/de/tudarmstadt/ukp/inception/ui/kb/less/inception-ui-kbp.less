@@ -57,16 +57,16 @@
 
 /* style for overall panel structure */
 div.flex-25 {
-  flex:0 1 25%
+  flex:0 0 25%
 }
 div.flex-35 {
-  flex:0 1 35%;
+  flex:0 0 35%;
 }
 div.flex-50 {
-  flex:0 1 50%;
+  flex:0 0 50%;
 }
 div.flex-65 {
-  flex:0 1 65%;
+  flex:0 0 65%;
 }
 div.knowledge-base-panel {
   padding:10px;
@@ -164,7 +164,6 @@ div.statement-editor {
 }
 div.statement-editor textarea {
   resize:vertical;
-  min-height:@input-height-base;
 }
 div.statement-editor span, div.statement-editor label {
   word-break:break-all;
@@ -175,6 +174,7 @@ div.statement-editor-button-row ul {
   cursor:default;
   margin:5px 0;
   padding-left:5px;
+  white-space: nowrap;
 }
 div.statement-editor-button-row ul li {
   display: inline-block;
@@ -185,7 +185,7 @@ div.list-empty-notice {
   display:flex;
   background-color:@panel-footer-bg;
   border-radius:5px;
-  min-height:100px;
+  min-height:20px;
 }
 div.list-empty-notice > p {
   margin:auto;

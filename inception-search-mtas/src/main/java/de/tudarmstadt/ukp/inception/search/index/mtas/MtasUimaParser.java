@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
@@ -45,8 +47,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,10 +192,10 @@ public class MtasUimaParser
     
     private CAS readCas(Reader aReader) throws UIMAException, IOException, SAXException
     {
-        CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        CAS cas = createCas();
 
         try (InputStream in = new ByteArrayInputStream(charsToBytes(toCharArray(aReader)))) {
-            CasIOUtils.load(in, cas);
+            CasIOUtils.load(in, getRealCas(cas));
         }
         
         return cas;
