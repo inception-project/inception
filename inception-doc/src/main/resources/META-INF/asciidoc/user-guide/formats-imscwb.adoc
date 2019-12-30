@@ -17,19 +17,23 @@
 [[sect_formats_imscwb]]
 = IMS CWB (aka VRT)
 
-The "verticalized XML" format used by the link:http://cwb.sourceforge.net[IMS Open Corpus Workbench], a linguistic search engine. It uses a tab-separated format
-with limited markup (e.g. for sentences, documents, but not recursive structures like
-parse-trees). In principle, it is a generic format - i.e. there can be arbitrary columns, pseudo-XML elements and attributes. However, support is limited to a specific set of columns that must appear exactly in a specific order: *token text*, *part-of-speech tag*, *lemma*. Also only specific pseudo-XML elements and attributes are supported: `text` (including an `id` attribute), `s`.
+The "verticalized XML" format used by the link:http://cwb.sourceforge.net[IMS Open Corpus Workbench], 
+a linguistic search engine. It uses a tab-separated format with limited markup (e.g. for sentences, 
+documents, but not recursive structures like parse-trees). In principle, it is a generic format - 
+i.e. there can be arbitrary columns, pseudo-XML elements and attributes. However, support is limited
+to a specific set of columns that must appear exactly in a specific order: *token text*, 
+*part-of-speech tag*, *lemma*. Also only specific pseudo-XML elements and attributes are supported:
+`text` (including an `id` attribute), `s`.
 
 [cols="2,1,1,1,3"]
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:https://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html[TEI P5]
-| yes
+| IMS CWB VRT
 | yes
 | no
-| UIMA XMI CAS
+| no
+|
 |====
 
 .Example

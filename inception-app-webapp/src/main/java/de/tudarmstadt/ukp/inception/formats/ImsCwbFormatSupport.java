@@ -17,19 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.formats;
 
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.io.imscwb.ImsCwbReader;
-import org.dkpro.core.io.imscwb.ImsCwbWriter;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
 public class ImsCwbFormatSupport
@@ -56,11 +51,11 @@ public class ImsCwbFormatSupport
         return true;
     }
     
-    @Override
-    public boolean isWritable()
-    {
-        return true;
-    }
+//    @Override
+//    public boolean isWritable()
+//    {
+//        return true;
+//    }
 
     @Override
     public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
@@ -68,10 +63,10 @@ public class ImsCwbFormatSupport
         return createReaderDescription(ImsCwbReader.class);
     }
     
-    @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
-        throws ResourceInitializationException
-    {
-        return createEngineDescription(ImsCwbWriter.class);
-    }
+//    @Override
+//    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+//        throws ResourceInitializationException
+//    {
+//        return createEngineDescription(ImsCwbWriter.class);
+//    }
 }
