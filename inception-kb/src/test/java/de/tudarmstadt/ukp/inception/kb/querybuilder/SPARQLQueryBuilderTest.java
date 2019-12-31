@@ -456,7 +456,42 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("http://example.org/#subproperty-1-1",
                         "http://example.org/#subproperty-1-1-1");
     }
+    
+    @Test
+    public void thatPropertyQueryListWorks_Wikidata()
+    {
+        assertIsReachable(wikidata);
+        
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_WIKIDATA);
+        initWikidataMapping();
+        
+        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
+                .forProperties(kb)
+                .limit(10));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).hasSize(10);
+    }
 
+    @Test
+    public void thatPropertyQueryLabelStartingWith_Wikidata()
+    {
+        assertIsReachable(wikidata);
+        
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_WIKIDATA);
+        initWikidataMapping();
+        
+        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
+                .forProperties(kb)
+                .withLabelStartingWith("educated"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().startsWith("educated"));
+    }
     @Test
     public void thatPropertyQueryLimitedToChildrenDoesNotReturnOutOfScopeResults()
         throws Exception
