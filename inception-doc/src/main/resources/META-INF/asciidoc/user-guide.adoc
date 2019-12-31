@@ -210,6 +210,8 @@ include::{include-dir}formats-conllcorenlp.adoc[leveloffset=+2]
 
 include::{include-dir}formats-conllu.adoc[leveloffset=+2]
 
+include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
+
 include::{include-dir}formats-inlinexml.adoc[leveloffset=+2]
 
 include::{include-dir}formats-lif.adoc[leveloffset=+2]
