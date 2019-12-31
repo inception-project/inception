@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
