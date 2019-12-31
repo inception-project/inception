@@ -280,13 +280,8 @@ public class SearchAnnotationSidebar
     protected void onConfigure()
     {
         super.onConfigure();
-        // if an admin is currently searching another's annos, 
-        // the admin should not be able to change anything
-        if (!currentUser.getUsername().equals(getModelObject().getUser().getUsername())) {
-            setChangeAnnotationsElementsEnabled(false);
-            return;
-        }
-        setChangeAnnotationsElementsEnabled(true);
+        
+        setChangeAnnotationsElementsEnabled(!getAnnotationPage().isUserViewingOthersWork());
     }
 
 
@@ -627,7 +622,7 @@ public class SearchAnnotationSidebar
     }
 
     private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, CAS aCas)
-        throws IOException
+        throws IOException, AnnotationException
     {
         AnnotatorState state = getModelObject();
 

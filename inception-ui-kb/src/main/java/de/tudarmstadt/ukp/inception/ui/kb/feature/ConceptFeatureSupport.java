@@ -81,7 +81,7 @@ public class ConceptFeatureSupport
     
     private LoadingCache<Key, KBHandle> labelCache = Caffeine.newBuilder()
         .maximumSize(10_000)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
         .refreshAfterWrite(1, TimeUnit.MINUTES)
         .build(key -> loadLabelValue(key));
     
@@ -122,7 +122,8 @@ public class ConceptFeatureSupport
     {
         // We just start with no specific scope at all (ANY) and let the user refine this via
         // the traits editor
-        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Concept/Instance", featureSupportId));
+        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Concept/Instance/Property",
+                featureSupportId));
     }
 
     @Override
@@ -138,11 +139,11 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
+    public String renderFeatureValue(AnnotationFeature aFeature, String aIdentifier)
     {
         String renderValue = null;
-        if (aLabel != null) {
-            return labelCache.get(new Key(aFeature, aLabel)).getUiLabel();
+        if (aIdentifier != null) {
+            return labelCache.get(new Key(aFeature, aIdentifier)).getUiLabel();
         }
         return renderValue;
     }
@@ -202,7 +203,10 @@ public class ConceptFeatureSupport
     {
         if (aValue instanceof String) {
             String identifier = (String) aValue;
-            return new KBHandle(identifier, renderFeatureValue(aFeature, identifier));
+            String label = renderFeatureValue(aFeature, identifier);
+            String description = labelCache.get(new Key(aFeature, identifier)).getDescription();
+            
+            return new KBHandle(identifier, label, description);
         }
         else if (aValue instanceof KBHandle) {
             return (KBHandle) aValue;

@@ -20,11 +20,10 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
-import static org.apache.uima.cas.SerialFormat.SERIALIZED_TSI;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
@@ -71,9 +70,7 @@ import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -696,7 +693,7 @@ public class MtasDocumentIndex
     }
 
     private void indexDocument(String aDocumentTitle, long aSourceDocumentId,
-            long aAnnotationDocumentId, String aUser, CAS aCas)
+            long aAnnotationDocumentId, String aUser, byte[] aBinaryCas)
         throws IOException
     {
         if (indexWriter != null) {
@@ -708,12 +705,7 @@ public class MtasDocumentIndex
                         aAnnotationDocumentId, aUser);
                 
                 // Prepare bytearray with document content to be indexed
-                String encodedCAS; 
-                try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-                    //XmiCasSerializer.serialize(aCas, null, bos, true, null);
-                    CasIOUtils.save(aCas, bos, SERIALIZED_TSI);
-                    encodedCAS = new String(MtasUtils.bytesToChars(bos.toByteArray()));
-                }
+                String encodedCAS = new String(MtasUtils.bytesToChars(aBinaryCas));
 
                 // Calculate timestamp that will be indexed
                 String timestamp = DateTools.dateToString(new Date(),
@@ -759,17 +751,17 @@ public class MtasDocumentIndex
     };
 
     @Override
-    public void indexDocument(SourceDocument aDocument, CAS aCas) throws IOException
+    public void indexDocument(SourceDocument aDocument, byte[] aBinaryCas) throws IOException
     {
-        indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aCas);
+        indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aBinaryCas);
     };
 
     @Override
-    public void indexDocument(AnnotationDocument aDocument, CAS aCas) throws IOException
+    public void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException
     {
         log.debug("***** Indexing annotation document");
         indexDocument(aDocument.getName(), aDocument.getDocument().getId(), aDocument.getId(),
-                aDocument.getUser(), aCas);
+                aDocument.getUser(), aBinaryCas);
         log.debug("***** End of Indexing annotation document");
     };
 
@@ -1080,7 +1072,6 @@ public class MtasDocumentIndex
 
     private void indexAllDocuments()
     {
-
         int users = 0;
         int annotationDocs = 0;
         int sourceDocs = 0;
@@ -1093,7 +1084,8 @@ public class MtasDocumentIndex
                 users++;
                 for (AnnotationDocument document : documentService.listAnnotationDocuments(project,
                         user)) {
-                    indexDocument(document, documentService.readAnnotationCas(document));
+                    indexDocument(document,
+                            casToByteArray(documentService.readAnnotationCas(document)));
                     annotationDocs++;
                 }
             }
@@ -1102,7 +1094,8 @@ public class MtasDocumentIndex
                     project.getId());
 
             for (SourceDocument document : documentService.listSourceDocuments(project)) {
-                indexDocument(document, documentService.createOrReadInitialCas(document));
+                indexDocument(document,
+                        casToByteArray(documentService.createOrReadInitialCas(document)));
                 sourceDocs++;
             }
         }

@@ -19,9 +19,10 @@ about: Release checklist for bug-fix releases (third-digit increase)
 - [ ] Update the `releases.yml` file
 - [ ] Add release documentation to GitHub pages
 
-**Test server**
+**Demo/test server**
 - [ ] *stable instance*: Update to release version
 - [ ] *testing instance*: Update auto-deployment script to match new SNAPSHOT version
+- [ ] *demo instance*: Update to release version
 
 **Docker**
 - [ ] Push the release to Docker
