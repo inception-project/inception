@@ -1,0 +1,70 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_formats_nif]]
+= NLP Interchange Format
+
+The link:https://persistence.uni-leipzig.org/nlp2rdf/[NLP Interchange Format] (NIF) provides a way of representing NLP information using semantic web technology, specifically RDF and OWL. A few additions of the format were defined in the apparently in-official link:https://nif.readthedocs.io/en/latest/[NIF 2.1] specification.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| link:https://persistence.uni-leipzig.org/nlp2rdf/[NIF]
+| yes
+| yes
+| no
+| 
+|====
+
+.Example
+[source,text]
+----
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix nif:   <http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#> .
+@prefix itsrdf: <http://www.w3.org/2005/11/its/rdf#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+<http://example.org/document0#char=0,86>
+        a               nif:RFC5147String , nif:String , nif:Context ;
+        nif:beginIndex  "0"^^xsd:nonNegativeInteger ;
+        nif:endIndex    "86"^^xsd:nonNegativeInteger ;
+        nif:isString    "Japan (Japanese: 日本 Nippon or Nihon) is a stratovolcanic archipelago of 6,852 islands."^^xsd:string ;
+        nif:topic       <http://example.org/document0#annotation0> .
+
+<http://example.org/document0#char=0,5>
+        a                     nif:RFC5147String , nif:String ;
+        nif:anchorOf          "Japan"^^xsd:string ;
+        nif:beginIndex        "0"^^xsd:nonNegativeInteger ;
+        nif:endIndex          "5"^^xsd:nonNegativeInteger ;
+        nif:referenceContext  <http://example.org/document0#char=0,86> ;
+        itsrdf:taClassRef     <http://example.org/Country> , <http://example.org/StratovolcanicArchipelago> ;
+        itsrdf:taIdentRef     <http://example.org/Japan> .
+
+<http://example.org/document0#char=42,68>
+        a                     nif:RFC5147String , nif:String ;
+        nif:anchorOf          "stratovolcanic archipelago"^^xsd:string ;
+        nif:beginIndex        "42"^^xsd:nonNegativeInteger ;
+        nif:endIndex          "68"^^xsd:nonNegativeInteger ;
+        nif:referenceContext  <http://example.org/document0#char=0,86> ;
+        itsrdf:taClassRef     <http://example.org/Archipelago> , rdfs:Class ;
+        itsrdf:taIdentRef     <http://example.org/StratovolcanicArchipelago> .
+
+<http://example.org/document0#annotation0>
+        a                  nif:Annotation ;
+        itsrdf:taIdentRef  <http://example.org/Geography> .
+----
