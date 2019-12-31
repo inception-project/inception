@@ -309,7 +309,7 @@ public abstract class AnnotationPageBase
         
         // If curating, then it is editable unless the curation is finished
         if (state.getMode().equals(CURATION)) {
-            return state.getDocument().getState().equals(CURATION_FINISHED);
+            return !state.getDocument().getState().equals(CURATION_FINISHED);
         }
         
         // If annotating normally, then it is editable unless marked as finished and unless
