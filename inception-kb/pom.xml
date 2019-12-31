@@ -25,6 +25,10 @@
   <artifactId>inception-kb</artifactId>
   <name>INCEpTION - Knowledge Base - Core</name>
 
+  <properties>
+    <jena.version>3.13.1</jena.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -267,7 +271,7 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-fuseki-main</artifactId>
-      <version>3.13.1</version>
+      <version>${jena.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -279,7 +283,30 @@
     <dependency>
       <groupId>org.apache.jena</groupId>
       <artifactId>jena-text</artifactId>
-      <version>3.13.1</version>
+      <version>${jena.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-arq</artifactId>
+      <version>${jena.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-tdb</artifactId>
+      <version>${jena.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-core</artifactId>
+      <version>${jena.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-core</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
