@@ -137,4 +137,17 @@ public class VDocument
     {
         return Collections.unmodifiableCollection(annotationLayers.values());
     }
+
+    public void add(VObject aVobj)
+    {
+        if (aVobj instanceof VSpan) {
+            add((VSpan) aVobj);
+        }
+        else if (aVobj instanceof VArc) {
+            add((VArc) aVobj);
+        }
+        else {
+            throw new IllegalArgumentException("VObject is neither VSpan nor VArc.");
+        }
+    }
 }

@@ -26,6 +26,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -206,9 +207,9 @@ public class UserDaoImpl
     {
         // When looking up roles for the user who is currently logged in, then we look in the
         // security context - otherwise we ask the database.
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Set<String> roles = new HashSet<>();
-        if (aUser.getUsername().equals(username)) {
+        if (authentication != null && aUser.getUsername().equals(authentication.getName())) {
             for (GrantedAuthority ga : SecurityContextHolder.getContext().getAuthentication()
                     .getAuthorities()) {
                 roles.add(ga.getAuthority());

@@ -396,8 +396,10 @@ public class BratAnnotationEditor
     {
         // This is the span the user has marked in the browser in order to create a new slot-filler
         // annotation OR the span of an existing annotation which the user has selected.
-        Offsets userSelectedSpan = getOffsetsFromRequest(request, aCas, aSelectedAnnotation);
-
+        Offsets optUserSelectedSpan = getOffsetsFromRequest(request, aCas,
+                aSelectedAnnotation);
+        
+        Offsets userSelectedSpan = optUserSelectedSpan;
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
 
@@ -422,7 +424,7 @@ public class BratAnnotationEditor
                 }
             }
         }
-
+        
         return new SpanAnnotationResponse();
     }
     
@@ -531,6 +533,7 @@ public class BratAnnotationEditor
             // Create new span annotation - in this case we get the offset information from the
             // request
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
+            
             OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
                     OffsetsList.class);
 

@@ -99,4 +99,9 @@ public class VSpan
     {
         return ranges;
     }
+
+    public void setColor(String aColor)
+    {
+        colorHint = aColor;
+    }
 }
