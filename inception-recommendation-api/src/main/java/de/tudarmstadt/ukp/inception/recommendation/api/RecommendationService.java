@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
@@ -158,4 +159,5 @@ public interface RecommendationService
     boolean isPredictForAllDocuments(String aUser, Project aProject);
     void setPredictForAllDocuments(String aUser, Project aProject, boolean aPredictForAllDocuments);
 
+    List<LogMessageGroup> getLog(String aUser, Project aProject);
 }

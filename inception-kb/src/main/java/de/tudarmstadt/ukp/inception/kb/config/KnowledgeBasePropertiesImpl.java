@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.kb.config;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.convert.DurationUnit;
 
 @ConfigurationProperties("knowledge-base")
 public class KnowledgeBasePropertiesImpl
@@ -25,8 +29,15 @@ public class KnowledgeBasePropertiesImpl
 {
     public static final int HARD_MIN_RESULTS = 10;
     
-    private int defaultMaxResults = 1000;
-    private int hardMaxResults = 10000;
+    private int defaultMaxResults = 1_000;
+    private int hardMaxResults = 10_000;
+    private long cacheSize = 100_000;
+    
+    @DurationUnit(ChronoUnit.MINUTES)
+    private Duration cacheExpireDelay = Duration.ofMinutes(15);
+    
+    @DurationUnit(ChronoUnit.MINUTES)
+    private Duration cacheRefreshDelay = Duration.ofMinutes(5);
 
     @Override
     public int getDefaultMaxResults()
@@ -34,7 +45,6 @@ public class KnowledgeBasePropertiesImpl
         return defaultMaxResults;
     }
 
-    @Override
     public void setDefaultMaxResults(int aDefaultMaxResults)
     {
         defaultMaxResults = aDefaultMaxResults;
@@ -46,9 +56,41 @@ public class KnowledgeBasePropertiesImpl
         return hardMaxResults;
     }
 
-    @Override
     public void setHardMaxResults(int aHardMaxResults)
     {
         hardMaxResults = aHardMaxResults;
+    }
+
+    @Override
+    public long getCacheSize()
+    {
+        return cacheSize;
+    }
+    
+    public void setCacheSize(long aCacheSize)
+    {
+        cacheSize = aCacheSize;
+    }
+
+    @Override
+    public Duration getCacheExpireDelay()
+    {
+        return cacheExpireDelay;
+    }
+    
+    public void setCacheExpireDelay(Duration aCacheExpireDelay)
+    {
+        cacheExpireDelay = aCacheExpireDelay;
+    }
+
+    @Override
+    public Duration getCacheRefreshDelay()
+    {
+        return cacheRefreshDelay;
+    }
+    
+    public void setCacheRefreshDelay(Duration aCacheRefreshDelay)
+    {
+        cacheRefreshDelay = aCacheRefreshDelay;
     }
 }

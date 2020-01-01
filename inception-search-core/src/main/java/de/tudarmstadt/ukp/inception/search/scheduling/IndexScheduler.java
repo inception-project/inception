@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling;
 
+import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
+
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -83,13 +86,25 @@ public class IndexScheduler
     public void enqueueIndexDocument(SourceDocument aSourceDocument, CAS aCas)
     {
         // Index source document
-        enqueue(new IndexSourceDocumentTask(aSourceDocument, aCas));
+        try {
+            enqueue(new IndexSourceDocumentTask(aSourceDocument, casToByteArray(aCas)));
+        }
+        catch (IOException e) {
+            log.error("Unable to enqueue document [{}]({}) for indexing",
+                    aSourceDocument.getName(), aSourceDocument.getId(), e);
+        }
     }
 
     public void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, CAS aCas)
     {
         // Index annotation document
-        enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, aCas));
+        try {
+            enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, casToByteArray(aCas)));
+        }
+        catch (IOException e) {
+            log.error("Unable to enqueue document [{}]({}) for indexing",
+                    aAnnotationDocument.getName(), aAnnotationDocument.getId(), e);
+        }
     }
     
     /**
@@ -136,7 +151,7 @@ public class IndexScheduler
             // This must be done so that the task will take into account the
             // latest changes to the annotation document.
             if (alreadyScheduledTask.isPresent()) {
-                alreadyScheduledTask.get().setCas(aRunnable.getCas());
+                alreadyScheduledTask.get().setBinaryCas(aRunnable.getBinaryCas());
                 log.debug(
                         "Matching source document indexing task already scheduled: [{}] - updating CAS",
                         aRunnable);

@@ -91,7 +91,7 @@ include::{include-dir}annotation_activeLearning.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_concept-linking.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_fact-extraction.adoc[leveloffset=+2]
+// include::{include-dir}annotation_fact-extraction.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_images.adoc[leveloffset=+2]
 
@@ -192,12 +192,54 @@ include::{include-dir}pdf-editor.adoc[leveloffset=+1]
 = Appendices
 
 [appendix]
-include::{include-dir}webannotsv.adoc[leveloffset=+1]
+include::{include-dir}formats.adoc[leveloffset=+1]
+
+include::{include-dir}formats-conll2000.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2002.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2003.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2006.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2009.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conll2012.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conllcorenlp.adoc[leveloffset=+2]
+
+include::{include-dir}formats-conllu.adoc[leveloffset=+2]
+
+include::{include-dir}formats-imscwb.adoc[leveloffset=+2]
+
+include::{include-dir}formats-inlinexml.adoc[leveloffset=+2]
+
+include::{include-dir}formats-lif.adoc[leveloffset=+2]
+
+include::{include-dir}formats-nif.adoc[leveloffset=+2]
+
+include::{include-dir}formats-perseus.adoc[leveloffset=+2]
+
+include::{include-dir}formats-tcf.adoc[leveloffset=+2]
+
+include::{include-dir}formats-tei.adoc[leveloffset=+2]
+
+include::{include-dir}formats-text.adoc[leveloffset=+2]
+
+include::{include-dir}formats-uimabinarycas.adoc[leveloffset=+2]
+
+include::{include-dir}formats-uimaxmi.adoc[leveloffset=+2]
+
+include::{include-dir}formats-webannotsv1.adoc[leveloffset=+2]
+
+include::{include-dir}formats-webannotsv2.adoc[leveloffset=+2]
+
+include::{include-dir}formats-webannotsv3.adoc[leveloffset=+2]
 
 <<<
 
 [appendix]
-include::{include-dir}formats.adoc[leveloffset=+1]
+include::{include-dir}webannotsv.adoc[leveloffset=+1]
 
 <<<
 

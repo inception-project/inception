@@ -41,6 +41,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public interface KnowledgeBaseService
@@ -518,4 +520,19 @@ public interface KnowledgeBaseService
      * @return whether the knowledge base with the given id is available or not
      */
     boolean isKnowledgeBaseEnabled(Project aProject, String repositoryID);
+    
+    /**
+     * Execute the given query and return the results. The service will try to cache the results for
+     * faster subsequent access.
+     * <p>
+     * <b>NOTE:</b> Do <b>NOT</b> use this method when current data from the KB is required, in 
+     * particular if it is a writable KB.
+     * 
+     * @param aQuery
+     *            a SPARQL query built using {@link SPARQLQueryBuilder}
+     * @return a list of {@link KBHandle KBHandles}
+     */
+    List<KBHandle> listHandlesCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);
+    
+    Optional<KBHandle> fetchHandleCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);
 }

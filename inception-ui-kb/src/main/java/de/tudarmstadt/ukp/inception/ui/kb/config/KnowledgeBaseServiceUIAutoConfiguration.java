@@ -22,6 +22,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -34,6 +35,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
+import de.tudarmstadt.ukp.inception.ui.kb.initializers.FactLayerInitializer;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.ui.kb.search.ConceptFeatureIndexingSupport;
@@ -162,5 +164,15 @@ public class KnowledgeBaseServiceUIAutoConfiguration
             ProjectService aProjectService, KnowledgeBaseService aKbService)
     {
         return new KnowledgeBasePageMenuItem(aUserRepo, aProjectService, aKbService);
+    }
+    
+    @ConditionalOnProperty(prefix = "fact-layer", name = "enabled", havingValue = "true", 
+            matchIfMissing = false)
+    @Bean
+    @Autowired
+    public FactLayerInitializer factLayerInitializer(
+            AnnotationSchemaService aAnnotationSchemaService)
+    {
+        return new FactLayerInitializer(aAnnotationSchemaService);
     }
 }

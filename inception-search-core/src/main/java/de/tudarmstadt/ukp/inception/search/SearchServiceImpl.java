@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
-import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -231,7 +230,7 @@ public class SearchServiceImpl
     }
     
     @Override
-    public void indexDocument(SourceDocument aSourceDocument, CAS aJCas)
+    public void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
         // Retrieve index entry for the project
         Index index = getIndexFromMemory(aSourceDocument.getProject());
@@ -248,7 +247,7 @@ public class SearchServiceImpl
 
             // Add annotation document to the index again
             log.trace("Add source document to index");
-            index.getPhysicalIndex().indexDocument(aSourceDocument, aJCas);
+            index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
         }
         catch (IOException e) {
             log.error("Error indexing source document [{}]({}) in project [{}]({})",
@@ -260,7 +259,7 @@ public class SearchServiceImpl
 
 
     @Override
-    public void indexDocument(AnnotationDocument aAnnotationDocument, CAS aCas)
+    public void indexDocument(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
     {
         log.debug("Indexing annotation document [{}]({}) in project [{}]({})",
                 aAnnotationDocument.getName(), aAnnotationDocument.getId(),
@@ -281,7 +280,7 @@ public class SearchServiceImpl
                         aAnnotationDocument.getName(), aAnnotationDocument.getId(),
                         aAnnotationDocument.getProject().getName(),
                         aAnnotationDocument.getProject().getId());
-                index.getPhysicalIndex().indexDocument(aAnnotationDocument, aCas);
+                index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
                 
                 // If there was a previous timestamped indexed annotation document, remove it from 
                 // index

@@ -50,8 +50,9 @@ public class KnowledgeBaseServiceAutoConfiguration
     
     @Bean
     @Autowired
-    public KnowledgeBaseService knowledgeBaseService(RepositoryProperties aRepoProperties)
+    public KnowledgeBaseService knowledgeBaseService(RepositoryProperties aRepoProperties,
+            KnowledgeBaseProperties aKbProperties)
     {
-        return new KnowledgeBaseServiceImpl(aRepoProperties, entityManager);
+        return new KnowledgeBaseServiceImpl(aRepoProperties, aKbProperties, entityManager);
     }
 }

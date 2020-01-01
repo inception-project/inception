@@ -98,6 +98,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
@@ -584,7 +586,7 @@ public class MtasDocumentIndexTest
         @Bean
         public KnowledgeBaseService knowledgeBaseService()
         {
-            return new KnowledgeBaseServiceImpl(repositoryProperties());
+            return new KnowledgeBaseServiceImpl(repositoryProperties(), knowledgeBaseProperties());
         }
 
         @Bean
@@ -632,6 +634,12 @@ public class MtasDocumentIndexTest
         public RepositoryProperties repositoryProperties()
         {
             return new RepositoryProperties();
+        }
+
+        @Bean
+        public KnowledgeBaseProperties knowledgeBaseProperties()
+        {
+            return new KnowledgeBasePropertiesImpl();
         }
 
         @Bean

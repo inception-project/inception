@@ -28,7 +28,9 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -46,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -68,6 +71,7 @@ public class RecommendationSidebar
     private StringResourceModel tipModel;
     private Form<Preferences> form;
     private RecommenderInfoPanel recommenderInfos;
+    private LogDialog logDialog;
     
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -98,17 +102,22 @@ public class RecommendationSidebar
 
         form.add(new CheckBox("showAllPredictions"));
 
+        form.add(new LambdaAjaxLink("showLog", this::actionShowLog));
+        
         form.add(new LambdaAjaxLink("retrain", this::actionRetrain));
 
         form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
                 aAnnotationPage.actionRefreshDocument(_target)));
-
+        
         add(form);
 
         add(new LearningCurveChartPanel(LEARNING_CURVE, aModel));
         
         recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
         add(recommenderInfos);
+        
+        logDialog = new LogDialog("logDialog", Model.of("Recommender Log"));
+        add(logDialog);
     }
 
     @Override
@@ -143,6 +152,14 @@ public class RecommendationSidebar
         aEvent.getRequestHandler().add(warning);
     }
 
+    private void actionShowLog(AjaxRequestTarget aTarget)
+    {
+        List<LogMessageGroup> messages = recommendationService
+                .getLog(getModelObject().getUser().getUsername(), getModelObject().getProject());
+        logDialog.setModel(new ListModel<LogMessageGroup>(messages));
+        logDialog.show(aTarget);
+    }
+    
     private void actionRetrain(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
