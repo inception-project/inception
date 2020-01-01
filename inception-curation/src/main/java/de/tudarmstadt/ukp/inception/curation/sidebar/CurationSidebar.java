@@ -39,7 +39,6 @@ import org.apache.wicket.markup.html.form.CheckGroup;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
@@ -54,6 +53,7 @@ import org.apache.wicket.util.value.IValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -92,7 +92,7 @@ public class CurationSidebar
     
     private CheckGroup<User> selectedUsers;
     private Form<List<User>> usersForm;
-    private RadioChoice<String> curationTargetChoice;
+    private BootstrapRadioChoice<String> curationTargetChoice;
     private WebMarkupContainer mainContainer;
     private DropDownChoice<MergeStrategy> mergeChoice;
     private ListView<User> users;
@@ -161,7 +161,7 @@ public class CurationSidebar
                 }
             }
         };
-        curationTargetChoice = new RadioChoice<String>("curationTargetRadioBtn",
+        curationTargetChoice = new BootstrapRadioChoice<String>("curationTargetRadioBtn",
                 Model.of(curationService.retrieveCurationTarget(
                 userRepository.getCurrentUser().getUsername(),
                 getModelObject().getProject().getId())),
@@ -181,7 +181,8 @@ public class CurationSidebar
                 return attrValMap;
             }
         };
-        curationTargetChoice.setPrefix("<br/>");
+        curationTargetChoice.setPrefix("<div>");
+        curationTargetChoice.setSuffix("</div>");
         settingsForm.add(curationTargetChoice);
         
         // toggle visibility of settings form
