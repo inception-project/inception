@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.ANY_OBJECT;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
@@ -95,8 +95,7 @@ public class ConceptLinkingServiceImplTest
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/pets.ttl");
 
-        List<KBHandle> handles = sut.disambiguate(kb, null,
-                ConceptFeatureValueType.ANY_OBJECT, null, "soc", 0, null);
+        List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "soc", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
             .as("Check whether \"Socke\" has been retrieved.")
@@ -112,8 +111,7 @@ public class ConceptLinkingServiceImplTest
         KBConcept concept = new KBConcept();
         concept.setName("manatee");
         kbService.createConcept(kb, concept);
-        List<KBHandle> handles = sut.disambiguate(kb, null,
-                ConceptFeatureValueType.ANY_OBJECT, null, "man", 0, null);
+        List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "man", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
             .as("Check whether \"manatee\" has been retrieved.")
