@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import static java.util.Arrays.asList;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -28,9 +31,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.wicket.util.collections.ConcurrentHashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -39,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * Stores references to the recommendationService, the currently used JCas and the annotatorState.
@@ -57,16 +60,14 @@ public class Predictions
     
     private final Project project;
     private final User user;
-    
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final List<LogMessage> log = new ArrayList<>();
     
     public Predictions(Project aProject, User aUser,
             Map<ExtendedId, AnnotationSuggestion> aPredictions)
     {
-        if (aProject == null) {
-            throw new IllegalArgumentException("The Project is necessary! It cannot be null.");
-        }
-
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aUser, "User must be specified");
+        
         project = aProject;
         user = aUser;
 
@@ -75,7 +76,8 @@ public class Predictions
         }
     }
     
-    public Predictions(User aUser, Project aProject) {
+    public Predictions(User aUser, Project aProject)
+    {
         this(aProject, aUser, null);
     }
 
@@ -269,5 +271,22 @@ public class Predictions
     public boolean hasRunPredictionOnDocument(SourceDocument aDocument)
     {
         return seenDocumentsForPrediction.contains(aDocument.getName());
+    }
+    
+    public void log(LogMessage aMessage)
+    {
+        synchronized (log) {
+            log.add(aMessage);
+        }
+    }
+    
+    public List<LogMessage> getLog()
+    {
+        synchronized (log) {
+            // Making a copy here because we may still write to the log and don't want to hand out
+            // a live copy... which might cause problems, e.g. if the live copy would be used in the
+            // Wicket UI and becomes subject to serialization.
+            return asList(log.stream().toArray(LogMessage[]::new));
+        }
     }
 }

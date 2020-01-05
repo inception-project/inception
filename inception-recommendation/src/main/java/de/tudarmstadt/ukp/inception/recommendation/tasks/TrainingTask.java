@@ -141,8 +141,8 @@ public class TrainingTask
                             .getRecommenderFactory(recommender);
 
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                        log.debug("[{}][{}][{}]: Recommender configured with invalid layer or feature "
-                                        + "- skipping recommender",
+                        log.debug("[{}][{}][{}]: Recommender configured with invalid layer or "
+                                        + "feature - skipping recommender",
                                 getId(), user.getUsername(), r.getRecommender().getName());
                         continue;
                     }

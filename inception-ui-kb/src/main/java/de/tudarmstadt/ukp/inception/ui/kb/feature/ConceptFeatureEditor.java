@@ -170,7 +170,7 @@ public class ConceptFeatureEditor
         // Extract filter on the description
         final String descriptionFilter;
         if (input.contains("::")) {
-            descriptionFilter = substringAfter(input , "::");
+            descriptionFilter = substringAfter(input , "::").trim();
             input = substringBefore(input , "::");
         }
         else {
@@ -182,7 +182,7 @@ public class ConceptFeatureEditor
         String trimmedInput = input.trim();
         if (trimmedInput.length() > 2 && trimmedInput.startsWith("\"")
                 && trimmedInput.endsWith("\"")) {
-            input = StringUtils.substring(trimmedInput, 1, -1);
+            input = StringUtils.substring(trimmedInput, 1, -1).trim();
             labelFilter = true;
         }
         

@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -127,13 +128,13 @@ public interface RecommendationService
      * @return the CAS address of the created/updated annotation.
      */
     int upsertSpanFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-                          String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
-                          String aValue, int aBegin, int aEnd)
+            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            String aValue, int aBegin, int aEnd)
         throws AnnotationException;
 
     int upsertRelationFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-                              String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
-                              String aValue, int aSourceAddr, int aTargetAddr)
+            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            String aValue, int aSourceAddr, int aTargetAddr)
         throws AnnotationException;
     
     /**
@@ -166,4 +167,6 @@ public interface RecommendationService
     boolean isPredictForAllDocuments(String aUser, Project aProject);
     
     void setPredictForAllDocuments(String aUser, Project aProject, boolean aPredictForAllDocuments);
+
+    List<LogMessageGroup> getLog(String aUser, Project aProject);
 }
