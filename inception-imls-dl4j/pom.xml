@@ -212,7 +212,7 @@
       <groupId>org.nd4j</groupId>
       <artifactId>${nd4j.backend}</artifactId>
       <version>${dl4j.version}</version>
-      <classifier>linux-x86_64-avx2</classifier>
+      <classifier>linux-x86_64</classifier>
       <exclusions>
         <exclusion>
           <groupId>org.nd4j</groupId>
@@ -224,7 +224,7 @@
       <groupId>org.nd4j</groupId>
       <artifactId>${nd4j.backend}</artifactId>
       <version>${dl4j.version}</version>
-      <classifier>macosx-x86_64-avx2</classifier>
+      <classifier>macosx-x86_64</classifier>
       <exclusions>
         <exclusion>
           <groupId>org.nd4j</groupId>
@@ -236,7 +236,7 @@
       <groupId>org.nd4j</groupId>
       <artifactId>${nd4j.backend}</artifactId>
       <version>${dl4j.version}</version>
-      <classifier>windows-x86_64-avx2</classifier>
+      <classifier>windows-x86_64</classifier>
       <exclusions>
         <exclusion>
           <groupId>org.nd4j</groupId>
