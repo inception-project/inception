@@ -281,7 +281,8 @@ public class SearchAnnotationSidebar
     {
         super.onConfigure();
         
-        setChangeAnnotationsElementsEnabled(!getAnnotationPage().isUserViewingOthersWork());
+        setChangeAnnotationsElementsEnabled(
+                !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser()));
     }
 
 
