@@ -89,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -163,36 +162,37 @@ public class SearchAnnotationSidebar
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
 
-        Form<Void> searchForm = new Form<Void>("searchForm");
+        Form<SearchOptions> searchForm = new Form<>("searchForm", searchOptions);
         searchForm.add(new TextArea<>("queryInput", targetQuery));
-        LambdaAjaxButton<Void> searchButton = new LambdaAjaxButton<>("search", this::actionSearch);
+        LambdaAjaxButton<SearchOptions> searchButton = new LambdaAjaxButton<>("search",
+                this::actionSearch);
         searchForm.add(searchButton);
         searchForm.setDefaultButton(searchButton);
         mainContainer.add(searchForm);
 
-        Form<SearchOptions> searchOptionsForm = new Form<>("searchOptionsForm", searchOptions);
-        searchOptionsForm.add(new CheckBox("limitedToCurrentDocument"));
-        searchOptionsForm.add(createLayerDropDownChoice("groupingLayer",
+        WebMarkupContainer searchOptionsPanel = new WebMarkupContainer("searchOptionsPanel");
+        searchOptionsPanel.add(new CheckBox("limitedToCurrentDocument"));
+        searchOptionsPanel.add(createLayerDropDownChoice("groupingLayer",
             annotationService.listAnnotationLayer(getModelObject().getProject())));
-        searchOptionsForm.add(groupingFeature);
         groupingFeature = new BootstrapSelect<>("groupingFeature", emptyList(),
                 new ChoiceRenderer<>("uiName"));
         groupingFeature.setNullValid(true);
-        searchOptionsForm.add(createResultsPerPageSelection("itemsPerPage"));
-        searchOptionsForm.add(visibleWhen(() -> searchOptionsForm.getModelObject().isVisible()));
-        searchOptionsForm.add(lowLevelPagingCheckBox = createLowLevelPagingCheckBox());
-        searchOptionsForm.setOutputMarkupPlaceholderTag(true);
-        searchForm.add(searchOptionsForm);
+        searchOptionsPanel.add(groupingFeature);
+        searchOptionsPanel.add(createResultsPerPageSelection("itemsPerPage"));
+        searchOptionsPanel.add(visibleWhen(() -> searchForm.getModelObject().isVisible()));
+        searchOptionsPanel.add(lowLevelPagingCheckBox = createLowLevelPagingCheckBox());
+        searchOptionsPanel.setOutputMarkupPlaceholderTag(true);
+        searchForm.add(searchOptionsPanel);
 
         searchForm.add(new LambdaAjaxLink("toggleOptionsVisibility", _target -> {
-            searchOptionsForm.getModelObject().toggleVisibility();
-            _target.add(searchOptionsForm);
+            searchForm.getModelObject().toggleVisibility();
+            _target.add(searchOptionsPanel);
         }));
 
         executeSearchResultsGroupedQuery();
 
         // Add link for re-indexing the project
-        searchOptionsForm.add(new LambdaAjaxLink("reindexProject", t -> {
+        searchOptionsPanel.add(new LambdaAjaxLink("reindexProject", t -> {
             searchService.reindex(getAnnotationPage().getModelObject().getProject());
         }));
 
@@ -213,17 +213,25 @@ public class SearchAnnotationSidebar
                 item.add(createGroupLevelSelectionCheckBox("selectAllInGroup",
                         result.getGroupKey()));
                 item.add(new SearchResultGroup("group", "resultGroup", SearchAnnotationSidebar.this,
-                        result.getGroupKey(), LambdaModel.of(() -> result)));
+                        result.getGroupKey(), Model.of(result)));
             }
         };
         searchOptions.getObject().setItemsPerPage(searchProperties.getPageSizes()[0]);
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
         resultsGroupContainer.add(searchResultGroups);
-        mainContainer.add(new PagingNavigator("pagingNavigator", searchResultGroups).add(
-            visibleWhen(
-                () -> groupedSearchResults.getObject() != null && !groupedSearchResults.getObject()
-                    .isEmpty())));
-
+        PagingNavigator pagingNavigator = new PagingNavigator("pagingNavigator",
+                searchResultGroups);
+        pagingNavigator.add(visibleWhen(() -> groupedSearchResults.getObject() != null 
+                && !groupedSearchResults.getObject().isEmpty()));
+        mainContainer.add(pagingNavigator);
+        Label numberOfResults = new Label("numberOfResults");
+        numberOfResults.setDefaultModel(LoadableDetachableModel.of(() -> String.format("%d-%d / %d",
+                searchResultGroups.getFirstItemOffset() + 1,
+                searchResultGroups.getFirstItemOffset() + searchResultGroups.getItemsPerPage(), 
+                searchResultGroups.getItemCount())));
+        numberOfResults.add(visibleWhen(() -> groupedSearchResults.getObject() != null 
+                && !groupedSearchResults.getObject().isEmpty()));
+        mainContainer.add(numberOfResults);
 
         annotationForm = new Form<>("annotateForm");
         // create annotate-button and options form
@@ -391,7 +399,7 @@ public class SearchAnnotationSidebar
         return selectAllCheckBox;
     }
 
-    private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm)
+    private void actionSearch(AjaxRequestTarget aTarget, Form<SearchOptions> aForm)
     {
         selectedResult = null;
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());

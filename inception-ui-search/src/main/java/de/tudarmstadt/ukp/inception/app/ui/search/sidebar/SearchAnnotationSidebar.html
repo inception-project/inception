@@ -42,7 +42,7 @@
             </div>
           </div>
           
-          <form wicket:id="searchOptionsForm" class="panel-small panel panel-default panel-flex">
+          <div wicket:id="searchOptionsPanel" class="panel-small panel panel-default panel-flex">
             <div class="panel-heading">
               <h3 class="panel-title">
                 <wicket:message key="options"/>
@@ -68,32 +68,32 @@
                 </div>
                 <h5><wicket:message key="groupingHeader"/></h5>
                 <div class="form-group">
-                  <label wicket:for="groupingLayer" class="control-label col-sm-3">
+                  <label wicket:for="groupingLayer" class="control-label col-sm-4">
                     <wicket:message key="groupingLayer"/>
                   </label>
-                  <div class="col-sm-9">
+                  <div class="col-sm-8">
                     <select wicket:id="groupingLayer" class="form-control" 
                         data-container="body"></select>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label wicket:for="groupingFeature" class="control-label col-sm-3">
+                  <label wicket:for="groupingFeature" class="control-label col-sm-4">
                     <wicket:message key="groupingFeature"/>
                   </label>
-                  <div class="col-sm-9">
+                  <div class="col-sm-8">
                     <select wicket:id="groupingFeature" class="form-control" 
                         data-container="body"></select>
                   </div>
                 </div>
                 <div class="form-group">
-                  <label wicket:for="itemsPerPage" class="control-label col-sm-3">
+                  <label wicket:for="itemsPerPage" class="control-label col-sm-4">
                     <wicket:message key="itemsPerPage"/>
                   </label>
-                  <div class="col-sm-9">
+                  <div class="col-sm-8">
                     <select wicket:id="itemsPerPage" class="form-control"
                         data-container="body"></select>
                   </div>
-              </div>
+                </div>
               </div>
             </div>
             <div class="panel-footer text-right">
@@ -102,11 +102,14 @@
                 <wicket:message key="reindex"/>
               </button>
             </div>
-          </form>
+          </div>
         </form>
         
+        <div>
+          <span wicket:id="numberOfResults" class="pull-right"/>
+          <span wicket:id="pagingNavigator"/>
+        </div>
         <div class="scrolling flex-content">
-          <span wicket:id="pagingNavigator"></span>
           <table wicket:id="resultsGroupContainer" class="table table-striped table-condensed">
             <wicket:container wicket:id="searchResultGroups">
               <tr valign="middle" style="line-height: 2em;">
