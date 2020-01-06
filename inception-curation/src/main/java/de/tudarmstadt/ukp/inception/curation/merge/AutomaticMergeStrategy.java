@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionB
 import de.tudarmstadt.ukp.inception.curation.CurationService;
 
 
-@Component("automaticStartegy")
+@Component("automaticStrategy")
 public class AutomaticMergeStrategy
     implements MergeStrategy
 {

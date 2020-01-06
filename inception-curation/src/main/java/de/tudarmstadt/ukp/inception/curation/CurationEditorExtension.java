@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 @Component(CurationEditorExtension.EXTENSION_ID)
@@ -79,6 +80,7 @@ public class CurationEditorExtension
     private @Autowired PreRenderer preRenderer;
     private @Autowired AnnotationSchemaService annotationService;
     private @Autowired DocumentService documentService;
+    private @Autowired UserDao userRepository;
     
     @Override
     public String getBeanName()
@@ -203,10 +205,10 @@ public class CurationEditorExtension
             return;
         }
         
-        String currentUser = aState.getUser().getUsername();
         long projectId = aState.getProject().getId();
         Optional<List<User>> selectedUsers = curationService
-                .listUsersSelectedForCuration(currentUser, projectId);
+                .listUsersSelectedForCuration(userRepository.getCurrentUser().getUsername(), 
+                        projectId);
         if (!selectedUsers.isPresent()) {
             return;
         }
