@@ -23,10 +23,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 
 public interface LearningRecordService
 {
@@ -55,7 +55,7 @@ public interface LearningRecordService
     void deleteById(long id);
 
     void logRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            SpanSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 
     /**
@@ -64,7 +64,7 @@ public interface LearningRecordService
      * action the user performed is not taken into account to determine duplicateness.
      */
     void logRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
+            SpanSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
             AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation);
 

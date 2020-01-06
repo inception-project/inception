@@ -23,9 +23,9 @@ import java.util.Optional;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.ActiveLearningUserState;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
@@ -35,7 +35,7 @@ public interface ActiveLearningService
      * Get all suggestions for the given layer and user as a flat list (i.e. not grouped by
      * documents, but grouped by alternatives).
      */
-    List<SuggestionGroup<AnnotationSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer);
+    List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer);
 
     /**
      * Check if the suggestions from which the given record was created (or an equivalent one)
@@ -52,8 +52,8 @@ public interface ActiveLearningService
 
     void hideRejectedOrSkippedAnnotations(User aUser, AnnotationLayer aLayer,
             boolean aFilterSkippedRecommendation,
-            List<SuggestionGroup<AnnotationSuggestion>> aSuggestionGroups);
+            List<SuggestionGroup<SpanSuggestion>> aSuggestionGroups);
 
-    Optional<Delta<AnnotationSuggestion>> generateNextSuggestion(User aUser,
+    Optional<Delta<SpanSuggestion>> generateNextSuggestion(User aUser,
             ActiveLearningUserState aAlState);
 }

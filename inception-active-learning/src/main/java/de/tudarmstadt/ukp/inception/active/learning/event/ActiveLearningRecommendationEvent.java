@@ -23,9 +23,9 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 
 public class ActiveLearningRecommendationEvent
     extends ApplicationEvent
@@ -33,7 +33,7 @@ public class ActiveLearningRecommendationEvent
     private static final long serialVersionUID = -2741267700429534514L;
 
     private final SourceDocument document;
-    private final AnnotationSuggestion currentRecommendation;
+    private final SpanSuggestion currentRecommendation;
     private final String user;
     private final AnnotationLayer layer;
     private final String annotationFeature;
@@ -41,7 +41,7 @@ public class ActiveLearningRecommendationEvent
     private final List<? extends AnnotationSuggestion_ImplBase> allRecommendations;
 
     public ActiveLearningRecommendationEvent(Object aSource, SourceDocument aDocument,
-            AnnotationSuggestion aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
+            SpanSuggestion aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
             String aAnnotationFeature, LearningRecordType aAction,
             List<? extends AnnotationSuggestion_ImplBase> aAllRecommendations)
     {
@@ -60,7 +60,7 @@ public class ActiveLearningRecommendationEvent
         return document;
     }
 
-    public AnnotationSuggestion getCurrentRecommendation()
+    public SpanSuggestion getCurrentRecommendation()
     {
         return currentRecommendation;
     }

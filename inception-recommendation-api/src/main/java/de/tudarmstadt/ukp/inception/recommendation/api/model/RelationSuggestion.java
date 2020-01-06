@@ -24,7 +24,7 @@ import java.io.Serializable;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.uima.cas.text.AnnotationFS;
 
-public class RelationAnnotationSuggestion
+public class RelationSuggestion
     extends AnnotationSuggestion_ImplBase
     implements Serializable
 {
@@ -32,7 +32,7 @@ public class RelationAnnotationSuggestion
 
     private final RelationPosition position;
 
-    public RelationAnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
+    public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
             long aLayerId, String aFeature, String aDocumentName, AnnotationFS aSource,
             AnnotationFS aTarget, String aLabel, String aUiLabel,
             double aConfidence, String aConfidenceExplanation)
@@ -49,7 +49,7 @@ public class RelationAnnotationSuggestion
      * @param aObject
      *            The annotationObject to copy
      */
-    public RelationAnnotationSuggestion(RelationAnnotationSuggestion aObject)
+    public RelationSuggestion(RelationSuggestion aObject)
     {
         super(aObject);
         

@@ -23,7 +23,7 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 
 /**
  * Event generated when a suggestion is offered to the user via the active learning sidebar as part
@@ -35,15 +35,15 @@ public class ActiveLearningSuggestionOfferedEvent
     private static final long serialVersionUID = -2741267700429534514L;
 
     private final SourceDocument document;
-    private final AnnotationSuggestion currentRecommendation;
+    private final SpanSuggestion currentRecommendation;
     private final String user;
     private final AnnotationLayer layer;
     private final String annotationFeature;
-    private final List<AnnotationSuggestion> allRecommendations;
+    private final List<SpanSuggestion> allRecommendations;
 
     public ActiveLearningSuggestionOfferedEvent(Object aSource, SourceDocument aDocument,
-            AnnotationSuggestion aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
-            String aAnnotationFeature, List<AnnotationSuggestion> aAllRecommendations)
+            SpanSuggestion aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
+            String aAnnotationFeature, List<SpanSuggestion> aAllRecommendations)
     {
         super(aSource);
         document = aDocument;
@@ -59,7 +59,7 @@ public class ActiveLearningSuggestionOfferedEvent
         return document;
     }
 
-    public AnnotationSuggestion getCurrentRecommendation()
+    public SpanSuggestion getCurrentRecommendation()
     {
         return currentRecommendation;
     }
@@ -79,7 +79,7 @@ public class ActiveLearningSuggestionOfferedEvent
         return annotationFeature;
     }
 
-    public List<AnnotationSuggestion> getAllRecommendations()
+    public List<SpanSuggestion> getAllRecommendations()
     {
         return allRecommendations;
     }

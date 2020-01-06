@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_TRANSIENT_ACCEPTED;
 
 import java.io.IOException;
 import java.util.List;
@@ -51,10 +51,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 
 public class RecommenderInfoPanel
@@ -144,18 +144,18 @@ public class RecommenderInfoPanel
                 .orElse(getDocumentTitle(cas));
         
         // Extract all predictions for the current document / recommender
-        List<AnnotationSuggestion> suggestions = predictions.getPredictions().entrySet().stream()
+        List<SpanSuggestion> suggestions = predictions.getPredictions().entrySet().stream()
                 .filter(f -> f.getKey().getDocumentName().equals(sourceDocumentName))
                 .filter(f -> f.getKey().getRecommenderId() == aRecommender.getId().longValue())
                 .map(Map.Entry::getValue)
-                .filter(f -> f instanceof AnnotationSuggestion)
-                .map(f -> (AnnotationSuggestion) f)
+                .filter(f -> f instanceof SpanSuggestion)
+                .map(f -> (SpanSuggestion) f)
                 .filter(s -> s.isVisible())
                 .collect(Collectors.toList());
 
         int accepted = 0;
         int skippedDueToConflict = 0;
-        for (AnnotationSuggestion suggestion : suggestions) {
+        for (SpanSuggestion suggestion : suggestions) {
             try {
                 // Upsert an annotation based on the suggestion
                 AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());

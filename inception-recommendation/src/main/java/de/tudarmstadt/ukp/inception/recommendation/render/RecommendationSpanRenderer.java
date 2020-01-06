@@ -50,10 +50,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 
@@ -104,7 +104,7 @@ public class RecommendationSpanRenderer
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
-        SuggestionDocumentGroup<AnnotationSuggestion> groups = predictions
+        SuggestionDocumentGroup<SpanSuggestion> groups = predictions
                 .getPredictions(sourceDocumentName, layer, aWindowBeginOffset, aWindowEndOffset);
         
         // No recommendations to render for this layer
@@ -125,12 +125,12 @@ public class RecommendationSpanRenderer
         Map<String, AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer)
             .stream().collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
-        for (SuggestionGroup<AnnotationSuggestion> suggestion : groups) {
-            Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
+        for (SuggestionGroup<SpanSuggestion> suggestion : groups) {
+            Map<LabelMapKey, Map<Long, SpanSuggestion>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (AnnotationSuggestion ao: suggestion) {
+            for (SpanSuggestion ao: suggestion) {
 
                 // Skip rendering AnnotationObjects that should not be rendered
                 if (!pref.isShowAllPredictions() && !ao.isVisible()) {
@@ -145,7 +145,7 @@ public class RecommendationSpanRenderer
                         || labelMap.get(label).get(ao.getRecommenderId())
                                 .getConfidence() < ao.getConfidence()) {
 
-                    Map<Long, AnnotationSuggestion> confidencePerClassifier;
+                    Map<Long, SpanSuggestion> confidencePerClassifier;
                     if (labelMap.get(label) == null) {
                         confidencePerClassifier = new HashMap<>();
                     } else {
@@ -161,7 +161,7 @@ public class RecommendationSpanRenderer
             Map<LabelMapKey, Double> maxConfidencePerLabel = new HashMap<>();
             for (LabelMapKey label : labelMap.keySet()) {
                 double maxConfidence = 0;
-                for (Entry<Long, AnnotationSuggestion> classifier : labelMap.get(label)
+                for (Entry<Long, SpanSuggestion> classifier : labelMap.get(label)
                         .entrySet()) {
                     if (classifier.getValue().getConfidence() > maxConfidence) {
                         maxConfidence = classifier.getValue().getConfidence();
@@ -184,7 +184,7 @@ public class RecommendationSpanRenderer
                 AnnotationSuggestion_ImplBase canonicalRecommendation = suggestion.stream()
                         // check for label or feature for no-label annotations as key
                         .filter(p -> label.equalsAnnotationSuggestion(p))
-                        .max(Comparator.comparingInt(AnnotationSuggestion::getId)).orElse(null);
+                        .max(Comparator.comparingInt(SpanSuggestion::getId)).orElse(null);
 
                 if (canonicalRecommendation == null) {
                     continue;
@@ -193,9 +193,9 @@ public class RecommendationSpanRenderer
                 VID vid = canonicalRecommendation.getVID();
                 
                 boolean first = true;
-                Map<Long, AnnotationSuggestion> confidencePerClassifier = labelMap.get(label);
+                Map<Long, SpanSuggestion> confidencePerClassifier = labelMap.get(label);
                 for (Long recommenderId: confidencePerClassifier.keySet()) {
-                    AnnotationSuggestion ao = confidencePerClassifier.get(recommenderId);
+                    SpanSuggestion ao = confidencePerClassifier.get(recommenderId);
 
                     // Only necessary for creating the first
                     if (first) {

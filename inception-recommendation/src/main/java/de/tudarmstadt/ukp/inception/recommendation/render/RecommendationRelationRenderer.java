@@ -41,8 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationAnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 
 /**
  * Render spans.
@@ -79,7 +79,7 @@ public class RecommendationRelationRenderer
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
         // TODO: Group suggestions by same source and target
-        List<RelationAnnotationSuggestion> suggestions = predictions
+        List<RelationSuggestion> suggestions = predictions
                 .getRelationPredictionsForLayer(sourceDocumentName, aLayer, -1, -1);
 
         // No recommendations to render for this layer
@@ -92,7 +92,7 @@ public class RecommendationRelationRenderer
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
         // TODO: Sort by confidence
-        for (RelationAnnotationSuggestion suggestion : suggestions) {
+        for (RelationSuggestion suggestion : suggestions) {
             RelationPosition position = suggestion.getPosition();
             AnnotationFS source = WebAnnoCasUtil.selectAnnotationByAddr(aCas, position.getSource());
             AnnotationFS target = WebAnnoCasUtil.selectAnnotationByAddr(aCas, position.getTarget());

@@ -118,7 +118,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -126,7 +125,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationAnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -1328,7 +1328,7 @@ public class RecommendationServiceImpl
                     continue;
                 }
 
-                suggestion = new AnnotationSuggestion(id, aRecommender.getId(), name,
+                suggestion = new SpanSuggestion(id, aRecommender.getId(), name,
                         layer.getId(), featureName, aDocument.getName(),
                         targetOffsets.get().getBegin(), targetOffsets.get().getEnd(),
                         predictedAnnotation.getCoveredText(), label, label, score,
@@ -1345,7 +1345,7 @@ public class RecommendationServiceImpl
                 AnnotationFS originalGovernor = findEquivalent(aOriginalCas, governor).get();
                 AnnotationFS originalDependent = findEquivalent(aOriginalCas, depedent).get();
 
-                suggestion = new RelationAnnotationSuggestion(id, aRecommender.getId(), name,
+                suggestion = new RelationSuggestion(id, aRecommender.getId(), name,
                         layer.getId(), featureName, aDocument.getName(),
                         originalGovernor, originalDependent, label, label, score, scoreExplanation);
 
@@ -1507,7 +1507,7 @@ public class RecommendationServiceImpl
                 .collect(toList());
 
         // Collect all suggestions of the given layer within the view window
-        List<SuggestionGroup<AnnotationSuggestion>> suggestionsInWindow = aRecommendations.stream()
+        List<SuggestionGroup<SpanSuggestion>> suggestionsInWindow = aRecommendations.stream()
                 // Only suggestions for the given layer
                 .filter(group -> group.getLayerId() == aLayer.getId())
                 // ... and in the given window
@@ -1516,7 +1516,7 @@ public class RecommendationServiceImpl
                     Offset offset = (Offset) group.getPosition();
                     return aWindowBegin <= offset.getBegin() && offset.getEnd() <= aWindowEnd;
                 })
-                .map(group -> (SuggestionGroup<AnnotationSuggestion>) (SuggestionGroup) group)
+                .map(group -> (SuggestionGroup<SpanSuggestion>) (SuggestionGroup) group)
                 .collect(toList());
 
         // Get all the skipped/rejected entries for the current layer
@@ -1546,7 +1546,7 @@ public class RecommendationServiceImpl
 
             // Reduce the suggestions to the ones for the given feature. We can use the tree here
             // since we only have a single SuggestionGroup for every position
-            Map<Offset, SuggestionGroup<AnnotationSuggestion>> suggestions = new TreeMap<>(
+            Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions = new TreeMap<>(
                     comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
             suggestionsInWindow.stream()
                     .filter(group -> group.getFeature().equals(feature.getName()))
@@ -1569,7 +1569,7 @@ public class RecommendationServiceImpl
             while (oi.hasNext()) {
                 if (oi.getA().overlaps(oi.getB())) {
                     // Fetch the current suggestion and annotation
-                    SuggestionGroup<AnnotationSuggestion> group = suggestions.get(oi.getA());
+                    SuggestionGroup<SpanSuggestion> group = suggestions.get(oi.getA());
                     for (AnnotationFS annotation : annotations.get(oi.getB())) {
                         String label = annotation.getFeatureValueAsString(feat);
                         for (AnnotationSuggestion_ImplBase suggestion : group) {
@@ -1596,7 +1596,7 @@ public class RecommendationServiceImpl
         }
     }
 
-    private void hideSuggestionsRejectedOrSkipped(AnnotationSuggestion aSuggestion,
+    private void hideSuggestionsRejectedOrSkipped(SpanSuggestion aSuggestion,
             List<LearningRecord> aRecordedRecommendations)
     {
         // If it was rejected or skipped, hide it

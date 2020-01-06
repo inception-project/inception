@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
 import static java.util.stream.Collectors.toList;
@@ -42,10 +42,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
@@ -73,7 +73,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public List<SuggestionGroup<AnnotationSuggestion>> getSuggestions(User aUser,
+    public List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser,
             AnnotationLayer aLayer)
     {
         Predictions predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
@@ -82,7 +82,7 @@ public class ActiveLearningServiceImpl
             return Collections.emptyList();
         }
 
-        Map<String, SuggestionDocumentGroup<AnnotationSuggestion>> recommendationsMap = predictions
+        Map<String, SuggestionDocumentGroup<SpanSuggestion>> recommendationsMap = predictions
                 .getPredictionsForWholeProject(aLayer, documentService);
 
         return recommendationsMap.values().stream()
@@ -94,9 +94,9 @@ public class ActiveLearningServiceImpl
     public boolean isSuggestionVisible(LearningRecord aRecord)
     {
         User user = userService.get(aRecord.getUser());
-        List<SuggestionGroup<AnnotationSuggestion>> suggestions = getSuggestions(user,
+        List<SuggestionGroup<SpanSuggestion>> suggestions = getSuggestions(user,
                 aRecord.getLayer());
-        for (SuggestionGroup<AnnotationSuggestion> listOfAO : suggestions) {
+        for (SuggestionGroup<SpanSuggestion> listOfAO : suggestions) {
             if (listOfAO.stream().anyMatch(suggestion -> suggestion.getDocumentName()
                     .equals(aRecord.getSourceDocument().getName())
                     && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
@@ -119,14 +119,14 @@ public class ActiveLearningServiceImpl
     @Override
     public void hideRejectedOrSkippedAnnotations(User aUser,
             AnnotationLayer aLayer, boolean filterSkippedRecommendation,
-            List<SuggestionGroup<AnnotationSuggestion>> aSuggestionGroups)
+            List<SuggestionGroup<SpanSuggestion>> aSuggestionGroups)
     {
         List<LearningRecord> records = learningHistoryService
                 .listRecords(aUser.getUsername(),
                         aLayer);
 
-        for (SuggestionGroup<AnnotationSuggestion> group : aSuggestionGroups) {
-            for (AnnotationSuggestion s : group) {
+        for (SuggestionGroup<SpanSuggestion> group : aSuggestionGroups) {
+            for (SpanSuggestion s : group) {
                 // If a suggestion is already invisible, we don't need to check if it needs hiding.
                 // Mind that this code does not unhide the suggestion immediately if a user
                 // deletes a skip learning record - it will only get unhidden after the next
@@ -153,12 +153,12 @@ public class ActiveLearningServiceImpl
     }
     
     @Override
-    public Optional<Delta<AnnotationSuggestion>> generateNextSuggestion(User aUser,
+    public Optional<Delta<SpanSuggestion>> generateNextSuggestion(User aUser,
             ActiveLearningUserState alState)
     {
         // Fetch the next suggestion to present to the user (if there is any)
         long startTimer = System.currentTimeMillis();
-        List<SuggestionGroup<AnnotationSuggestion>> suggestions = alState.getSuggestions();
+        List<SuggestionGroup<SpanSuggestion>> suggestions = alState.getSuggestions();
         long getRecommendationsFromRecommendationService = System.currentTimeMillis();
         log.trace("Getting recommendations from recommender system costs {} ms.",
                 (getRecommendationsFromRecommendationService - startTimer));
@@ -178,10 +178,10 @@ public class ActiveLearningServiceImpl
         return alState.getStrategy().generateNextSuggestion(suggestions);
     }
     
-    private static SuggestionGroup<AnnotationSuggestion> removeDuplicateRecommendations(
-            SuggestionGroup<AnnotationSuggestion> unmodifiedRecommendationList)
+    private static SuggestionGroup<SpanSuggestion> removeDuplicateRecommendations(
+            SuggestionGroup<SpanSuggestion> unmodifiedRecommendationList)
     {
-        SuggestionGroup<AnnotationSuggestion> cleanRecommendationList = new SuggestionGroup<>();
+        SuggestionGroup<SpanSuggestion> cleanRecommendationList = new SuggestionGroup<>();
 
         unmodifiedRecommendationList.forEach(recommendationItem -> {
             if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
@@ -193,7 +193,7 @@ public class ActiveLearningServiceImpl
     }
     
     private static boolean isAlreadyInCleanList(
-            SuggestionGroup<AnnotationSuggestion> cleanRecommendationList,
+            SuggestionGroup<SpanSuggestion> cleanRecommendationList,
             AnnotationSuggestion_ImplBase recommendationItem)
     {
         String source = recommendationItem.getRecommenderName();
@@ -219,9 +219,9 @@ public class ActiveLearningServiceImpl
         private boolean doExistRecommenders = true;
         private AnnotationLayer layer;
         private ActiveLearningStrategy strategy;
-        private List<SuggestionGroup<AnnotationSuggestion>> suggestions;
+        private List<SuggestionGroup<SpanSuggestion>> suggestions;
 
-        private Delta<AnnotationSuggestion> currentDifference;
+        private Delta<SpanSuggestion> currentDifference;
         private String leftContext;
         private String rightContext;
 
@@ -245,18 +245,18 @@ public class ActiveLearningServiceImpl
             this.doExistRecommenders = doExistRecommenders;
         }
 
-        public Optional<AnnotationSuggestion> getSuggestion()
+        public Optional<SpanSuggestion> getSuggestion()
         {
             return currentDifference != null ? Optional.of(currentDifference.getFirst())
                     : Optional.empty();
         }
 
-        public Optional<Delta<AnnotationSuggestion>> getCurrentDifference()
+        public Optional<Delta<SpanSuggestion>> getCurrentDifference()
         {
             return Optional.ofNullable(currentDifference);
         }
 
-        public void setCurrentDifference(Optional<Delta<AnnotationSuggestion>> currentDifference)
+        public void setCurrentDifference(Optional<Delta<SpanSuggestion>> currentDifference)
         {
             this.currentDifference = currentDifference.orElse(null);
         }
@@ -281,12 +281,12 @@ public class ActiveLearningServiceImpl
             strategy = aStrategy;
         }
 
-        public void setSuggestions(List<SuggestionGroup<AnnotationSuggestion>> aSuggestions)
+        public void setSuggestions(List<SuggestionGroup<SpanSuggestion>> aSuggestions)
         {
             suggestions = aSuggestions;
         }
 
-        public List<SuggestionGroup<AnnotationSuggestion>> getSuggestions()
+        public List<SuggestionGroup<SpanSuggestion>> getSuggestions()
         {
             return suggestions;
         }

@@ -216,7 +216,7 @@ public abstract class AnnotationSuggestion_ImplBase
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AnnotationSuggestion that = (AnnotationSuggestion) o;
+        SpanSuggestion that = (SpanSuggestion) o;
         return id == that.id && recommenderId == that.recommenderId
                 && documentName.equals(that.documentName);
     }

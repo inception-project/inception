@@ -134,7 +134,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion_ImplBase>
      * Get the deltas of all candidates. The deltas are calculated separately for each recommender
      * if the group contains recommendations from multiple recommenders. That is necessary because
      * the confidence scores of different recommenders are not necessarily on the same scale.
-     * Additionally, only suggestions that are {@link AnnotationSuggestion#isVisible() visible} are
+     * Additionally, only suggestions that are {@link SpanSuggestion#isVisible() visible} are
      * taken into consideration.
      */
     public Map<Long, List<Delta<T>>> getAllDeltas()
@@ -180,7 +180,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion_ImplBase>
      * Get the top delta per recommender. The deltas are calculated separately for each recommender
      * if the group contains recommendations from multiple recommenders. That is necessary because
      * the confidence scores of different recommenders are not necessarily on the same scale.
-     * Additionally, only suggestions that are {@link AnnotationSuggestion#isVisible() visible} are
+     * Additionally, only suggestions that are {@link SpanSuggestion#isVisible() visible} are
      * taken into consideration.
      */
     public Map<Long, Delta<T>> getTopDeltas()

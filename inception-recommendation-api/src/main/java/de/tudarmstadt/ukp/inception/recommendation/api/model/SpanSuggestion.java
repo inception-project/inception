@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class AnnotationSuggestion
+public class SpanSuggestion
     extends AnnotationSuggestion_ImplBase
     implements Serializable
 {
@@ -30,7 +30,7 @@ public class AnnotationSuggestion
     private final Offset position;
     private final String coveredText;
 
-    public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
+    public SpanSuggestion(int aId, long aRecommenderId, String aRecommenderName,
         long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
         String aCoveredText, String aLabel, String aUiLabel, double aConfidence,
         String aConfidenceExplanation)
@@ -48,7 +48,7 @@ public class AnnotationSuggestion
      * @param aObject
      *            The annotationObject to copy
      */
-    public AnnotationSuggestion(AnnotationSuggestion aObject)
+    public SpanSuggestion(SpanSuggestion aObject)
     {
         super(aObject);
         

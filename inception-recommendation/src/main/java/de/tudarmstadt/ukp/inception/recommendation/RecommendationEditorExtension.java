@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
@@ -59,11 +59,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationAnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
@@ -153,9 +153,9 @@ public class RecommendationEditorExtension
         SourceDocument document = aState.getDocument();
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
-                .filter(f -> f instanceof AnnotationSuggestion)
-                .map(f -> (AnnotationSuggestion) f);
+        Optional<SpanSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
+                .filter(f -> f instanceof SpanSuggestion)
+                .map(f -> (SpanSuggestion) f);
 
         if (!prediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
@@ -164,14 +164,14 @@ public class RecommendationEditorExtension
             return;
         }
 
-        AnnotationSuggestion suggestion = prediction.get();
+        SpanSuggestion suggestion = prediction.get();
 
         // Upsert an annotation based on the suggestion
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-        int address = recommendationService.upsertSpanFeature(annotationService, aState.getDocument(),
-                aState.getUser().getUsername(), aCas, layer, feature, suggestion.getLabel(),
-                suggestion.getBegin(), suggestion.getEnd());
+        int address = recommendationService.upsertSpanFeature(annotationService,
+                aState.getDocument(), aState.getUser().getUsername(), aCas, layer, feature,
+                suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         // panel
@@ -195,9 +195,9 @@ public class RecommendationEditorExtension
 
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<RelationAnnotationSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
-                .filter(f -> f instanceof RelationAnnotationSuggestion)
-                .map(f -> (RelationAnnotationSuggestion) f);
+        Optional<RelationSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
+                .filter(f -> f instanceof RelationSuggestion)
+                .map(f -> (RelationSuggestion) f);
 
         if (!prediction.isPresent()) {
             log.error("Could not find relation in [{}] with id [{}]", document, aVID);
@@ -206,7 +206,7 @@ public class RecommendationEditorExtension
             return;
         }
 
-        RelationAnnotationSuggestion suggestion = prediction.get();
+        RelationSuggestion suggestion = prediction.get();
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
 
@@ -242,7 +242,8 @@ public class RecommendationEditorExtension
         aSuggestion.hide(FLAG_TRANSIENT_ACCEPTED);
 
         // Send an application event that the suggestion has been accepted
-        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, aNewAnnotationAddress);
+        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class,
+                aNewAnnotationAddress);
         applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
                 document, aState.getUser().getUsername(), fs, feature, aSuggestion.getLabel()));
 
@@ -268,9 +269,9 @@ public class RecommendationEditorExtension
                 aState.getProject());
         
         SourceDocument document = aState.getDocument();
-        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID)
-                .filter(f -> f instanceof AnnotationSuggestion)
-                .map(f -> (AnnotationSuggestion) f);
+        Optional<SpanSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID)
+                .filter(f -> f instanceof SpanSuggestion)
+                .map(f -> (SpanSuggestion) f);
         
         if (!oPrediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
@@ -279,7 +280,7 @@ public class RecommendationEditorExtension
             return;
         }
 
-        AnnotationSuggestion suggestion = oPrediction.get();
+        SpanSuggestion suggestion = oPrediction.get();
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
         AnnotationFeature feature = recommender.getFeature();

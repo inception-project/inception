@@ -33,10 +33,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 
 @Component(LearningRecordService.SERVICE_NAME)
 public class LearningRecordServiceImpl
@@ -56,7 +56,7 @@ public class LearningRecordServiceImpl
     @Transactional
     @Override
     public void logRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            SpanSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
         logRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer,
@@ -66,7 +66,7 @@ public class LearningRecordServiceImpl
     @Transactional
     @Override
     public void logRecord(SourceDocument aDocument, String aUsername,
-            AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
+            SpanSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
             AnnotationFeature aFeature, LearningRecordType aUserAction, 
             LearningRecordChangeLocation aLocation)
     {
