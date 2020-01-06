@@ -18,14 +18,15 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -133,9 +134,8 @@ public class SearchAnnotationSidebar
             .of(new DeleteAnnotationsOptions());
     private DataView<ResultsGroup> searchResultGroups;
 
-    private DropDownChoice<AnnotationFeature> groupingFeature = new BootstrapSelect<>(
-        "groupingFeature", Collections.emptyList(), new ChoiceRenderer<>("uiName"));
-    private CheckBox lowLevelPagingCheckBox = createLowLevelPagingCheckBox();
+    private DropDownChoice<AnnotationFeature> groupingFeature;
+    private CheckBox lowLevelPagingCheckBox;
 
     private SearchResult selectedResult;
     
@@ -159,7 +159,6 @@ public class SearchAnnotationSidebar
             new SearchResultsProvider(searchService, groupedSearchResults),
             searchOptions.bind("isLowLevelPaging"));
 
-
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
@@ -176,10 +175,12 @@ public class SearchAnnotationSidebar
         searchOptionsForm.add(createLayerDropDownChoice("groupingLayer",
             annotationService.listAnnotationLayer(getModelObject().getProject())));
         searchOptionsForm.add(groupingFeature);
+        groupingFeature = new BootstrapSelect<>("groupingFeature", emptyList(),
+                new ChoiceRenderer<>("uiName"));
         groupingFeature.setNullValid(true);
         searchOptionsForm.add(createResultsPerPageSelection("itemsPerPage"));
         searchOptionsForm.add(visibleWhen(() -> searchOptionsForm.getModelObject().isVisible()));
-        searchOptionsForm.add(lowLevelPagingCheckBox);
+        searchOptionsForm.add(lowLevelPagingCheckBox = createLowLevelPagingCheckBox());
         searchOptionsForm.setOutputMarkupPlaceholderTag(true);
         searchForm.add(searchOptionsForm);
 
@@ -188,7 +189,7 @@ public class SearchAnnotationSidebar
             _target.add(searchOptionsForm);
         }));
 
-        getSearchResultsGrouped();
+        executeSearchResultsGroupedQuery();
 
         // Add link for re-indexing the project
         searchOptionsForm.add(new LambdaAjaxLink("reindexProject", t -> {
@@ -208,7 +209,7 @@ public class SearchAnnotationSidebar
             {
                 ResultsGroup result = item.getModelObject();
                 item.add(new Label("groupTitle", LoadableDetachableModel
-                        .of(() -> createGroupSizeLabel(result))));
+                        .of(() -> groupSizeLabelValue(result))));
                 item.add(createGroupLevelSelectionCheckBox("selectAllInGroup",
                         result.getGroupKey()));
                 item.add(new SearchResultGroup("group", "resultGroup", SearchAnnotationSidebar.this,
@@ -296,7 +297,8 @@ public class SearchAnnotationSidebar
         deleteOptionsLink.setEnabled(aEnabled);
     }
 
-    private String createGroupSizeLabel(ResultsGroup aResultsGroup) {
+    private String groupSizeLabelValue(ResultsGroup aResultsGroup)
+    {
         StringBuilder sb = new StringBuilder();
         sb.append(aResultsGroup.getGroupKey() + " (" + aResultsGroup.getResults().size());
         if (!resultsProvider.applyLowLevelPaging()) {
@@ -310,15 +312,14 @@ public class SearchAnnotationSidebar
     {
         List<Long> choices = Arrays.stream(searchProperties.getPageSizes()).boxed().collect(
             Collectors.toList());
-        DropDownChoice<Long> itemsPerPageChoice = new BootstrapSelect<>(aId, choices);
-        return itemsPerPageChoice;
+        return new BootstrapSelect<>(aId, choices);
     }
 
     private DropDownChoice<AnnotationLayer> createLayerDropDownChoice(String aId,
         List<AnnotationLayer> aChoices)
     {
         DropDownChoice<AnnotationLayer> layerChoice = new BootstrapSelect<>(aId, aChoices,
-            new ChoiceRenderer<>("uiName"));
+                new ChoiceRenderer<>("uiName"));
 
         layerChoice.add(new AjaxFormComponentUpdatingBehavior("change")
         {
@@ -337,21 +338,13 @@ public class SearchAnnotationSidebar
         return layerChoice;
     }
 
-    private CheckBox createLowLevelPagingCheckBox() {
-        CheckBox checkbox = new CheckBox("lowLevelPaging")
-        {
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setEnabled(searchOptions.getObject().getGroupingLayer() == null
-                    && searchOptions.getObject().getGroupingFeature() == null);
-            }
-        };
-
+    private CheckBox createLowLevelPagingCheckBox()
+    {
+        CheckBox checkbox = new CheckBox("lowLevelPaging");
+        checkbox.add(enabledWhen(() -> searchOptions.getObject().getGroupingLayer() == null
+                && searchOptions.getObject().getGroupingFeature() == null));
         checkbox.add(AttributeModifier.append("title",
             new StringResourceModel("lowLevelPagingMouseover", this)));
-
         return checkbox;
     }
 
@@ -402,7 +395,7 @@ public class SearchAnnotationSidebar
     {
         selectedResult = null;
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
-        getSearchResultsGrouped();
+        executeSearchResultsGroupedQuery();
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
@@ -415,7 +408,7 @@ public class SearchAnnotationSidebar
         aTarget.add(mainContainer);
     }
 
-    private void getSearchResultsGrouped()
+    private void executeSearchResultsGroupedQuery()
     {
         if (isBlank(targetQuery.getObject())) {
             resultsProvider.emptyQuery();

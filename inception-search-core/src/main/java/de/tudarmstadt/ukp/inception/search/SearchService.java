@@ -48,16 +48,24 @@ public interface SearchService
      * Receive the search results grouped by the feature values of the given AnnotationFeature of
      * the given AnnotationLayer. Both AnnotationLayer and AnnotationFeature must be not null for
      * this, otherwise the search results will be grouped by document title.
-     * @param aUser the current user
-     * @param aProject the project to search in
-     * @param aDocument limit search to this document or search in the whole project if null
-     * @param aAnnotationLayer the layer that the grouping feature belongs to
-     * @param aAnnotationFeature the feature that is used to group the results
-     * @param aOffset offset used for the paging of the search results i.e. the index of the first
-     *                search result of the page
-     * @param aCount number of search results to be returned, starting from aOffset
+     * 
+     * @param aUser
+     *            the current user
+     * @param aProject
+     *            the project to search in
+     * @param aDocument
+     *            limit search to this document or search in the whole project if null
+     * @param aAnnotationLayer
+     *            the layer that the grouping feature belongs to
+     * @param aAnnotationFeature
+     *            the feature that is used to group the results
+     * @param aOffset
+     *            offset used for the paging of the search results i.e. the index of the first
+     *            search result of the page
+     * @param aCount
+     *            number of search results to be returned, starting from aOffset
      * @return a Map where the keys are the group-keys (e.g. feature-values) and the values are
-     * lists of search results that belong to this group.
+     *         lists of search results that belong to this group.
      * @throws IOException
      * @throws ExecutionException
      */
@@ -71,7 +79,7 @@ public interface SearchService
     Index getIndex(Project aProject);
 
     boolean isIndexValid(Project aProject);
-    
+
     void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas);
 
     void indexDocument(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas);
@@ -79,6 +87,7 @@ public interface SearchService
     boolean isIndexInProgress(Project aProject);
 
     long determineNumOfQueryResults(User aUser, Project aProject, String aQuery,
-        SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature) throws ExecutionException;
+            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature)
+        throws ExecutionException;
 }

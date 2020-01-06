@@ -19,7 +19,7 @@
 
 This section describes the global settings related to the search module.
 
-.Paging sizes
+.Search results page size
 A list of possible numbers of results per page in the search sidebar. The user can select a number
 from this list to determine how many results should be displayed per page when he makes a query.
 

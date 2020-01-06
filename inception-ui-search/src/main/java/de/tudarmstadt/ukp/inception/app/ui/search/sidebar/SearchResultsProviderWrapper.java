@@ -32,47 +32,46 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 
-public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
+public class SearchResultsProviderWrapper
+    implements IDataProvider<ResultsGroup>
 {
+    private static final long serialVersionUID = 4339947719820231592L;
+
     private SearchResultsProvider searchResultsProvider;
     private List<ResultsGroup> resultGroups;
     private boolean groupingActivated;
-    private IModel<Boolean> isLowLevelPaging;
+    private IModel<Boolean> lowLevelPaging;
 
     public SearchResultsProviderWrapper(SearchResultsProvider aSearchResultsProvider,
-        IModel<Boolean> aIsLowLevelPaging)
+            IModel<Boolean> aLowLevelPaging)
     {
         searchResultsProvider = aSearchResultsProvider;
-        isLowLevelPaging = aIsLowLevelPaging;
+        lowLevelPaging = aLowLevelPaging;
     }
 
     @Override
     public Iterator<ResultsGroup> iterator(long first, long count)
     {
-        /*
-        If the grouping is activated we first fetch all results sorted by group and then apply
-        the paging.
-        This is done because if we apply paging at query level and grouping together, members of a
-        group might me scattered over multiple pages. (Grouping by document is
-        an exception because the query iterates over documents. So results from the same document
-        appear in a sequence)
-
-        If the grouping is not activated (defaults to grouping by document) we can apply paging at
-        query level. So we fetch them directly from the searchResultsProvider.
-         */
-        if (!applyLowLevelPaging()) {
-            List<ResultsGroup> subList = resultsGroupsSublist(first, count);
-
-            searchResultsProvider.getPagesCacheModel().getObject().putPage(first, count, subList);
-
-            return subList.iterator();
+        // If the grouping is activated we first fetch all results sorted by group and then apply
+        // the paging. This is done because if we apply paging at query level and grouping together,
+        // members of a group might me scattered over multiple pages. (Grouping by document is an
+        // exception because the query iterates over documents. So results from the same document
+        // appear in a sequence)
+        // 
+        // If the grouping is not activated (defaults to grouping by document) we can apply paging
+        // at query level. So we fetch them directly from the searchResultsProvider.
+        if (applyLowLevelPaging()) {
+            return searchResultsProvider.iterator(first, count);
         }
 
-        return searchResultsProvider.iterator(first, count);
+        List<ResultsGroup> subList = resultsGroupsSublist(first, count);
+        searchResultsProvider.getPagesCacheModel().getObject().putPage(first, count, subList);
+        return subList.iterator();
     }
 
-    public boolean applyLowLevelPaging() {
-        return !groupingActivated && isLowLevelPaging.getObject();
+    public boolean applyLowLevelPaging()
+    {
+        return !groupingActivated && lowLevelPaging.getObject();
     }
 
     /**
@@ -81,14 +80,13 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
      *
      * e.g.: sublist of elements 2 - 5
      *
-     * ResultsGroup1----------ResultsGroup2            ResultsGroup1----------ResultsGroup2
-     *      |                      |                        |                      |
-     * SearchResult-1         SearchResult-4           SearchResult-3         SearchResult-4
-     * SearchResult-2         SearchResult-5     --->                         SearchResult-5
-     * SearchResult-3         SearchResult-6
+     * ResultsGroup1----------ResultsGroup2 ResultsGroup1----------ResultsGroup2 | | | |
+     * SearchResult-1 SearchResult-4 SearchResult-3 SearchResult-4 SearchResult-2 SearchResult-5
+     * ---> SearchResult-5 SearchResult-3 SearchResult-6
      *
      */
-    private List<ResultsGroup> resultsGroupsSublist(long first, long count) {
+    private List<ResultsGroup> resultsGroupsSublist(long first, long count)
+    {
         List<ResultsGroup> resultsGroupsSubList = new ArrayList<>();
         int counter = 0;
         for (ResultsGroup resultsGroup : resultGroups) {
@@ -98,7 +96,7 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
             List<SearchResult> sublist = new ArrayList<>();
             for (SearchResult result : resultsGroup.getResults()) {
                 if (counter < first) {
-                    counter ++;
+                    counter++;
                     continue;
                 }
                 if (counter - first + 1 > count) {
@@ -107,7 +105,7 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
                 sublist.add(result);
                 counter++;
             }
-            if (! (counter <= first)) {
+            if (!(counter <= first)) {
                 ResultsGroup group = new ResultsGroup(resultsGroup.getGroupKey(), sublist);
                 resultsGroupsSubList.add(group);
             }
@@ -138,14 +136,14 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
     }
 
     public void initializeQuery(User aUser, Project aProject, String aQuery,
-        SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature)
+            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature)
     {
         searchResultsProvider.initializeQuery(aUser, aProject, aQuery, aDocument, aAnnotationLayer,
-            aAnnotationFeature);
+                aAnnotationFeature);
 
         groupingActivated = !(searchResultsProvider.getAnnotationFeature() == null
-            && searchResultsProvider.getAnnotationLayer() == null);
+                && searchResultsProvider.getAnnotationLayer() == null);
 
         if (!applyLowLevelPaging()) {
             resultGroups = getAllResults();
@@ -159,7 +157,6 @@ public class SearchResultsProviderWrapper implements IDataProvider<ResultsGroup>
         ArrayList<ResultsGroup> resultsList = new ArrayList<>();
         resultsIterator.forEachRemaining(r -> resultsList.add(r));
         return resultsList;
-
     }
 
     public void emptyQuery()

@@ -27,46 +27,58 @@ import java.util.stream.Collectors;
 
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 
-
-public class SearchResultsPagesCache implements Serializable
+public class SearchResultsPagesCache
+    implements Serializable
 {
-
+    private static final long serialVersionUID = 2219896532886718940L;
+    
     private Map<PageKey, List<ResultsGroup>> pages;
 
-    public SearchResultsPagesCache() {
+    public SearchResultsPagesCache()
+    {
         pages = new HashMap<>();
     }
 
-    public List<ResultsGroup> getPage(long pageFirst, long pageCount) {
+    public List<ResultsGroup> getPage(long pageFirst, long pageCount)
+    {
         return pages.get(new PageKey(pageFirst, pageCount));
     }
 
-    public void putPage(long pageFirst, long pageCount, List<ResultsGroup> aPage) {
+    public void putPage(long pageFirst, long pageCount, List<ResultsGroup> aPage)
+    {
         pages.put(new PageKey(pageFirst, pageCount), aPage);
     }
 
-    public List<ResultsGroup> allResultsGroups() {
+    public List<ResultsGroup> allResultsGroups()
+    {
         return pages.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
     }
 
-    public void clear() {
+    public void clear()
+    {
         pages = new HashMap<>();
     }
 
-    public boolean isEmpty() {
+    public boolean isEmpty()
+    {
         return pages.isEmpty();
     }
 
-    public boolean containsPage(long first, long count) {
+    public boolean containsPage(long first, long count)
+    {
         return pages.containsKey(new PageKey(first, count));
     }
 
-    private class PageKey implements Serializable {
-
+    private static class PageKey
+        implements Serializable
+    {
+        private static final long serialVersionUID = 9167352821262381017L;
+        
         private long first;
         private long count;
 
-        public PageKey (long aFirst, long aCount) {
+        public PageKey(long aFirst, long aCount)
+        {
             first = aFirst;
             count = aCount;
         }
@@ -74,10 +86,12 @@ public class SearchResultsPagesCache implements Serializable
         @Override
         public boolean equals(Object o)
         {
-            if (this == o)
+            if (this == o) {
                 return true;
-            if (o == null || getClass() != o.getClass())
+            }
+            if (o == null || getClass() != o.getClass()) {
                 return false;
+            }
             PageKey pageKey = (PageKey) o;
             return first == pageKey.first && count == pageKey.count;
         }

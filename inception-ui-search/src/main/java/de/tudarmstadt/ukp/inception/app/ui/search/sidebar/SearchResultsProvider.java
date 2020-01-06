@@ -20,11 +20,11 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 import static java.util.Collections.emptyIterator;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.IteratorUtils;
 import org.apache.wicket.markup.repeater.data.IDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -46,7 +46,7 @@ public class SearchResultsProvider
     private static final long serialVersionUID = -4937781923274074722L;
 
     private static final Logger LOG = LoggerFactory.getLogger(SearchResultsProvider.class);
-    
+
     private SearchService searchService;
 
     // Query settings
@@ -62,7 +62,7 @@ public class SearchResultsProvider
     private IModel<SearchResultsPagesCache> pagesCacheModel;
 
     public SearchResultsProvider(SearchService aSearchService,
-        IModel<SearchResultsPagesCache> aPageCacheModel)
+            IModel<SearchResultsPagesCache> aPageCacheModel)
     {
         searchService = aSearchService;
         pagesCacheModel = aPageCacheModel;
@@ -73,49 +73,46 @@ public class SearchResultsProvider
     {
         if (query == null) {
             pagesCacheModel.getObject().clear();
-            List<ResultsGroup> emptyList = Collections.emptyList();
-            return emptyList.iterator();
+            return IteratorUtils.emptyIterator();
         }
+        
+        if (pagesCacheModel.getObject().containsPage(first, count)) {
+            return pagesCacheModel.getObject().getPage(first, count).iterator();
+        }
+        
         // Query if the results in the given range are not in the cache i.e. if we need to fetch
         // a new page
-        if (!pagesCacheModel.getObject().containsPage(first, count)) {
-            try {
-                List<ResultsGroup> queryResults = searchService
+        try {
+            List<ResultsGroup> queryResults = searchService
                     .query(user, project, query, document, annotationLayer, annotationFeature,
-                        first, count).entrySet().stream()
-                    .map(e -> new ResultsGroup(e.getKey(), e.getValue()))
+                            first, count)
+                    .entrySet().stream().map(e -> new ResultsGroup(e.getKey(), e.getValue()))
                     .collect(Collectors.toList());
 
-                pagesCacheModel.getObject().putPage(first, count, queryResults);
-                return queryResults.iterator();
-            }
-            catch (IOException | ExecutionException e) {
-                LOG.error("Unable to retrieve results", e);
-                return emptyIterator();
-            }
+            pagesCacheModel.getObject().putPage(first, count, queryResults);
+            return queryResults.iterator();
         }
-        else {
-            return pagesCacheModel.getObject().getPage(first, count).iterator();
+        catch (IOException | ExecutionException e) {
+            LOG.error("Unable to retrieve results", e);
+            return emptyIterator();
         }
     }
 
     @Override
     public long size()
     {
-        if (totalResults == -1) {
-            try {
-                totalResults = searchService
-                    .determineNumOfQueryResults(user, project, query, document, annotationLayer,
-                        annotationFeature);
-                return totalResults;
-            }
-            catch (ExecutionException e) {
-                LOG.error("Unable to retrieve results", e);
-                return 0;
-            }
-        }
-        else {
+        if (totalResults != -1) {
             return totalResults;
+        }
+        
+        try {
+            totalResults = searchService.determineNumOfQueryResults(user, project, query, document,
+                    annotationLayer, annotationFeature);
+            return totalResults;
+        }
+        catch (ExecutionException e) {
+            LOG.error("Unable to retrieve results", e);
+            return 0;
         }
     }
 
@@ -167,4 +164,3 @@ public class SearchResultsProvider
         return pagesCacheModel;
     }
 }
-

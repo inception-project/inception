@@ -523,40 +523,36 @@ public class SearchServiceImpl
             }
 
             // Throw execution exception so that the user knows the query was not run
-            throw (new ExecutionException("Query not executed because index is in invalid state. Try again later."));
+            throw (new ExecutionException("Index still building. Try again later."));
         }
-        else {
-            // Index is valid, try to execute the query
+        
+        // Index is valid, try to execute the query
+        if (!index.getPhysicalIndex().isCreated()) {
+            // Physical index does not exist.
 
-            if (!index.getPhysicalIndex().isCreated()) {
-                // Physical index does not exist.
+            // Set the invalid flag
+            index.setInvalid(true);
+            updateIndex(index);
 
-                // Set the invalid flag
-                index.setInvalid(true);
-                updateIndex(index);
+            // Schedule new re-indexing process
+            indexScheduler.enqueueReindexTask(aProject);
 
-                // Schedule new reindexing process
-                indexScheduler.enqueueReindexTask(aProject);
-
-                // Throw execution exception so that the user knows the query was not run
-                throw (new ExecutionException("Query not executed because index is in invalid state. Try again later."));
-            }
-            else {
-                // Physical index exists
-
-                if (!index.getPhysicalIndex().isOpen()) {
-                    // Physical index is not open. Open it.
-                    index.getPhysicalIndex().openPhysicalIndex();
-                }
-
-                log.debug("Running query: [{}]", aQuery);
-
-                numResults = index.getPhysicalIndex()
-                        .numberOfQueryResults(new SearchQueryRequest(aProject, aUser, aQuery,
-                                aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
-            }
-
+            // Throw execution exception so that the user knows the query was not run
+            throw (new ExecutionException("Index still building. Try again later."));
         }
+        
+        // Physical index exists
+
+        if (!index.getPhysicalIndex().isOpen()) {
+            // Physical index is not open. Open it.
+            index.getPhysicalIndex().openPhysicalIndex();
+        }
+
+        log.debug("Executing query: [{}]", aQuery);
+
+        numResults = index.getPhysicalIndex().numberOfQueryResults(new SearchQueryRequest(aProject,
+                aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
+        
         return numResults;
     }
 }

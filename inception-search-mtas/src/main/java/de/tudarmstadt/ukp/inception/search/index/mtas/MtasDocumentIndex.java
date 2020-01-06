@@ -78,7 +78,6 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 
 import com.github.openjson.JSONObject;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -161,7 +160,6 @@ public class MtasDocumentIndex
     private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
     private @Autowired  FeatureSupportRegistry featureSupportRegistry;
 
-    private final AnnotationSchemaService annotationSchemaService;
     private final DocumentService documentService;
     private final ProjectService projectService;
     private final Project project;
@@ -171,8 +169,8 @@ public class MtasDocumentIndex
 
     private final File resourceDir;
 
-    public MtasDocumentIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
-            DocumentService aDocumentService, ProjectService aProjectService, String aDir)
+    public MtasDocumentIndex(Project aProject, DocumentService aDocumentService,
+            ProjectService aProjectService, String aDir)
         throws IOException
     {
         AutowireCapableBeanFactory factory = ApplicationContextProvider.getApplicationContext()
@@ -180,7 +178,6 @@ public class MtasDocumentIndex
         factory.autowireBean(this);
         factory.initializeBean(this, "transientParser");
 
-        annotationSchemaService = aAnnotationSchemaService;
         documentService = aDocumentService;
         projectService = aProjectService;
         project = aProject;
@@ -200,7 +197,7 @@ public class MtasDocumentIndex
         throws IOException, ExecutionException
     {
         try {
-            log.trace("Executing query {} on index {}", aRequest, getIndexDir());
+            log.trace("Executing query [{}] on index [{}]", aRequest, getIndexDir());
             
             Directory directory = FSDirectory.open(getIndexDir().toPath());
             IndexReader indexReader = DirectoryReader.open(directory);
@@ -210,12 +207,13 @@ public class MtasDocumentIndex
             return doQuery(indexReader, aRequest, FIELD_CONTENT, mtasSpanQuery);
         }
         catch (mtas.parser.cql.ParseException e) {
-            log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
+//            log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
             throw new ExecutionException("Unable to parse query [" + aRequest.getQuery() + "]", e);
         }
         catch (Exception e) {
-            log.error("Query execution error", e);
-            throw (new ExecutionException("Query execution error", e));
+//            log.error("Query execution error", e);
+            throw (new ExecutionException("Unable to execute query [" + aRequest.getQuery() + "]",
+                    e));
         }
     }
 
@@ -223,7 +221,7 @@ public class MtasDocumentIndex
     public long numberOfQueryResults(SearchQueryRequest aRequest) throws ExecutionException
     {
         try {
-            log.trace("Determining number of results for query {} on index {}", aRequest,
+            log.trace("Determining number of results for query [{}] on index [{}]", aRequest,
                     getIndexDir());
 
             Directory directory = FSDirectory.open(getIndexDir().toPath());
@@ -234,12 +232,13 @@ public class MtasDocumentIndex
             return countResults(indexReader, aRequest, mtasSpanQuery);
         }
         catch (mtas.parser.cql.ParseException e) {
-            log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
+//            log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
             throw new ExecutionException("Unable to parse query [" + aRequest.getQuery() + "]", e);
         }
         catch (Exception e) {
-            log.error("Query execution error", e);
-            throw (new ExecutionException("Query execution error", e));
+//            log.error("Query execution error", e);
+            throw (new ExecutionException("Unable to execute query [" + aRequest.getQuery() + "]",
+                    e));
         }
     }
 
@@ -351,7 +350,8 @@ public class MtasDocumentIndex
                                 // Exclude result if the retrieved document is a sourcedocument
                                 // (that is, has annotationDocument = -1) AND it has a
                                 // corresponding annotation document for this user
-                                log.trace("Skipping results from indexed source document {} in" + "favor of results from the corresponding annotation "
+                                log.trace("Skipping results from indexed source document {} in" 
+                                    + "favor of results from the corresponding annotation "
                                     + "document", sourceDocumentId);
                                 continue;
                             }
@@ -415,9 +415,7 @@ public class MtasDocumentIndex
         long count = aRequest.getCount();
         long current = 0;
 
-
-        resultIteration:
-        while (leafReaderContextIterator.hasNext()) {
+        resultIteration: while (leafReaderContextIterator.hasNext()) {
             LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
             try {
                 Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
