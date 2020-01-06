@@ -31,7 +31,7 @@ import org.apache.commons.lang3.Validate;
  * Container for {@link SuggestionGroup suggestion groups} all coming from a single document.
  * No guarantees about layers and features though.
  */
-public class SuggestionDocumentGroup<T extends AnnotationSuggestion_ImplBase>
+public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
     extends AbstractCollection<SuggestionGroup<T>>
 {
     private Collection<SuggestionGroup<T>> groups;

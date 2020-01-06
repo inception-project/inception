@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.ActiveLearningStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
@@ -194,13 +194,13 @@ public class ActiveLearningServiceImpl
     
     private static boolean isAlreadyInCleanList(
             SuggestionGroup<SpanSuggestion> cleanRecommendationList,
-            AnnotationSuggestion_ImplBase recommendationItem)
+            AnnotationSuggestion recommendationItem)
     {
         String source = recommendationItem.getRecommenderName();
         String annotation = recommendationItem.getLabel();
         String documentName = recommendationItem.getDocumentName();
             
-        for (AnnotationSuggestion_ImplBase existingRecommendation : cleanRecommendationList) 
+        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) 
         {
             boolean areLabelsEqual = existingRecommendation.labelEquals(annotation);
             if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual

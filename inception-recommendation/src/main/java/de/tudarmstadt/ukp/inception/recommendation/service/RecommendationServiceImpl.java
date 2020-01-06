@@ -118,6 +118,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -1572,7 +1573,7 @@ public class RecommendationServiceImpl
                     SuggestionGroup<SpanSuggestion> group = suggestions.get(oi.getA());
                     for (AnnotationFS annotation : annotations.get(oi.getB())) {
                         String label = annotation.getFeatureValueAsString(feat);
-                        for (AnnotationSuggestion_ImplBase suggestion : group) {
+                        for (AnnotationSuggestion suggestion : group) {
                             if (!aLayer.isAllowStacking()
                                     || (label != null && label.equals(suggestion.getLabel()))
                                     || suggestion.getLabel() == null) {

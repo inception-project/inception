@@ -113,7 +113,7 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggesti
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
@@ -458,7 +458,7 @@ public class ActiveLearningSidebar
         return recommendationForm;
     }
 
-    private String formatLabel(AnnotationSuggestion_ImplBase aCurrentRecommendation)
+    private String formatLabel(AnnotationSuggestion aCurrentRecommendation)
     {
         AnnotationFeature feat = annotationService.getFeature(aCurrentRecommendation.getFeature(),
                 alStateModel.getObject().getLayer());

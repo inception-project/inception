@@ -25,38 +25,8 @@ import javax.annotation.Nullable;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public abstract class AnnotationSuggestion_ImplBase
+    implements AnnotationSuggestion
 {
-    public static final String EXTENSION_ID = "recommendationEditorExtension";
-    
-    /**
-     * Suggestion is overlapping with an existing annotation
-     */
-    public static final int FLAG_OVERLAP = 1 << 0;
-    /**
-     * Suggestion has been skipped (from learning history)
-     */
-    public static final int FLAG_SKIPPED = 1 << 1;
-    /**
-     * Suggestion has been rejected (from learning history)
-     */
-    public static final int FLAG_REJECTED = 1 << 2;
-    /**
-     * User has accepted the suggestion and prediction has not re-run yet (which would reinitialize
-     * the visbility state)
-     */
-    public static final int FLAG_TRANSIENT_ACCEPTED = 1 << 3;
-    /**
-     * User has rejected the suggestion and prediction has not re-run yet (which would reinitialize
-     * the visbility state)
-     */
-    public static final int FLAG_TRANSIENT_REJECTED = 1 << 4;
-    /**
-     * User has corrected the suggestion and prediction has not re-run yet (which would reinitialize
-     * the visbility state)
-     */
-    public static final int FLAG_TRANSIENT_CORRECTED = 1 << 5;
-    public static final int FLAG_ALL = FLAG_OVERLAP | FLAG_SKIPPED | FLAG_REJECTED
-                | FLAG_TRANSIENT_ACCEPTED | FLAG_TRANSIENT_REJECTED | FLAG_TRANSIENT_CORRECTED;
     protected final int id;
     protected final long recommenderId;
     protected final String recommenderName;
@@ -99,6 +69,7 @@ public abstract class AnnotationSuggestion_ImplBase
         documentName = aObject.documentName;
     }
 
+    @Override
     public int getId()
     {
         return id;
@@ -110,62 +81,74 @@ public abstract class AnnotationSuggestion_ImplBase
      * 
      * @return the label value or null
      */
+    @Override
     @Nullable
     public String getLabel()
     {
         return label;
     }
 
+    @Override
     public String getUiLabel()
     {
         return uiLabel;
     }
 
+    @Override
     public long getLayerId()
     {
         return layerId;
     }
 
+    @Override
     public String getFeature()
     {
         return feature;
     }
 
+    @Override
     public String getRecommenderName()
     {
         return recommenderName;
     }
 
+    @Override
     public double getConfidence()
     {
         return confidence;
     }
 
+    @Override
     public Optional<String> getConfidenceExplanation()
     {
         return Optional.ofNullable(confidenceExplanation);
     }
 
+    @Override
     public long getRecommenderId()
     {
         return recommenderId;
     }
 
+    @Override
     public String getDocumentName()
     {
         return documentName;
     }
 
+    @Override
     public void hide(int aFlags)
     {
         hidingFlags |= aFlags;
     }
 
+    @Override
     public void show(int aFlags)
     {
         hidingFlags &= ~aFlags;
     }
 
+    @Override
     public String getReasonForHiding()
     {
         StringBuilder sb = new StringBuilder();
@@ -187,11 +170,13 @@ public abstract class AnnotationSuggestion_ImplBase
         return sb.toString();
     }
 
+    @Override
     public boolean isVisible()
     {
         return hidingFlags == 0;
     }
 
+    @Override
     public VID getVID()
     {
         return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, VID.NONE, VID.NONE);
@@ -226,10 +211,12 @@ public abstract class AnnotationSuggestion_ImplBase
      * 
      * @return true if both labels are null or equal
      */
+    @Override
     public boolean labelEquals(String aLabel)
     {
         return (aLabel == null && label == null) || (label != null && label.equals(aLabel));
     }
     
+    @Override
     public abstract Position getPosition();
 }
