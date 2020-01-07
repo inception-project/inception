@@ -286,7 +286,7 @@ public class ConceptLinkingServiceImpl
                 containingBuilder.descendantsOf(aConceptScope);
             }
             
-            containingBuilder.withLabelContainingAnyOf(longLabels);
+            containingBuilder.withLabelMatchingAnyOf(longLabels);
             
             containingBuilder
                     .retrieveLabel()
@@ -301,7 +301,7 @@ public class ConceptLinkingServiceImpl
                     conn -> containingBuilder.asHandles(conn, true));
             }
             
-            log.debug("Found [{}] candidates using containing {}", containingMatches.size(),
+            log.debug("Found [{}] candidates using matching {}", containingMatches.size(),
                     asList(longLabels));
             
             result.addAll(containingMatches);
