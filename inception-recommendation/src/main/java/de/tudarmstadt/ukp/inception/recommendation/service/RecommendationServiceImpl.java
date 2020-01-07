@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentAnnotation;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_ALL;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_OVERLAP;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
@@ -119,7 +119,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
@@ -1015,7 +1015,7 @@ public class RecommendationServiceImpl
         if (activePredictions != null) {
             for (SourceDocument document : aInherit) {
                 if (activePredictions.hasRunPredictionOnDocument(document)) {
-                    List<AnnotationSuggestion_ImplBase> suggestions = inheritSuggestions(aProject,
+                    List<AnnotationSuggestion> suggestions = inheritSuggestions(aProject,
                             activePredictions, document, username);
                     predictions.putPredictions(suggestions);
                     predictions.markDocumentAsPredictionCompleted(document);
@@ -1130,7 +1130,7 @@ public class RecommendationServiceImpl
                             // If possible, we inherit recommendations from a previous run while
                             // the recommender is still busy
                             if (activePredictions != null) {
-                                List<AnnotationSuggestion_ImplBase> suggestions = 
+                                List<AnnotationSuggestion> suggestions =
                                         inheritSuggestions(recommender, activePredictions, document,
                                                 username);
                                 if (!suggestions.isEmpty()) {
@@ -1152,7 +1152,7 @@ public class RecommendationServiceImpl
                         
                         cloneAndMonkeyPatchCAS(aProject, originalCas.get(), predictionCas);
 
-                        List<AnnotationSuggestion_ImplBase> suggestions;
+                        List<AnnotationSuggestion> suggestions;
                         
                         // If the recommender is not trainable and not sensitive to annotations, 
                         // we can actually re-use the predictions.
@@ -1177,7 +1177,7 @@ public class RecommendationServiceImpl
                         // Calculate the visibility of the suggestions. This happens via the
                         // original CAS which contains only the manually created annotations
                         // and *not* the suggestions.
-                        SuggestionDocumentGroup<AnnotationSuggestion_ImplBase> groups = 
+                        SuggestionDocumentGroup<AnnotationSuggestion> groups =
                                 new SuggestionDocumentGroup<>(suggestions);
                         calculateVisibility(originalCas.get(), username, recommender.getLayer(),
                                 groups, 0, originalCas.get().getDocumentText().length());
@@ -1200,7 +1200,7 @@ public class RecommendationServiceImpl
                         // suggestions to avoid that all the suggestions of the recommende simply
                         // disappear.
                         if (activePredictions != null) {
-                            List<AnnotationSuggestion_ImplBase> suggestions = inheritSuggestions(
+                            List<AnnotationSuggestion> suggestions = inheritSuggestions(
                                     recommender, activePredictions, document, username);
                             if (!suggestions.isEmpty()) {
                                 predictions.putPredictions(suggestions);
@@ -1229,10 +1229,10 @@ public class RecommendationServiceImpl
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private List<AnnotationSuggestion_ImplBase> inheritSuggestions(Recommender aRecommender,
+    private List<AnnotationSuggestion> inheritSuggestions(Recommender aRecommender,
             Predictions activePredictions, SourceDocument document, String aUsername)
     {
-        List<AnnotationSuggestion_ImplBase> suggestions = activePredictions
+        List<AnnotationSuggestion> suggestions = activePredictions
                 .getPredictionsByRecommenderAndDocument(aRecommender, document.getName());
         
         log.debug("[{}]({}) for user [{}] on document "
@@ -1250,10 +1250,10 @@ public class RecommendationServiceImpl
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private List<AnnotationSuggestion_ImplBase> inheritSuggestions(Project aProject,
+    private List<AnnotationSuggestion> inheritSuggestions(Project aProject,
             Predictions activePredictions, SourceDocument document, String aUsername)
     {
-        List<AnnotationSuggestion_ImplBase> suggestions = activePredictions
+        List<AnnotationSuggestion> suggestions = activePredictions
                 .getPredictionsByDocument(document.getName());
         
         log.debug(
@@ -1269,7 +1269,7 @@ public class RecommendationServiceImpl
     /**
      * Invokes the engine to produce new suggestions.
      */
-    private List<AnnotationSuggestion_ImplBase> generateSuggestions(RecommenderContext ctx,
+    private List<AnnotationSuggestion> generateSuggestions(RecommenderContext ctx,
             RecommendationEngine engine, Predictions activePredictions, SourceDocument document,
             CAS originalCas, CAS predictionCas, String aUsername)
         throws RecommendationException
@@ -1278,13 +1278,13 @@ public class RecommendationServiceImpl
         engine.predict(ctx, predictionCas);
 
         // Extract the suggestions from the data which the recommender has written into the CAS
-        List<AnnotationSuggestion_ImplBase> suggestions = extractSuggestions(aUsername, originalCas,
+        List<AnnotationSuggestion> suggestions = extractSuggestions(aUsername, originalCas,
                 predictionCas, document, engine.getRecommender());
                 
         return suggestions;
     }
 
-    private List<AnnotationSuggestion_ImplBase> extractSuggestions(String aUsername,
+    private List<AnnotationSuggestion> extractSuggestions(String aUsername,
             CAS aOriginalCas, CAS aPredictionCas, SourceDocument aDocument,
             Recommender aRecommender)
     {
@@ -1305,7 +1305,7 @@ public class RecommendationServiceImpl
 
         int predictionCount = 0;
 
-        List<AnnotationSuggestion_ImplBase> result = new ArrayList<>();
+        List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
 
         for (Annotation predictedAnnotation : aPredictionCas.<Annotation>select(predictedType)) {
@@ -1318,7 +1318,7 @@ public class RecommendationServiceImpl
             String scoreExplanation = predictedAnnotation.getStringValue(scoreExplanationFeature);
             String name = aRecommender.getName();
 
-            AnnotationSuggestion_ImplBase suggestion;
+            AnnotationSuggestion suggestion;
             
             switch (layer.getType()) {
             case SPAN_TYPE: {
@@ -1484,7 +1484,7 @@ public class RecommendationServiceImpl
      */
     @Override
     public void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<AnnotationSuggestion_ImplBase>> aRecommendations,
+            Collection<SuggestionGroup<AnnotationSuggestion>> aRecommendations,
             int aWindowBegin, int aWindowEnd)
     {
         // NOTE: In order to avoid having to upgrade the "original CAS" in computePredictions,this
@@ -1591,7 +1591,7 @@ public class RecommendationServiceImpl
 
             // Anything that was not hidden so far might still have been rejected
             suggestions.values().stream().flatMap(SuggestionGroup::stream)
-                    .filter(AnnotationSuggestion_ImplBase::isVisible)
+                    .filter(AnnotationSuggestion::isVisible)
                     .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
                             recordedAnnotations));
         }
@@ -1626,7 +1626,6 @@ public class RecommendationServiceImpl
     {
         try (StopWatch watch = new StopWatch(log, "adding score features")) {
             TypeSystemDescription tsd = annoService.getFullProjectTypeSystem(aProject);
-            System.out.println("Number of types before: " + tsd.getTypes().length);
 
             for (AnnotationLayer layer : annoService.listAnnotationLayer(aProject)) {
                 TypeDescription td = tsd.getType(layer.getName());

@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
@@ -154,7 +154,7 @@ public interface RecommendationService
             List<SourceDocument> aInherit);
     
     void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<AnnotationSuggestion_ImplBase>> aRecommendations,
+            Collection<SuggestionGroup<AnnotationSuggestion>> aRecommendations,
             int aWindowBegin, int aWindowEnd);
 
     List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);

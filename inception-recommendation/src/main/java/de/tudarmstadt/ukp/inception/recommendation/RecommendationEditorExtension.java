@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_TRANSIENT_ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_TRANSIENT_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
@@ -131,7 +131,7 @@ public class RecommendationEditorExtension
             actionAcceptRelationRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
         else if (DoActionResponse.is(aAction)) {
-            actionRejectSpanRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
+            actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
     }
     
@@ -261,7 +261,7 @@ public class RecommendationEditorExtension
      * <li>Sends events to the UI and application informing other components about the action.</li>
      * </ul>
      */
-    private void actionRejectSpanRecommendation(AnnotationActionHandler aActionHandler,
+    private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
         throws AnnotationException
     {
@@ -269,9 +269,7 @@ public class RecommendationEditorExtension
                 aState.getProject());
         
         SourceDocument document = aState.getDocument();
-        Optional<SpanSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID)
-                .filter(f -> f instanceof SpanSuggestion)
-                .map(f -> (SpanSuggestion) f);
+        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID);
         
         if (!oPrediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
@@ -280,7 +278,8 @@ public class RecommendationEditorExtension
             return;
         }
 
-        SpanSuggestion suggestion = oPrediction.get();
+        AnnotationSuggestion suggestion = oPrediction.get();
+
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
         AnnotationFeature feature = recommender.getFeature();
@@ -289,23 +288,31 @@ public class RecommendationEditorExtension
         // the entire document or even for the part visible on screen.
         suggestion.hide(FLAG_TRANSIENT_REJECTED);
 
-        // Log the action to the learning record
-        learningRecordService.logRecord(document, aState.getUser().getUsername(),
-                suggestion, layer, feature, REJECTED, MAIN_EDITOR);
-
-        // Trigger a re-rendering of the document
-        aActionHandler.actionSelect(aTarget, aCas);
-        
-        // Send an application event that the suggestion has been rejected
-        applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, document,
-                aState.getUser().getUsername(), suggestion.getBegin(), suggestion.getEnd(),
-                suggestion.getCoveredText(), feature, suggestion.getLabel()));
-
         // Send a UI event that the suggestion has been rejected
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
                 new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
+
+        if (suggestion instanceof SpanSuggestion) {
+            SpanSuggestion spanSuggestion = (SpanSuggestion) suggestion;
+            // Log the action to the learning record
+            learningRecordService.logRecord(document, aState.getUser().getUsername(),
+                    spanSuggestion, layer, feature, REJECTED, MAIN_EDITOR);
+
+            // Trigger a re-rendering of the document
+            aActionHandler.actionSelect(aTarget, aCas);
+
+            // Send an application event that the suggestion has been rejected
+            applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, document,
+                    aState.getUser().getUsername(), spanSuggestion.getBegin(), spanSuggestion.getEnd(),
+                    spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
+
+        } else if (suggestion instanceof RelationSuggestion) {
+            RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
+            // TODO: Log rejection
+            // TODO: Publish rejection event
+        }
     }
-    
+
     @Override
     public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc,
                        int aWindowBeginOffset, int aWindowEndOffset)

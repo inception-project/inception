@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.active.learning;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.SKIPPED;
 import static java.util.stream.Collectors.toList;
@@ -83,7 +83,7 @@ public class ActiveLearningServiceImpl
         }
 
         Map<String, SuggestionDocumentGroup<SpanSuggestion>> recommendationsMap = predictions
-                .getPredictionsForWholeProject(aLayer, documentService);
+                .getSpanPredictionsForWholeProject(aLayer, documentService);
 
         return recommendationsMap.values().stream()
                 .flatMap(docMap -> docMap.stream())
@@ -200,7 +200,7 @@ public class ActiveLearningServiceImpl
         String annotation = recommendationItem.getLabel();
         String documentName = recommendationItem.getDocumentName();
             
-        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) 
+        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList)
         {
             boolean areLabelsEqual = existingRecommendation.labelEquals(annotation);
             if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual

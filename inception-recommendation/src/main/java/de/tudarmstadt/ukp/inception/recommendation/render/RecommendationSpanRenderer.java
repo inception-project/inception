@@ -105,7 +105,7 @@ public class RecommendationSpanRenderer
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
         SuggestionDocumentGroup<SpanSuggestion> groups = predictions
-                .getPredictions(sourceDocumentName, layer, aWindowBeginOffset, aWindowEndOffset);
+                .getSpanPredictions(sourceDocumentName, layer, aWindowBeginOffset, aWindowEndOffset);
         
         // No recommendations to render for this layer
         if (groups.isEmpty()) {

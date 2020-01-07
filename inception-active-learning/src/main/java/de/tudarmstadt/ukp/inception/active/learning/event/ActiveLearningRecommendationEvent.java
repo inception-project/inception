@@ -23,7 +23,7 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 
@@ -38,12 +38,12 @@ public class ActiveLearningRecommendationEvent
     private final AnnotationLayer layer;
     private final String annotationFeature;
     private final LearningRecordType action;
-    private final List<? extends AnnotationSuggestion_ImplBase> allRecommendations;
+    private final List<? extends AnnotationSuggestion> allRecommendations;
 
     public ActiveLearningRecommendationEvent(Object aSource, SourceDocument aDocument,
             SpanSuggestion aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
             String aAnnotationFeature, LearningRecordType aAction,
-            List<? extends AnnotationSuggestion_ImplBase> aAllRecommendations)
+            List<? extends AnnotationSuggestion> aAllRecommendations)
     {
         super(aSource);
         document = aDocument;
@@ -85,7 +85,7 @@ public class ActiveLearningRecommendationEvent
         return action;
     }
 
-    public List<? extends AnnotationSuggestion_ImplBase> getAllRecommendations()
+    public List<? extends AnnotationSuggestion> getAllRecommendations()
     {
         return allRecommendations;
     }

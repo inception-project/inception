@@ -87,8 +87,6 @@ public class RecommendationRelationRenderer
             return;
         }
 
-        System.out.println(suggestions);
-
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
         // TODO: Sort by confidence

@@ -55,7 +55,7 @@ public class Predictions
 {
     private static final long serialVersionUID = -1598768729246662885L;
     
-    private Map<ExtendedId, AnnotationSuggestion_ImplBase> predictions = new ConcurrentHashMap<>();
+    private Map<ExtendedId, AnnotationSuggestion> predictions = new ConcurrentHashMap<>();
     private Set<String> seenDocumentsForPrediction = new ConcurrentHashSet<>();
     
     private final Project project;
@@ -86,7 +86,7 @@ public class Predictions
      * tokens and the inner list is a list of predictions for a token. The method filters all tokens
      * which already have an annotation and don't need further recommendation.
      */
-    public Map<String, SuggestionDocumentGroup<SpanSuggestion>> getPredictionsForWholeProject(
+    public Map<String, SuggestionDocumentGroup<SpanSuggestion>> getSpanPredictionsForWholeProject(
             AnnotationLayer aLayer, DocumentService aDocumentService)
     {
         Map<String, SuggestionDocumentGroup<SpanSuggestion>> result = new HashMap<>();
@@ -95,7 +95,7 @@ public class Predictions
 
         for (AnnotationDocument doc : docs) {
             // TODO #176 use the document Id once it it available in the CAS
-            SuggestionDocumentGroup<SpanSuggestion> p = getPredictions(doc.getName(), aLayer,
+            SuggestionDocumentGroup<SpanSuggestion> p = getSpanPredictions(doc.getName(), aLayer,
                     -1, -1);
             result.put(doc.getName(), p);
         }
@@ -120,10 +120,10 @@ public class Predictions
      * Get the predictions of a given window, where the outer list is a list of tokens and the inner
      * list is a list of predictions for a token
      */
-    public SuggestionDocumentGroup<SpanSuggestion> getPredictions(String aDocumentName,
+    public SuggestionDocumentGroup<SpanSuggestion> getSpanPredictions(String aDocumentName,
             AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        return new SuggestionDocumentGroup(getFlattenedPredictions(aDocumentName, aLayer,
+        return new SuggestionDocumentGroup(getFlattenedSpanPredictions(aDocumentName, aLayer,
                 aWindowBegin, aWindowEnd));
     }
 
@@ -134,8 +134,8 @@ public class Predictions
      * If the parameters {@code aWindowBegin} and {@code aWindowEnd} are {@code -1},
      * then they are ignored respectively. This is useful when all suggestions should be fetched.
      */
-    private List<SpanSuggestion> getFlattenedPredictions(String aDocumentName,
-        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+    private List<SpanSuggestion> getFlattenedSpanPredictions(String aDocumentName,
+            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
         return predictions.entrySet().stream()
             .filter(f -> f.getValue() instanceof SpanSuggestion)
@@ -153,13 +153,12 @@ public class Predictions
      * Returns the first prediction that matches recommendationId and recommenderId
      * in the given document.
      */
-    public Optional<AnnotationSuggestion_ImplBase> getPredictionByVID(SourceDocument aDocument,
+    public Optional<AnnotationSuggestion> getPredictionByVID(SourceDocument aDocument,
             VID aVID)
     {
         return predictions.values().stream()
                 .filter(f -> f.getDocumentName().equals(aDocument.getName()))
-                .filter(f -> f.getId() == aVID.getSubId())
-                .filter(f -> f.getRecommenderId() == aVID.getId())
+                .filter(f -> f.getVID().toString().equals(aVID.toString()))
                 .findFirst();
     }
 
@@ -181,7 +180,7 @@ public class Predictions
     /**
      * @param aPredictions - list of sentences containing recommendations
      */
-    public void putPredictions(List<AnnotationSuggestion_ImplBase> aPredictions)
+    public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
         aPredictions.forEach(prediction -> 
             predictions.put(new ExtendedId(user.getUsername(), project.getId(),
@@ -200,7 +199,7 @@ public class Predictions
         return !predictions.isEmpty();
     }
 
-    public Map<ExtendedId, AnnotationSuggestion_ImplBase> getPredictions()
+    public Map<ExtendedId, AnnotationSuggestion> getSpanPredictions()
     {
         return predictions;
     }
@@ -244,7 +243,7 @@ public class Predictions
             .collect(Collectors.toList());
     }
 
-    public List<AnnotationSuggestion_ImplBase> getPredictionsByRecommenderAndDocument(
+    public List<AnnotationSuggestion> getPredictionsByRecommenderAndDocument(
             Recommender aRecommender, String aDocument)
     {
         return predictions.entrySet().stream()
@@ -255,7 +254,7 @@ public class Predictions
                 .collect(Collectors.toList());
     }
 
-    public List<AnnotationSuggestion_ImplBase> getPredictionsByDocument(String aDocument)
+    public List<AnnotationSuggestion> getPredictionsByDocument(String aDocument)
     {
         return predictions.entrySet().stream()
                 .filter(f -> f.getKey().getDocumentName().equals(aDocument))

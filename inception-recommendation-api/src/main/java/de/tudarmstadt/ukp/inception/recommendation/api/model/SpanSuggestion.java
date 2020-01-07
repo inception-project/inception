@@ -22,7 +22,7 @@ import java.io.Serializable;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class SpanSuggestion
-    extends AnnotationSuggestion_ImplBase
+    extends AnnotationSuggestion
     implements Serializable
 {
     private static final long serialVersionUID = -1904645143661843249L;

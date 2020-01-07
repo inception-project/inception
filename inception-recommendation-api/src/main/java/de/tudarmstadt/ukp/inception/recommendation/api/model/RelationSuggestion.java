@@ -25,7 +25,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.uima.cas.text.AnnotationFS;
 
 public class RelationSuggestion
-    extends AnnotationSuggestion_ImplBase
+    extends AnnotationSuggestion
     implements Serializable
 {
     private static final long serialVersionUID = -1904645143661843249L;

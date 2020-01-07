@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 
 import java.io.IOException;
 import java.util.List;
@@ -144,7 +144,7 @@ public class RecommenderInfoPanel
                 .orElse(getDocumentTitle(cas));
         
         // Extract all predictions for the current document / recommender
-        List<SpanSuggestion> suggestions = predictions.getPredictions().entrySet().stream()
+        List<SpanSuggestion> suggestions = predictions.getSpanPredictions().entrySet().stream()
                 .filter(f -> f.getKey().getDocumentName().equals(sourceDocumentName))
                 .filter(f -> f.getKey().getRecommenderId() == aRecommender.getId().longValue())
                 .map(Map.Entry::getValue)

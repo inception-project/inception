@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningUserStateMetaData.CURRENT_AL_USER_STATE;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_REJECTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_TRANSIENT_ACCEPTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase.FLAG_TRANSIENT_CORRECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.CORRECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;

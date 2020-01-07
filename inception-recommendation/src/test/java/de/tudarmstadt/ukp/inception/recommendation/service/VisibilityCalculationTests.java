@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion_ImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
@@ -103,20 +103,20 @@ public class VisibilityCalculationTests
         when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<AnnotationSuggestion_ImplBase> suggestions = getSuggestionGroup(
+        SuggestionDocumentGroup<AnnotationSuggestion> suggestions = getSuggestionGroup(
                 new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
         sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
 
-        List<AnnotationSuggestion_ImplBase> invisibleSuggestions = getInvisibleSuggestions(
+        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(
                 suggestions);
-        List<AnnotationSuggestion_ImplBase> visibleSuggestions = getVisibleSuggestions(suggestions);
+        List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(invisibleSuggestions).isNotEmpty();
         //FIXME find out why suggestions are repeated/doubled
         assertThat(invisibleSuggestions)
                 .as("Invisible suggestions are hidden because of overlapping")
-                .extracting(AnnotationSuggestion_ImplBase::getReasonForHiding)
+                .extracting(AnnotationSuggestion::getReasonForHiding)
                 .extracting(String::trim)
                 .containsExactly("overlapping", "overlapping");
 
@@ -130,13 +130,13 @@ public class VisibilityCalculationTests
         when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<AnnotationSuggestion_ImplBase> suggestions = getSuggestionGroup(
+        SuggestionDocumentGroup<AnnotationSuggestion> suggestions = getSuggestionGroup(
                 new int[][] { { 1, 5, 10 } });
         sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
 
-        List<AnnotationSuggestion_ImplBase> invisibleSuggestions = getInvisibleSuggestions(
+        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(
                 suggestions);
-        List<AnnotationSuggestion_ImplBase> visibleSuggestions = getVisibleSuggestions(suggestions);
+        List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(visibleSuggestions).isNotEmpty();
@@ -155,24 +155,24 @@ public class VisibilityCalculationTests
         when(recordService.listRecords(user, layer)).thenReturn(records);
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<AnnotationSuggestion_ImplBase> suggestions = getSuggestionGroup(
+        SuggestionDocumentGroup<AnnotationSuggestion> suggestions = getSuggestionGroup(
                 new int[][] { { 1, 5, 10 } });
         sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
 
-        List<AnnotationSuggestion_ImplBase> invisibleSuggestions = getInvisibleSuggestions(
+        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(
                 suggestions);
-        List<AnnotationSuggestion_ImplBase> visibleSuggestions = getVisibleSuggestions(suggestions);
+        List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(visibleSuggestions).isEmpty();
         assertThat(invisibleSuggestions).as("Invisible suggestions are hidden because of rejection")
-                .extracting(AnnotationSuggestion_ImplBase::getReasonForHiding)
+                .extracting(AnnotationSuggestion::getReasonForHiding)
                 .extracting(String::trim)
                 .containsExactly("rejected");
     }
 
-    private List<AnnotationSuggestion_ImplBase> getInvisibleSuggestions(
-            Collection<SuggestionGroup<AnnotationSuggestion_ImplBase>> aSuggestions)
+    private List<AnnotationSuggestion> getInvisibleSuggestions(
+            Collection<SuggestionGroup<AnnotationSuggestion>> aSuggestions)
     {
         return aSuggestions.stream()
                 .flatMap(SuggestionGroup::stream)
@@ -180,8 +180,8 @@ public class VisibilityCalculationTests
                 .collect(Collectors.toList());
     }
 
-    private List<AnnotationSuggestion_ImplBase> getVisibleSuggestions(
-            Collection<SuggestionGroup<AnnotationSuggestion_ImplBase>> aSuggestions)
+    private List<AnnotationSuggestion> getVisibleSuggestions(
+            Collection<SuggestionGroup<AnnotationSuggestion>> aSuggestions)
     {
         return aSuggestions.stream()
                 .flatMap(SuggestionGroup::stream)
@@ -189,10 +189,10 @@ public class VisibilityCalculationTests
                 .collect(Collectors.toList());
     }
 
-    private SuggestionDocumentGroup<AnnotationSuggestion_ImplBase> getSuggestionGroup(int[][] vals)
+    private SuggestionDocumentGroup<AnnotationSuggestion> getSuggestionGroup(int[][] vals)
     {
 
-        List<AnnotationSuggestion_ImplBase> suggestions = new ArrayList<>();
+        List<AnnotationSuggestion> suggestions = new ArrayList<>();
         for (int[] val : vals) {
             suggestions.add(new SpanSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
                     layerId, FEATURE, DOC_NAME, val[1], val[2], COVERED_TEXT, null, UI_LABEL,
