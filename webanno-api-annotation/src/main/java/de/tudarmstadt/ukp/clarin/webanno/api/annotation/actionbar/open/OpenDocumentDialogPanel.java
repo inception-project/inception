@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
@@ -346,7 +347,7 @@ public class OpenDocumentDialogPanel
     }
     
     private List<DecoratedObject<SourceDocument>> listDocuments()
-    {
+    {        
         Project project = projectListChoice.getModel().map(DecoratedObject::get).orElse(null)
                 .getObject();
         User user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
@@ -391,15 +392,20 @@ public class OpenDocumentDialogPanel
         
         return allSourceDocuments;
     }
-    
+
     private void actionOpenDocument(AjaxRequestTarget aTarget, Form<?> aForm)
     {
-        if (projectListChoice.getModelObject() != null && docListChoice.getModelObject()  != null) {
+        if (projectListChoice.getModelObject() != null && docListChoice.getModelObject() != null) {
             state.setProject(projectListChoice.getModelObject().get());
             state.setDocument(docListChoice.getModelObject().get(), docListChoice.getChoices()
                     .stream().map(t -> t.get()).collect(Collectors.toList()));
-            state.setUser(userListChoice.getModelObject().get());
-  
+
+            // for curation view in inception: when curating into CURATION_USER's CAS
+            // and opening new document it should also be from the CURATION_USER
+            if (!state.getUser().getUsername().equals(CURATION_USER)) {
+                state.setUser(userListChoice.getModelObject().get());
+            }
+
             modalWindow.close(aTarget);
         }
     }

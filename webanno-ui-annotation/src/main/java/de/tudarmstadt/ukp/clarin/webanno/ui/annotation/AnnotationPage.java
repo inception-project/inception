@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
@@ -137,42 +138,54 @@ public class AnnotationPage
     {
         super();
         LOG.debug("Setting up annotation page without parameters");
-        commonInit();
-        
+
+        setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
+        // Ensure that a user is set
+        getModelObject().setUser(userRepository.getCurrentUser());
+
         Map<String, StringValue> fragmentParameters = Session.get()
                 .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
+        StringValue focus = StringValue.valueOf(0);
         if (fragmentParameters != null) {
             // Clear the URL fragment parameters - we only use them once!
             Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-            
+
             StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
             StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-            StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-            
-            handleParameters(null, project, document, focus, false);
+            focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
+
+            handleParameters(project, document, focus, false);
         }
+        commonInit(focus);
     }
 
     public AnnotationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
         LOG.debug("Setting up annotation page with parameters: {}", aPageParameters);
-        
-        commonInit();
 
+        setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
+        // Ensure that a user is set
+        getModelObject().setUser(userRepository.getCurrentUser());
+        
         StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
         
-        handleParameters(null, project, document, focus, true);
+        handleParameters(project, document, focus, true);
+        commonInit(focus);
+    }
+
+    protected void commonInit(StringValue focus)
+    {
+        createChildComponents();
+        SourceDocument doc = getModelObject().getDocument();
+        
+        updateDocumentView(null, doc, focus);
     }
     
-    private void commonInit()
+    private void createChildComponents()
     {
-        setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
-        // Ensure that a user is set
-        getModelObject().setUser(userRepository.getCurrentUser());
-
         add(createUrlFragmentBehavior());      
         
         centerArea = new WebMarkupContainer("centerArea");
@@ -192,7 +205,6 @@ public class AnnotationPage
         createAnnotationEditor(null);
 
         add(createRightSidebar());
-
         add(createLeftSidebar());
     }
 
@@ -349,7 +361,6 @@ public class AnnotationPage
     public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
         ensureIsEditable(); 
-
         AnnotatorState state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
@@ -385,8 +396,6 @@ public class AnnotationPage
         LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
         
         AnnotatorState state = getModelObject();
-        
-        
         if (state.getUser() == null) {
             state.setUser(userRepository.getCurrentUser());
         }
@@ -527,7 +536,10 @@ public class AnnotationPage
                 StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_ID);
                 StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
 
-                handleParameters(aTarget, project, document, focus, false);
+                SourceDocument previousDoc = getModelObject().getDocument();
+                handleParameters(project, document, focus, false);
+                
+                updateDocumentView(aTarget, previousDoc, focus);
             }
         };
     }
@@ -560,7 +572,7 @@ public class AnnotationPage
         }
     }
 
-    private void handleParameters(AjaxRequestTarget aTarget, StringValue aProjectParameter,
+    private void handleParameters(StringValue aProjectParameter,
             StringValue aDocumentParameter, StringValue aFocusParameter, boolean aLockIfPreset)
     {
         // Get current project from parameters
@@ -584,28 +596,25 @@ public class AnnotationPage
                         + project.getId() + "]");
             }
         }
-        
-        // Get current focus unit from parameters
-        int focus = 0;
-        if (aFocusParameter != null) {
-            focus = aFocusParameter.toInt(0);
-        }        
-        
+                
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
         if (
                 document != null &&
                 document.equals(getModelObject().getDocument()) && 
-                focus == getModelObject().getFocusUnitIndex()
+                aFocusParameter != null &&
+                aFocusParameter.toInt(0) == getModelObject().getFocusUnitIndex()
         ) {
             return;
         }
         
-        // Check access to project for annotator or current user if admin is viewing
+        // Check access to project for annotator or current user if admin is viewing.
+        // Default curation user should have access to all projects.
         if (project != null
                 && !projectService.isAnnotator(project, getModelObject().getUser())
-                && !projectService.isManager(project, userRepository.getCurrentUser())) {
+                && !projectService.isManager(project, userRepository.getCurrentUser())
+                && !getModelObject().getUser().getUsername().equals(CURATION_USER)) {
             error("You have no permission to access project [" + project.getId() + "]");
             return;
         }
@@ -615,6 +624,7 @@ public class AnnotationPage
                 .existsAnnotationDocument(document, getModelObject().getUser())) {
             AnnotationDocument adoc = documentService.getAnnotationDocument(document,
                     getModelObject().getUser());
+
             if (AnnotationDocumentState.IGNORE.equals(adoc.getState()) && isEditable()) {
                 error("Document [" + document.getId() + "] in project [" + project.getId()
                         + "] is locked for user [" + getModelObject().getUser().getUsername()
@@ -633,23 +643,51 @@ public class AnnotationPage
             }
         }
         
-        if (document != null) {
-            // If we arrive here and the document is not null, then we have a change of document
-            // or a change of focus (or both)
-            if (!document.equals(getModelObject().getDocument())) {
-                getModelObject().setDocument(document, getListOfDocs());
-                actionLoadDocument(aTarget, focus);
+        // If we arrive here and the document is not null, then we have a change of document
+        // or a change of focus (or both)
+        if (document != null && !document.equals(getModelObject().getDocument())) {
+            getModelObject().setDocument(document, getListOfDocs());
+        }
+    }
+
+    protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
+            StringValue aFocusParameter)
+    {
+        SourceDocument currentDocument = getModelObject().getDocument();
+        if (currentDocument == null) {
+            return;
+        }
+        
+        // If we arrive here and the document is not null, then we have a change of document
+        // or a change of focus (or both)
+        
+        // Get current focus unit from parameters
+        int focus = 0;
+        if (aFocusParameter != null) {
+            focus = aFocusParameter.toInt(0);
+        }
+        // If there is no change in the current document, then there is nothing to do. Mind
+        // that document IDs are globally unique and a change in project does not happen unless
+        // there is also a document change.
+        if (aPreviousDocument != null && aPreviousDocument.equals(currentDocument)
+                && focus == getModelObject().getFocusUnitIndex()) {
+            return;
+        }
+        
+        // never had set a document or is a new one
+        if (aPreviousDocument == null ||
+                !aPreviousDocument.equals(currentDocument)) { 
+            actionLoadDocument(aTarget, focus);
+        }
+        else {
+            try {
+                getModelObject().moveToUnit(getEditorCas(), focus, TOP);
+                actionRefreshDocument(aTarget);
             }
-            else {
-                try {
-                    getModelObject().moveToUnit(getEditorCas(), focus, TOP);
-                    actionRefreshDocument(aTarget);
-                }
-                catch (Exception e) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                    LOG.info("Error reading CAS " + e.getMessage());
-                    error("Error reading CAS " + e.getMessage());
-                }
+            catch (Exception e) {
+                aTarget.addChildren(getPage(), IFeedback.class);
+                LOG.info("Error reading CAS " + e.getMessage());
+                error("Error reading CAS " + e.getMessage());
             }
         }
     }
@@ -657,8 +695,9 @@ public class AnnotationPage
     @Override
     protected void loadPreferences() throws BeansException, IOException
     {
-        if (isUserViewingOthersWork()) {
-            AnnotatorState state = getModelObject();
+        AnnotatorState state = getModelObject();
+        if (state.isUserViewingOthersWork(userRepository.getCurrentUser()) || 
+                state.getUser().getUsername().equals(CURATION_USER)) {
             PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
                     state, userRepository.getCurrentUser().getUsername());
         }

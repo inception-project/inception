@@ -17,15 +17,36 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
 
-public enum CasMergeOpertationResult
+public class CasMergeOperationResult
 {
-    /**
-     * Merge resulted into a new annotation being created.
-     */
-    CREATED, 
+    public static enum ResultState
+    {
+        /**
+         * Merge resulted into a new annotation being created.
+         */
+        CREATED,
+
+        /**
+         * Merge updated an existing annotation.
+         */
+        UPDATED;
+    }
     
-    /**
-     * Merge updated an existing annotation.
-     */
-    UPDATED;
+    private final ResultState state;
+    private final int resultFSAddress;
+    
+    public CasMergeOperationResult(ResultState aState, int aResultAddress) {
+        state = aState;
+        resultFSAddress = aResultAddress;
+    }
+
+    public ResultState getState()
+    {
+        return state;
+    }
+
+    public int getResultFSAddress()
+    {
+        return resultFSAddress;
+    }
 }

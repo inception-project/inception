@@ -82,7 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationS
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.AlreadyMergedException;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOpertationResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.MergeConflictException;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -278,7 +278,7 @@ public class SuggestionViewPanel
         nextAnnotation: for (AnnotationFS ann : select(sourceCas,
                 adapter.getAnnotationType(sourceCas))) {
             try {
-                CasMergeOpertationResult result;
+                CasMergeOperationResult result;
 
                 switch (aLayer.getType()) {
                 case SPAN_TYPE:
@@ -293,7 +293,7 @@ public class SuggestionViewPanel
                     continue nextAnnotation;
                 }
 
-                switch (result) {
+                switch (result.getState()) {
                 case CREATED:
                     created++;
                     break;
@@ -349,8 +349,8 @@ public class SuggestionViewPanel
     {
         // Overriden in curationPanel
     }
-
-    private CasMergeOpertationResult mergeSpan(CasMerge aCasMerge, CAS aTargetCas, CAS aSourceCas,
+    
+    private CasMergeOperationResult mergeSpan(CasMerge aCasMerge, CAS aTargetCas, CAS aSourceCas,
             VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
             AnnotationLayer aLayer)
         throws AnnotationException, UIMAException, IOException
@@ -375,7 +375,7 @@ public class SuggestionViewPanel
                 feature.getName(), aSourceVid.getSlot());
     }
 
-    private CasMergeOpertationResult mergeRelation(CasMerge aCasMerge, CAS aCas, CAS aSourceCas,
+    private CasMergeOperationResult mergeRelation(CasMerge aCasMerge, CAS aCas, CAS aSourceCas,
             VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
             AnnotationLayer aLayer)
         throws AnnotationException, IOException

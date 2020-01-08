@@ -57,6 +57,11 @@ public abstract class VObject
         return vid;
     }
 
+    public void setVid(VID aVid)
+    {
+        vid = aVid;
+    }
+
     public AnnotationLayer getLayer()
     {
         return layer;

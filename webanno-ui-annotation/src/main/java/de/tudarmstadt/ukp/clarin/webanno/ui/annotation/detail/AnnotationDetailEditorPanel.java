@@ -463,7 +463,7 @@ public abstract class AnnotationDetailEditorPanel
         assert aCas != null;
 
         AnnotatorState state = getModelObject();
-        
+
         page.ensureIsEditable(); 
     
         // If this method is called when no slot is armed, it must be a bug!
@@ -553,7 +553,7 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         LOG.trace("actionAnnotate");
-        
+
         page.ensureIsEditable(); 
 
         AnnotatorState state = getModelObject();
@@ -660,8 +660,8 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         LOG.trace("actionCreateForward()");
-        
-        page.ensureIsEditable(); 
+
+        page.ensureIsEditable();
 
         AnnotatorState state = getModelObject();
 

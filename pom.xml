@@ -61,29 +61,29 @@
   
     <mockito.version>2.28.2</mockito.version>
     <assertj.version>3.14.0</assertj.version>
-    <spring.version>5.2.1.RELEASE</spring.version>
-    <spring.boot.version>2.2.0.RELEASE</spring.boot.version>
-    <spring.security.version>5.2.0.RELEASE</spring.security.version>
+    <spring.version>5.2.2.RELEASE</spring.version>
+    <spring.boot.version>2.2.2.RELEASE</spring.boot.version>
+    <spring.security.version>5.2.1.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
     <wicketstuff.version>8.6.0</wicketstuff.version>
     <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>2.0.11</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>2.0.7</wicket-jquery-selectors.version>
     <wicket-webjars.version>2.0.16</wicket-webjars.version>    
-    <wicket-spring-boot.version>2.1.7</wicket-spring-boot.version>
+    <wicket-spring-boot.version>2.1.8</wicket-spring-boot.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <uimafit.version>3.0.0</uimafit.version>
-    <slf4j.version>1.7.28</slf4j.version>
+    <slf4j.version>1.7.30</slf4j.version>
     <log4j.version>2.12.1</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
-    <hibernate.version>5.4.8.Final</hibernate.version>
+    <hibernate.version>5.4.10.Final</hibernate.version>
     <hibernate.validator.version>6.1.0.Final</hibernate.validator.version>
     <springfox.version>2.9.2</springfox.version>
     <batik.version>1.11</batik.version>
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.10.0</jackson.version>
+    <jackson.version>2.10.2</jackson.version>
   </properties>
   <repositories>
     <!--

@@ -85,7 +85,15 @@ public class SpanRenderer
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
         
         // Iterate over the span annotations of the current type and render each of them
-        Type type = getType(aCas, typeAdapter.getAnnotationTypeName());
+        Type type;
+        try {
+            type = getType(aCas, typeAdapter.getAnnotationTypeName());
+        }
+        catch (IllegalArgumentException e) {
+            // If the type does not exist in the given CAS, then there is nothing to render
+            return;
+        }
+        
         List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (AnnotationFS fs : annotations) {
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);

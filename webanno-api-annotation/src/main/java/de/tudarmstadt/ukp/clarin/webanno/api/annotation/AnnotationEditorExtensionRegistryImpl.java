@@ -105,6 +105,10 @@ public class AnnotationEditorExtensionRegistryImpl
         throws IOException, AnnotationException
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
+
+            if (!ext.getBeanName().equals(aParamId.getExtensionId())) {
+                continue;
+            }
             ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction);
         }
     }

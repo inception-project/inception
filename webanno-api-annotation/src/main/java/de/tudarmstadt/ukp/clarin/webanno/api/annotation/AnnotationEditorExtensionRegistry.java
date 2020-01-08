@@ -43,6 +43,6 @@ public interface AnnotationEditorExtensionRegistry
 
     void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
             int aWindowBeginOffset, int aWindowEndOffset);
-    
+
     void generateContextMenuItems(List<IMenuItem> aItems);
 }
