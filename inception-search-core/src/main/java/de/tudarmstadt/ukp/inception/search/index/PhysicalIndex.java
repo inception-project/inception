@@ -66,4 +66,6 @@ public interface PhysicalIndex
      * @throws IOException
      */
     public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException;
+
+    long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest) throws ExecutionException;
 }
