@@ -54,8 +54,6 @@ public class TutorialFooterPanel
 //        aResponse.render(JavaScriptHeaderItem
 //                .forReference(new WebjarsJavaScriptResourceReference("enjoyhint/current/enjoyhint.js")));
 
-        
-        
         // Loading resources for the tour guide feature for the new users
         aResponse.render(JavaScriptHeaderItem
                 .forReference(new WebjarsJavaScriptResourceReference("enjoyhint/current/jquery.enjoyhint.js")));
@@ -69,7 +67,7 @@ public class TutorialFooterPanel
     @Override
     public void onEvent(IEvent<?> aEvent)
     {
-    	//Error while saving recommender
+        // Error while saving recommender
         if (aEvent.getPayload() instanceof RecommenderSaveErrorEvent) {
             RecommenderSaveErrorEvent dEvent = (RecommenderSaveErrorEvent) aEvent.getPayload();
 

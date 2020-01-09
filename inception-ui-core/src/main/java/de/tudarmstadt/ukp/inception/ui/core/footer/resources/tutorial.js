@@ -17,6 +17,7 @@
 */
 
 	var cName = "tutorialSession";
+	var projectCName = "projectName";
 	var contextPath = "";
 	var isRecommenderError=false;
 
@@ -25,7 +26,6 @@
 			// reset all the cookies
 		}
 	});
-
 	
 $(document).ready(function() {
 			var enjoyhint_script_steps;
@@ -38,7 +38,7 @@ $(document).ready(function() {
 			{
 					enjoyhint_instance = new EnjoyHint({
 						onEnd : function() {
-							setCookie(cName, 'tutorialStarted',contextPath);
+							setCookie(cName, 'tutorialStarted', contextPath);
 						},
 						onSkip : function() {
 							setCookie(cName, 'ended', contextPath);
@@ -49,6 +49,11 @@ $(document).ready(function() {
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
 			} 
+			
+			else if (ps == "ended"){
+				deleteCookie(cName);
+				deleteCookie(projectCName);
+			}
 			
 			else if (currentPage.includes("projectsetting.html")  && projectId == 'NEW' && ps == "tutorialStarted") 
 			{
@@ -80,7 +85,7 @@ $(document).ready(function() {
 			{
 				//save the project name in the cookie
 				var projectName = $('[name="p::name"]').val()
-				setCookie("projectName", projectName, contextPath);
+				setCookie(projectCName, projectName, contextPath);
 				
 				//re-initialize the instance
 				enjoyhint_instance = new EnjoyHint({
@@ -137,11 +142,30 @@ $(document).ready(function() {
 			
 			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingView") {
 				
+				enjoyhint_instance = new EnjoyHint({     
+					
+					onEnd : function() {
+						setCookie(cName, "projectsettingsOpenedDoc", contextPath);
+						location.reload();
+					},
+					onSkip : function() {
+						setCookie(cName, 'ended', contextPath);
+					}
+
+				});
+
+				enjoyhint_script_steps = createOpenDocumentsRoutine(enjoyhint_instance);
+				enjoyhint_instance.set(enjoyhint_script_steps);
+				enjoyhint_instance.runScript();
+			}
+			
+			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingsOpenedDoc") {
+				
 					enjoyhint_instance = new EnjoyHint({     
 						
 						onEnd : function() {
-							setCookie(cName, "projectsettingConfigured", contextPath);
-							isRecommenderError=false;
+							setCookie(cName, "projectsettingsDocUploaded", contextPath);
+							location.reload();
 						},
 						onSkip : function() {
 							setCookie(cName, 'ended', contextPath);
@@ -149,9 +173,66 @@ $(document).ready(function() {
 
 					});
 
-					enjoyhint_script_steps = createSettingsRoutine(enjoyhint_instance);
+					enjoyhint_script_steps = createAddDocumentRoutine(enjoyhint_instance);
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
+			}
+			
+			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingsDocUploaded") {
+				
+				enjoyhint_instance = new EnjoyHint({     
+					
+					onEnd : function() {
+						setCookie(cName, "projectsettingsOpenedRecommenders", contextPath);
+						location.reload();
+					},
+					onSkip : function() {
+						setCookie(cName, 'ended', contextPath);
+					}
+
+				});
+
+				enjoyhint_script_steps = createOpenRecommendersRoutine(enjoyhint_instance);
+				enjoyhint_instance.set(enjoyhint_script_steps);
+				enjoyhint_instance.runScript();
+			}
+			
+			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingsOpenedRecommenders") {
+				
+				enjoyhint_instance = new EnjoyHint({     
+					
+					onEnd : function() {
+						setCookie(cName, "projectsettingsCreatedRecommender", contextPath);
+						location.reload();
+					},
+					onSkip : function() {
+						setCookie(cName, 'ended', contextPath);
+					}
+
+				});
+
+				enjoyhint_script_steps = createAddRecommenderRoutine(enjoyhint_instance);
+				enjoyhint_instance.set(enjoyhint_script_steps);
+				enjoyhint_instance.runScript();
+			}
+			
+			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingsCreatedRecommender") {
+				
+				enjoyhint_instance = new EnjoyHint({     
+					
+					onEnd : function() {
+						setCookie(cName, "projectsettingsConfigured", contextPath);
+						isRecommenderError=false;
+					},
+					onSkip : function() {
+						setCookie(cName, 'ended', contextPath);
+					}
+
+				});
+
+				enjoyhint_script_steps = createRecommenderSettingsRoutine(enjoyhint_instance);
+				enjoyhint_instance.set(enjoyhint_script_steps);
+				enjoyhint_instance.runScript();
 			}
 
 			//recommender saving error
@@ -167,7 +248,7 @@ $(document).ready(function() {
 
 					});
 
-					enjoyhint_script_steps = createAddRecommenderRoutine(enjoyhint_instance);
+					enjoyhint_script_steps = createRecommenderSettingsRoutine(enjoyhint_instance);
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
 			}
@@ -183,11 +264,11 @@ $(document).ready(function() {
 					}
 				});
 
-				enjoyhint_script_steps = createAddRecommenderRoutine(enjoyhint_instance);
+				enjoyhint_script_steps = createSaveRecommenderRoutine(enjoyhint_instance);
 				enjoyhint_instance.set(
 				[
 					{
-						'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
+						'click [href=\'./project.html\']:last' : 'Now, lets go back to the Dashboard.',
 					}
 				]		
 				);
@@ -210,8 +291,6 @@ $(document).ready(function() {
 			}
 		});
 
-
-
 function startTutorial() {
 	var enjoyhint_instance = new EnjoyHint({
 		onEnd : function() {
@@ -229,6 +308,9 @@ function startTutorial() {
 	enjoyhint_instance.runScript();
 }
 
+function deleteCookie(cname){
+	document.cookie = cname + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
 
 function setCookie(cname, cvalue, contextPath) {
 	var d = new Date();
@@ -254,7 +336,7 @@ function getCookie(cname) {
 
 function createNewProjectRoutine() {
 	var a = [ {
-		'event [name=\'p::name\']' : 'Write the name of the project and press Enter',
+		'event [name=\'p::name\']' : 'Write the name of the project and press Enter.',
 	}
 //	, {
 //		'click [type=submit]' : 'Click save'
@@ -267,7 +349,7 @@ function createNewProjectRoutine() {
 function createFirstPageRoutine() {
 	var a = [
 			{
-				'next .navbar-brand' : 'Welcome to INCEpTION! Let me guide you through its features. At any time during the tutorial you can skip and exit the tour',
+				'next .navbar-brand' : 'Welcome to INCEpTION! Let me guide you through its features. At any time during the tutorial you can click skip to exit the tour.',
 				'nextButton' : {
 					className : "myNext",
 					text : "Sure"
@@ -278,7 +360,7 @@ function createFirstPageRoutine() {
 				}
 			},
 			{
-				'click .btn btn-primary' : "Click here to create a new project",
+				'click .btn btn-primary' : "Click here to create a new project.",
 			} ];
 	return a;
 }
@@ -286,17 +368,17 @@ function createFirstPageRoutine() {
 function createFirstPageRoutinePart2() {
 	var projectName = getCookie("projectName");
 	var selector = "a:contains('"+projectName+"'):first";
-	var t = $('a').filter(function() {
-		 return $(this).text() == projectName;
-    });
+//	var t = $('a').filter(function() {
+//		 return $(this).text() == projectName;
+//    });
 	
 	var a = [
 
 			{
-				'next .file-input-new' : "The projects can also be imported",
+				'next .file-input-new' : "The projects can also be imported.",
 			},
 			{
-				'next .input-group:last' : "You can filter the projects based on the ownership type",
+				'next .input-group:last' : "You can filter the projects based on the ownership type.",
 			},
 			{
 				onBeforeStart:function(){ 
@@ -314,13 +396,13 @@ function createFirstPageRoutinePart2() {
 function createDashboardRoutine() {
 	var a = [
 		{
-			'next li:first-of-type' : 'Here, you can annotate your documents',
+			'next li:first-of-type' : 'Here, you can annotate your documents.',
 		},
 		{
-			'next li:nth-of-type(2)' : 'Completely annotated documents can be curated to form the  final result documents.',
+			'next li:nth-of-type(2)' : 'Completely annotated documents can be curated to form the final result documents.',
 		},
 		{
-			'next li:nth-of-type(3)' : 'This will show you the agreement between annotators across  documents.',
+			'next li:nth-of-type(3)' : 'This will show you the agreement between annotators across documents.',
 		},
 		{
 			'next li:nth-of-type(4)' : 'Here, you can see the annotators\' progress and assign documents.',
@@ -329,22 +411,22 @@ function createDashboardRoutine() {
 			'next li:nth-of-type(5)' : 'This allows you to evaluate your recommenders.',
 		},
 			{
-				'click li:nth-last-child(1)' : "Before getting started, lets configure the project. Please click Settings"
+				'click li:nth-last-child(1)' : "Before getting started, let's configure the project. Please click 'Settings'."
 			} ];
 	return a;
 }
 
-function createAddRecommenderRoutine(enjoyHint) {
+function createSaveRecommenderRoutine(enjoyHint) {
 	var a = [
 			{
 				'event [method = post]' : "Already exists. Try again!",
 			},
 			{
-				'click [value=Save]:last' : 'Now, lets go to the Dashboard',
+				'click [value=Save]:last' : "Now, let's go to the Dashboard.",
 				 
 			} ,
 			{
-				'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
+				'click [href=\'./project.html\']:last' : "Now, let's go to the Dashboard.",
 			}
 			];
 
@@ -352,18 +434,53 @@ function createAddRecommenderRoutine(enjoyHint) {
 }
 
 var setItToError = false;
-function createSettingsRoutine(enjoyHint) {
+function createOpenDocumentsRoutine(enjoyHint) {
+	var a = [
+		    {
+		    	"event": "click", 
+				"selector": $("span:contains('Documents')"),
+				"description": "Click here to add a document to the project.",
+		    }
+			];
+
+	return a;
+}
+
+function createAddDocumentRoutine(enjoyHint) {
 	var a = [
 			{
-				'click .tab2' : 'Click here to add a document to the project',
-			},
+				'next [class=flex-h-container]' : "Upload a file and import. Then click 'Next'.",
+			}
+			];
+
+	return a;
+}
+
+var setItToError = false;
+function createOpenRecommendersRoutine(enjoyHint) {
+	var a = [
 			{
-				'next [class=flex-h-container]' : "Upload a file and import. Then click Next.",
-			}, {
-				'click .tab5' : "Now, lets add a recommender. Click here!",
-			}, {
-				'click [value=Create]' : "Click to create a new recommender",
-			},
+		    	"event": "click", 
+				"selector": $("span:contains('Recommenders')"),
+				"description": "Now, lets add a recommender. Click here!",
+		    }
+			];
+
+	return a;
+}
+
+function createAddRecommenderRoutine(enjoyHint) {
+	var a = [
+			{
+				'click [value=Create]' : "Click here to create a new recommender.",
+			}
+			];
+
+	return a;
+}
+
+function createRecommenderSettingsRoutine(enjoyHint) {
+	var a = [
 //			 {
 //				'next .form-group:nth(2)' : "Select a Layer", 
 //				onBeforeStart:function(){ 
@@ -389,10 +506,10 @@ function createSettingsRoutine(enjoyHint) {
 //				},
 //			},
 			{ 
-				"event [method = post]" : "Fill in the details and click save", 
+				"event [method = post]" : "Fill in the details and click 'Save'.", 
 			},  
 			{
-				'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
+				'click [href=\'./project.html\']:last' : "Now, let's go to the Dashboard.",
 			}
 			];
 
@@ -414,30 +531,30 @@ function goBackToDashboardRoutine()
 	enjoyhint_instance.set(
 	[
 		{
-			'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
+			'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard.',
 		}
 	]		
 	);
 	enjoyhint_instance.runScript();}
 
-function createSettingsRoutine2() {
-	var a = [
-			{
-				"event_type": "custom", 
-				"event": "event-save-recommender", 
-				"selector": "[method=post]", 
-				"description": "Modify the name and click Enter", 
-			}, 
-			{
-				'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
-			}
-			];
-
-	return a;
-}
+//function createSettingsRoutine2() {
+//	var a = [
+//			{
+//				"event_type": "custom", 
+//				"event": "event-save-recommender", 
+//				"selector": "[method=post]", 
+//				"description": "Modify the name and click Enter", 
+//			}, 
+//			{
+//				'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard.',
+//			}
+//			];
+//
+//	return a;
+//}
 function createProjectSavedRoutine() {
 	var a = [ {
-		'click .navbar-link' : 'Click here to go back to the projects page'
+		'click .navbar-link' : 'Click here to go back to the projects page.'
 	} ];
 
 	return a;
@@ -446,7 +563,7 @@ function createProjectSavedRoutine() {
 function createLastRoutine() {
 	var a = [
 			{
-				'click .flex-sidebar' : 'You can start exploring the website further',
+				'click .flex-sidebar' : 'You can start exploring the website further.',
 				
 				'skipButton' : {
 					className : "mySkip",

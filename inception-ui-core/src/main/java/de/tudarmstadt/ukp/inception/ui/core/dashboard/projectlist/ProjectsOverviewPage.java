@@ -56,6 +56,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -137,8 +138,7 @@ public class ProjectsOverviewPage
                 new StringResourceModel("leaveDialog.text", this)));
         activeRoleFilters = Model.ofSet(new HashSet<>());
         
-        emptyListLabel = new Label(MID_EMPTY_LIST_LABEL, Model.of(
-                "At the moment there are no projects, To create your first project, click the button 'create new project'. To see how it works, click the button 'Get Started'."));
+        emptyListLabel = new Label(MID_EMPTY_LIST_LABEL, new ResourceModel("noProjects"));
         projectListContainer.add(emptyListLabel);
     }
     
@@ -233,15 +233,12 @@ public class ProjectsOverviewPage
                 if (getModelObject().isEmpty()) {
                     warn("There are no projects accessible to you matching the filter criteria.");
                     emptyListLabel.setVisible(true);
-
                 }
                 else {
                     emptyListLabel.setVisible(false);
                 }
             }
         };
-        
-        
         
         WebMarkupContainer projectList = new WebMarkupContainer(MID_PROJECTS);
         projectList.setOutputMarkupPlaceholderTag(true);
