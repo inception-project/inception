@@ -280,8 +280,9 @@ public class RecommendationEditorExtension
 
         AnnotationSuggestion suggestion = oPrediction.get();
 
-        Recommender recommender = recommendationService.getRecommender(aVID.getId());
-        AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
+        VID extensionVID = VID.parse(aVID.getExtensionPayload());
+        Recommender recommender = recommendationService.getRecommender(extensionVID.getId());
+        AnnotationLayer layer = annotationService.getLayer(extensionVID.getLayerId());
         AnnotationFeature feature = recommender.getFeature();
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
@@ -298,9 +299,6 @@ public class RecommendationEditorExtension
             learningRecordService.logRecord(document, aState.getUser().getUsername(),
                     spanSuggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
-            // Trigger a re-rendering of the document
-            aActionHandler.actionSelect(aTarget, aCas);
-
             // Send an application event that the suggestion has been rejected
             applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, document,
                     aState.getUser().getUsername(), spanSuggestion.getBegin(), spanSuggestion.getEnd(),
@@ -310,7 +308,11 @@ public class RecommendationEditorExtension
             RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
             // TODO: Log rejection
             // TODO: Publish rejection event
+            
         }
+
+        // Trigger a re-rendering of the document
+        aActionHandler.actionSelect(aTarget, aCas);
     }
 
     @Override
