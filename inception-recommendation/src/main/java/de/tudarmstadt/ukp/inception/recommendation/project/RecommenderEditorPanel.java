@@ -35,7 +35,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -75,8 +74,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderSaveErrorEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderSavedEvent;
 
 public class RecommenderEditorPanel
     extends Panel
@@ -271,10 +268,6 @@ public class RecommenderEditorPanel
             @Override
             protected void onError(AjaxRequestTarget aTarget)
             {
-                RecommenderSaveErrorEvent event = new RecommenderSaveErrorEvent(this,
-                        "add recommender error");
-                event.setTarget(aTarget);
-                send(getPage(), Broadcast.BREADTH, event); 
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
 
@@ -282,11 +275,6 @@ public class RecommenderEditorPanel
             protected void onAfterSubmit(AjaxRequestTarget target)
             {
                 actionSave(target);
-                
-                RecommenderSavedEvent event = new RecommenderSavedEvent(  );
-                event.setTarget(target);
-                send(getPage(), Broadcast.BREADTH, event); 
-                target.addChildren(getPage(), IFeedback.class);
             }
         });
 
