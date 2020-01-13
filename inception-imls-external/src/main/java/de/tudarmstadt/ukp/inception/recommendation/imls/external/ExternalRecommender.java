@@ -138,9 +138,12 @@ public class ExternalRecommender
         Request request = new Request.Builder().url(url).post(body).build();
 
         try (Response response = sendRequest(request)) {
+            if (response.code() == HTTP_TOO_MANY_REQUESTS) {
+                LOG.info("External recommender is already training");
+            }
             // If the response indicates that the request was not successful,
             // then it does not make sense to go on and try to decode the XMI
-            if (!response.isSuccessful()) {
+            else if (!response.isSuccessful()) {
                 int code = response.code();
                 String responseBody = getResponseBody(response);
                 String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
@@ -170,12 +173,9 @@ public class ExternalRecommender
         Request request = new Request.Builder().url(url).post(body).build();
 
         try (Response response = sendRequest(request)) {
-            if (response.code() == HTTP_TOO_MANY_REQUESTS) {
-                LOG.info("External recommender is already training");
-            }
             // If the response indicates that the request was not successful,
             // then it does not make sense to go on and try to decode the XMI
-            else if (!response.isSuccessful()) {
+            if (!response.isSuccessful()) {
                 int code = response.code();
                 String responseBody = getResponseBody(response);
                 String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
