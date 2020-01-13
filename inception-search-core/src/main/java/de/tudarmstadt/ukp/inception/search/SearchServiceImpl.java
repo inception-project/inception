@@ -330,7 +330,7 @@ public class SearchServiceImpl
         SourceDocument aDocument) throws IOException, ExecutionException
     {
         Map<String, List<SearchResult>> groupedResults = query(aUser, aProject, aQuery, aDocument,
-            null, null);
+            null, null, 0, Integer.MAX_VALUE);
         List<SearchResult> resultsAsList = new ArrayList<>();
         groupedResults.values().stream()
             .forEach(resultsGroup -> resultsAsList.addAll(resultsGroup));
@@ -339,9 +339,10 @@ public class SearchServiceImpl
 
     @Override
     @Transactional
-    public Map<String, List<SearchResult>> query(User aUser,
-        Project aProject, String aQuery, SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature) throws IOException, ExecutionException
+    public Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,
+            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature, long offset, long count)
+        throws IOException, ExecutionException
     {
         log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
                 aProject.getName(), aProject.getId());
@@ -387,7 +388,7 @@ public class SearchServiceImpl
 
                 results = index.getPhysicalIndex().executeQuery(
                     new SearchQueryRequest(aProject, aUser, aQuery, aDocument,
-                        aAnnotationLayer, aAnnotationFeature));
+                        aAnnotationLayer, aAnnotationFeature, offset, count));
             }
 
         }
@@ -507,5 +508,56 @@ public class SearchServiceImpl
     public boolean isIndexInProgress(Project aProject)
     {
         return indexScheduler.isIndexInProgress(aProject);
+    }
+
+    @Override public long determineNumOfQueryResults(User aUser, Project aProject, String aQuery,
+        SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+        AnnotationFeature aAnnotationFeature) throws ExecutionException
+    {
+        log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
+            aProject.getName(), aProject.getId());
+
+        long numResults;
+
+        Index index = getIndexFromMemory(aProject);
+
+        if (index.getInvalid()) {
+            if (!indexScheduler.isIndexInProgress(aProject)) {
+                // Index is invalid, schedule a new index rebuild
+                indexScheduler.enqueueReindexTask(aProject);
+            }
+
+            // Throw execution exception so that the user knows the query was not run
+            throw (new ExecutionException("Index still building. Try again later."));
+        }
+        
+        // Index is valid, try to execute the query
+        if (!index.getPhysicalIndex().isCreated()) {
+            // Physical index does not exist.
+
+            // Set the invalid flag
+            index.setInvalid(true);
+            updateIndex(index);
+
+            // Schedule new re-indexing process
+            indexScheduler.enqueueReindexTask(aProject);
+
+            // Throw execution exception so that the user knows the query was not run
+            throw (new ExecutionException("Index still building. Try again later."));
+        }
+        
+        // Physical index exists
+
+        if (!index.getPhysicalIndex().isOpen()) {
+            // Physical index is not open. Open it.
+            index.getPhysicalIndex().openPhysicalIndex();
+        }
+
+        log.debug("Executing query: [{}]", aQuery);
+
+        numResults = index.getPhysicalIndex().numberOfQueryResults(new SearchQueryRequest(aProject,
+                aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
+        
+        return numResults;
     }
 }
