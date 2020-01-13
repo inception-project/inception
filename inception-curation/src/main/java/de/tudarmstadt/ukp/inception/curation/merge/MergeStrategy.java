@@ -26,7 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 public interface MergeStrategy 
 {
 
-    void merge(AnnotatorState aState, CAS aCas, Map<String, CAS> aUserCases);
+    void merge(AnnotatorState aState, CAS aCas, Map<String, CAS> aUserCases,
+            boolean aMergeIncomplete);
 
     String getUiName();
 }

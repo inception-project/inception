@@ -42,6 +42,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -63,10 +64,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
 import de.tudarmstadt.ukp.inception.curation.merge.AutomaticMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
@@ -97,7 +98,7 @@ public class CurationSidebar
     private Label noDocsLabel;
     
     private AnnotationPage annoPage;
-    private final ConfirmationDialog mergeConfirm;
+    private final MergeDialog mergeConfirm;
     
     
     public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
@@ -120,10 +121,13 @@ public class CurationSidebar
         settingsForm.setOutputMarkupId(true);
         settingsForm.setVisible(false);
         mainContainer.add(settingsForm);
-        // confirmation dialog when using automatic merging (might change user's annos)
-        mergeConfirm = new ConfirmationDialog("mergeConfirmDialog",
-                new StringResourceModel("mergeConfirmTitle", this, null),
-                new StringResourceModel("mergeConfirmText", this, null));
+        // confirmation dialog when using automatic merging (might change user's annos)  
+        IModel<String> documentNameModel = PropertyModel.of(annoPage.getModel(), "document.name");
+        add(mergeConfirm = new MergeDialog("mergeConfirmDialog",
+                new StringResourceModel("mergeConfirmTitle", this),
+                new StringResourceModel("mergeConfirmText", this)
+                        .setModel(annoPage.getModel()).setParameters(documentNameModel),
+                documentNameModel));
         mainContainer.add(mergeConfirm);
         
         // Add empty space message
@@ -232,9 +236,9 @@ public class CurationSidebar
         Collection<User> users = selectedUsers.getModelObject();
         curationService.updateMergeStrategy(currentUser.getUsername(), projectId,
                 autoMergeStrat);
-        // if (mergeStrat instanceof AutomaticMergeStrategy) {
-        mergeConfirm.setConfirmAction((target) -> {
-            doMerge(state, state.getUser().getUsername(), users);
+        mergeConfirm.setConfirmAction((target, form) -> {
+            boolean mergeIncomplete = form.getModelObject().isMergeIncompleteAnnotations();
+            doMerge(state, state.getUser().getUsername(), users, mergeIncomplete);
             target.add(annoPage);
         });
         mergeConfirm.show(aTarget);
@@ -261,7 +265,7 @@ public class CurationSidebar
     }
 
     private void doMerge(AnnotatorState aState, String aCurator,
-            Collection<User> aUsers)
+            Collection<User> aUsers, boolean aMergeIncomplete)
     {
         // merge cases
         try {
@@ -272,7 +276,7 @@ public class CurationSidebar
             if (targetCas.isPresent()) {
                 MergeStrategy mergeStrat = curationService.retrieveMergeStrategy(
                         userRepository.getCurrentUser().getUsername(), aState.getProject().getId());
-                mergeStrat.merge(aState, targetCas.get(), userCases);
+                mergeStrat.merge(aState, targetCas.get(), userCases, aMergeIncomplete);
                 log.debug("{} merge done", mergeStrat.getUiName()); 
             }
         }

@@ -75,7 +75,8 @@ public class AutomaticMergeStrategy
      * Merges annotations that the given users (excluding the current one) agree on 
      * into the current user's (might be CURATION_USER) CAS
      */
-    public void merge(AnnotatorState aState, CAS aTargetCas, Map<String, CAS> aUserCasses)
+    public void merge(AnnotatorState aState, CAS aTargetCas, Map<String, CAS> aUserCasses,
+            boolean aMergeIncomplete)
     {
         // FIXME: should merging not overwrite the current users annos? (can result in deleting the
         // users annos!!!)
@@ -89,6 +90,7 @@ public class AutomaticMergeStrategy
                 .toResult();
         CasMerge casMerge = new CasMerge(annotationService);
         try {
+            casMerge.setMergeIncompleteAnnotations(aMergeIncomplete);
             casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
                     aTargetCas, aUserCasses);
         }

@@ -48,7 +48,8 @@ public class ManualMergeStrategy implements MergeStrategy
     }
 
     @Override
-    public void merge(AnnotatorState aState, CAS aCas, Map<String, CAS> aUserCases)
+    public void merge(AnnotatorState aState, CAS aCas, Map<String, CAS> aUserCases,
+            boolean aMergeIncomplete)
     {
         // Do nothing
     }
