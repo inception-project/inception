@@ -17,8 +17,7 @@
 [[sect_formats_conll2012]]
 = CoNLL 2012
 
-The CoNLL 2012 format targets semantic role labeling and coreference. Columns are space-separated. 
-Sentences are separated by a blank new line.
+The CoNLL 2012 format targets semantic role labeling and coreference. Columns are whitespace-separated (tabs or spaces). Sentences are separated by a blank new line.
 
 Note that this format cannot deal with the following situations:
 * An annotation has no label (e.g. a `SemPred` annotation has no category) - in such a case `null` is
@@ -27,7 +26,7 @@ Note that this format cannot deal with the following situations:
 * If a `SemPred` annotation is at the same position as a `SemArg` annotation linked to it, then only
   the `(V*)` representing the `SemPred` annotation will be written.
 * `SemPred` annotations spanning more than one token are not supported
-* If there are multilpe `SemPred` annotations on the same token, then only one of them is written.
+* If there are multiple `SemPred` annotations on the same token, then only one of them is written.
   This is because the `category` of the `SemPred` annotation goes to the  **Predicate Frameset ID** 
   and that can only hold one value which.
 
@@ -101,12 +100,12 @@ Note that this format cannot deal with the following situations:
 |====
  
 .Example
-[source,text]
+[source,text,tabsize=0]
 ----
-en-orig.conll   0   0       John   NNP   (TOP(S(NP*)      john   -   -          -   (PERSON)       (A0) (1)
-en-orig.conll   0   1       went   VBD         (VP*         go go.02   -          -         *        (V*) -
-en-orig.conll   0   2         to    TO         (PP*         to   -   -          -         *          *  -
-en-orig.conll   0   3        the    DT         (NP*        the   -   -          -         *          *  (2
-en-orig.conll   0   4     market    NN          *)))    market   -   -          -         *        (A1) 2)
-en-orig.conll   0   5          .     .           *))         .   -   -          -         *          *  -
+en-orig.conll	0	0	John	NNP	(TOP(S(NP*)	john	-	-	-	(PERSON)	(A0)	(1)
+en-orig.conll	0	1	went	VBD	(VP*	go	go.02	-	-	*	(V*)	-
+en-orig.conll	0	2	to	TO	(PP*	to	-	-	-	*	*	-
+en-orig.conll	0	3	the	DT	(NP*	the	-	-	-	*	*	(2
+en-orig.conll	0	4	market	NN	*)))	market	-	-	-	*	(A1)	2)
+en-orig.conll	0	5	.	.	*))	.	-	-	-	*	*	-
 ----
