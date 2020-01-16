@@ -71,6 +71,9 @@ public class ExternalRecommender
     
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
     private static final MediaType JSON = MediaType.parse("application/json");
+
+    private static final int HTTP_TOO_MANY_REQUESTS = 429;
+
     private static final long CONNECT_TIMEOUT = 30;
     private static final long WRITE_TIMEOUT = 30;
     private static final long READ_TIMEOUT = 30;
@@ -135,9 +138,12 @@ public class ExternalRecommender
         Request request = new Request.Builder().url(url).post(body).build();
 
         try (Response response = sendRequest(request)) {
+            if (response.code() == HTTP_TOO_MANY_REQUESTS) {
+                LOG.info("External recommender is already training");
+            }
             // If the response indicates that the request was not successful,
             // then it does not make sense to go on and try to decode the XMI
-            if (!response.isSuccessful()) {
+            else if (!response.isSuccessful()) {
                 int code = response.code();
                 String responseBody = getResponseBody(response);
                 String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
