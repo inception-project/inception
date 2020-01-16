@@ -51,16 +51,13 @@ category of the current span.
 |====
  
 .Example
-[source,text]
+[source,text,tabsize=0]
 ----
-U.N.         NNP  I-NP  I-ORG 
-official     NN   I-NP  O 
-Ekeus        NNP  I-NP  I-PER 
-heads        VBZ  I-VP  O 
-for          IN   I-PP  O 
-Baghdad      NNP  I-NP  I-LOC 
-.            .    O     O 
+U.N. NNP I-NP I-ORG
+official NN I-NP O
+Ekeus NNP I-NP I-PER
+heads VBZ I-VP O
+for IN I-PP O
+Baghdad NNP I-NP I-LOC
+. . O O
 ----
-
-NOTE: For readability, the columns in the example above are aligned. In actual files, there is only
-      a single space separating the fields in each line.

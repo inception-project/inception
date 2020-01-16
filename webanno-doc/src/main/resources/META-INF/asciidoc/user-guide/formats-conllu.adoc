@@ -78,12 +78,12 @@ separated by a blank new line.
 |====
  
 .Example
-[source,text]
+[source,text,tabsize=0]
 ----
-1   They    they    PRON    PRN Case=Nom|Number=Plur    2   nsubj   4:nsubj _
-2   buy buy VERB    VB  Number=Plur|Person=3|Tense=Pres 0   root    _   _
-3   and and CONJ    CC  _   2   cc  _   _
-4   sell    sell    VERB    VB  Number=Plur|Person=3|Tense=Pres 2   conj    0:root  _
-5   books   book    NOUN    NNS Number=Plur 2   dobj    4:dobj  SpaceAfter=No
-6   .   .   PUNCT   .   _   2   punct   _   _
+1	They	they	PRON	PRN	Case=Nom|Number=Plur	2	nsubj	4:nsubj	_
+2	buy	buy	VERB	VB	Number=Plur|Person=3|Tense=Pres	0	root	_	_
+3	and	and	CONJ	CC	_	2	cc	_	_
+4	sell	sell	VERB	VB	Number=Plur|Person=3|Tense=Pres	2	conj	0:root	_
+5	books	book	NOUN	NNS	Number=Plur	2	dobj	4:dobj	SpaceAfter=No
+6	.	.	PUNCT	.	_	2	punct	_	_
 ----

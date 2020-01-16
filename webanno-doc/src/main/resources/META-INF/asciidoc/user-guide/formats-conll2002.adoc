@@ -45,32 +45,29 @@ Sentences are separated by a blank new line.
 |====
  
 .Example
-[source,text]
+[source,text,tabsize=0]
 ----
-Wolff      B-PER
-,          O
-currently  O
-a          O
+Wolff B-PER
+, O
+currently O
+a O
 journalist O
-in         O
-Argentina  B-LOC
-,          O
-played     O
-with       O
-Del        B-PER
-Bosque     I-PER
-in         O
-the        O
-final      O
-years      O
-of         O
-the        O
-seventies  O
-in         O
-Real       B-ORG
-Madrid     I-ORG
-.          O
+in O
+Argentina B-LOC
+, O
+played O
+with O
+Del B-PER
+Bosque I-PER
+in O
+the O
+final O
+years O
+of O
+the O
+seventies O
+in O
+Real B-ORG
+Madrid I-ORG
+. O
 ----
-
-NOTE: For readability, the columns in the example above are aligned. In actual files, there is only
-      a single space separating the fields in each line.
