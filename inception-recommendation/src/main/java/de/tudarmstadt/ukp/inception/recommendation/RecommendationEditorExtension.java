@@ -300,8 +300,9 @@ public class RecommendationEditorExtension
                     spanSuggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
             // Send an application event that the suggestion has been rejected
-            applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, document,
-                    aState.getUser().getUsername(), spanSuggestion.getBegin(), spanSuggestion.getEnd(),
+            applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(
+                    this, document, aState.getUser().getUsername(),
+                    spanSuggestion.getBegin(), spanSuggestion.getEnd(),
                     spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
 
         } else if (suggestion instanceof RelationSuggestion) {
