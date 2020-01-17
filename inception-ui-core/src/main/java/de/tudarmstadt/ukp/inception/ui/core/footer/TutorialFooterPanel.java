@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.footer;
 
+import javax.servlet.ServletContext;
+
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
@@ -32,6 +36,7 @@ public class TutorialFooterPanel
     extends Panel
 {
     private static final long serialVersionUID = -1520440226035000228L;
+    private @SpringBean ServletContext context;
 
     public TutorialFooterPanel(String aId)
     {
@@ -48,12 +53,20 @@ public class TutorialFooterPanel
 //                .forReference(new WebjarsJavaScriptResourceReference("enjoyhint/current/enjoyhint.js")));
 
         // Loading resources for the tour guide feature for the new users
-        aResponse.render(JavaScriptHeaderItem
-                .forReference(new WebjarsJavaScriptResourceReference("enjoyhint/current/jquery.enjoyhint.js")));
-        aResponse.render(CssHeaderItem.forReference(new WebjarsCssResourceReference("enjoyhint/current/jquery.enjoyhint.css")));
-        aResponse.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("jquery.scrollTo/current/jquery.scrollTo.js")));
-        aResponse.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("kinetic/current/kinetic.min.js")));
+        aResponse.render(JavaScriptHeaderItem.forReference(
+                new WebjarsJavaScriptResourceReference("enjoyhint/current/jquery.enjoyhint.js")));
+        aResponse.render(CssHeaderItem.forReference(
+                new WebjarsCssResourceReference("enjoyhint/current/jquery.enjoyhint.css")));
+        aResponse.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference(
+                "jquery.scrollTo/current/jquery.scrollTo.js")));
+        aResponse.render(JavaScriptHeaderItem.forReference(
+                new WebjarsJavaScriptResourceReference("kinetic/current/kinetic.min.js")));
 
         aResponse.render(JavaScriptHeaderItem.forReference(TutorialJavascriptReference.get()));
+        
+        // check if the tutorial will need to be run
+        aResponse.render(OnLoadHeaderItem
+                .forScript("setContextPath('" + context.getContextPath() + "');\n" +
+                           "runRoutines();"));
     }
 }

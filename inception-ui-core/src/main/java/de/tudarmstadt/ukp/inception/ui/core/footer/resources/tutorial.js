@@ -18,13 +18,13 @@
 
 var cName = "tutorialSession";
 var projectCName = "projectName";
-var contextPath = "";
 
 var enjoyhint_instance = new EnjoyHint({});
+var contextPath;
 const tabObserver = new MutationObserver(runActiveTabsRoutines);
 	
 
-$(document).ready(function() {
+function runRoutines() {
 			var enjoyhint_script_steps;
 			var currentPage = window.location.pathname;
 			var projectId = getUrlParameter('p');
@@ -32,8 +32,14 @@ $(document).ready(function() {
 			var ps = getCookie(cName); 
 			
 			//don't do all the stuff if we're not in the tutorial
-			if (ps == null){ //checks for null and undefined
+			if (ps == ""){ 
 				return;
+			}
+			
+			// if the tutorial ended, remove cookies
+			if (ps == "ended"){
+				deleteCookies();
+				tabObserver.disconnect();
 			}
 			
 			// observe tabcontainer on settings page for changes in its tabs
@@ -47,10 +53,10 @@ $(document).ready(function() {
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
-						setCookie(cName, 'tutorialStarted', contextPath);
+						setCookie(cName, 'tutorialStarted');
 					},
 					onSkip : function() {
-						setCookie(cName, 'ended', contextPath);
+						setCookie(cName, 'ended');
 					}
 				});
 
@@ -59,21 +65,15 @@ $(document).ready(function() {
 				enjoyhint_instance.runScript();
 			} 
 			
-			else if (ps == "ended"){
-				deleteCookie(cName);
-				deleteCookie(projectCName);
-				tabObserver.disconnect();
-			}
-			
 			else if (currentPage.includes("projectsetting.html")  && projectId == 'NEW' && ps == "tutorialStarted") 
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onSkip : function() {
-						setCookie(cName, 'ended', contextPath);
+						setCookie(cName, 'ended');
 					}
 				});
 
-				setCookie(cName, 'projectSaved', contextPath);
+				setCookie(cName, 'projectSaved');
 				enjoyhint_script_steps = createNewProjectRoutine();
 				enjoyhint_instance.set(enjoyhint_script_steps);
 				enjoyhint_instance.runScript();
@@ -83,15 +83,15 @@ $(document).ready(function() {
 			{
 				//save the project name in the cookie
 				var projectName = $('[name="p::name"]').val()
-				setCookie(projectCName, projectName, contextPath);
+				setCookie(projectCName, projectName);
 				
 				//re-initialize the instance
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
-						setCookie(cName, 'projectCreated',contextPath);
+						setCookie(cName, 'projectCreated');
 					},
 					onSkip : function() {
-						setCookie(cName, 'ended', contextPath);
+						setCookie(cName, 'ended');
 					}
 				});
 
@@ -104,13 +104,17 @@ $(document).ready(function() {
 			{
 					enjoyhint_instance = new EnjoyHint({
 						onEnd : function() {
-							setCookie(cName, "projectView", contextPath);
+							setCookie(cName, "projectView");
 						},
 						onSkip : function() {
-							setCookie(cName, 'ended', contextPath);
+							setCookie(cName, 'ended');
 						}
 					});
-					
+					// disable the buttons that should not be clicked during the tutorial
+					document.querySelectorAll("[id^='projectArchiveUpload']")[0].disabled = true;
+					document.querySelectorAll("[id^='roleFilterLink']")
+						.forEach(element => element.disabled = true);
+					// run routine
 					enjoyhint_script_steps = createFirstPageRoutinePart2();
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
@@ -121,10 +125,10 @@ $(document).ready(function() {
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
-						setCookie(cName, "projectsettingView", contextPath);
+						setCookie(cName, "projectsettingView");
 					},
 					onSkip : function() {
-						setCookie(cName, 'ended', contextPath);
+						setCookie(cName, 'ended');
 					}
 				});
 				
@@ -138,10 +142,10 @@ $(document).ready(function() {
 				enjoyhint_instance = new EnjoyHint({     
 					
 					onEnd : function() {
-						setCookie(cName, "projectsettingsOpenedDoc", contextPath);
+						setCookie(cName, "projectsettingsOpenedDoc");
 					},
 					onSkip : function() {
-						setCookie(cName, 'ended', contextPath);
+						setCookie(cName, 'ended');
 					}
 
 				});
@@ -151,71 +155,32 @@ $(document).ready(function() {
 				enjoyhint_instance.runScript();
 			}
 			
-//			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingsOpenedDoc") {
-//				
-//					enjoyhint_instance = new EnjoyHint({     
-//						
-//						onEnd : function() {
-//							setCookie(cName, "projectsettingsDocUploaded", contextPath);
-//							location.reload();
-//						},
-//						onSkip : function() {
-//							setCookie(cName, 'ended', contextPath);
-//						}
-//
-//					});
-//
-//					enjoyhint_script_steps = createAddDocumentRoutine(enjoyhint_instance);
-//					enjoyhint_instance.set(enjoyhint_script_steps);
-//					enjoyhint_instance.runScript();
-//			}
-			
 			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingsDocUploaded") {
 				
 				enjoyhint_instance = new EnjoyHint({     
 					
 					onEnd : function() {
-						setCookie(cName, "projectsettingsOpenedRecommenders", contextPath);
+						setCookie(cName, "projectsettingsOpenedRecommenders");
 					},
 					onSkip : function() {
-						setCookie(cName, 'ended', contextPath);
+						setCookie(cName, 'ended');
 					}
 
 				});
-				// TODO: can we merge this with the previous routine?
 				enjoyhint_script_steps = createOpenRecommendersRoutine(enjoyhint_instance);
 				enjoyhint_instance.set(enjoyhint_script_steps);
 				enjoyhint_instance.runScript();
 			}
-			
-//			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingsOpenedRecommenders") {
-//				
-//				enjoyhint_instance = new EnjoyHint({     
-//					
-//					onEnd : function() {
-//						setCookie(cName, "projectsettingsCreatedRecommender", contextPath);
-//						location.reload();
-//					},
-//					onSkip : function() {
-//						setCookie(cName, 'ended', contextPath);
-//					}
-//
-//				});
-//
-//				enjoyhint_script_steps = createAddRecommenderRoutine(enjoyhint_instance);
-//				enjoyhint_instance.set(enjoyhint_script_steps);
-//				enjoyhint_instance.runScript();
-//			}
 			
 			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingsCreatedRecommender") {
 				
 				enjoyhint_instance = new EnjoyHint({     
 					
 					onEnd : function() {
-						setCookie(cName, "projectsettingsConfigured", contextPath);
+						setCookie(cName, "projectsettingsConfigured");
 					},
 					onSkip : function() {
-						setCookie(cName, 'ended', contextPath);
+						setCookie(cName, 'ended');
 					}
 
 				});
@@ -229,41 +194,69 @@ $(document).ready(function() {
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
-						setCookie(cName, "ended", contextPath);
+						setCookie(cName, "farewell");
+						location.reload(); //necessary to enable links again
 					},
 					onSkip : function() {
-						setCookie(cName, 'ended', contextPath);
+						setCookie(cName, 'ended');
 					}
 				});
+				
+				// disable buttons
+				let dashboardLinks = document.getElementsByClassName("hvr-fade");
+				for (i=0; i<dashboardLinks.length; i++){
+					dashboardLinks[i].style.pointerEvents = 'none';
+				}
+				// start routine
+				enjoyhint_script_steps = createDashboardRoutine2();
+				enjoyhint_instance.set(enjoyhint_script_steps);
+				enjoyhint_instance.runScript();
+			}
+			
+			else if (currentPage.includes("project.html") && ps == "farewell")
+			{
+				enjoyhint_instance = new EnjoyHint({
+					onEnd : function() {
+						setCookie(cName, "ended");
+						
+					},
+					onSkip : function() {
+						setCookie(cName, 'ended');
+					}
+				});
+				
 				enjoyhint_script_steps = createLastRoutine();
 				enjoyhint_instance.set(enjoyhint_script_steps);
 				enjoyhint_instance.runScript();
 			}
-		});
+};
 
-function startTutorial(aContextPath) {
-	contextPath = aContextPath;
+function startTutorial() {
 	var enjoyhint_instance = new EnjoyHint({
 		onEnd : function() {
 		},
 		onSkip : function() {
-			setCookie(cName, 'ended', aContextPath);
+			setCookie(cName, 'ended');
 		}
 	});
 
 	enjoyhint_script_steps = createFirstPageRoutine();
 	enjoyhint_instance.set(enjoyhint_script_steps);
 	
-	setCookie(cName, 'tutorialStarted', aContextPath);
+	setCookie(cName, 'tutorialStarted');
 
 	enjoyhint_instance.runScript();
+}
+
+function setContextPath(aContextPath){
+	contextPath = aContextPath;
 }
 
 // run routines on active tabs
 function runActiveTabsRoutines(){
 	
 	//don't do all the stuff if we're not in the tutorial
-	if (getCookie(cName) == null){ 
+	if (getCookie(cName) == ""){ 
 		return;
 	}
 	
@@ -272,11 +265,11 @@ function runActiveTabsRoutines(){
 			enjoyhint_instance = new EnjoyHint({     
 					
 				onEnd : function() {
-					setCookie(cName, "projectsettingsDocUploaded", contextPath);
+					setCookie(cName, "projectsettingsDocUploaded");
 					location.reload();
 				},
 				onSkip : function() {
-					setCookie(cName, 'ended', contextPath);
+					setCookie(cName, 'ended');
 				}
 			});
 
@@ -291,11 +284,11 @@ function runActiveTabsRoutines(){
 			enjoyhint_instance = new EnjoyHint({     
 				
 				onEnd : function() {
-					setCookie(cName, "projectsettingsCreatedRecommender", contextPath);
+					setCookie(cName, "projectsettingsCreatedRecommender");
 					location.reload();
 				},
 				onSkip : function() {
-					setCookie(cName, 'ended', contextPath);
+					setCookie(cName, 'ended');
 				}
 
 			});
@@ -307,17 +300,25 @@ function runActiveTabsRoutines(){
 	}
 }
 
-function deleteCookie(cname){
-	document.cookie = cname + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+function deleteCookies(){
+	var expires = "expires=" + (new Date(0)).toUTCString();
+	setCookieWithExpires(cName, "", expires);
+	setCookieWithExpires(projectCName, "", expires);
 }
 
-function setCookie(cname, cvalue, contextPath) {
+function setCookie(cname, cvalue) {
 	var d = new Date();
 	d.setTime(d.getTime() + (1 * 24 * 60 * 60 * 1000));
 	var expires = "expires=" + d.toUTCString();
+	setCookieWithExpires(cname, cvalue, expires);
+}
+
+function setCookieWithExpires(cname, cvalue, expires) {
 	document.cookie = cname + "=" + cvalue + ";" + expires + ";path="+contextPath;
 }
 
+// document.cookie should get the cookies from the current document location, should
+// find the right cookie for the right path?
 function getCookie(cname) {
 	var name = cname + "=";
 	var ca = document.cookie.split(';');
@@ -361,7 +362,6 @@ function createFirstPageRoutinePart2() {
 	var selector = "a:contains('"+projectName+"'):first";
 	
 	var a = [
-
 			{
 				'next .file-input-new' : "The projects can also be imported.",
 			},
@@ -383,21 +383,6 @@ function createFirstPageRoutinePart2() {
 
 function createDashboardRoutine() {
 	var a = [
-			{
-				'next li:first-of-type' : 'Here, you can annotate your documents.',
-			},
-			{
-				'next li:nth-of-type(2)' : 'Completely annotated documents can be curated to form the final result documents.',
-			},
-			{
-				'next li:nth-of-type(3)' : 'This will show you the agreement between annotators across documents.',
-			},
-			{
-				'next li:nth-of-type(4)' : 'Here, you can see the annotators\' progress and assign documents.',
-			},
-			{
-				'next li:nth-of-type(5)' : 'This allows you to evaluate your recommenders.',
-			},
 			{
 				'click li:nth-last-child(1)' : "Before getting started, let's configure the project. Please click 'Settings'.",
 			} ];
@@ -472,26 +457,6 @@ function createRecommenderSettingsRoutine(enjoyHint) {
 	return a;
 }
 
-function goBackToDashboardRoutine()
-{
-	var enjoyhint_instance = new EnjoyHint({     
-		onEnd : function() {
-			setCookie(cName, "projectsettingConfigured", contextPath);
-		},
-		onSkip : function() {
-			setCookie(cName, true, contextPath);
-		}
-	});
- 
-	enjoyhint_instance.set(
-	[
-		{
-			'click [href=\'./project.html\']:last' : 'Now, lets go back to the Dashboard.',
-		}
-	]		
-	);
-	enjoyhint_instance.runScript();}
-
 function createProjectSavedRoutine() {
 	var a = [ {
 		'click .navbar-link' : 'Click here to go back to the projects page.',
@@ -502,14 +467,37 @@ function createProjectSavedRoutine() {
 
 function createLastRoutine() {
 	var a = [
-			{
-				'click .flex-sidebar' : 'You can start exploring the website further.',
-				
-				'skipButton' : {
-					className : "mySkip",
-					text : "Thanks!"
-				}
-			} ];
+		{
+			'event .flex-sidebar' : 'You can start exploring the website further.',
+			
+			'skipButton' : {
+				className : "mySkip",
+				text : "Thanks!"
+			}
+		} 
+		];
+
+	return a;
+}
+
+function createDashboardRoutine2() {
+	var a = [
+		{
+			'next li:first-of-type' : 'Here, you can annotate your documents.',
+		},
+		{
+			'next li:nth-of-type(2)' : 'Completely annotated documents can be curated to form the final result documents.',
+		},
+		{
+			'next li:nth-of-type(3)' : 'This will show you the agreement between annotators across documents.',
+		},
+		{
+			'next li:nth-of-type(4)' : 'Here, you can see the annotators\' progress and assign documents.',
+		},
+		{
+			'next li:nth-of-type(5)' : 'This allows you to evaluate your recommenders.',
+		} 
+		];
 
 	return a;
 }

@@ -38,8 +38,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
-import javax.servlet.ServletContext;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Component;
@@ -116,7 +114,6 @@ public class ProjectsOverviewPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
-    private @SpringBean ServletContext context;
 
     private BootstrapFileInputField fileUpload;
     private WebMarkupContainer projectListContainer;
@@ -167,10 +164,7 @@ public class ProjectsOverviewPage
 
     private void startTutorial(AjaxRequestTarget aTarget)
     {
-        String contextPath = "inception-app-webapp";
-        contextPath = context.getContextPath();
-
-        aTarget.appendJavaScript(" startTutorial('" + contextPath + "'); ");
+        aTarget.appendJavaScript(" startTutorial(); ");
     }
     
     private Form<Void> createImportProjectForm()
