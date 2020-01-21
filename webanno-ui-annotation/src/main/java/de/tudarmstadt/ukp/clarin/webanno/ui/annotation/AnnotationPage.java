@@ -133,6 +133,7 @@ public class AnnotationPage
     private WebMarkupContainer actionBar;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
+    private SidebarPanel leftSidebar;
 
     public AnnotationPage()
     {
@@ -205,7 +206,8 @@ public class AnnotationPage
         createAnnotationEditor(null);
 
         add(createRightSidebar());
-        add(createLeftSidebar());
+        leftSidebar = createLeftSidebar();
+        add(leftSidebar);
     }
 
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
@@ -295,7 +297,7 @@ public class AnnotationPage
 
     private SidebarPanel createLeftSidebar()
     {
-        SidebarPanel leftSidebar = new SidebarPanel("leftSidebar", getModel(), detailEditor, () -> 
+        leftSidebar = new SidebarPanel("leftSidebar", getModel(), detailEditor, () -> 
                 getEditorCas(), AnnotationPage.this);
         // Override sidebar width from preferences
         leftSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
@@ -538,6 +540,12 @@ public class AnnotationPage
 
                 SourceDocument previousDoc = getModelObject().getDocument();
                 handleParameters(project, document, focus, false);
+                
+                // url is from external link, not just paging through documents,
+                // tabs may have changed depending on user rights
+                if (previousDoc == null) {
+                    leftSidebar.refreshTabs(aTarget);
+                }
                 
                 updateDocumentView(aTarget, previousDoc, focus);
             }

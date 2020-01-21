@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -45,6 +46,7 @@ public class SidebarPanel
     private CasProvider casProvider;
     private AnnotationPage annotationPage;
     private IModel<AnnotatorState> stateModel;
+    private SidebarTabbedPanel<SidebarTab> tabsPanel;
     
     public SidebarPanel(String aId, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
@@ -62,7 +64,7 @@ public class SidebarPanel
         annotationPage = aAnnotationPage;
         stateModel = aModel;
         
-        SidebarTabbedPanel<SidebarTab> tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent",
+        tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent",
                 makeTabs());
         add(tabsPanel);
         
@@ -76,6 +78,14 @@ public class SidebarPanel
         
         // Only show sidebar if a document is selected
         setVisible(stateModel.getObject() != null && stateModel.getObject().getDocument() != null);
+    }
+    
+    public void refreshTabs(AjaxRequestTarget aTarget) {
+        // re-init tabs list with valid tabs
+        List<SidebarTab> tabs = tabsPanel.getTabs();
+        tabs.clear();
+        tabs.addAll(makeTabs());
+        aTarget.add(tabsPanel);
     }
         
     private List<SidebarTab> makeTabs()
