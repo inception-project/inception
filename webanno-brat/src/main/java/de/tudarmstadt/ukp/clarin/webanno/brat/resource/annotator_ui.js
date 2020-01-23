@@ -234,20 +234,37 @@ var AnnotatorUI = (function($, window, undefined) {
         // single click actions for spans
         if (id = target.attr('data-span-id')) {
           preventDefault(evt);
-          editedSpan = data.spans[id];    		  
+          editedSpan = data.spans[id];
           editedFragment = target.attr('data-fragment-id');
           var offsets = [];
           $.each(editedSpan.fragments, function(fragmentNo, fragment) {
             offsets.push([fragment.from, fragment.to]);
           });
-          dispatcher.post('ajax', [ {
-            action: 'doAction',
-            offsets: $.toJSON(offsets),
-            	id: id,
-            	labelText: editedSpan.labelText,
-            	type: editedSpan.type
-          }, 'serverResult']);
-        	}
+          dispatcher.post('ajax', [{
+              action: 'doAction',
+              offsets: $.toJSON(offsets),
+              id: id,
+              labelText: editedSpan.labelText,
+              type: editedSpan.type
+            }, 'serverResult' ]);
+        }
+// BEGIN WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
+        else if (id = target.attr('data-arc-ed')) {
+          var type = target.attr('data-arc-role');
+          var originSpan = data.spans[target.attr('data-arc-origin')];
+          var targetSpan = data.spans[target.attr('data-arc-target')];
+          
+          dispatcher.post('ajax', [{
+              action: 'doAction',
+              arcId: id,
+              arcType: type,
+              originSpanId: originSpan.id,
+              originType: originSpan.type,
+              targetSpanId: targetSpan.id,
+              targetType: targetSpan.type
+            }, 'serverResult']);
+        }
+// END WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
 // WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
         // single click action on sentence id
         else if (id = target.attr('data-sent')) {
@@ -1739,7 +1756,14 @@ var AnnotatorUI = (function($, window, undefined) {
         var targetSpanId = target.data('span-id');
         var targetChunkId = target.data('chunk-id');
         var targetArcRole = target.data('arc-role');
+// BEGIN WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
+/*
         if (!(targetSpanId !== undefined || targetChunkId !== undefined || targetArcRole !== undefined)) {
+*/
+        // The targetArcRole check must be excluded from the negation - it cancels this handler when
+        // doing a mouse-up on a relation
+        if (!(targetSpanId !== undefined || targetChunkId !== undefined) || targetArcRole !== undefined) {
+// END WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
           // misclick
           clearSelection();
           stopArcDrag(target);
