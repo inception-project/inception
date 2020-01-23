@@ -297,7 +297,7 @@ public class AnnotationPage
 
     private SidebarPanel createLeftSidebar()
     {
-        leftSidebar = new SidebarPanel("leftSidebar", getModel(), detailEditor, () -> 
+        SidebarPanel leftSidebar = new SidebarPanel("leftSidebar", getModel(), detailEditor, () -> 
                 getEditorCas(), AnnotationPage.this);
         // Override sidebar width from preferences
         leftSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
