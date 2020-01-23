@@ -44,8 +44,8 @@ function runRoutines() {
 			
 			// observe tabcontainer on settings page for changes in its tabs
 			if (currentPage.includes("projectsetting.html") && 
-					document.querySelectorAll("[id^='tabContainer']").length > 0){
-				tabObserver.observe(document.querySelectorAll("[id^='tabContainer']")[0], 
+					document.querySelectorAll("[name^='tabContainer']").length > 0){
+				tabObserver.observe(document.querySelectorAll("[name^='tabContainer']")[0], 
 						{childList : true, subtree : true});
 			}
 			
@@ -111,7 +111,9 @@ function runRoutines() {
 						}
 					});
 					// disable the buttons that should not be clicked during the tutorial
-					document.querySelectorAll("[id^='projectArchiveUpload']")[0].disabled = true;
+					if (document.querySelectorAll("[name^='projectArchiveUpload']").length > 0){
+						document.querySelectorAll("[name^='projectArchiveUpload']")[0].disabled = true;
+					}
 					document.querySelectorAll("[id^='roleFilterLink']")
 						.forEach(element => element.disabled = true);
 					// run routine
