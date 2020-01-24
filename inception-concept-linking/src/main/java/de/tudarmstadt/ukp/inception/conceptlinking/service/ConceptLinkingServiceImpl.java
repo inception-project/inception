@@ -365,7 +365,7 @@ public class ConceptLinkingServiceImpl
         long startTime = currentTimeMillis();
         
         // Set the feature values
-        List<CandidateEntity> candidates = aCandidates.parallelStream()
+        List<CandidateEntity> candidates = aCandidates.stream()
                 .map(CandidateEntity::new)
                 .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBegin))
                 .map(candidate -> {
@@ -386,7 +386,6 @@ public class ConceptLinkingServiceImpl
                     handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
                     return handle;
                 })
-                .limit(properties.getCandidateDisplayLimit())
                 .collect(Collectors.toList());
         
         int rank = 1;

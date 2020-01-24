@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -44,6 +45,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -84,6 +86,7 @@ public class KnowledgeBasePanel
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean ConceptLinkingService conceptLinkingService;
+    private @SpringBean EntityLinkingProperties entityLinkingProperties;
 
     private IModel<KnowledgeBase> kbModel;
     private Model<KBObject> selectedConceptHandle = Model.of();
@@ -173,7 +176,9 @@ public class KnowledgeBasePanel
     {
         List<KBHandle> results;
         KnowledgeBase kb = kbModel.getObject();
-        results = conceptLinkingService.searchItems(kb, aTypedString);
+        results = conceptLinkingService.searchItems(kb, aTypedString).stream()
+            .limit(entityLinkingProperties.getCandidateDisplayLimit())
+            .collect(Collectors.toList());
         return results;
     }
 
