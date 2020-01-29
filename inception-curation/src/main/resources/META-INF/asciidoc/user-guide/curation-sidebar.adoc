@@ -11,9 +11,14 @@ and merge into the final document. Annotations from other users are shown in gra
 the user clicks *Apply* under the user selection. 
 The user can decide to *manually* or *automatically* merge their 
 annotations into either her own document or a separate _Curation User Document_ as the final document.
+The target document of the curated annotations can be configured in the sidebar's settings (cog-wheel icon).
+
+The suggestions for manual curation can be stopped by _clearing_ all selected users and the user can return to their document if necessary via the settings cog-wheel.
+Curation settings i.e. the selected users and the opened target document are cleared when leaving the annotation page but will be restored when opening the curation sidebar a next time. This way curation can be easily interrupted and picked up another time.
 
 The user can always copy annotations *manually* from other users into the curation document by clicking on them.
 The *automatic* merge can be triggered by clicking *Re-Merge*. It will copy all annotations that 
 all selected users agree on into the curation document.
 
-
+NOTE: This is an experimental feature not recommended for serious use. However, you can try it out
+      and enable it by adding `curation.sidebar.enabled=true` to the `settings.properties` file (see <<admin-guide.adoc#sect_settings>>). 

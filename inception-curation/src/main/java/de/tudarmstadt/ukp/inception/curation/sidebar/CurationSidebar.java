@@ -107,6 +107,8 @@ public class CurationSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
         annoPage = aAnnotationPage;
+        // TODO check annopage metadata, if empty (new page):
+        // set annotatorstate user according to curation state
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);

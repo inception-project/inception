@@ -106,6 +106,7 @@ public class CurationServiceImpl implements CurationService
     
     private CurationState getCurationState(String aUser, long aProjectId) {
         synchronized (curationStates) {
+            // TODO if absent: get from database, if not there, create new state
             return curationStates.computeIfAbsent(new CurationStateKey(aUser, aProjectId), 
                 key -> new CurationState(aUser));
         }
@@ -246,6 +247,7 @@ public class CurationServiceImpl implements CurationService
         SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
         if (info != null) {
             String username = (String) info.getPrincipal();
+            // TODO: store state info in db for all projects of this user
             clearState(username);
         }
     }
