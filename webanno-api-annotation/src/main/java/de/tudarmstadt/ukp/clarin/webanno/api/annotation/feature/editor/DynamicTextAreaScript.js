@@ -19,15 +19,3 @@ function resizeDynamicTextArea(element) {
   element.style.height = 'auto';
   element.style.height = (2 + element.scrollHeight) + 'px';
 };
-
-function resizeTextAreas () {
-  var textareas = document.getElementsByClassName('dynamic-textarea');
-  for (var i = 0; i < textareas.length; i++) {
-    var textarea = textareas.item(i);
-    resizeDynamicTextArea(textarea);
-  };
-};
-
-window.addEventListener('load', resizeTextAreas);
-
-resizeTextAreas();

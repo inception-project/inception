@@ -21,6 +21,7 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
@@ -31,6 +32,7 @@ public class DynamicTextAreaFeatureEditor
         extends TextFeatureEditorBase
 {
     private static final long serialVersionUID = -4798925191252992223L;
+    private TextArea<String> textarea;
     
     public DynamicTextAreaFeatureEditor(String aId, MarkupContainer aItem,
             IModel<FeatureState> aModel)
@@ -41,7 +43,8 @@ public class DynamicTextAreaFeatureEditor
     @Override
     protected AbstractTextComponent createInputField()
     {
-        TextArea<String> textarea = new TextArea<>("value");
+        textarea = new TextArea<>("value");
+        textarea.setOutputMarkupId(true);
         textarea.add(new AjaxPreventSubmitBehavior());
         return textarea;
     }
@@ -50,5 +53,7 @@ public class DynamicTextAreaFeatureEditor
     public void renderHead(IHeaderResponse aResponse) {
         aResponse.render(
                 JavaScriptHeaderItem.forReference(DynamicTextAreaScriptReference.get()));
+        aResponse.render(OnDomReadyHeaderItem.forScript(
+                "window.addEventListener('load', function(){resizeDynamicTextArea(document.getElementById('" + textarea.getMarkupId() + "'));});"));
     }
 }
