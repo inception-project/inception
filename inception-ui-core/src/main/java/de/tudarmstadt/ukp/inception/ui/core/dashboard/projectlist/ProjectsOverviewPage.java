@@ -156,6 +156,12 @@ public class ProjectsOverviewPage
     {
         LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
                 this::startTutorial);
+        startTutorialLink.add(visibleWhen(
+            () -> {
+                User currentUser = userRepository.getCurrentUser();
+                return userRepository.isAdministrator(currentUser) ||
+                        userRepository.isProjectCreator(currentUser);
+            }));
 
         add(startTutorialLink);
 

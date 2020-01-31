@@ -338,7 +338,8 @@ function getCookie(cname) {
 
 function createNewProjectRoutine() {
 	var a = [ {
-		'event [name=\'p::name\']' : 'Write a name for your project and press Enter.',
+		'event [name=\'p::name\']' : 'Write a name for your project and press Enter.', 
+		'showSkip': false
 	} ];
 	return a;
 }
@@ -346,14 +347,15 @@ function createNewProjectRoutine() {
 function createFirstPageRoutine() {
 	var a = [
 			{
-				'next .navbar-brand' : "Welcome to INCEpTION! Let me guide you through its features. At any time during the tutorial you can click 'Skip' to quit the tour.",
+				'next .navbar-brand' : "Welcome to INCEpTION! Let me guide you through its features. At any time during the tutorial you can click 'x' to quit the tour.",
 				'nextButton' : {
 					className : "myNext",
 					text : "Sure"
 				},
+				'showSkip': false
 			},
 			{
-				'click .btn btn-primary' : "Click here to create a new project.",
+				'click .btn btn-primary' : "Click here to create a new project.", 'showSkip': false
 			} 
 			];
 	return a;
@@ -365,10 +367,11 @@ function createFirstPageRoutinePart2() {
 	
 	var a = [
 			{
-				'next .file-input-new' : "The projects can also be imported.",
+				'next .file-input-new' : "Instead of creating a new project, existing projects can also be imported.", 'showSkip': false
 			},
 			{
 				'next .input-group:last' : "You can filter the projects based on your role in them.",
+				'showSkip': false
 			},
 			{
 				onBeforeStart:function(){ 
@@ -378,6 +381,7 @@ function createFirstPageRoutinePart2() {
 				"event": "click", 
 				"selector": selector,
 				"description": "Click on the project to get started.",
+				'showSkip': false
 			} 
 			];
 	return a;
@@ -387,6 +391,7 @@ function createDashboardRoutine() {
 	var a = [
 			{
 				'click li:nth-last-child(1)' : "Before getting started, let's configure the project. Please click 'Settings'.",
+				'showSkip': false
 			} ];
 	return a;
 }
@@ -395,9 +400,7 @@ function createOpenDocumentsRoutine(enjoyHint) {
 	var a = [
 		    {
 		    	'click .tab1' : 'Click here to add a document to the project.',
-//		    	"event": "click", 
-//				"selector": $("span:contains('Documents')"),
-//				"description": "Click here to add a document to the project.",
+		    	'showSkip': false
 		    }
 			];
 
@@ -407,7 +410,9 @@ function createOpenDocumentsRoutine(enjoyHint) {
 function createAddDocumentRoutine(enjoyHint) {
 	var a = [
 			{
-				'next [class=flex-h-container]' : "Upload a file and click 'Import'. Then click 'Next'.",
+				'next [class=flex-h-container]' : "Upload a document (e.g. a .txt file) using the 'Choose Files' button, " +
+						"choose a format (e.g. 'Plain Text') and click 'Import'. Then click 'Next'.",
+						'showSkip': false
 			}
 			];
 
@@ -418,9 +423,7 @@ function createOpenRecommendersRoutine(enjoyHint) {
 	var a = [
 			{
 				'click .tab5' : 'Now, lets add a recommender. Click here!',
-//		    	"event": "click", 
-//				"selector": $("span:contains('Recommenders')"),
-//				"description": "Now, lets add a recommender. Click here!",
+				'showSkip': false
 		    }
 			];
 
@@ -431,6 +434,7 @@ function createAddRecommenderRoutine(enjoyHint) {
 	var a = [
 			{
 				'click [value=Create]' : "Click here to create a new recommender that will give you suggestions while annotating.",
+				'showSkip': false
 			}
 			];
 	
@@ -441,18 +445,23 @@ function createRecommenderSettingsRoutine(enjoyHint) {
 	var a = [
 			{
 				'next .form-group:nth(2)' : "Select a Layer (the enclosing annotation e.g. 'Named entity').",
+				'showSkip': false
 			},
 			{
-				'next .form-group:nth(3)' : "Select a Feature (the annotation's attribute that should be predicted e.g. 'value').",
+				'next .form-group:nth(3)' : "Select a Feature (the annotation's attribute which should be predicted e.g. 'value').",
+				'showSkip': false
 			},
 			{
-				'next .form-group:nth(4)' : "Select a Tool that is used to produce the suggestions e.g. 'Stringmatcher'.",
+				'next .form-group:nth(4)' : "Select a Tool which is used to produce the suggestions e.g. 'Stringmatcher'.",
+				'showSkip': false
 			},
 			{
 				"next [value=Save]" : "Click 'Save'.",
+				'showSkip': false
 			},
 			{
 				'click [href=\'./project.html\']:last' : "Now, let's go back to the Dashboard.",
+				'showSkip': false
 			} 
 			];
 
@@ -461,7 +470,8 @@ function createRecommenderSettingsRoutine(enjoyHint) {
 
 function createProjectSavedRoutine() {
 	var a = [ {
-		'click .navbar-link' : 'Click here to go back to the projects page.',
+		'click .navbar-link' : 'Click here to go back to the projects overview page.',
+		'showSkip': false
 	} ];
 
 	return a;
@@ -470,7 +480,7 @@ function createProjectSavedRoutine() {
 function createLastRoutine() {
 	var a = [
 		{
-			'event .flex-sidebar' : 'You can start exploring the website further.',
+			'event .flex-sidebar' : 'Now, feel free to explore INCEpTION on your own.',
 			
 			'skipButton' : {
 				className : "mySkip",
@@ -485,19 +495,24 @@ function createLastRoutine() {
 function createDashboardRoutine2() {
 	var a = [
 		{
-			'next li:first-of-type' : 'Here, you can annotate your documents.',
+			'next li:first-of-type' : "Finally, some information on the Dashboard's buttons: Here, you can annotate your documents.",
+			'showSkip': false
 		},
 		{
 			'next li:nth-of-type(2)' : 'Completely annotated documents can be curated to form the final result documents.',
+			'showSkip': false
 		},
 		{
 			'next li:nth-of-type(3)' : 'This will show you the agreement between annotators across documents.',
+			'showSkip': false
 		},
 		{
 			'next li:nth-of-type(4)' : 'Here, you can see the annotators\' progress and assign documents.',
+			'showSkip': false
 		},
 		{
 			'next li:nth-of-type(5)' : 'This allows you to evaluate your recommenders.',
+			'showSkip': false
 		} 
 		];
 
