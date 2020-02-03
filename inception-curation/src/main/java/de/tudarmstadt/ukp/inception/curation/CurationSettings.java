@@ -70,7 +70,12 @@ public class CurationSettings
         username = aUsername;
         projectId = aProjectId;
         curationUsername = aCurationName;
-        selectedUserNames = new HashSet<>(aUsernames);
+        if (aUsernames == null) {
+            selectedUserNames = new HashSet<>();
+        }
+        else {
+            selectedUserNames = new HashSet<>(aUsernames);
+        }
     }
 
     public Long getId()

@@ -206,6 +206,11 @@ public class CurationEditorExtension
         }
         
         long projectId = aState.getProject().getId();
+        if (!curationService.isUserCurating(userRepository.getCurrentUser().getUsername(),
+                projectId)) {
+            return;
+        }
+            
         Optional<List<User>> selectedUsers = curationService
                 .listUsersSelectedForCuration(userRepository.getCurrentUser().getUsername(), 
                         projectId);
@@ -227,7 +232,7 @@ public class CurationEditorExtension
                         aState.getAnnotationLayers());
                 // copy all arcs and spans to existing doc with new VID
                 String username = user.getUsername();
-                String color = "#cccccc"; // this is the same color as for recommendations
+                String color = "#ccccff";  //"#cccccc" is the color for recommendations
 
                 // copy all spans and add to map as possible varc dependents
                 // spans with new vids identified by their old vid for lookup in varcs

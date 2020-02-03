@@ -40,6 +40,7 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
@@ -57,11 +58,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AnnotationPageCreatedEvent;
 import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
 @Component
-public class CurationServiceImpl implements CurationService
+public class CurationServiceImpl
+    implements CurationService, ApplicationListener<AnnotationPageCreatedEvent>
 {
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -162,6 +165,8 @@ public class CurationServiceImpl implements CurationService
         return state;
     }
     
+    
+    
     private class CurationState
     {
         private List<User> selectedUsers;
@@ -169,6 +174,7 @@ public class CurationServiceImpl implements CurationService
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationUser;
         private MergeStrategy selectedStrategy;
+        private boolean isCurating;
                 
         public CurationState(String aUser)
         {
@@ -212,6 +218,16 @@ public class CurationServiceImpl implements CurationService
         public MergeStrategy getMergeStrategy()
         {
             return selectedStrategy;
+        }
+
+        public boolean isCurating()
+        {
+            return isCurating;
+        }
+
+        public void setCurating(boolean isCurating)
+        {
+            this.isCurating = isCurating;
         }
     }
 
@@ -321,9 +337,14 @@ public class CurationServiceImpl implements CurationService
             Long projectId = project.getId();
             List<String> usernames = null;
             if (curationStates.containsKey(new CurationStateKey(aUsername, projectId))) {
+                
                 CurationState state = curationStates
                         .get(new CurationStateKey(aUsername, projectId));
-                if (state.getSelectedUsers().size() > 0) {
+                if (state == null) {
+                    continue;
+                }
+                
+                if (state.getSelectedUsers() != null) {
                     usernames = state.getSelectedUsers().stream().map(User::getUsername)
                             .collect(Collectors.toList());
                 }
@@ -415,6 +436,32 @@ public class CurationServiceImpl implements CurationService
             long aProjectId)
     {
         return getCurationState(aUsername, aProjectId).getMergeStrategy();
+    }
+
+    @Override
+    public void onApplicationEvent(AnnotationPageCreatedEvent event)
+    {
+        // when annotationpage is loaded for the first time, 
+        // we do not want to immediately start curating
+        synchronized (curationStates)
+        {
+            getCurationState(event.getUsername(), event.getProjectId()).setCurating(false);
+        }
+    }
+
+    @Override
+    public void setUserStartedCurating(String aUsername, Long aProjectId)
+    {
+        synchronized (curationStates)
+        {
+            getCurationState(aUsername, aProjectId).setCurating(true);
+        }
+    }
+
+    @Override
+    public boolean isUserCurating(String aUsername, Long aProjectId)
+    {
+        return getCurationState(aUsername, aProjectId).isCurating();
     }
 
 }

@@ -139,13 +139,17 @@ public class CurationSidebar
         // if curation user changed we have to reload the document
         AnnotatorState state = aModel.getObject();
         String currentUser = userRepository.getCurrentUser().getUsername();
+        long projectid = state.getProject().getId();
         User curationUser = curationService.retrieveCurationUser(currentUser, 
-                state.getProject().getId());
-        if (!currentUser.equals(curationUser.getUsername())) {
+                projectid);
+        if (currentUser != null && !currentUser.equals(curationUser.getUsername())) {
             state.setUser(curationUser);
             Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
             annoPage.actionLoadDocument(target.orElseGet(null));
         }
+        
+        // user started curating, extension can show suggestions
+        curationService.setUserStartedCurating(currentUser, projectid);
     }
     
     private Form<Void> createSettingsForm(String aId)
@@ -211,7 +215,7 @@ public class CurationSidebar
         });
         return settingsForm;
     }
-    
+
     @Override
     protected void onConfigure()
     {
