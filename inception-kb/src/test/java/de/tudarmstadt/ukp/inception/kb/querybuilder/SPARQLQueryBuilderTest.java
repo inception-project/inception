@@ -935,6 +935,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().contains("tower"));
     }
 
+    @Ignore
     @Test
     public void testWithLabelContainingAnyOf_Wikidata_FTS() throws Exception
     {
@@ -1297,6 +1298,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Barack Obam"));
     }
 
+    @Ignore
     @Test
     public void testWithLabelStartingWith_Wikidata_FTS() throws Exception
     {
@@ -1397,6 +1399,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
+    @Ignore
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Wikidata_FTS() throws Exception
     {
@@ -1416,6 +1419,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.equalsIgnoreCase("Labour"));
     }
 
+    @Ignore
     @Test
     public void testWithLabelMatchingExactlyAnyOf_multiple_Wikidata_FTS() throws Exception
     {

@@ -23,6 +23,8 @@
       <div class="flex-h-container flex-gutter">
         <div>
           <input wicket:id="newProject" type="button" class="btn btn-primary" wicket:message="value:newProject"/> 
+          <a wicket:id="startTutorial" ><i class="fa fa-lightbulb">  Start Tutorial</i></a>
+          
         </div>
         <div class="flex-content"></div>
         <div style="flex-basis: 30%; min-width: 20em;">
@@ -48,6 +50,7 @@
       </div>
       <div class="scrolling flex-content flex-h-container flex-gutter">
         <div wicket:id="projects" class="flex-content list-group">
+        <div wicket:id="emptyListLabel"  style="position: absolute; top: 50%; left: 30%; right: 30%; color:#aaa; font-size: x-large;  transform: translate(0, -50%)"></div>
           <div wicket:id="project" class="list-group-item">
             <div class="flex-h-container flex-gutter flex-only-internal-gutter">
               <div class="flex-content">
