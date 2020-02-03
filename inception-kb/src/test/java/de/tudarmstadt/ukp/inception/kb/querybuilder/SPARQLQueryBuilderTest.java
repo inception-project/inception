@@ -1190,6 +1190,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Barack Obam"));
     }
 
+    @Ignore
     @Test
     public void testWithLabelStartingWith_Wikidata_FTS() throws Exception
     {
@@ -1309,6 +1310,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.equalsIgnoreCase("Labour"));
     }
 
+    @Ignore
     @Test
     public void testWithLabelMatchingExactlyAnyOf_multiple_Wikidata_FTS() throws Exception
     {
