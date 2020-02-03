@@ -500,6 +500,17 @@
     	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
     	<artifactId>inception-curation</artifactId>
     </dependency>
+      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
+      <artifactId>enjoyhint</artifactId>
+	</dependency> 
+	<dependency>
+	    <groupId>org.webjars.npm</groupId>
+	    <artifactId>kinetic</artifactId>
+	</dependency>
+	<dependency>
+	    <groupId>org.webjars.bower</groupId>
+	    <artifactId>jquery.scrollTo</artifactId>
+	</dependency>
   </dependencies>
   <build>
     <plugins>
@@ -769,6 +780,10 @@
                 <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
               <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
+              <!-- Tutorial Js dependencies -->
+              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
+              <usedDependency>org.webjars.npm:kinetic</usedDependency>
+              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

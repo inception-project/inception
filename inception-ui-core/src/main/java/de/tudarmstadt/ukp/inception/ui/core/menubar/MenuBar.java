@@ -52,7 +52,7 @@ public class MenuBar
                 .add(visibleWhen(() -> userRepository.getCurrentUser() != null)));
 
         add(new BookmarkablePageLink<>("adminLink", AdminDashboardPage.class)
-                .add(visibleWhen(this::adminAreaAccessRequired)));
+                .add(visibleWhen(this::adminAreaAccessRequired))); 
     }
     
     private boolean adminAreaAccessRequired()
