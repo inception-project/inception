@@ -28,7 +28,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
@@ -40,6 +45,7 @@ import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -61,6 +67,9 @@ public class CurationServiceImpl implements CurationService
     
     // stores info on which users are selected and which doc is the curation-doc
     private ConcurrentMap<CurationStateKey, CurationState> curationStates;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
     
     private @Autowired DocumentService documentService;
     private @Autowired SessionRegistry sessionRegistry;
@@ -104,12 +113,53 @@ public class CurationServiceImpl implements CurationService
         }
     }
     
-    private CurationState getCurationState(String aUser, long aProjectId) {
-        synchronized (curationStates) {
-            // TODO if absent: get from database, if not there, create new state
-            return curationStates.computeIfAbsent(new CurationStateKey(aUser, aProjectId), 
-                key -> new CurationState(aUser));
+    private CurationState getCurationState(String aUser, long aProjectId)
+    {
+        if (curationStates.containsKey(new CurationStateKey(aUser, aProjectId))) {
+            return curationStates.get(new CurationStateKey(aUser, aProjectId));
         }
+        else {
+            return getSettingsFromDB(aUser, aProjectId);
+        }
+    }
+    
+    @Transactional
+    private CurationState getSettingsFromDB(String aUsername, long aProjectId)
+    {
+        Validate.notBlank(aUsername, "User must be specified");
+        Validate.notNull(aProjectId, "project must be specified");
+        
+        String query = "FROM " + CurationSettings.class.getName() 
+                + " o WHERE o.username = :username " 
+                + "AND o.projectId = :projectId";
+        
+        List<CurationSettings> settings = entityManager
+                .createQuery(query, CurationSettings.class)
+                .setParameter("username", aUsername)
+                .setParameter("projectId", aProjectId)
+                .setMaxResults(1)
+                .getResultList();
+        
+        CurationState state;
+        if (settings.isEmpty()) {
+            state = new CurationState(aUsername);
+        }
+        else {
+            CurationSettings setting = settings.get(0);
+            Project project = projectService.getProject(aProjectId);
+            List<User> users = new ArrayList<>();
+            if (!setting.getSelectedUserNames().isEmpty()) {
+                users = setting.getSelectedUserNames().stream()
+                    .map(username -> userRegistry.get(username))
+                    .filter(user -> projectService.existsProjectPermission(user, project))
+                    .collect(Collectors.toList());
+            }
+            state = new CurationState(setting.getCurationUserName(), 
+                    users);
+        }
+        
+        curationStates.put(new CurationStateKey(aUsername, aProjectId), state);
+        return state;
     }
     
     private class CurationState
@@ -123,6 +173,14 @@ public class CurationServiceImpl implements CurationService
         public CurationState(String aUser)
         {
             curationUser = aUser;
+            selectedStrategy = new ManualMergeStrategy();
+        }
+
+        public CurationState(String aCurationUserName,
+                List<User> aSelectedUsers)
+        {
+            curationUser = aCurationUserName;
+            selectedUsers = new ArrayList<>(aSelectedUsers);
             selectedStrategy = new ManualMergeStrategy();
         }
 
@@ -247,9 +305,46 @@ public class CurationServiceImpl implements CurationService
         SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
         if (info != null) {
             String username = (String) info.getPrincipal();
-            // TODO: store state info in db for all projects of this user
+            storeCurationSettings(username);
             clearState(username);
         }
+    }
+
+    /**
+     * Write settings for all projects of this user to the data base
+     */
+    private void storeCurationSettings(String aUsername)
+    {
+        List<CurationSettings> settings = new ArrayList<>();
+        User currentUser = userRegistry.get(aUsername);
+        for (Project project : projectService.listAccessibleProjects(currentUser)) {
+            Long projectId = project.getId();
+            List<String> usernames = null;
+            if (curationStates.containsKey(new CurationStateKey(aUsername, projectId))) {
+                CurationState state = curationStates
+                        .get(new CurationStateKey(aUsername, projectId));
+                if (state.getSelectedUsers().size() > 0) {
+                    usernames = state.getSelectedUsers().stream().map(User::getUsername)
+                            .collect(Collectors.toList());
+                }
+                settings.add(new CurationSettings(aUsername, projectId, state.getCurationName(),
+                        usernames));
+            }
+        }
+        writeSettingsToDB(settings);
+    }
+
+    @Transactional
+    private void writeSettingsToDB(List<CurationSettings> aSettings)
+    {
+        for (CurationSettings setting : aSettings) {
+            if (setting.getId() == null) {
+                entityManager.persist(setting);
+            } else {
+                entityManager.merge(setting);
+            }
+        }
+        entityManager.flush();
     }
 
     private void clearState(String aUsername)
@@ -297,6 +392,22 @@ public class CurationServiceImpl implements CurationService
             return aUser;
         }
         return curationUser;
+    }
+    
+    @Override
+    public User retrieveCurationUser(String aUser, long aProjectId)
+    {
+        String curationUser = getCurationState(aUser, aProjectId).getCurationName();
+        if (curationUser == null) {
+            // default to user as curation target
+            return userRegistry.get(aUser);
+        }
+        else if (curationUser.equals(CURATION_USER)) {
+            return new User(CURATION_USER);
+        }
+        else {
+            return userRegistry.get(curationUser);
+        }
     }
 
     @Override

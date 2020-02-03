@@ -76,7 +76,7 @@ public interface CurationService
     public Map<String, CAS> retrieveUserCases(Collection<User> aUsers, SourceDocument aDoc);
 
     /**
-     * Returns the user corresponding to the CAS used as curation (target) CAS
+     * Returns the name of the user corresponding to the CAS used as curation (target) CAS
      */
     public String retrieveCurationTarget(String aUser, long aProjectId);
 
@@ -89,5 +89,10 @@ public interface CurationService
     /**
      * Store the selected merge-strategy for the given user and project
      */
-    void updateMergeStrategy(String aCurrentUser, long aProjectId, MergeStrategy aStrategy);
+    public void updateMergeStrategy(String aCurrentUser, long aProjectId, MergeStrategy aStrategy);
+
+    /**
+     * Returns the user corresponding to the CAS used as curation (target) CAS
+     */
+    public User retrieveCurationUser(String aUser, long aProjectId);
 }

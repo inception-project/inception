@@ -45,6 +45,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.value.AttributeMap;
 import org.apache.wicket.util.value.IValueMap;
@@ -107,8 +108,7 @@ public class CurationSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
         annoPage = aAnnotationPage;
-        // TODO check annopage metadata, if empty (new page):
-        // set annotatorstate user according to curation state
+        
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
@@ -135,6 +135,17 @@ public class CurationSidebar
         // Add empty space message
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
         mainContainer.add(noDocsLabel);
+        
+        // if curation user changed we have to reload the document
+        AnnotatorState state = aModel.getObject();
+        String currentUser = userRepository.getCurrentUser().getUsername();
+        User curationUser = curationService.retrieveCurationUser(currentUser, 
+                state.getProject().getId());
+        if (!currentUser.equals(curationUser.getUsername())) {
+            state.setUser(curationUser);
+            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+            annoPage.actionLoadDocument(target.orElseGet(null));
+        }
     }
     
     private Form<Void> createSettingsForm(String aId)

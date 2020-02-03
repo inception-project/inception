@@ -1,0 +1,45 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+  <changeSet author="INCEpTION Team" id="20200202-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="curationSettings_users" />
+      </not>
+    </preConditions>
+    <createTable tableName="curationSettings_users">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="setting_id" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+      <column name="username" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+    </createTable>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20200202-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="curation_settings" />
+      </not>
+    </preConditions>
+    <createTable tableName="curation_settings">
+      <column name="setting_id" type="BIGINT" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="username" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="projectId" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+      <column name="curationUsername" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+  </changeSet>
+</databaseChangeLog>
