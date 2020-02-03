@@ -47,8 +47,8 @@ public class MtasDocumentIndexFactory
     {
         PhysicalIndex indexBase = null;
         try {
-            indexBase = new MtasDocumentIndex(aProject, aAnnotationSchemaService, aDocumentService,
-                    aProjectService, aDir);
+            indexBase = new MtasDocumentIndex(aProject, aDocumentService, aProjectService,
+                    aDir);
         }
         catch (Exception e) {
             log.error("Unable to get index", e);

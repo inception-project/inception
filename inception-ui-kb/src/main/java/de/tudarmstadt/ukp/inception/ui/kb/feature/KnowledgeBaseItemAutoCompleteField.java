@@ -91,7 +91,8 @@ public class KnowledgeBaseItemAutoCompleteField
         behavior.setOption("footerTemplate",
                 Options.asString("#: instance.dataSource.total() # items found"));
         
-        // Try to smartly set the width and height of the dropdown
+        // Use one-third of the browser width but not less than 300 pixels. This is better than 
+        // using the Kendo auto-sizing feature because that sometimes doesn't get the width right.
         behavior.setOption("height", "Math.max($(window).height()*0.5,200)");
         behavior.setOption("open", String.join(" ",
                 "function(e) {",
@@ -106,8 +107,6 @@ public class KnowledgeBaseItemAutoCompleteField
                 "}"));
         
         // Prevent scrolling action from closing the dropdown while the focus is on the input field
-        // Use one-third of the browser width but not less than 300 pixels. This is better than 
-        // using the Kendo auto-sizing feature because that sometimes doesn't get the width right.
         // The solution we use here is a NASTY hack, but I didn't find any other way to cancel out
         // only the closing triggered by scrolling the browser window without having other adverse
         // side effects such as mouse clicks or enter no longer selecting and closing the dropdown.

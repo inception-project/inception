@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
@@ -41,6 +42,16 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jena.fuseki.main.FusekiServer;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.text.EntityDefinition;
+import org.apache.jena.query.text.TextDatasetFactory;
+import org.apache.jena.query.text.TextIndex;
+import org.apache.jena.query.text.TextIndexConfig;
+import org.apache.jena.query.text.TextIndexLucene;
+import org.apache.jena.tdb.TDBFactory;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.RAMDirectory;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
@@ -57,6 +68,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -186,6 +198,7 @@ public class SPARQLQueryBuilderTest
     
     private KnowledgeBase kb;
     private Repository rdf4jLocalRepo;
+    private Repository fusekiLocalRepo;
     private Repository ukpVirtuosoRepo;
     private Repository zbwStw;
     private Repository zbwGnd;
@@ -194,6 +207,8 @@ public class SPARQLQueryBuilderTest
     private Repository yago;
     private Repository hucit;
     private Repository britishMuseum;
+    
+    private FusekiServer fusekiServer;
     
     @Before
     public void setUp()
@@ -208,7 +223,7 @@ public class SPARQLQueryBuilderTest
         
         initRdfsMapping();
         
-        // Local in-memory store - this should be used for most tests because we can
+        // Local RDF4J in-memory store - this should be used for most tests because we can
         // a) rely on its availability
         // b) import custom test data
         LuceneSail lucenesail = new LuceneSail();
@@ -216,6 +231,15 @@ public class SPARQLQueryBuilderTest
         lucenesail.setBaseSail(new MemoryStore());
         rdf4jLocalRepo = new SailRepository(lucenesail);
         rdf4jLocalRepo.init();
+        
+        // Local Fuseki in-memory story
+        fusekiServer = FusekiServer.create()
+                .add("/fuseki", createFusekiFTSDataset())
+                .build();
+        fusekiServer.start() ;
+        fusekiLocalRepo = new SPARQLRepository(
+                "http://localhost:" + fusekiServer.getPort() + "/fuseki");
+        fusekiLocalRepo.init();
         
         ukpVirtuosoRepo = new SPARQLRepository(
                 "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql");
@@ -250,6 +274,12 @@ public class SPARQLQueryBuilderTest
         britishMuseum.init();
     }
     
+    @After
+    public void tearDown()
+    {
+        fusekiServer.stop();
+    }
+    
     /**
      * Checks that {@code SPARQLQueryBuilder#exists(RepositoryConnection, boolean)} can return 
      * {@code true} by querying for a list of all classes in {@link #DATA_CLASS_RDFS_HIERARCHY}
@@ -258,7 +288,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatExistsReturnsTrueWhenDataQueriedForExists() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb));
@@ -275,7 +305,7 @@ public class SPARQLQueryBuilderTest
     {
         kb.setDefaultLanguage(null);
         
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
         
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
@@ -305,7 +335,7 @@ public class SPARQLQueryBuilderTest
         // The dataset contains only labels for French but no descriptions
         kb.setDefaultLanguage("fr");
         
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
         
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
@@ -331,7 +361,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatExistsReturnsFalseWhenDataQueriedForDoesNotExist() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -346,7 +376,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatExplicitClassCanBeRetrievedByItsIdentifier() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -361,7 +391,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatImplicitClassCanBeRetrievedByItsIdentifier() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -377,7 +407,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatNonClassCannotBeRetrievedByItsIdentifier() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -392,7 +422,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatCanRetrieveItemInfoForIdentifier() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
@@ -413,7 +443,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatAllPropertiesCanBeRetrieved() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forProperties(kb)
@@ -444,7 +474,7 @@ public class SPARQLQueryBuilderTest
     public void thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
         throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forProperties(kb)
@@ -496,7 +526,7 @@ public class SPARQLQueryBuilderTest
     public void thatPropertyQueryLimitedToChildrenDoesNotReturnOutOfScopeResults()
         throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forProperties(kb)
@@ -512,7 +542,7 @@ public class SPARQLQueryBuilderTest
     public void thatPropertyQueryLimitedToDomainDoesNotReturnOutOfScopeResults()
         throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forProperties(kb)
@@ -534,7 +564,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -549,7 +579,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatQueryWithExplicitRootClassDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         ValueFactory vf = SimpleValueFactory.getInstance();
         kb.setRootConcepts(asList(vf.createIRI("http://example.org/#implicitRoot")));
@@ -567,7 +597,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatNonRootClassCanBeUsedAsExplicitRootClass() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         ValueFactory vf = SimpleValueFactory.getInstance();
         kb.setRootConcepts(asList(
@@ -586,7 +616,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatQueryLimitedToClassesDoesNotReturnInstances() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder.forClasses(kb));
         
@@ -599,7 +629,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatQueryLimitedToInstancesDoesNotReturnClasses() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder.forInstances(kb));
         
@@ -612,7 +642,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatClassQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -628,7 +658,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatClassQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -643,7 +673,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -669,7 +699,7 @@ public class SPARQLQueryBuilderTest
         assertIsReachable(wikidata);
         
         kb.setType(REMOTE);
-        kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
+        kb.setFullTextSearchIri(FTS_WIKIDATA);
         initWikidataMapping();
     
         List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
@@ -687,7 +717,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatClassQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -703,7 +733,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatInstanceQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -718,7 +748,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -735,7 +765,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatInstanceQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forInstances(kb)
@@ -751,7 +781,7 @@ public class SPARQLQueryBuilderTest
     public void thatInstanceQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
         throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forInstances(kb)
@@ -766,7 +796,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatItemQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forItems(kb)
@@ -782,7 +812,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatItemQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forItems(kb)
@@ -796,6 +826,52 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
+    public void testWithLabelMatchingAnyOf_RDF4J_withLanguage_noFTS() throws Exception
+    {
+        kb.setFullTextSearchIri(null);
+        
+        __testWithLabelMatchingAnyOf_withLanguage(rdf4jLocalRepo);
+    }
+    
+    @Test
+    public void testWithLabelMatchingAnyOf_RDF4J_withLanguage_FTS() throws Exception
+    {
+        kb.setFullTextSearchIri(FTS_LUCENE);
+        
+        __testWithLabelMatchingAnyOf_withLanguage(rdf4jLocalRepo);
+    }
+
+    @Test
+    public void testWithLabelMatchingAnyOf_FUSEKI_withLanguage_FTS() throws Exception
+    {
+        kb.setFullTextSearchIri(FTS_FUSEKI);
+        
+        __testWithLabelMatchingAnyOf_withLanguage(fusekiLocalRepo);
+    }
+
+    public void __testWithLabelMatchingAnyOf_withLanguage(Repository aRepository)
+        throws Exception
+    {
+        importDataFromString(aRepository, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder
+                .forItems(kb)
+                .withLabelMatchingAnyOf("Gobli"));
+        
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.contains("Goblin"));
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results)
+                .usingElementComparatorOnFields(
+                        "identifier", "name", "language")
+                .containsExactlyInAnyOrder(
+                        new KBHandle("http://example.org/#red-goblin", "Red Goblin"),
+                        new KBHandle("http://example.org/#green-goblin", "Green Goblin",
+                                null, "en"));
+    }    
+    
+    @Test
     public void testWithLabelContainingAnyOf_RDF4J_withLanguage_noFTS() throws Exception
     {
         kb.setFullTextSearchIri(null);
@@ -806,15 +882,24 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelContainingAnyOf_RDF4J_withLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE);
         
         __testWithLabelContainingAnyOf_withLanguage(rdf4jLocalRepo);
     }
-    
+
+    @Test
+    public void testWithLabelContainingAnyOf_FUSEKI_withLanguage_FTS() throws Exception
+    {
+        kb.setFullTextSearchIri(FTS_FUSEKI);
+        
+        __testWithLabelContainingAnyOf_withLanguage(fusekiLocalRepo);
+    }
+
     public void __testWithLabelContainingAnyOf_withLanguage(Repository aRepository)
         throws Exception
     {
-        importDataFromString(TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+        importDataFromString(aRepository, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder
                 .forItems(kb)
@@ -921,7 +1006,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE);
         
         __testWithLabelMatchingExactlyAnyOf_withLanguage(rdf4jLocalRepo);
     }
@@ -929,7 +1014,7 @@ public class SPARQLQueryBuilderTest
     public void __testWithLabelMatchingExactlyAnyOf_withLanguage(Repository aRepository)
         throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder
@@ -954,23 +1039,34 @@ public class SPARQLQueryBuilderTest
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setLabelIri(RDFS.LABEL);
         
-        __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(rdf4jLocalRepo);
+        __testWithLabelMatchingExactlyAnyOf_subproperty(rdf4jLocalRepo);
     }
     
     @Test
     public void testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE);
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setLabelIri(RDFS.LABEL);
         
-        __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(rdf4jLocalRepo);
+        __testWithLabelMatchingExactlyAnyOf_subproperty(rdf4jLocalRepo);
     }
     
-    public void __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(Repository aRepository)
+    @Ignore("Requires addition Fuseki FTS configuration")
+    @Test
+    public void testWithLabelMatchingExactlyAnyOf_FUSEKI_subproperty_FTS() throws Exception
+    {
+        kb.setFullTextSearchIri(FTS_FUSEKI);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setLabelIri(RDFS.LABEL);
+        
+        __testWithLabelMatchingExactlyAnyOf_subproperty(fusekiLocalRepo);
+    }
+    
+    public void __testWithLabelMatchingExactlyAnyOf_subproperty(Repository aRepository)
         throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, LABEL_SUBPROPERTY);
+        importDataFromString(aRepository, TURTLE, TURTLE_PREFIX, LABEL_SUBPROPERTY);
         
         // The label "Green Goblin" is not assigned directly via rdfs:label but rather via a
         // subproperty of it. Thus, this test also checks if the label sub-property support works.
@@ -992,22 +1088,30 @@ public class SPARQLQueryBuilderTest
     {
         kb.setFullTextSearchIri(null);
         
-        __testWithLabelStartingWith_RDF4J_withoutLanguage();
+        __testWithLabelStartingWith_withoutLanguage(rdf4jLocalRepo);
     }
 
     @Test
     public void testWithLabelStartingWith_RDF4J_withoutLanguage_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setFullTextSearchIri(FTS_LUCENE);
         
-        __testWithLabelStartingWith_RDF4J_withoutLanguage();
+        __testWithLabelStartingWith_withoutLanguage(rdf4jLocalRepo);
     }
 
-    public void __testWithLabelStartingWith_RDF4J_withoutLanguage() throws Exception
+    @Test
+    public void testWithLabelStartingWith_FUSEKI_withoutLanguage_FTS() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITHOUT_LANGUAGE);
+        kb.setFullTextSearchIri(FTS_FUSEKI);
+        
+        __testWithLabelStartingWith_withoutLanguage(fusekiLocalRepo);
+    }
+
+    public void __testWithLabelStartingWith_withoutLanguage(Repository aRepository) throws Exception
+    {
+        importDataFromString(aRepository, TURTLE, TURTLE_PREFIX, DATA_LABELS_WITHOUT_LANGUAGE);
     
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder
                 .forItems(kb)
                 .withLabelStartingWith("Green"));
         
@@ -1024,7 +1128,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_noFTS() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(null);
         
@@ -1046,7 +1151,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_1() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
@@ -1070,7 +1176,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_2() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
@@ -1094,7 +1201,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_3() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
@@ -1395,7 +1502,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         kb.setLabelIri(vf.createIRI("http://purl.org/olia/system.owl#hasTag"));
         
-        importDataFromFile("src/test/resources/data/penn.owl");
+        importDataFromFile(rdf4jLocalRepo, "src/test/resources/data/penn.owl");
         
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forInstances(kb)
@@ -1518,7 +1625,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelContainingAnyOf_RDF4J_pets_ttl() throws Exception
     {
-        importDataFromFile("src/test/resources/data/pets.ttl");
+        importDataFromFile(rdf4jLocalRepo, "src/test/resources/data/pets.ttl");
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forItems(kb)
@@ -1537,7 +1644,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatRootsCanBeRetrieved_RDF4J_ontolex() throws Exception
     {
-        importDataFromFile("src/test/resources/data/wordnet-ontolex-ontology.owl");
+        importDataFromFile(rdf4jLocalRepo, "src/test/resources/data/wordnet-ontolex-ontology.owl");
         
         initOwlMapping();
 
@@ -1561,7 +1668,7 @@ public class SPARQLQueryBuilderTest
                 .isEqualTo("Green Goblin");
     }
 
-    private void importDataFromFile(String aFilename) throws IOException
+    private void importDataFromFile(Repository aRepository, String aFilename) throws IOException
     {
         // Detect the file format
         RDFFormat format = Rio.getParserFormatForFileName(aFilename).orElse(RDFFormat.RDFXML);
@@ -1570,23 +1677,25 @@ public class SPARQLQueryBuilderTest
         
         // Load files into the repository
         try (InputStream is = new FileInputStream(aFilename)) {
-            importData(format, is);
+            importData(aRepository, format, is);
         }
     }
     
-    private void importDataFromString(RDFFormat aFormat, String... aRdfData) throws IOException
+    private void importDataFromString(Repository aRepository, RDFFormat aFormat, String... aRdfData)
+        throws IOException
     {
         String data = String.join("\n", aRdfData);
         
         // Load files into the repository
         try (InputStream is = IOUtils.toInputStream(data, UTF_8)) {
-            importData(aFormat, is);
+            importData(aRepository, aFormat, is);
         }
     }
     
-    private void importData(RDFFormat aFormat, InputStream aIS) throws IOException
+    private void importData(Repository aRepository, RDFFormat aFormat, InputStream aIS)
+        throws IOException
     {
-        try (RepositoryConnection conn = rdf4jLocalRepo.getConnection()) {
+        try (RepositoryConnection conn = aRepository.getConnection()) {
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
@@ -1685,5 +1794,19 @@ public class SPARQLQueryBuilderTest
         
         Assume.assumeTrue("Remote repository at [" + sparqlRepository + "] is not reachable",
                 isReachable(sparqlRepository.toString()));
+    }
+    
+    /**
+     * Creates a dataset description with FTS support for the RDFS label property.
+     */
+    private static Dataset createFusekiFTSDataset()
+    {
+        Dataset ds1 = TDBFactory.createDataset();
+        Directory dir = new RAMDirectory();
+        EntityDefinition eDef = new EntityDefinition("iri", "text");
+        eDef.setPrimaryPredicate(org.apache.jena.vocabulary.RDFS.label);
+        TextIndex tidx = new TextIndexLucene(dir, new TextIndexConfig(eDef));
+        Dataset ds = TextDatasetFactory.create(ds1, tidx);
+        return ds;
     }
 }
