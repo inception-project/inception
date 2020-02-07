@@ -36,23 +36,26 @@
     <dependency>
       <groupId>org.asciidoctor</groupId>
       <artifactId>asciidoctorj</artifactId>
-      <version>1.5.8.1</version>
+      <version>${asciidoctor.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.asciidoctor</groupId>
       <artifactId>asciidoctorj-diagram</artifactId>
-      <version>1.5.12</version>
+      <version>${asciidoctor-diagram.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>jquery.tocify.js</artifactId>
       <version>1.9.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>jquery-migrate</artifactId>
       <version>3.0.0</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
