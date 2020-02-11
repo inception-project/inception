@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
@@ -93,6 +94,7 @@ public class PdfAnnotationEditor
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
@@ -157,8 +159,9 @@ public class PdfAnnotationEditor
                 int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
 
                 VDocument vdoc = render(cas, begin, end);
-                PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
-                    vdoc, cas.getDocumentText(), annotationService, pdfExtractFile, begin);
+                PdfAnnoRenderer renderer = new PdfAnnoRenderer(annotationService, coloringService);
+                PdfAnnoModel pdfAnnoModel = renderer.render(getModelObject(),
+                    vdoc, cas.getDocumentText(), pdfExtractFile, begin);
                 // show unmatched spans to user
                 if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
                     String annotations = pdfAnnoModel.getUnmatchedSpans().stream()

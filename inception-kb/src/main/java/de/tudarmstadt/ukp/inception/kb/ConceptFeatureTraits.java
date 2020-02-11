@@ -28,7 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTr
  * Traits for knowledge-base-related features.
  */
 public class ConceptFeatureTraits
-    implements Serializable
+    implements Serializable, KeyBindingTrait
 {
     private static final long serialVersionUID = 6303541487449965932L;
 
@@ -71,11 +71,13 @@ public class ConceptFeatureTraits
         allowedValueType = aAllowedType;
     }
 
+    @Override
     public List<KeyBinding> getKeyBindings()
     {
         return keyBindings;
     }
 
+    @Override
     public void setKeyBindings(List<KeyBinding> aKeyBindings)
     {
         if (aKeyBindings == null) {
