@@ -128,7 +128,7 @@
     <!-- For RELEASEes of WebAnno / DKPro Core-->
     <repository>
       <id>ukp-oss-releases</id>
-      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
+      <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
       <releases>
         <enabled>true</enabled>
         <updatePolicy>never</updatePolicy>
@@ -141,7 +141,7 @@
     <!-- For SNAPSHOTs of WebAnno / DKPro Core -->
     <repository>
       <id>ukp-oss-snapshots</id>
-      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
+      <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -154,12 +154,12 @@
     <pluginRepository>
       <id>jcenter-snapshots</id>
       <name>jcenter</name>
-      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
+      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
     </pluginRepository>
     <pluginRepository>
       <id>jcenter-releases</id>
       <name>jcenter</name>
-      <url>http://jcenter.bintray.com</url>
+      <url>https://jcenter.bintray.com</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
