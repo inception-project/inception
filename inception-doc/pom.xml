@@ -35,6 +35,12 @@
 
     <dependency>
       <groupId>org.asciidoctor</groupId>
+      <artifactId>asciidoctorj-api</artifactId>
+      <version>${asciidoctor.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.asciidoctor</groupId>
       <artifactId>asciidoctorj</artifactId>
       <version>${asciidoctor.version}</version>
       <scope>test</scope>
@@ -69,6 +75,7 @@
               <!--
                 - Maven doesn't detect that we tell asciidoctor to use the diagram module
               -->
+              <usedDependency>org.asciidoctor:asciidoctorj</usedDependency>
               <usedDependency>org.asciidoctor:asciidoctorj-diagram</usedDependency>
               <!--
                 - Maven doesn't detect JS dependencies. We use this in docinfo.html
