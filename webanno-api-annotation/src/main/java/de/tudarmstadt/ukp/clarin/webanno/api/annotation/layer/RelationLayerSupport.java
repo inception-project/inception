@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class RelationLayerSupport
-    extends LayerSupport_ImplBase<RelationAdapter>
+    extends LayerSupport_ImplBase<RelationAdapter, Void>
     implements InitializingBean
 {
     private final ApplicationEventPublisher eventPublisher;
@@ -98,8 +98,8 @@ public class RelationLayerSupport
     @Override
     public RelationAdapter createAdapter(AnnotationLayer aLayer)
     {
-        RelationAdapter adapter = new RelationAdapter(featureSupportRegistry, eventPublisher,
-            aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        RelationAdapter adapter = new RelationAdapter(getLayerSupportRegistry(),
+            featureSupportRegistry, eventPublisher, aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
             () -> schemaService.listAnnotationFeature(aLayer),
             layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
 
@@ -126,7 +126,8 @@ public class RelationLayerSupport
     @Override
     public Renderer getRenderer(AnnotationLayer aLayer)
     {
-        return new RelationRenderer(createAdapter(aLayer), featureSupportRegistry,
+        return new RelationRenderer(createAdapter(aLayer), getLayerSupportRegistry(),
+                featureSupportRegistry,
                 layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
     }
 }

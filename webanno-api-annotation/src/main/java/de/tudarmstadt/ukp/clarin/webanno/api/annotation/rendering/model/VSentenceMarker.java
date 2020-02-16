@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 public class VSentenceMarker
     extends VMarker
 {
-    private String type;
-    private int index;
+    private final String type;
+    private final int index;
 
     public VSentenceMarker(String aType, int aIndex)
     {

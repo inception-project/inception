@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -195,4 +196,11 @@ public interface TypeAdapter
      * that should not be tracked in detail.
      */
     void silenceEvents();
+    
+    default String getUiTypeName()
+    {
+        return getTypeId() + "_" + getAnnotationTypeName();
+    }
+    
+    <T> Optional<T> getTraits(Class<T> aInterface);
 }

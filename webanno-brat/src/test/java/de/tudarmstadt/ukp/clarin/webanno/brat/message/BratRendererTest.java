@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
@@ -173,7 +174,9 @@ public class BratRendererTest
                 cas, schemaService.listAnnotationLayer(project));
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, state, vdoc, cas, schemaService);
+        BratRenderer renderer = new BratRenderer(schemaService,
+                new ColoringServiceImpl(schemaService));
+        renderer.render(response, state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -209,7 +212,9 @@ public class BratRendererTest
                 cas, schemaService.listAnnotationLayer(project));
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, state, vdoc, cas, schemaService);
+        BratRenderer renderer = new BratRenderer(schemaService,
+                new ColoringServiceImpl(schemaService));
+        renderer.render(response, state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
