@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", 
         matchIfMissing = false)
 public class DocumentMetadataLayerSupport
-    extends LayerSupport_ImplBase<DocumentMetadataLayerAdapter>
+    extends LayerSupport_ImplBase<DocumentMetadataLayerAdapter, Void>
     implements InitializingBean
 {
     public static final String TYPE = "document-metadata";
@@ -98,7 +98,7 @@ public class DocumentMetadataLayerSupport
     public DocumentMetadataLayerAdapter createAdapter(AnnotationLayer aLayer)
     {
         DocumentMetadataLayerAdapter adapter = new DocumentMetadataLayerAdapter(
-            featureSupportRegistry, eventPublisher, aLayer,
+            getLayerSupportRegistry(), featureSupportRegistry, eventPublisher, aLayer,
             () -> schemaService.listAnnotationFeature(aLayer));
 
         return adapter;
@@ -119,6 +119,7 @@ public class DocumentMetadataLayerSupport
     @Override
     public Renderer getRenderer(AnnotationLayer aLayer)
     {
-        return new NopRenderer(createAdapter(aLayer), featureSupportRegistry);
+        return new NopRenderer(createAdapter(aLayer), getLayerSupportRegistry(),
+                featureSupportRegistry);
     }
 }
