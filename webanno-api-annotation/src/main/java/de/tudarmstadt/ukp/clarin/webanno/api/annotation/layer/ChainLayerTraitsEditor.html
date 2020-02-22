@@ -19,10 +19,21 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <form wicket:id="form" class="form-horizontal">
-    <div class="form-group">
-      <label class="col-sm-4 control-label">Coloring rules</label>
+    <div class="form-group" wicket:enclosure="anchoringMode">
+      <label wicket:for="anchoringMode" class="col-sm-4 control-label"> <wicket:label
+          key="anchoringMode" />
+      </label>
       <div class="col-sm-8">
-        <div wicket:id="coloringRules"/>
+        <select wicket:id="anchoringMode" class="form-control" data-container="body"></select>
+      </div>
+    </div>
+    <div class="form-group" wicket:enclosure="linkedListBehavior">
+      <div class="col-sm-offset-4 col-sm-8">
+        <div class="checkbox">
+          <label wicket:for="linkedListBehavior">
+            <input wicket:id="linkedListBehavior" type="checkbox"> <wicket:label key="linkedListBehavior"/>
+          </label>
+        </div>
       </div>
     </div>
   </form>

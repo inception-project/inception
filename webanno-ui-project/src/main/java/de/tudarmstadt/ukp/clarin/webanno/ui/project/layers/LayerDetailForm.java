@@ -72,7 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEven
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -87,7 +86,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.LayerExportMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
@@ -113,27 +111,23 @@ public class LayerDetailForm
     private DropDownChoice<AnnotationLayer> attachTypeSelect;
     private Label effectiveAttachType;
 
-    private DropDownChoice<AnchoringMode> anchoringMode;
     private DropDownChoice<OverlapMode> overlapMode;
     private DropDownChoice<ValidationMode> validationMode;
 
-    private FeatureSelectionForm featureSelectionForm;
     private FeatureDetailForm featureDetailForm;
     
     private CheckBox crossSentence;
     private CheckBox showTextInHover;
-    private CheckBox linkedListBehavior;
 
     private WebMarkupContainer traitsContainer;
 
     private LayerExportMode exportMode = LayerExportMode.JSON;
 
     public LayerDetailForm(String id, IModel<AnnotationLayer> aSelectedLayer,
-            FeatureSelectionForm aFeatureSelectionForm, FeatureDetailForm aFeatureDetailForm)
+            FeatureDetailForm aFeatureDetailForm)
     {
         super(id, CompoundPropertyModel.of(aSelectedLayer));
 
-        featureSelectionForm = aFeatureSelectionForm;
         featureDetailForm = aFeatureDetailForm;
         
         setOutputMarkupPlaceholderTag(true);
@@ -199,9 +193,7 @@ public class LayerDetailForm
             {
                 aTarget.add(crossSentence);
                 aTarget.add(showTextInHover);
-                aTarget.add(linkedListBehavior);
                 aTarget.add(attachTypeSelect);
-                aTarget.add(anchoringMode);
                 aTarget.add(overlapMode);
                 aTarget.add(traitsContainer);
             }
@@ -230,25 +222,6 @@ public class LayerDetailForm
         validationMode.setOutputMarkupPlaceholderTag(true);
         validationMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
         validationMode.setChoices(Arrays.asList(ValidationMode.values()));
-
-        add(anchoringMode = new BootstrapSelect<AnchoringMode>("anchoringMode"));
-        anchoringMode.setOutputMarkupPlaceholderTag(true);
-        anchoringMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        anchoringMode.setChoices(Arrays.asList(AnchoringMode.values()));
-        anchoringMode.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-            // Makes no sense for relation layers or that attach directly to tokens
-            _this.setVisible(
-                    !isBlank(layer.getType()) && 
-                    !RELATION_TYPE.equals(layer.getType()));
-            _this.setEnabled(
-                    // Surface form must be locked to token boundaries for CONLL-U writer
-                    // to work.
-                    !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for layers that attach to tokens (currently
-                    // that is the only layer on which we use the attach feature)
-                    layer.getAttachFeature() == null);
-        }));
 
         add(overlapMode = new BootstrapSelect<OverlapMode>("overlapMode"));
         overlapMode.setOutputMarkupPlaceholderTag(true);
@@ -291,18 +264,6 @@ public class LayerDetailForm
                     // Surface form must be locked to token boundaries for CONLL-U writer
                     // to work.
                     !SurfaceForm.class.getName().equals(layer.getName()));
-        }));
-
-        add(linkedListBehavior = new CheckBox("linkedListBehavior"));
-        linkedListBehavior.setOutputMarkupPlaceholderTag(true);
-        linkedListBehavior.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-            _this.setVisible(!isBlank(layer.getType()) && CHAIN_TYPE.equals(layer.getType()));
-        }));
-        linkedListBehavior.add(AjaxFormComponentUpdatingBehavior.onUpdate("change", _target -> {
-            _target.add(featureSelectionForm);
-            _target.add(featureDetailForm);
-            
         }));
 
         add(new TextArea<String>("onClickJavascriptAction")

@@ -19,10 +19,16 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <form wicket:id="form" class="form-horizontal">
-    <div class="form-group">
-      <label class="col-sm-4 control-label">
-        Coloring rules
+    <div class="form-group" wicket:enclosure="anchoringMode">
+      <label wicket:for="anchoringMode" class="col-sm-4 control-label"> <wicket:label
+          key="anchoringMode" />
       </label>
+      <div class="col-sm-8">
+        <select wicket:id="anchoringMode" class="form-control" data-container="body"></select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-4 control-label">Coloring rules</label>
       <div class="col-sm-8">
         <div wicket:id="coloringRules"/>
       </div>

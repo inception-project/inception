@@ -38,8 +38,8 @@ public class RelationLayerTraitsEditor
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
 
     private String layerSupportId;
-    private IModel<AnnotationLayer> feature;
-    private CompoundPropertyModel<RelationLayerTraits> traits;
+    private CompoundPropertyModel<RelationLayerTraits> traitsModel;
+    private CompoundPropertyModel<AnnotationLayer> layerModel;
     private ColoringRulesConfigurationPanel coloringRules;
 
     public RelationLayerTraitsEditor(String aId, RelationLayerSupport aFS,
@@ -48,11 +48,12 @@ public class RelationLayerTraitsEditor
         super(aId, aLayer);
 
         layerSupportId = aFS.getId();
-        feature = aLayer;
 
-        traits = CompoundPropertyModel.of(getLayerSupport().readTraits(feature.getObject()));
+        layerModel = CompoundPropertyModel.of(aLayer);
+        traitsModel = CompoundPropertyModel
+                .of(getLayerSupport().readTraits(layerModel.getObject()));
 
-        Form<RelationLayerTraits> form = new Form<RelationLayerTraits>(MID_FORM, traits)
+        Form<RelationLayerTraits> form = new Form<RelationLayerTraits>(MID_FORM, traitsModel)
         {
             private static final long serialVersionUID = -3109239605783291123L;
 
@@ -61,7 +62,7 @@ public class RelationLayerTraitsEditor
             {
                 super.onSubmit();
 
-                getLayerSupport().writeTraits(feature.getObject(), traits.getObject());
+                getLayerSupport().writeTraits(layerModel.getObject(), traitsModel.getObject());
             }
         };
 
@@ -76,7 +77,7 @@ public class RelationLayerTraitsEditor
             IModel<AnnotationLayer> aFeature)
     {
         ColoringRulesConfigurationPanel panel = new ColoringRulesConfigurationPanel("coloringRules",
-                aFeature, traits.bind("coloringRules.rules"));
+                aFeature, traitsModel.bind("coloringRules.rules"));
         panel.setOutputMarkupId(true);
         return panel;
     }

@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import static java.util.Arrays.asList;
 
+import org.apache.wicket.Component;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -27,19 +30,20 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 
-public class SpanLayerTraitsEditor
+public class ChainLayerTraitsEditor
     extends Panel
 {
     private static final long serialVersionUID = -9082045435380184514L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(ChainLayerTraitsEditor.class);
 
     private static final String MID_FORM = "form";
 
@@ -47,12 +51,13 @@ public class SpanLayerTraitsEditor
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
 
     private String layerSupportId;
-    private CompoundPropertyModel<SpanLayerTraits> traitsModel;
+    private CompoundPropertyModel<ChainLayerTraits> traitsModel;
     private IModel<AnnotationLayer> layerModel;
-    private ColoringRulesConfigurationPanel coloringRules;
     private DropDownChoice<AnchoringMode> anchoringMode;
+    private CheckBox linkedListBehavior;
 
-    public SpanLayerTraitsEditor(String aId, SpanLayerSupport aFS, IModel<AnnotationLayer> aLayer)
+    public ChainLayerTraitsEditor(String aId, ChainLayerSupport aFS,
+            IModel<AnnotationLayer> aLayer)
     {
         super(aId, aLayer);
 
@@ -62,7 +67,7 @@ public class SpanLayerTraitsEditor
         traitsModel = CompoundPropertyModel
                 .of(getLayerSupport().readTraits(layerModel.getObject()));
 
-        Form<SpanLayerTraits> form = new Form<SpanLayerTraits>(MID_FORM, traitsModel)
+        Form<ChainLayerTraits> form = new Form<ChainLayerTraits>(MID_FORM, traitsModel)
         {
             private static final long serialVersionUID = -3109239605783291123L;
 
@@ -75,38 +80,33 @@ public class SpanLayerTraitsEditor
             }
         };
 
-        coloringRules = newColoringRulesConfigurationPanel(aLayer);
-        form.add(coloringRules);
-        
         form.add(anchoringMode = new BootstrapSelect<AnchoringMode>("anchoringMode"));
         anchoringMode.setModel(PropertyModel.of(layerModel, "anchoringMode"));
         anchoringMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
         anchoringMode.setChoices(asList(AnchoringMode.values()));
-        anchoringMode.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotationLayer layer = layerModel.getObject();
-            _this.setEnabled(
-                    // Surface form must be locked to token boundaries for CONLL-U writer to work.
-                    !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for layers that attach to tokens (currently
-                    // that is the only layer on which we use the attach feature)
-                    layer.getAttachFeature() == null);
+        
+        form.add(linkedListBehavior = new CheckBox("linkedListBehavior"));
+        linkedListBehavior.setModel(PropertyModel.of(layerModel, "linkedListBehavior"));
+        linkedListBehavior.add(AjaxFormComponentUpdatingBehavior.onUpdate("change", _target -> {
+            try {
+                @SuppressWarnings("unchecked")
+                Component layerDetailForm = findParent((Class<Component>) Class.forName(
+                        "de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.ProjectLayersPanel"));
+                _target.add(layerDetailForm.get("featureSelectionForm"));
+                _target.add(layerDetailForm.get("featureDetailForm"));
+            }
+            catch (ClassNotFoundException e) {
+                LOG.error("Unable to update feature selection and detail forms", e);
+            }
         }));
-
+        
+        
         form.setOutputMarkupPlaceholderTag(true);
         add(form);
     }
-    
-    private ColoringRulesConfigurationPanel newColoringRulesConfigurationPanel(
-            IModel<AnnotationLayer> aFeature)
-    {
-        ColoringRulesConfigurationPanel panel = new ColoringRulesConfigurationPanel("coloringRules",
-                aFeature, traitsModel.bind("coloringRules.rules"));
-        panel.setOutputMarkupId(true);
-        return panel;
-    }
 
-    private SpanLayerSupport getLayerSupport()
+    private ChainLayerSupport getLayerSupport()
     {
-        return (SpanLayerSupport) layerSupportRegistry.getLayerSupport(layerSupportId);
+        return (ChainLayerSupport) layerSupportRegistry.getLayerSupport(layerSupportId);
     }
 }
