@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import static java.util.Arrays.asList;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -43,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ChainRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component
 public class ChainLayerSupport
@@ -156,31 +154,8 @@ public class ChainLayerSupport
     }
 
     @Override
-    public ChainLayerTraits readTraits(AnnotationLayer aFeature)
+    public ChainLayerTraits createTraits()
     {
-        ChainLayerTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(ChainLayerTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-    
-        if (traits == null) {
-            traits = new ChainLayerTraits();
-        }
-    
-        return traits;
-    }
-    
-    @Override
-    public void writeTraits(AnnotationLayer aFeature, ChainLayerTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return new ChainLayerTraits();
     }
 }

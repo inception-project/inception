@@ -17,23 +17,32 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
     implements LayerSupport<A, T>
 {
-    protected final FeatureSupportRegistry featureSupportRegistry;
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     private LayerSupportRegistry layerSupportRegistry;
-    
+
+    protected final FeatureSupportRegistry featureSupportRegistry;
+
     public LayerSupport_ImplBase(FeatureSupportRegistry aFeatureSupportRegistry)
     {
         featureSupportRegistry = aFeatureSupportRegistry;
@@ -48,6 +57,7 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
         }
     }
     
+    @Override
     public void setLayerSupportRegistry(LayerSupportRegistry aLayerSupportRegistry)
     {
         if (layerSupportRegistry != null) {
@@ -57,6 +67,7 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
         layerSupportRegistry = aLayerSupportRegistry;
     }
     
+    @Override
     public LayerSupportRegistry getLayerSupportRegistry()
     {
         if (layerSupportRegistry == null) {
@@ -64,5 +75,35 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
         }
         
         return layerSupportRegistry;
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public T readTraits(AnnotationLayer aLayer)
+    {
+        T traits = null;
+        try {
+            traits = fromJsonString((Class<T>) createTraits().getClass(), aLayer.getTraits());
+        }
+        catch (IOException e) {
+            log.error("Unable to read traits", e);
+        }
+    
+        if (traits == null) {
+            traits = createTraits();
+        }
+    
+        return traits;
+    }
+    
+    @Override
+    public void writeTraits(AnnotationLayer aLayer, T aTraits)
+    {
+        try {
+            aLayer.setTraits(toJsonString(aTraits));
+        }
+        catch (IOException e) {
+            log.error("Unable to write traits", e);
+        }
     }
 }
