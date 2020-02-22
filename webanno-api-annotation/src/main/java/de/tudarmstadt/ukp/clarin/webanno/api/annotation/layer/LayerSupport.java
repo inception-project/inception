@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public interface LayerSupport<A extends TypeAdapter, T>
     extends BeanNameAware
 {
-    Object getId();
+    String getId();
 
     /**
      * Checks whether the given layer is provided by the current layer support.

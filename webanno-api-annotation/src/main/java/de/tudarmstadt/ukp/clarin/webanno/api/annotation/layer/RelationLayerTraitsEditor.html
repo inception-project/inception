@@ -17,14 +17,12 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<wicket:panel>
-  <form wicket:id="form" class="form-horizontal">
-    <div class="form-group">
-      <label class="col-sm-4 control-label">Coloring rules</label>
-      <div class="col-sm-8">
-        <div wicket:id="coloringRules"/>
-      </div>
+<wicket:extend>
+  <div class="form-group">
+    <label class="col-sm-4 control-label">Coloring rules</label>
+    <div class="col-sm-8">
+      <div wicket:id="coloringRules"/>
     </div>
-  </form>
-</wicket:panel>
+  </div>
+</wicket:extend>
 </html>
