@@ -17,17 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
-import static java.util.Arrays.asList;
-
-import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.PropertyModel;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.AnchoringModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
@@ -42,18 +36,15 @@ public class SpanLayerTraitsEditor
     {
         super(aId, aLayerSupport, aLayer);
     }
-    
+
     @Override
     protected void initializeForm(Form<SpanLayerTraits> aForm)
     {
-        aForm.add(new ColoringRulesConfigurationPanel("coloringRules",
-                getLayerModel(), getTraitsModel().bind("coloringRules.rules")));
-        
-        DropDownChoice<AnchoringMode> anchoringMode = new BootstrapSelect<AnchoringMode>(
-                "anchoringMode");
-        anchoringMode.setModel(PropertyModel.of(getLayerModel(), "anchoringMode"));
-        anchoringMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        anchoringMode.setChoices(asList(AnchoringMode.values()));
+        aForm.add(new ColoringRulesConfigurationPanel("coloringRules", getLayerModel(),
+                getTraitsModel().bind("coloringRules.rules")));
+
+        AnchoringModeSelect anchoringMode = new AnchoringModeSelect("anchoringMode",
+                getLayerModel());
         anchoringMode.add(LambdaBehavior.onConfigure(_this -> {
             AnnotationLayer layer = getLayerModelObject();
             _this.setEnabled(
