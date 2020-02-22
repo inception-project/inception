@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.htmleditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -60,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -314,7 +314,8 @@ public class HtmlAnnotationEditor
                 TypeAdapter typeAdapter = annotationService.getAdapter(layer);
 
                 for (VSpan vspan : vdoc.spans(layer.getId())) {
-                    String bratLabelText = getUiLabelText(typeAdapter, vspan);
+                    String bratLabelText = TypeUtil.getUiLabelText(typeAdapter,
+                            vspan.getFeatures());
 
                     Annotation anno = new Annotation();
                     anno.setId(vspan.getVid().toString());
