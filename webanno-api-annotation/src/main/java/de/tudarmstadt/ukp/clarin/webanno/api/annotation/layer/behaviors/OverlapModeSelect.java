@@ -17,27 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors;
 
-import static java.util.Arrays.asList;
+import java.util.Arrays;
 
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 
-public class AnchoringModeSelect
-    extends BootstrapSelect<AnchoringMode>
+public class OverlapModeSelect
+    extends BootstrapSelect<OverlapMode>
 {
-    private static final long serialVersionUID = -7730878193827899241L;
+    private static final long serialVersionUID = 7947988674895121258L;
 
-    public AnchoringModeSelect(String aId, IModel<AnnotationLayer> aLayerModel)
+    public OverlapModeSelect(String aId, IModel<AnnotationLayer> aLayerModel)
     {
         super(aId);
 
-        setModel(PropertyModel.of(aLayerModel, "anchoringMode"));
+        setModel(PropertyModel.of(aLayerModel, "overlapMode"));
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        setChoices(asList(AnchoringMode.values()));
+        setChoices(Arrays.asList(OverlapMode.values()));
     }
 }

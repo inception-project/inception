@@ -123,7 +123,8 @@ public class ProjectLayersPanel
         featureDetailForm = new FeatureDetailForm("featureDetailForm", selectedFeature);
 
         layerSelectionForm = new LayerSelectionForm("layerSelectionForm", selectedLayer);
-        layerDetailForm = new LayerDetailForm("layerDetailForm", selectedLayer, featureDetailForm);
+        layerDetailForm = new LayerDetailForm("layerDetailForm", selectedLayer,
+                featureSelectionForm, featureDetailForm);
 
         add(layerSelectionForm);
         add(featureSelectionForm);

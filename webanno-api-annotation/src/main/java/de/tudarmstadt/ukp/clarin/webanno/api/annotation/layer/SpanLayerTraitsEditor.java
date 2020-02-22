@@ -22,6 +22,7 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.AnchoringModeSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
@@ -43,6 +44,18 @@ public class SpanLayerTraitsEditor
         aForm.add(new ColoringRulesConfigurationPanel("coloringRules", getLayerModel(),
                 getTraitsModel().bind("coloringRules.rules")));
 
+        OverlapModeSelect overlapMode = new OverlapModeSelect("overlapMode", getLayerModel());
+        overlapMode.add(LambdaBehavior.onConfigure(_this -> {
+            AnnotationLayer layer = getLayerModelObject();
+            _this.setEnabled(
+                    // Surface form must be non-stacking for CONLL-U writer to work.
+                    !SurfaceForm.class.getName().equals(layer.getName()) &&
+                    // Not configurable for layers that attach to tokens (currently that is
+                    // the only layer on which we use the attach feature)
+                    layer.getAttachFeature() == null);
+        })); 
+        aForm.add(overlapMode);
+        
         AnchoringModeSelect anchoringMode = new AnchoringModeSelect("anchoringMode",
                 getLayerModel());
         anchoringMode.add(LambdaBehavior.onConfigure(_this -> {

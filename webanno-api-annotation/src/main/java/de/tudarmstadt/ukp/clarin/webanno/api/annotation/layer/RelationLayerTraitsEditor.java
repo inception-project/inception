@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class RelationLayerTraitsEditor
@@ -37,6 +40,12 @@ public class RelationLayerTraitsEditor
     @Override
     protected void initializeForm(Form<RelationLayerTraits> aForm)
     {
+        OverlapModeSelect overlapMode = new OverlapModeSelect("overlapMode", getLayerModel());
+        // Not configurable for layers that attach to tokens (currently that is the only layer on
+        // which we use the attach feature)
+        overlapMode.add(enabledWhen(() -> getLayerModelObject().getAttachFeature() == null));
+        aForm.add(overlapMode);
+        
         aForm.add(new ColoringRulesConfigurationPanel("coloringRules",
                 getLayerModel(), getTraitsModel().bind("coloringRules.rules")));
     }

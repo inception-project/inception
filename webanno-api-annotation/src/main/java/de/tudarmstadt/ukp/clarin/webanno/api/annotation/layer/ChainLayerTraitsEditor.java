@@ -17,24 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
-import org.apache.wicket.Component;
-import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.AnchoringModeSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class ChainLayerTraitsEditor
     extends LayerTraitsEditor_ImplBase<ChainLayerTraits, ChainLayerSupport>
 {
     private static final long serialVersionUID = -9082045435380184514L;
-
-    private static final Logger LOG = LoggerFactory.getLogger(ChainLayerTraitsEditor.class);
 
     public ChainLayerTraitsEditor(String aId, ChainLayerSupport aLayerSupport,
             IModel<AnnotationLayer> aLayer)
@@ -47,20 +42,10 @@ public class ChainLayerTraitsEditor
     {
         aForm.add(new AnchoringModeSelect("anchoringMode", getLayerModel()));
         
+        aForm.add(new OverlapModeSelect("overlapMode", getLayerModel()));
+        
         CheckBox linkedListBehavior = new CheckBox("linkedListBehavior");
         linkedListBehavior.setModel(PropertyModel.of(getLayerModel(), "linkedListBehavior"));
-        linkedListBehavior.add(AjaxFormComponentUpdatingBehavior.onUpdate("change", _target -> {
-            try {
-                @SuppressWarnings("unchecked")
-                Component layerDetailForm = findParent((Class<Component>) Class.forName(
-                        "de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.ProjectLayersPanel"));
-                _target.add(layerDetailForm.get("featureSelectionForm"));
-                _target.add(layerDetailForm.get("featureDetailForm"));
-            }
-            catch (ClassNotFoundException e) {
-                LOG.error("Unable to update feature selection and detail forms", e);
-            }
-        }));
         aForm.add(linkedListBehavior);
     }
 }

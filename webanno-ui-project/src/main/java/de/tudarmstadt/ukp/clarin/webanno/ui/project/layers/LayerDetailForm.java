@@ -60,8 +60,6 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -74,7 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -87,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStream;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.LayerExportMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
@@ -96,8 +94,6 @@ public class LayerDetailForm
     extends Form<AnnotationLayer>
 {
     private static final long serialVersionUID = -1L;
-
-    private static final Logger LOG = LoggerFactory.getLogger(LayerDetailForm.class);
 
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
     private static final String MID_TRAITS = "traits";
@@ -112,9 +108,9 @@ public class LayerDetailForm
     private DropDownChoice<AnnotationLayer> attachTypeSelect;
     private Label effectiveAttachType;
 
-    private DropDownChoice<OverlapMode> overlapMode;
     private DropDownChoice<ValidationMode> validationMode;
 
+    private FeatureSelectionForm featureSelectionForm;
     private FeatureDetailForm featureDetailForm;
     
     private CheckBox crossSentence;
@@ -125,10 +121,11 @@ public class LayerDetailForm
     private LayerExportMode exportMode = LayerExportMode.JSON;
 
     public LayerDetailForm(String id, IModel<AnnotationLayer> aSelectedLayer,
-            FeatureDetailForm aFeatureDetailForm)
+            FeatureSelectionForm aFeatureSelectionForm, FeatureDetailForm aFeatureDetailForm)
     {
         super(id, CompoundPropertyModel.of(aSelectedLayer));
 
+        featureSelectionForm = aFeatureSelectionForm;
         featureDetailForm = aFeatureDetailForm;
         
         setOutputMarkupPlaceholderTag(true);
@@ -195,7 +192,6 @@ public class LayerDetailForm
                 aTarget.add(crossSentence);
                 aTarget.add(showTextInHover);
                 aTarget.add(attachTypeSelect);
-                aTarget.add(overlapMode);
                 aTarget.add(traitsContainer);
             }
         });
@@ -223,21 +219,6 @@ public class LayerDetailForm
         validationMode.setOutputMarkupPlaceholderTag(true);
         validationMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
         validationMode.setChoices(Arrays.asList(ValidationMode.values()));
-
-        add(overlapMode = new BootstrapSelect<OverlapMode>("overlapMode"));
-        overlapMode.setOutputMarkupPlaceholderTag(true);
-        overlapMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        overlapMode.setChoices(Arrays.asList(OverlapMode.values()));
-        overlapMode.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-            _this.setVisible(!isBlank(layer.getType()));
-            _this.setEnabled(
-                    // Surface form must be non-stacking for CONLL-U writer to work.
-                    !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for layers that attach to tokens (currently that is
-                    // the only layer on which we use the attach feature)
-                    layer.getAttachFeature() == null);
-        })); 
 
         add(crossSentence = new CheckBox("crossSentence"));
         crossSentence.setOutputMarkupPlaceholderTag(true);
@@ -428,6 +409,8 @@ public class LayerDetailForm
         success("Settings for layer [" + layer.getUiName() + "] saved.");
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(findParent(ProjectLayersPanel.class));
+        aTarget.add(featureDetailForm);
+        aTarget.add(featureSelectionForm);
 
         // Trigger LayerConfigurationChangedEvent
         applicationEventPublisherHolder.get()
