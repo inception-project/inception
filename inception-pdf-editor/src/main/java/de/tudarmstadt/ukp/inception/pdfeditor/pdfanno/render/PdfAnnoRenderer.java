@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,14 +30,13 @@ import org.ahocorasick.trie.Trie;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
@@ -53,16 +50,8 @@ public class PdfAnnoRenderer
 {
     private static final int WINDOW_SIZE_INCREMENT = 5;
 
-    private final AnnotationSchemaService schemaService;
-    private final ColoringService coloringService;
-
-    public PdfAnnoRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService)
-    {
-        schemaService = aSchemaService;
-        coloringService = aColoringService;
-    }
-
-    public PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
+    public static PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
+                                      AnnotationSchemaService aAnnotationService,
                                       PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
     {
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
@@ -70,9 +59,9 @@ public class PdfAnnoRenderer
 
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : schemaService.listAnnotationLayer(aState.getProject())) {
-            ColoringStrategy coloringStrategy = coloringService.getStrategy(layer,
-                    aState.getPreferences(), colorQueues);
+        for (AnnotationLayer layer : aAnnotationService.listAnnotationLayer(aState.getProject())) {
+            ColoringStrategy coloringStrategy = ColoringStrategy.getStrategy(aAnnotationService,
+                layer, aState.getPreferences(), colorQueues);
 
             // If the layer is not included in the rendering, then we skip here - but only after
             // we have obtained a coloring strategy for this layer and thus secured the layer
@@ -82,7 +71,7 @@ public class PdfAnnoRenderer
                 continue;
             }
 
-            TypeAdapter typeAdapter = schemaService.getAdapter(layer);
+            TypeAdapter typeAdapter = aAnnotationService.getAdapter(layer);
 
             ColoringRules coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
                     .map(ColoringRulesTrait::getColoringRules).orElse(null);
@@ -105,6 +94,21 @@ public class PdfAnnoRenderer
         }
         pdfAnnoModel.addSpans(convertToPdfAnnoSpans(spans, aDocumentText, aPdfExtractFile));
         return pdfAnnoModel;
+    }
+
+    private static String getColor(VObject aVObject, ColoringStrategy aColoringStrategy,
+                                   String aLabelText)
+    {
+        String color;
+        if (aVObject.getEquivalenceSet() >= 0) {
+            // Every chain is supposed to have a different color
+            color = ColoringStrategy.PALETTE_NORMAL_FILTERED[aVObject.getEquivalenceSet()
+                % ColoringStrategy.PALETTE_NORMAL_FILTERED.length];
+        }
+        else {
+            color = aColoringStrategy.getColor(aVObject.getVid(), aLabelText);
+        }
+        return color;
     }
 
     private static List<Span> convertToPdfAnnoSpans(
