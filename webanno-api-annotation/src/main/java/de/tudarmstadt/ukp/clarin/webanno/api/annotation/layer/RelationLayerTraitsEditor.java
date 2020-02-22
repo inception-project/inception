@@ -19,13 +19,16 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.ValidationModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class RelationLayerTraitsEditor
@@ -42,6 +45,8 @@ public class RelationLayerTraitsEditor
     @Override
     protected void initializeForm(Form<RelationLayerTraits> aForm)
     {
+        aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
+        
         OverlapModeSelect overlapMode = new OverlapModeSelect("overlapMode", getLayerModel());
         // Not configurable for layers that attach to tokens (currently that is the only layer on
         // which we use the attach feature)
@@ -57,5 +62,12 @@ public class RelationLayerTraitsEditor
         // which we use the attach feature)
         crossSentence.add(enabledWhen(() -> getLayerModelObject().getAttachFeature() == null));
         aForm.add(crossSentence);
+
+        TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
+        onClickJavascriptAction.setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
+        onClickJavascriptAction.add(new AttributeModifier("placeholder",
+                "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
+                        + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));
+        aForm.add(onClickJavascriptAction);
     }
 }

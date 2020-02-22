@@ -20,13 +20,16 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.AnchoringModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.ValidationModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class ChainLayerTraitsEditor
@@ -43,6 +46,8 @@ public class ChainLayerTraitsEditor
     @Override
     protected void initializeForm(Form<ChainLayerTraits> aForm)
     {
+        aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
+        
         aForm.add(new AnchoringModeSelect("anchoringMode", getLayerModel()));
         
         aForm.add(new OverlapModeSelect("overlapMode", getLayerModel()));
@@ -55,5 +60,12 @@ public class ChainLayerTraitsEditor
         crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
         crossSentence.add(visibleWhen(() -> !isBlank(getLayerModelObject().getType())));
         aForm.add(crossSentence);
+        
+        TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
+        onClickJavascriptAction.setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
+        onClickJavascriptAction.add(new AttributeModifier("placeholder",
+                "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
+                        + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));
+        aForm.add(onClickJavascriptAction);
     }
 }

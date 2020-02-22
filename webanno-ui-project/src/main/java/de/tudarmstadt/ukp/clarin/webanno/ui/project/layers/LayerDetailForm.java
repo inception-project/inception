@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
@@ -25,19 +24,16 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -73,12 +69,10 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -87,7 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.InputStreamResourceStrea
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.FeatureSelectionForm;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.LayerExportMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class LayerDetailForm
@@ -108,13 +101,9 @@ public class LayerDetailForm
     private DropDownChoice<AnnotationLayer> attachTypeSelect;
     private Label effectiveAttachType;
 
-    private DropDownChoice<ValidationMode> validationMode;
-
     private FeatureSelectionForm featureSelectionForm;
     private FeatureDetailForm featureDetailForm;
     
-    private CheckBox showTextInHover;
-
     private WebMarkupContainer traitsContainer;
 
     private LayerExportMode exportMode = LayerExportMode.JSON;
@@ -189,7 +178,6 @@ public class LayerDetailForm
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                aTarget.add(showTextInHover);
                 aTarget.add(attachTypeSelect);
                 aTarget.add(traitsContainer);
             }
@@ -213,30 +201,6 @@ public class LayerDetailForm
         
         // Behaviors of layers
         add(new CheckBox("readonly"));
-
-        add(validationMode = new BootstrapSelect<ValidationMode>("validationMode"));
-        validationMode.setOutputMarkupPlaceholderTag(true);
-        validationMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        validationMode.setChoices(Arrays.asList(ValidationMode.values()));
-
-        add(showTextInHover = new CheckBox("showTextInHover"));
-        showTextInHover.setOutputMarkupPlaceholderTag(true);
-        showTextInHover.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-            _this.setVisible(!isBlank(layer.getType()) &&
-                // Not configurable for chains or relations
-                !CHAIN_TYPE.equals(layer.getType()) && 
-                !RELATION_TYPE.equals(layer.getType()));
-            _this.setEnabled(
-                    // Surface form must be locked to token boundaries for CONLL-U writer
-                    // to work.
-                    !SurfaceForm.class.getName().equals(layer.getName()));
-        }));
-
-        add(new TextArea<String>("onClickJavascriptAction")
-                .add(new AttributeModifier("placeholder",
-                        "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
-                                + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);")));
 
         add(new BootstrapSelect<LayerExportMode>("exportMode",
                 new PropertyModel<LayerExportMode>(this, "exportMode"),

@@ -25,19 +25,19 @@ import org.apache.wicket.model.PropertyModel;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 
-public class OverlapModeSelect
-    extends BootstrapSelect<OverlapMode>
+public class ValidationModeSelect
+    extends BootstrapSelect<ValidationMode>
 {
     private static final long serialVersionUID = 7947988674895121258L;
 
-    public OverlapModeSelect(String aId, IModel<AnnotationLayer> aLayerModel)
+    public ValidationModeSelect(String aId, IModel<AnnotationLayer> aLayerModel)
     {
         super(aId);
 
-        setModel(PropertyModel.of(aLayerModel, "overlapMode"));
+        setModel(PropertyModel.of(aLayerModel, "validationMode"));
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        setChoices(asList(OverlapMode.values()));
+        setChoices(asList(ValidationMode.values()));
     }
 }

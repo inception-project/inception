@@ -17,14 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.AnchoringModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.ValidationModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
@@ -45,6 +50,8 @@ public class SpanLayerTraitsEditor
     {
         aForm.add(new ColoringRulesConfigurationPanel("coloringRules", getLayerModel(),
                 getTraitsModel().bind("coloringRules.rules")));
+
+        aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
 
         OverlapModeSelect overlapMode = new OverlapModeSelect("overlapMode", getLayerModel());
         overlapMode.add(LambdaBehavior.onConfigure(_this -> {
@@ -84,5 +91,19 @@ public class SpanLayerTraitsEditor
                     layer.getAttachFeature() == null);
         }));
         aForm.add(crossSentence);
+
+        TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
+        onClickJavascriptAction.setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
+        onClickJavascriptAction.add(new AttributeModifier("placeholder",
+                "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
+                        + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));
+        aForm.add(onClickJavascriptAction);
+        
+        CheckBox showTextInHover = new CheckBox("showTextInHover");
+        showTextInHover.setModel(PropertyModel.of(getLayerModel(), "showTextInHover"));
+        // Surface form must be locked to token boundaries for CONLL-U writer to work.
+        showTextInHover.add(enabledWhen(
+            () -> !SurfaceForm.class.getName().equals(getLayerModelObject().getName())));
+        aForm.add(showTextInHover);
     }
 }
