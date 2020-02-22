@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
@@ -48,5 +50,12 @@ public class RelationLayerTraitsEditor
         
         aForm.add(new ColoringRulesConfigurationPanel("coloringRules",
                 getLayerModel(), getTraitsModel().bind("coloringRules.rules")));
+        
+        CheckBox crossSentence = new CheckBox("crossSentence");
+        crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
+        // Not configurable for layers that attach to tokens (currently that is the only layer on
+        // which we use the attach feature)
+        crossSentence.add(enabledWhen(() -> getLayerModelObject().getAttachFeature() == null));
+        aForm.add(crossSentence);
     }
 }

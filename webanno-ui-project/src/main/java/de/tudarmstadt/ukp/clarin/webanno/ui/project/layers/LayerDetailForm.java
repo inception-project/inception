@@ -113,7 +113,6 @@ public class LayerDetailForm
     private FeatureSelectionForm featureSelectionForm;
     private FeatureDetailForm featureDetailForm;
     
-    private CheckBox crossSentence;
     private CheckBox showTextInHover;
 
     private WebMarkupContainer traitsContainer;
@@ -151,6 +150,7 @@ public class LayerDetailForm
         });
 
         add(new CheckBox("enabled"));
+        
         add(layerTypeSelect = new BootstrapSelect<LayerType>("type") {
             private static final long serialVersionUID = 9029205407108101183L;
 
@@ -189,7 +189,6 @@ public class LayerDetailForm
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                aTarget.add(crossSentence);
                 aTarget.add(showTextInHover);
                 aTarget.add(attachTypeSelect);
                 aTarget.add(traitsContainer);
@@ -219,20 +218,6 @@ public class LayerDetailForm
         validationMode.setOutputMarkupPlaceholderTag(true);
         validationMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
         validationMode.setChoices(Arrays.asList(ValidationMode.values()));
-
-        add(crossSentence = new CheckBox("crossSentence"));
-        crossSentence.setOutputMarkupPlaceholderTag(true);
-        crossSentence.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-            _this.setVisible(!isBlank(layer.getType()));
-            _this.setEnabled(
-                    // Surface form must be locked to token boundaries for CONLL-U writer
-                    // to work.
-                    !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for layers that attach to tokens (currently that
-                    // is the only layer on which we use the attach feature)
-                    layer.getAttachFeature() == null);
-        }));
 
         add(showTextInHover = new CheckBox("showTextInHover"));
         showTextInHover.setOutputMarkupPlaceholderTag(true);

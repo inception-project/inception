@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.AnchoringModeSelect;
@@ -68,5 +70,19 @@ public class SpanLayerTraitsEditor
                     layer.getAttachFeature() == null);
         }));
         aForm.add(anchoringMode);
+        
+        CheckBox crossSentence = new CheckBox("crossSentence");
+        crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
+        crossSentence.add(LambdaBehavior.onConfigure(_this -> {
+            AnnotationLayer layer = getLayerModelObject();
+            _this.setEnabled(
+                    // Surface form must be locked to token boundaries for CONLL-U writer
+                    // to work.
+                    !SurfaceForm.class.getName().equals(layer.getName()) &&
+                    // Not configurable for layers that attach to tokens (currently that
+                    // is the only layer on which we use the attach feature)
+                    layer.getAttachFeature() == null);
+        }));
+        aForm.add(crossSentence);
     }
 }

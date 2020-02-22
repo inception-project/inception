@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
@@ -47,5 +50,10 @@ public class ChainLayerTraitsEditor
         CheckBox linkedListBehavior = new CheckBox("linkedListBehavior");
         linkedListBehavior.setModel(PropertyModel.of(getLayerModel(), "linkedListBehavior"));
         aForm.add(linkedListBehavior);
+        
+        CheckBox crossSentence = new CheckBox("crossSentence");
+        crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
+        crossSentence.add(visibleWhen(() -> !isBlank(getLayerModelObject().getType())));
+        aForm.add(crossSentence);
     }
 }
