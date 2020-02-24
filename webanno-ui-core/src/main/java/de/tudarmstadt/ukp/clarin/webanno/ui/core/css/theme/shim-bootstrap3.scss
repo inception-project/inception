@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  * 
@@ -16,5 +16,29 @@
  * limitations under the License.
  ******************************************************************************/
 
-@page-footer-height: 21px;
-@page-header-height: 51px;
+// Fix that hidden-xs is missing in Bootstrap File Input
+.hidden-xs {
+	@extend .d-none;
+}
+
+.hidden {
+	@extend .d-none;
+}
+
+// Patch some font-awesome icons into the glyphicon CSS namespace, in particular for the
+// BootstrapFileInput
+.glyphicon {
+	font-family: 'Font Awesome 5 Free';
+	font-weight: 900;
+	font-style: normal;
+}
+	
+// Original: .fa-folder-open  
+.glyphicon-folder-open:before {
+	content: "\f07c"; 
+}
+
+// Original: .fa-times  
+.glyphicon-ban-circle:before {
+	content: "\f00d";
+}

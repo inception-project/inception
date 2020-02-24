@@ -20,62 +20,77 @@
 <body>
   <wicket:panel>
     <div wicket:id="confirmationDialog"></div>
-    <form wicket:id="form" class="panel panel-default panel-flex">
-      <div class="panel-heading">
-        <h3 class="panel-title"><wicket:message key="tagset.details"/></h3>
-      </div>
-      <div class="panel-body form-horizontal">
-        <div class="col-sm-12">
-          <div class="form-group">
-            <label wicket:for="name" class="col-sm-2 control-label">
-              <wicket:label key="name"/>
-            </label>
-            <div class="col-sm-10">
-              <input wicket:id="name" type="text" class="form-control"/>
-            </div>
-          </div>
-          <div class="form-group">
-            <label wicket:for="language" class="col-sm-2 control-label">
-              <wicket:label key="language"/>
-            </label>
-            <div class="col-sm-10">
-              <input wicket:id="language" type="text" class="form-control"/>
-            </div>
-          </div>
-          <div class="form-group">
-            <label wicket:for="description" class="col-sm-2 control-label">
-              <wicket:label key="description"/>
-            </label>
-            <div class="col-sm-10">
-              <textarea wicket:id="description" class="form-control" style="resize: vertical;"></textarea>
-            </div>
-          </div>
-          <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
-              <div class="checkbox">
-                <label wicket:for="createTag">
-                  <input wicket:id="createTag" type="checkbox"> Annotators may add new tags
-                </label>
+    <form wicket:id="form" class="card">
+      <div class="card-header">
+        <wicket:message key="tagset.details"/>
+        <div class="actions">
+          <button wicket:id="save" class="btn btn-primary">
+            <i class="fas fa-save"></i>&nbsp;
+            <wicket:message key="save"/>
+          </button>
+          <button wicket:id="cancel" class="btn btn-secondary">
+            <i class="fas fa-times"></i>&nbsp;
+            <wicket:message key="cancel"/>
+          </button>
+          <div class="btn dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-action btn-light dropdown-toggle flex-content" type="button" data-toggle="dropdown">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="dropdown-menu" role="menu" style="min-width: 220px;">
+              <div class="container">
+                <div class="form-group form-row">
+                  <button wicket:id="export" type="button" class="btn btn-sm btn-primary col-sm-12">
+                    <i class="fas fa-download" aria-hidden="true"></i>&nbsp;
+                    <wicket:message key="export"/>
+                  </button>
+                  <div wicket:id="format" class="small"></div>
+                </div>
+                <hr/>
+                <div class="form-group form-row">
+                  <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
+                    <i class="fas fa-trash"></i>&nbsp;
+                    <wicket:message key="delete"/>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="panel-footer flex-h-container">
-        <div class="flex-content form-group form-horizontal">
-          <div class="input-group">
-            <select class="form-control" wicket:id="format" data-container="body"></select>
-            <span class="input-group-btn">
-              <button wicket:id="export" type="button" class="btn btn-default">
-                <i class="fas fa-download" aria-hidden="true"></i>
-              </button>
-            </span>
+      <div class="card-body">
+        <div class="form-group form-row">
+          <label wicket:for="name" class="col-sm-2 col-form-label">
+            <wicket:label key="name"/>
+          </label>
+          <div class="col-sm-10">
+            <input wicket:id="name" type="text" class="form-control"/>
           </div>
         </div>
-        <div class="flex-content text-right">
-          <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"/> 
-          <input wicket:id="delete" type="button" class="btn btn-danger" wicket:message="value:delete"/>
-          <input wicket:id="cancel" type="button" class="btn btn-default" wicket:message="value:cancel"/>
+        <div class="form-group form-row">
+          <label wicket:for="language" class="col-sm-2 col-form-label">
+            <wicket:label key="language"/>
+          </label>
+          <div class="col-sm-10">
+            <input wicket:id="language" type="text" class="form-control"/>
+          </div>
+        </div>
+        <div class="form-group form-row">
+          <label wicket:for="description" class="col-sm-2 col-form-label">
+            <wicket:label key="description"/>
+          </label>
+          <div class="col-sm-10">
+            <textarea wicket:id="description" class="form-control" style="resize: vertical;"></textarea>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="createTag">
+          <div class="offset-md-2 col-sm-10">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" wicket:id="createTag">
+              <label class="form-check-label" wicket:for="createTag">
+                Annotators may add new tags
+              </label>
+            </div>
+          </div>
         </div>
       </div>
     </form>

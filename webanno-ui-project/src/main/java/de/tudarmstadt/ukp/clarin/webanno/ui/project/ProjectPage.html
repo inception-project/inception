@@ -32,8 +32,14 @@
           </div>
           <div>
             <h1>
-              <input wicket:id="delete" type="button" class="btn btn-danger" wicket:message="value:delete" />
-              <input wicket:id="cancel" type="button" class="btn btn-default" wicket:message="value:cancel" />
+              <button wicket:id="delete" class="btn btn-danger">
+                <i class="fas fa-trash"></i>&nbsp;
+                <wicket:message key="delete"/>
+              </button>
+              <button wicket:id="cancel" class="btn btn-secondary">
+                <i class="fas fa-times"></i>&nbsp;
+                <wicket:message key="cancel"/>
+              </button>
             </h1>
           </div>
         </div>

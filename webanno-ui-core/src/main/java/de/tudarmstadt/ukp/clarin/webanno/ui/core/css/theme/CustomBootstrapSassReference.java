@@ -17,20 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme;
 
-import de.agilecoders.wicket.less.LessResourceReference;
+import de.agilecoders.wicket.sass.SassResourceReference;
 
-public class CustomBootstrapLessReference extends LessResourceReference
+public class CustomBootstrapSassReference extends SassResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final CustomBootstrapLessReference INSTANCE = new CustomBootstrapLessReference();
+    private static final CustomBootstrapSassReference INSTANCE = new CustomBootstrapSassReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static CustomBootstrapLessReference get()
+    public static CustomBootstrapSassReference get()
     {
         return INSTANCE;
     }
@@ -38,9 +38,9 @@ public class CustomBootstrapLessReference extends LessResourceReference
     /**
      * Private constructor
      */
-    private CustomBootstrapLessReference()
+    private CustomBootstrapSassReference()
     {
-        super(CustomBootstrapLessReference.class, "bootstrap.less");
+        super(CustomBootstrapSassReference.class, "bootstrap.scss");
         //super(GoogleCssReference.class, "css/google-bootstrap.less");
     }
 }

@@ -31,15 +31,27 @@ public class LambdaAjaxFormSubmittingBehavior extends AjaxFormSubmitBehavior
     private AjaxCallback action;
     private AjaxExceptionHandler exceptionHandler;
 
-    public LambdaAjaxFormSubmittingBehavior(Form<?> aForm, String aId, AjaxCallback aAction)
+    /**
+     * @param aForm
+     *            form that will be submitted
+     * @param aEvent
+     *            javascript event this behavior is attached to, like onclick
+     */
+    public LambdaAjaxFormSubmittingBehavior(Form<?> aForm, String aEvent, AjaxCallback aAction)
     {
-        this(aForm, aId, aAction, null);
+        this(aForm, aEvent, aAction, null);
     }
 
-    public LambdaAjaxFormSubmittingBehavior(Form<?> aForm, String aId, AjaxCallback aAction,
+    /**
+     * @param aForm
+     *            form that will be submitted
+     * @param aEvent
+     *            javascript event this behavior is attached to, like onclick
+     */
+    public LambdaAjaxFormSubmittingBehavior(Form<?> aForm, String aEvent, AjaxCallback aAction,
             AjaxExceptionHandler aExceptionHandler)
     {
-        super(aForm, aId);
+        super(aForm, aEvent);
         action = aAction;
         exceptionHandler = aExceptionHandler;
     }

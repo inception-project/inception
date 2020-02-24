@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
+import static io.bit3.jsass.OutputStyle.EXPANDED;
+import static io.bit3.jsass.OutputStyle.NESTED;
 import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
 
 import java.io.File;
@@ -53,13 +55,12 @@ import org.wicketstuff.annotation.scan.AnnotatedMountList;
 import org.wicketstuff.annotation.scan.AnnotatedMountScanner;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
-import com.github.sommeri.less4j.LessCompiler.Configuration;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
-import de.agilecoders.wicket.less.BootstrapLess;
-import de.agilecoders.wicket.less.LessCompilerConfigurationFactory;
+import de.agilecoders.wicket.sass.BootstrapSass;
+import de.agilecoders.wicket.sass.SassCompilerOptionsFactory;
 import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
@@ -73,11 +74,12 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapLessReference;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapSassReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar;
+import io.bit3.jsass.Options;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -181,18 +183,18 @@ public abstract class WicketApplicationBase
     
     protected void initBootstrap()
     {
-        LessCompilerConfigurationFactory lessConfigFactory = () -> {
-            Configuration lessConfig = new Configuration();
-            lessConfig.setCompressing(DEPLOYMENT.equals(getConfigurationType()));
-            return lessConfig;
+        SassCompilerOptionsFactory sassOptionsFactory = () -> {
+            Options options = new Options();
+            options.setOutputStyle(DEPLOYMENT.equals(getConfigurationType()) ? EXPANDED : NESTED);
+            return options;
         };
         
         WicketWebjars.install(this);
-        BootstrapLess.install(this, lessConfigFactory);
+        BootstrapSass.install(this, sassOptionsFactory);
         Bootstrap.install(this);
         
         IBootstrapSettings settings = Bootstrap.getSettings(this);
-        settings.setCssResourceReference(CustomBootstrapLessReference.get());
+        settings.setCssResourceReference(CustomBootstrapSassReference.get());
     }
 
     protected void initAddBaseLayoutCssToAllPages()

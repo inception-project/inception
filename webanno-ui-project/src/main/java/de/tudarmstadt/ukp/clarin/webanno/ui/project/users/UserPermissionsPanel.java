@@ -99,6 +99,8 @@ public class UserPermissionsPanel
         // The model adapter already commits the changes for us as part of the normal form
         // processing cycle. So nothing special to do here.
         
+        success("Permissions saved");
+        
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }

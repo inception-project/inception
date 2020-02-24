@@ -40,18 +40,18 @@ html, body {
 
 .page-footer {
   flex: none;
-  min-height: @page-footer-height; 
-  height: @page-footer-height;
+  min-height: $page-footer-height; 
+  height: $page-footer-height;
   overflow: hidden;
   margin-top: 0px; 
   margin-bottom: 0px; 
   text-align: center; 
-  font-size: @font-size-base; 
-  padding-left: ceil((@grid-gutter-width / 2));
-  padding-right: floor((@grid-gutter-width / 2));
-  color: @navbar-default-color;
-  background-color: @navbar-default-bg;
-  border-color: @navbar-default-border;
+  font-size: $font-size-sm; 
+  padding-left: ceil(($grid-gutter-width / 2));
+  padding-right: floor(($grid-gutter-width / 2));
+  color: $card-color;
+  background-color: $card-bg;
+  border-color: $card-border-color;
   border-top: 1px solid;
   
   a, a:hover, a:focus {
@@ -61,10 +61,10 @@ html, body {
 
 .feedback-panel {
   position: fixed;
-  bottom: @page-footer-height;
+  bottom: $page-footer-height;
   z-index: 9999;
   min-width: 30%;
-  max-height: ~"calc(100vh - " @page-footer-height ~" - " @page-header-height ~")";
+  max-height: calc(100vh - $page-footer-height - $page-header-height);
   overflow: auto;
  
   ul.feedbackPanel {
@@ -105,9 +105,7 @@ html, body {
     font-size: 25px;
     line-height: unset;
   } 
-}
-
-.nav {
+ 
   .logo {
     height: 40px;
   }
@@ -126,16 +124,11 @@ html, body {
   margin-left: 0px;
 }
 
-.form-group .k-widget,
-.form-group .k-textbox {
-  width: 100%;
-}
-
 /* Allow text in non-editable span values in forms to break. Maintain minimal height. */
 span.form-control {
   word-wrap: break-word;
   height: auto;
-  min-height: @input-height-base;
+  min-height: $input-height;
 }
 
 /* Fix header font in Wicket modal windows */
@@ -148,15 +141,16 @@ span.form-control {
   margin-right: 15px;
 }
 
+/*
 .panel { 
-  margin-bottom: ceil(@grid-gutter-width / 2);
+  margin-bottom: ceil($grid-gutter-width / 2);
 }
 
 .panel-small {
-  margin-bottom: ceil(@grid-gutter-width / 4);
+  margin-bottom: ceil($grid-gutter-width / 4);
   
   .panel-title {
-    font-size: @font-size-small;
+    font-size: $font-size-sm;
   }
   
   .panel-heading {
@@ -164,6 +158,7 @@ span.form-control {
     padding-bottom: 1px;
   }  
 }
+*/
 
 .form-horizontal hr {
   margin-top: 5px;
@@ -188,6 +183,7 @@ span.form-control {
 .master-detail-editor { flex-grow: 1; padding: 15px; }
 
 /* Flexed Bootstrap panel */
+/*
 .panel-flex {
   display: flex; 
   flex-direction: column;
@@ -197,6 +193,7 @@ span.form-control {
   .panel-footer { flex: none; }
   .panel-footer .form-group { margin-bottom: 0px; }
 }
+*/
 
 .min-content-height {
   min-height: -moz-min-content;
@@ -211,10 +208,10 @@ span.form-control {
 
 /* Flex layout helpers as CSS classes - order matters! */
 .flex-h-container { display: flex; flex-direction: row; }
-.flex-h-container.flex-gutter > * { margin-left: ceil(@grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > * { margin-left: ceil($grid-gutter-width / 2) }
 .flex-h-container.flex-no-gutter > .panel { margin-bottom: 0px; }
 .flex-h-container.flex-gutter > .panel { margin-bottom: 0px; }
-.flex-h-container.flex-gutter > *:last-child { margin-right: floor(@grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > *:last-child { margin-right: floor($grid-gutter-width / 2) }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:first-child { margin-left: 0px; }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:last-child { margin-right: 0px; }
 .flex-h-container.flex-no-initial-gutter > *:first-child { margin-left: 0px; }
@@ -224,8 +221,8 @@ span.form-control {
 .flex-v-container.flex-no-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
 .flex-v-container.flex-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
 .flex-v-container { display: flex; flex-direction: column; }
-.flex-v-container.flex-gutter > * { margin-top: (@grid-gutter-width / 2) }
-.flex-v-container.flex-gutter > *:last-child { margin-bottom: floor(@grid-gutter-width / 2) }
+.flex-v-container.flex-gutter > * { margin-top: ($grid-gutter-width / 2) }
+.flex-v-container.flex-gutter > *:last-child { margin-bottom: floor($grid-gutter-width / 2) }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:first-child { margin-top: 0px; }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:last-child { margin-bottom: 0px; }
 .flex-v-container.flex-only-internal-gutter > *:first-child { margin-top: 0px; }
@@ -305,44 +302,10 @@ a.disabled {
   z-index: 21060 !important;
 }
 
-.bs3.bootstrap-select .dropdown-toggle .filter-option, .k-autocomplete .k-input {
-	padding-top: 0px;
-	padding-bottom: 0px;
-}
-
-.action-bar {
-	padding: 5px;
-	background-color: grey;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-
-	> * {
-		padding-left: @grid-gutter-width / 4;
-		padding-right: @grid-gutter-width / 4;
-	}
-		
-	.action-bar-group {
-		padding: 2px;
-		background-color: lightgrey;
-    border-radius: 5px;
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		flex: 0;
-	}
-	
-	.action-bar-group-title {
-		padding-left: @grid-gutter-width / 2;
-		padding-right: @grid-gutter-width / 2;
-	}
-}
-
 .no-data-notice {
+	@extend .text-muted;
+	background-color: $card-cap-bg;
   display: flex;
-  color: grey;
-  background-color: @panel-footer-bg; 
-  font-style: italic; 
   justify-content: center; 
   align-items: center;
 }
@@ -353,17 +316,6 @@ a.disabled {
 	}
 }
 
-.feature-editor-label {
-	.make-sm-column(3);
-}
-
-.feature-editor-label + .feature-editor-value {
-	.make-sm-column(9);
-}
-
-.feature-editor-value {
-	.make-sm-column(12);
-}
 
 // Make the JQuery context menu fit in nicely with the rest of the theme instead of showing up in
 // bright orange
@@ -372,8 +324,8 @@ a.disabled {
 	
 	.ui-menu-item {
 		.ui-menu-item-wrapper.ui-state-active {
-			color: @component-active-color;
-			background-color: @component-active-bg;
+			color: $component-active-color;
+			background-color: $component-active-bg;
 			background-image: none;
 		}
 	}
@@ -387,31 +339,4 @@ a.disabled {
 	overflow: hidden; 
 	opacity: 0; 
 	margin-top: -1px;
-}
-
-// Adjust the Kendo dropdowns (i.e. the combo box) to use less vertical space and be more in line
-// with the other Bootstrap inputs
-.k-dropdown-wrap {
-	.k-input {
-		padding: 0px !important;
-	}
-	
-	.k-select {
-		line-height: 2em !important;
-	}
-}
-
-// Make sure that the Kendo dropdnwos (i.e. the combo box) fits nicely into Bootstrap input groups
-.input-group {
-	.k-dropdown-wrap {
-		border: 0px;
-	}
-}
-
-// Make sure Kendo icons show in input groups where the input groups are rendered with a 
-// z-index of 2
-.input-group {
-	.k-icon {
-		z-index: 3;
-	}
 }

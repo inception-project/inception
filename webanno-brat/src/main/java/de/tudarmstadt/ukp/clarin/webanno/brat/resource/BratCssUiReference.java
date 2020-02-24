@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
-import de.agilecoders.wicket.less.LessResourceReference;
+import de.agilecoders.wicket.sass.SassResourceReference;
 
 public class BratCssUiReference
-    extends LessResourceReference
+    extends SassResourceReference
 {
     private static final long serialVersionUID = -7167264646343829988L;
     
@@ -41,6 +41,6 @@ public class BratCssUiReference
      */
     private BratCssUiReference()
     {
-        super(BratCssUiReference.class, "style-ui.less");
+        super(BratCssUiReference.class, "style-ui.scss");
     }
 }

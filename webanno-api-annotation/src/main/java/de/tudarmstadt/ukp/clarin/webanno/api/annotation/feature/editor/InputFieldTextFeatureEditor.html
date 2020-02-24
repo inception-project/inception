@@ -18,14 +18,14 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="form-group" wicket:enclosure="value">
-    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label control-label">
+  <div class="form-group form-row" wicket:enclosure="value">
+    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
       <span wicket:id="feature"/>
     </label>
     <div class="feature-editor-value">
-      <div class="input-group col-sm-12">
-        <span class="input-group-addon">
-          <span wicket:id="textIndicator" />
+      <div class="input-group">
+        <span class="input-group-prepend">
+          <span class="input-group-text"><span wicket:id="textIndicator"/></span>
         </span>
         <input wicket:id="value" class="form-control"></input>
       </div>

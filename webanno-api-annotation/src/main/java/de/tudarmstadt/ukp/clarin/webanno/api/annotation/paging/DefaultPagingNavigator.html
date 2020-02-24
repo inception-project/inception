@@ -21,24 +21,24 @@
   <wicket:panel>
     <form wicket:id="form" class="action-bar-group">
 <!--       <div class="action-bar-group-title">Row</div> -->
-      <div class="input-group" style="max-width: 14em;">
+      <div class="input-group">
         <span class="input-group-btn">
-          <button wicket:id="showFirst" class="btn btn-default" type="button" wicket:message="title:firstPage">
+          <button wicket:id="showFirst" class="btn btn-light" type="button" wicket:message="title:firstPage">
             <i class="fas fa-fast-backward" aria-hidden="true"></i>
           </button>
-          <button wicket:id="showPrevious" class="btn btn-default" type="button" wicket:message="title:previousPage">
+          <button wicket:id="showPrevious" class="btn btn-light" type="button" wicket:message="title:previousPage">
             <i class="fas fa-step-backward"></i>
           </button>
         </span>
-        <input type="number" wicket:id="gotoPageText" class="form-control text-center"/>
+        <input type="number" wicket:id="gotoPageText" class="form-control text-center" style="max-width: 6rem;"/>
         <span class="input-group-btn">
-          <button wicket:id="gotoPageLink" class="btn btn-default" type="button" wicket:message="title:focusRow">
+          <button wicket:id="gotoPageLink" class="btn btn-light" type="button" wicket:message="title:focusRow">
             <i class="fas fa-eye" aria-hidden="true"></i>
           </button>
-          <button wicket:id="showNext" class="btn btn-default" type="button" wicket:message="title:nextPage">
+          <button wicket:id="showNext" class="btn btn-light" type="button" wicket:message="title:nextPage">
             <i class="fas fa-step-forward" aria-hidden="true"></i>
           </button>
-          <button wicket:id="showLast" class="btn btn-default" type="button" wicket:message="title:lastPage">
+          <button wicket:id="showLast" class="btn btn-light" type="button" wicket:message="title:lastPage">
             <i class="fas fa-fast-forward" aria-hidden="true"></i>
           </button>
         </span>

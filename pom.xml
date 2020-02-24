@@ -61,16 +61,16 @@
   
     <mockito.version>2.28.2</mockito.version>
     <assertj.version>3.14.0</assertj.version>
-    <spring.version>5.2.2.RELEASE</spring.version>
-    <spring.boot.version>2.2.2.RELEASE</spring.boot.version>
-    <spring.security.version>5.2.1.RELEASE</spring.security.version>
+    <spring.version>5.2.3.RELEASE</spring.version>
+    <spring.boot.version>2.2.4.RELEASE</spring.boot.version>
+    <spring.security.version>5.2.2.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
     <wicketstuff.version>8.6.0</wicketstuff.version>
     <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>2.0.11</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>2.0.7</wicket-jquery-selectors.version>
-    <wicket-webjars.version>2.0.16</wicket-webjars.version>    
-    <wicket-spring-boot.version>2.1.8</wicket-spring-boot.version>
+    <wicket-bootstrap.version>3.0.0-M13</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>3.0.0-M4</wicket-jquery-selectors.version>
+    <wicket-webjars.version>3.0.0-M4</wicket-webjars.version>    
+    <wicket-spring-boot.version>2.1.9</wicket-spring-boot.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <uimafit.version>3.0.0</uimafit.version>
@@ -515,7 +515,7 @@
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
-        <artifactId>wicket-bootstrap-less</artifactId>
+        <artifactId>wicket-bootstrap-sass</artifactId>
         <version>${wicket-bootstrap.version}</version>
         <exclusions>
           <exclusion>
@@ -543,6 +543,11 @@
         <groupId>com.github.sommeri</groupId>
         <artifactId>less4j</artifactId>
         <version>1.17.2</version>
+      </dependency>
+      <dependency>
+        <groupId>io.bit3</groupId>
+        <artifactId>jsass</artifactId>
+        <version>5.10.3</version>
       </dependency>
       <dependency>
         <groupId>com.github.rjeschke</groupId>

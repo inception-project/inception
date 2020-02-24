@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
@@ -402,7 +403,7 @@ public class OpenDocumentDialogPanel
 
             // for curation view in inception: when curating into CURATION_USER's CAS
             // and opening new document it should also be from the CURATION_USER
-            if (!state.getUser().getUsername().equals(CURATION_USER)) {
+            if (!CURATION_USER.equals(state.getUser().getUsername())) {
                 state.setUser(userListChoice.getModelObject().get());
             }
 
@@ -415,7 +416,7 @@ public class OpenDocumentDialogPanel
         projectListChoice.detach();
         userListChoice.detach();
         docListChoice.detach();
-        if (Mode.CURATION.equals(state.getMode())) {
+        if (CURATION.equals(state.getMode())) {
             state.setDocument(null, null); // on cancel, go welcomePage
         }
         onCancel(aTarget);

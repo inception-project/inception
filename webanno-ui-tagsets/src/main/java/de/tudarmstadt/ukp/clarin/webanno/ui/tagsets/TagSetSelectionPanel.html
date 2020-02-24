@@ -19,18 +19,18 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-content panel panel-default panel-flex" style="min-height: 10em;">
-      <div class="panel-heading">
-        <h3 class="panel-title">
-          <wicket:message key="tagsets" />
-        </h3>
+    <div class="flex-content card" style="min-height: 10em;">
+      <div class="card-header">
+        <wicket:message key="tagsets" />
+        <div class="actions">
+          <button wicket:id="create" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>&nbsp;
+            <wicket:message key="create"/>
+          </button>
+        </div>
       </div>
-      <div class="scrolling panel-body fit-child-snug">
+      <div class="scrolling card-body fit-child-snug">
         <select wicket:id="tagset" class="form-control"></select>
-      </div>
-      <div class="panel-footer text-right">
-        <input type="button" wicket:id="create" wicket:message="value:create"
-          class="btn btn-primary" />
       </div>
     </div>
   </wicket:panel>

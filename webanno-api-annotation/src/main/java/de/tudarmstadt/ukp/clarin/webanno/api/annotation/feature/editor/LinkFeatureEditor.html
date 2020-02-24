@@ -18,33 +18,46 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-  <div class="panel panel-default panel-small">
-    <div class="panel-heading">
-      <h3 class="panel-title">
+  <div class="form-group form-row">
+    <div class="card">
+      <div class="card-header small">
         <span wicket:id="feature"></span>
         <span wicket:id="linkIndicator" class="" style=""></span>
-      </h3>
-    </div>
-    <div class="panel-body">
+      </div>
       <div wicket:id="content">
-        <div wicket:id="slots">
-          <div class="form-group">
-            <label class="col-sm-3 control-label">
-              <span wicket:id="role"></span>	
-            </label>
-            <div class="col-sm-9">
-              <span wicket:id="label" class="form-control text-nowrap" style="max-width: 20em; overflow:hidden; text-overflow: ellipsis;"></span>
+        <div class="card-body">
+          <div wicket:id="slots">
+            <div class="form-group form-row">
+              <label class="feature-editor-label col-form-label">
+                <span wicket:id="role"></span>	
+              </label>
+              <div class="feature-editor-value">
+                <span wicket:id="label" class="scrolling form-control" style="flex: 0 0 100%; max-height: 4.5rem;"></span>
+              </div>
             </div>
           </div>
         </div>
-        <div style="display: table;">
-          <div style="display: table-cell; width: 100%;">
-            <input wicket:id="newRole" style="width: 100%;"></input>
-          </div>
-          <div class="text-nowrap" style="display: table-cell; padding-left: 15px;">
-            <button wicket:id="add" class="btn btn-xs">Add</button>
-            <button wicket:id="del" class="btn btn-xs">Del</button>
-            <button wicket:id="set" class="btn btn-xs">Set</button>
+        <div class="card-footer small">
+          <div style="display: table;">
+            <div style="display: table-cell; width: 100%;">
+              <input wicket:id="newRole" style="width: 100%;" placeholder="Enter role name..."></input>
+            </div>
+            <div class="text-nowrap" style="display: table-cell; padding-left: 15px;">
+              <button wicket:id="add" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus"></i>&nbsp;
+                Add
+              </button>
+              <div class="btn-group" role="group">
+                <button wicket:id="del" class="btn btn-sm btn-danger">
+                  <i class="fas fa-trash"></i>&nbsp;
+                  Del
+                </button>
+                <button wicket:id="set" class="btn btn-sm btn-secondary">
+                  <i class="fas fa-check"></i>&nbsp;
+                  Set
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

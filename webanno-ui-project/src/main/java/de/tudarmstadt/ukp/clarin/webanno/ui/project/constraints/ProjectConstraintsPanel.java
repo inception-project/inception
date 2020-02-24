@@ -28,6 +28,9 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.WicketRuntimeException;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -36,7 +39,6 @@ import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -46,6 +48,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
@@ -139,6 +142,9 @@ public class ProjectConstraintsPanel
         public DetailForm(String aId, IModel<ConstraintSet> aModel)
         {
             super(aId, new CompoundPropertyModel<>(aModel));
+            
+            setOutputMarkupPlaceholderTag(true);
+            
             TextField<String> constraintNameTextField = new TextField<>("name");
             add(constraintNameTextField);
             
@@ -220,8 +226,8 @@ public class ProjectConstraintsPanel
                 @Override
                 public void onSubmit()
                 {
-                    // Actually nothing to do here. Wicket will transfer the values from the
-                    // form into the model object and Hibernate will persist it                    
+                    constraintsService
+                            .createOrUpdateConstraintSet(DetailForm.this.getModelObject());
                 }
 
                 @Override
@@ -268,22 +274,27 @@ public class ProjectConstraintsPanel
     {
         private static final long serialVersionUID = 8121850699963791359L;
         
-        private FileUploadField uploads;
+        private BootstrapFileInputField uploads;
         
         public ImportForm(String aId)
         {
             super(aId);
 
-            add(uploads = new FileUploadField("uploads", Model.of()));
-            add(new Button("import")
+            add(uploads = new BootstrapFileInputField("uploads"));
+            uploads.getConfig().showPreview(false);
+            uploads.getConfig().showUpload(false);
+            uploads.getConfig().showRemove(false);
+            uploads.setRequired(true);
+
+            add(new AjaxButton("import")
             {
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                public void onSubmit()
+                public void onSubmit(AjaxRequestTarget aTarget)
                 {
                     try {
-                        importAction();
+                        importAction(aTarget);
                     }
                     catch (ParseException | TokenMgrError e) {
                         LOG.error(
@@ -291,17 +302,19 @@ public class ProjectConstraintsPanel
                                 e);
                         error("Exception while parsing the constraint rules file. Please check it. "
                                 + ExceptionUtils.getRootCauseMessage(e));
+                        aTarget.addChildren(getPage(), IFeedback.class);
                     }
                     catch (IOException e) {
                         LOG.error("Unable to read the constraint rules file.", e);
                         error("Unable to read constraints file: "
                                 + ExceptionUtils.getRootCauseMessage(e));
+                        aTarget.addChildren(getPage(), IFeedback.class);
                     }
                 }
             });
         }
         
-        private void importAction() throws ParseException, IOException
+        private void importAction(AjaxRequestTarget aTarget) throws ParseException, IOException
         {
             Project project = ProjectConstraintsPanel.this.getModelObject();
 
@@ -331,6 +344,9 @@ public class ProjectConstraintsPanel
                 parser.Parse();
                 constraintRuleFileIsOK = true;
 
+                aTarget.add(selectionForm);
+                aTarget.add(detailForm);
+
                 // Persist rules
                 if (constraintRuleFileIsOK) {
                     try {
@@ -343,7 +359,7 @@ public class ProjectConstraintsPanel
                                     constraintFilename);
                         }
                         constraintSet.setName(constraintFilename);
-                        constraintsService.createConstraintSet(constraintSet);
+                        constraintsService.createOrUpdateConstraintSet(constraintSet);
                         constraintsService.writeConstraintSet(constraintSet,
                                 constraintRulesFile.getInputStream());
                         selectionForm.setModelObject(constraintSet);
@@ -353,6 +369,7 @@ public class ProjectConstraintsPanel
                         LOG.error("Unable to write the constraint rules file.", e);
                         error("Unable to write the constraints file "
                                 + ExceptionUtils.getRootCauseMessage(e));
+                        aTarget.addChildren(getPage(), IFeedback.class);
                     }
                 }
             }

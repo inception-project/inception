@@ -30,7 +30,6 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -38,6 +37,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
@@ -57,7 +57,7 @@ public class ImportDocumentsPanel extends Panel
     private @SpringBean DocumentService documentService;
     private @SpringBean ImportExportService importExportService;
     
-    private FileUploadField fileUpload;
+    private BootstrapFileInputField fileUpload;
 
     private IModel<String> format;
     
@@ -83,7 +83,11 @@ public class ImportDocumentsPanel extends Panel
             }
         }
         
-        form.add(fileUpload = new FileUploadField("documents"));
+        form.add(fileUpload = new BootstrapFileInputField("documents"));
+        fileUpload.getConfig().showPreview(false);
+        fileUpload.getConfig().showUpload(false);
+        fileUpload.getConfig().showRemove(false);
+        fileUpload.setRequired(true);
 
         DropDownChoice<String> formats = new BootstrapSelect<>("format");
         formats.setModel(format);

@@ -20,17 +20,20 @@
 <body>
   <wicket:panel>
     <div class="flex-content flex-h-container">
-      <div class="flex-v-container">
-        <div class="flex-content panel-default panel-flex">
-          <form wicket:id="importForm" class="panel-heading flex-h-container flex-centered flex-gutter">
-            <label wicket:for="uploads" class="text-nowrap">
-              <wicket:label key="filesToImport"/>
+      <div class="flex-v-container border-right">
+        <div class="flex-content flex-v-container">
+          <form wicket:id="importForm" class="card-header flex-h-container flex-centered flex-gutter">
+            <label class="text-nowrap">
+              <wicket:message key="filesToImport"/>
             </label>
             <input wicket:id="uploads" type="file" multiple class="flex-content"></input>
             
-            <input wicket:id="import" type="submit" class="btn btn-primary" wicket:message="value:import"></input>
+            <button wicket:id="import" class="btn btn-primary">
+              <i class="fas fa-file-upload"></i>&nbsp;
+              <wicket:message key="import"/>
+            </button>
           </form>
-          <form wicket:id="selectionForm" class="panel-body flex-v-container" style="padding: 0px;">
+          <form wicket:id="selectionForm" class="card-body flex-v-container" style="padding: 0px;">
             <div class="flex-content fit-child-snug">
               <select class="form-control" wicket:id="ruleset"></select>
             </div>
@@ -38,19 +41,31 @@
         </div>
       </div>
       <div class="flex-content flex-v-container">
-        <form wicket:id="detailForm" class="flex-content flex-v-container panel-default panel-flex">
-          <div class="panel-heading flex-h-container flex-centered flex-gutter">
+        <form wicket:id="detailForm" class="flex-content flex-v-container">
+          <div class="card-header flex-h-container flex-centered flex-gutter">
             <label wicket:for="name" class="control-label"><wicket:label key="name"/></label>
             <input wicket:id="name" class="form-control flex-content"/>
-            <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:save"/>
+            <button wicket:id="save" class="btn btn-primary">
+              <i class="fas fa-save"></i>&nbsp;
+              <wicket:message key="save"/>
+            </button>
           </div>
-          <div class="panel-body flex-h-container" style="padding: 0px;">
-            <textarea wicket:id="script" class="flex-content" style="padding: 0px; border: none; resize: none;"></textarea>
+          <div class="card-body flex-h-container" style="padding: 0px;">
+            <textarea wicket:id="script" class="flex-content form-control" style="border: none; resize: none;"></textarea>
           </div>
-          <div class="panel-footer text-right">
-            <input type="submit" wicket:id="delete" class="btn btn-danger" wicket:message="value:delete"/>
-            <input type="submit" wicket:id="export" class="btn btn-default" wicket:message="value:export"/>
-            <input type="submit" wicket:id="cancel" class="btn btn-default" wicket:message="value:cancel"/>
+          <div class="card-footer text-right">
+            <button wicket:id="delete" class="btn btn-danger">
+              <i class="fas fa-trash"></i>&nbsp;
+              <wicket:message key="delete"/>
+            </button>
+            <button wicket:id="export" type="button" class="btn btn-primary">
+              <i class="fas fa-download" aria-hidden="true"></i>&nbsp;
+              <wicket:message key="export"/>
+            </button>
+            <button wicket:id="cancel" class="btn btn-secondary">
+              <i class="fas fa-times"></i>&nbsp;
+              <wicket:message key="cancel"/>
+            </button>
           </div>
         </form>
       </div>

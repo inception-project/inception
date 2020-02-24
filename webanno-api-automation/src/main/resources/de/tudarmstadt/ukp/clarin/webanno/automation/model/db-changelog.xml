@@ -209,4 +209,32 @@
       tableName="mira_template_annotation_feature"
       indexName="FK_3xkcbyluqsj5d7nj1s08mof21" />
   </changeSet>
+
+  <!--
+    Clean up legacy column (MiraTemplate_id) on (mira_template_annotation_feature)
+   -->
+  <changeSet author="WebAnno Team" id="20200223-01">
+    <preConditions onFail="MARK_RAN">
+      <foreignKeyConstraintExists foreignKeyTableName="mira_template_annotation_feature" foreignKeyName="FKnkv890bo9wx7vvq4yvu07d16h" />
+    </preConditions>
+    <dropForeignKeyConstraint baseTableName="mira_template_annotation_feature" constraintName="FKnkv890bo9wx7vvq4yvu07d16h" />
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="20200223-02">
+    <preConditions onFail="MARK_RAN">
+      <indexExists tableName="mira_template_annotation_feature" indexName="FKnkv890bo9wx7vvq4yvu07d16h"/>
+    </preConditions>
+    <dropIndex 
+      tableName="mira_template_annotation_feature"
+      indexName="FKnkv890bo9wx7vvq4yvu07d16h" />
+  </changeSet>
+
+  <changeSet author="WebAnno Team" id="20200223-03">
+    <preConditions onFail="MARK_RAN">
+      <columnExists tableName="mira_template_annotation_feature" columnName="MiraTemplate_id"/>
+    </preConditions>
+    <dropColumn
+      tableName="mira_template_annotation_feature"
+      columnName="MiraTemplate_id" />
+  </changeSet>
 </databaseChangeLog>

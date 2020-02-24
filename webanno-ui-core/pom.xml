@@ -150,15 +150,15 @@
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-less</artifactId>
+      <artifactId>wicket-bootstrap-sass</artifactId>
     </dependency>
     <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.github.sommeri</groupId>
-      <artifactId>less4j</artifactId>
+      <groupId>io.bit3</groupId>
+      <artifactId>jsass</artifactId>
     </dependency>
   </dependencies>
   <profiles>
@@ -188,6 +188,8 @@
                     <!-- Customized simple Bootstrap files (MIT license) -->
                     <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/bootstrap.less</exclude>
                     <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/variables.less</exclude>
+                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/bootstrap.scss</exclude>
+                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/variables.scss</exclude>
                   </excludes>
                 </configuration>
               </execution>

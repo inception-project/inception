@@ -51,7 +51,7 @@ public class ProjectTagSetsPanel
         selectedTagSet = Model.of();
         selectedTag = Model.of();
         
-        tagSetImportPanel = new TagSetImportPanel("tagSetImport", selectedProject, selectedTagSet);
+        tagSetImportPanel = new TagSetImportPanel("tagSetImport", selectedProject);
         tagSetImportPanel.setImportCompleteAction(target -> {
             selectedTag.setObject(null);
             target.add(tagSetSelectionPanel);
