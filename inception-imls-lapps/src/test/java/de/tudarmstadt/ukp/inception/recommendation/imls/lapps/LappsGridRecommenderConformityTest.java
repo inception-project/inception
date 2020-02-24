@@ -40,10 +40,12 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.wicket.util.SlowTests;
 import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -61,6 +63,7 @@ import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestH
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
+@Category(SlowTests.class)
 @RunWith(JUnitParamsRunner.class)
 public class LappsGridRecommenderConformityTest
 {
