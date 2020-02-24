@@ -40,7 +40,6 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.util.SlowTests;
 import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
@@ -62,6 +61,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridSe
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import nl.ru.test.category.SlowTests;
 
 @Category(SlowTests.class)
 @RunWith(JUnitParamsRunner.class)
