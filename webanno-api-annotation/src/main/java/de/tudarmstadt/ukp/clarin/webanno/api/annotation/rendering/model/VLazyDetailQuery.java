@@ -29,8 +29,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
  */
 public class VLazyDetailQuery
 {
-    private String feature;
-    private String query;
+    private final String feature;
+    private final String query;
     
     public VLazyDetailQuery(String aFeature, String aQuery)
     {
@@ -43,18 +43,8 @@ public class VLazyDetailQuery
         return feature;
     }
 
-    public void setFeature(String aFeature)
-    {
-        feature = aFeature;
-    }
-
     public String getQuery()
     {
         return query;
-    }
-
-    public void setQuery(String aQuery)
-    {
-        query = aQuery;
     }
 }

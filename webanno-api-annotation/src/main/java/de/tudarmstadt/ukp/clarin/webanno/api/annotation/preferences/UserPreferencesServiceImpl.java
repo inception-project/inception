@@ -46,8 +46,8 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -67,13 +67,16 @@ public class UserPreferencesServiceImpl
     private final BratProperties defaultPreferences;
     private final AnnotationSchemaService annotationService;
     private final RepositoryProperties repositoryProperties;
+    private final ColoringService coloringService;
     
     public UserPreferencesServiceImpl(BratProperties aDefaultPreferences,
-            AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties)
+            AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
+            ColoringService aColoringService)
     {
         defaultPreferences = aDefaultPreferences;
         annotationService = aAnnotationService;
         repositoryProperties = aRepositoryProperties;
+        coloringService = aColoringService;
     }
 
     @Override
@@ -211,8 +214,8 @@ public class UserPreferencesServiceImpl
         }
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             if (!colorPerLayer.containsKey(layer.getId())) {
-                colorPerLayer.put(layer.getId(), ColoringStrategy
-                        .getBestInitialStrategy(annotationService, layer, preference));
+                colorPerLayer.put(layer.getId(),
+                        coloringService.getBestInitialStrategy(layer, preference));
             }
         }
         

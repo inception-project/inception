@@ -135,6 +135,7 @@ public class LayerExporter
         exLayer.setProjectName(aLayer.getProject().getName());
         exLayer.setType(aLayer.getType());
         exLayer.setUiName(aLayer.getUiName());
+        exLayer.setTraits(aLayer.getTraits());
 
         if (aLayerToExLayer != null) {
             aLayerToExLayer.put(aLayer, exLayer);
@@ -293,6 +294,7 @@ public class LayerExporter
         aLayer.setName(aExLayer.getName());
         aLayer.setProject(aProject);
         aLayer.setType(aExLayer.getType());
+        aLayer.setTraits(aExLayer.getTraits());
         annotationService.createLayer(aLayer);
     }
 

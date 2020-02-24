@@ -37,10 +37,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -49,6 +51,7 @@ import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -62,6 +65,7 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
@@ -96,6 +100,9 @@ public class LayerDetailForm
 
     private static final Logger LOG = LoggerFactory.getLogger(LayerDetailForm.class);
 
+    private static final String MID_TRAITS_CONTAINER = "traitsContainer";
+    private static final String MID_TRAITS = "traits";
+
     private static final String TYPE_PREFIX = "webanno.custom.";
 
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
@@ -117,6 +124,8 @@ public class LayerDetailForm
     private CheckBox showTextInHover;
     private CheckBox linkedListBehavior;
 
+    private WebMarkupContainer traitsContainer;
+
     private LayerExportMode exportMode = LayerExportMode.JSON;
 
     public LayerDetailForm(String id, IModel<AnnotationLayer> aSelectedLayer,
@@ -128,6 +137,9 @@ public class LayerDetailForm
         featureDetailForm = aFeatureDetailForm;
         
         setOutputMarkupPlaceholderTag(true);
+
+        add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
+        traitsContainer.setOutputMarkupId(true);
 
         add(new TextField<String>("uiName").setRequired(true));
         add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
@@ -147,7 +159,28 @@ public class LayerDetailForm
         });
 
         add(new CheckBox("enabled"));
-        add(layerTypeSelect = new BootstrapSelect<>("type"));
+        add(layerTypeSelect = new BootstrapSelect<LayerType>("type") {
+            private static final long serialVersionUID = 9029205407108101183L;
+
+            @Override
+            protected void onModelChanged()
+            {
+                // If the feature type has changed, we need to set up a new traits editor
+                Component newTraits;
+                if (LayerDetailForm.this.getModelObject() != null
+                        && getModelObject() != null) {
+                    LayerSupport<?, ?> fs = layerSupportRegistry
+                            .getLayerSupport(getModelObject().getlayerSupportId());
+                    newTraits = fs.createTraitsEditor(MID_TRAITS,
+                            LayerDetailForm.this.getModel());
+                }
+                else {
+                    newTraits = new EmptyPanel(MID_TRAITS);
+                }
+
+                traitsContainer.addOrReplace(newTraits);
+            }
+        });
         layerTypeSelect.setChoices(layerSupportRegistry::getAllTypes);
         layerTypeSelect.add(LambdaBehavior
                 .enabledWhen(() -> isNull(LayerDetailForm.this.getModelObject().getId())));
@@ -162,14 +195,15 @@ public class LayerDetailForm
             private static final long serialVersionUID = 6790949494089940303L;
 
             @Override
-            protected void onUpdate(AjaxRequestTarget target)
+            protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                target.add(crossSentence);
-                target.add(showTextInHover);
-                target.add(linkedListBehavior);
-                target.add(attachTypeSelect);
-                target.add(anchoringMode);
-                target.add(overlapMode);
+                aTarget.add(crossSentence);
+                aTarget.add(showTextInHover);
+                aTarget.add(linkedListBehavior);
+                aTarget.add(attachTypeSelect);
+                aTarget.add(anchoringMode);
+                aTarget.add(overlapMode);
+                aTarget.add(traitsContainer);
             }
         });
 
@@ -285,7 +319,10 @@ public class LayerDetailForm
                 new LambdaModel<>(this::getExportLayerFileName).autoDetaching(),
                 this::exportLayer));
 
-        add(new LambdaAjaxButton<>("save", this::actionSave));
+        // Processing the data in onAfterSubmit so the traits panel can use the
+        // override onSubmit in its nested form and store the traits before
+        // we clear the currently selected feature.
+        add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
         add(new LambdaAjaxLink("cancel", this::actionCancel));
     }
     
@@ -296,7 +333,6 @@ public class LayerDetailForm
         if (layer.getAttachType() == null) {
             return null;
         }
-        
         
         if (layer.getAttachFeature() != null) {
             Project project = getModelObject().getProject();
@@ -426,6 +462,10 @@ public class LayerDetailForm
             TypeAdapter adapter = annotationService.getAdapter(layer);
             adapter.initialize(annotationService);
         }
+        
+        success("Settings for layer [" + layer.getUiName() + "] saved.");
+        aTarget.addChildren(getPage(), IFeedback.class);
+        aTarget.add(findParent(ProjectLayersPanel.class));
 
         // Trigger LayerConfigurationChangedEvent
         applicationEventPublisherHolder.get()
@@ -515,6 +555,15 @@ public class LayerDetailForm
                     .ifPresent(handler -> handler.addChildren(getPage(), IFeedback.class));
             return null;
         }
+    }
+
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+
+        // Since feature type uses a lambda model, it needs to be notified explicitly.
+        layerTypeSelect.modelChanged();
     }
 
     @Override

@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -125,6 +126,7 @@ public class BratAnnotationEditor
     
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
@@ -703,7 +705,8 @@ public class BratAnnotationEditor
     {
         AnnotatorState aState = getModelObject();
         VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
-        BratRenderer.render(response, aState, vdoc, aCas, annotationService);
+        BratRenderer renderer = new BratRenderer(annotationService, coloringService);
+        renderer.render(response, aState, vdoc, aCas);
     }
     
     private String bratInitCommand()

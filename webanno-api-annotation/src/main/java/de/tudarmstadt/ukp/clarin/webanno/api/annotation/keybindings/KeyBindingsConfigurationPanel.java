@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
@@ -77,7 +79,10 @@ public class KeyBindingsConfigurationPanel
         keyBindingsContainer.setOutputMarkupPlaceholderTag(true);
         keyBindingForm.add(keyBindingsContainer);
 
-        keyBindingsContainer.add(new TextField<String>("keyCombo").add(new KeyComboValidator()));
+        // We cannot make the key-combo field a required one here because then we'd get a message
+        // about keyCombo not being set when saving the entire feature details form!
+        keyBindingsContainer.add(new TextField<String>("keyCombo")
+                .add(new KeyComboValidator()));
         keyBindingsContainer.add(new LambdaAjaxSubmitLink<>("addKeyBinding", this::addKeyBinding));
         
         AnnotationFeature feature = aModel.getObject();
@@ -129,11 +134,18 @@ public class KeyBindingsConfigurationPanel
     
     private void addKeyBinding(AjaxRequestTarget aTarget, Form<KeyBinding> aForm)
     {
+        KeyBinding keyBinding = aForm.getModelObject();
+        
+        if (StringUtils.isBlank(keyBinding.getKeyCombo())) {
+            error("Key combo is required");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
         // Copy value from the value editor over into the form model (key binding) and then add it
         // to the list
         AnnotationFeature feature = getModelObject();
         FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
-        KeyBinding keyBinding = aForm.getModelObject();
         keyBinding.setValue(fs.unwrapFeatureValue(feature, null, featureState.getObject().value));
         keyBindings.getObject().add(keyBinding);
         
@@ -141,6 +153,8 @@ public class KeyBindingsConfigurationPanel
         aForm.setModelObject(new KeyBinding());
         featureState.getObject().setValue(null);
         
+        success("Key binding added. Do not forget to save the feature details!");
+        aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(keyBindingsContainer);
     }
     

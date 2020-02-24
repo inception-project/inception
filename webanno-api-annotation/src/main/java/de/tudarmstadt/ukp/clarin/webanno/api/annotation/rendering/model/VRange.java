@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
 public class VRange
 {
-    private int begin;
-    private int end;
+    private final int begin;
+    private final int end;
 
     public VRange(int aBegin, int aEnd)
     {
