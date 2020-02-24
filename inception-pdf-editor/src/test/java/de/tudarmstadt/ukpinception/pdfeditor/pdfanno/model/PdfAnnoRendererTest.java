@@ -44,7 +44,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
@@ -176,10 +175,8 @@ public class PdfAnnoRendererTest
                 schemaService.listAnnotationLayer(project));
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
-        PdfAnnoRenderer renderer = new PdfAnnoRenderer(schemaService,
-                new ColoringServiceImpl(schemaService));
-        PdfAnnoModel annoFile = renderer.render(state, vdoc, cas.getDocumentText(), pdfExtractFile,
-                0);
+        PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
+            cas.getDocumentText(), schemaService, pdfExtractFile, 0);
 
         assertThat(annoFile.getAnnoFileContent())
             .isEqualToNormalizingNewlines(contentOf(

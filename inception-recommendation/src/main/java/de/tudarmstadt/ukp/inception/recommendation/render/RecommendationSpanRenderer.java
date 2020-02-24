@@ -34,6 +34,7 @@ import org.apache.uima.cas.CAS;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -81,7 +83,8 @@ public class RecommendationSpanRenderer
      *            the coloring strategy to render this layer
      */
     @Override
-    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, AnnotationLayer layer,
+    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState,
+        ColoringStrategy aColoringStrategy, AnnotationLayer layer,
         RecommendationService recommendationService, LearningRecordService learningRecordService,
         AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
         DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset)
@@ -107,9 +110,9 @@ public class RecommendationSpanRenderer
         if (groups.isEmpty()) {
             return;
         }
-
-        String color = "#cccccc";
-        String bratTypeName = typeAdapter.getUiTypeName();
+        
+        String color = aColoringStrategy.getColor(null, null);
+        String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
         
         recommendationService.calculateVisibility(aCas, aState.getUser().getUsername(), layer,
                 groups, aWindowBeginOffset, aWindowEndOffset);
