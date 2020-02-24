@@ -32,6 +32,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 public class StructuredReviewDraftPanel
     extends AnnotationPanel
 {
@@ -67,6 +69,8 @@ public class StructuredReviewDraftPanel
         unlinkedAnnotationsContainer = new UnlinkedAnnotationPanel(
             CID_UNLINKED_ANNOTATIONS_CONTAINER, model, aCasProvider);
         unlinkedAnnotationsContainer.setOutputMarkupId(true);
+        unlinkedAnnotationsContainer.add(visibleWhen(() -> listUnlinkedAnnotations().size() > 0));
+
         linkedAnnotationsContainer.add(unlinkedAnnotationsContainer);
     }
 
@@ -80,7 +84,6 @@ public class StructuredReviewDraftPanel
             @Override
             protected void populateItem(ListItem<AnnotationListItem> aItem)
             {
-                // TODO: why???
                 aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
                 String title = aItem.getModelObject().getLayer().getUiName();
                 VID vid = new VID(aItem.getModelObject().getAddr());

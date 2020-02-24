@@ -56,7 +56,7 @@ public class UnlinkedAnnotationPanel
     
         // Allow AJAX updates.
         setOutputMarkupId(true);
-    
+
         annotationsContainer = new WebMarkupContainer((CID_ANNOTATIONS_CONTAINER));
         annotationsContainer.setOutputMarkupId(true);
         annotationsContainer.add(createAnnotationList());
@@ -74,8 +74,6 @@ public class UnlinkedAnnotationPanel
             protected void populateItem(ListItem<AnnotationListItem> aItem)
             {
                 aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
-                
-                String title = aItem.getModelObject().getLayer().getUiName();
                 
                 VID vid = new VID(aItem.getModelObject().getAddr());
                 
