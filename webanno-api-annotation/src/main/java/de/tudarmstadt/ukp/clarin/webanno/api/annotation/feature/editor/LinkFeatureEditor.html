@@ -19,11 +19,13 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <div class="form-group form-row">
+    <div class="feature-editor-label">
+      <span wicket:id="feature"></span>
+      <span class="float-right">
+        <span wicket:id="linkIndicator"></span>
+      </span>
+    </div>
     <div class="card">
-      <div class="card-header small">
-        <span wicket:id="feature"></span>
-        <span wicket:id="linkIndicator" class="" style=""></span>
-      </div>
       <div wicket:id="content">
         <div class="card-body">
           <div wicket:id="slots">

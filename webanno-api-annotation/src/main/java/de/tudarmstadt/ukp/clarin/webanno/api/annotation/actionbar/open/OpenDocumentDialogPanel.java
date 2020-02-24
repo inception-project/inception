@@ -403,7 +403,7 @@ public class OpenDocumentDialogPanel
 
             // for curation view in inception: when curating into CURATION_USER's CAS
             // and opening new document it should also be from the CURATION_USER
-            if (!CURATION_USER.equals(state.getUser().getUsername())) {
+            if (state.getUser() != null && !CURATION_USER.equals(state.getUser().getUsername())) {
                 state.setUser(userListChoice.getModelObject().get());
             }
 

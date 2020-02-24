@@ -9,43 +9,8 @@
 // import must be first
 @import "webanno-variables";
 
-@import "webjars!bootstrap/current/scss/functions";
-@import "webjars!bootstrap/current/scss/variables";
-@import "webjars!bootstrap/current/scss/mixins";
-@import "webjars!bootstrap/current/scss/root";
-@import "webjars!bootstrap/current/scss/reboot";
-@import "webjars!bootstrap/current/scss/type";
-@import "webjars!bootstrap/current/scss/images";
-@import "webjars!bootstrap/current/scss/code";
-@import "webjars!bootstrap/current/scss/grid";
-@import "webjars!bootstrap/current/scss/tables";
-@import "webjars!bootstrap/current/scss/forms";
-@import "webjars!bootstrap/current/scss/buttons";
-@import "webjars!bootstrap/current/scss/transitions";
-@import "webjars!bootstrap/current/scss/dropdown";
-@import "webjars!bootstrap/current/scss/button-group";
-@import "webjars!bootstrap/current/scss/input-group";
-@import "webjars!bootstrap/current/scss/custom-forms";
-@import "webjars!bootstrap/current/scss/nav";
-@import "webjars!bootstrap/current/scss/navbar";
-@import "webjars!bootstrap/current/scss/card";
-@import "webjars!bootstrap/current/scss/breadcrumb";
-@import "webjars!bootstrap/current/scss/pagination";
-@import "webjars!bootstrap/current/scss/badge";
-@import "webjars!bootstrap/current/scss/jumbotron";
-@import "webjars!bootstrap/current/scss/alert";
-@import "webjars!bootstrap/current/scss/progress";
-@import "webjars!bootstrap/current/scss/media";
-@import "webjars!bootstrap/current/scss/list-group";
-@import "webjars!bootstrap/current/scss/close";
-@import "webjars!bootstrap/current/scss/toasts";
-@import "webjars!bootstrap/current/scss/modal";
-@import "webjars!bootstrap/current/scss/tooltip";
-@import "webjars!bootstrap/current/scss/popover";
-@import "webjars!bootstrap/current/scss/carousel";
-@import "webjars!bootstrap/current/scss/spinners";
-@import "webjars!bootstrap/current/scss/utilities";
-@import "webjars!bootstrap/current/scss/print";
+// Import the original bootstrap
+@import "webjars!bootstrap/current/scss/bootstrap";
 
 // Customization
 // Custom styles that make use of Bootstrap and the new variables

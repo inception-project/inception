@@ -202,10 +202,11 @@ public class AnnotationPage
         actionBar.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
         actionBar.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
         centerArea.add(actionBar);
-        
-        createAnnotationEditor(null);
 
         add(createRightSidebar());
+
+        createAnnotationEditor(null);
+
         leftSidebar = createLeftSidebar();
         add(leftSidebar);
     }

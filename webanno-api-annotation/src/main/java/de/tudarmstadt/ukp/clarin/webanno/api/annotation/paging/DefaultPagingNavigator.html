@@ -20,9 +20,8 @@
 <body>
   <wicket:panel>
     <form wicket:id="form" class="action-bar-group">
-<!--       <div class="action-bar-group-title">Row</div> -->
       <div class="input-group">
-        <span class="input-group-btn">
+        <span class="input-group-prepend">
           <button wicket:id="showFirst" class="btn btn-light" type="button" wicket:message="title:firstPage">
             <i class="fas fa-fast-backward" aria-hidden="true"></i>
           </button>
@@ -31,7 +30,7 @@
           </button>
         </span>
         <input type="number" wicket:id="gotoPageText" class="form-control text-center" style="max-width: 6rem;"/>
-        <span class="input-group-btn">
+        <span class="input-group-append">
           <button wicket:id="gotoPageLink" class="btn btn-light" type="button" wicket:message="title:focusRow">
             <i class="fas fa-eye" aria-hidden="true"></i>
           </button>

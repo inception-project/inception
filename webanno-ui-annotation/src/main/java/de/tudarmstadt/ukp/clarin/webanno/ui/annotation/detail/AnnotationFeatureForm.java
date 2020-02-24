@@ -175,6 +175,7 @@ public class AnnotationFeatureForm
         selectedAnnotationInfoContainer.add(createSelectedAnnotationTypeLabel());
         selectedAnnotationInfoContainer.add(createNoFeaturesWarningLabel());
         selectedAnnotationInfoContainer.add(createSelectedTextLabel());
+        selectedAnnotationInfoContainer.add(createJumpToAnnotationLink());
         selectedAnnotationInfoContainer
                 .add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
         infoContainer.add(selectedAnnotationInfoContainer);
@@ -393,14 +394,16 @@ public class AnnotationFeatureForm
         }
     }
 
-    private LambdaAjaxLink createSelectedTextLabel()
+    private Component createSelectedTextLabel()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("jumpToAnnotation",
-                this::actionJumpToAnnotation);
-        link.add(new Label("selectedText", PropertyModel.of(getModelObject(),
-                "selection.text")).setOutputMarkupId(true));
-        link.setOutputMarkupId(true);
-        return link;
+        return new Label("selectedText", PropertyModel.of(getModelObject(), "selection.text"))
+                .setOutputMarkupId(true);
+    }
+    
+    private Component createJumpToAnnotationLink()
+    {
+        return new LambdaAjaxLink("jumpToAnnotation", this::actionJumpToAnnotation)
+                .setOutputMarkupId(true);
     }
     
     private void actionJumpToAnnotation(AjaxRequestTarget aTarget) throws IOException

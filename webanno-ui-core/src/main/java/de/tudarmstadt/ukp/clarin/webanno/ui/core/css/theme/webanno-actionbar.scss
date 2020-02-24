@@ -17,8 +17,9 @@
  ******************************************************************************/
 
 .action-bar {
+	@extend .border-bottom;
 	padding: 5px;
-	background-color: grey;
+	background-color: $card-cap-bg;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -36,6 +37,11 @@
 		flex-direction: row;
 		align-items: center;
 		flex: 0;
+
+		> * {
+			padding-left: $grid-gutter-width / 8;
+			padding-right: $grid-gutter-width / 8;
+		}
 	}
 	
 	.action-bar-group-title {

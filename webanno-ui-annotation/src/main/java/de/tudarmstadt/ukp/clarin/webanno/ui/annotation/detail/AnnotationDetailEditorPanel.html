@@ -69,26 +69,24 @@
         <div wicket:id=replaceAnnotationDialog></div>
         <div wicket:id="layerContainer" class="card">
           <div class="card-body">
-            <div class="col-sm-12">
-              <div class="form-group form-row">
-                <label wicket:for="defaultAnnotationLayer" class="col-sm-3 col-form-label">
-                  <wicket:label key="layer"/>
-                </label>
-                <div class="col-sm-9">
-                  <select wicket:id="defaultAnnotationLayer" class="form-control" 
-                      data-container="body"></select>
-                </div>
-                <div class="col-sm-offset-3 col-sm-9 small">
-                  <em wicket:id="relationHint"></em>
-                </div>
+            <div class="form-group form-row">
+              <label wicket:for="defaultAnnotationLayer" class="col-sm-3 col-form-label">
+                <wicket:label key="layer"/>
+              </label>
+              <div class="col-sm-9">
+                <select wicket:id="defaultAnnotationLayer" class="form-control" 
+                    data-container="body"></select>
               </div>
-              <div class="form-group form-row" wicket:enclosure="forwardAnnotation">
-                <div class="col-sm-offset-3 col-sm-9">
-                  <div class="checkbox">
-                    <label wicket:for="forwardAnnotation">
-                      <input wicket:id="forwardAnnotation" type="checkbox"> Forward annotation
-                    </label>
-                  </div>
+              <div class="col-sm-offset-3 col-sm-9 small">
+                <em wicket:id="relationHint"></em>
+              </div>
+            </div>
+            <div class="form-group form-row" wicket:enclosure="forwardAnnotation">
+              <div class="col-sm-offset-3 col-sm-9">
+                <div class="checkbox">
+                  <label wicket:for="forwardAnnotation">
+                    <input wicket:id="forwardAnnotation" type="checkbox"> Forward annotation
+                  </label>
                 </div>
               </div>
             </div>
@@ -131,10 +129,13 @@
                     </div>
                   </div>
                   <div class="form-group form-row">
-                    <label class="feature-editor-label col-form-label">Text</label>
+                    <label class="feature-editor-label col-form-label">
+                      <wicket:message key="text"/> 
+                      <a wicket:id="jumpToAnnotation" class="float-right"><i class="fas fa-crosshairs"></i></a>
+                    </label>
                     <div class="feature-editor-value" style="position: relative; height: 5em;">
                       <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 0px; right: 0px;" readonly>
-                        <a wicket:id="jumpToAnnotation"><wicket:container wicket:id="selectedText"/></a>
+                        <wicket:container wicket:id="selectedText"/>
                       </div>
                     </div>
                   </div>
