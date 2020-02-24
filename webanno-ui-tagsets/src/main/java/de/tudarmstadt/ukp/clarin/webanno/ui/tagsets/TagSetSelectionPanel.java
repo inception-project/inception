@@ -41,6 +41,7 @@ public class TagSetSelectionPanel
     private @SpringBean AnnotationSchemaService annotationSchemaService;
 
     private OverviewListChoice<TagSet> overviewList;
+    private TagSetImportPanel tagSetImportPanel;
     
     private IModel<Project> selectedProject;
 
@@ -61,6 +62,12 @@ public class TagSetSelectionPanel
         add(overviewList);
 
         add(new LambdaAjaxLink("create", this::actionCreate));
+        
+        tagSetImportPanel = new TagSetImportPanel("importPanel", selectedProject);
+        tagSetImportPanel.setImportCompleteAction(target -> {
+            target.add(findParent(ProjectTagSetsPanel.class));
+        });
+        add(tagSetImportPanel);
     }
 
     private List<TagSet> listTagSets()

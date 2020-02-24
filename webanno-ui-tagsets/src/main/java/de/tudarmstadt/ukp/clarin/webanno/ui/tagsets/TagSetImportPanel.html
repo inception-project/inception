@@ -19,15 +19,9 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <form wicket:id="form" class="card min-content-height">
+    <form wicket:id="form" class="min-content-height" style="min-width: 440px;">
       <div class="card-header">
-        <wicket:message key="import"/>
-        <div class="actions">
-          <button wicket:id="import" class="btn btn-primary">
-            <i class="fas fa-file-upload"></i>&nbsp;
-            <wicket:message key="import"/>
-          </button>
-        </div>
+        Import Tagset(s)
       </div>
       <div class="card-body">
         <div class="form-group form-row">
@@ -55,6 +49,12 @@
             </div>
           </div>
         </div>
+      </div>
+      <div class="card-footer text-right">
+        <button wicket:id="import" class="btn btn-primary">
+          <i class="fas fa-file-upload"></i>&nbsp;
+          <wicket:message key="import"/>
+        </button>
       </div>
     </form>
   </wicket:panel>

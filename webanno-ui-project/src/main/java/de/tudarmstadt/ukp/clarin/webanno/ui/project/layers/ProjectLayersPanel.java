@@ -53,17 +53,18 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -132,7 +133,7 @@ public class ProjectLayersPanel
         add(featureDetailForm);
 
         importLayerForm = new ImportLayerForm("importLayerForm");
-        add(importLayerForm);
+        layerSelectionForm.add(importLayerForm);
     }
 
     @Override
@@ -153,20 +154,15 @@ public class ProjectLayersPanel
         {
             super(id, aModel);
 
-            add(new Button("create", new StringResourceModel("label"))
-            {
-                private static final long serialVersionUID = -4482428496358679571L;
-
-                @Override
-                public void onSubmit()
-                {
-                    AnnotationLayer layer = new AnnotationLayer();
-                    layer.setProject(ProjectLayersPanel.this.getModelObject());
-                    
-                    layerDetailForm.setModelObject(layer);
-                    featureDetailForm.setModelObject(null);
-                }
-            });
+            add(new LambdaAjaxButton<>("create", (_target, _form) -> {
+                AnnotationLayer layer = new AnnotationLayer();
+                layer.setProject(ProjectLayersPanel.this.getModelObject());
+                
+                layerDetailForm.setModelObject(layer);
+                featureDetailForm.setModelObject(null);
+                
+                _target.add(ProjectLayersPanel.this);
+            }));
 
             final Map<AnnotationLayer, String> colors = new HashMap<>();
 
@@ -248,13 +244,19 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -7777616763931128598L;
 
-        private FileUploadField fileUpload;
+        private BootstrapFileInputField fileUpload;
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ImportLayerForm(String id)
         {
             super(id);
-            add(fileUpload = new FileUploadField("content", new Model()));
+            
+            add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
+            fileUpload.getConfig().showPreview(false);
+            fileUpload.getConfig().showUpload(false);
+            fileUpload.getConfig().showRemove(false);
+            fileUpload.setRequired(true);
+            
             add(new LambdaAjaxButton("import", this::actionImport));
         }
 
