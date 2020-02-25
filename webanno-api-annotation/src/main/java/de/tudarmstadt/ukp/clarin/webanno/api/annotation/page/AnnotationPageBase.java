@@ -282,14 +282,18 @@ public abstract class AnnotationPageBase
             throw new NotEditableException("No document selected");
         }
 
-        if (state.getMode().equals(CURATION)
-                && state.getDocument().getState().equals(CURATION_FINISHED)) {
-            throw new NotEditableException("Curation is already finished. You can put it back into "
-                    + "progress via the monitoring page.");
+        if (state.getMode().equals(CURATION)) {
+            if (state.getDocument().getState().equals(CURATION_FINISHED)) {
+                throw new NotEditableException("Curation is already finished. You can put it back "
+                                + "into progress via the monitoring page.");
+            }
+            
+            return;
         }
 
         if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
-            throw new NotEditableException("This document is already closed. Please ask your "
+            throw new NotEditableException("This document is already closed for user ["
+                    + state.getUser().getUsername() + "]. Please ask your "
                     + "project manager to re-open it via the monitoring page.");
         }
 
