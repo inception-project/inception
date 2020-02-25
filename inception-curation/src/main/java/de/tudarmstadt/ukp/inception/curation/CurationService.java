@@ -95,14 +95,4 @@ public interface CurationService
      * Returns the user corresponding to the CAS used as curation (target) CAS
      */
     public User retrieveCurationUser(String aUser, long aProjectId);
-    
-    /**
-     * Set curating flag for given user to true
-     */
-    public void setUserStartedCurating(String aUsername, Long aProjectId);
-    
-    /**
-     * Return if user has started curating
-     */
-    public boolean isUserCurating(String aUsername, Long aProjectId);
 }

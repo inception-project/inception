@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
+import de.tudarmstadt.ukp.inception.curation.CurationMetadata;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
 import de.tudarmstadt.ukp.inception.curation.merge.AutomaticMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
@@ -149,7 +150,7 @@ public class CurationSidebar
         }
         
         // user started curating, extension can show suggestions
-        curationService.setUserStartedCurating(currentUser, projectid);
+        state.setMetaData(CurationMetadata.CURATION_USER_PROJECT, true);
     }
     
     private Form<Void> createSettingsForm(String aId)

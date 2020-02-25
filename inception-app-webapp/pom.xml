@@ -500,6 +500,7 @@
     	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
     	<artifactId>inception-curation</artifactId>
     </dependency>
+    <dependency>
       <groupId>org.webjars.bowergithub.xbsoftware</groupId>
       <artifactId>enjoyhint</artifactId>
 	</dependency> 

@@ -40,7 +40,6 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
@@ -58,13 +57,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AnnotationPageCreatedEvent;
 import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
 @Component
 public class CurationServiceImpl
-    implements CurationService, ApplicationListener<AnnotationPageCreatedEvent>
+    implements CurationService
 {
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -174,7 +172,6 @@ public class CurationServiceImpl
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationUser;
         private MergeStrategy selectedStrategy;
-        private boolean isCurating;
                 
         public CurationState(String aUser)
         {
@@ -218,16 +215,6 @@ public class CurationServiceImpl
         public MergeStrategy getMergeStrategy()
         {
             return selectedStrategy;
-        }
-
-        public boolean isCurating()
-        {
-            return isCurating;
-        }
-
-        public void setCurating(boolean isCurating)
-        {
-            this.isCurating = isCurating;
         }
     }
 
@@ -316,6 +303,7 @@ public class CurationServiceImpl
     }
     
     @EventListener
+    @Transactional
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
@@ -355,13 +343,13 @@ public class CurationServiceImpl
         writeSettingsToDB(settings);
     }
 
-    @Transactional
-    private void writeSettingsToDB(List<CurationSettings> aSettings)
+    public void writeSettingsToDB(List<CurationSettings> aSettings)
     {
         for (CurationSettings setting : aSettings) {
             if (setting.getId() == null) {
                 entityManager.persist(setting);
             } else {
+                // FIXME after logging in: getting old state, this is not called
                 entityManager.merge(setting);
             }
         }
@@ -436,32 +424,6 @@ public class CurationServiceImpl
             long aProjectId)
     {
         return getCurationState(aUsername, aProjectId).getMergeStrategy();
-    }
-
-    @Override
-    public void onApplicationEvent(AnnotationPageCreatedEvent event)
-    {
-        // when annotationpage is loaded for the first time, 
-        // we do not want to immediately start curating
-        synchronized (curationStates)
-        {
-            getCurationState(event.getUsername(), event.getProjectId()).setCurating(false);
-        }
-    }
-
-    @Override
-    public void setUserStartedCurating(String aUsername, Long aProjectId)
-    {
-        synchronized (curationStates)
-        {
-            getCurationState(aUsername, aProjectId).setCurating(true);
-        }
-    }
-
-    @Override
-    public boolean isUserCurating(String aUsername, Long aProjectId)
-    {
-        return getCurationState(aUsername, aProjectId).isCurating();
     }
 
 }

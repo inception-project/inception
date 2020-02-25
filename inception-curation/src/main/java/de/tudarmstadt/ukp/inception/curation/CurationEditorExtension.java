@@ -205,9 +205,10 @@ public class CurationEditorExtension
             return;
         }
         
+        //check annotatorstate metadata if user is currently curating for this project
         long projectId = aState.getProject().getId();
-        if (!curationService.isUserCurating(userRepository.getCurrentUser().getUsername(),
-                projectId)) {
+        Boolean isCurating = aState.getMetaData(CurationMetadata.CURATION_USER_PROJECT);
+        if (isCurating == null || !isCurating) {
             return;
         }
             
