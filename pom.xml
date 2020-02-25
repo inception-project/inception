@@ -71,6 +71,7 @@
     <wicket-jquery-selectors.version>3.0.0-M4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.0-M4</wicket-webjars.version>    
     <wicket-spring-boot.version>2.1.9</wicket-spring-boot.version>
+    <bootstrap.version>4.4.1-1</bootstrap.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <uimafit.version>3.0.0</uimafit.version>
@@ -538,6 +539,11 @@
         <groupId>org.webjars</groupId>
         <artifactId>font-awesome</artifactId>
         <version>5.11.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>bootstrap</artifactId>
+        <version>${bootstrap.version}</version>
       </dependency>
       <dependency>
         <groupId>com.github.sommeri</groupId>

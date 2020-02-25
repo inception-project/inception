@@ -57,6 +57,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
@@ -71,7 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -202,11 +203,13 @@ public class LayerDetailForm
         // Behaviors of layers
         add(new CheckBox("readonly"));
 
-        add(new BootstrapSelect<LayerExportMode>("exportMode",
-                new PropertyModel<LayerExportMode>(this, "exportMode"),
-                asList(LayerExportMode.values()), new EnumChoiceRenderer<>(this))
-                        .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
-
+        BootstrapRadioChoice<LayerExportMode> exportModeChoice = new BootstrapRadioChoice<>(
+                "exportMode", asList(LayerExportMode.values()));
+        exportModeChoice.setModel(new PropertyModel<LayerExportMode>(this, "exportMode"));
+        exportModeChoice.setChoiceRenderer(new EnumChoiceRenderer<>(this));
+        exportModeChoice.add(new LambdaAjaxFormChoiceComponentUpdatingBehavior());
+        add(exportModeChoice);
+        
         add(new AjaxDownloadLink("export",
                 new LambdaModel<>(this::getExportLayerFileName).autoDetaching(),
                 this::exportLayer));

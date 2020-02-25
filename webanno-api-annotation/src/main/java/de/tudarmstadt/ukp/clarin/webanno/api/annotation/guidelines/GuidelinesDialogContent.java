@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines;
 
+import static org.apache.wicket.markup.html.link.PopupSettings.RESIZABLE;
+import static org.apache.wicket.markup.html.link.PopupSettings.SCROLLBARS;
+
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.PopupSettings;
@@ -60,8 +63,8 @@ public class GuidelinesDialogContent
             guidelineRepeater.add(item);
 
             // Add a popup window link to display annotation guidelines
-            PopupSettings popupSettings = new PopupSettings(
-                    PopupSettings.RESIZABLE | PopupSettings.SCROLLBARS).setHeight(500)
+            PopupSettings popupSettings = new PopupSettings(RESIZABLE | SCROLLBARS)
+                            .setHeight(500)
                             .setWidth(700);
 
             IResourceStream stream = new FileResourceStream(projectService

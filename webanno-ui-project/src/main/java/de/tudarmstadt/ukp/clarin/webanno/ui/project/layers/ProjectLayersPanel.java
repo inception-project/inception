@@ -57,7 +57,6 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -441,7 +440,7 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new Button("new", new StringResourceModel("label"))
+            add(new Button("new")
             {
                 private static final long serialVersionUID = 1L;
 

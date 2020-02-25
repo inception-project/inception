@@ -58,4 +58,9 @@
 	    @include make-col(12);
 	  }
 	}
+
+	.form-group .k-widget,
+	.form-group .k-textbox {
+	  width: 100%;
+	}
 }

@@ -39,12 +39,16 @@ public class GuidelinesDialog
         
         state = aModel;
 
-        setInitialWidth(550);
-        setInitialHeight(450);
+        setOutputMarkupId(true);
+        setInitialWidth(620);
+        setInitialHeight(440);
         setResizable(true);
         setWidthUnit("px");
         setHeightUnit("px");
-        setTitle("Open Annotation Guideline, in separate window");
+        setCssClassName("w_blue w_flex");
+        showUnloadConfirmation(false);
+
+        setTitle("Guidelines");
     }
 
     @Override

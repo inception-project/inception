@@ -400,8 +400,6 @@ public class BratAnnotationEditor
         // annotation OR the span of an existing annotation which the user has selected.
         Offsets optUserSelectedSpan = getOffsetsFromRequest(request, aCas, aSelectedAnnotation);
         
-        LOG.debug("Span selection {}", optUserSelectedSpan);
-        
         Offsets userSelectedSpan = optUserSelectedSpan;
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();

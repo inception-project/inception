@@ -55,7 +55,7 @@
                         <i class="fas fa-file-upload"></i>&nbsp;
                         <wicket:message key="import"/>
                       </button>
-                    </div>            
+                    </div>
                   </form>
                 </div>
               </span>
@@ -85,14 +85,17 @@
                   <i class="fas fa-download"></i>&nbsp;
                   <wicket:message key="export"/>
                 </button>
-                <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu">
-                  <div class="input-group">
-                    <select class="form-control" wicket:id="exportMode" data-container="body"></select>
-                    <span class="input-group-btn">
-                      <button wicket:id="export" type="button" class="btn btn-default">
-                        <i class="fas fa-download" aria-hidden="true"></i>
+                <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
+                  <div class="container">
+                    <div class="form-group form-row">
+                      <div wicket:id="exportMode" class="small"></div>
+                    </div>
+                    <div class="form-group form-row">
+                      <button wicket:id="export" class="btn btn-sm btn-primary col-sm-12">
+                        <i class="fas fa-download"></i>&nbsp;
+                        <wicket:message key="export"/>
                       </button>
-                    </span>
+                    </div>
                   </div>
                 </div>
               </span>
@@ -110,11 +113,9 @@
             <div class="card min-content-height">
               <div class="card-header small">
                 <wicket:message key="properties"/>
-                <span class="float-right">
-                  <a target="_blank" wicket:message="href:properties.help.link">
-                    <i class="fas fa-question-circle"></i>
-                  </a>
-                </span>
+                <a target="_blank" wicket:message="href:properties.help.link">
+                  <i class="fas fa-question-circle"></i>
+                </a>
               </div>
               <div class="card-body">
                 <div class="form-group form-row">
@@ -149,11 +150,9 @@
             <div class="card min-content-height">
               <div class="card-header small">
                 <wicket:message key="technicalProperties"/>
-                <span class="float-right">
-                  <a target="_blank" wicket:message="href:properties.help.link">
-                    <i class="fas fa-question-circle"></i>
-                  </a>
-                </span>
+                <a target="_blank" wicket:message="href:properties.help.link">
+                  <i class="fas fa-question-circle"></i>
+                </a>
               </div>
               <div class="card-body">
                 <div class="form-group form-row">
@@ -195,13 +194,11 @@
             <div class="card min-content-height">
               <div class="card-header small">
                 <wicket:message key="behaviors"/>
-                <span class="float-right">
-                  <a target="_blank" wicket:message="href:behaviours.help.link">
-                    <i class="fas fa-question-circle"></i>
-                  </a>
-                </span>
+                <a target="_blank" wicket:message="href:behaviours.help.link">
+                  <i class="fas fa-question-circle"></i>
+                </a>
               </div>
-              <div class="panel-body">
+              <div class="card-body">
                 <div class="col-sm-12">
                   <div class="form-group form-row" wicket:enclosure="readonly">
                     <div class="offset-sm-4 col-sm-8">
@@ -227,17 +224,18 @@
         <form wicket:id="featureSelectionForm" class="card">
           <div class="card-header">
             <wicket:message key="features"/>
-            <span class="float-right">
-              <a target="_blank" wicket:message="href:features.help.link">
-                <i class="fas fa-question-circle"></i>
-              </a>
-            </span>
+            <a target="_blank" wicket:message="href:features.help.link">
+              <i class="fas fa-question-circle"></i>
+            </a>
+            <div class="actions">
+              <button wicket:id="new" class="btn btn-primary">
+                <i class="fas fa-plus-square"></i>&nbsp;
+                <wicket:message key="create"/>
+              </button>
+            </div>
           </div>
           <div class="card-body fit-child-snug">
             <select wicket:id="feature" class="form-control"></select>
-          </div>
-          <div class="card-footer text-right">
-            <input wicket:id="new" type="submit" class="btn btn-primary" wicket:message="value:create"/>
           </div>
         </form>
         
@@ -261,11 +259,15 @@
                 <button class="btn btn-action dropdown-toggle flex-content" type="button" data-toggle="dropdown">
                   <i class="fas fa-ellipsis-v"></i>
                 </button>
-                <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu">
-                  <button wicket:id="delete" class="btn btn-action btn-danger col-sm-12">
-                    <i class="fas fa-trash"></i>&nbsp;
-                    <wicket:message key="delete"/>
-                  </button>
+                <div class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
+                  <div class="container">
+                    <div class="form-group form-row">
+                      <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
+                        <i class="fas fa-trash"></i>&nbsp;
+                        <wicket:message key="delete"/>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </span>
             </div>

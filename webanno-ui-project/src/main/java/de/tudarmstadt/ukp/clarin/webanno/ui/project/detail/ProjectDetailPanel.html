@@ -85,7 +85,10 @@
       </div>
     </div>
     <div class="card-footer text-right">
-      <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save" />
+      <button wicket:id="save" class="btn btn-primary">
+        <i class="fas fa-save"></i>&nbsp;
+        <wicket:message key="save"/>
+      </button>
     </div>
   </form>
 </wicket:panel>

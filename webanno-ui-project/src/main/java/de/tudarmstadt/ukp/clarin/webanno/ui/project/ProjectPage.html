@@ -25,20 +25,20 @@
         <wicket:container wicket:id="projects" />
       </div>
       <div wicket:id ="tabContainer" class="flex-content flex-v-container flex-gutter" name="tabContainer">
-        <div class="page-header flex-h-container">
-          <div class="flex-content">
-            <h1><wicket:container wicket:id="projectName"/></h1>
-          </div>
-          <div>
-            <h1>
+        <div class="card">
+          <div class="card-header border-bottom-0">
+            <h1 class="float-right">
               <button wicket:id="delete" class="btn btn-danger">
                 <i class="fas fa-trash"></i>&nbsp;
                 <wicket:message key="delete"/>
               </button>
               <button wicket:id="cancel" class="btn btn-secondary">
                 <i class="fas fa-times"></i>&nbsp;
-                <wicket:message key="cancel"/>
+                <wicket:message key="close"/>
               </button>
+            </h1>
+            <h1>
+              <wicket:container wicket:id="projectName"/>
             </h1>
           </div>
         </div>

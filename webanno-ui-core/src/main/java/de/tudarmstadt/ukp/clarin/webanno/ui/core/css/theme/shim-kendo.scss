@@ -44,15 +44,16 @@
 	}
 }
 
-/*
-.form-group .k-widget,
-.form-group .k-textbox {
-  width: 100%;
-}
-*/
-
 .bs3.bootstrap-select .dropdown-toggle .filter-option, .k-autocomplete .k-input {
 	padding-top: 0px;
 	padding-bottom: 0px;
+}
+
+.k-combobox {
+	.k-input {
+		// This is required to fit the input field nicely into the control box. Without it, the input
+		// slightly overlaps the control box on the bottom which does not look very nice.
+		margin-bottom: 1px !important;
+	}
 }
 

@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
@@ -33,6 +34,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -599,6 +602,19 @@ public class ProjectServiceImpl
         }
 
         return annotationGuidelineFiles;
+    }
+    
+    @Override
+    public boolean hasGuidelines(Project aProject)
+    {
+        try (DirectoryStream<Path> d = newDirectoryStream(getGuidelinesFolder(aProject).toPath())) {
+            return d.iterator().hasNext();
+        }
+        catch (IOException e) {
+            // This may not be the best way to handle it, but if is a fairly sound assertion and
+            // saves the calling code from having to handle the exception.
+            return false;
+        }
     }
 
     @Override

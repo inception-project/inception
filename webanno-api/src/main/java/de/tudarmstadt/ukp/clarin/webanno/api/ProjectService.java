@@ -362,6 +362,15 @@ public interface ProjectService
     List<String> listGuidelines(Project project);
 
     /**
+     * Checks if the given project defines any guidelines.
+     *
+     * @param project
+     *            the project.
+     * @return the filenames.
+     */
+    boolean hasGuidelines(Project project);
+
+    /**
      * Remove an annotation guideline document from the file system
      *
      * @param project
