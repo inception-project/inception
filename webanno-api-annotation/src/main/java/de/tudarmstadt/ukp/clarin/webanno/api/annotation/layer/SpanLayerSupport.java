@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -42,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.SpanRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component
 public class SpanLayerSupport
@@ -140,33 +138,11 @@ public class SpanLayerSupport
         
         return new SpanLayerTraitsEditor(aId, this, aLayerModel);
     }
+    
 
     @Override
-    public SpanLayerTraits readTraits(AnnotationLayer aFeature)
+    public SpanLayerTraits createTraits()
     {
-        SpanLayerTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(SpanLayerTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-    
-        if (traits == null) {
-            traits = new SpanLayerTraits();
-        }
-    
-        return traits;
-    }
-    
-    @Override
-    public void writeTraits(AnnotationLayer aFeature, SpanLayerTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return new SpanLayerTraits();
     }
 }

@@ -24,6 +24,10 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -41,9 +45,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class ChainLayerSupport
-    extends LayerSupport_ImplBase<ChainAdapter, Void>
+    extends LayerSupport_ImplBase<ChainAdapter, ChainLayerTraits>
     implements InitializingBean
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
@@ -133,5 +139,23 @@ public class ChainLayerSupport
         return new ChainRenderer(createAdapter(aLayer), getLayerSupportRegistry(),
                 featureSupportRegistry,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+    }
+    
+    @Override
+    public Panel createTraitsEditor(String aId,  IModel<AnnotationLayer> aLayerModel)
+    {
+        AnnotationLayer layer = aLayerModel.getObject();
+        
+        if (!accepts(layer)) {
+            throw unsupportedLayerTypeException(layer);
+        }
+        
+        return new ChainLayerTraitsEditor(aId, this, aLayerModel);
+    }
+
+    @Override
+    public ChainLayerTraits createTraits()
+    {
+        return new ChainLayerTraits();
     }
 }

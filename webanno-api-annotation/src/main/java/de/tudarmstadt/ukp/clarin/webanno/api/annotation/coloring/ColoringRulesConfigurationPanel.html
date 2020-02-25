@@ -22,21 +22,21 @@
   <form wicket:id="coloringRulesForm">
     <div wicket:id="coloringRulesContainer">
       <div class="flex-h-container flex-gutter flex-only-internal-gutter">
-        <input wicket:id="pattern" class="form-control" placeholder="Enter label regex here..."/>
-        <input wicket:id="color" class="form-control" placeholder="Enter color as #rrggbb..."/>
+        <input wicket:id="pattern" class="form-control" placeholder="Label regex..."/>
+        <input wicket:id="color" class="form-control" placeholder="#rrggbb..."/>
         <span class="flex-h-container flex-centered" style="white-space:nowrap;">
-          <a wicket:id="addColoringRule" class="btn-xs btn-primary pull-right">
+          <button wicket:id="addColoringRule" class="btn btn-sm btn-primary pull-right">
             <i class="fas fa-plus" aria-hidden="true"></i>
-          </a>
+          </button>
         </span>
       </div>
       <div class="flex-v-container flex-gutter">
         <div wicket:id="coloringRules" class="flex-h-container flex-gutter flex-only-internal-gutter">
           <div class="flex-content">
-            <span class="badge" wicket:id="pattern"/>
+            <span class="badge font-weight-normal font-size-normal" style="font-size: inherit;" wicket:id="pattern"/>
           </div>
           <div class="flex-h-container flex-centered" style="white-space:nowrap;">
-            <a wicket:id="removeColoringRule" class="btn-xs btn-danger pull-right">
+            <a wicket:id="removeColoringRule" class="btn-sm btn-danger pull-right">
               <i class="fas fa-trash" aria-hidden="true"></i>
             </a>
           </div>

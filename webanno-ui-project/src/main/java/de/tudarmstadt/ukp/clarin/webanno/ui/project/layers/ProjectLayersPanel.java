@@ -50,7 +50,6 @@ import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -82,6 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -425,19 +425,13 @@ public class ProjectLayersPanel
                         }
                     });
                     setNullValid(false);
-                    add(new FormComponentUpdatingBehavior()
-                    {
-                        private static final long serialVersionUID = -2961708999353358452L;
-                        
-                        @Override
-                        protected void onUpdate()
-                        {
-                            // list and detail panel share the same model, but they are not
-                            // automatically notified of updates to the model unless the 
-                            // updates go through their respective setModelObject() calls
-                            featureDetailForm.modelChanged();
-                        };
-                    });
+                    add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
+                        // list and detail panel share the same model, but they are not
+                        // automatically notified of updates to the model unless the 
+                        // updates go through their respective setModelObject() calls
+                        featureDetailForm.modelChanged();
+                        _target.add(featureDetailForm);
+                    }));
                 }
 
                 @Override

@@ -24,7 +24,6 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -46,7 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RelationRender
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component
 public class RelationLayerSupport
@@ -152,31 +150,8 @@ public class RelationLayerSupport
     }
 
     @Override
-    public RelationLayerTraits readTraits(AnnotationLayer aFeature)
+    public RelationLayerTraits createTraits()
     {
-        RelationLayerTraits traits = null;
-        try {
-            traits = JSONUtil.fromJsonString(RelationLayerTraits.class, aFeature.getTraits());
-        }
-        catch (IOException e) {
-            log.error("Unable to read traits", e);
-        }
-    
-        if (traits == null) {
-            traits = new RelationLayerTraits();
-        }
-    
-        return traits;
-    }
-    
-    @Override
-    public void writeTraits(AnnotationLayer aFeature, RelationLayerTraits aTraits)
-    {
-        try {
-            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
-        }
-        catch (IOException e) {
-            log.error("Unable to write traits", e);
-        }
+        return new RelationLayerTraits();
     }
 }

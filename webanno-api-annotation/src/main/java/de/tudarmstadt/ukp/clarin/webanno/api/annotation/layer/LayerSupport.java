@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public interface LayerSupport<A extends TypeAdapter, T>
     extends BeanNameAware
 {
-    Object getId();
+    String getId();
 
     /**
      * Checks whether the given layer is provided by the current layer support.
@@ -124,6 +124,11 @@ public interface LayerSupport<A extends TypeAdapter, T>
         return new EmptyPanel(aId);
     }
     
+    default T createTraits()
+    {
+        return null;
+    }
+
     /**
      * Read the traits for the given {@link AnnotationLayer}. If traits are supported, then this
      * method must be overwritten. A typical implementation would read the traits from a JSON string
