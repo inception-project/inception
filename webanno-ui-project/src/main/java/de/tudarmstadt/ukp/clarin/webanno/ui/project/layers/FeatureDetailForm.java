@@ -32,6 +32,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -183,7 +184,10 @@ public class FeatureDetailForm
             }
         });
 
-        add(new LambdaButton("save", this::actionSave).triggerAfterSubmit());
+        // Processing the data in onAfterSubmit so the traits panel can use the
+        // override onSubmit in its nested form and store the traits before
+        // we clear the currently selected feature.
+        add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
         add(new LambdaAjaxButton<>("delete", this::actionDelete).add(
                 visibleWhen(() -> !isNull(getModelObject().getId()))));
         // Set default form processing to false to avoid saving data
@@ -271,12 +275,8 @@ public class FeatureDetailForm
         });
     }
     
-    private void actionSave()
+    private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
     {
-        // Processing the data in onAfterSubmit so the traits panel can use the
-        // override onSubmit in its nested form and store the traits before
-        // we clear the currently selected feature.
-
         AnnotationFeature feature = getModelObject();
         String name = feature.getUiName();
         name = name.replaceAll("\\W", "");
@@ -334,6 +334,9 @@ public class FeatureDetailForm
 
         // Clear currently selected feature / feature details
         setModelObject(null);
+        
+        success("Settings for feature [" + feature.getUiName() + "] saved.");
+        aTarget.addChildren(getPage(), IFeedback.class);
 
         // Trigger LayerConfigurationChangedEvent
         applicationEventPublisherHolder.get().publishEvent(

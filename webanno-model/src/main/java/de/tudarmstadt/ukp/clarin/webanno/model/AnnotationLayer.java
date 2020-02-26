@@ -98,7 +98,6 @@ public class AnnotationLayer
     @JoinColumn(name = "project")
     private Project project;
 
-
     @Column(name = "crossSentence")
     private boolean crossSentence;
     
@@ -137,6 +136,10 @@ public class AnnotationLayer
     @Deprecated
     @Column(name = "allowSTacking")
     private boolean allowStacking;
+    
+    @Lob
+    @Column(length = 64000)
+    private String traits;
     
     public AnnotationLayer()
     {
@@ -530,6 +533,16 @@ public class AnnotationLayer
     public void setOnClickJavascriptAction(String onClickAction)
     {
         this.onClickJavascriptAction = onClickAction;
+    }
+
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
     }
 
     @Override

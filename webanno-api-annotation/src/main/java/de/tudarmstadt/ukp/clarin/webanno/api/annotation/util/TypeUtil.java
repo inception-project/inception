@@ -29,6 +29,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
@@ -45,27 +46,47 @@ public final class TypeUtil
     }
 
     /**
-     * Construct the label text used in the brat user interface.
+     * Construct the label text used in the user interface.
      *
-     * @param aAdapter the adapter.
-     * @param aFeatures the features.
+     * @param aAdapter
+     *            the adapter.
+     * @param aVObject
+     *            a visual object.
+     * @return the label.
+     */
+    public static String getUiLabelText(TypeAdapter aAdapter, VObject aVObject)
+    {
+        if (aVObject.getLabelHint() != null) {
+            return aVObject.getLabelHint();
+        }
+
+        return getUiLabelText(aAdapter, aVObject.getFeatures());
+    }
+
+    /**
+     * Construct the label text used in the user interface.
+     *
+     * @param aAdapter
+     *            the adapter.
+     * @param aFeatures
+     *            the features.
      * @return the label.
      */
     public static String getUiLabelText(TypeAdapter aAdapter, Map<String, String> aFeatures)
     {
-        StringBuilder bratLabelText = new StringBuilder();
+        StringBuilder labelText = new StringBuilder();
         for (Entry<String, String> feature : aFeatures.entrySet()) {
             String label = StringUtils.defaultString(feature.getValue());
             
-            if (bratLabelText.length() > 0 && label.length() > 0) {
-                bratLabelText.append(TypeAdapter.FEATURE_SEPARATOR);
+            if (labelText.length() > 0 && label.length() > 0) {
+                labelText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
 
-            bratLabelText.append(label);
+            labelText.append(label);
         }
 
-        if (bratLabelText.length() > 0) {
-            return bratLabelText.toString();
+        if (labelText.length() > 0) {
+            return labelText.toString();
         }
         else {
             // If there are no label features at all, then return the empty string. This avoids
@@ -76,7 +97,7 @@ public final class TypeUtil
     }
     
     /**
-     * Construct the hover text used in the brat user interface.
+     * Construct the hover text used in the user interface.
      *
      * @param aAdapter the adapter.
      * @param aHoverFeatures the features.
@@ -156,7 +177,7 @@ public final class TypeUtil
     }
     
     /**
-     * Construct the hover text used in the brat user interface.
+     * Construct the hover text used in the user interface.
      *
      * @param aAdapter the adapter.
      * @param aFs the annotation.
@@ -166,7 +187,7 @@ public final class TypeUtil
     public static String getUiHoverText(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
-        StringBuilder bratHoverText = new StringBuilder();
+        StringBuilder hoverText = new StringBuilder();
         for (AnnotationFeature feature : aFeatures) {
 
             if (!feature.isEnabled() || !feature.isIncludeInHover()
@@ -177,18 +198,18 @@ public final class TypeUtil
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
             String text = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
             
-            if (bratHoverText.length() > 0 && text.length() > 0) {
-                bratHoverText.append(TypeAdapter.FEATURE_SEPARATOR);
+            if (hoverText.length() > 0 && text.length() > 0) {
+                hoverText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
 
-            bratHoverText.append(text);
+            hoverText.append(text);
         }
 
-        if (bratHoverText.length() > 0) {
+        if (hoverText.length() > 0) {
             if (aAdapter.getLayer().isShowTextInHover()) {
-                return String.format("\"%s\" %s", aFs.getCoveredText(), bratHoverText.toString());
+                return String.format("\"%s\" %s", aFs.getCoveredText(), hoverText.toString());
             }
-            return bratHoverText.toString();
+            return hoverText.toString();
         }
         else {
             // If there are no label features at all, then use the spantext, which 
@@ -198,20 +219,19 @@ public final class TypeUtil
     }
 
     /**
-     * @param aBratTypeName the brat type name.
+     * @param aUiTypeName
+     *            the brat type name.
      * @return the layer ID.
-     * @see #getUiTypeName
+     * @see TypeAdapter#getUiTypeName
      */
-    public static long getLayerId(String aBratTypeName)
+    public static long getLayerId(String aUiTypeName)
     {
-        return Long.parseLong(aBratTypeName.substring(0, aBratTypeName.indexOf("_")));
+        return Long.parseLong(aUiTypeName.substring(0, aUiTypeName.indexOf("_")));
     }
 
-    public static String getUiTypeName(TypeAdapter aAdapter)
-    {
-        return aAdapter.getTypeId() + "_" + aAdapter.getAnnotationTypeName();
-    }
-
+    /**
+     * @see TypeAdapter#getUiTypeName
+     */
     public static String getUiTypeName(AnnotationLayer aLayer)
     {
         return aLayer.getId() + "_" + aLayer.getName();

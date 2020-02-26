@@ -27,10 +27,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public abstract class LayerSupport_ImplBase<T extends TypeAdapter>
-    implements LayerSupport<T>
+public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
+    implements LayerSupport<A, T>
 {
     protected final FeatureSupportRegistry featureSupportRegistry;
+    
+    private LayerSupportRegistry layerSupportRegistry;
     
     public LayerSupport_ImplBase(FeatureSupportRegistry aFeatureSupportRegistry)
     {
@@ -44,5 +46,23 @@ public abstract class LayerSupport_ImplBase<T extends TypeAdapter>
             FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
             fs.generateFeature(aTSD, aTD, feature);
         }
+    }
+    
+    public void setLayerSupportRegistry(LayerSupportRegistry aLayerSupportRegistry)
+    {
+        if (layerSupportRegistry != null) {
+            throw new IllegalStateException("LayerSupportRegistry can only be set once!");
+        }
+        
+        layerSupportRegistry = aLayerSupportRegistry;
+    }
+    
+    public LayerSupportRegistry getLayerSupportRegistry()
+    {
+        if (layerSupportRegistry == null) {
+            throw new IllegalStateException("LayerSupportRegistry not set!");
+        }
+        
+        return layerSupportRegistry;
     }
 }

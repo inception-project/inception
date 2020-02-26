@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 public class VTextMarker
     extends VMarker
 {
-    private String type;
-    private int begin;
-    private int end;
+    private final String type;
+    private final int begin;
+    private final int end;
 
     public VTextMarker(String aType, int aBegin, int aEnd)
     {
