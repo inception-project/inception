@@ -113,6 +113,9 @@ public class AnnotationFeatureForm
     private final WebMarkupContainer infoContainer;
     private final WebMarkupContainer featureEditorContainer;
 
+    // Within layerContainer
+    private final WebMarkupContainer forwardAnnotationGroup;
+    
     // Within infoContainer
     private final WebMarkupContainer selectedAnnotationInfoContainer;
 
@@ -149,10 +152,19 @@ public class AnnotationFeatureForm
         noAnnotationWarning
                 .add(visibleWhen(() -> !getModelObject().getSelection().getAnnotation().isSet()));
         add(noAnnotationWarning);
-        
+
+        // Trying to re-render the forwardAnnotationCheckBox as part of an AJAX request when it is
+        // not visible causes an error in the JS console saying that the component could not be
+        // found. Placing it in this WebMarkupContainer and controlling the visibility via the
+        // container resolves this issue. Mind, using a "wicket:enclosure" instead of the
+        // WebMarkupGroup also did not work.
+        forwardAnnotationGroup = new WebMarkupContainer("forwardAnnotationGroup");
+        forwardAnnotationGroup.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
+        forwardAnnotationGroup.setOutputMarkupPlaceholderTag(true);
+        forwardAnnotationGroup.add(visibleWhen(this::isForwardable));
+
         layerContainer = new WebMarkupContainer("layerContainer");
         layerContainer.setOutputMarkupPlaceholderTag(true);
-        layerContainer.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
         layerContainer.add(relationHint = createRelationHint());
         layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
         // Visible if there is more than one selectable layer and if either "remember layer" is off
@@ -162,6 +174,7 @@ public class AnnotationFeatureForm
                 .map(layerChoices -> layerChoices.size() > 1).orElse(false).getObject()
                 && (!getModelObject().getPreferences().isRememberLayer()
                         || editorPanel.getEditorPage().isEditable())));
+        layerContainer.add(forwardAnnotationGroup);
         add(layerContainer);
 
         infoContainer = new WebMarkupContainer("infoContainer");
@@ -334,7 +347,7 @@ public class AnnotationFeatureForm
         AnnotatorState state = getModelObject();
 
         aTarget.add(relationHint);
-        aTarget.add(forwardAnnotationCheckBox);
+        aTarget.add(forwardAnnotationGroup);
         
         // If forward annotation was enabled, disable it
         if (state.isForwardAnnotation()) {
@@ -556,8 +569,7 @@ public class AnnotationFeatureForm
     private CheckBox createForwardAnnotationCheckBox()
     {
         CheckBox checkbox = new CheckBox("forwardAnnotation");
-        checkbox.setOutputMarkupPlaceholderTag(true);
-        checkbox.add(visibleWhen(this::isForwardable));
+        checkbox.setOutputMarkupId(true);
         checkbox.add(LambdaBehavior.onConfigure(_this -> {
             // Force-disable forward annotation mode if current layer is not forwardable
             if (!isForwardable()) {
