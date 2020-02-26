@@ -44,6 +44,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -60,7 +61,9 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridSe
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 @RunWith(JUnitParamsRunner.class)
 public class LappsGridRecommenderConformityTest
 {
