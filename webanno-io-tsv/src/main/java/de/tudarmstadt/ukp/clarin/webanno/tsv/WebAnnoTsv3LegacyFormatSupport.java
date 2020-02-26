@@ -31,6 +31,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -85,13 +86,15 @@ public class WebAnnoTsv3LegacyFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
         return createReaderDescription(WebannoTsv3Reader.class);
     }
     
     @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
         List<AnnotationLayer> layers = annotationService.listAnnotationLayer(aProject);

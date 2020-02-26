@@ -31,7 +31,6 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,6 +54,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -246,17 +246,17 @@ public class DocumentServiceImpl
         Validate.notNull(aProject, "Project must be specified");
         Validate.notBlank(aFileName, "File name must be specified");
         
-        try {
-            entityManager
-                    .createQuery(
-                            "FROM SourceDocument WHERE project = :project AND " + "name =:name ",
-                            SourceDocument.class).setParameter("project", aProject)
-                    .setParameter("name", aFileName).getSingleResult();
-            return true;
-        }
-        catch (NoResultException ex) {
-            return false;
-        }
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM SourceDocument",
+                "WHERE project = :project AND name =:name ");
+
+        long count = entityManager.createQuery(query, Long.class)
+                .setParameter("project", aProject)
+                .setParameter("name", aFileName)
+                .getSingleResult();
+        
+        return count > 0;
     }
 
     @Override
@@ -510,17 +510,16 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public void uploadSourceDocument(File aFile, SourceDocument aDocument)
+    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument)
         throws IOException
     {
-        try (InputStream is = new FileInputStream(aFile)) {
-            uploadSourceDocument(is, aDocument);
-        }
+        uploadSourceDocument(aIs, aDocument, null);
     }
 
     @Override
     @Transactional
-    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument)
+    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws IOException
     {
         // Create the metadata record - this also assigns the ID to the document
@@ -538,7 +537,7 @@ public class DocumentServiceImpl
             
             // Check if the file has a valid format / can be converted without error
             // This requires that the document ID has already been assigned
-            cas = createOrReadInitialCas(aDocument);
+            cas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, aFullProjectTypeSystem);
         }
         catch (IOException e) {
             FileUtils.forceDelete(targetFile);
@@ -567,11 +566,19 @@ public class DocumentServiceImpl
     public CAS createOrReadInitialCas(SourceDocument aDocument)
         throws IOException
     {
-        return createOrReadInitialCas(aDocument, CasUpgradeMode.NO_CAS_UPGRADE);
+        return createOrReadInitialCas(aDocument, NO_CAS_UPGRADE);
     }
     
     @Override
     public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode)
+            throws IOException
+    {
+        return createOrReadInitialCas(aDocument, aUpgradeMode, null);
+    }
+    
+    @Override
+    public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -588,7 +595,7 @@ public class DocumentServiceImpl
                 try {
                     return importExportService.importCasFromFile(
                             getSourceDocumentFile(aDocument), aDocument.getProject(),
-                            aDocument.getFormat());
+                            aDocument.getFormat(), aFullProjectTypeSystem);
                 }
                 catch (UIMAException e) {
                     throw new IOException("Unable to create CAS: " + e.getMessage(), e);
