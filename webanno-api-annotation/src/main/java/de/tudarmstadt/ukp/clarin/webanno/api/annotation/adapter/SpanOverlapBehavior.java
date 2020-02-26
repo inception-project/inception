@@ -58,7 +58,7 @@ public class SpanOverlapBehavior
     extends SpanLayerBehavior
 {
     @Override
-    public boolean accepts(LayerSupport<?> aLayerType)
+    public boolean accepts(LayerSupport<?, ?> aLayerType)
     {
         return super.accepts(aLayerType) || aLayerType instanceof ChainLayerSupport;
     }

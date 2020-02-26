@@ -761,7 +761,7 @@ public class AnnotationSchemaServiceImpl
         List<AnnotationFeature> allFeaturesInProject = listAnnotationFeature(aProject);
         
         for (AnnotationLayer layer : allLayersInProject) {
-            LayerSupport<?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
+            LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
             
             // for built-in layers, we clone the information from the built-in type descriptors
             if (layer.isBuiltIn()) {

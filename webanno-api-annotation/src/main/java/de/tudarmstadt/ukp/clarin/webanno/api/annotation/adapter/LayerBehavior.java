@@ -37,7 +37,7 @@ public interface LayerBehavior
      *            a layer support.
      * @return whether the given layer is provided by the current layer support.
      */
-    boolean accepts(LayerSupport<?> aLayerType);
+    boolean accepts(LayerSupport<?, ?> aLayerType);
     
     /**
      * Check if all annotations of this layer conform with the behavior configuration. This is

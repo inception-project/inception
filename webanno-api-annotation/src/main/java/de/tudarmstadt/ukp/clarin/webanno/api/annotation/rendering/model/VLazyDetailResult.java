@@ -29,8 +29,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
  */
 public class VLazyDetailResult
 {
-    private String label;
-    private String value;
+    private final String label;
+    private final String value;
     
     public VLazyDetailResult(String aLabel, String aValue)
     {
@@ -43,18 +43,8 @@ public class VLazyDetailResult
         return label;
     }
 
-    public void setLabel(String aLabel)
-    {
-        label = aLabel;
-    }
-
     public String getValue()
     {
         return value;
-    }
-
-    public void setValue(String aValue)
-    {
-        value = aValue;
     }
 }
