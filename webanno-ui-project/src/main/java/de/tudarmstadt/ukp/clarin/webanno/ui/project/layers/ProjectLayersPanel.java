@@ -47,6 +47,7 @@ import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -81,6 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -94,6 +96,9 @@ public class ProjectLayersPanel
     static final Logger LOG = LoggerFactory.getLogger(ProjectLayersPanel.class);
     private static final long serialVersionUID = -7870526462864489252L;
 
+    public static final String MID_FEATURE_SELECTION_FORM = "featureSelectionForm";
+    public static final String MID_FEATURE_DETAIL_FORM = "featureDetailForm";
+    
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService repository;
     private @SpringBean UserDao userRepository;
@@ -101,7 +106,7 @@ public class ProjectLayersPanel
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
-    private LayerSelectionForm layerSelectionForm;
+    private LayerSelectionPane layerSelectionPane;
     private FeatureSelectionForm featureSelectionForm;
     private LayerDetailForm layerDetailForm;
     private final FeatureDetailForm featureDetailForm;
@@ -119,20 +124,21 @@ public class ProjectLayersPanel
         selectedLayer = Model.of();
         selectedFeature = Model.of();
 
-        featureSelectionForm = new FeatureSelectionForm("featureSelectionForm", selectedFeature);
-        featureDetailForm = new FeatureDetailForm("featureDetailForm", selectedFeature);
+        featureSelectionForm = new FeatureSelectionForm(MID_FEATURE_SELECTION_FORM,
+                selectedFeature);
+        featureDetailForm = new FeatureDetailForm(MID_FEATURE_DETAIL_FORM, selectedFeature);
 
-        layerSelectionForm = new LayerSelectionForm("layerSelectionForm", selectedLayer);
+        layerSelectionPane = new LayerSelectionPane("layerSelectionPane", selectedLayer);
         layerDetailForm = new LayerDetailForm("layerDetailForm", selectedLayer,
                 featureSelectionForm, featureDetailForm);
 
-        add(layerSelectionForm);
+        add(layerSelectionPane);
         add(featureSelectionForm);
         add(layerDetailForm);
         add(featureDetailForm);
 
         importLayerForm = new ImportLayerForm("importLayerForm");
-        layerSelectionForm.add(importLayerForm);
+        layerSelectionPane.add(importLayerForm);
     }
 
     @Override
@@ -144,16 +150,16 @@ public class ProjectLayersPanel
         featureDetailForm.setModelObject(null);
     }
 
-    private class LayerSelectionForm
-        extends Form<AnnotationLayer>
+    private class LayerSelectionPane
+        extends WebMarkupContainer
     {
         private static final long serialVersionUID = -1L;
 
-        public LayerSelectionForm(String id, IModel<AnnotationLayer> aModel)
+        public LayerSelectionPane(String id, IModel<AnnotationLayer> aModel)
         {
             super(id, aModel);
 
-            add(new LambdaAjaxButton<>("create", (_target, _form) -> {
+            add(new LambdaAjaxLink("create", _target -> {
                 AnnotationLayer layer = new AnnotationLayer();
                 layer.setProject(ProjectLayersPanel.this.getModelObject());
                 

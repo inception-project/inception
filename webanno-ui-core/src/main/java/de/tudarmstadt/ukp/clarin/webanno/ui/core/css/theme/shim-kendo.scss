@@ -44,10 +44,13 @@
 	}
 }
 
-.bs3.bootstrap-select .dropdown-toggle .filter-option, .k-autocomplete .k-input {
-	padding-top: 0px;
-	padding-bottom: 0px;
+// Make Kendo components render with full width inside form groups
+/*
+.form-group .k-widget,
+.form-group .k-textbox {
+  width: 100%;
 }
+*/
 
 .k-combobox {
 	.k-input {

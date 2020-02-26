@@ -160,10 +160,12 @@ span.form-control {
 }
 */
 
+/*
 .form-horizontal hr {
   margin-top: 5px;
   margin-bottom: 5px;
 }
+*/
 
 .vert-aligned {
   vertical-align: middle !important;
@@ -177,10 +179,12 @@ span.form-control {
 .w_flex .w_flex_footer { flex: none; } 
 
 /* Full-page master-detail view */
+/*
 .master-detail-container { display: flex; max-height: 100%; height: 100%; width: 100%; }
 .master-detail-overview { flex-basis: 20%; flex-shrink: 0; flex-grow: 0; height: 100%; }
 .master-detail-overview > * { display: none }
 .master-detail-editor { flex-grow: 1; padding: 15px; }
+*/
 
 /* Flexed Bootstrap panel */
 /*
@@ -277,6 +281,7 @@ span.form-control {
 }
 
 /* remove top border in tabbed panels */
+/*
 ul.nav.nav-tabs + div.panel.panel-default {
   border-top:none;
   border-top-left-radius:0;
@@ -286,6 +291,7 @@ ul.nav.nav-tabs + div.panel.panel-default {
 .nav.nav-tabs > li > a {
   padding: 2px 15px; 
 }
+*/
 
 /* Fixes to brat CSS */
 #commentpopup {
@@ -298,9 +304,6 @@ a.disabled {
   cursor: default;
 }
 
-.bootstrap-select.bs-container .dropdown-menu {
-  z-index: 21060 !important;
-}
 
 .no-data-notice {
 	@extend .text-muted;
@@ -308,11 +311,14 @@ a.disabled {
   display: flex;
   justify-content: center; 
   align-items: center;
+	min-height: 5rem;
+	text-align: center;
 }
 
-.panel-body {
+.card-body {
 	.no-data-notice {
-		margin: -5px;
+		margin: -$card-spacer-x;
+		padding: $card-spacer-x;
 	}
 }
 
