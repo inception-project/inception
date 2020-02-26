@@ -41,7 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class ChainLayerSupport
-    extends LayerSupport_ImplBase<ChainAdapter>
+    extends LayerSupport_ImplBase<ChainAdapter, Void>
     implements InitializingBean
 {
     private final ApplicationEventPublisher eventPublisher;
@@ -95,9 +95,9 @@ public class ChainLayerSupport
     @Override
     public ChainAdapter createAdapter(AnnotationLayer aLayer)
     {
-        ChainAdapter adapter = new ChainAdapter(featureSupportRegistry, eventPublisher, aLayer,
-            () -> schemaService.listAnnotationFeature(aLayer),
-            layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+        ChainAdapter adapter = new ChainAdapter(getLayerSupportRegistry(), featureSupportRegistry,
+                eventPublisher, aLayer, () -> schemaService.listAnnotationFeature(aLayer),
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
 
         return adapter;
     }
@@ -130,7 +130,8 @@ public class ChainLayerSupport
     @Override
     public Renderer getRenderer(AnnotationLayer aLayer)
     {
-        return new ChainRenderer(createAdapter(aLayer), featureSupportRegistry,
+        return new ChainRenderer(createAdapter(aLayer), getLayerSupportRegistry(),
+                featureSupportRegistry,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
     }
 }

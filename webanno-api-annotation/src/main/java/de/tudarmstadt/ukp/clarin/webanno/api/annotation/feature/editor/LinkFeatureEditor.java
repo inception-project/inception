@@ -178,7 +178,7 @@ public class LinkFeatureEditor
                         List<AnnotationFeature> features =
                                 annotationService.listAnnotationFeature(layer);
                         Map<String, String> renderedFeatures =
-                                renderer.getFeatures(adapter, fs, features);
+                                renderer.renderLabelFeatureValues(adapter, fs, features);
                         String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
                         role = new Label("role", labelText);
                     }

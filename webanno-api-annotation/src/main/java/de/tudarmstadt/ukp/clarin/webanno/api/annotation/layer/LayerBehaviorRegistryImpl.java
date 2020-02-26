@@ -80,7 +80,7 @@ public class LayerBehaviorRegistryImpl
     }
 
     @Override
-    public <T> List<T> getLayerBehaviors(LayerSupport<?> aLayerSupport, Class<? extends T> aAPI)
+    public <T> List<T> getLayerBehaviors(LayerSupport<?, ?> aLayerSupport, Class<? extends T> aAPI)
     {
         return getLayerBehaviors().stream()
                 .filter(b -> b.accepts(aLayerSupport) && aAPI.isAssignableFrom(b.getClass()))

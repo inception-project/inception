@@ -1212,4 +1212,17 @@
     </createTable>
     <addPrimaryKey columnNames="id" tableName="instance_identity" />
   </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20200216-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_type" columnName="traits"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_type">
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>  
 </databaseChangeLog>

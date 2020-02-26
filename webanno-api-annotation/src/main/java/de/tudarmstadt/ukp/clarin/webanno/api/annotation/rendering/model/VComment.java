@@ -26,14 +26,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class VComment
 {
-    private VID vid;
-    private VCommentType commentType;
-    private String comment;
-
-    public VComment()
-    {
-        // Nothing to do
-    }
+    private final VID vid;
+    private final VCommentType commentType;
+    private final String comment;
 
     public VComment(FeatureStructure aFS, VCommentType aCommentType, String aComment)
     {
