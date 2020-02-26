@@ -104,25 +104,21 @@
           <div class="card-header small">
             <wicket:message key="history"/>
           </div>
-          <div class="scrolling card-body">
-            <table class="table table-sm col-sm-12">
-              <wicket:container wicket:id="historyListview">
-                <tr style="font-size: 90%;">
-                  <td style="width: 100%; padding-bottom: 0px;">
-                    <a wicket:id="removeRecord" class="btn-xs btn-danger pull-right" style="white-space:nowrap;">
-                      <i class="fa fa-trash" aria-hidden="true"></i>
-                    </a>
-                    <a wicket:id="jumpToAnnotation"></a>
-                  </td>
-                </tr>
-                <tr style="font-size: 70%; padding: 0px;">
-                  <td style="border:none;">
-                    <span wicket:id="userAction" class="pull-right"></span>
-                    <span wicket:id="recommendedAnnotation"></span>
-                  </td>
-                </tr>
-              </wicket:container>
-            </table>
+          <div class="scrolling card-body p-0">
+            <div class="list-group-flush">
+              <div wicket:id="historyListview" class="list-group-item px-2 py-1">
+                <div class="clearfix">
+                  <a wicket:id="removeRecord" class="btn-sm btn-outline-danger float-right" style="white-space:nowrap;">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                  </a>
+                  <a wicket:id="jumpToAnnotation"></a>
+                </div>
+                <div class="small">
+                  <span wicket:id="userAction" class="badge badge-secondary float-right"></span>
+                  <span wicket:id="recommendedAnnotation"></span>
+                </div>
+              </div>
+            </div>
           </div>
         </form>
       </div>
