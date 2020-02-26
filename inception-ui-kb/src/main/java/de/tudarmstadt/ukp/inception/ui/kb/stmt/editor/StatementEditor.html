@@ -26,7 +26,7 @@
   <wicket:fragment wicket:id="viewMode">
     <wicket:container wicket:id="value"></wicket:container>
     
-    <div class="pull-right">
+    <div class="float-right">
       <a wicket:id="makeExplicit" wicket:message="title:makeExplicit" class="btn-link"> <i class="fas fa-gavel"></i></a>
       <a wicket:id="edit" wicket:message="title:edit" class="btn-link"> <i class="fas fa-edit"></i></a>
     </div>
@@ -37,7 +37,7 @@
         </div>
       </div>
     </div>
-    <div class="pull-right" wicket:enclosure="addQualifier">
+    <div class="float-right" wicket:enclosure="addQualifier">
       <a wicket:id="addQualifier" class="btn-link">
         <i class="fas fa-plus" aria-hidden="true"></i>
         <wicket:container wicket:id="label"></wicket:container>
@@ -52,7 +52,7 @@
           <select wicket:id="valueType" class="flex-content form-control" data-container="body"></select>
         </div>
         <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" wicket:id="value"></div>
-        <div class="pull-right statement-editor-button-row">
+        <div class="float-right statement-editor-button-row">
           <ul>
             <li><a wicket:id="save" wicket:message="title:statement.save" class="btn-link"><i class="fas fa-check"></i></a>
             </li>

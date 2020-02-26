@@ -19,16 +19,20 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <div class="form-group" wicket:enclosure="value">
-    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label control-label">
+    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
       <span wicket:id="feature"/>
     </label>
     <div class="feature-editor-value">
-      <div class="input-group col-sm-12">
-        <span class="input-group-addon">
-          <span wicket:id="iriInfoBadge"/>
-          <a wicket:id="openIri" target="_blank"><i class="fas fa-external-link-alt"></i></a>
-          <span wicket:id="disabledKBWarning"/>
-        </span> 
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <div class="input-group-text">
+            <span wicket:id="iriInfoBadge" class="mr-2"/>
+            <a wicket:id="openIri" target="_blank">
+              <i class="fas fa-external-link-alt"></i>
+            </a>
+            <span wicket:id="disabledKBWarning" class="ml-2"/>
+          </div>
+        </div> 
         <input style="width: 100%;" wicket:id="value" class="form-control" type="text"/>
       </div>
       <div class="col-sm-12" style="position: relative; height: 5em;" wicket:enclosure="description">
