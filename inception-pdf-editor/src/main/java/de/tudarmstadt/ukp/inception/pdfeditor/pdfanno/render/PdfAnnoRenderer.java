@@ -32,6 +32,8 @@ import org.ahocorasick.trie.Trie;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -82,9 +84,12 @@ public class PdfAnnoRenderer
 
             TypeAdapter typeAdapter = schemaService.getAdapter(layer);
 
+            ColoringRules coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
+                    .map(ColoringRulesTrait::getColoringRules).orElse(null);
+
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 String labelText = getUiLabelText(typeAdapter, vspan);
-                String color = coloringStrategy.getColor(vspan, labelText);;
+                String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
                 
                 spans.add(new RenderSpan(vspan,
                     new Span(vspan.getVid().toString(), labelText, color), aPageBeginOffset));
@@ -92,7 +97,7 @@ public class PdfAnnoRenderer
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
                 String labelText = getUiLabelText(typeAdapter, varc);
-                String color = coloringStrategy.getColor(varc, labelText);;
+                String color = coloringStrategy.getColor(varc, labelText, coloringRules);
 
                 pdfAnnoModel.addRelation(new Relation(varc.getVid().toString(),
                     varc.getSource().toString(), varc.getTarget().toString(), labelText, color));
