@@ -21,47 +21,46 @@
     xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <div class="navbar-header">
-      <a class="navbar-brand" href="welcome.html">
-        <span>
-          <img class="pageicon" wicket:message="src:page.icon" />
-          <wicket:message key="page.title" />
-        </span>
-      </a>
-    </div>
-
-    <div class="navbar-nav mr-auto">
-      <div class="nav-item navbar-text nav-link">
-        <i class="fas fa-home" aria-hidden="true"></i>
-        <a href="welcome.html">Home</a>
+    <nav class="navbar navbar-expand navbar-dark bg-dark px-2">
+      <div class="navbar-header">
+        <a class="navbar-brand" href="welcome.html">
+          <span>
+            <img class="pageicon" wicket:message="src:page.icon" />
+            <wicket:message key="page.title" />
+          </span>
+        </a>
       </div>
-    </div>
+  
+      <div class="navbar-nav mr-auto">
+        <div class="nav-item">
+          <a class="nav-link" href="welcome.html">
+            <i class="fas fa-home" aria-hidden="true"></i>
+            <span class="nav-link active p-0 d-none d-md-inline">
+              Home
+            </span>
+          </a>
+        </div>
+      </div>
+      
+      <div class="navbar-nav">
+        <div wicket:id="links">
+          <span class="nav-item" wicket:id="link"></span>
+        </div>
+      
+        <div class="nav-item" wicket:enclosure="helpLink">
+          <a class="nav-link"wicket:id="helpLink">
+            <i class="fas fa-question-circle" aria-hidden="true"></i>
+            <span class="nav-link active p-0 d-none d-md-inline">
+              <wicket:message key="page.help" />
+            </span>
+          </a>
+        </div>
     
-    <!--  
-    <div class="navbar-header">
-      <div class="navbar-brand navbar-center">
-        <span>
-          <img class="logo" src="assets/logo.png" />
-          <wicket:message key="product.name"/>
-        </span>
+        <wicket:enclosure child="logoutPanel">
+          <wicket:container wicket:id="logoutPanel" />
+        </wicket:enclosure>
       </div>
-    </div>
-    -->
-        
-    <div class="navbar-nav">
-      <div class="nav-item navbar-text nav-link" wicket:id="links" style="margin-right: 1px;">
-        <span wicket:id="link"></span>
-      </div>
-  
-      <div class="nav-item navbar-text nav-link" wicket:enclosure="helpLink">
-        <i class="fas fa-question-circle" aria-hidden="true"></i>
-        <a wicket:id="helpLink"></a>
-      </div>
-  
-      <wicket:enclosure child="logoutPanel">
-        <wicket:container wicket:id="logoutPanel" />
-      </wicket:enclosure>
-    </div>
+    </nav>
   </wicket:panel>
 </body>
 </html>

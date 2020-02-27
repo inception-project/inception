@@ -60,3 +60,10 @@
 	}
 }
 
+// Avoid comboboxes getting two borders
+.k-combobox.form-control {
+	border: none;
+	width: 100% !important;
+}
+
+

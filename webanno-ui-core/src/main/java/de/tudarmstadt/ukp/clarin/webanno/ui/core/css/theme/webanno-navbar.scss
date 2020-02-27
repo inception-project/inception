@@ -16,24 +16,39 @@
  * limitations under the License.
  ******************************************************************************/
 
-// Bootstrap variables: Cards
+.navbar {
+  margin-bottom: 0px;
+  position: relative;
+  border: none;
+  border-bottom: 1px solid;
+  
+  .navbar-extra-link img {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-left: 15px;
+      height: 40px;
+  }
+  
+  .navbar-header .navbar-center {
+    position: absolute;
+    left: calc(50% - 400px / 2);
+    width: 400px;
+    text-align: center;
+  } 
+  
+  .navbar-header .navbar-brand {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    line-height: 40px;
+    font-size: 25px;
+    line-height: unset;
+  } 
+ 
+  .logo {
+    height: 40px;
+  }
 
-$card-spacer-y:											.25rem !default; 		// Original: .75rem
-$card-spacer-x:											.75rem !default;			// Original: 1.25rem
-
-// Bootstrap variables: Forms
-
-$label-margin-bottom:								0.5rem !default;			// Original: .5rem
-$form-group-margin-bottom:						0.5rem !default;			// Original: 1rem
-
-// Bootstrap variables: Navbar:
-
-$navbar-padding-y:									0px;										// Original: $spacer / 2 !default;
-$navbar-padding-x:									0px;										// $spacer !default;
-
-
-// WebAnno variables: Footer
-
-$page-footer-height: 								21px;
-$page-header-height: 								51px;
-
+  .pageicon {
+    height: 40px;
+  }
+}

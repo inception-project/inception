@@ -78,43 +78,6 @@ html, body {
   }  
 }
 
-.navbar {
-  margin-bottom: 0px;
-  position: relative;
-  border: none;
-  border-bottom: 1px solid;
-  
-  .navbar-extra-link img {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    margin-left: 15px;
-      height: 40px;
-  }
-  
-  .navbar-header .navbar-center {
-    position: absolute;
-    left: calc(50% - 400px / 2);
-    width: 400px;
-    text-align: center;
-  } 
-  
-  .navbar-header .navbar-brand {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    line-height: 40px;
-    font-size: 25px;
-    line-height: unset;
-  } 
- 
-  .logo {
-    height: 40px;
-  }
-
-  .pageicon {
-    height: 40px;
-  }
-}
-
 .nav-pills img {
   padding-right: 15px;
 }
@@ -141,32 +104,6 @@ span.form-control {
   margin-right: 15px;
 }
 
-/*
-.panel { 
-  margin-bottom: ceil($grid-gutter-width / 2);
-}
-
-.panel-small {
-  margin-bottom: ceil($grid-gutter-width / 4);
-  
-  .panel-title {
-    font-size: $font-size-sm;
-  }
-  
-  .panel-heading {
-    padding-top: 1px;
-    padding-bottom: 1px;
-  }  
-}
-*/
-
-/*
-.form-horizontal hr {
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-*/
-
 .vert-aligned {
   vertical-align: middle !important;
 }
@@ -178,26 +115,6 @@ span.form-control {
 .w_flex .w_flex_content { flex: 1; overflow: auto; padding-top: 15px; padding-bottom: 15px; }
 .w_flex .w_flex_footer { flex: none; } 
 
-/* Full-page master-detail view */
-/*
-.master-detail-container { display: flex; max-height: 100%; height: 100%; width: 100%; }
-.master-detail-overview { flex-basis: 20%; flex-shrink: 0; flex-grow: 0; height: 100%; }
-.master-detail-overview > * { display: none }
-.master-detail-editor { flex-grow: 1; padding: 15px; }
-*/
-
-/* Flexed Bootstrap panel */
-/*
-.panel-flex {
-  display: flex; 
-  flex-direction: column;
-  
-  .panel-heading { flex: none; }
-  .panel-body { flex: 1; }
-  .panel-footer { flex: none; }
-  .panel-footer .form-group { margin-bottom: 0px; }
-}
-*/
 
 .min-content-height {
   min-height: -moz-min-content;
@@ -237,7 +154,7 @@ span.form-control {
 
 .flex-static-item { flex: none; }
 .flex-growing-item { flex: 1; }
-.flex-sidebar { flex-basis: 20%; flex-grow: 0; flex-shrink: 0; }
+.flex-sidebar { flex-basis: 20%; flex-grow: 0; flex-shrink: 0; min-width: 0px; }
 .flex-content { flex: 1; }
 .flex-content .scrolling { flex-basis: 0; }
 
@@ -279,19 +196,6 @@ span.form-control {
 	  color: yellow;
   }
 }
-
-/* remove top border in tabbed panels */
-/*
-ul.nav.nav-tabs + div.panel.panel-default {
-  border-top:none;
-  border-top-left-radius:0;
-  border-top-right-radius:0;
-}
-
-.nav.nav-tabs > li > a {
-  padding: 2px 15px; 
-}
-*/
 
 /* Fixes to brat CSS */
 #commentpopup {
