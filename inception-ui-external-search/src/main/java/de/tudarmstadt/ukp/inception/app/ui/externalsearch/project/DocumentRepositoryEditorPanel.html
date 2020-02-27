@@ -19,38 +19,56 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <form wicket:id="form" class="flex-content panel panel-default panel-flex">
-      <div class="panel-heading">
-        <h3 class="panel-title"><wicket:message key="details"/></h3>
-      </div>
-      <div class="panel-body">
-        <div class="col-sm-12 form-horizontal">
-          <div class="form-group" wicket:enclosure="name">
-            <label class="col-sm-2 col-form-label">
-              <wicket:message key="name"/>
-            </label>
-            <div class="col-sm-10">
-              <input type="text" wicket:id="name" size="30" class="form-control"/>
+    <form wicket:id="form" class="flex-content card">
+      <div class="card-header">
+        <wicket:message key="details"/>
+        <div class="actions">
+          <button wicket:id="save" class="btn btn-primary">
+            <i class="fas fa-save"></i>&nbsp;
+            <div class="btn-action-label"><wicket:message key="save"/></div>
+          </button>
+          <button wicket:id="cancel" class="btn btn-secondary">
+            <i class="fas fa-times"></i>&nbsp;
+            <div class="btn-action-label"><wicket:message key="cancel"/></div>
+          </button>
+          <div class="btn dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-action dropdown-toggle flex-content" type="button" data-toggle="dropdown">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="dropdown-menu" role="menu" style="min-width: 220px;">
+              <div class="container">
+                <div class="form-group form-row">
+                  <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
+                    <i class="fas fa-trash"></i>&nbsp;
+                    <wicket:message key="delete"/>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="form-group" wicket:enclosure="type">
-            <label wicket:for="type" class="col-sm-2 col-form-label">
-              <wicket:label key="type"/>
-            </label>
-            <div class="col-sm-10">
-              <select wicket:id="type" class="form-control" data-container="body"></select>
-            </div>
-          </div>
-          <div wicket:id="propertiesContainer">
-            <div wicket:id="properties"></div>
           </div>
         </div>
       </div>
-      <div class="panel-footer text-right">
-        <input type="button" wicket:id="delete" class="btn btn-danger pull-left" wicket:message="value:delete"></input>
-        <input type="submit" wicket:id="save" class="btn btn-primary" wicket:message="value:save"></input>
-        <input type="button" wicket:id="cancel" class="btn btn-secondary" wicket:message="value:cancel"></input>
-      </div>            
+      <div class="card-body">
+        <div class="form-group form-row" wicket:enclosure="name">
+          <label class="col-sm-2 col-form-label">
+            <wicket:message key="name"/>
+          </label>
+          <div class="col-sm-10">
+            <input type="text" wicket:id="name" size="30" class="form-control"/>
+          </div>
+        </div>
+        <div class="form-group form-row" wicket:enclosure="type">
+          <label wicket:for="type" class="col-sm-2 col-form-label">
+            <wicket:label key="type"/>
+          </label>
+          <div class="col-sm-10">
+            <select wicket:id="type" class="form-control" data-container="body"></select>
+          </div>
+        </div>
+        <div wicket:id="propertiesContainer">
+          <div wicket:id="properties"></div>
+        </div>
+      </div>
     </form>
   </wicket:panel>
 </body>
