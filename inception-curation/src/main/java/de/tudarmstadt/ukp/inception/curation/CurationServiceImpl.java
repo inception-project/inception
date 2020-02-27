@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -127,19 +128,7 @@ public class CurationServiceImpl
     @Transactional
     private CurationState getSettingsFromDB(String aUsername, long aProjectId)
     {
-        Validate.notBlank(aUsername, "User must be specified");
-        Validate.notNull(aProjectId, "project must be specified");
-        
-        String query = "FROM " + CurationSettings.class.getName() 
-                + " o WHERE o.username = :username " 
-                + "AND o.projectId = :projectId";
-        
-        List<CurationSettings> settings = entityManager
-                .createQuery(query, CurationSettings.class)
-                .setParameter("username", aUsername)
-                .setParameter("projectId", aProjectId)
-                .setMaxResults(1)
-                .getResultList();
+        List<CurationSettings> settings = queryDBForSetting(aUsername, aProjectId);
         
         CurationState state;
         if (settings.isEmpty()) {
@@ -162,9 +151,25 @@ public class CurationServiceImpl
         curationStates.put(new CurationStateKey(aUsername, aProjectId), state);
         return state;
     }
-    
-    
-    
+
+    private List<CurationSettings> queryDBForSetting(String aUsername, long aProjectId)
+    {
+        Validate.notBlank(aUsername, "User must be specified");
+        Validate.notNull(aProjectId, "project must be specified");
+        
+        String query = "FROM " + CurationSettings.class.getName() 
+                + " o WHERE o.username = :username " 
+                + "AND o.projectId = :projectId";
+        
+        List<CurationSettings> settings = entityManager
+                .createQuery(query, CurationSettings.class)
+                .setParameter("username", aUsername)
+                .setParameter("projectId", aProjectId)
+                .setMaxResults(1)
+                .getResultList();
+        return settings;
+    }
+
     private class CurationState
     {
         private List<User> selectedUsers;
@@ -319,11 +324,10 @@ public class CurationServiceImpl
      */
     private void storeCurationSettings(String aUsername)
     {
-        List<CurationSettings> settings = new ArrayList<>();
         User currentUser = userRegistry.get(aUsername);
         for (Project project : projectService.listAccessibleProjects(currentUser)) {
             Long projectId = project.getId();
-            List<String> usernames = null;
+            Set<String> usernames = null;
             if (curationStates.containsKey(new CurationStateKey(aUsername, projectId))) {
                 
                 CurationState state = curationStates
@@ -334,23 +338,23 @@ public class CurationServiceImpl
                 
                 if (state.getSelectedUsers() != null) {
                     usernames = state.getSelectedUsers().stream().map(User::getUsername)
-                            .collect(Collectors.toList());
+                            .collect(Collectors.toSet());
                 }
-                settings.add(new CurationSettings(aUsername, projectId, state.getCurationName(),
-                        usernames));
-            }
-        }
-        writeSettingsToDB(settings);
-    }
+                
+                // get setting from context and update values if it exists, else save new setting
+                // to db
+                CurationSettings setting = entityManager.find(CurationSettings.class,
+                        new CurationSettingsId(projectId, aUsername));
 
-    public void writeSettingsToDB(List<CurationSettings> aSettings)
-    {
-        for (CurationSettings setting : aSettings) {
-            if (setting.getId() == null) {
-                entityManager.persist(setting);
-            } else {
-                // FIXME after logging in: getting old state, this is not called
-                entityManager.merge(setting);
+                if (setting != null) {
+                    setting.setSelectedUserNames(usernames);
+                    setting.setCurationUserName(state.getCurationName());
+                }
+                else {
+                    setting = new CurationSettings(aUsername, projectId, state.getCurationName(),
+                            usernames);
+                    entityManager.persist(setting);
+                }
             }
         }
         entityManager.flush();
@@ -369,8 +373,7 @@ public class CurationServiceImpl
         synchronized (curationStates)
         {
             getCurationState(aUsername, aProjectId).setSelectedUsers(new ArrayList<>());
-        }
-        
+        }   
     }
 
     @Override
