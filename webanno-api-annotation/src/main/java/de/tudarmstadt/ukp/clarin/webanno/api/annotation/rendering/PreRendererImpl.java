@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,15 +54,19 @@ public class PreRendererImpl implements PreRenderer
             return;
         }
         
+        // The project for all layers must be the same, so we just fetch the project from the 
+        // first layer
         Project project = aLayers.get(0).getProject();
         
+        // Listing the features once is faster than repeatedly hitting the DB to list features for
+        // every layer.
         List<AnnotationFeature> allFeatures = annotationService.listAnnotationFeature(project);
         
         // Render (custom) layers
         for (AnnotationLayer layer : aLayers) {
             List<AnnotationFeature> features = allFeatures.stream()
                     .filter(feature -> feature.getLayer().equals(layer))
-                    .collect(Collectors.toList());
+                    .collect(toList());
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
             renderer.render(aCas, features, aResponse, windowBeginOffset, windowEndOffset);
         }

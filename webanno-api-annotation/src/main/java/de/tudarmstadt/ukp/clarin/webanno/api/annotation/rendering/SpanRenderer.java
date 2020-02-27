@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -37,13 +36,13 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
@@ -56,10 +55,10 @@ public class SpanRenderer
 {
     private final List<SpanLayerBehavior> behaviors;
     
-    public SpanRenderer(SpanAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry,
-            List<SpanLayerBehavior> aBehaviors)
+    public SpanRenderer(SpanAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
     {
-        super(aTypeAdapter, aFeatureSupportRegistry);
+        super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
         
         if (aBehaviors == null) {
             behaviors = emptyList();
@@ -77,10 +76,6 @@ public class SpanRenderer
     {
         SpanAdapter typeAdapter = getTypeAdapter();
         
-        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
-                .filter(f -> f.isVisible() && f.isEnabled())
-                .collect(Collectors.toList());
-
         // Index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
         
@@ -96,12 +91,13 @@ public class SpanRenderer
         
         List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (AnnotationFS fs : annotations) {
-            String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-            Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
-            Map<String, String> hoverFeatures = getHoverFeatures(typeAdapter, fs, aFeatures);
+            String uiTypeName = typeAdapter.getUiTypeName();
+            Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs, aFeatures);
+            Map<String, String> hoverFeatures = renderHoverFeatureValues(typeAdapter, fs,
+                    aFeatures);
             
             VRange range = new VRange(fs.getBegin() - aWindowBegin, fs.getEnd() - aWindowBegin);
-            VSpan span = new VSpan(typeAdapter.getLayer(), fs, bratTypeName, range, features,
+            VSpan span = new VSpan(typeAdapter.getLayer(), fs, uiTypeName, range, features,
                     hoverFeatures);
             span.setLazyDetails(getLazyDetails(typeAdapter, fs, aFeatures));
             
@@ -110,7 +106,7 @@ public class SpanRenderer
             aResponse.add(span);
             
             // Render errors if required features are missing
-            renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
+            renderRequiredFeatureErrors(aFeatures, fs, aResponse);
 
             // Render slots
             int fi = 0;
@@ -122,7 +118,7 @@ public class SpanRenderer
                         LinkWithRoleModel link = links.get(li);
                         FeatureStructure targetFS = selectFsByAddr(fs.getCAS(), link.targetAddr);
                         aResponse.add(new VArc(typeAdapter.getLayer(), new VID(fs, fi, li),
-                                bratTypeName, fs, targetFS, link.role, features));
+                                uiTypeName, fs, targetFS, link.role, features));
                     }
                 }
                 fi++;

@@ -65,6 +65,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -72,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -135,6 +138,7 @@ public class SuggestionViewPanel
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean ColoringService coloringService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
@@ -462,8 +466,8 @@ public class SuggestionViewPanel
                 aBratAnnotatorModel.getWindowEndOffset(), aCas, layersToRender);
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, aBratAnnotatorModel, vdoc, aCas, annotationService,
-                aCurationColoringStrategy);
+        BratRenderer renderer = new BratRenderer(annotationService, coloringService);
+        renderer.render(response, aBratAnnotatorModel, vdoc, aCas, aCurationColoringStrategy);
         return JSONUtil.toInterpretableJsonString(response);
     }
 
@@ -653,12 +657,12 @@ public class SuggestionViewPanel
         return new ColoringStrategy()
         {
             @Override
-            public String getColor(VID aVid, String aLabel)
+            public String getColor(VObject aVObject, String aLabel, ColoringRules aColoringRules)
             {
-                if (aColors.get(aVid) == null) {
+                if (aColors.get(aVObject.getVid()) == null) {
                     return AnnotationState.NOT_SUPPORTED.getColorCode();
                 }
-                return aColors.get(aVid).getColorCode();
+                return aColors.get(aVObject.getVid()).getColorCode();
             }
         };
     }

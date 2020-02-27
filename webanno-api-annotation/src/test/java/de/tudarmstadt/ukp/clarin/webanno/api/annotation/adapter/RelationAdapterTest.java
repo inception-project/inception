@@ -49,6 +49,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -63,6 +65,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 public class RelationAdapterTest
 {
+    private LayerSupportRegistry layerSupportRegistry;
     private FeatureSupportRegistry featureSupportRegistry;
     private Project project;
     private AnnotationLayer depLayer;
@@ -114,6 +117,7 @@ public class RelationAdapterTest
         dependencyLayerDependent = new AnnotationFeature(3l, depLayer, "Dependent",
                 Token.class.getName());
 
+        layerSupportRegistry = new LayerSupportRegistryImpl(asList());
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
         
         behaviors = asList(new RelationAttachmentBehavior(), new RelationOverlapBehavior(),
@@ -132,8 +136,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(featureSupportRegistry, null, depLayer,
-            FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
+            null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
             () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
@@ -162,8 +166,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(featureSupportRegistry, null, depLayer,
-            FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
+            null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
             () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
@@ -188,8 +192,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(featureSupportRegistry, null, depLayer,
-            FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
+            null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
             () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
@@ -219,8 +223,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(featureSupportRegistry, null, depLayer,
-            FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
+            null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
             () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
@@ -247,8 +251,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(featureSupportRegistry, null, depLayer,
-            FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
+            null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
             () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
@@ -293,8 +297,8 @@ public class RelationAdapterTest
             pos.addToIndexes();
         }
 
-        RelationAdapter sut = new RelationAdapter(featureSupportRegistry, null, depLayer,
-            FEAT_REL_TARGET, FEAT_REL_SOURCE,
+        RelationAdapter sut = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
+            null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
             () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
