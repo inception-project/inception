@@ -21,24 +21,24 @@
 <body>
 <wicket:panel>
   <div class="form-group col-xs-12">
-    <div class="form-group row">
+    <div class="form-group form-row">
       <h4 class="col-sm-12">
         <wicket:message key="kb.settings.access"/>
       </h4>
     </div>
-    <div class="form-group row">
+    <div class="form-group form-row">
       <label wicket:for="type" class="col-form-label col-sm-3">
         <wicket:message key="kb.wizard.steps.type.type"/>
       </label>
       <div class="col-sm-9">
-        <select wicket:id="type" data-size="5"></select>
+        <select wicket:id="type" class="form-control" data-size="5"></select>
       </div>
     </div>
-    <div class="form-group row" wicket:enclosure="writeprotection">
-      <div class="col-sm-offset-3 col-sm-9">
-        <div class="checkbox">
-          <label wicket:for="writeprotection">
-            <input wicket:id="writeprotection" type="checkbox">
+    <div class="form-group form-row" wicket:enclosure="writeprotection">
+      <div class="offset-sm-3 col-sm-9">
+        <div class="form-check">
+          <input wicket:id="writeprotection" class="form-check-input" type="checkbox">
+          <label wicket:for="writeprotection" class="form-check-label">
             <wicket:label key="kb.details.contents.permissions"/>
           </label>
         </div>

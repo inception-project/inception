@@ -18,46 +18,42 @@
 -->
 
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
 <wicket:panel>
-  <div class="form-group col-xs-12">
-    <div class="form-group row">
-      <h4 class="col-sm-12">
-        <wicket:message key="kb.settings.rootConcepts"/>
-      </h4>
-    </div>
-    <div>
-      <label class="col-form-label col-sm-3">
-        <wicket:message key="kb.settings.defineRootConcepts"/>
-      </label>
-      <div class="col-sm-9">
-        <div class="list-group">
-          <div class="list-group-item">
+  <div class="form-group form-row">
+    <h4 class="col-sm-12">
+      <wicket:message key="kb.settings.rootConcepts"/>
+    </h4>
+  </div>
+  <div class="form-group form-row">
+    <label class="col-form-label col-sm-3">
+      <wicket:message key="kb.settings.defineRootConcepts"/>
+    </label>
+    <div class="col-sm-9">
+      <div class="list-group">
+        <div class="list-group-item">
+          <div class="input-group">
+            <input type="text" wicket:id="newConceptField" class="form-control"/>
+            <span class="input-group-btn">
+              <a wicket:id="newExplicitConcept" class="btn btn-primary">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+              </a>
+            </span>
+          </div>
+        </div>
+        <div wicket:id="rootConcepts" class="list-group-item">
+          <form wicket:id="conceptForm">
             <div class="input-group">
-              <input type="text" wicket:id="newConceptField" class="form-control"/>
+              <input type="text" wicket:id="textField" class="form-control"/>
               <span class="input-group-btn">
-                <a wicket:id="newExplicitConcept" class="btn btn-primary">
-                  <i class="fas fa-plus" aria-hidden="true"></i>
+                <a wicket:id="removeConcept" class="btn btn-danger">
+                  <i class="fas fa-trash" aria-hidden="true"></i>
                 </a>
               </span>
             </div>
-          </div>
-          <div wicket:id="rootConcepts" class="list-group-item">
-            <form wicket:id="conceptForm">
-              <div class="input-group">
-                <input type="text" wicket:id="textField" class="form-control"/>
-                <span class="input-group-btn">
-                  <a wicket:id="removeConcept" class="btn btn-danger">
-                    <i class="fas fa-trash" aria-hidden="true"></i>
-                  </a>
-                </span>
-              </div>
-            </form>
-          </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
 </wicket:panel>
-</body>
 </html>

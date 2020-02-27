@@ -20,8 +20,8 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-content flex-v-container panel-default">
-      <div class="panel-heading">
+    <div class="flex-content card">
+      <div class="card-header">
         <div class="float-right form-inline">
           <input type="checkbox" wicket:id="showAllInstances"/>
           <wicket:message key="instance.showall"/>
@@ -41,7 +41,7 @@
           <select wicket:id="instances" class="form-control list-panel"></select>
         </div>
       </div>
-      <div class="panel-footer text-right">
+      <div class="card-footer text-right">
         <button wicket:id="add" type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> <wicket:container wicket:id="label"></wicket:container></button>
       </div>
     </div>

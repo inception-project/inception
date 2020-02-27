@@ -47,20 +47,23 @@
 
   <wicket:fragment wicket:id="editMode">
     <form wicket:id="form" class="form-inline">
-      <div class="flex-h-container flex-gutter flex-only-internal-gutter" style="flex-wrap: wrap">
+      <div class="flex-fill flex-h-container flex-gutter flex-only-internal-gutter" style="flex-wrap: wrap">
         <div class="flex-h-container" style="width: 8em;">
           <select wicket:id="valueType" class="flex-content form-control" data-container="body"></select>
         </div>
         <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" wicket:id="value"></div>
-        <div class="float-right statement-editor-button-row">
-          <ul>
-            <li><a wicket:id="save" wicket:message="title:statement.save" class="btn-link"><i class="fas fa-check"></i></a>
-            </li>
-            <li><a wicket:id="cancel" wicket:message="title:cancel" class="btn-link"><i class="fas fa-times"></i></a>
-            </li>
-            <li><a wicket:id="delete" wicket:message="title:statement.delete" class="btn-link"><i class="fas fa-trash"></i></a>
-            </li>
-          </ul>
+        <div class="statement-editor-button-row">
+          <div class="btn-group">
+            <a wicket:id="save" wicket:message="title:statement.save" class="btn btn-primary">
+              <i class="fas fa-check"></i>
+            </a>
+            <a wicket:id="cancel" wicket:message="title:cancel" class="btn btn-secondary">
+              <i class="fas fa-times"></i>
+            </a>
+            <a wicket:id="delete" wicket:message="title:statement.delete" class="btn btn-danger">
+              <i class="fas fa-trash"></i>
+            </a>
+          </div>
         </div>
       </div>
     </form>

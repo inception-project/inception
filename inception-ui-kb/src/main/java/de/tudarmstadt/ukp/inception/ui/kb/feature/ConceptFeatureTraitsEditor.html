@@ -20,7 +20,7 @@
 <wicket:panel>
   <form wicket:id="form">
     <div  wicket:id="disabledKBWarning" class="col-sm-offset-7"></div>
-    <div class="form-group" wicket:enclosure="allowedValueType">
+    <div class="form-group form-row" wicket:enclosure="allowedValueType">
       <label wicket:for="allowedValueType" class="col-sm-4 col-form-label">
         <wicket:label key="allowedValueType"/>
       </label>
@@ -28,7 +28,7 @@
         <select wicket:id="allowedValueType" class="form-control" data-container="body"></select>
       </div>
     </div>
-    <div class="form-group" wicket:enclosure="knowledgeBase">
+    <div class="form-group form-row" wicket:enclosure="knowledgeBase">
       <label wicket:for="knowledgeBase" class="col-sm-4 col-form-label">
         <wicket:label key="knowledgeBase"/>
       </label>
@@ -36,7 +36,7 @@
         <select wicket:id="knowledgeBase" class="form-control" data-container="body"></select>
       </div>
     </div>
-    <div class="form-group" wicket:enclosure="scope">
+    <div class="form-group form-row" wicket:enclosure="scope">
       <label wicket:for="scope" class="col-sm-4 col-form-label">
         <wicket:label key="scope"/>
       </label>
@@ -45,7 +45,7 @@
       </div>
     </div>
   </form>
-  <div class="form-group">
+  <div class="form-group form-row">
     <label class="col-sm-4 col-form-label">
       Key bindings
     </label>
