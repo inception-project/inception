@@ -27,6 +27,13 @@ $card-action-button-padding: 1px 4px;
 		& > .btn, .btn-action {
 			font-size: $card-action-button-font-size;
 			padding: $card-action-button-padding;
+			
+			.btn-action-label {
+				display: inline;
+				@include media-breakpoint-down(lg) {
+					display: none !important;
+				}
+			}
 		}
 	}
 
