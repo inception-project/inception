@@ -24,6 +24,7 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.text.TextReader;
 import org.dkpro.core.io.text.TextWriter;
 import org.springframework.stereotype.Component;
@@ -63,15 +64,17 @@ public class TextFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
-        return createReaderDescription(TextReader.class);
+        return createReaderDescription(TextReader.class, aTSD);
     }
     
     @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(TextWriter.class);
+        return createEngineDescription(TextWriter.class, aTSD);
     }
 }
