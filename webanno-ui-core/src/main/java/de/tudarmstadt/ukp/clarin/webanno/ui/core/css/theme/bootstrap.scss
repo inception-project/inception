@@ -7,20 +7,20 @@
 
 // Override default variables. Apparently only the first declaration of a variable counts, so this
 // import must be first
-@import "webanno-variables";
+@import "package!webanno-variables";
 
 // Import the original bootstrap
 @import "webjars!bootstrap/current/scss/bootstrap";
 
 // Customization
 // Custom styles that make use of Bootstrap and the new variables
-@import "webanno-custom"; 
-@import "webanno-card-actions";
-@import "webanno-actionbar";
-@import "webanno-navbar";
-@import "webanno-feature-editors";
+@import "package!webanno-custom"; 
+@import "package!webanno-card-actions";
+@import "package!webanno-actionbar";
+@import "package!webanno-navbar";
+@import "package!webanno-feature-editors";
 
-@import "shim-bootstrap3";
-@import "shim-kendo";
-@import "shim-wicketstuff";
-@import "shim-bootstrapselect";
+@import "package!shim-bootstrap3";
+@import "package!shim-kendo";
+@import "package!shim-wicketstuff";
+@import "package!shim-bootstrapselect";

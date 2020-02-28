@@ -59,14 +59,15 @@ import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
-import de.agilecoders.wicket.sass.BootstrapSass;
-import de.agilecoders.wicket.sass.SassCompilerOptionsFactory;
 import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.clarin.webanno.support.sass.BootstrapSass;
+import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassCacheManager;
+import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassCompilerOptionsFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.BaseLayoutCssResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.BootstrapAwareJQueryUIJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
@@ -190,7 +191,13 @@ public abstract class WicketApplicationBase
         };
         
         WicketWebjars.install(this);
+
         BootstrapSass.install(this, sassOptionsFactory);
+        // Install a customized cache manager which can deal with SCSS files in JARs
+        SassCacheManager cacheManager = new SassCacheManager(sassOptionsFactory);
+        cacheManager.install(this);
+
+        
         Bootstrap.install(this);
         
         IBootstrapSettings settings = Bootstrap.getSettings(this);

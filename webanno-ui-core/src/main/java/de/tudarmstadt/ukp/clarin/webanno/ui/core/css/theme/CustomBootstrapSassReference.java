@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme;
 
-import de.agilecoders.wicket.sass.SassResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassResourceReference;
 
 public class CustomBootstrapSassReference extends SassResourceReference
 {
