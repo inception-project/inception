@@ -75,7 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapSassReference;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.bootstrap.CustomBootstrapSassReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.login.LoginPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;

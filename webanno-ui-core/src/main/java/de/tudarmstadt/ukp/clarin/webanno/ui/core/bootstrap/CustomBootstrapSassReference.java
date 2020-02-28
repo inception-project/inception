@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.bootstrap;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassResourceReference;
 
