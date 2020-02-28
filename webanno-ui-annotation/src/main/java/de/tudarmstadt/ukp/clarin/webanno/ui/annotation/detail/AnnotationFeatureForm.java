@@ -108,6 +108,7 @@ public class AnnotationFeatureForm
 
     // Top-level containers
     private final WebMarkupContainer noAnnotationWarning;
+    private final WebMarkupContainer noFeaturesWarning;
     private final WebMarkupContainer layerContainer;
     private final WebMarkupContainer buttonContainer;
     private final WebMarkupContainer infoContainer;
@@ -152,6 +153,11 @@ public class AnnotationFeatureForm
         noAnnotationWarning
                 .add(visibleWhen(() -> !getModelObject().getSelection().getAnnotation().isSet()));
         add(noAnnotationWarning);
+        
+        noFeaturesWarning = new WebMarkupContainer("noFeaturesWarning");
+        noFeaturesWarning.setOutputMarkupPlaceholderTag(true);
+        noFeaturesWarning.add(visibleWhen(() -> getModelObject().getFeatureStates().isEmpty()));
+        add(noFeaturesWarning);
 
         // Trying to re-render the forwardAnnotationCheckBox as part of an AJAX request when it is
         // not visible causes an error in the JS console saying that the component could not be
@@ -186,7 +192,6 @@ public class AnnotationFeatureForm
         selectedAnnotationInfoContainer.add(
                 visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
         selectedAnnotationInfoContainer.add(createSelectedAnnotationTypeLabel());
-        selectedAnnotationInfoContainer.add(createNoFeaturesWarningLabel());
         selectedAnnotationInfoContainer.add(createSelectedTextLabel());
         selectedAnnotationInfoContainer.add(createJumpToAnnotationLink());
         selectedAnnotationInfoContainer
@@ -197,8 +202,9 @@ public class AnnotationFeatureForm
         featureEditorContainer.setOutputMarkupPlaceholderTag(true);
         featureEditorContainer.add(featureEditorPanelContent = createFeatureEditorPanelContent());
         featureEditorContainer.add(createFocusResetHelper());
-        featureEditorContainer.add(
-                visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        featureEditorContainer.add(visibleWhen(() -> 
+                getModelObject().getSelection().getAnnotation().isSet() && 
+                !getModelObject().getFeatureStates().isEmpty()));
         add(featureEditorContainer);
         
         buttonContainer = new WebMarkupContainer("buttonContainer");
@@ -238,11 +244,11 @@ public class AnnotationFeatureForm
         return textfield;
     }
 
-    private Label createNoFeaturesWarningLabel()
+    private WebMarkupContainer createNoFeaturesWarningLabel()
     {
-        Label label = new Label("noFeaturesWarning", "No features available!");
-        label.add(visibleWhen(() -> getModelObject().getFeatureStates().isEmpty()));
-        return label;
+        WebMarkupContainer warning = new WebMarkupContainer("noFeaturesWarning");
+        warning.add(visibleWhen(() -> getModelObject().getFeatureStates().isEmpty()));
+        return warning;
     }
 
     private FeatureEditorPanelContent createFeatureEditorPanelContent()
@@ -966,7 +972,7 @@ public class AnnotationFeatureForm
     public void refresh(AjaxRequestTarget aTarget)
     {
         aTarget.add(layerContainer, buttonContainer, infoContainer, featureEditorContainer,
-                noAnnotationWarning);
+                noAnnotationWarning, noFeaturesWarning);
     }
     
     protected DropDownChoice<AnnotationLayer> getLayerSelector()

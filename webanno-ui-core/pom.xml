@@ -181,11 +181,6 @@
                   <excludes combine.children="append">
                     <!-- otherwise license files mentioned in NOTICE.txt -->
                     <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/css_browser_selector.js</exclude>
-                    <!-- Customized simple Bootstrap files (MIT license) -->
-                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/bootstrap.less</exclude>
-                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/variables.less</exclude>
-                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/bootstrap.scss</exclude>
-                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/variables.scss</exclude>
                   </excludes>
                 </configuration>
               </execution>
