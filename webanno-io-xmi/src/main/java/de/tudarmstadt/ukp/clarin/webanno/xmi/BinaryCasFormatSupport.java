@@ -24,6 +24,7 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.bincas.BinaryCasReader;
 import org.dkpro.core.io.bincas.BinaryCasWriter;
 import org.springframework.stereotype.Component;
@@ -37,7 +38,7 @@ public class BinaryCasFormatSupport
 {
     public static final String ID = "bin";
     public static final String NAME = "UIMA binary CAS";
-    
+
     @Override
     public String getId()
     {
@@ -55,7 +56,7 @@ public class BinaryCasFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -63,15 +64,17 @@ public class BinaryCasFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
-    {
-        return createReaderDescription(BinaryCasReader.class);
-    }
-    
-    @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createEngineDescription(BinaryCasWriter.class);
+        return createReaderDescription(BinaryCasReader.class, aTSD);
+    }
+
+    @Override
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
+        throws ResourceInitializationException
+    {
+        return createEngineDescription(BinaryCasWriter.class, aTSD);
     }
 }
