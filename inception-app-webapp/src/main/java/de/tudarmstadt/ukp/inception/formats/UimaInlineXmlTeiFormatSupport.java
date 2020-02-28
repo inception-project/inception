@@ -22,6 +22,7 @@ import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDesc
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.xml.InlineXmlWriter;
 import org.springframework.stereotype.Component;
 
@@ -54,7 +55,8 @@ public class UimaInlineXmlTeiFormatSupport
     }
 
     @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
         return createEngineDescription(InlineXmlWriter.class);

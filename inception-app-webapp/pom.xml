@@ -30,13 +30,6 @@
     <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
   </properties>
   <dependencies>
-  <!--  
-    <dependency>
-      <groupId>xml-apis</groupId>
-      <artifactId>xml-apis</artifactId>
-    </dependency>
-    -->
-  
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -423,11 +416,6 @@
     </dependency>
 
     <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
@@ -768,7 +756,6 @@
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
-              <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
               <!-- Spring AOP
                 <usedDependency>org.springframework:spring-aop</usedDependency>
