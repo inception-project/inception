@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.less;
+package de.tudarmstadt.ukp.inception.ui.kb.sass;
 
-import de.agilecoders.wicket.sass.SassResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassResourceReference;
 
 public class KnowledgeBasePageLRR extends SassResourceReference {
 
