@@ -202,11 +202,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-security</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-datasets-asl</artifactId>
       <scope>test</scope>

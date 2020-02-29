@@ -40,8 +40,8 @@ public class KnowledgeBaseServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
     
-    @Autowired
     @Bean
+    @Autowired
     public KnowledgeBaseExporter knowledgeBaseExporter(KnowledgeBaseService aKbService,
             KnowledgeBaseProperties aKbProperties, AnnotationSchemaService aSchemaService)
     {
