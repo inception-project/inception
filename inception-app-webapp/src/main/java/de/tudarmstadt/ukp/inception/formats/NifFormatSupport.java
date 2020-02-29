@@ -67,7 +67,7 @@ public class NifFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(NifReader.class);
+        return createReaderDescription(NifReader.class, aTSD);
     }
     
     @Override
@@ -75,6 +75,6 @@ public class NifFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(NifWriter.class);
+        return createEngineDescription(NifWriter.class, aTSD);
     }
 }

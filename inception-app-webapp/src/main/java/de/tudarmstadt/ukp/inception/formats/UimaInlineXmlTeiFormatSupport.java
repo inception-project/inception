@@ -59,6 +59,6 @@ public class UimaInlineXmlTeiFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(InlineXmlWriter.class);
+        return createEngineDescription(InlineXmlWriter.class, aTSD);
     }
 }
