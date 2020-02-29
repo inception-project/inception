@@ -73,11 +73,13 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import nl.ru.test.category.SlowTests;
 
 public class SPARQLQueryBuilderTest
 {
@@ -487,6 +489,7 @@ public class SPARQLQueryBuilderTest
                         "http://example.org/#subproperty-1-1-1");
     }
     
+    @Category(SlowTests.class)
     @Test
     public void thatPropertyQueryListWorks_Wikidata()
     {
@@ -504,6 +507,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).hasSize(10);
     }
 
+    @Category(SlowTests.class)
     @Test
     public void thatPropertyQueryLabelStartingWith_Wikidata()
     {
@@ -693,6 +697,7 @@ public class SPARQLQueryBuilderTest
      * Wikidata that the popular ones returned by the FTS do not include any from the Star Trek
      * universe.
      */
+    @Category(SlowTests.class)
     @Test
     public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata() throws Exception
     {
@@ -917,6 +922,7 @@ public class SPARQLQueryBuilderTest
                                 null, "en"));
     }
     
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelContainingAnyOf_Virtuoso_withLanguage_FTS() throws Exception
     {
@@ -935,6 +941,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().contains("tower"));
     }
 
+    @Category(SlowTests.class)
     @Ignore
     @Test
     public void testWithLabelContainingAnyOf_Wikidata_FTS() throws Exception
@@ -955,6 +962,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().contains("tower"));
     }
 
+    @Category(SlowTests.class)
     @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
@@ -977,6 +985,7 @@ public class SPARQLQueryBuilderTest
                         label.contains("Stiker-Métral"));
     }
 
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelContainingAnyOf_classes_HUCIT_FTS() throws Exception
     {
@@ -1216,6 +1225,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).isEmpty();
     }
     
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_1() throws Exception
     {
@@ -1236,6 +1246,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Barack"));
     }
 
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_2() throws Exception
     {
@@ -1257,6 +1268,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Barack"));
     }
 
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_3() throws Exception
     {
@@ -1278,6 +1290,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Barack"));
     }
 
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_4() throws Exception
     {
@@ -1298,6 +1311,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Barack Obam"));
     }
 
+    @Category(SlowTests.class)
     @Ignore
     @Test
     public void testWithLabelStartingWith_Wikidata_FTS() throws Exception
@@ -1318,6 +1332,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().startsWith("barack"));
     }
 
+    @Category(SlowTests.class)
     @Ignore("#1522 - GND tests not running")
     @Test
     public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
@@ -1339,6 +1354,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().startsWith("thom"));
     }
     
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_noFTS_STW() throws Exception
     {
@@ -1380,6 +1396,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Thomas Henricus".equals(label));
     }
 
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Wikidata_noFTS() throws Exception
     {
@@ -1399,6 +1416,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
+    @Category(SlowTests.class)
     @Ignore
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Wikidata_FTS() throws Exception
@@ -1419,6 +1437,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.equalsIgnoreCase("Labour"));
     }
 
+    @Category(SlowTests.class)
     @Ignore
     @Test
     public void testWithLabelMatchingExactlyAnyOf_multiple_Wikidata_FTS() throws Exception
@@ -1439,6 +1458,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label) || "Tory".equals(label));
     }
 
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Virtuoso_withLanguage_FTS() throws Exception
     {
@@ -1457,6 +1477,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Green Goblin".equals(label));
     }
 
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelStartingWith_HUCIT_noFTS() throws Exception
     {
@@ -1475,6 +1496,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Achilles"));
     }
 
+    @Category(SlowTests.class)
     @Test
     public void testWithLabelStartingWith_onlyDescendants_HUCIT_noFTS() throws Exception
     {
@@ -1515,6 +1537,7 @@ public class SPARQLQueryBuilderTest
     }
     
 
+    @Category(SlowTests.class)
     @Test
     public void thatRootsCanBeRetrieved_BritishMuseum()
     {
@@ -1527,6 +1550,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).isNotEmpty();
     }
 
+    @Category(SlowTests.class)
     @Test
     public void thatChildrenCanBeRetrieved_BritishMuseum()
     {
@@ -1541,6 +1565,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).isNotEmpty();
     }
 
+    @Category(SlowTests.class)
     @Test
     public void thatChildrenOfExplicitRootCanBeRetrieved_DBPedia()
     {
@@ -1552,6 +1577,7 @@ public class SPARQLQueryBuilderTest
                 "http://www.w3.org/2002/07/owl#Thing");
     }
 
+    @Category(SlowTests.class)
     @Test
     public void thatChildrenOfExplicitRootCanBeRetrieved_YAGO()
     {
@@ -1563,6 +1589,7 @@ public class SPARQLQueryBuilderTest
                 "http://www.w3.org/2002/07/owl#Thing");
     }
 
+    @Category(SlowTests.class)
     @Test
     public void thatParentsCanBeRetrieved_Wikidata()
     {
@@ -1583,6 +1610,7 @@ public class SPARQLQueryBuilderTest
                 .contains("http://www.wikidata.org/entity/Q35120");
     }
     
+    @Category(SlowTests.class)
     @Test
     public void thatRootsCanBeRetrieved_DBPedia()
     {
@@ -1603,6 +1631,7 @@ public class SPARQLQueryBuilderTest
                 .contains("Thing");
     }
     
+    @Category(SlowTests.class)
     @Test
     public void thatParentsCanBeRetrieved_DBPedia()
     {

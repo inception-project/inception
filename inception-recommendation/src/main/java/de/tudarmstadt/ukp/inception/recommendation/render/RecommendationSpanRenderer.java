@@ -77,8 +77,6 @@ public class RecommendationSpanRenderer
      *            A VDocument containing annotations for the given layer
      * @param aState
      *            Data model for brat annotations
-     * @param aColoringStrategy
-     *            the coloring strategy to render this layer
      */
     @Override
     public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, AnnotationLayer layer,
