@@ -37,7 +37,7 @@ to a specific set of columns that must appear exactly in a specific order: *toke
 |====
 
 .Example
-[source,text]
+[source,text,tabsize=0]
 ----
 <text id="http://www.epguides.de/nikita.htm">
 <s>
