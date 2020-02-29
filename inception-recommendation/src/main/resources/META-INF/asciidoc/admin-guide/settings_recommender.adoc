@@ -31,4 +31,9 @@ This section describes the global settings related to the recommender module.
 | enable/disable recommender support
 | true
 | false
+
+| recommender.evaluation-page.enabled
+| enable/disable evaluation page
+| true
+| false
 |===
