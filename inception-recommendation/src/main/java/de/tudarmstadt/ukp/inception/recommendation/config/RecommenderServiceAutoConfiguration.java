@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
  * Provides all back-end Spring beans for the external search functionality.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "recommenders", name = "enabled", havingValue = "true", 
+@ConditionalOnProperty(prefix = "recommender", name = "enabled", havingValue = "true", 
         matchIfMissing = true)
 public class RecommenderServiceAutoConfiguration
 {

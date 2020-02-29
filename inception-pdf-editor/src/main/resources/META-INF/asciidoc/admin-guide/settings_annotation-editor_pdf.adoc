@@ -1,4 +1,4 @@
-// Copyright 2018
+// Copyright 2020
 // Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
@@ -14,17 +14,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_settings_search]]
-=== Search Settings
+[[sect_settings_annotation-editor_pdf]]
+=== PDF Editor Settings
 
-This section describes the global settings related to the search module.
-
-.Search results page size
-A list of possible numbers of results per page in the search sidebar. The user can select a number
-from this list to determine how many results should be displayed per page when he makes a query.
-
-If no value for the parameter is specified, its default value is used. The default value is shown as
-an example of how the parameter can be configured below:
+This section describes the global settings related to the PDF annotation editor module.
 
 .Knowledge base settings overview
 [cols="4*", options="header"]
@@ -34,14 +27,8 @@ an example of how the parameter can be configured below:
 | Default
 | Example
 
-
-| search.enable
-| Enable/disable search
+| ui.pdf.enabled.enabled
+| enable/disable KB support
 | true
 | false
-
-| search.resultsPerPage
-| list of possible numbers of results per page for in-project search
-| 10, 20, 50, 100, 500, 1000
-| 100, 1000, 2000, 3000
 |===

@@ -27,9 +27,7 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -39,10 +37,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.NopRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportProperties;
 
-@Component
-@ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+/**
+ * Support for document-level annotations.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DocumentMetadataLayerSupportAutoConfiguration#documentMetadataLayerSupport}.
+ * </p>
+ */
 public class DocumentMetadataLayerSupport
     extends LayerSupport_ImplBase<DocumentMetadataLayerAdapter, Void>
     implements InitializingBean
@@ -51,17 +55,20 @@ public class DocumentMetadataLayerSupport
     
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
+    private final DocumentMetadataLayerSupportProperties properties;
 
     private String layerSupportId;
     private List<LayerType> types;
 
     @Autowired
     public DocumentMetadataLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService)
+            ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
+            DocumentMetadataLayerSupportProperties aProperties)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         schemaService = aSchemaService;
+        properties = aProperties;
     }
 
     @Override
@@ -79,7 +86,8 @@ public class DocumentMetadataLayerSupport
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(TYPE, "Document metadata", layerSupportId));
+        types = asList(new LayerType(TYPE, "Document metadata", layerSupportId, 
+                !properties.isEnabled()));
     }
     
     @Override

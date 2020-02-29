@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.active.learning.sidebar;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -28,8 +27,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
 
-@Component("activeLearningSidebar")
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ActiveLearningAutoConfiguration#activeLearningSidebarFactory}.
+ * </p>
+ */
 public class ActiveLearningSidebarFactory extends AnnotationSidebarFactory_ImplBase {
     private static final ResourceReference ICON =
         new PackageResourceReference(ActiveLearningSidebarFactory.class, "active_learning.png");

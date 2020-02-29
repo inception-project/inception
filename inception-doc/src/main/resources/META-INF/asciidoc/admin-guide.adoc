@@ -80,6 +80,8 @@ include::{include-dir}settings_custom-header-icons.adoc[leveloffset=+1]
 
 include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
 
+include::{include-dir}settings_annotation-editor_pdf.adoc[leveloffset=+1]
+
 include::{include-dir}security-preauth.adoc[leveloffset=+1]
 
 include::{include-dir}settings_concept-linking.adoc[leveloffset=+1]
@@ -88,5 +90,6 @@ include::{include-dir}settings_knowledgebase.adoc[leveloffset=+1]
 
 include::{include-dir}settings_scheduler.adoc[leveloffset=+1]
 
+include::{include-dir}settings_external-search.adoc[leveloffset=+1]
 
-
+include::{include-dir}settings_recommender.adoc[leveloffset=+1]

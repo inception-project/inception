@@ -1,4 +1,4 @@
-// Copyright 2018
+// Copyright 2020
 // Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
@@ -14,17 +14,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_settings_search]]
-=== Search Settings
+[[sect_settings_documentmetadata]]
+=== Document Metadata Settings
 
-This section describes the global settings related to the search module.
+This section describes the global settings related to the document metadata annotation support.
 
-.Search results page size
-A list of possible numbers of results per page in the search sidebar. The user can select a number
-from this list to determine how many results should be displayed per page when he makes a query.
-
-If no value for the parameter is specified, its default value is used. The default value is shown as
-an example of how the parameter can be configured below:
+NOTE: Disabling document metadata support prevents new document metadata layers from being
+       created, but it does not prevent the use of existing document metadata layers layers in order
+       not to break existing projects. 
 
 .Knowledge base settings overview
 [cols="4*", options="header"]
@@ -35,13 +32,8 @@ an example of how the parameter can be configured below:
 | Example
 
 
-| search.enable
+| documentmetadata.enabled
 | Enable/disable search
-| true
 | false
-
-| search.resultsPerPage
-| list of possible numbers of results per page for in-project search
-| 10, 20, 50, 100, 500, 1000
-| 100, 1000, 2000, 3000
+| true
 |===

@@ -15,18 +15,11 @@
 // limitations under the License.
 
 [[sect_settings_search]]
-=== Search Settings
+=== Document Repositories Settings
 
-This section describes the global settings related to the search module.
+This section describes the global settings related to the external document repository support.
 
-.Search results page size
-A list of possible numbers of results per page in the search sidebar. The user can select a number
-from this list to determine how many results should be displayed per page when he makes a query.
-
-If no value for the parameter is specified, its default value is used. The default value is shown as
-an example of how the parameter can be configured below:
-
-.Knowledge base settings overview
+.Document repository settings overview
 [cols="4*", options="header"]
 |===
 | Setting
@@ -35,13 +28,8 @@ an example of how the parameter can be configured below:
 | Example
 
 
-| search.enable
-| Enable/disable search
+| external-search.enable
+| Enable/disable document repository support
 | true
 | false
-
-| search.resultsPerPage
-| list of possible numbers of results per page for in-project search
-| 10, 20, 50, 100, 500, 1000
-| 100, 1000, 2000, 3000
 |===

@@ -33,15 +33,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.config.WeblichtRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model.WeblichtChain;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WeblichtRecommenderAutoConfiguration#weblichtChainService}.
+ * </p>
+ */
 public class WeblichtChainServiceImpl
     implements WeblichtChainService
 {
