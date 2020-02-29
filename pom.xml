@@ -78,6 +78,10 @@
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
     <okhttp.version>3.14.2</okhttp.version>
+    
+    <asciidoctor.plugin.version>2.0.0-RC.1</asciidoctor.plugin.version>
+    <asciidoctor.version>2.2.0</asciidoctor.version>
+    <asciidoctor-diagram.version>2.0.1</asciidoctor-diagram.version>
   </properties>
   <modules>
     <!-- Build infrastructure modules -->
