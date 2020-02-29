@@ -82,8 +82,8 @@ public class RecommenderServiceAutoConfiguration
         return new LearningRecordServiceImpl(entityManager);
     }
     
-    @ConditionalOnProperty(prefix = "recommender.evaluation-page", name = "enabled", havingValue = "true", 
-            matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "recommender.evaluation-page", name = "enabled", 
+            havingValue = "true", matchIfMissing = true)
     @Bean
     public EvaluationSimulationPageMenuItem evaluationSimulationPageMenuItem()
     {
