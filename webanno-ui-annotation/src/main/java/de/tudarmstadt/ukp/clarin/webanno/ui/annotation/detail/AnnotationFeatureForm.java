@@ -156,7 +156,9 @@ public class AnnotationFeatureForm
         
         noFeaturesWarning = new WebMarkupContainer("noFeaturesWarning");
         noFeaturesWarning.setOutputMarkupPlaceholderTag(true);
-        noFeaturesWarning.add(visibleWhen(() -> getModelObject().getFeatureStates().isEmpty()));
+        noFeaturesWarning.add(visibleWhen(() -> 
+                getModelObject().getSelection().getAnnotation().isSet() && 
+                getModelObject().getFeatureStates().isEmpty()));
         add(noFeaturesWarning);
 
         // Trying to re-render the forwardAnnotationCheckBox as part of an AJAX request when it is
