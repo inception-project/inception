@@ -86,8 +86,6 @@ public class ImportExportServiceImplTest
         sut.onContextRefreshedEvent();
         
         when(schemaService.listAnnotationLayer(any(Project.class))).thenReturn(emptyList());
-        // We don't want to re-write the prepareCasForExport method - call the original
-        when(schemaService.prepareCasForExport(any(), any())).thenCallRealMethod();
         // The prepareCasForExport method internally calls getFullProjectTypeSystem, so we need to
         // ensure this is actually callable and doesn't run into a mocked version which simply 
         // returns null.

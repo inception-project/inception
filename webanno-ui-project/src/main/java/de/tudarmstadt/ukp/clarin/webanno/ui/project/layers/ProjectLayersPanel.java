@@ -230,6 +230,11 @@ public class ProjectLayersPanel
             layerSelection.setOutputMarkupId(true);
             layerSelection.add(OnChangeAjaxBehavior.onChange(_target -> {
                 featureDetailForm.setModelObject(null);
+                
+                // list and detail panel share the same model, but they are not
+                // automatically notified of updates to the model unless the 
+                // updates go through their respective setModelObject() calls
+                layerDetailForm.modelChanged();
 
                 _target.add(layerDetailForm);
                 _target.add(featureSelectionForm);

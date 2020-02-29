@@ -21,13 +21,17 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTrait;
 
 /**
  * Traits for input field text features.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class StringFeatureTraits
-        implements Serializable
+        implements Serializable, KeyBindingTrait
 {
     private static final long serialVersionUID = -8450181605003189055L;
     
@@ -82,11 +86,13 @@ public class StringFeatureTraits
         this.expandedRows = expandedRows;
     }
 
+    @Override
     public List<KeyBinding> getKeyBindings()
     {
         return keyBindings;
     }
 
+    @Override
     public void setKeyBindings(List<KeyBinding> aKeyBindings)
     {
         if (aKeyBindings == null) {

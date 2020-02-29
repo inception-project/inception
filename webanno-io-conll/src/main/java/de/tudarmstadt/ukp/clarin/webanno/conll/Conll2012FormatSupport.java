@@ -24,6 +24,7 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.conll.Conll2012Reader;
 import org.dkpro.core.io.conll.Conll2012Writer;
 import org.springframework.stereotype.Component;
@@ -63,7 +64,8 @@ public class Conll2012FormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
         return createReaderDescription(Conll2012Reader.class,
                 // Constituents are not supported by WebAnno and trying to read a file which does
@@ -72,7 +74,8 @@ public class Conll2012FormatSupport
     }
     
     @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
         return createEngineDescription(Conll2012Writer.class);

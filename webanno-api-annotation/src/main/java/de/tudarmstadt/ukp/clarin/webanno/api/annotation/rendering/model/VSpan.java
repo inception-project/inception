@@ -35,8 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class VSpan
     extends VObject
 {
-    private List<VRange> ranges = new ArrayList<>();
-    private String colorHint;
+    private final List<VRange> ranges;
     
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             Map<String, String> aFeatures, Map<String, String> aHoverFeatures)
@@ -79,17 +78,13 @@ public class VSpan
     }
 
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, List<VRange> aOffsets,
-            Map<String, String> aFeatures, Map<String, String> aHoverFeatures, String color)
+            Map<String, String> aFeatures, Map<String, String> aHoverFeatures, String aColor)
     {
         super(aLayer, aVid, aType, aFeatures, aHoverFeatures);
-        ranges = aOffsets;
-        colorHint = color;
+        setColorHint(aColor);
+        ranges = aOffsets != null ? aOffsets : new ArrayList<>();
     }
     
-    public String getColorHint () {
-        return colorHint;
-    }
-
     public List<VRange> getOffsets()
     {
         return ranges;
@@ -98,10 +93,5 @@ public class VSpan
     public List<VRange> getRanges()
     {
         return ranges;
-    }
-
-    public void setColor(String aColor)
-    {
-        colorHint = aColor;
     }
 }

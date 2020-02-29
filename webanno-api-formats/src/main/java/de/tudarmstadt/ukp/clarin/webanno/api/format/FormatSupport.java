@@ -21,6 +21,7 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -60,7 +61,7 @@ public interface FormatSupport
     /**
      * @return a UIMA reader description.
      */
-    default CollectionReaderDescription getReaderDescription()
+    default CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         throw new UnsupportedOperationException("The format [" + getName() + "] cannot be read");
@@ -69,7 +70,8 @@ public interface FormatSupport
     /**
      * @return a UIMA reader description.
      */
-    default AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    default AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
         throw new UnsupportedOperationException("The format [" + getName() + "] cannot be written");

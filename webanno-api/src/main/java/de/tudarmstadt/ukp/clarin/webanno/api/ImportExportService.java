@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -86,7 +87,9 @@ public interface ImportExportService
     // --------------------------------------------------------------------------------------------
     
     /**
-     * Convert a file to a CAS.
+     * Convert a file to a CAS. This method collects the project's type system as part of the call.
+     * It is not well-suited for bulk-imports. For these, use 
+     * {@link #importCasFromFile(File, Project, String, TypeSystemDescription)} instead.
      *
      * @param aFile
      *            the file.
@@ -102,6 +105,29 @@ public interface ImportExportService
      */
     CAS importCasFromFile(File aFile, Project aProject, String aFormatId)
         throws UIMAException, IOException;
+
+    /**
+     * Convert a file to a CAS. This method is good for bulk-importing because it accepts the 
+     * project type system as a parameter instead of collecting it on every call.
+     *
+     * @param aFile
+     *            the file.
+     * @param aProject
+     *            the project to which this file belongs (required to get the type system).
+     * @param aFormatId
+     *            ID of a supported file format
+     * @param aFullProjectTypeSystem
+     *            the project type system. If this parameter is {@code null}, then the method will
+     *            try to resolve the type system itself. 
+     * @return the CAS.
+     * @throws UIMAException
+     *             if a conversion error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */    
+    CAS importCasFromFile(File aFile, Project aProject, String aFormatId,
+            TypeSystemDescription aFullProjectTypeSystem)
+                    throws UIMAException, IOException;
 
     /**
      * Exports the given CAS to a file on disk. 

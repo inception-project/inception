@@ -352,7 +352,7 @@ for switching from a combo box to an auto-complete via the
 
 === Key bindings
 
-Some types of features support key bindings. This means, you can assing a combination of keys to a
+Some types of features support key bindings. This means, you can assigning a combination of keys to a
 particular feature value. Pressing these keys on the annotation page while a annotation is selected
 will set the feature to the assigned value. E.g. you could assign the key combo `CTRL P` to the 
 value `PER` for the `value` feature on the *Named Entity* layer. So when you create a *Named Entity*
@@ -381,4 +381,23 @@ function key, etc). A combination of multiple number or letter keys does not wor
 NOTE: Mind that you need to take care not to define the same key binding multiple times. Duplicate
       definitions are only sensible if you can ensure that the features on which they are defined will never
       be visible on screen simultaneously. 
+      
+=== Coloring rules
+
+Coloring rules can be used to control the coloring of annotations. A rule consists of two parts:
+1) a regular expression that matches the label of an annotation, 2) a hexadecimal color code.
+
+A simple color rule could be use the pattern `PER` and the color code `#0000ff` (blue). This would 
+display all annotations with the label `PER` on the given layer in blue.
+
+In order to assign a specific color to all annotations from the given layer, use the pattern `.*`.
+
+It is also possible to assign a color to multiple label at once by exploiting the fact that the
+pattern is a regular expression. E.g. `PER|OTH` would match annotations with the label `PER` as well
+as with the label `OTH`. Mind not to add extra space such as `PER | OTH` - this would not work!
+
+Be careful when creating coloring rules on layers with multiple features. If there are two features
+with the values `a` and `b`, the label will be `a | b`. In order to match this label in a coloring 
+rule, the pipe symbol (`|`) must be escaped - otherwise it is interpreted as a regular expression 
+`OR` operator: `a \| b`. 
 

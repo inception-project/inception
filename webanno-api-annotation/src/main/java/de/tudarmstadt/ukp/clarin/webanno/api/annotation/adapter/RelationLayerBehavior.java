@@ -37,7 +37,7 @@ public abstract class RelationLayerBehavior
     implements LayerBehavior
 {
     @Override
-    public boolean accepts(LayerSupport<?> aLayerType)
+    public boolean accepts(LayerSupport<?, ?> aLayerType)
     {
         return aLayerType instanceof RelationLayerSupport;
     }

@@ -247,15 +247,28 @@ public class ImportExportServiceImpl
     public CAS importCasFromFile(File aFile, Project aProject, String aFormatId)
         throws UIMAException, IOException
     {
+        return importCasFromFile(aFile, aProject, aFormatId, null);
+    }    
+    
+    @Override
+    public CAS importCasFromFile(File aFile, Project aProject, String aFormatId,
+            TypeSystemDescription aFullProjectTypeSystem)
+        throws UIMAException, IOException
+    {
+        TypeSystemDescription tsd = aFullProjectTypeSystem;
+        
+        if (tsd == null) {
+            tsd = annotationService.getFullProjectTypeSystem(aProject);
+        }
+        
         // Prepare a CAS with the project type system
-        TypeSystemDescription allTypes = annotationService.getFullProjectTypeSystem(aProject);
-        CAS cas = CasFactory.createCas(allTypes);
+        CAS cas = CasFactory.createCas(tsd);
 
         // Convert the source document to CAS
         FormatSupport format = getReadableFormatById(aFormatId).orElseThrow(() -> 
                 new IOException("No reader available for format [" + aFormatId + "]"));
         
-        CollectionReaderDescription readerDescription = format.getReaderDescription();
+        CollectionReaderDescription readerDescription = format.getReaderDescription(tsd);
         ConfigurationParameterFactory.addConfigurationParameters(readerDescription, 
                 ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, 
                     aFile.getParentFile().getAbsolutePath(), 
@@ -391,7 +404,10 @@ public class ImportExportServiceImpl
     {
         // Update type system the CAS, compact it (remove all non-reachable feature strucutres)
         // and remove all internal feature structures in the process
-        CAS cas = annotationService.prepareCasForExport(aCas, aDocument);
+        CAS exportCas = WebAnnoCasUtil.createCas();
+        TypeSystemDescription fullProjectTypeSystem = annotationService
+                .getFullProjectTypeSystem(aDocument.getProject(), false);
+        annotationService.upgradeCas(aCas, exportCas, fullProjectTypeSystem);
         
         // Update the source file name in case it is changed for some reason. This is necessary
         // for the writers to create the files under the correct names.
@@ -399,7 +415,7 @@ public class ImportExportServiceImpl
         File currentDocumentUri = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
                 + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/"
                 + aDocument.getId() + "/" + SOURCE_FOLDER);
-        DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
+        DocumentMetaData documentMetadata = DocumentMetaData.get(exportCas.getJCas());
         documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
         documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
                 .toExternalForm());
@@ -415,7 +431,7 @@ public class ImportExportServiceImpl
                 continue;
             }
             else if (!feature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                updateCasWithTagSet(cas, feature.getLayer().getName(), tagSet.getName());
+                updateCasWithTagSet(exportCas, feature.getLayer().getName(), tagSet.getName());
             }
         }
 
@@ -425,14 +441,14 @@ public class ImportExportServiceImpl
             exportTempDir.mkdirs();
             
             AnalysisEngineDescription writer = aFormat.getWriterDescription(aDocument.getProject(),
-                    cas);
+                    fullProjectTypeSystem, exportCas);
             ConfigurationParameterFactory.addConfigurationParameters(writer,
                     JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
                     JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
 
-            runPipeline(cas, writer);
+            runPipeline(exportCas, writer);
     
             // If the writer produced more than one file, we package it up as a ZIP file
             File exportFile;

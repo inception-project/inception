@@ -20,39 +20,32 @@
 <body>
 <wicket:panel>
   <form wicket:id="keyBindingForm">
-    <table wicket:id="keyBindingsContainer" class="col-sm-12">
-      <col width="50%">
-      <col width="50%">
-      <col width="0%">
-      <tr wicket:id="keyBindings">
-        <td colspan="2">
-          <span wicket:id="keyCombo" class="pull-right" style="white-space:nowrap;"/>
-          <span wicket:id="value"/>
-        </td>
-        <td style="white-space:nowrap;">
-          <a wicket:id="removeKeyBinding" class="btn-xs btn-danger pull-right">
-            <i class="fas fa-trash" aria-hidden="true"></i>
-          </a>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <div wicket:id="value"/>
-        </td>
-        <td style="white-space:nowrap;">
-          <div class="form-group">
-            <div class="col-sm-12">
-              <input wicket:id="keyCombo" class="form-control" placeholder="Enter key combo here..."/>
-            </div>
-          </div>
-        </td>
-        <td style="white-space:nowrap;">
+    <div wicket:id="keyBindingsContainer">
+      <div class="flex-h-container flex-gutter flex-only-internal-gutter">
+        <div wicket:id="value" class="flex-content"/>
+        <input wicket:id="keyCombo" class="flex-content form-control" placeholder="Enter key combo here..."/>
+        <span class="flex-h-container flex-centered" style="white-space:nowrap;">
           <a wicket:id="addKeyBinding" class="btn-xs btn-primary pull-right">
             <i class="fas fa-plus" aria-hidden="true"></i>
           </a>
-        </td>
-      </tr>
-    </table>
+        </span>
+      </div>
+      <div class="flex-v-container flex-gutter">
+        <div wicket:id="keyBindings" class="flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="flex-content">
+            <span wicket:id="value"/>
+          </div>
+          <div>
+            <span wicket:id="keyCombo" style="white-space:nowrap;"/>
+          </div>
+          <div class="flex-h-container flex-centered" style="white-space:nowrap;">
+            <a wicket:id="removeKeyBinding" class="btn-xs btn-danger pull-right">
+              <i class="fas fa-trash" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
   </form>
 </wicket:panel>
 </body>
