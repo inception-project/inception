@@ -61,7 +61,7 @@
   
     <mockito.version>2.28.2</mockito.version>
     <assertj.version>3.14.0</assertj.version>
-    <spring.version>5.2.3.RELEASE</spring.version>
+    <spring.version>5.2.4.RELEASE</spring.version>
     <spring.boot.version>2.2.4.RELEASE</spring.boot.version>
     <spring.security.version>5.2.2.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
@@ -87,7 +87,7 @@
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.10.2</jackson.version>
-    <tomcat.version>8.5.51</tomcat.version>
+    <tomcat.version>9.0.31</tomcat.version>
   </properties>
   <repositories>
     <!--
