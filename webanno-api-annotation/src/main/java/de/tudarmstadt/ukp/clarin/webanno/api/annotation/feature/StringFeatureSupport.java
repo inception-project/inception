@@ -35,6 +35,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.PrimitiveUimaFeatureSupportProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.DynamicTextAreaFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFieldTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoAutoCompleteTextFeatureEditor;
@@ -150,7 +151,11 @@ public class StringFeatureSupport
         if (feature.getTagset() == null) {
             if (traits.isMultipleRows()) {
                 // If multiple rows are set use a textarea
-                return new TextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
+                if (traits.isDynamicSize()) {
+                    return new DynamicTextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
+                } else {
+                    return new TextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
+                }
             }
             else {
                 // Otherwise use a simple input field
