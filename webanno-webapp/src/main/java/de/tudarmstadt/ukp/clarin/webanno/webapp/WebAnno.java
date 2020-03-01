@@ -59,8 +59,17 @@ public class WebAnno
 {
     private static final String PROTOCOL = "AJP/1.3";
     
-    @Value("${tomcat.ajp.port:-1}")
+    @Value("${server.ajp.port:-1}")
     private int ajpPort;
+
+    @Value("${server.ajp.secret-required:true}")
+    private String ajpSecretRequired;
+
+    @Value("${server.ajp.secret:}")
+    private String ajpSecret;
+
+    @Value("${server.ajp.address:127.0.0.1}")
+    private String ajpAddress;
 
     @Bean
     public SessionRegistry sessionRegistry()
@@ -78,13 +87,16 @@ public class WebAnno
     @Bean
     public EmbeddedServletContainerFactory servletContainer()
     {
-        TomcatEmbeddedServletContainerFactory tomcat = new TomcatEmbeddedServletContainerFactory();
+        TomcatEmbeddedServletContainerFactory factory = new TomcatEmbeddedServletContainerFactory();
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
             ajpConnector.setPort(ajpPort);
-            tomcat.addAdditionalTomcatConnectors(ajpConnector);
+            ajpConnector.setAttribute("secretRequired", ajpSecretRequired);
+            ajpConnector.setAttribute("secret", ajpSecret);
+            ajpConnector.setAttribute("address", ajpAddress);
+            factory.addAdditionalTomcatConnectors(ajpConnector);
         }
-        return tomcat;
+        return factory;
     }
 
     @Override
