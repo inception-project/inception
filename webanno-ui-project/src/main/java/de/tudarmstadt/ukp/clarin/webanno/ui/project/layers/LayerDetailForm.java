@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -125,19 +126,7 @@ public class LayerDetailForm
         add(new TextField<String>("uiName").setRequired(true));
         add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
-        add(new Label("name")
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(StringUtils
-                        .isNotBlank(LayerDetailForm.this.getModelObject().getName()));
-            }
-        });
+        add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
 
         add(new CheckBox("enabled"));
         
@@ -149,12 +138,10 @@ public class LayerDetailForm
             {
                 // If the feature type has changed, we need to set up a new traits editor
                 Component newTraits;
-                if (LayerDetailForm.this.getModelObject() != null
-                        && getModelObject() != null) {
+                if (LayerDetailForm.this.getModelObject() != null && getModelObject() != null) {
                     LayerSupport<?, ?> fs = layerSupportRegistry
                             .getLayerSupport(getModelObject().getlayerSupportId());
-                    newTraits = fs.createTraitsEditor(MID_TRAITS,
-                            LayerDetailForm.this.getModel());
+                    newTraits = fs.createTraitsEditor(MID_TRAITS, LayerDetailForm.this.getModel());
                 }
                 else {
                     newTraits = new EmptyPanel(MID_TRAITS);
@@ -164,14 +151,13 @@ public class LayerDetailForm
             }
         });
         layerTypeSelect.setChoices(layerSupportRegistry::getAllTypes);
-        layerTypeSelect
-                .add(enabledWhen(() -> isNull(LayerDetailForm.this.getModelObject().getId())));
+        layerTypeSelect.add(enabledWhen(() -> isNull(getModelObject().getId())));
         layerTypeSelect.setRequired(true);
         layerTypeSelect.setNullValid(false);
         layerTypeSelect.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layerTypeSelect.setModel(LambdaModelAdapter.of(
-            () -> layerSupportRegistry.getLayerType(LayerDetailForm.this.getModelObject()), 
-            (v) -> LayerDetailForm.this.getModelObject().setType(v.getName())));
+            () -> layerSupportRegistry.getLayerType(getModelObject()), 
+            (v) -> getModelObject().setType(v.getName())));
         layerTypeSelect.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             private static final long serialVersionUID = 6790949494089940303L;
