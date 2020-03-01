@@ -83,6 +83,8 @@ include::{include-dir}settings_general.adoc[leveloffset=+1]
 
 include::{include-dir}settings_database.adoc[leveloffset=+1]
 
+include::{include-dir}settings_server.adoc[leveloffset=+1]
+
 include::{include-dir}settings_internal-backup.adoc[leveloffset=+1]
 
 include::{include-dir}settings_custom-header-icons.adoc[leveloffset=+1]
