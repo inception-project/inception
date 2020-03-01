@@ -290,7 +290,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
             
             for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
-                Map<String, String> renderedFeatures = renderer.getFeatures(adapter, fs, features);
+                Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
+                        fs, features);
                 String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
                 items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText, layer));
             }

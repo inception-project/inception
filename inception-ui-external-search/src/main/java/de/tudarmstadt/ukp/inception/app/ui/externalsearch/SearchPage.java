@@ -137,6 +137,7 @@ public class SearchPage extends ApplicationPageBase
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
             error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 

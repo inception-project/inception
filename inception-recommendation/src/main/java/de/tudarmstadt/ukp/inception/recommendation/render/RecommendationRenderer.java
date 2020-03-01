@@ -25,7 +25,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -70,13 +69,12 @@ public class RecommendationRenderer
                 continue;
             }
             
-            ColoringStrategy coloringStrategy = ColoringStrategy.staticColor("#cccccc");  
             TypeAdapter adapter = aAnnotationService.getAdapter(layer);      
             RecommendationTypeRenderer renderer = getRenderer(adapter);
             if (renderer != null) {
-                renderer.render(aCas, aVdoc, aState, coloringStrategy, layer, aRecService,
-                    aLearningRecordService, aAnnotationService, aFsRegistry, aDocumentService,
-                    aWindowBeginOffset, aWindowEndOffset);
+                renderer.render(aCas, aVdoc, aState, layer, aRecService, aLearningRecordService,
+                        aAnnotationService, aFsRegistry, aDocumentService, aWindowBeginOffset,
+                        aWindowEndOffset);
             }
         }
     }
