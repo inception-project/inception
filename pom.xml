@@ -84,7 +84,7 @@
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.10.2</jackson.version>
-    <tomcat.version>8.5.51</tomcat.version>
+    <tomcat.version>9.0.31</tomcat.version>
   </properties>
   <repositories>
     <!--
