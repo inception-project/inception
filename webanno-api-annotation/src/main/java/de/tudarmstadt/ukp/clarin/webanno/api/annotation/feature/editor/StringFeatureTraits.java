@@ -36,6 +36,7 @@ public class StringFeatureTraits
     private static final long serialVersionUID = -8450181605003189055L;
     
     private boolean multipleRows = false;
+    private boolean dynamicSize = false;
     private int collapsedRows = 1;
     private int expandedRows = 1;
     private List<KeyBinding> keyBindings = new ArrayList<>();
@@ -53,6 +54,16 @@ public class StringFeatureTraits
     public void setMultipleRows(boolean multipleRows)
     {
         this.multipleRows = multipleRows;
+    }
+    
+    public boolean isDynamicSize()
+    {
+        return dynamicSize;
+    }
+    
+    public void setDynamicSize(boolean dynamicSize)
+    {
+        this.dynamicSize = dynamicSize;
     }
     
     public int getCollapsedRows()

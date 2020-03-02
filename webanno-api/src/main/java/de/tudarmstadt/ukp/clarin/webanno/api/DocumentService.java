@@ -28,6 +28,7 @@ import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -137,10 +138,6 @@ public interface DocumentService
     void removeSourceDocument(SourceDocument document)
         throws IOException;
 
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
-    void uploadSourceDocument(File file, SourceDocument document)
-        throws IOException, UIMAException;
-
     /**
      * Upload a SourceDocument, obtained as Inputstream, such as from remote API Zip folder to a
      * repository directory. This way we don't need to create the file to a temporary folder
@@ -156,6 +153,27 @@ public interface DocumentService
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void uploadSourceDocument(InputStream file, SourceDocument document)
+        throws IOException, UIMAException;
+
+    /**
+     * Upload a SourceDocument, obtained as Inputstream, such as from remote API Zip folder to a
+     * repository directory. This way we don't need to create the file to a temporary folder
+     *
+     * @param file
+     *            the file.
+     * @param document
+     *            the source document.
+     * @param aFullProjectTypeSystem
+     *            the project type system. If this parameter is {@code null}, then the method will
+     *            try to resolve the type system itself. 
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws UIMAException
+     *             if a conversion error occurs.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
+    void uploadSourceDocument(InputStream file, SourceDocument document,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws IOException, UIMAException;
 
     /**
@@ -402,6 +420,25 @@ public interface DocumentService
      *             if there was a problem loading the CAS.
      */
     CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode)
+        throws IOException;
+
+    /**
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created.
+     * This method is good for bulk-importing because it accepts the project type system as a
+     * parameter instead of collecting it on every call.
+     * 
+     * @param aDocument
+     *            the source document.
+     * @param aUpgradeMode
+     *            whether to upgrade the type system in the CAS.
+     * @param aFullProjectTypeSystem
+     *            the project type system.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading the CAS.
+     */
+    CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws IOException;
 
     /**

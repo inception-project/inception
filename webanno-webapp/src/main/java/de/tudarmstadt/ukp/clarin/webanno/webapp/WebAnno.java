@@ -38,6 +38,8 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -63,9 +65,24 @@ public class WebAnno
 {
     private static final String PROTOCOL = "AJP/1.3";
     
-    @Value("${tomcat.ajp.port:-1}")
+    @Value("${server.ajp.port:-1}")
     private int ajpPort;
-    
+
+    @Value("${server.ajp.secret-required:true}")
+    private String ajpSecretRequired;
+
+    @Value("${server.ajp.secret:}")
+    private String ajpSecret;
+
+    @Value("${server.ajp.address:127.0.0.1}")
+    private String ajpAddress;
+
+    @Bean
+    public SessionRegistry sessionRegistry()
+    {
+        return new SessionRegistryImpl();
+    }
+
     @Bean
     @Primary
     public Validator validator()
@@ -101,13 +118,16 @@ public class WebAnno
     @Bean
     public TomcatServletWebServerFactory servletContainer()
     {
-        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
+        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
             ajpConnector.setPort(ajpPort);
-            tomcat.addAdditionalTomcatConnectors(ajpConnector);
+            ajpConnector.setAttribute("secretRequired", ajpSecretRequired);
+            ajpConnector.setAttribute("secret", ajpSecret);
+            ajpConnector.setAttribute("address", ajpAddress);
+            factory.addAdditionalTomcatConnectors(ajpConnector);
         }
-        return tomcat;
+        return factory;
     }
 
     @Override

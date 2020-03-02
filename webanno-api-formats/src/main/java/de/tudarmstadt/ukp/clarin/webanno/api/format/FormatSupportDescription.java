@@ -26,6 +26,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -72,7 +73,8 @@ public class FormatSupportDescription
 
     @SuppressWarnings("unchecked")
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
         if (!isReadable()) {
             throw new UnsupportedOperationException("The format [" + getName() + "] cannot be read");
@@ -86,12 +88,13 @@ public class FormatSupportDescription
             throw new ResourceInitializationException(e);
         }
         
-        return createReaderDescription(readerClazz);
+        return createReaderDescription(readerClazz, aTSD);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
         if (!isReadable()) {
@@ -106,6 +109,6 @@ public class FormatSupportDescription
             throw new ResourceInitializationException(e);
         }
 
-        return createEngineDescription(writerClazz);
+        return createEngineDescription(writerClazz, aTSD);
     }
 }
