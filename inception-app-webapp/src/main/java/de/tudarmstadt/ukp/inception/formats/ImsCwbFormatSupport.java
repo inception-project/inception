@@ -62,7 +62,7 @@ public class ImsCwbFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(ImsCwbReader.class);
+        return createReaderDescription(ImsCwbReader.class, aTSD);
     }
     
 //    @Override

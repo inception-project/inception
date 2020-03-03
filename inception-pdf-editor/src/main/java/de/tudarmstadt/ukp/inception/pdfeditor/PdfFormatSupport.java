@@ -56,6 +56,6 @@ public class PdfFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(PdfReader.class);
+        return createReaderDescription(PdfReader.class, aTSD);
     }
 }

@@ -67,7 +67,7 @@ public class LifFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(LifReader.class);
+        return createReaderDescription(LifReader.class, aTSD);
     }
     
     @Override
@@ -75,6 +75,6 @@ public class LifFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(LifWriter.class);
+        return createEngineDescription(LifWriter.class, aTSD);
     }
 }
