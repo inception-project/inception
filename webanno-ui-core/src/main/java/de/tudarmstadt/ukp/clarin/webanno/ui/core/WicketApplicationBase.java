@@ -68,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.support.sass.BootstrapSass;
 import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassCacheManager;
 import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassCompilerOptionsFactory;
-import de.tudarmstadt.ukp.clarin.webanno.ui.config.BaseLayoutCssResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.BootstrapAwareJQueryUIJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
@@ -177,9 +176,6 @@ public abstract class WicketApplicationBase
         addFontAwesomeToAllPages();
         
         addCssBrowserSelectorToAllPages();
-        
-        // Loading base layout CSS here so it can override JQuery/Kendo CSS
-        initAddBaseLayoutCssToAllPages();
     }
     
     protected void initBootstrap()
@@ -204,14 +200,6 @@ public abstract class WicketApplicationBase
         settings.setCssResourceReference(CustomBootstrapSassReference.get());
     }
 
-    protected void initAddBaseLayoutCssToAllPages()
-    {
-        getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
-                component.add(BaseLayoutCssResourceBehavior.get());
-            }
-        });
-    }
     protected void addKendoResourcesToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
