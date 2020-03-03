@@ -125,7 +125,7 @@ public abstract class AnnotationPanel
             
             for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
                 Map<String, String> renderedFeatures = renderer
-                    .getFeatures(adapter, fs, features);
+                    .renderLabelFeatureValues(adapter, fs, features);
                 String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
                 if (labelText.isEmpty()) {
                     labelText = "(" + layer.getUiName() + ")";
