@@ -37,12 +37,6 @@ $card-action-button-padding: 1px 4px;
 		}
 	}
 
-	// Restore the control border if the control is shown in a card header, otherwise it is hard
-	// to see
-	.bootstrap-select {
-		border: $input-border-width solid $input-border-color !important;
-	}
-
 	// Add contrast to light buttons when displayed on card background
 	.btn-light {
 		background-color: $body-bg;
