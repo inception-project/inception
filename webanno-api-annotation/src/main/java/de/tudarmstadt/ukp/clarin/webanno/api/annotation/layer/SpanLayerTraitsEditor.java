@@ -79,6 +79,7 @@ public class SpanLayerTraitsEditor
         aForm.add(anchoringMode);
         
         CheckBox crossSentence = new CheckBox("crossSentence");
+        crossSentence.setOutputMarkupPlaceholderTag(true);
         crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
         crossSentence.add(LambdaBehavior.onConfigure(_this -> {
             AnnotationLayer layer = getLayerModelObject();
@@ -100,6 +101,7 @@ public class SpanLayerTraitsEditor
         aForm.add(onClickJavascriptAction);
         
         CheckBox showTextInHover = new CheckBox("showTextInHover");
+        showTextInHover.setOutputMarkupPlaceholderTag(true);
         showTextInHover.setModel(PropertyModel.of(getLayerModel(), "showTextInHover"));
         // Surface form must be locked to token boundaries for CONLL-U writer to work.
         showTextInHover.add(enabledWhen(

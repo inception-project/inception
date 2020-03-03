@@ -102,28 +102,20 @@ public class FeatureDetailForm
         add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
         add(new TextField<String>("uiName").setRequired(true));
         add(new TextArea<String>("description"));
-        add(new CheckBox("enabled"));
-        add(new CheckBox("visible"));
-        add(new CheckBox("hideUnconstraintFeature"));
-        add(new CheckBox("remember"));
+        add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
+        add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
+        add(new CheckBox("hideUnconstraintFeature").setOutputMarkupPlaceholderTag(true));
+        add(new CheckBox("remember").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("includeInHover")
-        {
-            private static final long serialVersionUID = -8273152168889478682L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                String layertype = FeatureDetailForm.this.getModelObject().getLayer().getType();
-                // Currently not configurable for chains or relations
-                // TODO: technically it is possible
-                setVisible(!CHAIN_TYPE.equals(layertype) && !RELATION_TYPE.equals(layertype));
-            }
-
-        });
+                .setOutputMarkupPlaceholderTag(true)
+                .add(LambdaBehavior.visibleWhen(() -> {
+                    String layertype = FeatureDetailForm.this.getModelObject().getLayer().getType();
+                    // Currently not configurable for chains or relations
+                    // TODO: technically it is possible
+                    return !CHAIN_TYPE.equals(layertype) && !RELATION_TYPE.equals(layertype);
+                })));
         required = new CheckBox("required");
-        required.setOutputMarkupId(true);
+        required.setOutputMarkupPlaceholderTag(true);
         required.add(LambdaBehavior.onConfigure(_this -> {
             boolean relevant = CAS.TYPE_NAME_STRING
                     .equals(FeatureDetailForm.this.getModelObject().getType());

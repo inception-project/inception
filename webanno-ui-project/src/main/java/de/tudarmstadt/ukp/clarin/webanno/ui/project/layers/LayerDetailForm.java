@@ -128,7 +128,7 @@ public class LayerDetailForm
 
         add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
 
-        add(new CheckBox("enabled"));
+        add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
         
         add(layerTypeSelect = new BootstrapSelect<LayerType>("type") {
             private static final long serialVersionUID = 9029205407108101183L;
@@ -187,7 +187,7 @@ public class LayerDetailForm
         add(effectiveAttachType);
         
         // Behaviors of layers
-        add(new CheckBox("readonly"));
+        add(new CheckBox("readonly").setOutputMarkupPlaceholderTag(true));
 
         BootstrapRadioChoice<LayerExportMode> exportModeChoice = new BootstrapRadioChoice<>(
                 "exportMode", asList(LayerExportMode.values()));

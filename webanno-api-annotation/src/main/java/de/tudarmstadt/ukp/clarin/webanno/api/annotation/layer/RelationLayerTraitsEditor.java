@@ -57,6 +57,7 @@ public class RelationLayerTraitsEditor
                 getLayerModel(), getTraitsModel().bind("coloringRules.rules")));
         
         CheckBox crossSentence = new CheckBox("crossSentence");
+        crossSentence.setOutputMarkupPlaceholderTag(true);
         crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
         // Not configurable for layers that attach to tokens (currently that is the only layer on
         // which we use the attach feature)
