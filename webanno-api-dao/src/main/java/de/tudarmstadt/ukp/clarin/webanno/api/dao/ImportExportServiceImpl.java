@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -448,7 +449,8 @@ public class ImportExportServiceImpl
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
 
-            runPipeline(exportCas, writer);
+            
+            runPipeline(getRealCas(exportCas), writer);
     
             // If the writer produced more than one file, we package it up as a ZIP file
             File exportFile;
