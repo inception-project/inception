@@ -55,6 +55,6 @@ public class PubAnnotationSectionsFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(PubAnnotationSectionsReader.class);
+        return createReaderDescription(PubAnnotationSectionsReader.class, aTSD);
     }
 }

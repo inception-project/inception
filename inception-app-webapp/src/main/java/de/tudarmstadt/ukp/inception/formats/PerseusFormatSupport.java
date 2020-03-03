@@ -62,6 +62,6 @@ public class PerseusFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(PerseusReader.class);
+        return createReaderDescription(PerseusReader.class, aTSD);
     }
 }

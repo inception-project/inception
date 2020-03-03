@@ -67,7 +67,7 @@ public class TeiFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(TeiReader.class);
+        return createReaderDescription(TeiReader.class, aTSD);
     }
     
     @Override
@@ -75,6 +75,6 @@ public class TeiFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(TeiWriter.class);
+        return createEngineDescription(TeiWriter.class, aTSD);
     }
 }

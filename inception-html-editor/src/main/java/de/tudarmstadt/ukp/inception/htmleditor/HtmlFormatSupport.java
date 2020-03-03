@@ -56,6 +56,6 @@ public class HtmlFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(HtmlReader.class);
+        return createReaderDescription(HtmlReader.class, aTSD);
     }
 }
