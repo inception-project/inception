@@ -183,4 +183,12 @@ public interface AnnotatorState
     List<FeatureState> getFeatureStates();
 
     FeatureState getFeatureState(AnnotationFeature aFeature);
+    
+    // ---------------------------------------------------------------------------------------------
+    // Meta data
+    // ---------------------------------------------------------------------------------------------
+    
+    <M extends Serializable> M getMetaData(final AnnotatorStateMetaDataKey<M> aKey);
+    
+    <M extends Serializable> void setMetaData(final AnnotatorStateMetaDataKey<M> aKey, M aMetadata);
 }
