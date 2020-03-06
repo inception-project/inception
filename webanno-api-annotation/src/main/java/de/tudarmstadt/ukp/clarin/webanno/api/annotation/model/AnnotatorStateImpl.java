@@ -171,6 +171,8 @@ public class AnnotatorStateImpl
     
     private List<Unit> visibleUnits;
     
+    private Map<AnnotatorStateMetaDataKey<?>, Object> metaData = new HashMap<>();
+    
     public AnnotatorStateImpl(Mode aMode)
     {
         mode = aMode;
@@ -648,5 +650,21 @@ public class AnnotatorStateImpl
     {
         return !user.getUsername().equals(CURATION_USER) && 
                 !user.equals(aCurrentUser);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <M extends Serializable> M getMetaData(AnnotatorStateMetaDataKey<M> aKey)
+    {
+        if (metaData.containsKey(aKey)) {
+            return (M) metaData.get(aKey);
+        }
+        return null;
+    }
+
+    @Override
+    public <M extends Serializable> void setMetaData(AnnotatorStateMetaDataKey<M> aKey, M aMetadata)
+    {
+        metaData.put(aKey, aMetadata);
     }
 }
