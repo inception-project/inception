@@ -20,17 +20,23 @@
 <head>
   <wicket:head>
     <style>
-      .page-content {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      :root {
+        --input-padding-x: 1.5rem;
+        --input-padding-y: 1.5rem;
       }
-    
-      .login-form {
-        text-align: center;
-        display: inline-block;
+      
+      .form-group input[type=text],input[type=password] {
+        padding: var(--input-padding-y) var(--input-padding-x);
+        border-radius: 2rem;
       }
-     </style>
+      
+      .btn-login {
+        font-size: 0.9rem !important;
+        letter-spacing: 0.05rem !important;
+        padding: 0.75rem 1rem !important;
+        border-radius: 2rem !important;
+      }
+    </style>
   </wicket:head>
 </head>
 <body>
@@ -40,23 +46,30 @@
         $("#urlfragment").attr("value", unescape(self.document.location.hash.substring(1)));
       });    
     </script>
-    <form wicket:id="loginForm" method="post" class="login-form well">
-      <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
-      <div class="form-group">
-        <label wicket:for="username" style="color: black;">Username</label> <input
-          wicket:id="username" type="text" class="form-control" />
+    <div class="scrolling flex-content flex-h-container flex-centered">
+      <div class="flex-content flex-v-container flex-centered">
+        <form wicket:id="loginForm" class="card" style="background: white; padding: 3rem 3rem; min-width: 440px; max-width: 30%;">
+          <div class="card-body container-sm">
+            <h5 class="card-title mb-3 text-center">
+              Welcome!
+            </h5>
+            <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
+            <div class="form-group form-row mb-3">
+              <input wicket:id="username" type="text" class="form-control" placeholder="User ID"/>
+            </div>
+            <div class="form-group form-row mb-3">
+              <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
+            </div>
+            <div class="form-group form-row justify-content-md-center">
+              <input type="submit" value="SIGN IN" class="btn btn-login btn-primary w-100" />
+            </div>
+            <div class="form-group form-row mt-3" wicket:enclosure="loginMessage">
+              <span wicket:id="loginMessage"></span>
+            </div>
+          </div>
+        </form>
       </div>
-      <div class="form-group">
-        <label wicket:for="password" style="color: black;">Password</label> <input
-          wicket:id="password" type="password" class="form-control" />
-      </div>
-      <div class="form-group text-center">
-        <input type="submit" value="Log in" class="btn btn-primary" />
-      </div>
-      <div class="form-group">
-        <span wicket:id="loginMessage"></span>
-      </div>
-    </form>
+    </div>
   </wicket:extend>
 </body>
 </html>

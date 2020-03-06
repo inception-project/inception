@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  * 
@@ -16,5 +16,29 @@
  * limitations under the License.
  ******************************************************************************/
 
-@page-footer-height: 21px;
-@page-header-height: 51px;
+/* Bootstrap: Card (additional classes) */
+$card-action-button-font-size: 80%;
+$card-action-button-padding: 1px 4px;
+
+.card-header {
+	.actions {
+		float: right;
+		
+		& > .btn, .btn-action {
+			font-size: $card-action-button-font-size;
+			padding: $card-action-button-padding;
+			
+			.btn-action-label {
+				display: inline;
+				@include media-breakpoint-down(lg) {
+					display: none !important;
+				}
+			}
+		}
+	}
+
+	// Add contrast to light buttons when displayed on card background
+	.btn-light {
+		background-color: $body-bg;
+	}
+}	

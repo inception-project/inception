@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
@@ -28,6 +32,8 @@ public class GuidelinesActionBarItem
     private static final long serialVersionUID = 4139817495914347777L;
 
     private GuidelinesDialog guidelinesDialog;
+    
+    private @SpringBean ProjectService projectService;
 
     public GuidelinesActionBarItem(String aId, AnnotationPageBase aPage)
     {
@@ -35,5 +41,8 @@ public class GuidelinesActionBarItem
 
         add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", aPage.getModel()));
         add(new LambdaAjaxLink("showGuidelinesDialog", guidelinesDialog::show));
+        
+        // Hide the guidelines button if there are no guidelines
+        add(visibleWhen(() -> projectService.hasGuidelines(aPage.getModelObject().getProject())));
     }
 }

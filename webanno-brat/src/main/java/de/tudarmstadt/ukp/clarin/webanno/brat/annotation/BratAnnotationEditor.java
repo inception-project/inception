@@ -398,8 +398,7 @@ public class BratAnnotationEditor
     {
         // This is the span the user has marked in the browser in order to create a new slot-filler
         // annotation OR the span of an existing annotation which the user has selected.
-        Offsets optUserSelectedSpan = getOffsetsFromRequest(request, aCas,
-                aSelectedAnnotation);
+        Offsets optUserSelectedSpan = getOffsetsFromRequest(request, aCas, aSelectedAnnotation);
         
         Offsets userSelectedSpan = optUserSelectedSpan;
         AnnotatorState state = getModelObject();

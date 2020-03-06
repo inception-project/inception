@@ -319,7 +319,13 @@ var VisualizerUI = (function($, window, undefined) {
 /* slight "tooltip" delay to allow highlights to be seen
            before the popup obstructs them. */
                     displayCommentTimer = setTimeout(function() {
+// BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+// - Show/hide comments immediately instead of using an animation to avoid costly reflows
+/*
                         commentPopup.stop(true, true).fadeIn(0);
+*/
+                        commentPopup.show();
+// END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
                         commentDisplayed = true;
                     }, immediately ? 0 : 500);
                 };
@@ -526,9 +532,16 @@ var VisualizerUI = (function($, window, undefined) {
             var hideComment = function() {
                     clearTimeout(displayCommentTimer);
                     if (commentDisplayed) {
+// BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+// - Show/hide comments immediately instead of using an animation to avoid costly reflows
+/*
                         commentPopup.stop(true, true).fadeOut(0, function() {
                             commentDisplayed = false;
                         });
+*/
+                        commentPopup.hide();
+                        commentDisplayed = false;
+// END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
                     }
                 };
 

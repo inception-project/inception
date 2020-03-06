@@ -85,7 +85,7 @@ public class ConstraintsExporter
                 ConstraintSet constraintSet = new ConstraintSet();
                 constraintSet.setProject(aProject);
                 constraintSet.setName(fileName);
-                constraintsService.createConstraintSet(constraintSet);
+                constraintsService.createOrUpdateConstraintSet(constraintSet);
                 constraintsService.writeConstraintSet(constraintSet, aZip.getInputStream(entry));
                 log.info("Imported constraint [" + fileName + "] for project [" + aProject.getName()
                         + "] with id [" + aProject.getId() + "]");

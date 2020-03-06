@@ -21,35 +21,33 @@
   <wicket:panel>
     <div class="flex-content flex-h-container flex-gutter">
       <div class="flex-content flex-v-container flex-gutter">
-        <form wicket:id="otherLayerDetailForm" class="flex-content panel panel-default panel-flex">
-          <div class="panel-heading">
-            <h3 class="panel-title"><wicket:message key="useOtherLayersAsTrainingFeatures"/></h3>
+        <form wicket:id="otherLayerDetailForm" class="flex-content card">
+          <div class="card-header">
+            <wicket:message key="useOtherLayersAsTrainingFeatures"/>
           </div>
-          <div class="panel-body form-horizontal">
-            <div class="col-sm-12">
-              <div class="form-group" wicket:enclosure="features">
-                <label wicket:for="features" class="col-sm-2 control-label">
-                  <wicket:label key="features"/>
-                </label>
-                <div class="col-sm-10">
-                  <select wicket:id="features" class="form-control" data-container="body"></select>
-                </div>
+          <div class="card-body">
+            <div class="form-group form-row" wicket:enclosure="features">
+              <label wicket:for="features" class="col-sm-2 col-form-label">
+                <wicket:label key="features"/>
+              </label>
+              <div class="col-sm-10">
+                <select wicket:id="features" class="form-control" data-container="body"></select>
               </div>
+            </div>
 
-              <div class="form-group" wicket:enclosure="selectedFeatures">
-                <label wicket:for="selectedFeatures" class="col-sm-2 control-label">
-                  <wicket:label key="selectedFeatures"/>
-                </label>
-                <div class="col-sm-10">
-                  <select wicket:id="selectedFeatures" class="form-control"></select>
-                </div>
+            <div class="form-group form-row" wicket:enclosure="selectedFeatures">
+              <label wicket:for="selectedFeatures" class="col-sm-2 col-form-label">
+                <wicket:label key="selectedFeatures"/>
+              </label>
+              <div class="col-sm-10">
+                <select wicket:id="selectedFeatures" class="form-control"></select>
               </div>
             </div>
           </div>
         </form>
       </div>
       
-      <div wicket:id="otherLayerTarinDocumentsPanel" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter"></div>
+      <div wicket:id="otherLayerTarinDocumentsPanel" class="flex-content flex-v-container flex-gutter"></div>
       
     </div>
   </wicket:panel>

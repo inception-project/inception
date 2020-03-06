@@ -18,10 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
-import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +28,6 @@ import java.util.Optional;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
 import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
@@ -97,7 +93,6 @@ public class ProjectPage
     private WebMarkupContainer tabContainer;
     private AjaxTabbedPanel<ITab> tabPanel;
     private ProjectSelectionPanel projects;
-    private ProjectImportPanel importProjectPanel;
 
     private IModel<Project> selectedProject;
     private ChallengeResponseDialog deleteProjectDialog;
@@ -219,11 +214,6 @@ public class ProjectPage
                 target.addChildren(getPage(), IFeedback.class);
             }
         });
-        
-        importProjectPanel = new ProjectImportPanel("importPanel", selectedProject);
-        sidebar.add(importProjectPanel);
-        authorize(importProjectPanel, Component.RENDER,
-                String.join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
     }
 
     private List<ITab> makeTabs()

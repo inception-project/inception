@@ -29,16 +29,14 @@
 </head>
 <body>
   <wicket:extend>
-    <div>
-      <ul wicket:id="menu" class="nav nav-pills nav-stacked">
-        <li role="presentation">
-          <a wicket:id="menulink">
-            <img wicket:id="icon"></img>
-            <wicket:container wicket:id="label"/>
-          </a>
-        </li>
-      </ul>
-    </div>
+    <ul class="nav flex-column">
+      <li wicket:id="menu">
+        <a wicket:id="menulink" class="nav-link">
+          <img wicket:id="icon"></img>
+          <wicket:container wicket:id="label"/>
+        </a>
+      </li>
+    </ul>
   </wicket:extend>
 </body>
 </html>

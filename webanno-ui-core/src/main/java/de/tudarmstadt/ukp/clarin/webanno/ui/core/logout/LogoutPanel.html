@@ -69,15 +69,27 @@
   </wicket:head>
   <body>
     <wicket:panel>
-      <p class="navbar-text navbar-right" style="margin-right: 1px;">
-        <i class="fas fa-sign-out-alt"></i>
-        <a class="navbar-link" wicket:id="logout">Log out</a>
-        <span wicket:id="logoutTimer"> (automatically in <span id="timer"></span>&thinsp;min)</span>
-      </p>
-      <p class="navbar-text navbar-right">
+    
+      <div class="nav-item">
+        <a class="nav-link" wicket:id="profile">
         <i class="fas fa-user" aria-hidden="true"></i>
-        <a class="navbar-link" wicket:id="profile"><wicket:container wicket:id="username"/></a>
-      </p>
+          <span class="nav-link active p-0 d-none d-md-inline">
+            <wicket:container wicket:id="username"/>
+          </span>
+        </a>
+      </div>
+      
+      <div class="nav-item">
+        <a class="nav-link" wicket:id="logout">
+          <i class="fas fa-sign-out-alt"></i>
+          <span class="nav-link active p-0 d-none d-md-inline">
+            Log out
+          </span>
+        </a>
+      </div>
+      <div class="navbar-text d-none d-lg-inline" wicket:id="logoutTimer">
+        <i class="far fa-clock"></i> <span id="timer"/>&thinsp;min
+      </div>
     </wicket:panel>
   </body>
 </html>

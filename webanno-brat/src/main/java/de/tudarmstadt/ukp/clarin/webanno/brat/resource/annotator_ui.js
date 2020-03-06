@@ -197,7 +197,8 @@ var AnnotatorUI = (function($, window, undefined) {
       var clickTimer = null;
       var CLICK_DELAY = 300;
 
-      // Distinguish between double clicks and single clicks  
+      // Distinguish between double clicks and single clicks . This is relevant when clicking on 
+      // annotations. For clicking on text nodes, this is not really relevant.
       var onClick = function(evt){
         clickCount++;
 
@@ -207,7 +208,7 @@ var AnnotatorUI = (function($, window, undefined) {
             customJSAction : editAnnotation;
         
         if (clickCount === 1) {
-          timer = setTimeout(function() {
+          clickTimer = setTimeout(function() {
             try {
               singleClickAction.call(self, evt); // perform single-click action
             }
@@ -216,7 +217,7 @@ var AnnotatorUI = (function($, window, undefined) {
             }
           }, CLICK_DELAY);
         } else {
-          clearTimeout(timer);                   // prevent single-click action
+          clearTimeout(clickTimer);              // prevent single-click action
           try {
             doubleClickAction.call(self, evt);   // perform double-click action
           }
@@ -403,6 +404,9 @@ var AnnotatorUI = (function($, window, undefined) {
       };
 
       var onMouseDown = function(evt) {
+// BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+// - Instead of calling startArcDrag() immediately, we defer this to onMouseMove
+/*
         dragStartedAt = evt; // XXX do we really need the whole evt?
         if (!that.user || arcDragOrigin) return;
         var target = $(evt.target);
@@ -413,19 +417,47 @@ var AnnotatorUI = (function($, window, undefined) {
           startArcDrag(id);
           return false;
         }
-// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-        // If user starts selecting text, suppress all pointer events on annotations to
-        // avoid the selection jumping around. During selection, we don't need the annotations
-        // to react on mouse events anyway.
-        if (target.attr('data-chunk-id')) {
-          $(svgElement).children('.row, .sentnum').each(function(index, row) {
-            $(row).css('pointer-events', 'none');
-          });
+*/
+        if (!that.user || arcDragOrigin) return;
+        var target = $(evt.target);
+        // is it arc drag start?
+        if (target.attr('data-span-id')) {
+          dragStartedAt = evt; // XXX do we really need the whole evt?
+          return false;
         }
-// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+// END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
       };
 
       var onMouseMove = function(evt) {
+// BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+        if (!arcDragOrigin && dragStartedAt) {
+          // When the user has pressed the mouse button, we monitor the mouse cursor. If the cursor
+          // moves more than a certain distance, we start the arc-drag operation. Starting this
+          // operation is expensive because figuring out where the arc is to be drawn is requires
+          // fetching bounding boxes - and this triggers a blocking/expensive reflow operation in
+          // the browser.
+          var deltaX = Math.abs(dragStartedAt.pageX - evt.pageX);
+          var deltaY = Math.abs(dragStartedAt.pageY - evt.pageY);
+          if (deltaX > 5 || deltaY > 5) {
+            arcOptions = null;
+            var target = $(dragStartedAt.target);
+            var id = target.attr('data-span-id');
+            startArcDrag(id);
+            
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+            // If user starts selecting text, suppress all pointer events on annotations to
+            // avoid the selection jumping around. During selection, we don't need the annotations
+            // to react on mouse events anyway.
+            if (target.attr('data-chunk-id')) {
+              $(svgElement).children('.row, .sentnum').each(function(index, row) {
+                $(row).css('pointer-events', 'none');
+              });
+            }
+// END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+          }
+        }
+// END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+        
         if (arcDragOrigin) {
           if (arcDragJustStarted) {
             // show the possible targets
@@ -1710,6 +1742,10 @@ var AnnotatorUI = (function($, window, undefined) {
 // WEBANNO EXTENSION END
 
       var stopArcDrag = function(target) {
+// BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+        // Clear the dragStartAt saved event
+        dragStartedAt = null;
+// END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
         if (arcDragOrigin) {
           if (!target) {
             target = $('.badTarget');
@@ -1879,9 +1915,8 @@ var AnnotatorUI = (function($, window, undefined) {
             focusOffset = sel.getRangeAt(sel.rangeCount - 1).endOffset;
           }
           
-          // If neither approach worked, give up.
+          // If neither approach worked, give up - the user didn't click on selectable text.
           if (!anchorNode[0] || !focusNode[0]) {
-            console.error("Unable to locate start/end chunks");
             clearSelection();
             stopArcDrag(target);
             return;

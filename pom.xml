@@ -62,15 +62,18 @@
     <mockito.version>2.28.2</mockito.version>
     <assertj.version>3.14.0</assertj.version>
     <spring.version>5.2.4.RELEASE</spring.version>
-    <spring.boot.version>2.2.2.RELEASE</spring.boot.version>
-    <spring.security.version>5.2.1.RELEASE</spring.security.version>
+    <spring.boot.version>2.2.4.RELEASE</spring.boot.version>
+    <spring.security.version>5.2.2.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
     <wicketstuff.version>8.6.0</wicketstuff.version>
     <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>2.0.11</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>2.0.7</wicket-jquery-selectors.version>
-    <wicket-webjars.version>2.0.16</wicket-webjars.version>    
-    <wicket-spring-boot.version>2.1.8</wicket-spring-boot.version>
+    <wicket-bootstrap.version>3.0.0-M13</wicket-bootstrap.version>
+    <!-- 2.x is for Wicket 8; 3.x is for Wicket 9 -->
+    <wicket-jquery-selectors.version>2.0.8</wicket-jquery-selectors.version>
+    <!-- 2.x is for Wicket 8; 3.x is for Wicket 9 -->
+    <wicket-webjars.version>2.0.17</wicket-webjars.version>    
+    <wicket-spring-boot.version>2.1.9</wicket-spring-boot.version>
+    <bootstrap.version>4.4.1-1</bootstrap.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <uimafit.version>3.0.0</uimafit.version>
@@ -516,7 +519,7 @@
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
-        <artifactId>wicket-bootstrap-less</artifactId>
+        <artifactId>wicket-bootstrap-sass</artifactId>
         <version>${wicket-bootstrap.version}</version>
         <exclusions>
           <exclusion>
@@ -541,9 +544,19 @@
         <version>5.11.2</version>
       </dependency>
       <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>bootstrap</artifactId>
+        <version>${bootstrap.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.github.sommeri</groupId>
         <artifactId>less4j</artifactId>
         <version>1.17.2</version>
+      </dependency>
+      <dependency>
+        <groupId>io.bit3</groupId>
+        <artifactId>jsass</artifactId>
+        <version>5.10.3</version>
       </dependency>
       <dependency>
         <groupId>com.github.rjeschke</groupId>
@@ -1137,6 +1150,17 @@
             <dependency>javax.activation:javax.activation-api</dependency>
           </ignoredDependencies>
         </configuration>
+        <dependencies>
+          <dependency>
+            <!--
+              - Required to use the dependency plugin on newer Java versions.
+              - See: https://issues.apache.org/jira/browse/MDEP-613 
+              -->
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-dependency-analyzer</artifactId>
+            <version>1.11.1</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

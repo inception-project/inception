@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -59,14 +60,18 @@ public abstract class AnnotationEditorBase
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
-    private AnnotationActionHandler actionHandler;
-    private CasProvider casProvider;
+    private final AnnotationActionHandler actionHandler;
+    private final CasProvider casProvider;
     private boolean enableHighlight = true;
     
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(aId, aModel);
+        
+        Validate.notNull(aActionHandler, "Annotation action handle must be provided");
+        Validate.notNull(aCasProvider, "CAS provider must be provided");
+        
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
         

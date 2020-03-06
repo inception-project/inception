@@ -100,11 +100,11 @@
          or when selecting a sentence).
        -->
       <div wicket:id="sentenceListContainer" class="flex-sidebar flex-v-container flex-gutter">
-        <div class="flex-content panel panel-default panel-flex">
-          <div class="panel-heading">
-            <h3 class="panel-title">Sentences</h3>
+        <div class="flex-content card">
+          <div class="card-header">
+            Sentences
           </div>
-          <div class="scrolling panel-body">
+          <div class="scrolling card-body">
             <div wicket:id="sentencesListView" style="border-collapse: collapse;">
               <span wicket:id="sentencesList" class="curation-sentence-number">
                 <a wicket:id="sentenceNumber"></a>
@@ -116,44 +116,40 @@
 
       <div wicket:id="centerArea" class="flex-content flex-v-container">
         <div class="flex-content flex-v-container flex-gutter">
-          <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter" style="flex: 0.75;">
-            <div class="flex-content panel panel-primary panel-flex">
-              <div class="panel-heading">
-                <h3 class="panel-title">
-                  <span wicket:id="documentNamePanel"/> 
-                  <span wicket:id="numberOfPages" style="float: right;"/>
-                </h3>
-              </div>
-              <div class="panel-body flex-v-container" style="padding: 0px;">
-                <nav wicket:id="actionBar" class="action-bar">
-                  <span wicket:id="documentNavigator" />
-                  <span wicket:id="pageNavigator"/>
-                  <span wicket:id="toggleScriptDirection"/>
-                  <span wicket:id="guidelinesDialog" />
-                  <span wicket:id="workflowActions" />
-                  <span wicket:id="preferencesDialog" />
-                </nav>
-                <div wicket:id="mergeView" class="text-center flex-content flex-v-container"></div>
-              </div>
+          <div class="flex-content card">
+            <div class="card-header border-bottom-0">
+              <span wicket:id="documentNamePanel"/> 
+              <span wicket:id="numberOfPages" class="small text-muted float-right"/>
             </div>
-    
-            <div class="panel panel-default" wicket:enclosure="crossSentAnnoView">
-              <div class="panel-heading">
-                <h3 class="panel-title">Invisible annotations on other pages</h3>
-              </div>
-              <div class="panel-body">
-                <span wicket:id="crossSentAnnoView">
-                  <span wicket:id="crossSentAnnoList">
-                    <span wicket:id="crossAnnoSent"></span>
-                  </span>
+            <div class="card-body flex-v-container" style="padding: 0px;">
+              <nav wicket:id="actionBar" class="action-bar">
+                <span wicket:id="documentNavigator" />
+                <span wicket:id="pageNavigator"/>
+                <span wicket:id="toggleScriptDirection"/>
+                <span wicket:id="guidelinesDialog" />
+                <span wicket:id="workflowActions" />
+                <span wicket:id="preferencesDialog" />
+              </nav>
+              <div wicket:id="mergeView" class="text-center flex-content flex-v-container"></div>
+            </div>
+          </div>
+
+          <div class="card small" wicket:enclosure="crossSentAnnoView">
+            <div class="card-header">
+              Invisible annotations on other pages
+            </div>
+            <div class="card-body">
+              <span wicket:id="crossSentAnnoView">
+                <span wicket:id="crossSentAnnoList">
+                  <span wicket:id="crossAnnoSent"></span>
                 </span>
-              </div>
+              </span>
             </div>
           </div>
           
           <div wicket:id="suggestionViewPanel" class="scrolling flex-content">
             <div wicket:id="contextMenu" style="width: 250px;"></div>
-            <div class="sentence-list-view" wicket:id="sentenceListView">
+            <div class="sentence-list-view pb-3" wicket:id="sentenceListView">
               <div wicket:id="sentence"></div>
             </div>
           </div>

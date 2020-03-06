@@ -125,7 +125,10 @@ public class SpanAdapter
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
-        
+
+        log.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
+                newAnnotation.getEnd(), newAnnotation.getCoveredText());
+
         // If if the layer attaches to a feature, then set the attach-feature to the newly
         // created annotation.
         if (getAttachFeatureName() != null) {

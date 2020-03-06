@@ -17,72 +17,58 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.TextArea;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.ValidationModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class RelationLayerTraitsEditor
-    extends Panel
+    extends LayerTraitsEditor_ImplBase<RelationLayerTraits, RelationLayerSupport>
 {
     private static final long serialVersionUID = -9082045435380184514L;
 
-    private static final String MID_FORM = "form";
-
-    private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean LayerSupportRegistry layerSupportRegistry;
-
-    private String layerSupportId;
-    private IModel<AnnotationLayer> feature;
-    private CompoundPropertyModel<RelationLayerTraits> traits;
-    private ColoringRulesConfigurationPanel coloringRules;
-
-    public RelationLayerTraitsEditor(String aId, RelationLayerSupport aFS,
+    public RelationLayerTraitsEditor(String aId, RelationLayerSupport aLayerSupport,
             IModel<AnnotationLayer> aLayer)
     {
-        super(aId, aLayer);
-
-        layerSupportId = aFS.getId();
-        feature = aLayer;
-
-        traits = CompoundPropertyModel.of(getLayerSupport().readTraits(feature.getObject()));
-
-        Form<RelationLayerTraits> form = new Form<RelationLayerTraits>(MID_FORM, traits)
-        {
-            private static final long serialVersionUID = -3109239605783291123L;
-
-            @Override
-            protected void onSubmit()
-            {
-                super.onSubmit();
-
-                getLayerSupport().writeTraits(feature.getObject(), traits.getObject());
-            }
-        };
-
-        coloringRules = newColoringRulesConfigurationPanel(aLayer);
-        form.add(coloringRules);
-
-        form.setOutputMarkupPlaceholderTag(true);
-        add(form);
+        super(aId, aLayerSupport, aLayer);
     }
 
-    private ColoringRulesConfigurationPanel newColoringRulesConfigurationPanel(
-            IModel<AnnotationLayer> aFeature)
+    @Override
+    protected void initializeForm(Form<RelationLayerTraits> aForm)
     {
-        ColoringRulesConfigurationPanel panel = new ColoringRulesConfigurationPanel("coloringRules",
-                aFeature, traits.bind("coloringRules.rules"));
-        panel.setOutputMarkupId(true);
-        return panel;
-    }
+        aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
+        
+        OverlapModeSelect overlapMode = new OverlapModeSelect("overlapMode", getLayerModel());
+        // Not configurable for layers that attach to tokens (currently that is the only layer on
+        // which we use the attach feature)
+        overlapMode.add(enabledWhen(() -> getLayerModelObject().getAttachFeature() == null));
+        aForm.add(overlapMode);
+        
+        aForm.add(new ColoringRulesConfigurationPanel("coloringRules",
+                getLayerModel(), getTraitsModel().bind("coloringRules.rules")));
+        
+        CheckBox crossSentence = new CheckBox("crossSentence");
+        crossSentence.setOutputMarkupPlaceholderTag(true);
+        crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
+        // Not configurable for layers that attach to tokens (currently that is the only layer on
+        // which we use the attach feature)
+        crossSentence.add(enabledWhen(() -> getLayerModelObject().getAttachFeature() == null));
+        aForm.add(crossSentence);
 
-    private RelationLayerSupport getLayerSupport()
-    {
-        return (RelationLayerSupport) layerSupportRegistry.getLayerSupport(layerSupportId);
+        TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
+        onClickJavascriptAction.setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
+        onClickJavascriptAction.add(new AttributeModifier("placeholder",
+                "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
+                        + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));
+        aForm.add(onClickJavascriptAction);
     }
 }

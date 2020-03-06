@@ -17,26 +17,28 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<head>
-<wicket:head>
-  <script type="text/javascript">
-			Wicket.Window.unloadConfirmation = false;
-		</script>
-</wicket:head>
-</head>
-<body>
-  <wicket:panel>
-    <table style="width: 100%;">
-      <tbody>
-        <tr wicket:id="guidelineRepeater">
-          <td><span wicket:id="guidelineName"> : </span></td>
-          <td><a wicket:id="guideine"> Open Guideline </a></td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="buttons">
-      <input type="button" wicket:id="cancel" wicket:message="value:cancel" />
+<wicket:panel>
+  <div class="w_flex_container">
+    <div class="w_flex_content">
+      <div class="scrolling fluid-container">
+        <ul class="list-group">
+          <li wicket:id="guidelineRepeater" class="list-group-item">
+            <i class="fas fa-book"></i>
+            <span wicket:id="guidelineName"></span>
+            <button wicket:id="guideine" class="float-right btn btn-sm btn-primary">
+              <i class="fas fa-book-open"></i>
+              Open Guideline
+            </button>
+          </li>
+        </ul>
+      </div>
     </div>
-  </wicket:panel>
-</body>
+    <div class="w_flex_footer card-footer text-right">
+      <button wicket:id="cancel" class="btn btn-secondary">
+        <i class="fas fa-times"></i>&nbsp;
+        <wicket:message key="close"/>
+      </button>
+    </div>
+  </div>
+</wicket:panel>
 </html>

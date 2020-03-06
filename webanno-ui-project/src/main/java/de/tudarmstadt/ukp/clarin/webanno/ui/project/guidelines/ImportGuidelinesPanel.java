@@ -32,11 +32,11 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -51,7 +51,7 @@ public class ImportGuidelinesPanel
     private @SpringBean ProjectService projectRepository;
     private @SpringBean ImportExportService importExportService;
 
-    private FileUploadField fileUpload;
+    private BootstrapFileInputField fileUpload;
 
     private IModel<Project> projectModel;
 
@@ -64,7 +64,11 @@ public class ImportGuidelinesPanel
         Form<Void> form = new Form<>("form");
         add(form);
 
-        form.add(fileUpload = new FileUploadField("guidelines"));
+        form.add(fileUpload = new BootstrapFileInputField("guidelines"));
+        fileUpload.getConfig().showPreview(false);
+        fileUpload.getConfig().showUpload(false);
+        fileUpload.getConfig().showRemove(false);
+        fileUpload.setRequired(true);
 
         form.add(new LambdaAjaxButton<>("import", this::actionImport));
     }

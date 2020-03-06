@@ -40,18 +40,18 @@ html, body {
 
 .page-footer {
   flex: none;
-  min-height: @page-footer-height; 
-  height: @page-footer-height;
+  min-height: $page-footer-height; 
+  height: $page-footer-height;
   overflow: hidden;
   margin-top: 0px; 
   margin-bottom: 0px; 
   text-align: center; 
-  font-size: @font-size-base; 
-  padding-left: ceil((@grid-gutter-width / 2));
-  padding-right: floor((@grid-gutter-width / 2));
-  color: @navbar-default-color;
-  background-color: @navbar-default-bg;
-  border-color: @navbar-default-border;
+  font-size: $font-size-sm; 
+  padding-left: ceil(($grid-gutter-width / 2));
+  padding-right: floor(($grid-gutter-width / 2));
+  color: $card-color;
+  background-color: $card-bg;
+  border-color: $card-border-color;
   border-top: 1px solid;
   
   a, a:hover, a:focus {
@@ -61,10 +61,10 @@ html, body {
 
 .feedback-panel {
   position: fixed;
-  bottom: @page-footer-height;
+  bottom: $page-footer-height;
   z-index: 9999;
   min-width: 30%;
-  max-height: ~"calc(100vh - " @page-footer-height ~" - " @page-header-height ~")";
+  max-height: calc(100vh - $page-footer-height - $page-header-height);
   overflow: auto;
  
   ul.feedbackPanel {
@@ -78,45 +78,6 @@ html, body {
   }  
 }
 
-.navbar {
-  margin-bottom: 0px;
-  position: relative;
-  border: none;
-  border-bottom: 1px solid;
-  
-  .navbar-extra-link img {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    margin-left: 15px;
-      height: 40px;
-  }
-  
-  .navbar-header .navbar-center {
-    position: absolute;
-    left: calc(50% - 400px / 2);
-    width: 400px;
-    text-align: center;
-  } 
-  
-  .navbar-header .navbar-brand {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    line-height: 40px;
-    font-size: 25px;
-    line-height: unset;
-  } 
-}
-
-.nav {
-  .logo {
-    height: 40px;
-  }
-
-  .pageicon {
-    height: 40px;
-  }
-}
-
 .nav-pills img {
   padding-right: 15px;
 }
@@ -126,16 +87,11 @@ html, body {
   margin-left: 0px;
 }
 
-.form-group .k-widget,
-.form-group .k-textbox {
-  width: 100%;
-}
-
 /* Allow text in non-editable span values in forms to break. Maintain minimal height. */
 span.form-control {
   word-wrap: break-word;
   height: auto;
-  min-height: @input-height-base;
+  min-height: $input-height;
 }
 
 /* Fix header font in Wicket modal windows */
@@ -146,28 +102,6 @@ span.form-control {
 .w_content_container .fluid-container {
   margin-left: 15px;
   margin-right: 15px;
-}
-
-.panel { 
-  margin-bottom: ceil(@grid-gutter-width / 2);
-}
-
-.panel-small {
-  margin-bottom: ceil(@grid-gutter-width / 4);
-  
-  .panel-title {
-    font-size: @font-size-small;
-  }
-  
-  .panel-heading {
-    padding-top: 1px;
-    padding-bottom: 1px;
-  }  
-}
-
-.form-horizontal hr {
-  margin-top: 5px;
-  margin-bottom: 5px;
 }
 
 .vert-aligned {
@@ -181,22 +115,6 @@ span.form-control {
 .w_flex .w_flex_content { flex: 1; overflow: auto; padding-top: 15px; padding-bottom: 15px; }
 .w_flex .w_flex_footer { flex: none; } 
 
-/* Full-page master-detail view */
-.master-detail-container { display: flex; max-height: 100%; height: 100%; width: 100%; }
-.master-detail-overview { flex-basis: 20%; flex-shrink: 0; flex-grow: 0; height: 100%; }
-.master-detail-overview > * { display: none }
-.master-detail-editor { flex-grow: 1; padding: 15px; }
-
-/* Flexed Bootstrap panel */
-.panel-flex {
-  display: flex; 
-  flex-direction: column;
-  
-  .panel-heading { flex: none; }
-  .panel-body { flex: 1; }
-  .panel-footer { flex: none; }
-  .panel-footer .form-group { margin-bottom: 0px; }
-}
 
 .min-content-height {
   min-height: -moz-min-content;
@@ -211,10 +129,10 @@ span.form-control {
 
 /* Flex layout helpers as CSS classes - order matters! */
 .flex-h-container { display: flex; flex-direction: row; }
-.flex-h-container.flex-gutter > * { margin-left: ceil(@grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > * { margin-left: ceil($grid-gutter-width / 2) }
 .flex-h-container.flex-no-gutter > .panel { margin-bottom: 0px; }
 .flex-h-container.flex-gutter > .panel { margin-bottom: 0px; }
-.flex-h-container.flex-gutter > *:last-child { margin-right: floor(@grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > *:last-child { margin-right: floor($grid-gutter-width / 2) }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:first-child { margin-left: 0px; }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:last-child { margin-right: 0px; }
 .flex-h-container.flex-no-initial-gutter > *:first-child { margin-left: 0px; }
@@ -224,8 +142,8 @@ span.form-control {
 .flex-v-container.flex-no-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
 .flex-v-container.flex-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
 .flex-v-container { display: flex; flex-direction: column; }
-.flex-v-container.flex-gutter > * { margin-top: (@grid-gutter-width / 2) }
-.flex-v-container.flex-gutter > *:last-child { margin-bottom: floor(@grid-gutter-width / 2) }
+.flex-v-container.flex-gutter > * { margin-top: ($grid-gutter-width / 2) }
+.flex-v-container.flex-gutter > *:last-child { margin-bottom: floor($grid-gutter-width / 2) }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:first-child { margin-top: 0px; }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:last-child { margin-bottom: 0px; }
 .flex-v-container.flex-only-internal-gutter > *:first-child { margin-top: 0px; }
@@ -236,7 +154,7 @@ span.form-control {
 
 .flex-static-item { flex: none; }
 .flex-growing-item { flex: 1; }
-.flex-sidebar { flex-basis: 20%; flex-grow: 0; flex-shrink: 0; }
+.flex-sidebar { flex-basis: 20%; flex-grow: 0; flex-shrink: 0; min-width: 0px; }
 .flex-content { flex: 1; }
 .flex-content .scrolling { flex-basis: 0; }
 
@@ -279,17 +197,6 @@ span.form-control {
   }
 }
 
-/* remove top border in tabbed panels */
-ul.nav.nav-tabs + div.panel.panel-default {
-  border-top:none;
-  border-top-left-radius:0;
-  border-top-right-radius:0;
-}
-
-.nav.nav-tabs > li > a {
-  padding: 2px 15px; 
-}
-
 /* Fixes to brat CSS */
 #commentpopup {
   text-align: initial;
@@ -301,69 +208,24 @@ a.disabled {
   cursor: default;
 }
 
-.bootstrap-select.bs-container .dropdown-menu {
-  z-index: 21060 !important;
-}
-
-.bs3.bootstrap-select .dropdown-toggle .filter-option, .k-autocomplete .k-input {
-	padding-top: 0px;
-	padding-bottom: 0px;
-}
-
-.action-bar {
-	padding: 5px;
-	background-color: grey;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-
-	> * {
-		padding-left: @grid-gutter-width / 4;
-		padding-right: @grid-gutter-width / 4;
-	}
-		
-	.action-bar-group {
-		padding: 2px;
-		background-color: lightgrey;
-    border-radius: 5px;
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		flex: 0;
-	}
-	
-	.action-bar-group-title {
-		padding-left: @grid-gutter-width / 2;
-		padding-right: @grid-gutter-width / 2;
-	}
-}
 
 .no-data-notice {
+	@extend .text-muted;
+	background-color: $card-cap-bg;
   display: flex;
-  color: grey;
-  background-color: @panel-footer-bg; 
-  font-style: italic; 
   justify-content: center; 
   align-items: center;
+	min-height: 5rem;
+	text-align: center;
 }
 
-.panel-body {
+.card-body {
 	.no-data-notice {
-		margin: -5px;
+		margin: -$card-spacer-x;
+		padding: $card-spacer-x;
 	}
 }
 
-.feature-editor-label {
-	.make-sm-column(3);
-}
-
-.feature-editor-label + .feature-editor-value {
-	.make-sm-column(9);
-}
-
-.feature-editor-value {
-	.make-sm-column(12);
-}
 
 // Make the JQuery context menu fit in nicely with the rest of the theme instead of showing up in
 // bright orange
@@ -372,8 +234,8 @@ a.disabled {
 	
 	.ui-menu-item {
 		.ui-menu-item-wrapper.ui-state-active {
-			color: @component-active-color;
-			background-color: @component-active-bg;
+			color: $component-active-color;
+			background-color: $component-active-bg;
 			background-image: none;
 		}
 	}
@@ -389,29 +251,262 @@ a.disabled {
 	margin-top: -1px;
 }
 
-// Adjust the Kendo dropdowns (i.e. the combo box) to use less vertical space and be more in line
-// with the other Bootstrap inputs
-.k-dropdown-wrap {
-	.k-input {
-		padding: 0px !important;
-	}
+/* -------------------------------------------------------------------------------------------------
+ * Wicket Forms
+ */
+
+label.required {
+    color: red;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Page layout
+ */
+
+#spinner {
+  display: none;
+  position: fixed;
+  right:10px;
+  top: 55px;
+  z-index:9999;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Menu
+ */
+.locationbar {
+    text-align: left; 
+    /*color: maroon;*/
+    padding-left: 1em;
+    padding-right: 1em;
+    margin-top: 0.2em;
+}
+
+.actionbar {
+    text-align: center;
+    background-color: #DFDFDF;
+    vertical-align: middle;
+    border-bottom: 1px solid #BFBFBF;
+    padding-top: 2px;
+}
+
+.actionbar fieldset {
+    border-width:2px;
+    border-style:ridge;
+    border-color:#BFBFBF;
+    -moz-border-radius:5px;
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    margin:0px;
+    padding:2px;
+}
+
+.actionbar fieldset legend {
+    font-weight:bold;
+    font-size:90%;
+    -moz-border-radius:3px;
+    -webkit-border-radius:3px;
+    border-radius:3px;
+    background-color:#4D4D4D;
+    color:white;
+    padding-left:0.5em;
+    padding-right:0.5em;
+    margin-bottom: 0px;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Welcome page icon menu
+ */
+
+/* Use for a horizontal list of icons */
+ul.horizontal{
+    margin:0px;
+    padding:0px;
+}
+
+ul.horizontal li{
+    margin-left:0.5em;
+    margin-right:0.5em;
+    display:inline-block;
+    text-align:center;
+}
+
+a.menulink {
+    text-decoration: none;
+}
+
+a.menulink > span {
+  font-size: 120%;
+    text-decoration: none;
+    color: white;
+    display: table-cell;
+    vertical-align: middle;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Tables
+ */
+
+th{
+    padding:3px;
+}
+
+tr.odd{
+    background:#EEEEEE;
+}
+
+tr.even{
+    background:#DDDDDD;
+}
+
+tr.odd:hover{
+    background:#CCCCAA;
+}
+
+tr.even:hover{
+    background:#CCCCAA;
+}
+
+.headers,
+.headers a:link,
+.headers a:visited{
+    background-color:#B90F22;
+    color:white;
+    vertical-align:bottom;
+}
+
+tr.headers th.wicket_orderDown a{
+    padding-right:24px;
+    background-image:url(../images/descending.png);
+    background-position:right;
+    background-repeat:no-repeat;
+}
+
+tr.headers th.wicket_orderUp a{
+    padding-right:24px;
+    background-image:url(../images/ascending.png);
+    background-position:right;
+    background-repeat:no-repeat;
+}
+
+div.navigatorLabel{
+    float:left;
+}
+
+div.navigator{
+    text-align:right;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * JQuery UI overrides - Probably should roll own theme instead...
+ */
+.ui-widget {
+    font-size: 1.0em;
+}
+  
+.ui-widget-content {
+  background: #fff;
+  color: #000;
+}
+
+.ui-tooltip {
+  padding: 0px;
+    -webkit-box-shadow: 0 0 5px #4D4D4D;
+    box-shadow: 0 0 5px #4D4D4D;
+    border: 1px solid #4D4D4D;
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * DescriptionTooltipBehavior
+ */
+ 
+.ui-tooltip .tooltip-title {
+  text-align: center;
+    font-weight: bold;
+    color: #fff;
+    background-color: #B90F22;
+    padding: 4px;
+    margin-bottom: 4px;
+}
+
+.ui-tooltip .tooltip-content {
+    padding: 4px;
+}
+
+.ui-tooltip .tooltip-pre {
+  word-break: keep-all; /* webkit */
+  word-wrap: break-word;
+  white-space: pre;
+  white-space: -moz-pre-wrap; /* fennec */
+  white-space: pre-wrap;
+    white-space: pre\9; /* IE7+ */  
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Tab panel left
+ */
+div.left-tabpanel {
+  display: flex;
+}
+
+div.left-tabpanel div.tab-row {
+	flex: none;
+  width: 39px;
+	background-color: #f5f5f5;
+	border: 1px solid #ddd;  
 	
-	.k-select {
-		line-height: 2em !important;
-	}
+  display: flex;
+  flex-direction: column;
 }
 
-// Make sure that the Kendo dropdnwos (i.e. the combo box) fits nicely into Bootstrap input groups
-.input-group {
-	.k-dropdown-wrap {
-		border: 0px;
-	}
+div.left-tabpanel div.tab-row ul {
+  display: block;
+  padding: 0px;
+  margin: 0px;
 }
 
-// Make sure Kendo icons show in input groups where the input groups are rendered with a 
-// z-index of 2
-.input-group {
-	.k-icon {
-		z-index: 3;
-	}
+div.left-tabpanel .tab-panel {
+  flex: 1;
+  min-width: 0px;
+  display: flex;
+}
+
+div.left-tabpanel div.tab-row li {
+  width: 100%;
+  display: block;
+}
+
+div.left-tabpanel div.tab-row li img {
+    display: block;
+    padding: 3px;
+}
+
+div.left-tabpanel div.tab-row a:link,
+div.left-tabpanel div.tab-row a:visited {
+    display: block;
+    background:#f3f3f3;
+    padding: 0px;
+    margin: 0px;
+    text-decoration:none;
+    color:#666;
+}
+
+div.left-tabpanel div.tab-row li.selected a:link,
+div.left-tabpanel div.tab-row a:visited.active {
+    background:#fff;
+    color:#000;
+}
+
+div.left-tabpanel div.tab-row a:hover {
+    background:#fff;
+}
+
+/* Remove left border from panel so it attaches nicely to the sidebar controls */
+.left-tabpanel > .tab-panel > .flex-v-container > .panel,
+.left-tabpanel > .tab-panel > .flex-h-container > .panel {
+  border-top-left-radius: 0px;
+  border-bottom-left-radius:  0px;
+  border-left: none;
 }
