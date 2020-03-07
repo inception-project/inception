@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getAdapters;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
+import static java.lang.Double.NaN;
 import static java.util.Arrays.asList;
 
 import java.util.List;
@@ -57,10 +58,9 @@ public class KrippendorffAlphaAgreementMeasure
         AnnotationFeature feature = getFeature();
         KrippendorffAlphaAgreementTraits traits = getTraits();
         
-        List<DiffAdapter> adapters = getAdapters(annotationService, feature.getProject());
+        List<DiffAdapter> adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
 
-        CasDiff diff = doDiff(asList(feature.getLayer().getName()), adapters,
-                traits.getLinkCompareBehavior(), aCasMap);
+        CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
 
         CodingAgreementResult agreementResult = makeCodingStudy(diff,
                 feature.getLayer().getName(), feature.getName(), traits.isExcludeIncomplete(),
@@ -74,11 +74,11 @@ public class KrippendorffAlphaAgreementMeasure
                 agreementResult.setAgreement(agreement.calculateAgreement());
             }
             catch (InsufficientDataException e) {
-                agreementResult.setAgreement(Double.NaN);
+                agreementResult.setAgreement(NaN);
             }
         }
         else {
-            agreementResult.setAgreement(Double.NaN);
+            agreementResult.setAgreement(NaN);
         }
 
         return agreementResult;

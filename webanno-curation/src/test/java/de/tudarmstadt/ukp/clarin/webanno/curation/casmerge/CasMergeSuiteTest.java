@@ -84,8 +84,7 @@ public class CasMergeSuiteTest
         JCas curatorCas = createText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
-        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser)
-                .toResult();
+        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         result.print(System.out);
 
