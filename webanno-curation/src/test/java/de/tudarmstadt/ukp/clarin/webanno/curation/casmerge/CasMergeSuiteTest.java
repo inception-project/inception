@@ -86,7 +86,7 @@ public class CasMergeSuiteTest
 
         DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
 
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
