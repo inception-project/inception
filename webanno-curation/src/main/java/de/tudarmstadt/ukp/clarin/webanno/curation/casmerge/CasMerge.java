@@ -30,6 +30,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.shouldIgnoreFeatureOnMerge;
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -43,7 +45,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
@@ -213,7 +214,7 @@ public class CasMerge
                 .map(Position::getType)
                 .distinct()
                 .map(type -> schemaService.findLayer(aTargetDocument.getProject(), type))
-                .collect(Collectors.toMap(AnnotationLayer::getName, Function.identity()));
+                .collect(toMap(AnnotationLayer::getName, identity()));
 
         List<String> layerNames = new ArrayList<>(type2layer.keySet());
         

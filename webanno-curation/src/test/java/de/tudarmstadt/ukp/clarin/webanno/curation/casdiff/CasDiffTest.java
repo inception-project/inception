@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.loadW
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
@@ -70,16 +71,13 @@ public class CasDiffTest
     public void noDataTest()
         throws Exception
     {
-        List<String> entryTypes = new ArrayList<>();
-        
         List<DiffAdapter> diffAdapters = new ArrayList<>();
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser).toResult();
+        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(0, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -98,14 +96,11 @@ public class CasDiffTest
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(user1Cas));
 
-        List<String> entryTypes = asList(Token.class.getName());
-
         List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Token.class.getName()));
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser).toResult();
+        DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(0, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -141,15 +136,13 @@ public class CasDiffTest
         casByUser.put("user1", asList(user1Cas1, user1Cas2, user1Cas3, user1Cas4));
         casByUser.put("user2", asList(user2Cas1, user2Cas2, user2Cas3, user2Cas4));
 
-        List<String> entryTypes = asList(Lemma.class.getName());
-
         List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters,
+                LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(0, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -169,15 +162,12 @@ public class CasDiffTest
                 "casdiff/noDifferences/data.conll",
                 "casdiff/noDifferences/data.conll");
 
-        List<String> entryTypes = asList(POS.class.getName());
-        
-        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
+        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -198,15 +188,12 @@ public class CasDiffTest
                 "casdiff/noDifferences/data.conll",
                 "casdiff/noDifferences/data.conll");
 
-        List<String> entryTypes = asList(Dependency.class.getName());
-
         List<? extends DiffAdapter> diffAdapters = asList(DEPENDENCY_DIFF_ADAPTER);
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -227,16 +214,13 @@ public class CasDiffTest
                 "casdiff/noDifferences/data.conll",
                 "casdiff/noDifferences/data.conll");
 
-        List<String> entryTypes = asList(POS.class.getName(), Dependency.class.getName());
-        
         List<? extends DiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER,
                 DEPENDENCY_DIFF_ADAPTER);
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(52, result.size());
         assertEquals(26, result.size(POS.class.getName()));
@@ -259,15 +243,12 @@ public class CasDiffTest
                 "casdiff/singleSpanDifference/user1.conll",
                 "casdiff/singleSpanDifference/user2.conll");
 
-        List<String> entryTypes = asList(POS.class.getName());
-
         List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(1, result.size());
         assertEquals(1, result.getDifferingConfigurationSets().size());
@@ -288,14 +269,12 @@ public class CasDiffTest
                 "casdiff/someDifferences/user1.conll",
                 "casdiff/someDifferences/user2.conll");
 
-        List<String> entryTypes = asList(POS.class.getName());
-
         List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(4, result.getDifferingConfigurationSets().size());
@@ -316,15 +295,13 @@ public class CasDiffTest
                 "casdiff/singleSpanNoDifference/data.conll",
                 "casdiff/singleSpanNoDifference/data.conll");
 
-        List<String> entryTypes = asList(POS.class.getName());
-
         List<? extends DiffAdapter> diffAdapters = asList(new SpanDiffAdapter(POS.class.getName(),
                 "PosValue"));
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(1, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -345,15 +322,13 @@ public class CasDiffTest
                 "casdiff/relationDistance/user1.conll",
                 "casdiff/relationDistance/user2.conll");
 
-        List<String> entryTypes = asList(Dependency.class.getName());
-
         List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
                 Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(27, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -374,15 +349,13 @@ public class CasDiffTest
                 "casdiff/spanLabel/user1.conll",
                 "casdiff/spanLabel/user2.conll");
 
-        List<String> entryTypes = asList(POS.class.getName());
-
         List<? extends DiffAdapter> diffAdapters = asList(new SpanDiffAdapter(POS.class.getName(),
                 "PosValue"));
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(1, result.getDifferingConfigurationSets().size());
@@ -407,15 +380,13 @@ public class CasDiffTest
                 asList(loadWebAnnoTsv3("testsuite/" + testContext.getMethodName() + "/user2.tsv")
                         .getCas()));
 
-        List<String> entryTypes = asList(Dependency.class.getName());
-
         List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
                 Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));
 
-        CasDiff diff = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
 
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(26, result.size());
         assertEquals(1, result.getDifferingConfigurationSets().size());
@@ -495,17 +466,14 @@ public class CasDiffTest
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList("webanno.custom.Relation");
-
         List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
                 "webanno.custom.Relation", WebAnnoConst.FEAT_REL_TARGET,
                 WebAnnoConst.FEAT_REL_SOURCE, "value"));
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(1, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -538,17 +506,14 @@ public class CasDiffTest
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(HOST_TYPE);
-
         SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(4, result.size());
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -579,17 +544,14 @@ public class CasDiffTest
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(HOST_TYPE);
-
         SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_ROLE_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_ROLE_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(2, result.size());
         assertEquals(1, result.getDifferingConfigurationSets().size());
@@ -620,17 +582,14 @@ public class CasDiffTest
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(HOST_TYPE);
-
         SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
         DiffResult result = diff.toResult();
         
-        result.print(System.out);
+        // result.print(System.out);
         
         assertEquals(2, result.size());
         assertEquals(1, result.getDifferingConfigurationSets().size());
@@ -664,16 +623,13 @@ public class CasDiffTest
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(HOST_TYPE);
-
         SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser).toResult();
+        DiffResult diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
         
-        diff.print(System.out);
+        // diff.print(System.out);
         
         assertEquals(2, diff.size());
         assertEquals(1, diff.getDifferingConfigurationSets().size());
@@ -707,16 +663,13 @@ public class CasDiffTest
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(HOST_TYPE);
-
         SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser).toResult();
+        DiffResult diff = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
         
-        diff.print(System.out);
+        // diff.print(System.out);
         
         assertEquals(3, diff.size());
         assertEquals(1, diff.getDifferingConfigurationSets().size());

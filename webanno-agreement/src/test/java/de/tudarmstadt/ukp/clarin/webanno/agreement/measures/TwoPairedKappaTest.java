@@ -45,9 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
@@ -121,9 +118,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        CasDiff diff = CasDiff.doDiff(POS.class.getName(),
-                new SpanDiffAdapter(POS.class.getName(), "PosValue"),
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
+        CasDiff diff = doDiff(asList(POS_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, convert(userCases));
         DiffResult result = diff.toResult();
         AgreementResult agreement = getCohenKappaAgreement(diff, POS.class.getName(),
                 "PosValue", convert(userCases));
@@ -162,10 +157,8 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        CasDiff diff = CasDiff.doDiff(Dependency.class.getName(),
-                new RelationDiffAdapter(Dependency.class.getName(), "Dependent", "Governor",
-                        "DependencyType"),
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
+        CasDiff diff = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), LINK_TARGET_AS_LABEL,
+                convert(userCases));
         DiffResult result = diff.toResult();
         AgreementResult agreement = getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", convert(userCases));
@@ -196,9 +189,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        CasDiff diff = doDiff(POS.class.getName(),
-                new SpanDiffAdapter(POS.class.getName(), "PosValue"), LINK_TARGET_AS_LABEL,
-                convert(userCases));
+        CasDiff diff = doDiff(asList(POS_DIFF_ADAPTER), LINK_TARGET_AS_LABEL, convert(userCases));
         DiffResult result = diff.toResult();
         AgreementResult agreement = getCohenKappaAgreement(diff, POS.class.getName(),
                 "PosValue", convert(userCases));
@@ -229,10 +220,8 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        CasDiff diff = doDiff(
-                Dependency.class.getName(), new RelationDiffAdapter(Dependency.class.getName(),
-                        "Dependent", "Governor", "DependencyType"),
-                LINK_TARGET_AS_LABEL, convert(userCases));
+        CasDiff diff = doDiff(asList(DEPENDENCY_DIFF_ADAPTER), LINK_TARGET_AS_LABEL,
+                convert(userCases));
         DiffResult result = diff.toResult();
         CodingAgreementResult agreement = getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", convert(userCases));
@@ -266,9 +255,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
 
         // Check against new impl
-        CasDiff diff = CasDiff.doDiff(
-                asList(POS.class.getName(), Dependency.class.getName()), 
-                asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER), 
+        CasDiff diff = doDiff(asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER),
                 LINK_TARGET_AS_LABEL, convert(userCases));
         DiffResult result = diff.toResult();
         
