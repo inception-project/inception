@@ -41,8 +41,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -54,8 +56,10 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +69,10 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
@@ -83,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -99,6 +108,8 @@ public class ProjectServiceImpl
     private @Autowired UserDao userRepository;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired RepositoryProperties repositoryProperties;
+    private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
+    private List<ProjectInitializer> initializers;
 
     private boolean running = false;
 
@@ -1057,5 +1068,80 @@ public class ProjectServiceImpl
         }
 
         return user;
+    }
+
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<ProjectInitializer> inits = new ArrayList<>();
+
+        if (initializerProxy != null) {
+            inits.addAll(initializerProxy);
+            AnnotationAwareOrderComparator.sort(inits);
+        
+            Set<Class<? extends ProjectInitializer>> initializerClasses = new HashSet<>();
+            for (ProjectInitializer init : inits) {
+                if (initializerClasses.add(init.getClass())) {
+                    log.info("Found project initializer: {}",
+                            ClassUtils.getAbbreviatedName(init.getClass(), 20));
+                }
+                else {
+                    throw new IllegalStateException("There cannot be more than once instance "
+                            + "of each project initializer class! Duplicate instance of class: "
+                                    + init.getClass());
+                }
+            }
+        }
+        
+        initializers = Collections.unmodifiableList(inits);
+    }
+    
+    @Override
+    @Transactional
+    public void initializeProject(Project aProject)
+        throws IOException
+    {
+        Deque<ProjectInitializer> deque = new LinkedList<>(initializers);
+        Set<Class<? extends ProjectInitializer>> initsSeen = new HashSet<>();
+        Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
+
+        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
+
+        for (ProjectInitializer initializer : deque) {
+            allInits.add(initializer.getClass());
+        }
+        
+        while (!deque.isEmpty()) {
+            ProjectInitializer initializer = deque.pop();
+
+            if (!allInits.containsAll(initializer.getDependencies())) {
+                throw new IllegalStateException(
+                        "Missing dependencies of " + initializer + " initializer from " + deque);
+            }
+
+            if (initsDeferred.contains(initializer)) {
+                throw new IllegalStateException("Circular initializer dependencies in "
+                        + initsDeferred + " via " + initializer);
+            }
+            
+            if (initsSeen.containsAll(initializer.getDependencies())) {
+                log.debug("Applying project initializer: {}", initializer);
+                initializer.configure(aProject);
+                initsSeen.add(initializer.getClass());
+                initsDeferred.clear();
+            }
+            else {
+                log.debug(
+                        "Deferring project initializer as dependencies are not yet fulfilled: [{}]",
+                        initializer);
+                deque.add(initializer);
+                initsDeferred.add(initializer);
+            }
+        }
     }
 }

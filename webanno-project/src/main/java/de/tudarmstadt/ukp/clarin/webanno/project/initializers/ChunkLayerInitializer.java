@@ -15,11 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers;
+package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -30,19 +28,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
+import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk;
 
 @Component
-public class SurfaceFormLayerInitializer
+public class ChunkLayerInitializer
     implements LayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
-
+    
     @Autowired
-    public SurfaceFormLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public ChunkLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
@@ -57,18 +57,17 @@ public class SurfaceFormLayerInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        // The surface form must be locked to tokens for CoNLL-U writer to work properly
-        AnnotationLayer surfaceFormLayer = new AnnotationLayer(SurfaceForm.class.getName(),
-                "Surface form", SPAN_TYPE, aProject, true, TOKENS, NO_OVERLAP);
-        annotationSchemaService.createLayer(surfaceFormLayer);
+        AnnotationLayer chunkLayer = new AnnotationLayer(Chunk.class.getName(), "Chunk", SPAN_TYPE,
+                aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
+        annotationSchemaService.createLayer(chunkLayer);
 
-        AnnotationFeature surfaceFormValueFeature = new AnnotationFeature();
-        surfaceFormValueFeature.setDescription("Original surface text");
-        surfaceFormValueFeature.setName("value");
-        surfaceFormValueFeature.setType(CAS.TYPE_NAME_STRING);
-        surfaceFormValueFeature.setProject(aProject);
-        surfaceFormValueFeature.setUiName("Form");
-        surfaceFormValueFeature.setLayer(surfaceFormLayer);
-        annotationSchemaService.createFeature(surfaceFormValueFeature);
+        AnnotationFeature chunkValueFeature = new AnnotationFeature();
+        chunkValueFeature.setDescription("Chunk tag");
+        chunkValueFeature.setName("chunkValue");
+        chunkValueFeature.setType(CAS.TYPE_NAME_STRING);
+        chunkValueFeature.setProject(aProject);
+        chunkValueFeature.setUiName("Tag");
+        chunkValueFeature.setLayer(chunkLayer);
+        annotationSchemaService.createFeature(chunkValueFeature);
     }
 }

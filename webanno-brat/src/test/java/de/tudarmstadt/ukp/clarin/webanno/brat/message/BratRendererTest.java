@@ -130,20 +130,16 @@ public class BratRendererTest
         layerBehaviorRegistry.init();
         
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
         
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
-        when(schemaService.listAnnotationFeature(any(Project.class)))
-                .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(layer).createAdapter(layer);
+            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
+                () -> asList(posFeature));
         });
         
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);

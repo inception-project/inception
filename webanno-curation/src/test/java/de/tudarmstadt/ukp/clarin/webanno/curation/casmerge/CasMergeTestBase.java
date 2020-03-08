@@ -350,7 +350,8 @@ public class CasMergeTestBase
 
         when(schemaService.getAdapter(any(AnnotationLayer.class))).thenAnswer(call -> { 
             AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
-            return layerSupportRegistry.getLayerSupport(type).createAdapter(type);
+            return layerSupportRegistry.getLayerSupport(type).createAdapter(type, 
+                () -> schemaService.listAnnotationFeature(type));
         });
         
         featureSupportRegistry = new FeatureSupportRegistryImpl(
@@ -362,12 +363,9 @@ public class CasMergeTestBase
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerSupportRegistry.init();
         
         sut = new CasMerge(schemaService);

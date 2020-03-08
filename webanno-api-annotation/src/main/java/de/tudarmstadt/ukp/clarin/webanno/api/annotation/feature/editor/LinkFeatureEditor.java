@@ -173,8 +173,9 @@ public class LinkFeatureEditor
                                 annotationService.findLayer(state.getProject(),  fs);
                         TypeAdapter adapter =
                                 annotationService.getAdapter(layer);
-                        Renderer renderer =
-                                layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
+                        Renderer renderer = layerSupportRegistry.getLayerSupport(layer)
+                                .createRenderer(layer,
+                                    () -> annotationService.listAnnotationFeature(layer));
                         List<AnnotationFeature> features =
                                 annotationService.listAnnotationFeature(layer);
                         Map<String, String> renderedFeatures =

@@ -27,12 +27,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.factory.ConfigurationParameterFactory.addConfigurationParameters;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,6 +52,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.impl.XmiCasSerializer;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
@@ -56,6 +60,7 @@ import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.ConfigurationParameterFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.XMLSerializer;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 import org.slf4j.Logger;
@@ -270,11 +275,10 @@ public class ImportExportServiceImpl
                 new IOException("No reader available for format [" + aFormatId + "]"));
         
         CollectionReaderDescription readerDescription = format.getReaderDescription(tsd);
-        ConfigurationParameterFactory.addConfigurationParameters(readerDescription, 
+        addConfigurationParameters(readerDescription, 
                 ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION, 
                     aFile.getParentFile().getAbsolutePath(), 
-                ResourceCollectionReaderBase.PARAM_PATTERNS,
-                    new String[] { "[+]" + aFile.getName() });
+                ResourceCollectionReaderBase.PARAM_PATTERNS, "[+]" + aFile.getName());
         CollectionReader reader = createReader(readerDescription);
         
         if (!reader.hasNext()) {
@@ -282,6 +286,32 @@ public class ImportExportServiceImpl
                     "Source file [" + aFile.getName() + "] not found in [" + aFile.getPath() + "]");
         }
         reader.getNext(cas);
+        
+        try (OutputStream os = new FileOutputStream("/Users/bluefire/test-types.xml")) {
+            tsd.toXML(os);
+        }
+        catch (Exception e) {
+            // ignore
+        }
+
+        
+        DocumentMetaData dmd = DocumentMetaData.get(cas);
+        dmd.setCollectionId("++COLLECTIONID++");
+        dmd.setDocumentId("++ID++");
+        dmd.setDocumentUri("++URI++");
+        dmd.setDocumentBaseUri("++BASEURI++");
+        dmd.setDocumentTitle("++TITLE++");
+        CasPersistenceUtils.writeSerializedCas(cas, new File("/Users/bluefire/test.ser"));
+        
+        try (OutputStream os = new FileOutputStream("/Users/bluefire/test.xmi")) {
+            XmiCasSerializer xmiCasSerializer = new XmiCasSerializer(null);
+            XMLSerializer sax2xml = new XMLSerializer(os, true);
+            xmiCasSerializer.serialize(cas, sax2xml.getContentHandler(), null, null, null);
+        }
+        catch (Exception e) {
+            // ignore
+        }
+        
         // Create sentence / token annotations if they are missing
         boolean hasTokens = exists(cas, getType(cas, Token.class));
         boolean hasSentences = exists(cas, getType(cas, Sentence.class));
@@ -302,8 +332,7 @@ public class ImportExportServiceImpl
             tokenize(cas);
         }
         
-        if (!exists(cas, getType(cas, Token.class))
-                || !exists(cas, getType(cas, Sentence.class))) {
+        if (!exists(cas, getType(cas, Token.class)) || !exists(cas, getType(cas, Sentence.class))) {
             throw new IOException("The document appears to be empty. Unable to detect any "
                     + "tokens or sentences. Empty documents cannot be imported.");
         }

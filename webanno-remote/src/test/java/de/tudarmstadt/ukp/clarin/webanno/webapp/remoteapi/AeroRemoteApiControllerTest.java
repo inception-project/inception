@@ -33,6 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.io.File;
 import java.util.Collections;
 
+import javax.persistence.EntityManager;
+
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -49,7 +51,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -89,14 +90,15 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiCont
 
 @RunWith(SpringRunner.class) 
 @EnableAutoConfiguration
-@SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+@SpringBootTest(
+        webEnvironment = WebEnvironment.MOCK, 
+        properties = { "repository.path=target/AeroRemoteApiControllerTest/repository" })
 @EnableWebSecurity
 @EntityScan({
-    "de.tudarmstadt.ukp.clarin.webanno.model",
-    "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-@TestPropertySource(locations = "classpath:RemoteApiController2Test.properties")
+        "de.tudarmstadt.ukp.clarin.webanno.model",
+        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class RemoteApiController2Test
+public class AeroRemoteApiControllerTest
 {
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
@@ -273,10 +275,11 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));
     }
-
+    
     @Configuration
     public static class TestContext {
-        @Autowired ApplicationEventPublisher applicationEventPublisher;
+        private @Autowired ApplicationEventPublisher applicationEventPublisher;
+        private @Autowired EntityManager entityManager;
         
         @Bean
         public AeroRemoteApiController remoteApiV2()
@@ -301,13 +304,13 @@ public class RemoteApiController2Test
         {
             return new DocumentServiceImpl(repositoryProperties(), userRepository(),
                     casStorageService(), importExportService(), projectService(),
-                    applicationEventPublisher);
+                    applicationEventPublisher, entityManager);
         }
         
         @Bean
         public AnnotationSchemaService annotationService()
         {
-            return new AnnotationSchemaServiceImpl();
+            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), entityManager);
         }
         
         @Bean
@@ -364,11 +367,9 @@ public class RemoteApiController2Test
         public LayerSupportRegistry layerSupportRegistry()
         {
             return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(featureSupportRegistry(), null, annotationService(), null),
-                    new RelationLayerSupport(featureSupportRegistry(), null, annotationService(),
-                            null),
-                    new ChainLayerSupport(featureSupportRegistry(), null, annotationService(),
-                            null)));
+                    new SpanLayerSupport(featureSupportRegistry(), null, null),
+                    new RelationLayerSupport(featureSupportRegistry(), null, null),
+                    new ChainLayerSupport(featureSupportRegistry(), null, null)));
         }
     }
 }
