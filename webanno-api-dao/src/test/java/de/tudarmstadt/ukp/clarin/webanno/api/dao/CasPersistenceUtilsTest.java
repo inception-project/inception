@@ -23,6 +23,7 @@ import java.io.File;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.jcas.tcas.DocumentAnnotation;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -58,25 +59,12 @@ public class CasPersistenceUtilsTest
         CAS cas2 = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
         
         CasPersistenceUtils.readSerializedCas(cas2, file);
-        
+
+        assertThat((AnnotationFS) cas2.getDocumentAnnotation())
+                .isInstanceOf(DocumentMetaData.class);
+
         assertThat(cas2.select(DocumentAnnotation.class).asList())
                 .extracting(fs -> fs.getType().getName())
                 .containsExactly(DocumentMetaData.class.getName());
     }
-
-//    @Test
-//    public void importExportService() throws Exception
-//    {
-//        TypeSystemDescription tsd = createTypeSystemDescriptionFromPath(
-//                "src/test/resources/xmi/test-types.xml");
-//        
-//        File inFile = new File("src/test/resources/xmi/rdxruC2B.xmi");
-//        
-//        
-//        ImportExportServiceImpl imExSrv = new ImportExportServiceImpl(null,
-//                asList(new XmiFormatSupport()), null, null);
-//        imExSrv.init();
-//        imExSrv.importCasFromFile(inFile, null, XmiFormatSupport.ID, tsd);
-//    }
-    
 }
