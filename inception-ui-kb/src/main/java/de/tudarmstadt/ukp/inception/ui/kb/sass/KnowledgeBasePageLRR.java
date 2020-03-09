@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.less;
+package de.tudarmstadt.ukp.inception.ui.kb.sass;
 
-import de.agilecoders.wicket.less.LessResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassResourceReference;
 
-public class KnowledgeBasePageLRR extends LessResourceReference {
+public class KnowledgeBasePageLRR extends SassResourceReference {
 
     private static final long serialVersionUID = -5906752913389722261L;
     private static final KnowledgeBasePageLRR INSTANCE = new KnowledgeBasePageLRR();
@@ -37,6 +37,6 @@ public class KnowledgeBasePageLRR extends LessResourceReference {
      * Private constructor
      */
     private KnowledgeBasePageLRR() {
-        super(KnowledgeBasePageLRR.class, "inception-ui-kbp.less");
+        super(KnowledgeBasePageLRR.class, "inception-ui-kbp.scss");
     }
 }

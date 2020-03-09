@@ -18,17 +18,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
     xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-  <div class="panel panel-default panel-small">
-    <div class="panel-heading">
-      <h3 class="panel-title">
-        <span wicket:id="feature"></span>
-        <span wicket:id="disabledKBWarning"></span>
-      </h3>
+  <div class="card">
+    <div class="card-header small">
+      <span wicket:id="feature"></span>
+      <span wicket:id="disabledKBWarning"></span>
     </div>
-    <div class="panel-body">
+    <div class="card-body">
       <div wicket:id="content">
         <div wicket:id="slots">
-          <div class="form-group">
+          <div class="form-group form-row">
             <label class="col-sm-4">
               <span wicket:id="role"></span>
             </label>
