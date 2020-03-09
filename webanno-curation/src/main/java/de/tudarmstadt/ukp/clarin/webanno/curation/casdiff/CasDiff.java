@@ -17,12 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -68,8 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffA
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class CasDiff
 {
@@ -91,7 +90,7 @@ public class CasDiff
 
     private boolean recurseIntoLinkFeatures = false;
     
-    private CasDiff(int aBegin, int aEnd, Collection<? extends DiffAdapter> aAdapters,
+    private CasDiff(int aBegin, int aEnd, Iterable<? extends DiffAdapter> aAdapters,
             LinkCompareBehavior aLinkCompareBehavior)
     {
         begin = aBegin;
@@ -105,187 +104,51 @@ public class CasDiff
     }
 
     /**
-     * Calculate the differences between CASes. <b>This is for testing</b>. Normally you should use
-     * {@link #doDiff(List, Collection, Map, int, int, LinkCompareBehavior)}.
+     * Calculate the differences between CASes. This method scopes the calculation of differences to
+     * a span instead of calculating them on the whole text.
      * 
-     * @param aEntryType
-     *            the type for which differences are to be calculated.
      * @param aAdapters
-     *            a diff adapter telling how the diff algorithm should handle different features
-     * @param aCasMap
-     *            a set of CASes, each associated with an ID
-     * @return a diff result.
-     */
-    public static CasDiff doDiff(Class<? extends AnnotationFS> aEntryType,
-            Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, CAS> aCasMap)
-    {
-        Map<String, List<CAS>> map2 = new LinkedHashMap<>();
-        for (Entry<String, CAS> e : aCasMap.entrySet()) {
-            map2.put(e.getKey(), asList(e.getValue()));
-        }
-        return doDiff(asList(aEntryType.getName()), aAdapters, aLinkCompareBehavior, map2);
-    }
-    
-    /**
-     * Calculate the differences between CASes. <b>This is for testing</b>. Normally you should use
-     * {@link #doDiff(List, Collection, Map, int, int, LinkCompareBehavior)}.
-     * 
-     * @param aEntryType
-     *            the type for which differences are to be calculated.
-     * @param aAdapters
-     *            a diff adapter telling how the diff algorithm should handle different features
-     * @param aCasMap
-     *            a set of CASes, each associated with an ID
-     * @return a diff result.
-     */
-    public static CasDiff doDiff(Type aEntryType,
-            Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, CAS> aCasMap)
-    {
-        Map<String, List<CAS>> map2 = new LinkedHashMap<>();
-        for (Entry<String, CAS> e : aCasMap.entrySet()) {
-            map2.put(e.getKey(), asList(e.getValue()));
-        }
-        return doDiff(asList(aEntryType.getName()), aAdapters, aLinkCompareBehavior, map2);
-    }
-
-    /**
-     * Calculate the differences between CASes. <b>This is for testing</b>. Normally you should use
-     * {@link #doDiff(List, Collection, Map, int, int, LinkCompareBehavior)}.
-     * 
-     * @param aEntryTypes
-     *            the types for which differences are to be calculated.
-     * @param aAdapters
-     *            a diff adapter telling how the diff algorithm should handle different features
-     * @param aCasMap
-     *            a set of CASes, each associated with an ID
-     * @return a diff result.
-     */
-    public static CasDiff doSingleDiff(List<String> aEntryTypes,
-            Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, CAS> aCasMap)
-    {
-        Map<String, List<CAS>> map2 = new LinkedHashMap<>();
-        for (Entry<String, CAS> e : aCasMap.entrySet()) {
-            map2.put(e.getKey(), asList(e.getValue()));
-        }
-        return doDiff(aEntryTypes, aAdapters, aLinkCompareBehavior, map2);
-    }
-
-    /**
-     * Calculate the differences between CASes. <b>This is for testing</b>. Normally you should use
-     * {@link #doDiff(List, Collection, Map, int, int, LinkCompareBehavior)}.
-     * 
-     * @param aEntryType
-     *            the type for which differences are to be calculated.
-     * @param aAdapter
      *            a set of diff adapters telling how the diff algorithm should handle different
      *            features
      * @param aCasMap
      *            a set of CASes, each associated with an ID
+     * @param aBegin
+     *            begin of the span for which differences should be calculated.
+     * @param aEnd
+     *            end of the span for which differences should be calculated.
      * @return a diff result.
      */
-    public static CasDiff doDiff(String aEntryType, DiffAdapter aAdapter,
-            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<CAS>> aCasMap)
+    public static CasDiff doDiffSingle(Iterable<? extends DiffAdapter> aAdapters,
+            LinkCompareBehavior aLinkCompareBehavior, Map<String, CAS> aCasMap, int aBegin,
+            int aEnd)
     {
-        return doDiff(asList(aEntryType), asList(aAdapter), aLinkCompareBehavior, aCasMap);
+        Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+        for (Entry<String, CAS> e : aCasMap.entrySet()) {
+            casMap.put(e.getKey(), asList(e.getValue()));
+        }
+        
+        return doDiff(aAdapters, aLinkCompareBehavior, casMap, aBegin, aEnd);
     }
 
     /**
      * Calculate the differences between CASes.
      * 
-     * @param aEntryTypes
-     *            the type for which differences are to be calculated.
      * @param aAdapters
      *            a set of diff adapters how the diff algorithm should handle different features
      * @param aCasMap
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static CasDiff doDiff(List<String> aEntryTypes,
-            Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, List<CAS>> aCasMap)
+    public static CasDiff doDiff(Iterable<? extends DiffAdapter> aAdapters,
+            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<CAS>> aCasMap)
     {
-        if (aCasMap.isEmpty()) {
-            return new CasDiff(0,0, aAdapters, aLinkCompareBehavior);
-        }
-        
-        List<CAS> casList = aCasMap.values().iterator().next();
-        if (casList.isEmpty()) {
-            return new CasDiff(0,0, aAdapters, aLinkCompareBehavior);
-        }
-        
-        return doDiff(aEntryTypes, aAdapters, aCasMap, -1, -1, aLinkCompareBehavior);
-    }
-    
-    /**
-     * Calculate the differences between CASes. This method scopes the calculation of differences to
-     * a span instead of calculating them on the whole text.
-     * 
-     * @param aService
-     *            the annotation service.
-     * @param aProject
-     *            a project.
-     * @param aEntryTypes
-     *            the types for which differences are to be calculated.
-     * @param aCasMap
-     *            a set of CASes, each associated with an ID
-     * @param aBegin
-     *            begin of the span for which differences should be calculated.
-     * @param aEnd
-     *            end of the span for which differences should be calculated.
-     * @return a diff result.
-     */
-    public static CasDiff doDiffSingle(AnnotationSchemaService aService, Project aProject,
-            List<Type> aEntryTypes, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, CAS> aCasMap, int aBegin, int aEnd)
-    {
-        List<DiffAdapter> adapters = CasDiff.getAdapters(aService, aProject);
-        
-        return doDiffSingle(aEntryTypes, adapters, aLinkCompareBehavior, aCasMap, aBegin, aEnd);
-    }
-    
-    /**
-     * Calculate the differences between CASes. This method scopes the calculation of differences to
-     * a span instead of calculating them on the whole text.
-     * 
-     * @param aAdapters
-     *            a set of diff adapters telling how the diff algorithm should handle different
-     *            features
-     * @param aEntryTypes
-     *            the types for which differences are to be calculated.
-     * @param aCasMap
-     *            a set of CASes, each associated with an ID
-     * @param aBegin
-     *            begin of the span for which differences should be calculated.
-     * @param aEnd
-     *            end of the span for which differences should be calculated.
-     * @return a diff result.
-     */
-    public static CasDiff doDiffSingle(List<Type> aEntryTypes,
-            Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, CAS> aCasMap, int aBegin, int aEnd)
-    {
-        List<String> entryTypes = new ArrayList<>();
-        for (Type t : aEntryTypes) {
-            entryTypes.add(t.getName());
-        }
-        
-        Map<String, List<CAS>> casMap = new LinkedHashMap<>();
-        for (Entry<String, CAS> e : aCasMap.entrySet()) {
-            casMap.put(e.getKey(), asList(e.getValue()));
-        }
-        
-        return doDiff(entryTypes, aAdapters, casMap, aBegin, aEnd, aLinkCompareBehavior);
+        return doDiff(aAdapters, aLinkCompareBehavior, aCasMap, -1, -1);
     }
 
     /**
      * Calculate the differences between CASes. This method scopes the calculation of differences to
      * a span instead of calculating them on the whole text.
      * 
-     * @param aEntryTypes
-     *            the types for which differences are to be calculated.
      * @param aAdapters
      *            a set of diff adapters telling how the diff algorithm should handle different
      *            features
@@ -297,10 +160,19 @@ public class CasDiff
      *            end of the span for which differences should be calculated.
      * @return a diff.
      */
-    public static CasDiff doDiff(List<String> aEntryTypes,
-            Collection<? extends DiffAdapter> aAdapters, Map<String, List<CAS>> aCasMap,
-            int aBegin, int aEnd, LinkCompareBehavior aLinkCompareBehavior)
+    public static CasDiff doDiff(Iterable<? extends DiffAdapter> aAdapters,
+            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<CAS>> aCasMap, int aBegin,
+            int aEnd)
     {
+        if (aCasMap.isEmpty()) {
+            return new CasDiff(0, 0, aAdapters, aLinkCompareBehavior);
+        }
+        
+        List<CAS> casList = aCasMap.values().iterator().next();
+        if (casList.isEmpty()) {
+            return new CasDiff(0, 0, aAdapters, aLinkCompareBehavior);
+        }
+        
         long startTime = System.currentTimeMillis();
         
         sanityCheck(aCasMap);
@@ -310,15 +182,15 @@ public class CasDiff
         for (Entry<String, List<CAS>> e : aCasMap.entrySet()) {
             int casId = 0;
             for (CAS cas : e.getValue()) {
-                for (String type : aEntryTypes) {
+                for (DiffAdapter adapter : aAdapters) {
                     // null elements in the list can occur if a user has never worked on a CAS
-                    diff.addCas(e.getKey(), casId, cas != null ? cas : null, type);
+                    diff.addCas(e.getKey(), casId, cas != null ? cas : null, adapter.getType());
                 }
                 casId++;
             }
         }
         
-        LOG.trace("CASDiff2 completed in {} ms", System.currentTimeMillis() - startTime);
+        LOG.trace("CASDiff completed in {} ms", System.currentTimeMillis() - startTime);
         
         return diff;
     }
@@ -371,7 +243,7 @@ public class CasDiff
         DiffAdapter adapter = typeAdapters.get(aType);
         if (adapter == null) {
             LOG.warn("No diff adapter for type [" + aType + "] -- treating as without features");
-            adapter = new SpanDiffAdapter(aType, Collections.EMPTY_SET);
+            adapter = new SpanDiffAdapter(aType, emptySet());
             typeAdapters.put(aType, adapter);
         }
         return adapter;
@@ -1161,50 +1033,52 @@ public class CasDiff
         }
     }
     
-    public static List<DiffAdapter> getAdapters(AnnotationSchemaService annotationService,
-            Project project)
+    public static List<DiffAdapter> getDiffAdapters(AnnotationSchemaService schemaService,
+            Iterable<AnnotationLayer> aLayers)
     {
         List<DiffAdapter> adapters = new ArrayList<>();
-        for (AnnotationLayer layer : annotationService.listAnnotationLayer(project)) {
+        nextLayer: for (AnnotationLayer layer : aLayers) {
+            if (!layer.isEnabled()) {
+                continue nextLayer;
+            }
+            
             Set<String> labelFeatures = new LinkedHashSet<>();
-            for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+            nextFeature: for (AnnotationFeature f : schemaService.listAnnotationFeature(layer)) {
                 if (!f.isEnabled()) {
-                    continue;
+                    continue nextFeature;
                 }
                 
                 // Link features are treated separately from primitive label features
-                if (!LinkMode.NONE.equals(f.getLinkMode())) {
-                    continue;
+                if (!NONE.equals(f.getLinkMode())) {
+                    continue nextFeature;
                 }
                 
                 labelFeatures.add(f.getName());
             }
             
-            DiffAdapter_ImplBase adpt;
+            DiffAdapter_ImplBase adapter;
             switch (layer.getType()) {
             case SPAN_TYPE: {
-                adpt = new SpanDiffAdapter(layer.getName(), labelFeatures);
+                adapter = new SpanDiffAdapter(layer.getName(), labelFeatures);
                 break;
             }
             case RELATION_TYPE: {
-                RelationAdapter typeAdpt = (RelationAdapter) annotationService.getAdapter(layer);
-                adpt = new RelationDiffAdapter(layer.getName(),
+                RelationAdapter typeAdpt = (RelationAdapter) schemaService.getAdapter(layer);
+                adapter = new RelationDiffAdapter(layer.getName(),
                         typeAdpt.getSourceFeatureName(), typeAdpt.getTargetFeatureName(),
                         labelFeatures);
                 break;
             }
-            case CHAIN_TYPE:
-                // FIXME Currently, these are ignored.
-                continue;
             default:
-                throw new IllegalStateException("Unknown layer type [" + layer.getType() + "]");
+                LOG.debug("Curation for layer type [{}] not supported - ignoring", layer.getType());
+                continue nextLayer;
             }
 
-            adapters.add(adpt);
+            adapters.add(adapter);
 
-            for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
+            nextFeature: for (AnnotationFeature f : schemaService.listAnnotationFeature(layer)) {
                 if (!f.isEnabled()) {
-                    continue;
+                    continue nextFeature;
                 }
                 
                 switch (f.getLinkMode()) {
@@ -1212,10 +1086,10 @@ public class CasDiff
                     // Nothing to do here
                     break;
                 case SIMPLE:
-                    adpt.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(), null);
+                    adapter.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(), null);
                     break;
                 case WITH_ROLE:
-                    adpt.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(),
+                    adapter.addLinkFeature(f.getName(), f.getLinkTypeRoleFeatureName(),
                             f.getLinkTypeTargetFeatureName());
                     break;
                 default:
