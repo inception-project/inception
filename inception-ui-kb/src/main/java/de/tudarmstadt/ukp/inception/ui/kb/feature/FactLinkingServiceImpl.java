@@ -45,12 +45,12 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
+import de.tudarmstadt.ukp.inception.ui.kb.config.FactLinkingAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link KnowledgeBaseServiceUIAutoConfiguration#factLinkingService}.
+ * {@link FactLinkingAutoConfiguration#factLinkingService}.
  * </p>
  */
 public class FactLinkingServiceImpl
