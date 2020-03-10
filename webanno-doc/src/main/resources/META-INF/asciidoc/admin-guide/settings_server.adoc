@@ -1,0 +1,62 @@
+// Copyright 2020
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Server Settings
+
+These settings relate to the embedded web server in the JAR version of {product-name}.
+
+.Server settings
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| server.port
+| Port on which the server listens
+| 8080
+| 18080
+
+| server.address
+| IP address on which the server listens
+| 0.0.0.0
+| 127.0.0.1
+
+| server.ajp.port
+| Port for AJP connector
+| -1 _(disabled)_
+| 8009
+
+| server.ajp.address
+| IP address on which the AJP connector listens
+| 127.0.0.1
+| 0.0.0.0
+
+| server.ajp.secret-required
+| Whether AJP connections require a shared secret
+| true
+| false
+
+| server.ajp.secret
+| Shared secret for AJP connections
+| _unset_
+| _some secret string of your choice_
+|===
+
+NOTE: The application is based on Spring Boot and using an embedded Tomcat server. You can configure 
+      additional aspects of the embedded web server using default link:https://docs.spring.io/spring-boot/docs/1.5.22.RELEASE/reference/html/common-application-properties.html[Spring Boot configuration settings].
+

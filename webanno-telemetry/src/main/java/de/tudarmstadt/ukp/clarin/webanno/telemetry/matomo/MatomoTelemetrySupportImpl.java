@@ -55,12 +55,12 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.session.HttpSessionCreatedEvent;
 import org.springframework.stereotype.Component;
 
-import ch.rasc.piwik.tracking.PiwikConfig;
-import ch.rasc.piwik.tracking.PiwikRequest;
-import ch.rasc.piwik.tracking.PiwikTracker;
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
 
+import ch.rasc.piwik.tracking.PiwikConfig;
+import ch.rasc.piwik.tracking.PiwikRequest;
+import ch.rasc.piwik.tracking.PiwikTracker;
 import de.tudarmstadt.ukp.clarin.webanno.api.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.model.InstanceIdentity;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
