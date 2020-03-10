@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 public final class CasPersistenceUtils
 {
@@ -115,6 +116,16 @@ public final class CasPersistenceUtils
         try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
             CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
             deserializeCASComplete(serializer, (CASImpl) getRealCas(aCas));
+            
+            // Workaround for UIMA adding back deleted DocumentAnnotations
+            // https://issues.apache.org/jira/browse/UIMA-6199
+            // If there is a DocumentMetaData annotation, then we can drop any of the default
+            // UIMA DocumentAnnotation instances (excluding the DocumentMetaData of course)
+            if (!aCas.select(DocumentMetaData.class.getName()).isEmpty()) {
+                aCas.select(CAS.TYPE_NAME_DOCUMENT_ANNOTATION)
+                    .filter(fs -> !DocumentMetaData.class.getName().equals(fs.getType().getName()))
+                    .forEach(aCas::removeFsFromIndexes);
+            }
         }
         catch (ClassNotFoundException e) {
             throw new IOException(e);
