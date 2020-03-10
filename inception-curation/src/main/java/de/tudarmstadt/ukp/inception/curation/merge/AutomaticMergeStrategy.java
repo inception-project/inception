@@ -26,7 +26,6 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +36,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
 
 
@@ -79,15 +78,12 @@ public class AutomaticMergeStrategy
             boolean aMergeIncomplete)
     {
         // FIXME: should merging not overwrite the current users annos? (can result in deleting the
-        // users annos!!!)
+        // users annos!!!), currently fixed by warn message to user
         // prepare merged cas
         List<AnnotationLayer> layers = aState.getAnnotationLayers();
-        List<Type> entryTypes = SuggestionBuilder.getEntryTypes(aTargetCas, layers,
-                annotationService);
-        DiffResult diff = CasDiff
-                .doDiffSingle(annotationService, aState.getProject(), entryTypes,
-                        LINK_ROLE_AS_LABEL, aUserCasses, 0, aTargetCas.getDocumentText().length())
-                .toResult();
+        List<DiffAdapter> adapters = CasDiff.getDiffAdapters(annotationService, layers);
+        DiffResult diff = CasDiff.doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aUserCasses, 0,
+                aTargetCas.getDocumentText().length()).toResult();
         CasMerge casMerge = new CasMerge(annotationService);
         try {
             casMerge.setMergeIncompleteAnnotations(aMergeIncomplete);

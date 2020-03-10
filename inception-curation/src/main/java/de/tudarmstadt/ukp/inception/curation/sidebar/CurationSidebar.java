@@ -198,8 +198,6 @@ public class CurationSidebar
                 return attrValMap;
             }
         };
-        curationTargetChoice.setPrefix("<div>");
-        curationTargetChoice.setSuffix("</div>");
         settingsForm.add(curationTargetChoice);
         
         // toggle visibility of settings form

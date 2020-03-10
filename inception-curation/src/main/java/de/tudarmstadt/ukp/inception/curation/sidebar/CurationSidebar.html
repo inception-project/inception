@@ -19,17 +19,30 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div wicket:id="mainContainer" class="panel panel-default panel-flex flex-content">
-      <div class="panel-heading">
-        <h3 class="panel-title"><wicket:message key="curationHeader"/></h3>
+    <div wicket:id="mainContainer" class="card flex-content">
+      <div class="card-header">
+        <wicket:message key="curationHeader"/>
       </div>
-      <div class="scrolling panel-body">
+      
+      <div class="scrolling card-body">
         <div wicket:id="mergeConfirmDialog"></div>
-        <span wicket:id="noDocumentsLabel"></span>
-        <form wicket:id="usersForm" class="panel panel-default panel-small">
-          <div class="panel-heading">
-            <h3 class="panel-title"><wicket:message key="usersLabel"/></h3>
+        <span class="no-data-notice" wicket:id="noDocumentsLabel"></span>
+        <form wicket:id="usersForm" class="card">
+          <div class="card-header small">
+            <wicket:message key="usersLabel"/>
+            <div class="actions">
+          <button wicket:id="show" class="btn btn-primary">
+		    <i class="fas fa-save" wicket:message="title:apply"></i>
+          </button>
+          <button wicket:id="clear" class="btn btn-secondary">
+            <i class="fas fa-trash" wicket:message="title:clear"></i>
+          </button>
+          <button wicket:id="merge" class="btn btn-secondary">
+            <i class="fas fa-sync" wicket:message="title:merge"></i>
+          </button>
           </div>
+          </div>
+                    
           <div wicket:id="selectedUsers">
           <table class="table">
             <tr wicket:id="users">
@@ -40,32 +53,29 @@
             </tr>
           </table>
           </div>
-          <div class="panel-footer text-right">
-              <input wicket:id="show" class="btn btn-primary" type="submit" wicket:message="value:apply"/>
-              <input wicket:id="clear" class="btn btn-default" type="submit" wicket:message="value:clear"/>
-              <input wicket:id="merge" class="btn btn-default" type="submit" wicket:message="value:merge"/>
-              <button wicket:id="toggleOptionsVisibility" type="submit" class="btn btn-default">
-                  <i class="fa fa-cog" aria-hidden="true"></i>
-                </button>
+          <div class="card-footer text-right">
+            <button wicket:id="toggleOptionsVisibility" type="submit" class="btn btn-secondary">
+                <i class="fa fa-cog" aria-hidden="true"></i>
+            </button>
           </div>  
         </form>
-        <form wicket:id="settingsForm" class="panel panel-default panel-small">
-          <div class="panel-heading">
-            <h3 class="panel-title"><wicket:message key="settingsLabel"/></h3>
+        <form wicket:id="settingsForm" class="card">
+          <div class="card-header small">
+              <wicket:message key="settingsLabel"/>
           </div>
-          <div class="panel-body form-horizontal">
-              <div class="col-sm-12">
-                <div class="form-group">
-                  <label class="control-label col-sm-3">
-                    <wicket:message key=curationTarget/>
-                  </label>
-                  <div class="col-sm-9">
-                    <div wicket:id="curationTargetRadioBtn" class="radio"></div>
-                  </div>
+          <div class="card-body form-horizontal">
+            <div class="form-group form-row">
+              <div class="form-check">
+                <label class="form-check-label">
+                  <wicket:message key=curationTarget/>
+                </label>
+                <div class="form-check-label">
+                  <div wicket:id="curationTargetRadioBtn" class="radio"></div>
                 </div>
               </div>
             </div>
-          <div class="panel-footer text-right">
+          </div>
+          <div class="card-footer text-right">
             <input wicket:id="apply" class="btn btn-primary" type="submit" wicket:message="value:apply"/>
           </div>
         </form>

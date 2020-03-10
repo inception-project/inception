@@ -231,10 +231,12 @@ public class CurationEditorExtension
                 VDocument tmpDoc = new VDocument();
                 preRenderer.render(tmpDoc, aWindowBeginOffset, aWindowEndOffset, userCas,
                         aState.getAnnotationLayers());
-                // copy all arcs and spans to existing doc with new VID
+                
                 String username = user.getUsername();
                 String color = "#ccccff";  //"#cccccc" is the color for recommendations
 
+                // copy all arcs and spans to existing doc with new VID
+                
                 // copy all spans and add to map as possible varc dependents
                 // spans with new vids identified by their old vid for lookup in varcs
                 Map<VID, VSpan> newIdSpan = new HashMap<>();
@@ -245,7 +247,7 @@ public class CurationEditorExtension
                             new VID(vspan.getLayer().getId(), aDepVID.getId(), aDepVID.getSubId(),
                                     aDepVID.getAttribute(), aDepVID.getSlot()));
                     vspan.setVid(newVID);
-                    vspan.setColor(color);
+                    vspan.setColorHint(color);
                     // TODO: might be better to change after bugfix #1389
                     vspan.setLazyDetails(Collections.emptyList());
                     newIdSpan.put(prevVID, vspan);
@@ -261,16 +263,15 @@ public class CurationEditorExtension
                     VID extendedVID = new CurationVID(EXTENSION_ID, username,
                             new VID(varc.getLayer().getId(), vid.getId(), vid.getSubId(),
                                     vid.getAttribute(), vid.getSlot()));
-                    varc.setVid(extendedVID);
                     // set target and src with new vids for arc
                     VSpan targetSpan = newIdSpan.get(varc.getTarget());
                     VSpan srcSpan = newIdSpan.get(varc.getSource());
-                    varc.setSource(srcSpan.getVid());
-                    varc.setTarget(targetSpan.getVid());
-                    varc.setColor(color);
+                    VArc newVarc = new VArc(varc.getLayer(),extendedVID, varc.getType(), 
+                            srcSpan.getVid(), targetSpan.getVid(), varc.getLabelHint(), 
+                            varc.getFeatures(), color);
                     // set user name as comment
                     aVdoc.add(new VComment(extendedVID, VCommentType.INFO, username));
-                    aVdoc.add(varc);
+                    aVdoc.add(newVarc);
                 }
 
             }
