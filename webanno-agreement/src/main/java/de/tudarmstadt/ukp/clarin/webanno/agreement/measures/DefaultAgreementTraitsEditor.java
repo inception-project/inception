@@ -67,7 +67,8 @@ public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
         linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
         form.add(linkCompareBehaviorDropDown);
 
-        form.add(new CheckBox("limitToFinishedDocuments"));
+        form.add(new CheckBox("limitToFinishedDocuments").
+                setOutputMarkupId(true));
         
         add(form);
     }
