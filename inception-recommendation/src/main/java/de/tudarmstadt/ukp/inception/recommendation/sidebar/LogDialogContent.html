@@ -21,7 +21,7 @@
 <wicket:panel>
   <div class="w_flex_container">
     <div class="w_flex_content scrolling">
-      <table class="col-sm-12 table table-condensed">
+      <table class="col-sm-12 table table-sm">
         <tbody>
           <wicket:container wicket:id="messageSets">
             <tr class="info" style="vertical-align: top;">
@@ -38,10 +38,11 @@
         </tbody>
       </table>
     </div>
-    <div class="w_flex_footer panel-footer">
-      <div class="form-group pull-right">
-        <input wicket:id="close" type="button" class="btn btn-default" wicket:message="value:close"></input>
-      </div>
+    <div class="w_flex_footer card-footer text-right">
+      <button wicket:id="close" class="btn btn-secondary">
+        <i class="fas fa-times"></i>&nbsp;
+        <wicket:message key="close"/>
+      </button>
     </div>
   </div>
 </wicket:panel>

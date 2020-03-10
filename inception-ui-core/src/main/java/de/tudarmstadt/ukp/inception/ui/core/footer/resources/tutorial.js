@@ -410,7 +410,7 @@ function createOpenDocumentsRoutine(enjoyHint) {
 function createAddDocumentRoutine(enjoyHint) {
 	var a = [
 			{
-				'next [class=flex-h-container]' : "Upload a document (e.g. a .txt file) using the 'Choose Files' button, " +
+				'next [class=flex-h-container]' : "Upload a document (e.g. a .txt file) using the button next to 'Select Files', " +
 						"choose a format (e.g. 'Plain Text') and click 'Import'. Then click 'Next'.",
 						'showSkip': false
 			}
@@ -433,7 +433,7 @@ function createOpenRecommendersRoutine(enjoyHint) {
 function createAddRecommenderRoutine(enjoyHint) {
 	var a = [
 			{
-				'click [value=Create]' : "Click here to create a new recommender that will give you suggestions while annotating.",
+				'click .btn-primary' : "Click here to create a new recommender that will give you suggestions while annotating.",
 				'showSkip': false
 			}
 			];
@@ -444,19 +444,19 @@ function createAddRecommenderRoutine(enjoyHint) {
 function createRecommenderSettingsRoutine(enjoyHint) {
 	var a = [
 			{
-				'next .form-group:nth(2)' : "Select a Layer (the enclosing annotation e.g. 'Named entity').",
+				'next .form-group:nth(3)' : "Select a Layer (the enclosing annotation e.g. 'Named entity').",
 				'showSkip': false
 			},
 			{
-				'next .form-group:nth(3)' : "Select a Feature (the annotation's attribute which should be predicted e.g. 'value').",
+				'next .form-group:nth(4)' : "Select a Feature (the annotation's attribute which should be predicted e.g. 'value').",
 				'showSkip': false
 			},
 			{
-				'next .form-group:nth(4)' : "Select a Tool which is used to produce the suggestions e.g. 'Stringmatcher'.",
+				'next .form-group:nth(5)' : "Select a Tool which is used to produce the suggestions e.g. 'Stringmatcher'.",
 				'showSkip': false
 			},
 			{
-				"next [value=Save]" : "Click 'Save'.",
+				'next [name=save]' : "Click 'Save'.",
 				'showSkip': false
 			},
 			{
@@ -470,7 +470,7 @@ function createRecommenderSettingsRoutine(enjoyHint) {
 
 function createProjectSavedRoutine() {
 	var a = [ {
-		'click .navbar-link' : 'Click here to go back to the projects overview page.',
+		'click .nav-item:first-of-type' : 'Click here to go back to the projects overview page.',
 		'showSkip': false
 	} ];
 
