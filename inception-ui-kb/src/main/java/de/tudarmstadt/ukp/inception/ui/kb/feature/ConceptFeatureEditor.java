@@ -129,7 +129,8 @@ public class ConceptFeatureEditor
         
         description = new Label("description", LoadableDetachableModel.of(this::descriptionValue));
         description.setOutputMarkupPlaceholderTag(true);
-        description.add(visibleWhen(() -> getLabelComponent().isVisible()));
+        description.add(visibleWhen(
+            () -> getLabelComponent().isVisible() && getModelObject().getValue() != null));
         add(description);
     }
 

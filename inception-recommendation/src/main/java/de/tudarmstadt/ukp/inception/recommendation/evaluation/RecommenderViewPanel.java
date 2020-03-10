@@ -68,11 +68,9 @@ public class RecommenderViewPanel
         add(form);
         
         nameField = new TextField<>(MID_NAME, String.class);
-        nameField.setRequired(true);
         form.add(nameField);
         
         tool = new TextField<>(MID_TOOL,String.class);
-        tool.setRequired(true);
         form.add(tool);
         
         feature = new TextField<AnnotationFeature>(MID_FEATURE );

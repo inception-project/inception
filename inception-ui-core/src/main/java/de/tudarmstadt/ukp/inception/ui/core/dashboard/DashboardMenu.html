@@ -19,9 +19,9 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <ul class="nav nav-pills nav-stacked">
-      <li wicket:id="items" role="presentation">
-        <a wicket:id="item" class="hvr-fade">
+    <ul class="nav flex-column nav-pills">
+      <li wicket:id="items" class="d-flex text-left hvr-fade">
+        <a wicket:id="item" class="nav-link flex-fill">
           <img wicket:id="icon"></img>
           <wicket:container wicket:id="label"/>
         </a>

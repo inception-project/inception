@@ -30,24 +30,24 @@
     -->
 
     <wicket:container wicket:id="remoteSpecificSettings">
-      <div class="form-group row">
-        <label wicket:for="url" class="control-label col-sm-3">
+      <div class="form-group form-row">
+        <label wicket:for="url" class="col-form-label col-sm-3">
           <wicket:message key="kb.remote.url"/>
         </label>
         <div class="col-sm-9">
           <input wicket:id="url" type="text" class="form-control"/>
         </div>
       </div>
-      <div class="form-group row" wicket:enclosure="defaultDataset">
-        <label class="control-label col-sm-3" wicket:for="defaultDataset">
+      <div class="form-group form-row" wicket:enclosure="defaultDataset">
+        <label class="col-form-label col-sm-3" wicket:for="defaultDataset">
           <wicket:label key="kb.iri.defaultDataset"/>
         </label>
         <div class="col-sm-9">
           <input type="text" wicket:id="defaultDataset" class="form-control"/>
         </div>
       </div>
-      <div class="form-group row" wicket:enclosure="suggestions">
-        <label class="control-label col-sm-3">
+      <div class="form-group form-row" wicket:enclosure="suggestions">
+        <label class="col-form-label col-sm-3">
           <wicket:message key="kb.wizard.steps.remote.suggestions"/>
         </label>
         <div class="scrolling col-sm-9" style="height:150px">
@@ -60,21 +60,21 @@
           </div>
         </div>
       </div>
-        <div class="form-group" wicket:id="infoContainer" style="margin-top: 20px;">
-          <div class="form-group row" wicket:enclosure="description">
-            <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.description"/></label>
+        <div class="form-group form-row" wicket:id="infoContainer" style="margin-top: 20px;">
+          <div class="form-group form-row" wicket:enclosure="description">
+            <label class="col-form-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.description"/></label>
             <label wicket:id="description" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
           </div>
-          <div class="form-group row" wicket:enclosure="hostInstitutionName">
-            <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.hostInstitutionName"/></label>
+          <div class="form-group form-row" wicket:enclosure="hostInstitutionName">
+            <label class="col-form-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.hostInstitutionName"/></label>
             <label wicket:id="hostInstitutionName" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
           </div>
-          <div class="form-group row" wicket:enclosure="authorName">
-            <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.authorName"/></label>
+          <div class="form-group form-row" wicket:enclosure="authorName">
+            <label class="col-form-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.authorName"/></label>
             <label wicket:id="authorName" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
           </div>
-          <div class="form-group row" wicket:enclosure="websiteURL">
-            <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.homepage"/></label>
+          <div class="form-group form-row" wicket:enclosure="websiteURL">
+            <label class="col-form-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.homepage"/></label>
             <a wicket:id="websiteURL" class="col-sm-9" target="_blank"></a>
           </div>
         </div>
@@ -85,8 +85,8 @@
 
       <!-- Import -->
       <div wicket:enclosure="uploadForm">
-        <div class="form-group row">
-          <label class="control-label col-sm-3">
+        <div class="form-group form-row">
+          <label class="col-form-label col-sm-3">
             <wicket:message key="kb.details.local.contents"/>
           </label>
           <div class="col-sm-9">
@@ -97,15 +97,15 @@
             </div>
           </div>
         </div>
-        <div class="form-group row">
-          <p class="col-sm-9 col-md-offset-3" id="supportedList">
-            <em class="small"><wicket:message key="kb.local.fileupload.supported.list"/></em>
+        <div class="form-group form-row">
+          <p class="col-sm-9 offset-sm-3" id="supportedList">
+            <small class="text-muted"><wicket:message key="kb.local.fileupload.supported.list"/></small>
           </p>
         </div>
       </div>
       <wicket:enclosure wicket:id="clear">
-        <div class="form-group row">
-          <label class="col-sm-3 control-label">
+        <div class="form-group form-row">
+          <label class="col-sm-3 col-form-label">
             <wicket:message key="kb.details.local.contents.clear"/>
           </label>
           <div class="col-sm-9">
@@ -115,14 +115,14 @@
         </div>
       </wicket:enclosure>
       <!-- Export -->
-      <div class="form-group row" wicket:enclosure="exportButtons">
-        <label class="control-label col-sm-3">
+      <div class="form-group form-row" wicket:enclosure="exportButtons">
+        <label class="col-form-label col-sm-3">
           <wicket:message key="kb.details.local.contents.export"/>
         </label>
         <div class="col-sm-9">
           <div class="flex-h-container flex-gutter flex-only-internal-gutter">
             <div wicket:id="exportButtons">
-              <button wicket:id="link" type="button" class="btn btn-default"><i
+              <button wicket:id="link" type="button" class="btn btn-secondary"><i
                       class="fas fa-download" aria-hidden="true"></i>
                 <wicket:container wicket:id="label"></wicket:container>
               </button>
@@ -131,39 +131,48 @@
         </div>
       </div>
 
-      <div class="form-group row" wicket:id="listViewContainer" wicket:enclosure="listViewContainer">
-        <label class="control-label col-sm-3">
+      <div class="form-group form-row" wicket:id="listViewContainer" wicket:enclosure="listViewContainer">
+        <label class="col-form-label col-sm-3">
           <wicket:message key="kb.wizard.steps.local.predefinedKBs"/>
         </label>
         <div class="col-sm-9">
           <div class="btn-group-vertical">
             <wicket:container wicket:id="localKBs">
-              <button wicket:id="suggestionLink" type="button" class="btn btn-default">
+              <button wicket:id="suggestionLink" type="button" class="btn btn-outline-secondary">
                 <wicket:container wicket:id="suggestionLabel"/>
               </button>
             </wicket:container>
           </div>
-          <button wicket:id="addKbButton" type="button" class="btn btn-outline-secondary">
+          <button wicket:id="addKbButton" type="button" class="btn btn-secondary">
             <wicket:container wicket:id="addKbLabel"></wicket:container>
           </button>
         </div>
       </div>
-      <div class="form-group" wicket:id="infoContainer" style="margin-top: 20px;">
-        <div class="form-group row" wicket:enclosure="description">
-          <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.description"/></label>
-          <label wicket:id="description" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
+      <hr/>
+      <div wicket:id="infoContainer">
+        <div class="form-group form-row" wicket:enclosure="description">
+          <label class="col-form-label col-sm-3">
+            <wicket:message key="kb.wizard.steps.accessSpecific.description"/>
+            </label>
+          <span wicket:id="description" class="form-control col-sm-9 text-muted"/>
         </div>
-        <div class="form-group row" wicket:enclosure="hostInstitutionName">
-          <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.hostInstitutionName"/></label>
-          <label wicket:id="hostInstitutionName" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
+        <div class="form-group form-row" wicket:enclosure="hostInstitutionName">
+          <label class="col-form-label col-sm-3">
+            <wicket:message key="kb.wizard.steps.accessSpecific.hostInstitutionName"/>
+          </label>
+          <span wicket:id="hostInstitutionName" class="form-control col-sm-9 text-muted"/>
         </div>
-        <div class="form-group row" wicket:enclosure="authorName">
-          <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.authorName"/></label>
-          <label wicket:id="authorName" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
+        <div class="form-group form-row" wicket:enclosure="authorName">
+          <label class="col-form-label col-sm-3">
+            <wicket:message key="kb.wizard.steps.accessSpecific.authorName"/>
+          </label>
+          <span wicket:id="authorName" class="form-control col-sm-9 text-muted"/>
         </div>
-        <div class="form-group row" wicket:enclosure="websiteURL">
-          <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.homepage"/></label>
-          <a wicket:id="websiteURL" class="col-sm-9" target="_blank"></a>
+        <div class="form-group form-row" wicket:enclosure="websiteURL">
+          <label class="col-form-label col-sm-3">
+            <wicket:message key="kb.wizard.steps.accessSpecific.homepage"/>
+          </label>
+          <a wicket:id="websiteURL" class="form-control col-sm-9" target="_blank"></a>
       </div>
     </div>
 
