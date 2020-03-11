@@ -127,6 +127,9 @@
     <module>inception-example-imls-data-majority</module>
     <!-- Documentation -->
     <module>inception-doc</module>
+    <!-- Curation -->
+    
+    <module>inception-curation</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -724,7 +727,7 @@
         <artifactId>h2</artifactId>
         <version>1.4.197</version>
       </dependency>
-
+     
       <!-- JAXB DEPENDENCIES -->
       <dependency>
         <groupId>javax.xml.bind</groupId>
@@ -1144,6 +1147,12 @@
         <groupId>org.webjars</groupId>
         <artifactId>d3js</artifactId>
         <version>5.5.0</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-curation</artifactId>
+        <version>0.15.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.webjars.bowergithub.xbsoftware</groupId>

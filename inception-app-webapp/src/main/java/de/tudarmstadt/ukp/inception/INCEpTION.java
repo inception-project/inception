@@ -85,13 +85,13 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
                 // activation strategies for menu items. Thus, we need to re-implement the menu
                 // items for INCEpTION.
                 AnnotationPageMenuItem.class,
-                CurationPageMenuItem.class,
                 MonitoringPageMenuItem.class,
                 AgreementPageMenuItem.class,
 
                 // INCEpTION uses its recommenders, not the WebAnno automation code
                 AutomationService.class, 
                 AutomationMiraTemplateExporter.class,
+                CurationPageMenuItem.class,
                 AutomationTrainingDocumentExporter.class
         })})
 @EntityScan(basePackages = {

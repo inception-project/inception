@@ -452,6 +452,9 @@ public class RecommendationServiceImpl
             // document, we start the predictions so that the user gets recommendations
             // as quickly as possible without any interaction needed
             User user = userRepository.get(username);
+            if (user == null) {
+                return;
+            }
             Predictions predictions = getPredictions(user, project);
             if (
                     predictions == null ||
@@ -580,12 +583,11 @@ public class RecommendationServiceImpl
             SourceDocument aCurrentDocument)
     {
         User user = userRepository.get(aUser);
-        
         // do not trigger training during when viewing others' work
-        if (!user.equals(userRepository.getCurrentUser())) {
+        if (user == null || !user.equals(userRepository.getCurrentUser())) {
             return;
         }
-
+        
         // Update the task count
         AtomicInteger count = trainingTaskCounter.computeIfAbsent(
             new RecommendationStateKey(user.getUsername(), aProject),
