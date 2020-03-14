@@ -325,6 +325,10 @@ public class CurationServiceImpl
     private void storeCurationSettings(String aUsername)
     {
         User currentUser = userRegistry.get(aUsername);
+        if (currentUser == null) {
+            return;
+        }
+        
         for (Project project : projectService.listAccessibleProjects(currentUser)) {
             Long projectId = project.getId();
             Set<String> usernames = null;
