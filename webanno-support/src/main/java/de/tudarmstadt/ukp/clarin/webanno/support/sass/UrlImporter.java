@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 import javax.servlet.ServletContext;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Application;
 import org.apache.wicket.WicketRuntimeException;
@@ -252,9 +253,9 @@ class UrlImporter
 
     private String getAbsolutePath(URI base, String url)
     {
-        String basePath = base.toString();
-        Path parentBasePath = Paths.get(basePath).getParent();
-        return parentBasePath.resolve(url).toString();
+        String parentPath = new File(base.toString()).getParent();
+        String result = FilenameUtils.concat(parentPath, url);
+        return FilenameUtils.normalize(result, true);
     }
 
     private Import buildImport(URL importUri)
