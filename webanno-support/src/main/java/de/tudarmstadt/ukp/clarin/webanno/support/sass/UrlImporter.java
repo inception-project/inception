@@ -7,8 +7,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
@@ -16,6 +14,7 @@ import java.util.stream.Stream;
 
 import javax.servlet.ServletContext;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Application;
 import org.apache.wicket.WicketRuntimeException;
@@ -252,9 +251,9 @@ class UrlImporter
 
     private String getAbsolutePath(URI base, String url)
     {
-        String basePath = base.toString();
-        Path parentBasePath = Paths.get(basePath).getParent();
-        return parentBasePath.resolve(url).toString();
+        String parentPath = new File(base.toString()).getParent();
+        String result = FilenameUtils.concat(parentPath, url);
+        return FilenameUtils.normalize(result, true);
     }
 
     private Import buildImport(URL importUri)
