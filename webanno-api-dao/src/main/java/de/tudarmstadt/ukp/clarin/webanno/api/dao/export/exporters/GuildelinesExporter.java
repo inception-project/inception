@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
+import static org.apache.commons.io.FileUtils.forceMkdir;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
@@ -91,16 +94,15 @@ public class GuildelinesExporter
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ZipUtils.normalizeEntryName(entry);
             
-            if (entryName.startsWith(GUIDELINES_FOLDER + "/")) {
+            if (entryName.startsWith(GUIDELINE + "/")) {
                 String fileName = FilenameUtils.getName(entry.getName());
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
                 File guidelineDir = projectService.getGuidelinesFolder(aProject);
-                FileUtils.forceMkdir(guidelineDir);
-                FileUtils.copyInputStreamToFile(aZip.getInputStream(entry), new File(guidelineDir,
-                        fileName));
-                
+                forceMkdir(guidelineDir);
+                copyInputStreamToFile(aZip.getInputStream(entry), new File(guidelineDir, fileName));
+ 
                 log.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
                         + "] with id [" + aProject.getId() + "]");
             }
