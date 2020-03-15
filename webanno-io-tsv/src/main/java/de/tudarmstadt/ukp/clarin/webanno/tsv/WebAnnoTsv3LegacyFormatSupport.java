@@ -89,7 +89,7 @@ public class WebAnnoTsv3LegacyFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(WebannoTsv3Reader.class);
+        return createReaderDescription(WebannoTsv3Reader.class, aTSD);
     }
     
     @Override
@@ -152,7 +152,7 @@ public class WebAnnoTsv3LegacyFormatSupport
             }
         }
 
-        return createEngineDescription(WebannoTsv3Writer.class,
+        return createEngineDescription(WebannoTsv3Writer.class, aTSD,
                 "spanLayers", spanLayers, 
                 "slotFeatures", slotFeatures, 
                 "slotTargets", slotTargets, 

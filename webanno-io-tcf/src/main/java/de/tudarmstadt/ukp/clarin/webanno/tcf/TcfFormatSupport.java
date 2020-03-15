@@ -67,7 +67,7 @@ public class TcfFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(TcfReader.class);
+        return createReaderDescription(TcfReader.class, aTSD);
     }
     
     @Override
@@ -75,6 +75,6 @@ public class TcfFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(TcfWriter.class);
+        return createEngineDescription(TcfWriter.class, aTSD);
     }
 }

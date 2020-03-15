@@ -55,6 +55,6 @@ public class LineOrientedTextFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(LineOrientedTextReader.class);
+        return createReaderDescription(LineOrientedTextReader.class, aTSD);
     }
 }

@@ -67,7 +67,7 @@ public class ConllCoreNlpFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(ConllCoreNlpReader.class);
+        return createReaderDescription(ConllCoreNlpReader.class, aTSD);
     }
     
     @Override
@@ -75,6 +75,6 @@ public class ConllCoreNlpFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(ConllCoreNlpWriter.class);
+        return createEngineDescription(ConllCoreNlpWriter.class, aTSD);
     }
 }
