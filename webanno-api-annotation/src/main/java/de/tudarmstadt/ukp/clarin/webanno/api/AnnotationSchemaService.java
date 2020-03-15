@@ -392,6 +392,16 @@ public interface AnnotationSchemaService
             String[] aTagDescription, Project aProject)
                 throws IOException;
     
+
+    /**
+     * Returns a type system with all the types that should be present in an exported CAS. This
+     * means in particular that type internal to the application should <b>not</b> be included.
+     * 
+     * @see #getFullProjectTypeSystem(Project, boolean)
+     */
+    TypeSystemDescription getTypeSystemForExport(Project aProject)
+            throws ResourceInitializationException;
+
     /**
      * Returns the custom types define in the project excluding built-in types.
      * 
@@ -500,7 +510,8 @@ public interface AnnotationSchemaService
      * resulting CAS should be <b>only</b> used for export and never be persisted within the
      * repository.
      */
-    CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+    CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws ResourceInitializationException, UIMAException, IOException;
 
     void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)

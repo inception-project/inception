@@ -116,7 +116,8 @@ public class AnnotationDocumentsExporterTest
             return doc;
         });
                 
-        sut = new AnnotationDocumentExporter(documentService, null, importExportSerivce);
+        sut = new AnnotationDocumentExporter(documentService, schemaService, null,
+                importExportSerivce);
     }
 
     @Test
