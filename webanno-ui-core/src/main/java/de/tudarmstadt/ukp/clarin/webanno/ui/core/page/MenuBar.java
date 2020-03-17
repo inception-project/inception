@@ -48,8 +48,7 @@ public class MenuBar
 
         add(new LogoutPanel("logoutPanel"));
 
-        add(helpLink = new ExternalLink("helpLink", new ResourceModel("page.help.link", ""),
-                new ResourceModel("page.help", "")) {
+        add(helpLink = new ExternalLink("helpLink", new ResourceModel("page.help.link", "")) {
             private static final long serialVersionUID = -2510064191732926764L;
 
             @Override
@@ -58,6 +57,8 @@ public class MenuBar
                 super.onConfigure();
                 
                 try {
+                    // Trying to access the resources - if we can, then we show the link, but if
+                    // we fail, then we hide the link
                     getString("page.help.link");
                     getString("page.help");
                     helpLink.setVisible(true);

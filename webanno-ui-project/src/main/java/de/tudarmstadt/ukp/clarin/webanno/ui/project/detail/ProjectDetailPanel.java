@@ -103,9 +103,9 @@ public class ProjectDetailPanel
         scriptDirection.setChoices(Arrays.asList(ScriptDirection.values()));
         form.add(scriptDirection);
         
-        form.add(new CheckBox("disableExport"));
+        form.add(new CheckBox("disableExport").setOutputMarkupPlaceholderTag(true));
 
-        form.add(new CheckBox("anonymousCuration"));
+        form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
 
         form.add(projectTypes = makeProjectTypeChoice());
         

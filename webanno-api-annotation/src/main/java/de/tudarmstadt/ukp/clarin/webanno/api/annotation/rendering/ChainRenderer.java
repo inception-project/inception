@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -53,10 +54,10 @@ public class ChainRenderer
 {
     private final List<SpanLayerBehavior> behaviors;
     
-    public ChainRenderer(ChainAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry,
-            List<SpanLayerBehavior> aBehaviors)
+    public ChainRenderer(ChainAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
     {
-        super(aTypeAdapter, aFeatureSupportRegistry);
+        super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
         
         if (aBehaviors == null) {
             behaviors = emptyList();
@@ -124,7 +125,7 @@ public class ChainRenderer
                     continue; // Go to next link
                 }
 
-                String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
+                String bratTypeName = typeAdapter.getUiTypeName();
 
                 // Render span
                 {

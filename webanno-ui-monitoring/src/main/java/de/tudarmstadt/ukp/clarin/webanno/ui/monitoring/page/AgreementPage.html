@@ -21,11 +21,11 @@
   <wicket:extend>
     <div class="flex-content flex-h-container flex-gutter">
       <form wicket:id="projectSelectionForm" class="flex-sidebar flex-v-container flex-gutter">
-        <div class="flex-content panel panel-default panel-flex">
-          <div class="panel-heading">
-            <h3 class="panel-title"><wicket:message key="projects" /></h3>
+        <div class="flex-content card">
+          <div class="card-header">
+            <wicket:message key="projects" />
           </div>
-          <div class="scrolling panel-body fit-child-snug" >
+          <div class="scrolling card-body fit-child-snug" >
             <select wicket:id="project" size="20" class="form-control"></select>
           </div>
         </div>
@@ -36,23 +36,23 @@
           <div class="page-header">
             <h1><wicket:container wicket:id="name"/></h1>
           </div>
-          <div class="panel panel-default panel-flex">
-            <div class="panel-heading">
-              <h3 class="panel-title"><wicket:message key="settings" />
-              <span class="pull-right"><a target="_blank" wicket:message="href:agreement.help.link">
-                  <wicket:message key="help" /></a></span></h3>
+          <div class="card">
+            <div class="card-header">
+              <wicket:message key="settings"/>
+              <span class="float-right"><a target="_blank" wicket:message="href:agreement.help.link">
+                  <i class="fas fa-question-circle"></i></a></span>
             </div>
-            <div class="panel-body flex-h-container form-horizontal">
+            <div class="card-body flex-h-container">
               <div class="flex-content">
-                <div class="form-group" wicket:enclosure="feature">
-                  <label wicket:for="feature" class="col-sm-4 control-label">
+                <div class="form-group form-row" wicket:enclosure="feature">
+                  <label wicket:for="feature" class="col-sm-4 col-form-label">
                   <wicket:label key="feature"/></label>
                   <div class="col-sm-8">
                     <select wicket:id="feature" class="form-control" data-container="body"></select>
                   </div>
                 </div>
-                <div class="form-group" wicket:enclosure="measure">
-                  <label wicket:for="measure" class="col-sm-4 control-label">
+                <div class="form-group form-row" wicket:enclosure="measure">
+                  <label wicket:for="measure" class="col-sm-4 col-form-label">
                   <wicket:label key="measure"/></label>
                   <div class="col-sm-8">
                     <select wicket:id="measure" class="form-control" data-container="body"></select>
@@ -63,7 +63,7 @@
                 <div wicket:id="traits"></div>
               </div>
             </div>
-            <div class="panel-footer flex-h-container">
+            <div class="card-footer flex-h-container">
               <div class="flex-content text-right">
                 <input type="submit" wicket:id="run" class="btn btn-primary" wicket:message="value:run"></input>
               </div>

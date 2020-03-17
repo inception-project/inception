@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -32,10 +35,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public interface LayerSupport<T extends TypeAdapter>
+public interface LayerSupport<A extends TypeAdapter, T>
     extends BeanNameAware
 {
-    Object getId();
+    String getId();
 
     /**
      * Checks whether the given layer is provided by the current layer support.
@@ -72,7 +75,7 @@ public interface LayerSupport<T extends TypeAdapter>
      *            the annotation layer.
      * @return the adapter.
      */
-    T createAdapter(AnnotationLayer aLayer);
+    A createAdapter(AnnotationLayer aLayer);
 
     /**
      * Add the types required for this layer to the given type system.
@@ -100,4 +103,70 @@ public interface LayerSupport<T extends TypeAdapter>
     }
 
     Renderer getRenderer(AnnotationLayer aLayer);
+    
+    /**
+     * Returns a Wicket component to configure the specific traits of this layer type. Note that
+     * every {@link LayerSupport} has to return a <b>different class</b> here. So it is not
+     * possible to simple return a Wicket {@link Panel} here, but it must be a subclass of
+     * {@link Panel} used exclusively by the current {@link LayerSupport}. If this is not done,
+     * then the traits editor in the UI will not be correctly updated when switching between layer
+     * types!
+     * 
+     * @param aId
+     *            a markup ID.
+     * @param aLayerModel
+     *            a model holding the annotation layer for which the traits editor should be
+     *            created.
+     * @return the traits editor component .
+     */
+    default Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
+    {
+        return new EmptyPanel(aId);
+    }
+    
+    default T createTraits()
+    {
+        return null;
+    }
+
+    /**
+     * Read the traits for the given {@link AnnotationLayer}. If traits are supported, then this
+     * method must be overwritten. A typical implementation would read the traits from a JSON string
+     * stored in {@link AnnotationLayer#getTraits}, but it would also possible to load the
+     * traits from a database table.
+     * 
+     * @param aLayer
+     *            the layer whose traits should be obtained.
+     * @return the traits.
+     */
+    default T readTraits(AnnotationLayer aLayer)
+    {
+        return null;
+    }
+
+    /**
+     * Write the traits for the given {@link AnnotationLayer}. If traits are supported, then this
+     * method must be overwritten. A typical implementation would write the traits from to JSON
+     * string stored in {@link AnnotationLayer#setTraits}, but it would also possible to store
+     * the traits from a database table.
+     * 
+     * @param aLayer
+     *            the layer whose traits should be written.
+     * @param aTraits
+     *            the traits.
+     */
+    default void writeTraits(AnnotationLayer aLayer, T aTraits)
+    {
+        aLayer.setTraits(null);
+    }
+    
+    default IllegalArgumentException unsupportedLayerTypeException(AnnotationLayer aLayer)
+    {
+        return new IllegalArgumentException("Unsupported type [" + aLayer.getType()
+                + "] on layer [" + aLayer.getName() + "]");
+    }
+    
+    void setLayerSupportRegistry(LayerSupportRegistry aLayerSupportRegistry);
+    
+    LayerSupportRegistry getLayerSupportRegistry();
 }

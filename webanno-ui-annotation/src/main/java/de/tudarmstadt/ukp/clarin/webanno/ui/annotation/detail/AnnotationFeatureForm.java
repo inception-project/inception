@@ -108,11 +108,15 @@ public class AnnotationFeatureForm
 
     // Top-level containers
     private final WebMarkupContainer noAnnotationWarning;
+    private final WebMarkupContainer noFeaturesWarning;
     private final WebMarkupContainer layerContainer;
     private final WebMarkupContainer buttonContainer;
     private final WebMarkupContainer infoContainer;
     private final WebMarkupContainer featureEditorContainer;
 
+    // Within layerContainer
+    private final WebMarkupContainer forwardAnnotationGroup;
+    
     // Within infoContainer
     private final WebMarkupContainer selectedAnnotationInfoContainer;
 
@@ -150,9 +154,25 @@ public class AnnotationFeatureForm
                 .add(visibleWhen(() -> !getModelObject().getSelection().getAnnotation().isSet()));
         add(noAnnotationWarning);
         
+        noFeaturesWarning = new WebMarkupContainer("noFeaturesWarning");
+        noFeaturesWarning.setOutputMarkupPlaceholderTag(true);
+        noFeaturesWarning.add(visibleWhen(() -> 
+                getModelObject().getSelection().getAnnotation().isSet() && 
+                getModelObject().getFeatureStates().isEmpty()));
+        add(noFeaturesWarning);
+
+        // Trying to re-render the forwardAnnotationCheckBox as part of an AJAX request when it is
+        // not visible causes an error in the JS console saying that the component could not be
+        // found. Placing it in this WebMarkupContainer and controlling the visibility via the
+        // container resolves this issue. Mind, using a "wicket:enclosure" instead of the
+        // WebMarkupGroup also did not work.
+        forwardAnnotationGroup = new WebMarkupContainer("forwardAnnotationGroup");
+        forwardAnnotationGroup.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
+        forwardAnnotationGroup.setOutputMarkupPlaceholderTag(true);
+        forwardAnnotationGroup.add(visibleWhen(this::isForwardable));
+
         layerContainer = new WebMarkupContainer("layerContainer");
         layerContainer.setOutputMarkupPlaceholderTag(true);
-        layerContainer.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
         layerContainer.add(relationHint = createRelationHint());
         layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
         // Visible if there is more than one selectable layer and if either "remember layer" is off
@@ -162,6 +182,7 @@ public class AnnotationFeatureForm
                 .map(layerChoices -> layerChoices.size() > 1).orElse(false).getObject()
                 && (!getModelObject().getPreferences().isRememberLayer()
                         || editorPanel.getEditorPage().isEditable())));
+        layerContainer.add(forwardAnnotationGroup);
         add(layerContainer);
 
         infoContainer = new WebMarkupContainer("infoContainer");
@@ -173,8 +194,8 @@ public class AnnotationFeatureForm
         selectedAnnotationInfoContainer.add(
                 visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
         selectedAnnotationInfoContainer.add(createSelectedAnnotationTypeLabel());
-        selectedAnnotationInfoContainer.add(createNoFeaturesWarningLabel());
         selectedAnnotationInfoContainer.add(createSelectedTextLabel());
+        selectedAnnotationInfoContainer.add(createJumpToAnnotationLink());
         selectedAnnotationInfoContainer
                 .add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
         infoContainer.add(selectedAnnotationInfoContainer);
@@ -183,8 +204,9 @@ public class AnnotationFeatureForm
         featureEditorContainer.setOutputMarkupPlaceholderTag(true);
         featureEditorContainer.add(featureEditorPanelContent = createFeatureEditorPanelContent());
         featureEditorContainer.add(createFocusResetHelper());
-        featureEditorContainer.add(
-                visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        featureEditorContainer.add(visibleWhen(() -> 
+                getModelObject().getSelection().getAnnotation().isSet() && 
+                !getModelObject().getFeatureStates().isEmpty()));
         add(featureEditorContainer);
         
         buttonContainer = new WebMarkupContainer("buttonContainer");
@@ -224,11 +246,11 @@ public class AnnotationFeatureForm
         return textfield;
     }
 
-    private Label createNoFeaturesWarningLabel()
+    private WebMarkupContainer createNoFeaturesWarningLabel()
     {
-        Label label = new Label("noFeaturesWarning", "No features available!");
-        label.add(visibleWhen(() -> getModelObject().getFeatureStates().isEmpty()));
-        return label;
+        WebMarkupContainer warning = new WebMarkupContainer("noFeaturesWarning");
+        warning.add(visibleWhen(() -> getModelObject().getFeatureStates().isEmpty()));
+        return warning;
     }
 
     private FeatureEditorPanelContent createFeatureEditorPanelContent()
@@ -333,7 +355,7 @@ public class AnnotationFeatureForm
         AnnotatorState state = getModelObject();
 
         aTarget.add(relationHint);
-        aTarget.add(forwardAnnotationCheckBox);
+        aTarget.add(forwardAnnotationGroup);
         
         // If forward annotation was enabled, disable it
         if (state.isForwardAnnotation()) {
@@ -393,14 +415,16 @@ public class AnnotationFeatureForm
         }
     }
 
-    private LambdaAjaxLink createSelectedTextLabel()
+    private Component createSelectedTextLabel()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("jumpToAnnotation",
-                this::actionJumpToAnnotation);
-        link.add(new Label("selectedText", PropertyModel.of(getModelObject(),
-                "selection.text")).setOutputMarkupId(true));
-        link.setOutputMarkupId(true);
-        return link;
+        return new Label("selectedText", PropertyModel.of(getModelObject(), "selection.text"))
+                .setOutputMarkupId(true);
+    }
+    
+    private Component createJumpToAnnotationLink()
+    {
+        return new LambdaAjaxLink("jumpToAnnotation", this::actionJumpToAnnotation)
+                .setOutputMarkupId(true);
     }
     
     private void actionJumpToAnnotation(AjaxRequestTarget aTarget) throws IOException
@@ -553,8 +577,7 @@ public class AnnotationFeatureForm
     private CheckBox createForwardAnnotationCheckBox()
     {
         CheckBox checkbox = new CheckBox("forwardAnnotation");
-        checkbox.setOutputMarkupPlaceholderTag(true);
-        checkbox.add(visibleWhen(this::isForwardable));
+        checkbox.setOutputMarkupId(true);
         checkbox.add(LambdaBehavior.onConfigure(_this -> {
             // Force-disable forward annotation mode if current layer is not forwardable
             if (!isForwardable()) {
@@ -951,7 +974,7 @@ public class AnnotationFeatureForm
     public void refresh(AjaxRequestTarget aTarget)
     {
         aTarget.add(layerContainer, buttonContainer, infoContainer, featureEditorContainer,
-                noAnnotationWarning);
+                noAnnotationWarning, noFeaturesWarning);
     }
     
     protected DropDownChoice<AnnotationLayer> getLayerSelector()

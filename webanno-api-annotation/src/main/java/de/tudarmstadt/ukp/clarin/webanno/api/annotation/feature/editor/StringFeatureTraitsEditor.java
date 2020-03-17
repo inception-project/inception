@@ -85,6 +85,8 @@ public class StringFeatureTraitsEditor
                 // Tagsets only are allowed for single-row input fields, not for textareas
                 if (traits.getObject().isMultipleRows()) {
                     feature.getObject().setTagset(null);
+                } else {
+                    traits.getObject().setDynamicSize(false);
                 }
 
                 getFeatureSupport().writeTraits(feature.getObject(), traits.getObject());
@@ -97,14 +99,16 @@ public class StringFeatureTraitsEditor
                 Integer.class);
         collapsedRows.setModel(PropertyModel.of(traits, "collapsedRows"));
         collapsedRows.setMinimum(1);
-        collapsedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
+        collapsedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows()
+                && !traits.getObject().isDynamicSize()));
         form.add(collapsedRows);
 
         NumberTextField<Integer> expandedRows = new NumberTextField<>("expandedRows",
                 Integer.class);
         expandedRows.setModel(PropertyModel.of(traits, "expandedRows"));
         expandedRows.setMinimum(1);
-        expandedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
+        expandedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows() 
+                && !traits.getObject().isDynamicSize()));
         form.add(expandedRows);
 
         DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
@@ -131,6 +135,14 @@ public class StringFeatureTraitsEditor
         multipleRows.add(
                 new LambdaAjaxFormComponentUpdatingBehavior("change", target -> target.add(form)));
         form.add(multipleRows);
+    
+        CheckBox dynamicSize = new CheckBox("dynamicSize");
+        dynamicSize.setModel(PropertyModel.of(traits, "dynamicSize"));
+        dynamicSize.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+            target -> target.add(form)
+        ));
+        dynamicSize.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
+        form.add(dynamicSize);
     }
 
     private KeyBindingsConfigurationPanel newKeyBindingsConfigurationPanel(

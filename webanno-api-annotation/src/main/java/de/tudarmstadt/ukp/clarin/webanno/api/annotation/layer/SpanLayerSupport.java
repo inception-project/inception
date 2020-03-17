@@ -25,6 +25,10 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -40,13 +44,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class SpanLayerSupport
-    extends LayerSupport_ImplBase<SpanAdapter>
+    extends LayerSupport_ImplBase<SpanAdapter, SpanLayerTraits>
     implements InitializingBean
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
-
+    
     private String layerSupportId;
     private List<LayerType> types;
 
@@ -93,9 +99,9 @@ public class SpanLayerSupport
     @Override
     public SpanAdapter createAdapter(AnnotationLayer aLayer)
     {
-        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, eventPublisher, aLayer,
-            () -> schemaService.listAnnotationFeature(aLayer),
-            layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+        SpanAdapter adapter = new SpanAdapter(getLayerSupportRegistry(), featureSupportRegistry,
+                eventPublisher, aLayer, () -> schemaService.listAnnotationFeature(aLayer),
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
         
         return adapter;
     }
@@ -116,7 +122,27 @@ public class SpanLayerSupport
     @Override
     public SpanRenderer getRenderer(AnnotationLayer aLayer)
     {
-        return new SpanRenderer(createAdapter(aLayer), featureSupportRegistry,
+        return new SpanRenderer(createAdapter(aLayer), getLayerSupportRegistry(),
+                featureSupportRegistry,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+    }
+    
+    @Override
+    public Panel createTraitsEditor(String aId,  IModel<AnnotationLayer> aLayerModel)
+    {
+        AnnotationLayer layer = aLayerModel.getObject();
+        
+        if (!accepts(layer)) {
+            throw unsupportedLayerTypeException(layer);
+        }
+        
+        return new SpanLayerTraitsEditor(aId, this, aLayerModel);
+    }
+    
+
+    @Override
+    public SpanLayerTraits createTraits()
+    {
+        return new SpanLayerTraits();
     }
 }

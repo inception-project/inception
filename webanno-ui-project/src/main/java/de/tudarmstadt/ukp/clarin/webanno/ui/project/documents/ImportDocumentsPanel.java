@@ -19,18 +19,21 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -38,7 +41,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -56,8 +61,9 @@ public class ImportDocumentsPanel extends Panel
     
     private @SpringBean DocumentService documentService;
     private @SpringBean ImportExportService importExportService;
+    private @SpringBean AnnotationSchemaService annotationService;
     
-    private FileUploadField fileUpload;
+    private BootstrapFileInputField fileUpload;
 
     private IModel<String> format;
     
@@ -83,7 +89,11 @@ public class ImportDocumentsPanel extends Panel
             }
         }
         
-        form.add(fileUpload = new FileUploadField("documents"));
+        form.add(fileUpload = new BootstrapFileInputField("documents"));
+        fileUpload.getConfig().showPreview(false);
+        fileUpload.getConfig().showUpload(false);
+        fileUpload.getConfig().showRemove(false);
+        fileUpload.setRequired(true);
 
         DropDownChoice<String> formats = new BootstrapSelect<>("format");
         formats.setModel(format);
@@ -105,23 +115,47 @@ public class ImportDocumentsPanel extends Panel
         
         List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
         Project project = projectModel.getObject();
+        
         if (isEmpty(uploadedFiles)) {
             error("No document is selected to upload, please select a document first");
             return;
         }
+        
         if (isNull(project.getId())) {
             error("Project not yet created, please save project details!");
             return;
         }
 
+        TypeSystemDescription fullProjectTypeSystem;
+        try {
+            fullProjectTypeSystem = annotationService
+                    .getFullProjectTypeSystem(project);
+        }
+        catch (Exception e) {
+            error("Unable to acquire the type system for project: " + getRootCauseMessage(e));
+            LOG.error("Unable to acquire the type system for project [{}]({})", project.getName(),
+                    project.getId(), e);
+            return;
+        }
+        
+        // Fetching all documents at once here is faster than calling existsSourceDocument() for
+        // every imported document
+        Set<String> existingDocuments = documentService.listSourceDocuments(project).stream()
+                .map(SourceDocument::getName)
+                .collect(Collectors.toCollection(HashSet::new));
+        
         for (FileUpload documentToUpload : uploadedFiles) {
             String fileName = documentToUpload.getClientFileName();
 
-            if (documentService.existsSourceDocument(project, fileName)) {
-                error("Document " + fileName + " already uploaded ! Delete "
+            if (existingDocuments.contains(fileName)) {
+                error("Document [" + fileName + "] already uploaded ! Delete "
                         + "the document if you want to upload again");
                 continue;
             }
+
+            // Add the imported document to the set of existing documents just in case the user
+            // somehow manages to upload two files with the same name...
+            existingDocuments.add(fileName);
 
             try {
                 SourceDocument document = new SourceDocument();
@@ -131,9 +165,9 @@ public class ImportDocumentsPanel extends Panel
                         .get().getId());
                 
                 try (InputStream is = documentToUpload.getInputStream()) {
-                    documentService.uploadSourceDocument(is, document);
+                    documentService.uploadSourceDocument(is, document, fullProjectTypeSystem);
                 }
-                info("File [" + fileName + "] has been imported successfully!");
+                info("Document [" + fileName + "] has been imported successfully!");
             }
             catch (Exception e) {
                 error("Error while uploading document " + fileName + ": "

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static java.util.Objects.isNull;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,6 +35,7 @@ import javax.persistence.PersistenceContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BOMInputStream;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -78,9 +80,16 @@ public class ConstraintsServiceImpl
 
     @Override
     @Transactional
-    public void createConstraintSet(ConstraintSet aSet)
+    public void createOrUpdateConstraintSet(ConstraintSet aSet)
     {
-        entityManager.persist(aSet);
+        Validate.notNull(aSet, "Constraints set must be specified");
+        
+        if (isNull(aSet.getId())) {
+            entityManager.persist(aSet);
+        }
+        else {
+            entityManager.merge(aSet);
+        }
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aSet.getProject().getId()))) {

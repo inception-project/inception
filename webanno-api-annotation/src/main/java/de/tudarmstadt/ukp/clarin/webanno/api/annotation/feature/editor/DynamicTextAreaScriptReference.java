@@ -1,5 +1,5 @@
 /*
- * Copyright 2015
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,31 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
-import org.apache.wicket.request.resource.CssResourceReference;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
-public class BaseLayoutCssReference extends CssResourceReference
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
+
+public class DynamicTextAreaScriptReference
+        extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
-
-    private static final BaseLayoutCssReference INSTANCE = new BaseLayoutCssReference();
-
+    
+    private static final DynamicTextAreaScriptReference INSTANCE =
+            new DynamicTextAreaScriptReference();
+    
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static BaseLayoutCssReference get()
+    public static DynamicTextAreaScriptReference get()
     {
         return INSTANCE;
     }
-
+    
     /**
      * Private constructor
      */
-    private BaseLayoutCssReference()
+    private DynamicTextAreaScriptReference()
     {
-        super(BaseLayoutCssReference.class, "BaseLayout.css");
+        super(DynamicTextAreaScriptReference.class, "DynamicTextAreaScript.js");
     }
 }

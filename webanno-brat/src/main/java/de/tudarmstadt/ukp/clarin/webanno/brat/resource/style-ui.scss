@@ -20,30 +20,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-@color_1: #000000;
-@color_2: #ffffff;
-@color_3: darkgray;
-@color_4: #777;
-@color_5: gray;
-@color_6: #333366;
-@color_7: #336633;
-@font_family_1: monospace;
-@font_family_2: 'Astloch', serif;
-@font_family_3: inherit;
-@background_color_1: #ffffff;
-@background_color_2: rgba(255,255,255,0.75);
-@background_color_3: #FF9696;
-@background_color_4: #FFE2A3;
-@background_color_5: #87b6d9;
-@background_color_6: #ffff99;
-@background_color_7: #FCFDFD;
-@background_color_8: #BBBBBB;
-@background_color_9: #eaf4fd;
-@background_color_10: #ccffcc;
-@background_color_11: #ffcccc;
-@background_color_12: #cccccc;
-@background_color_13: #eeeeee;
-@background_color_14: #dddddd;
+$color_1: #000000;
+$color_2: #ffffff;
+$color_3: darkgray;
+$color_4: #777;
+$color_5: gray;
+$color_6: #333366;
+$color_7: #336633;
+$font_family_1: monospace;
+$font_family_2: 'Astloch', serif;
+$font_family_3: inherit;
+$background_color_1: #ffffff;
+$background_color_2: rgba(255,255,255,0.75);
+$background_color_3: #FF9696;
+$background_color_4: #FFE2A3;
+$background_color_5: #87b6d9;
+$background_color_6: #ffff99;
+$background_color_7: #FCFDFD;
+$background_color_8: #BBBBBB;
+$background_color_9: #eaf4fd;
+$background_color_10: #ccffcc;
+$background_color_11: #ffcccc;
+$background_color_12: #cccccc;
+$background_color_13: #eeeeee;
+$background_color_14: #dddddd;
 
 .brat {
   @font-face {
@@ -103,8 +103,8 @@
   #messagepullup {
     max-height: 300px;
     overflow-y: scroll;
-    background-color: @background_color_1;
-    background-color: @background_color_2;
+    background-color: $background_color_1;
+    background-color: $background_color_2;
     z-index: 1;
   }
   #messages {
@@ -125,24 +125,24 @@
       }
     }
     >div.error {
-      background-color: @background_color_3;
+      background-color: $background_color_3;
       font-weight: bold;
-      color: @color_1;
+      color: $color_1;
     }
     >div.warning {
-      background-color: @background_color_4;
+      background-color: $background_color_4;
       font-weight: bold;
-      color: @color_1;
+      color: $color_1;
     }
     >div.comment {
-      background-color: @background_color_5;
-      color: @color_2;
+      background-color: $background_color_5;
+      color: $color_2;
       font-weight: bold;
       border: 1px outset #27628F;
     }
     >div.debug {
-      background-color: @background_color_6;
-      color: @color_1;
+      background-color: $background_color_6;
+      color: $color_1;
     }
   }
   #notes_container {
@@ -153,14 +153,14 @@
   }
   #arc_notes {
     &:disabled {
-      background-color: @background_color_7;
+      background-color: $background_color_7;
     }
   }
   #arc_notes_fieldset {
     &:disabled {
       border: 1px solid #BBBBBB;
       legend {
-        background-color: @background_color_8;
+        background-color: $background_color_8;
       }
     }
   }
@@ -177,19 +177,19 @@
     right: -2px;
   }
   .span_norm_txt_input {
-    background-color: @background_color_9;
+    background-color: $background_color_9;
   }
   input.valid_value {
-    background-color: @background_color_10;
+    background-color: $background_color_10;
   }
   input.invalid_value {
-    background-color: @background_color_11;
+    background-color: $background_color_11;
   }
   #norm_search_result_select {
     height: 200px;
     display: inline-block;
     border: 2px inset;
-    background-color: @background_color_1;
+    background-color: $background_color_1;
     border-collapse: collapse;
     width: 100%;
     margin-top: 10px;
@@ -215,7 +215,7 @@
       }
     }
     tr.selected {
-      background-color: @background_color_12;
+      background-color: $background_color_12;
     }
   }
   #norm_search_container {
@@ -343,13 +343,13 @@
   }
   #help_link {
     padding-right: 0.5em;
-    color: @color_3;
+    color: $color_3;
     vertical-align: center;
     float: right;
   }
   .document_edit_time {
-    font-family: @font_family_1;
-    color: @color_4;
+    font-family: $font_family_1;
+    color: $color_4;
   }
   #menu_explanation {
     margin-left: 10px;
@@ -364,7 +364,7 @@
     }
   }
   .logo {
-    font-family: @font_family_2;
+    font-family: $font_family_2;
     font-style: normal;
     text-decoration: none;
     text-transform: none;
@@ -411,7 +411,7 @@
     -webkit-border-radius: 0px 5px 5px 0px;
     border-radius: 0px 5px 5px 0px;
   }
-  #spinner {
+  #adjust-huener {
     display: none;
     position: fixed;
     right: 10px;
@@ -421,7 +421,7 @@
     height: 200px;
     display: inline-block;
     border: 2px inset;
-    background-color: @background_color_1;
+    background-color: $background_color_1;
     border-collapse: collapse;
     width: 100%;
     margin-top: 10px;
@@ -447,7 +447,7 @@
       }
     }
     tr.selected {
-      background-color: @background_color_12;
+      background-color: $background_color_12;
     }
     img {
       width: 16px;
@@ -466,7 +466,7 @@
     overflow: auto;
   }
   #import_text {
-    font-family: @font_family_3;
+    font-family: $font_family_3;
   }
   #export_page {
     div {
@@ -486,10 +486,10 @@
       text-align: left;
     }
     tr.background0 {
-      background-color: @background_color_13;
+      background-color: $background_color_13;
     }
     tr.background1 {
-      background-color: @background_color_14;
+      background-color: $background_color_14;
     }
   }
   .optionRow {
@@ -503,10 +503,10 @@
   #advanced_search_option_toggle {
     float: right;
     font-size: 80%;
-    color: @color_5;
+    color: $color_5;
   }
   #browserwarning {
-    background-color: @background_color_11;
+    background-color: $background_color_11;
     padding: 10px;
     display: none;
   }
@@ -517,10 +517,10 @@
     position: fixed;
   }
   .file {
-    color: @color_6;
+    color: $color_6;
   }
   .collection {
-    color: @color_7;
+    color: $color_7;
   }
   .rightalign {
     text-align: right;
@@ -555,3 +555,4 @@
     }
   }
 }
+

@@ -17,14 +17,14 @@
 /* -------------------------------------------------------------------------------------------------
  * Colors
  */
-.navbar-inverse {
-	background: #B90F22;
+.navbar-dark {
+	background-color: #B90F22 !important;
 }
 
-.navbar-inverse .navbar-brand {
+.navbar-dark .navbar-brand {
   color: white;
 }
 
-.navbar-inverse .navbar-text,.navbar-inverse .navbar-link {
+.navbar-dark .navbar-text,.navbar-dark .navbar-link {
   color: white;
 }

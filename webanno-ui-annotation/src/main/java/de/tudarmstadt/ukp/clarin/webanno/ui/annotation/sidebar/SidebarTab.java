@@ -36,5 +36,5 @@ public abstract class SidebarTab extends AbstractTab
     public ResourceReference getIcon()
     {
         return icon;
-    }
+    }    
 }

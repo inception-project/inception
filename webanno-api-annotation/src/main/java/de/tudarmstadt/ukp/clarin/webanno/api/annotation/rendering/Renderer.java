@@ -19,12 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isRequiredFeatureMissing;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -64,7 +64,7 @@ public interface Renderer
     
     FeatureSupportRegistry getFeatureSupportRegistry();
 
-    default Map<String, String> getFeatures(TypeAdapter aAdapter, FeatureStructure aFs,
+    default Map<String, String> renderLabelFeatureValues(TypeAdapter aAdapter, FeatureStructure aFs,
             List<AnnotationFeature> aFeatures)
     {
         FeatureSupportRegistry fsr = getFeatureSupportRegistry();
@@ -93,10 +93,10 @@ public interface Renderer
         return aFeatures.stream()
                 .filter(AnnotationFeature::isEnabled)
                 .flatMap(f -> fsr.getFeatureSupport(f).getLazyDetails(f, aFs).stream())
-                .collect(Collectors.toList());
+                .collect(toList());
     }
     
-    default Map<String, String> getHoverFeatures(TypeAdapter aAdapter, AnnotationFS aFs,
+    default Map<String, String> renderHoverFeatureValues(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
         FeatureSupportRegistry fsr = getFeatureSupportRegistry();
@@ -125,6 +125,10 @@ public interface Renderer
             FeatureStructure aFS, VDocument aResponse)
     {
         for (AnnotationFeature f : aFeatures) {
+            if (!f.isEnabled()) {
+                continue;
+            }
+            
             if (isRequiredFeatureMissing(f, aFS)) {
                 aResponse.add(new VComment(new VID(getAddr(aFS)), VCommentType.ERROR,
                         "Required feature [" + f.getName() + "] not set."));

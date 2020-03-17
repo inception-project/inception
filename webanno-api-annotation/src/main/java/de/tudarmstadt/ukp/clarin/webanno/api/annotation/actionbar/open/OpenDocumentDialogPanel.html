@@ -19,39 +19,43 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <form wicket:id="form" class="w_flex_container">
-    <div class="w_flex_content flex-h-container" style="padding: 0px;">
-      <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
-        <div class="flex-content flex-v-container" wicket:enclosure="project">
-          <label style="padding: 5px 0px 0px 15px;">
+    <div class="w_flex_content flex-h-container">
+      <div class="flex-content flex-h-container flex-gutter">
+        <div class="flex-content flex-v-container card" wicket:enclosure="project">
+          <div class="card-header">
             <wicket:message key="projects"/>
-          </label>
+          </div>
           <div class="flex-content scrolling fit-child-snug">
             <select wicket:id="project" class="form-control"></select>
           </div>
         </div>
-        <div class="flex-content flex-v-container" wicket:enclosure="user">
-          <label style="padding: 5px 0px 0px 15px;">
+        <div class="flex-content flex-v-container card" wicket:enclosure="user">
+          <div class="card-header">
             <wicket:message key="users"/>
-          </label>
+          </div>
           <div class="flex-content scrolling fit-child-snug">
             <select wicket:id="user" class="form-control"></select>
           </div>
         </div>
-        <div class="flex-content flex-v-container" wicket:enclosure="documents">
-            <label style="padding: 5px 0px 0px 15px;">
-              <wicket:message key="docs"/>
-            </label>
+        <div class="flex-content flex-v-container card" wicket:enclosure="documents">
+          <div class="card-header">
+            <wicket:message key="docs"/>
+          </div>
           <div class="flex-content scrolling fit-child-snug">
             <select wicket:id="documents" class="form-control"></select>
           </div>
         </div>
       </div>
     </div>
-    <div class="w_flex_footer panel-footer">
-      <div wicket:id="buttons" class="form-group pull-right">
-        <button wicket:id="openButton" class="btn btn-primary">Open</button>
-        <button wicket:id="cancelButton" class="btn btn-default">Cancel</button>
-      </div>
+    <div wicket:id="buttons" class="w_flex_footer card-footer text-right">
+       <button wicket:id="openButton" class="btn btn-primary">
+        <i class="fas fa-file-alt"></i>&nbsp;
+        <wicket:message key="open"/>
+      </button>
+      <button wicket:id="cancelButton" class="btn btn-secondary">
+        <i class="fas fa-times"></i>&nbsp;
+        <wicket:message key="cancel"/>
+      </button>
     </div>
   </form>
 </wicket:panel>

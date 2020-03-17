@@ -47,23 +47,23 @@ import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -81,6 +81,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -94,6 +96,9 @@ public class ProjectLayersPanel
     static final Logger LOG = LoggerFactory.getLogger(ProjectLayersPanel.class);
     private static final long serialVersionUID = -7870526462864489252L;
 
+    public static final String MID_FEATURE_SELECTION_FORM = "featureSelectionForm";
+    public static final String MID_FEATURE_DETAIL_FORM = "featureDetailForm";
+    
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService repository;
     private @SpringBean UserDao userRepository;
@@ -101,7 +106,7 @@ public class ProjectLayersPanel
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
-    private LayerSelectionForm layerSelectionForm;
+    private LayerSelectionPane layerSelectionPane;
     private FeatureSelectionForm featureSelectionForm;
     private LayerDetailForm layerDetailForm;
     private final FeatureDetailForm featureDetailForm;
@@ -119,20 +124,21 @@ public class ProjectLayersPanel
         selectedLayer = Model.of();
         selectedFeature = Model.of();
 
-        featureSelectionForm = new FeatureSelectionForm("featureSelectionForm", selectedFeature);
-        featureDetailForm = new FeatureDetailForm("featureDetailForm", selectedFeature);
+        featureSelectionForm = new FeatureSelectionForm(MID_FEATURE_SELECTION_FORM,
+                selectedFeature);
+        featureDetailForm = new FeatureDetailForm(MID_FEATURE_DETAIL_FORM, selectedFeature);
 
-        layerSelectionForm = new LayerSelectionForm("layerSelectionForm", selectedLayer);
+        layerSelectionPane = new LayerSelectionPane("layerSelectionPane", selectedLayer);
         layerDetailForm = new LayerDetailForm("layerDetailForm", selectedLayer,
                 featureSelectionForm, featureDetailForm);
 
-        add(layerSelectionForm);
+        add(layerSelectionPane);
         add(featureSelectionForm);
         add(layerDetailForm);
         add(featureDetailForm);
 
         importLayerForm = new ImportLayerForm("importLayerForm");
-        add(importLayerForm);
+        layerSelectionPane.add(importLayerForm);
     }
 
     @Override
@@ -144,29 +150,24 @@ public class ProjectLayersPanel
         featureDetailForm.setModelObject(null);
     }
 
-    private class LayerSelectionForm
-        extends Form<AnnotationLayer>
+    private class LayerSelectionPane
+        extends WebMarkupContainer
     {
         private static final long serialVersionUID = -1L;
 
-        public LayerSelectionForm(String id, IModel<AnnotationLayer> aModel)
+        public LayerSelectionPane(String id, IModel<AnnotationLayer> aModel)
         {
             super(id, aModel);
 
-            add(new Button("create", new StringResourceModel("label"))
-            {
-                private static final long serialVersionUID = -4482428496358679571L;
-
-                @Override
-                public void onSubmit()
-                {
-                    AnnotationLayer layer = new AnnotationLayer();
-                    layer.setProject(ProjectLayersPanel.this.getModelObject());
-                    
-                    layerDetailForm.setModelObject(layer);
-                    featureDetailForm.setModelObject(null);
-                }
-            });
+            add(new LambdaAjaxLink("create", _target -> {
+                AnnotationLayer layer = new AnnotationLayer();
+                layer.setProject(ProjectLayersPanel.this.getModelObject());
+                
+                layerDetailForm.setModelObject(layer);
+                featureDetailForm.setModelObject(null);
+                
+                _target.add(ProjectLayersPanel.this);
+            }));
 
             final Map<AnnotationLayer, String> colors = new HashMap<>();
 
@@ -230,6 +231,11 @@ public class ProjectLayersPanel
             layerSelection.setOutputMarkupId(true);
             layerSelection.add(OnChangeAjaxBehavior.onChange(_target -> {
                 featureDetailForm.setModelObject(null);
+                
+                // list and detail panel share the same model, but they are not
+                // automatically notified of updates to the model unless the 
+                // updates go through their respective setModelObject() calls
+                layerDetailForm.modelChanged();
 
                 _target.add(layerDetailForm);
                 _target.add(featureSelectionForm);
@@ -243,13 +249,19 @@ public class ProjectLayersPanel
     {
         private static final long serialVersionUID = -7777616763931128598L;
 
-        private FileUploadField fileUpload;
+        private BootstrapFileInputField fileUpload;
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public ImportLayerForm(String id)
         {
             super(id);
-            add(fileUpload = new FileUploadField("content", new Model()));
+            
+            add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
+            fileUpload.getConfig().showPreview(false);
+            fileUpload.getConfig().showUpload(false);
+            fileUpload.getConfig().showRemove(false);
+            fileUpload.setRequired(true);
+            
             add(new LambdaAjaxButton("import", this::actionImport));
         }
 
@@ -418,19 +430,13 @@ public class ProjectLayersPanel
                         }
                     });
                     setNullValid(false);
-                    add(new FormComponentUpdatingBehavior()
-                    {
-                        private static final long serialVersionUID = -2961708999353358452L;
-                        
-                        @Override
-                        protected void onUpdate()
-                        {
-                            // list and detail panel share the same model, but they are not
-                            // automatically notified of updates to the model unless the 
-                            // updates go through their respective setModelObject() calls
-                            featureDetailForm.modelChanged();
-                        };
-                    });
+                    add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
+                        // list and detail panel share the same model, but they are not
+                        // automatically notified of updates to the model unless the 
+                        // updates go through their respective setModelObject() calls
+                        featureDetailForm.modelChanged();
+                        _target.add(featureDetailForm);
+                    }));
                 }
 
                 @Override
@@ -440,7 +446,7 @@ public class ProjectLayersPanel
                 }
             });
 
-            add(new Button("new", new StringResourceModel("label"))
+            add(new Button("new")
             {
                 private static final long serialVersionUID = 1L;
 

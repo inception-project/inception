@@ -135,6 +135,7 @@ public class AnnotationPage
     private WebMarkupContainer actionBar;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
+    private SidebarPanel leftSidebar;
 
     public AnnotationPage()
     {
@@ -206,11 +207,13 @@ public class AnnotationPage
         actionBar.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
         actionBar.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
         centerArea.add(actionBar);
-        
-        createAnnotationEditor(null);
 
         add(createRightSidebar());
-        add(createLeftSidebar());
+
+        createAnnotationEditor(null);
+
+        leftSidebar = createLeftSidebar();
+        add(leftSidebar);
     }
 
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
@@ -547,6 +550,12 @@ public class AnnotationPage
 
                 SourceDocument previousDoc = getModelObject().getDocument();
                 handleParameters(project, document, name, focus, false);
+                
+                // url is from external link, not just paging through documents,
+                // tabs may have changed depending on user rights
+                if (previousDoc == null) {
+                    leftSidebar.refreshTabs(aTarget);
+                }
                 
                 updateDocumentView(aTarget, previousDoc, focus);
             }

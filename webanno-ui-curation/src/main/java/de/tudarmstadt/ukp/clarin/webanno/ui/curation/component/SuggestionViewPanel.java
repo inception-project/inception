@@ -26,8 +26,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility.isDocumentFinished;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.AGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.DISAGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.DO_NOT_USE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.USE;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
@@ -43,7 +48,6 @@ import java.util.Set;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -65,6 +69,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -72,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -80,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.AlreadyMergedException;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
@@ -103,7 +111,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationS
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -134,7 +141,8 @@ public class SuggestionViewPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CorrectionDocumentService correctionDocumentService;
-    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationSchemaService schemaService;
+    private @SpringBean ColoringService coloringService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
@@ -192,7 +200,7 @@ public class SuggestionViewPanel
 
         if (!action.isEmpty()) {
             String type = removePrefix(request.getParameterValue(PARAM_TYPE).toString());
-            AnnotationLayer layer = annotationService.getLayer(TypeUtil.getLayerId(type));
+            AnnotationLayer layer = schemaService.getLayer(TypeUtil.getLayerId(type));
             VID sourceVid = VID.parse(request.getParameterValue(PARAM_ID).toString());
 
             CAS targetCas = readEditorCas(aSegment.getAnnotatorState());
@@ -221,7 +229,7 @@ public class SuggestionViewPanel
             }
 
             // check if clicked on a span
-            CasMerge casMerge = new CasMerge(annotationService);
+            CasMerge casMerge = new CasMerge(schemaService);
             if (ACTION_SELECT_SPAN_FOR_MERGE.equals(action.toString())) {
                 mergeSpan(casMerge, targetCas, sourceCas, sourceVid, sourceState.getDocument(),
                         sourceState.getUser().getUsername(), layer);
@@ -264,7 +272,7 @@ public class SuggestionViewPanel
         CAS targetCas = readEditorCas(aSegment.getAnnotatorState());
         CAS sourceCas = readAnnotatorCas(aSegment);
         AnnotatorState sourceState = aSegment.getAnnotatorState();
-        TypeAdapter adapter = annotationService.getAdapter(aLayer);
+        TypeAdapter adapter = schemaService.getAdapter(aLayer);
 
         int mergeConflict = 0;
         int alreadyMerged = 0;
@@ -272,7 +280,7 @@ public class SuggestionViewPanel
         int created = 0;
         Set<String> otherErrors = new LinkedHashSet<>();
         
-        CasMerge casMerge = new CasMerge(annotationService);
+        CasMerge casMerge = new CasMerge(schemaService);
         casMerge.setSilenceEvents(true);
         
         nextAnnotation: for (AnnotationFS ann : select(sourceCas,
@@ -367,7 +375,7 @@ public class SuggestionViewPanel
     {
         AnnotationFS sourceAnnotation = selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
 
-        TypeAdapter adapter = annotationService.getAdapter(aLayer);
+        TypeAdapter adapter = schemaService.getAdapter(aLayer);
         AnnotationFeature feature = adapter.listFeatures().stream().sequential()
                 .skip(aSourceVid.getAttribute()).findFirst().get();
 
@@ -462,8 +470,8 @@ public class SuggestionViewPanel
                 aBratAnnotatorModel.getWindowEndOffset(), aCas, layersToRender);
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, aBratAnnotatorModel, vdoc, aCas, annotationService,
-                aCurationColoringStrategy);
+        BratRenderer renderer = new BratRenderer(schemaService, coloringService);
+        renderer.render(response, aBratAnnotatorModel, vdoc, aCas, aCurationColoringStrategy);
         return JSONUtil.toInterpretableJsonString(response);
     }
 
@@ -496,10 +504,45 @@ public class SuggestionViewPanel
 
         // We store the CAS that the user will edit as the "CURATION USER"
         casses.put(CURATION_USER, annotatorCas);
+        List<DiffAdapter> adapters = getDiffAdapters(schemaService, state.getAnnotationLayers());
+        
+        Map<String, Map<VID, AnnotationState>> annoStates1 = new HashMap<>();
+        
+        Project project = state.getProject();
+        Mode mode1 = state.getMode();
+        
+        DiffResult diff;
+        if (mode1.equals(CURATION)) {
+            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
+                    aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd())
+                            .toResult();
+        }
+        else {
+            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, aCurationSegment.getBegin(),
+                    aCurationSegment.getEnd()).toResult();
+        }
+        
+        Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();
+        
+        Collection<ConfigurationSet> i = diff.getIncompleteConfigurationSets().values();
+        for (ConfigurationSet cfgSet : d) {
+            if (i.contains(cfgSet)) {
+                i.remove(cfgSet);
+            }
+        }
+        
+        addSuggestionColor(project, mode1, casses, annoStates1, d, false, false);
+        addSuggestionColor(project, mode1, casses, annoStates1, i, true, false);
+        
+        List<ConfigurationSet> all = new ArrayList<>();
+        all.addAll(diff.getConfigurationSets());
+        all.removeAll(d);
+        all.removeAll(i);
+        
+        addSuggestionColor(project, mode1, casses, annoStates1, all, false, true);
 
         // get differing feature structures
-        Map<String, Map<VID, AnnotationState>> annoStates = calcColors(state, aCurationSegment,
-                annotatorCas, casses);
+        Map<String, Map<VID, AnnotationState>> annoStates = annoStates1;
 
         List<String> usernamesSorted = new ArrayList<>(casses.keySet());
         Collections.sort(usernamesSorted);
@@ -525,7 +568,7 @@ public class SuggestionViewPanel
                 seg.setUsername(username);
                 seg.setAnnotatorState(state);
                 seg.setCollectionData(
-                        getCollectionInformation(annotationService, aCurationContainer));
+                        getCollectionInformation(schemaService, aCurationContainer));
                 seg.setDocumentResponse(render(cas, state, curationColoringStrategy));
                 seg.setSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
                 segments.add(seg);
@@ -571,11 +614,44 @@ public class SuggestionViewPanel
 
         // We store the CAS that the user will edit as the "CURATION USER"
         casses.put(CURATION_USER, annotatorCas);
+        List<DiffAdapter> adapters = getDiffAdapters(schemaService, state.getAnnotationLayers());
+        
+        Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
+        
+        Project project = state.getProject();
+        Mode mode = state.getMode();
+        
+        DiffResult diff;
+        if (mode.equals(CURATION)) {
+            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
+                    aCurationSegment.getCurationBegin(), aCurationSegment.getCurationEnd())
+                            .toResult();
+        }
+        else {
+            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, aCurationSegment.getBegin(),
+                    aCurationSegment.getEnd()).toResult();
+        }
+        
+        Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();
+        
+        Collection<ConfigurationSet> i = diff.getIncompleteConfigurationSets().values();
+        for (ConfigurationSet cfgSet : d) {
+            if (i.contains(cfgSet)) {
+                i.remove(cfgSet);
+            }
+        }
+        
+        addSuggestionColor(project, mode, casses, annoStates, d, false, false);
+        addSuggestionColor(project, mode, casses, annoStates, i, true, false);
+        
+        List<ConfigurationSet> all = new ArrayList<>();
+        all.addAll(diff.getConfigurationSets());
+        all.removeAll(d);
+        all.removeAll(i);
+        
+        addSuggestionColor(project, mode, casses, annoStates, all, false, true);
 
         // get differing feature structures
-        Map<String, Map<VID, AnnotationState>> annoStates = calcColors(state, aCurationSegment,
-                annotatorCas, casses);
-
         sentenceListView.visitChildren(BratSuggestionVisualizer.class, (v, visit) -> {
             BratSuggestionVisualizer vis = (BratSuggestionVisualizer) v;
             UserAnnotationSegment seg = vis.getModelObject();
@@ -589,7 +665,7 @@ public class SuggestionViewPanel
             // Create curation view for the current user
             try {
                 seg.setCollectionData(
-                        getCollectionInformation(annotationService, aCurationContainer));
+                        getCollectionInformation(schemaService, aCurationContainer));
                 seg.setDocumentResponse(render(cas, state, curationColoringStrategy));
                 seg.setAnnotatorState(state);
                 seg.setSelectionByUsernameAndAddress(aAnnotationSelectionByUsernameAndAddress);
@@ -603,62 +679,17 @@ public class SuggestionViewPanel
         });
     }
 
-    private Map<String, Map<VID, AnnotationState>> calcColors(AnnotatorState state,
-            SourceListView aCurationSegment, CAS annotatorCas, Map<String, CAS> aCasses)
-    {
-        // get differing feature structures
-        List<Type> entryTypes = SuggestionBuilder.getEntryTypes(annotatorCas,
-                state.getAnnotationLayers(), annotationService);
-
-        Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
-
-        DiffResult diff;
-        if (state.getMode().equals(CURATION)) {
-            diff = doDiffSingle(annotationService, state.getProject(), entryTypes,
-                    LINK_ROLE_AS_LABEL, aCasses, aCurationSegment.getCurationBegin(),
-                    aCurationSegment.getCurationEnd()).toResult();
-        }
-        else {
-            diff = doDiffSingle(annotationService, state.getProject(), entryTypes,
-                    LINK_ROLE_AS_LABEL, aCasses, aCurationSegment.getBegin(),
-                    aCurationSegment.getEnd()).toResult();
-        }
-
-        Collection<ConfigurationSet> d = diff.getDifferingConfigurationSets().values();
-
-        Collection<ConfigurationSet> i = diff.getIncompleteConfigurationSets().values();
-        for (ConfigurationSet cfgSet : d) {
-            if (i.contains(cfgSet)) {
-                i.remove(cfgSet);
-            }
-        }
-
-        addSuggestionColor(state.getProject(), state.getMode(), aCasses, annoStates, d, false,
-                false);
-        addSuggestionColor(state.getProject(), state.getMode(), aCasses, annoStates, i, true,
-                false);
-
-        List<ConfigurationSet> all = new ArrayList<>();
-        all.addAll(diff.getConfigurationSets());
-        all.removeAll(d);
-        all.removeAll(i);
-
-        addSuggestionColor(state.getProject(), state.getMode(), aCasses, annoStates, all, false,
-                true);
-        return annoStates;
-    }
-
     private ColoringStrategy makeColoringStrategy(Map<VID, AnnotationState> aColors)
     {
         return new ColoringStrategy()
         {
             @Override
-            public String getColor(VID aVid, String aLabel)
+            public String getColor(VObject aVObject, String aLabel, ColoringRules aColoringRules)
             {
-                if (aColors.get(aVid) == null) {
+                if (aColors.get(aVObject.getVid()) == null) {
                     return AnnotationState.NOT_SUPPORTED.getColorCode();
                 }
-                return aColors.get(aVid).getColorCode();
+                return aColors.get(aVObject.getVid()).getColorCode();
             }
         };
     }
@@ -669,24 +700,21 @@ public class SuggestionViewPanel
      */
     private void addSuggestionColor(Project aProject, Mode aMode, Map<String, CAS> aCasMap,
             Map<String, Map<VID, AnnotationState>> aSuggestionColors,
-            Collection<ConfigurationSet> aCfgSet, boolean aI, boolean aAgree)
+            Collection<ConfigurationSet> aCfgSet, boolean aDisagree, boolean aAgree)
     {
         for (ConfigurationSet cs : aCfgSet) {
             boolean use = false;
             for (String u : cs.getCasGroupIds()) {
-                Map<VID, AnnotationState> colors = aSuggestionColors.get(u);
-                if (colors == null) {
-                    colors = new HashMap<>();
-                    aSuggestionColors.put(u, colors);
-                }
+                Map<VID, AnnotationState> colors = aSuggestionColors.computeIfAbsent(u,
+                    k -> new HashMap<>());
 
                 for (Configuration c : cs.getConfigurations(u)) {
 
                     FeatureStructure fs = c.getFs(u, aCasMap);
 
-                    AnnotationLayer layer = annotationService.findLayer(aProject,
+                    AnnotationLayer layer = schemaService.findLayer(aProject,
                             fs.getType().getName());
-                    TypeAdapter typeAdapter = annotationService.getAdapter(layer);
+                    TypeAdapter typeAdapter = schemaService.getAdapter(layer);
 
                     VID vid;
                     // link FS
@@ -706,16 +734,16 @@ public class SuggestionViewPanel
                     }
 
                     if (aAgree) {
-                        colors.put(vid, AnnotationState.AGREE);
+                        colors.put(vid, AGREE);
                         continue;
                     }
                     // automation and correction projects
-                    if (!aMode.equals(Mode.CURATION) && !aAgree) {
+                    if (!aMode.equals(CURATION) && !aAgree) {
                         if (cs.getCasGroupIds().size() == 2) {
-                            colors.put(vid, AnnotationState.DO_NOT_USE);
+                            colors.put(vid, DO_NOT_USE);
                         }
                         else {
-                            colors.put(vid, AnnotationState.DISAGREE);
+                            colors.put(vid, DISAGREE);
                         }
                         continue;
                     }
@@ -733,19 +761,19 @@ public class SuggestionViewPanel
                     }
 
                     if (aAgree) {
-                        colors.put(vid, AnnotationState.AGREE);
+                        colors.put(vid, AGREE);
                     }
                     else if (use) {
-                        colors.put(vid, AnnotationState.USE);
+                        colors.put(vid, USE);
                     }
-                    else if (aI) {
-                        colors.put(vid, AnnotationState.DISAGREE);
+                    else if (aDisagree) {
+                        colors.put(vid, DISAGREE);
                     }
                     else if (!cs.getCasGroupIds().contains(CURATION_USER)) {
-                        colors.put(vid, AnnotationState.DISAGREE);
+                        colors.put(vid, DISAGREE);
                     }
                     else {
-                        colors.put(vid, AnnotationState.DO_NOT_USE);
+                        colors.put(vid, DO_NOT_USE);
                     }
                 }
             }

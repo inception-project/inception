@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_DETAIL_FORM;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_SELECTION_FORM;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
@@ -32,6 +34,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -99,28 +102,20 @@ public class FeatureDetailForm
         add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
         add(new TextField<String>("uiName").setRequired(true));
         add(new TextArea<String>("description"));
-        add(new CheckBox("enabled"));
-        add(new CheckBox("visible"));
-        add(new CheckBox("hideUnconstraintFeature"));
-        add(new CheckBox("remember"));
+        add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
+        add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
+        add(new CheckBox("hideUnconstraintFeature").setOutputMarkupPlaceholderTag(true));
+        add(new CheckBox("remember").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("includeInHover")
-        {
-            private static final long serialVersionUID = -8273152168889478682L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                String layertype = FeatureDetailForm.this.getModelObject().getLayer().getType();
-                // Currently not configurable for chains or relations
-                // TODO: technically it is possible
-                setVisible(!CHAIN_TYPE.equals(layertype) && !RELATION_TYPE.equals(layertype));
-            }
-
-        });
+                .setOutputMarkupPlaceholderTag(true)
+                .add(LambdaBehavior.visibleWhen(() -> {
+                    String layertype = FeatureDetailForm.this.getModelObject().getLayer().getType();
+                    // Currently not configurable for chains or relations
+                    // TODO: technically it is possible
+                    return !CHAIN_TYPE.equals(layertype) && !RELATION_TYPE.equals(layertype);
+                })));
         required = new CheckBox("required");
-        required.setOutputMarkupId(true);
+        required.setOutputMarkupPlaceholderTag(true);
         required.add(LambdaBehavior.onConfigure(_this -> {
             boolean relevant = CAS.TYPE_NAME_STRING
                     .equals(FeatureDetailForm.this.getModelObject().getType());
@@ -183,7 +178,10 @@ public class FeatureDetailForm
             }
         });
 
-        add(new LambdaButton("save", this::actionSave).triggerAfterSubmit());
+        // Processing the data in onAfterSubmit so the traits panel can use the
+        // override onSubmit in its nested form and store the traits before
+        // we clear the currently selected feature.
+        add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
         add(new LambdaAjaxButton<>("delete", this::actionDelete).add(
                 visibleWhen(() -> !isNull(getModelObject().getId()))));
         // Set default form processing to false to avoid saving data
@@ -271,12 +269,8 @@ public class FeatureDetailForm
         });
     }
     
-    private void actionSave()
+    private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
     {
-        // Processing the data in onAfterSubmit so the traits panel can use the
-        // override onSubmit in its nested form and store the traits before
-        // we clear the currently selected feature.
-
         AnnotationFeature feature = getModelObject();
         String name = feature.getUiName();
         name = name.replaceAll("\\W", "");
@@ -334,6 +328,12 @@ public class FeatureDetailForm
 
         // Clear currently selected feature / feature details
         setModelObject(null);
+        
+        success("Settings for feature [" + feature.getUiName() + "] saved.");
+        aTarget.addChildren(getPage(), IFeedback.class);
+        
+        aTarget.add(findParent(ProjectLayersPanel.class).get(MID_FEATURE_DETAIL_FORM));
+        aTarget.add(findParent(ProjectLayersPanel.class).get(MID_FEATURE_SELECTION_FORM));
 
         // Trigger LayerConfigurationChangedEvent
         applicationEventPublisherHolder.get().publishEvent(

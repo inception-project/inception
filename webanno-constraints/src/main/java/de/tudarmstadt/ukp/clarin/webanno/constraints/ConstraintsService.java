@@ -35,7 +35,7 @@ public interface ConstraintsService
     /**
      * Creates Constraint Set
      */
-    void createConstraintSet(ConstraintSet aSet);
+    void createOrUpdateConstraintSet(ConstraintSet aSet);
 
     /**
      * Returns list of ConstraintSets in a project

@@ -65,7 +65,6 @@ public class GenerateDocumentation
                 .attribute("product-website-url", "https://webanno.github.io/webanno/")
                 .attribute("icons", "font")
                 .attribute("toc", "preamble")
-                .attribute("sourceHighlighter", "coderay")
                 .get();
         OptionsBuilder options = OptionsBuilder.options()
                 .toDir(outputDir.toFile())

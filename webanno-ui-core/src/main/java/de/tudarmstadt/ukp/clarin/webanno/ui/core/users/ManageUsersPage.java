@@ -115,7 +115,8 @@ public class ManageUsersPage
             
             add(new CheckBox("enabled")
                     .add(this::validateEnabled)
-                    .add(visibleWhen(ManageUsersPage.this::isAdmin)));
+                    .add(visibleWhen(ManageUsersPage.this::isAdmin))
+                    .setOutputMarkupPlaceholderTag(true));
 
             add(new LambdaAjaxButton<>("save", ManageUsersPage.this::actionSave));
             

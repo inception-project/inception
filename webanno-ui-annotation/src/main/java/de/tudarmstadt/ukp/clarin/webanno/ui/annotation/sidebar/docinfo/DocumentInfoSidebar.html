@@ -19,37 +19,33 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div class="panel panel-default panel-flex flex-content">
-      <div class="panel-heading">
-        <h3 class="panel-title">Document Information</h3>
+    <div class="flex-content card">
+      <div class="card-header">
+        Document Information
       </div>
-      <div class="scrolling panel-body">
-        <div class="form-horizontal">
-          <div class="col-sm-12">
-            <div class="form-group" >
-              <label class="col-sm-4 control-label">ID</label>
-              <div class="col-sm-8">
-                <span class="form-control" readonly>
-                  <wicket:container wicket:id="id"/>
-                </span>
-              </div>
-            </div>
-            <div class="form-group" >
-              <label class="col-sm-4 control-label">Format</label>
-              <div class="col-sm-8">
-                <span class="form-control" style="word-break: break-all;" readonly>
-                  <wicket:container wicket:id="format"/>
-                </span>
-              </div>
-            </div>
-            <div class="form-group" >
-              <label class="col-sm-4 control-label">Last change</label>
-              <div class="col-sm-8">
-                <span class="form-control" style="word-break: break-all;" readonly>
-                  <wicket:container wicket:id="timestamp"/>
-                </span>
-              </div>
-            </div>
+      <div class="scrolling card-body">
+        <div class="form-group form-row" >
+          <label class="col-sm-4 col-form-label">ID</label>
+          <div class="col-sm-8">
+            <span class="form-control" readonly>
+              <wicket:container wicket:id="id"/>
+            </span>
+          </div>
+        </div>
+        <div class="form-group form-row" >
+          <label class="col-sm-4 col-form-label">Format</label>
+          <div class="col-sm-8">
+            <span class="form-control" style="word-break: break-all;" readonly>
+              <wicket:container wicket:id="format"/>
+            </span>
+          </div>
+        </div>
+        <div class="form-group form-row" >
+          <label class="col-sm-4 col-form-label">Last change</label>
+          <div class="col-sm-8">
+            <span class="form-control" style="word-break: break-all;" readonly>
+              <wicket:container wicket:id="timestamp"/>
+            </span>
           </div>
         </div>
       </div>

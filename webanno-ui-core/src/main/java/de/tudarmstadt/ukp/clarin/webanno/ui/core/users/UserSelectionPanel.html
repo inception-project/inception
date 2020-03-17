@@ -20,24 +20,28 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <div class="flex-content panel panel-default panel-flex" style="min-height: 10em;">
-      <div class="panel-heading">
-        <h3 class="panel-title">
-          <wicket:message key="users" />
-        </h3>
+    <div class="flex-content card" style="min-height: 10em;">
+      <div class="card-header">
+        <wicket:message key="users" />
+        <div class="actions">
+          <button wicket:id="create" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>&nbsp;
+            <wicket:message key="create"/>
+          </button>
+        </div>
       </div>
-      <div class="scrolling panel-body fit-child-snug">
+      <div class="scrolling card-body fit-child-snug">
         <select wicket:id="user" class="form-control"></select>
       </div>
-      <div class="panel-footer">
+      <div class="card-footer">
         <span class="form-inline">
-          <input type="checkbox" wicket:id="showDisabled"/> 
-          <wicket:message key="showDisabled"/>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" wicket:id="showDisabled"/> 
+            <label class="form-check-label">
+              <wicket:message key="showDisabled"/>
+            </label>
+          </div>
         </span>
-        <div class="pull-right">
-          <input type="button" wicket:id="create" wicket:message="value:create"
-            class="btn btn-primary" />
-        </div>
       </div>
     </div>
   </wicket:panel>

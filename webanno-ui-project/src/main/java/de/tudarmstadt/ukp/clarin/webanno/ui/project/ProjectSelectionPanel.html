@@ -20,18 +20,27 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <div class="flex-content panel panel-default panel-flex" style="min-height: 10em;">
-      <div class="panel-heading">
-        <h3 class="panel-title">
-          <wicket:message key="projects" />
-        </h3>
+    <div class="flex-content card" style="min-height: 10em;">
+      <div class="card-header">
+        <wicket:message key="projects" />
+        <div class="actions">
+          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button" data-toggle="dropdown">
+              <i class="fas fa-file-upload"></i>
+              <div class="btn-action-label"><wicket:message key="import"/></div>
+            </button>
+            <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu">
+              <wicket:container wicket:id="importPanel" />
+            </div>
+          </span>
+          <button wicket:id="create" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>
+            <div class="btn-action-label"><wicket:message key="create"/></div>
+          </button>
+        </div>
       </div>
-      <div class="scrolling panel-body fit-child-snug">
+      <div class="scrolling card-body fit-child-snug">
         <select wicket:id="project" class="form-control"></select>
-      </div>
-      <div class="panel-footer text-right">
-        <input type="button" wicket:id="create" wicket:message="value:create"
-          class="btn btn-primary" />
       </div>
     </div>
   </wicket:panel>

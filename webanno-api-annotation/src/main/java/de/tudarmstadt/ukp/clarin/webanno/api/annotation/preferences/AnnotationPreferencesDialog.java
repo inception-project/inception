@@ -51,7 +51,7 @@ public class AnnotationPreferencesDialog
         setResizable(true);
         setWidthUnit("px");
         setHeightUnit("px");
-        setTitle("Settings");
+        setTitle("Preferences");
         setCssClassName("w_blue w_flex");
         setCloseButtonCallback((target) -> {
             closeButtonClicked = true;

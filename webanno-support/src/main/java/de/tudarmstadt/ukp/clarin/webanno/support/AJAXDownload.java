@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
@@ -101,13 +102,14 @@ public class AJAXDownload
      */
     protected IResourceStream getResourceStream()
     {
+        return new AbstractResourceStream()
+        {
+            private static final long serialVersionUID = 1L;
+            
+            private InputStream inStream;
 
-        return new AbstractResourceStream() {
-            private static final long serialVersionUID1 = 1L;
-            InputStream inStream;
             @Override
-            public InputStream getInputStream()
-                throws ResourceStreamNotFoundException
+            public InputStream getInputStream() throws ResourceStreamNotFoundException
             {
                 try {
                     inStream = new FileInputStream(fileName);
@@ -117,9 +119,11 @@ public class AJAXDownload
                 }
                 return inStream;
             }
+
             @Override
-            public void close() throws IOException {
-                inStream.close();
+            public void close() throws IOException
+            {
+                IOUtils.closeQuietly(inStream);
                 inStream = null;
                 FileUtils.forceDelete(new File(fileName));
             }

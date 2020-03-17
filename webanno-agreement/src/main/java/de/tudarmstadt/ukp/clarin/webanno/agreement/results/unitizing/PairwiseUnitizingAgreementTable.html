@@ -17,16 +17,14 @@
 #limitations under the License.
 -->
 <wicket:panel xmlns:wicket="http://wicket.apache.org">
-  <div class="flex-content panel panel-default panel-flex">
-    <div class="panel-heading">
-      <h3 class="panel-title">
-        <wicket:message key="agreement" />
-        <span class="pull-right">
-          <a wicket:id="legend"><wicket:message key="legend"/></a> 
-        </span>
-      </h3>
+  <div class="flex-content card">
+    <div class="card-header">
+      <wicket:message key="agreement" />
+      <span class="float-right">
+        <a wicket:id="legend"><wicket:message key="legend"/></a> 
+      </span>
     </div>
-    <div class="scrolling panel-body fit-child-snug" style="padding: 0px;">
+    <div class="scrolling card-body fit-child-snug" style="padding: 0px;">
       <table style="width: 100%;">
         <tr wicket:id="rows">
           <td wicket:id="cells">

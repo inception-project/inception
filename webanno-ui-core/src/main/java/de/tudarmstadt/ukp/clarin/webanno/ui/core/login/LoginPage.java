@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.EnumSet;
@@ -30,7 +31,7 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
-import org.apache.wicket.markup.html.basic.MultiLineLabel;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.HiddenField;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
@@ -146,7 +147,9 @@ public class LoginPage
             add(new HiddenField<>("urlfragment"));
             Properties settings = SettingsUtil.getSettings();
             String loginMessage = settings.getProperty(SettingsUtil.CFG_LOGIN_MESSAGE);
-            add(new MultiLineLabel("loginMessage", loginMessage).setEscapeModelStrings(false));
+            add(new Label("loginMessage", loginMessage)
+                    .setEscapeModelStrings(false)
+                    .add(visibleWhen(() -> isNotBlank(loginMessage))));
         }
 
         @Override
