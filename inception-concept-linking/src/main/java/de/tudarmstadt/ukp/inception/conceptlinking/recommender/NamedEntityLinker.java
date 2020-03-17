@@ -86,19 +86,6 @@ public class NamedEntityLinker
     {
     }
 
-    // TODO #176 use the document Id once it is available in the CAS
-    private boolean isNamedEntity(RecommenderContext aContext, AnnotationFS token,
-                                  String aDocumentUri)
-        throws RecommendationException
-    {
-        Collection<ImmutablePair<String, Collection<AnnotationFS>>> model = aContext.get(KEY_MODEL)
-            .orElseThrow(() -> new RecommendationException(
-                "Key [" + KEY_MODEL + "] not found in context"));
-
-        return model.stream().anyMatch(pair -> pair.getLeft().equals(aDocumentUri)
-            && pair.getRight().stream().anyMatch(t -> t.getBegin() == token.getBegin()));
-    }
-
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
