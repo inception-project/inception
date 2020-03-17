@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 
 import java.io.IOException;
@@ -95,6 +96,8 @@ public class RecommenderInfoPanel
         add(mainContainer);
         
         recommenderEvals = new Model<HashMap<Long,EvaluatedRecommender>>(initRecommenderEvals());
+        
+        
         recommenderGroups = new ListView<EvaluatedRecommender>("recommender")
         {
             private static final long serialVersionUID = -631500052426449048L;
@@ -117,9 +120,18 @@ public class RecommenderInfoPanel
                 item.add(resultsContainer);
             }
         };
-        recommenderGroups.setDefaultModel(LoadableDetachableModel.of(this::getEvaluationResults));
+        
+        IModel<List<EvaluatedRecommender>> recommenders = LoadableDetachableModel
+                .of(this::getEvaluationResults);
+        recommenderGroups.setDefaultModel(recommenders);
         recommenderGroups.setOutputMarkupId(true);
         mainContainer.add(recommenderGroups);
+        mainContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
+        
+        WebMarkupContainer noRecommendersWarning = new WebMarkupContainer("noRecommendersWarning");
+        noRecommendersWarning.setOutputMarkupPlaceholderTag(true);
+        noRecommendersWarning.add(visibleWhen(() -> recommenders.getObject().isEmpty()));
+        add(noRecommendersWarning);
         
         add(new WebSocketBehavior() {
 

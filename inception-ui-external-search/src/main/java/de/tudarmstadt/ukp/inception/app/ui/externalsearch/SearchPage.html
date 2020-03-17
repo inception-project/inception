@@ -39,20 +39,24 @@
       <form wicket:id="searchForm" class="flex-h-container flex-gutter">
         <div style="width: 240px;">
           <div class="input-group">
-            <span class="input-group-addon">
-              <i class="fa fa-database"></i>
+            <span class="input-group-prepend">
+              <span class="input-group-text">
+                <i class="fas fa-database"></i>
+              </span>
             </span>
             <select wicket:id="repository" class="form-control" data-container="body"></select>
           </div>
         </div>
         <div class="flex-content">
           <div class="input-group">
-            <span class="input-group-addon">
-              <i class="fa fa-search"></i>
+            <span class="input-group-prepend">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
             </span>
             <input wicket:id="query" class="form-control" type="text" />
-            <div class="input-group-btn">
-              <button wicket:id="submitSearch" class="btn btn-default" type="submit">Search</button>
+            <div class="input-group-append">
+              <button wicket:id="submitSearch" class="btn btn-secondary" type="submit">Search</button>
             </div>
           </div>
         </div>

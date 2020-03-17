@@ -18,34 +18,26 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <form wicket:id="form" class="flex-content panel panel-default panel-flex">
-    <div class="panel-heading">
-      <h3 class="panel-title">
-        <wicket:message key="simulation" />
-      </h3>
+  <form wicket:id="form" class="flex-content card">
+    <div class="card-header">
+      <wicket:message key="simulation" />
     </div>
-		<div>
-			<div class="col-sm-12 form-horizontal">
-				<div class="form-group" wicket:enclosure="select">
-					<label wicket:for="select" class="col-sm-3 control-label"> <wicket:label
-							key="metric" />
-					</label>
-					<div class="col-sm-9">
-						<select wicket:id="select" class="form-control"
-							data-container="body"></select>
-					</div>
-				</div>
-			</div>
-		</div>
-		<br/><br/>
-		<div class=" panel-body"  >
-			<div wicket:id="chart-container"  ></div>
-		</div>
-		<div class="panel-footer text-right">
-			<button wicket:id="simulation-start-button" class="btn btn-primary">
-				<wicket:message key="start" />
-			</button>
-		</div>
-	</form>
+    <div class="scrolling card-body">
+      <div class="form-group form-row" wicket:enclosure="select">
+        <label wicket:for="select" class="col-sm-3 col-form-label">
+          <wicket:label key="metric" />
+        </label>
+        <div class="col-sm-9">
+          <select wicket:id="select" class="form-control" data-container="body"></select>
+        </div>
+      </div>
+      <div wicket:id="chart-container"></div>
+    </div>
+    <div class="card-footer text-right">
+      <button wicket:id="simulation-start-button" class="btn btn-primary">
+        <wicket:message key="start" />
+      </button>
+    </div>
+  </form>
 </wicket:panel>
 </html>

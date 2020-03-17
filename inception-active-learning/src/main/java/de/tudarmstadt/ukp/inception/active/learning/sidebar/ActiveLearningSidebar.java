@@ -64,6 +64,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -86,10 +87,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -200,8 +202,9 @@ public class ActiveLearningSidebar
         // Set up the AL state in the page if it is not already there or if for some reason the
         // suggestions have completely disappeared (e.g. after a system restart)
         AnnotatorState state = getModelObject();
-        Predictions predictions = recommendationService.getPredictions(state.getUser(),
-                state.getProject());
+        Predictions predictions = state.getProject() != null
+                ? recommendationService.getPredictions(state.getUser(), state.getProject())
+                : null;
         if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null || predictions == null) {
             ActiveLearningUserState alState = new ActiveLearningUserState();
             alState.setStrategy(new UncertaintySamplingStrategy());
@@ -293,8 +296,11 @@ public class ActiveLearningSidebar
 
         moveToNextRecommendation(target, false);
 
+        String userName = state.getUser().getUsername();
+        Project project = state.getProject();
+        recommendationService.setPredictForAllDocuments(userName, project, true);
         applicationEventPublisherHolder.get().publishEvent(new ActiveLearningSessionStartedEvent(
-                this, state.getProject(), state.getUser().getUsername()));
+                this, project, userName));
     }
     
     private void actionStopSession(AjaxRequestTarget target)
@@ -307,8 +313,11 @@ public class ActiveLearningSidebar
         // Stop current session
         alState.setSessionActive(false);
 
+        String userName = state.getUser().getUsername();
+        Project project = state.getProject();
+        recommendationService.setPredictForAllDocuments(userName, project, false);
         applicationEventPublisherHolder.get().publishEvent(new ActiveLearningSessionCompletedEvent(
-                this, state.getProject(), state.getUser().getUsername()));
+                this, project,userName));
     }
 
     private void setHighlight(AnnotationSuggestion aSuggestion)
@@ -714,8 +723,11 @@ public class ActiveLearningSidebar
             aTarget.add((Component) getActionHandler());
         }
 
+        User user = state.getUser();
+        Project project = state.getProject();
+
         Optional<Delta> recommendationDifference = activeLearningService
-                .generateNextSuggestion(state.getUser(), alState);
+                .generateNextSuggestion(user, alState);
         Optional<AnnotationSuggestion> prevSuggestion = alState.getSuggestion();
         alState.setCurrentDifference(recommendationDifference);
         
@@ -754,7 +766,7 @@ public class ActiveLearningSidebar
         // If there is one, open it in the sidebar and take the main editor to its location
         try {
             AnnotationSuggestion suggestion = alState.getSuggestion().get();
-            SourceDocument sourceDocument = documentService.getSourceDocument(state.getProject(),
+            SourceDocument sourceDocument = documentService.getSourceDocument(project,
                     suggestion.getDocumentName());
             
             // Refresh feature editor
@@ -781,7 +793,14 @@ public class ActiveLearningSidebar
             }
             else {
                 cas = documentService.readAnnotationCas(sourceDocument,
-                        state.getUser().getUsername());
+                        user.getUsername());
+
+                // When the document is opened, the recommendation service defaults to only
+                // predicting for the current document. Therefore, while in an AL session,
+                // we kindly as again to predict for all documents
+                // See also RecommendationServiceImpl::onDocumentOpened where it is set again
+                // to predict on single documents only.
+                recommendationService.setPredictForAllDocuments(user.getUsername(), project, true);
             }
             String text = cas.getDocumentText();
             alState.setLeftContext(
@@ -791,14 +810,14 @@ public class ActiveLearningSidebar
             
             // Send an application event that the suggestion has been rejected
             List<AnnotationSuggestion> alternativeSuggestions = recommendationService
-                    .getPredictions(state.getUser(), state.getProject())
+                    .getPredictions(user, project)
                     .getPredictionsByTokenAndFeature(suggestion.getDocumentName(),
                             alState.getLayer(), suggestion.getBegin(), suggestion.getEnd(),
                             suggestion.getFeature());
 
             applicationEventPublisherHolder.get()
                     .publishEvent(new ActiveLearningSuggestionOfferedEvent(this, sourceDocument,
-                            suggestion, state.getUser().getUsername(), alState.getLayer(),
+                            suggestion, user.getUsername(), alState.getLayer(),
                             suggestion.getFeature(), alternativeSuggestions));
         }
         catch (IOException e) {

@@ -18,12 +18,11 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="panel panel-default panel-small">
-    <div class="panel-heading">
-      <h3 class="panel-title">
-        Recommenders
-      </h3>
+  <div class="card">
+    <div class="card-header small">
+      Recommenders
     </div>
+<<<<<<< HEAD
     <div wicket:id="mainContainer" class="panel-body">
       <ul class="form-group list-group">
         <li wicket:id="recommender" class="list-group-item">
@@ -36,34 +35,46 @@
                 <div class="col-sm-8">
                   <span wicket:id="f1Score" class="form-control"/>
                 </div>
+=======
+    <div class="card-body p-0">
+      <div wicket:id="noRecommendersWarning" class="flex-content flex-h-container small no-data-notice">
+        <div>No recommenders have been defined</div>
+      </div>
+      <div wicket:id="recommenderContainer" class="list-group-flush">
+        <div wicket:id="recommender" class="list-group-item">
+          <div wicket:id="name" class="list-group-item-heading mb-2"></div>
+          <div wicket:id="resultsContainer" class="d-flex small rounded border mb-2">
+            <div class="d-flex flex-fill flex-column p-2 border-right">
+              <div class="d-flex flex-row">
+                <label>F1</label>
+                <span wicket:id="f1Score" class="flex-grow-1 text-right"/>
+>>>>>>> master
               </div>
-              <div class="col-md-6 form-group">
-                <label class="col-sm-4 control-label">Acc.</label>
-                <div class="col-sm-8">
-                  <span wicket:id="accuracy" class="form-control"/>
-                </div>
+              <div class="d-flex flex-row">
+                <label>Accuracy</label>
+                <span wicket:id="accuracy" class="flex-grow-1 text-right"/>
               </div>
             </div>
-            <div class="row">
-              <div class="col-md-6 form-group">
-                <label class="col-sm-4 control-label">Prec.</label>
-                <div class="col-sm-8">
-                  <span wicket:id="precision" class="form-control"/>
-                </div>
+            <div class="d-flex flex-fill flex-column p-2">
+              <div class="d-flex flex-row">
+                <label>Precision</label>
+                <span wicket:id="precision" class="flex-grow-1 text-right"/>
               </div>
-              <div class="col-md-6 form-group">
-                <label class="col-sm-4 control-label">Rec.</label>
-                <div class="col-sm-8">
-                  <span wicket:id="recall" class="form-control"/>
-                </div>
+              <div class="d-flex flex-row">
+                <label>Recall</label>
+                <span wicket:id="recall" class="flex-grow-1 text-right"/>
               </div>
             </div>
           </div>
-          <div class="row text-right">
-            <input wicket:id="acceptAll" type="button" class="btn btn-xs btn-success" value="Accept all"/>
+          <div class="text-right">
+            <span wicket:id="state" class="badge badge-secondary float-left"/>
+            <button wicket:id="acceptAll" class="btn btn-sm btn-success">
+              <i class="fas fa-check"></i>&nbsp;
+              Accept all
+            </button>
           </div>
-        </li>
-      </ul>
+        </div>
+      </div>
     </div>
   </div>
 </wicket:panel>

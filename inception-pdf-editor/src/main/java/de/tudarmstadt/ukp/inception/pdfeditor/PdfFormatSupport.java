@@ -21,6 +21,7 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDe
 
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.pdf.PdfReader;
 import org.springframework.stereotype.Component;
 
@@ -52,8 +53,9 @@ public class PdfFormatSupport
     }
     
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
-        return createReaderDescription(PdfReader.class);
+        return createReaderDescription(PdfReader.class, aTSD);
     }
 }

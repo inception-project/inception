@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.LayerInitializer;
@@ -41,7 +40,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.PropertyFeatureSupport;
 
-@Component
+//@Component
 public class FactLayerInitializer
     implements LayerInitializer
 {

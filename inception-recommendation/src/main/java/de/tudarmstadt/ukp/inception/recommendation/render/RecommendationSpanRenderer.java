@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
@@ -33,7 +34,6 @@ import org.apache.uima.cas.CAS;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -43,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -78,12 +77,9 @@ public class RecommendationSpanRenderer
      *            A VDocument containing annotations for the given layer
      * @param aState
      *            Data model for brat annotations
-     * @param aColoringStrategy
-     *            the coloring strategy to render this layer
      */
     @Override
-    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState,
-        ColoringStrategy aColoringStrategy, AnnotationLayer layer,
+    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, AnnotationLayer layer,
         RecommendationService recommendationService, LearningRecordService learningRecordService,
         AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
         DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset)
@@ -109,15 +105,19 @@ public class RecommendationSpanRenderer
         if (groups.isEmpty()) {
             return;
         }
-        
-        String color = aColoringStrategy.getColor(null, null);
-        String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
+
+        String color = "#cccccc";
+        String bratTypeName = typeAdapter.getUiTypeName();
         
         recommendationService.calculateVisibility(aCas, aState.getUser().getUsername(), layer,
                 groups, aWindowBeginOffset, aWindowEndOffset);
 
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
+        
+        // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
+        Map<String, AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer)
+            .stream().collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
         for (SuggestionGroup suggestion : groups) {
             Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
@@ -193,8 +193,7 @@ public class RecommendationSpanRenderer
 
                     // Only necessary for creating the first
                     if (first) {
-                        AnnotationFeature feature = aAnnotationService
-                            .getFeature(ao.getFeature(), layer);
+                        AnnotationFeature feature = features.get(ao.getFeature());
                         // Retrieve the UI display label for the given feature value
                         FeatureSupport featureSupport = aFsRegistry.getFeatureSupport(feature);
                         String annotation = featureSupport.renderFeatureValue(feature,

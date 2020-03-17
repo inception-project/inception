@@ -20,17 +20,18 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
 <wicket:panel>
-  <div class="flex-content panel panel-default panel-flex">
-    <div class="panel-heading">
-      <h3 class="panel-title">
-        <wicket:message key="kb.knowledgebases"/>
-      </h3>
+  <div class="flex-content card">
+    <div class="card-header">
+      <wicket:message key="kb.knowledgebases"/>
+      <div class="actions">
+        <button wicket:id="new" class="btn btn-primary">
+          <i class="fas fa-plus-square"></i>
+          <div class="btn-action-label"><wicket:message key="create"/></div>
+        </button>
+      </div>
     </div>
-    <div class="panel-body fit-child-snug">
+    <div class="card-body fit-child-snug">
       <select wicket:id="knowledgebases" class="form-control"></select>
-    </div>
-    <div class="panel-footer text-right">
-      <input wicket:id="new" type="submit" class="btn btn-primary" wicket:message="value:kb.new"/>
     </div>
   </div>
   <div wicket:id="modal"></div>

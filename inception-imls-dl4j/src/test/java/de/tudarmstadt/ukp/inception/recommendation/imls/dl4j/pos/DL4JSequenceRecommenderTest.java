@@ -44,6 +44,7 @@ import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -56,7 +57,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 public class DL4JSequenceRecommenderTest
 {
     private static File cache = DkproTestContext.getCacheFolder();

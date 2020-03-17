@@ -1,0 +1,54 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_formats_perseus]]
+= Perseus Ancient Greek and Latin Dependency Treebank 2.1 XML
+
+An XML format used by the link:https://github.com/PerseusDL/treebank_data/tree/master/v2.1[Perseus Ancient Greek and Latin Dependency Treebank].
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| Perseus Ancient Greek and Latin Dependency Treebank 2.1 XML
+| yes
+| no
+| no
+| 
+|====
+
+.Example (excerpt from link:https://github.com/PerseusDL/treebank_data/blob/master/v2.1/Greek/texts/tlg0013.tlg002.perseus-grc1.tb.xml[tlg0013.tlg002.perseus-grc1.tb.xml])
+[source,text]
+----
+<treebank version="2.1" xml:lang="grc" cts="urn:cts:greekLit:tlg0013.tlg002.perseus-grc1.tb">
+  <body>
+    <sentence id="2" document_id="urn:cts:greekLit:tlg0013.tlg002.perseus-grc1" subdoc="1-495">
+      <word id="1" form="σέβας" lemma="σέβας" postag="n-s---nn-" relation="PNOM" sg="nmn dpd" gloss="object.of.wonder" head="13"/>
+      <word id="2" form="τό" lemma="ὁ" postag="p-s---nn-" relation="SBJ" sg="sbs nmn dpd" gloss="this" head="13"/>
+      <word id="3" form="γε" lemma="γε" postag="d--------" relation="AuxY" sg="prt" gloss="indeed" head="13"/>
+      <word id="4" form="πᾶσιν" lemma="πᾶς" postag="a-p---md-" relation="ATR" sg="prp" gloss="all" head="9"/>
+      <word id="5" form="ἰδέσθαι" lemma="εἶδον" postag="v--anm---" relation="ATR" sg="dpd vrb as_nmn not_ind" gloss="see" head="1"/>
+      <word id="6" form="ἀθανάτοις" lemma="ἀθάνατος" postag="a-p---md-" relation="ATR" sg="prp" gloss="immortal" head="8"/>
+      <word id="7" form="τε" lemma="τε" postag="c--------" relation="AuxY" sg="" gloss="and" head="9"/>
+      <word id="8" form="θεοῖς" lemma="θεός" postag="n-p---md-" relation="ADV_CO" sg="dtv dpd prp int adv" gloss="god" head="9"/>
+      <word id="9" form="ἠδὲ" lemma="ἠδέ" postag="c--------" relation="COORD" sg="" gloss="and" head="13"/>
+      <word id="10" form="θνητοῖς" lemma="θνητός" postag="a-p---md-" relation="ATR" sg="prp" gloss="mortal" head="11"/>
+      <word id="11" form="ἀνθρώποις" lemma="ἄνθρωπος" postag="n-p---md-" relation="ADV_CO" sg="dtv dpd prp int adv" gloss="man" head="9"/>
+      <word id="12" form="·" lemma="·" postag="u--------" relation="AuxK" sg="" head="0"/>
+      <word id="13" insertion_id="0003e" artificial="elliptic" relation="PRED" lemma="εἰμί" postag="v3spia---" form="ἐστι" sg="ind stt" gloss="be" head="0"/>
+    </sentence>
+</treebank>
+----

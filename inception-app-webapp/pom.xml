@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.13.0-SNAPSHOT</version>
+    <version>0.15.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -30,13 +30,6 @@
     <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
   </properties>
   <dependencies>
-  <!--  
-    <dependency>
-      <groupId>xml-apis</groupId>
-      <artifactId>xml-apis</artifactId>
-    </dependency>
-    -->
-  
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -195,6 +188,14 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-perseus-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-xml-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-imscwb-asl</artifactId>
     </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
@@ -418,11 +419,6 @@
     </dependency>
 
     <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
@@ -459,12 +455,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -479,9 +469,8 @@
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-      <scope>compile</scope>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
@@ -498,6 +487,22 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
+      <artifactId>enjoyhint</artifactId>
+	</dependency> 
+	<dependency>
+	    <groupId>org.webjars.npm</groupId>
+	    <artifactId>kinetic</artifactId>
+	</dependency>
+	<dependency>
+	    <groupId>org.webjars.bower</groupId>
+	    <artifactId>jquery.scrollTo</artifactId>
+	</dependency>
   </dependencies>
   <build>
     <plugins>
@@ -546,7 +551,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
               <imagesDir>./user-guide/images</imagesDir>
               <attributes>
@@ -564,7 +568,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
               <imagesDir>./developer-guide/images</imagesDir>
               <attributes>
@@ -582,7 +585,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
               <attributes>
                 <toc>left</toc>
@@ -652,6 +654,7 @@
         <plugin>
           <groupId>org.asciidoctor</groupId>
           <artifactId>asciidoctor-maven-plugin</artifactId>
+          <version>${asciidoctor.plugin.version}</version>
           <configuration>
             <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
             <attributes>
@@ -672,8 +675,13 @@
           <dependencies>
             <dependency>
               <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctorj</artifactId>
+              <version>${asciidoctor.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.asciidoctor</groupId>
               <artifactId>asciidoctorj-diagram</artifactId>
-              <version>1.5.12</version>
+              <version>${asciidoctor-diagram.version}</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -704,6 +712,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
@@ -758,7 +767,6 @@
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
-              <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
               <!-- Spring AOP
                 <usedDependency>org.springframework:spring-aop</usedDependency>
@@ -766,6 +774,10 @@
                 <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
               <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
+              <!-- Tutorial Js dependencies -->
+              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
+              <usedDependency>org.webjars.npm:kinetic</usedDependency>
+              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -936,7 +948,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
                     <imagesDir>./user-guide/images</imagesDir>
                     <attributes>
@@ -954,7 +965,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
                     <imagesDir>./developer-guide/images</imagesDir>
                     <attributes>
@@ -972,7 +982,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
                     <attributes>
                       <toc>preamble</toc>

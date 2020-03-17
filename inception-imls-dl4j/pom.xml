@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-plugin-parent</artifactId>
-    <version>0.13.0-SNAPSHOT</version>
+    <version>0.15.0-SNAPSHOT</version>
     <relativePath>../inception-plugin-parent</relativePath>
   </parent>
   <artifactId>inception-imls-dl4j</artifactId>
@@ -29,11 +29,11 @@
     <plugin.class>de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.DL4JSequenceRecommenderPlugin</plugin.class>
     <plugin.provider>INCEpTION</plugin.provider>
     
-    <dl4j.version>1.0.0-beta4</dl4j.version>
-    <openblas.version>0.3.5</openblas.version>
-    <javacpp-presets.version>1.5</javacpp-presets.version>
-    <mkl.version>2019.3</mkl.version>
-    <mkl-dnn.javacpp.version>0.18.1-${javacpp-presets.version}</mkl-dnn.javacpp.version>
+    <dl4j.version>1.0.0-beta6</dl4j.version>
+    <openblas.version>0.3.7</openblas.version>
+    <javacpp-presets.version>1.5.2</javacpp-presets.version>
+    <mkl.version>2019.5</mkl.version>
+    <mkl-dnn.javacpp.version>0.21.2-${javacpp-presets.version}</mkl-dnn.javacpp.version>
     <nd4j.backend>nd4j-native</nd4j.backend>
   </properties>
   <dependencies>
@@ -201,29 +201,58 @@
       <groupId>org.nd4j</groupId>
       <artifactId>${nd4j.backend}</artifactId>
       <version>${dl4j.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.nd4j</groupId>
+          <artifactId>${nd4j.backend}</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.nd4j</groupId>
       <artifactId>${nd4j.backend}</artifactId>
       <version>${dl4j.version}</version>
       <classifier>linux-x86_64</classifier>
+      <exclusions>
+        <exclusion>
+          <groupId>org.nd4j</groupId>
+          <artifactId>${nd4j.backend}</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.nd4j</groupId>
       <artifactId>${nd4j.backend}</artifactId>
       <version>${dl4j.version}</version>
       <classifier>macosx-x86_64</classifier>
+      <exclusions>
+        <exclusion>
+          <groupId>org.nd4j</groupId>
+          <artifactId>${nd4j.backend}</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.nd4j</groupId>
       <artifactId>${nd4j.backend}</artifactId>
       <version>${dl4j.version}</version>
       <classifier>windows-x86_64</classifier>
+      <exclusions>
+        <exclusion>
+          <groupId>org.nd4j</groupId>
+          <artifactId>${nd4j.backend}</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>nl.ru</groupId>
+      <artifactId>test-categories</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

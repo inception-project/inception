@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 
 public class BaselineRankingStrategy
 {
-    private static Comparator<CandidateEntity> INSTANCE = (e1, e2) -> new CompareToBuilder()
+    private static final Comparator<CandidateEntity> INSTANCE = (e1, e2) -> new CompareToBuilder()
             // Did the user enter an URI and does the candidate exactly match it?
             // Note that the comparator sorts ascending by value, so a match is represented using
             // a 0 while a mistmatch is represented using 1. The typical case is that neither
@@ -44,10 +44,7 @@ public class BaselineRankingStrategy
             // Compare geometric mean of the Levenshtein distance to query and mention
             // since both are important and a very close similarity in say the mention outweighs
             // a not so close similarity in the query
-            .append(Math.sqrt(e1.get(KEY_LEVENSHTEIN_QUERY).get() * 
-                            e1.get(KEY_LEVENSHTEIN_MENTION).get()), 
-                    Math.sqrt(e2.get(KEY_LEVENSHTEIN_QUERY).get() * 
-                            e2.get(KEY_LEVENSHTEIN_MENTION).get()))
+            .append(weightedLevenshteinDistance(e1), weightedLevenshteinDistance(e2))
             // A high signature overlap score is preferred.
             .append(e2.get(KEY_SIGNATURE_OVERLAP_SCORE).get(),
                     e1.get(KEY_SIGNATURE_OVERLAP_SCORE).get())
@@ -64,6 +61,32 @@ public class BaselineRankingStrategy
             .append(e1.getLabel().toLowerCase(e1.getLocale()), 
                     e2.getLabel().toLowerCase(e2.getLocale()))
             .toComparison();
+    
+    private static double weightedLevenshteinDistance(CandidateEntity aCandidate)
+    {
+        int query = aCandidate.get(KEY_LEVENSHTEIN_QUERY).get();
+        int mention = aCandidate.get(KEY_LEVENSHTEIN_MENTION).get();
+        
+        if (query == Integer.MAX_VALUE && mention == Integer.MAX_VALUE) {
+            return Double.MAX_VALUE;
+        }
+        
+        if (query == Integer.MAX_VALUE) {
+            return Math.sqrt(mention);
+        }
+        
+        if (mention == Integer.MAX_VALUE) {
+            return Math.sqrt(query);
+        }
+        
+        // If the distance of the query and mention is the same, then give the query a slight
+        // benefit so the user see's items matching the query he/she entered first
+        if (query > 0 && query == mention) {
+            query = query - 1;
+        }
+        
+        return Math.sqrt(query * mention);
+    }
     
     public static Comparator<CandidateEntity> getInstance()
     {

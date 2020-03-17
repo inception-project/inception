@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -44,8 +47,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -63,6 +69,7 @@ public class MtasUimaParserTest
 {
     private Project project;
     private @Mock AnnotationSchemaService annotationSchemaService;
+    private LayerSupportRegistryImpl layerSupportRegistry;
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private FeatureIndexingSupportRegistryImpl featureIndexingSupportRegistry;
     private JCas jcas;
@@ -76,9 +83,12 @@ public class MtasUimaParserTest
         project.setId(1l);
         project.setName("test project");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
-        
+
+        layerSupportRegistry = new LayerSupportRegistryImpl(emptyList());
+
         featureSupportRegistry = new FeatureSupportRegistryImpl(
-                asList(new PrimitiveUimaFeatureSupport()));
+                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
+                        new NumberFeatureSupport()));
         featureSupportRegistry.init();
         
         featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(
@@ -271,14 +281,16 @@ public class MtasUimaParserTest
                 .thenReturn(asList(dependencyLayerGovernor, dependencyLayerDependent));
 
         when(annotationSchemaService.getAdapter(posLayer)).thenReturn(new SpanAdapter(
-                featureSupportRegistry, null, posLayer, asList(posLayerValue), null));
+            layerSupportRegistry, featureSupportRegistry, null, posLayer, 
+            () -> asList(posLayerValue), null));
 
-        when(annotationSchemaService.getAdapter(depLayer)).thenReturn(new RelationAdapter(
-                featureSupportRegistry, null, depLayer, depLayer.getId(), depLayer.getName(),
-                WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
-                depLayer.getAttachFeature().getName(), depLayer.getAttachType().getName(),
-                asList(dependencyLayerGovernor, dependencyLayerDependent)));
-        
+        when(annotationSchemaService.getAdapter(depLayer))
+                .thenReturn(new RelationAdapter(
+                    layerSupportRegistry, featureSupportRegistry, null, depLayer,
+                    FEAT_REL_TARGET, FEAT_REL_SOURCE,
+                    () -> asList(dependencyLayerGovernor, dependencyLayerDependent),
+                    emptyList()));
+
         MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
                 featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());

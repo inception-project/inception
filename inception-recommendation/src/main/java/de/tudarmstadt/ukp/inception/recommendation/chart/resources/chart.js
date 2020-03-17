@@ -25,7 +25,6 @@
 
 function updateLearningCurveDiagram(arrayOfLearningCurves) {
   var xAxixType = 'indexed';
-  var plotType = 'step';
   
   var xTick = {
     format : function(a) {

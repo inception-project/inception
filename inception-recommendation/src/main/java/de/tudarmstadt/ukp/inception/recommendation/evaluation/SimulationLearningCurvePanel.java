@@ -41,6 +41,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -102,10 +103,9 @@ public class SimulationLearningCurvePanel
         add(form);
         
         final DropDownChoice<RecommenderEvaluationScoreMetricEnum> dropdown = 
-                new DropDownChoice<RecommenderEvaluationScoreMetricEnum>(
+                new BootstrapSelect<RecommenderEvaluationScoreMetricEnum>(
                 "select", new Model<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES.get(0)),
                 new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
-        dropdown.setRequired(true);
         dropdown.setOutputMarkupId(true);
         selectedValue = RecommenderEvaluationScoreMetricEnum.Accuracy;
 
@@ -113,6 +113,7 @@ public class SimulationLearningCurvePanel
         {
             private static final long serialVersionUID = -6744838136235652577L;
 
+            @Override
             protected void onUpdate(AjaxRequestTarget _target)
             {
                 selectedValue = dropdown.getModelObject();
@@ -137,9 +138,9 @@ public class SimulationLearningCurvePanel
         // for the selected recommender is plotted in the hCart Panel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
-            (_target, _form) -> {
-                startEvaluation(_target, _form );
-            });
+            (_target, _form) -> 
+                startEvaluation(_target, _form )
+            );
         
         form.add(startButton);
     }

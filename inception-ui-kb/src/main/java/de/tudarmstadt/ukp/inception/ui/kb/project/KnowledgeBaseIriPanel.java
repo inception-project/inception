@@ -34,7 +34,7 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -146,9 +146,9 @@ public class KnowledgeBaseIriPanel
 
         IModel<String> adapter = new LambdaModelAdapter<String>(
             () -> { return model.getObject() != null ? model.getObject().stringValue() : null; },
-            str -> { 
+            str -> 
                 model.setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : 
-                    null); });
+                    null) );
 
         ComboBox<String> comboBox = new ComboBox<>(id, adapter, choices);
         comboBox.add(LambdaBehavior.enabledWhen(() -> 

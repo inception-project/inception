@@ -72,9 +72,13 @@ public class TrainingTask
     private @Autowired SchedulingService schedulingService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
 
-    public TrainingTask(User aUser, Project aProject, String aTrigger)
+    private final SourceDocument currentDocument;
+
+    public TrainingTask(User aUser, Project aProject, String aTrigger,
+                        SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
+        currentDocument = aCurrentDocument;
     }
     
     @Override
@@ -144,8 +148,8 @@ public class TrainingTask
                             .getRecommenderFactory(recommender);
 
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                        log.debug("[{}][{}][{}]: Recommender configured with invalid layer or feature "
-                                        + "- skipping recommender",
+                        log.debug("[{}][{}][{}]: Recommender configured with invalid layer or "
+                                        + "feature - skipping recommender",
                                 getId(), user.getUsername(), r.getRecommender().getName());
                         continue;
                     }
@@ -213,6 +217,8 @@ public class TrainingTask
 
                     publishTrainingEvents(user, recommenderCount, recommender, recommenders.size());
                 }
+                // Catching Throwable is intentional here as we want to continue the execution
+                // even if a particular recommender fails.
                 catch (Throwable e) {
                     log.error("[{}][{}][{}]: Training failed ({} ms)", getId(),
                             user.getUsername(), recommender.getName(),
@@ -228,7 +234,7 @@ public class TrainingTask
         }
         
         schedulingService.enqueue(new PredictionTask(user, getProject(),
-                String.format("TrainingTask %s complete", getId())));
+                String.format("TrainingTask %s complete", getId()), currentDocument));
     }
 
     private void publishTrainingEvents(User aUser, int aRecommenderCount,

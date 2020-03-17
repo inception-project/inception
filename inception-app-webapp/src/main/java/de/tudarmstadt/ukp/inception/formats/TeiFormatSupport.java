@@ -24,6 +24,7 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.tei.TeiReader;
 import org.dkpro.core.io.tei.TeiWriter;
 import org.springframework.stereotype.Component;
@@ -55,17 +56,25 @@ public class TeiFormatSupport
     {
         return true;
     }
-
+    
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public boolean isWritable()
     {
-        return createReaderDescription(TeiReader.class);
+        return true;
     }
     
     @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createEngineDescription(TeiWriter.class);
+        return createReaderDescription(TeiReader.class, aTSD);
+    }
+    
+    @Override
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
+        throws ResourceInitializationException
+    {
+        return createEngineDescription(TeiWriter.class, aTSD);
     }
 }

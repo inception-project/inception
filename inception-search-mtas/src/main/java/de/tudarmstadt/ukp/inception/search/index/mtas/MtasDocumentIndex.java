@@ -20,11 +20,10 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
-import static org.apache.uima.cas.SerialFormat.SERIALIZED_TSI;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
@@ -34,12 +33,12 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -71,9 +70,7 @@ import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,7 +78,6 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 
 import com.github.openjson.JSONObject;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -107,6 +103,7 @@ import mtas.codec.MtasCodec;
 import mtas.codec.util.CodecInfo;
 import mtas.codec.util.CodecUtil;
 import mtas.parser.cql.MtasCQLParser;
+import mtas.parser.cql.ParseException;
 import mtas.search.spans.util.MtasSpanQuery;
 
 /**
@@ -158,29 +155,11 @@ public class MtasDocumentIndex
 
     private static final String EMPTY_FEATURE_VALUE_KEY = "<Empty>";
 
-    // Comparator for feature values. Sort lexicographically and make sure
-    // EMPTY_FEATUREVALUE_KEY is the "biggest" value
-    private static final Comparator<String> FEATUREVALUE_COMPARATOR = (o1, o2) -> {
-        if (EMPTY_FEATURE_VALUE_KEY.equals(o1) && EMPTY_FEATURE_VALUE_KEY.equals(o2)) {
-            return 0;
-        }
-        else if (EMPTY_FEATURE_VALUE_KEY.equals(o1)) {
-            return 1;
-        }
-        else if (EMPTY_FEATURE_VALUE_KEY.equals(o2)) {
-            return -1;
-        }
-        else {
-            return o1.compareTo(o2);
-        }
-    };
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
     private @Autowired  FeatureSupportRegistry featureSupportRegistry;
 
-    private final AnnotationSchemaService annotationSchemaService;
     private final DocumentService documentService;
     private final ProjectService projectService;
     private final Project project;
@@ -190,8 +169,8 @@ public class MtasDocumentIndex
 
     private final File resourceDir;
 
-    public MtasDocumentIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
-            DocumentService aDocumentService, ProjectService aProjectService, String aDir)
+    public MtasDocumentIndex(Project aProject, DocumentService aDocumentService,
+            ProjectService aProjectService, String aDir)
         throws IOException
     {
         AutowireCapableBeanFactory factory = ApplicationContextProvider.getApplicationContext()
@@ -199,7 +178,6 @@ public class MtasDocumentIndex
         factory.autowireBean(this);
         factory.initializeBean(this, "transientParser");
 
-        annotationSchemaService = aAnnotationSchemaService;
         documentService = aDocumentService;
         projectService = aProjectService;
         project = aProject;
@@ -219,28 +197,61 @@ public class MtasDocumentIndex
         throws IOException, ExecutionException
     {
         try {
-            log.trace("Executing query {} on index {}", aRequest, getIndexDir());
+            log.trace("Executing query [{}] on index [{}]", aRequest, getIndexDir());
             
             Directory directory = FSDirectory.open(getIndexDir().toPath());
             IndexReader indexReader = DirectoryReader.open(directory);
 
-            String modifiedQuery = parseQuery(aRequest.getQuery());
-            MtasSpanQuery mtasSpanQuery;
-            try (Reader reader = new StringReader(modifiedQuery)) {
-                MtasCQLParser parser = new MtasCQLParser(reader);
-                mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
-            }
+            MtasSpanQuery mtasSpanQuery = prepareMtasSpanQuery(aRequest);
             
             return doQuery(indexReader, aRequest, FIELD_CONTENT, mtasSpanQuery);
         }
         catch (mtas.parser.cql.ParseException e) {
-            log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
+//            log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
             throw new ExecutionException("Unable to parse query [" + aRequest.getQuery() + "]", e);
         }
         catch (Exception e) {
-            log.error("Query execution error", e);
-            throw (new ExecutionException("Query execution error", e));
+//            log.error("Query execution error", e);
+            throw (new ExecutionException("Unable to execute query [" + aRequest.getQuery() + "]",
+                    e));
         }
+    }
+
+    @Override
+    public long numberOfQueryResults(SearchQueryRequest aRequest) throws ExecutionException
+    {
+        try {
+            log.trace("Determining number of results for query [{}] on index [{}]", aRequest,
+                    getIndexDir());
+
+            Directory directory = FSDirectory.open(getIndexDir().toPath());
+            IndexReader indexReader = DirectoryReader.open(directory);
+
+            MtasSpanQuery mtasSpanQuery = prepareMtasSpanQuery(aRequest);
+
+            return countResults(indexReader, aRequest, mtasSpanQuery);
+        }
+        catch (mtas.parser.cql.ParseException e) {
+//            log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
+            throw new ExecutionException("Unable to parse query [" + aRequest.getQuery() + "]", e);
+        }
+        catch (Exception e) {
+//            log.error("Query execution error", e);
+            throw (new ExecutionException("Unable to execute query [" + aRequest.getQuery() + "]",
+                    e));
+        }
+    }
+
+    private MtasSpanQuery prepareMtasSpanQuery (SearchQueryRequest aRequest)
+        throws IOException, ParseException
+    {
+        String modifiedQuery = parseQuery(aRequest.getQuery());
+        MtasSpanQuery mtasSpanQuery;
+        try (Reader reader = new StringReader(modifiedQuery)) {
+            MtasCQLParser parser = new MtasCQLParser(reader);
+            mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+        }
+        return mtasSpanQuery;
     }
 
     private String parseQuery(String aQuery)
@@ -278,11 +289,113 @@ public class MtasDocumentIndex
         return result;
     }
 
+    private long countResults(IndexReader aIndexReader,
+        SearchQueryRequest aRequest, MtasSpanQuery q) throws IOException
+    {
+        ListIterator<LeafReaderContext> leafReaderContextIterator = aIndexReader.leaves()
+            .listIterator();
+
+        IndexSearcher searcher = new IndexSearcher(aIndexReader);
+
+        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(aRequest.getProject(),
+            aRequest.getUser());
+
+        final float boost = 0;
+        SpanWeight spanweight = q.rewrite(aIndexReader).createWeight(searcher, false, boost);
+
+        long numResults = 0;
+
+        while (leafReaderContextIterator.hasNext()) {
+            LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
+            try {
+                Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
+                if (spans != null) {
+                    while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                        if (segmentReader.numDocs() == segmentReader.maxDoc()
+                                || segmentReader.getLiveDocs().get(spans.docID())) {
+                            Document document = segmentReader.document(spans.docID());
+
+                            // Retrieve user
+                            String user = document.get(FIELD_USER);
+
+                            // Retrieve source and annotation document ids
+                            String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                            String rawAnnotationDocumentId = document
+                                    .get(FIELD_ANNOTATION_DOCUMENT_ID);
+                            if (rawSourceDocumentId == null || rawAnnotationDocumentId == null) {
+                                log.trace("Indexed document lacks source/annotation document IDs"
+                                        + " - source: {}, annotation: {}", rawSourceDocumentId,
+                                    rawAnnotationDocumentId);
+                                continue;
+
+                            }
+                            long sourceDocumentId = Long.valueOf(rawSourceDocumentId);
+                            long annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
+
+                            // If the query is limited to a given document, skip any results
+                            // which are not in the given document
+                            Optional<SourceDocument> limitedToDocument = aRequest
+                                    .getLimitedToDocument();
+                            if (limitedToDocument.isPresent() && !Objects
+                                .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
+                                log.trace("Query limited to document {}, skipping results for "
+                                        + "document {}", limitedToDocument.get().getId(),
+                                    sourceDocumentId);
+                                continue;
+                            }
+
+                            if (annotatableDocuments.containsKey(sourceDocumentId)
+                                && annotationDocumentId == -1) {
+                                // Exclude result if the retrieved document is a sourcedocument
+                                // (that is, has annotationDocument = -1) AND it has a
+                                // corresponding annotation document for this user
+                                log.trace("Skipping results from indexed source document {} in" 
+                                    + "favor of results from the corresponding annotation "
+                                    + "document", sourceDocumentId);
+                                continue;
+                            }
+                            else if (annotationDocumentId != -1 && !aRequest.getUser().getUsername()
+                                .equals(user)) {
+                                // Exclude result if the retrieved document is an annotation
+                                // document (that is, annotationDocument != -1 and its username
+                                // is different from the quering user
+                                log.trace("Skipping results from annotation document for user {} "
+                                        + "which does not match the requested user {}", user,
+                                    aRequest.getUser().getUsername());
+                                continue;
+                            }
+
+                            while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                                numResults++;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                log.error("Unable to process query results", e);
+                numResults = -1;
+            }
+        }
+        return numResults;
+    }
+
+    private Map<Long, Long> listAnnotatableDocuments(Project aProject, User aUser)
+    {
+        Map<Long, Long> annotateableDocuments =  new HashMap<>();
+        documentService.listAnnotatableDocuments(aProject, aUser).entrySet()
+            .stream()
+            .filter(e -> e.getValue() != null) // only include entries where the annodoc is not null
+            .forEach(e -> annotateableDocuments.put(e.getKey().getId(), e.getValue().getId()));
+        return annotateableDocuments;
+    }
+    
     private Map<String, List<SearchResult>> doQuery(IndexReader aIndexReader,
         SearchQueryRequest aRequest, String field, MtasSpanQuery q)
         throws IOException
     {
-        Map<String, List<SearchResult>> results = new TreeMap<>(FEATUREVALUE_COMPARATOR);
+        Map<String, List<SearchResult>> results = new LinkedHashMap<>();
 
         ListIterator<LeafReaderContext> leafReaderContextIterator = aIndexReader.leaves()
                 .listIterator();
@@ -298,7 +411,11 @@ public class MtasDocumentIndex
         final float boost = 0;
         SpanWeight spanweight = q.rewrite(aIndexReader).createWeight(searcher, false, boost);
 
-        while (leafReaderContextIterator.hasNext()) {
+        long offset = aRequest.getOffset();
+        long count = aRequest.getCount();
+        long current = 0;
+
+        resultIteration: while (leafReaderContextIterator.hasNext()) {
             LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
             try {
                 Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
@@ -320,8 +437,8 @@ public class MtasDocumentIndex
                                     .get(FIELD_ANNOTATION_DOCUMENT_ID);
                             if (rawSourceDocumentId == null || rawAnnotationDocumentId == null) {
                                 log.trace("Indexed document lacks source/annotation document IDs"
-                                        + " - source: {}, annotation: {}",
-                                        rawSourceDocumentId, rawAnnotationDocumentId);
+                                        + " - source: {}, annotation: {}", rawSourceDocumentId,
+                                    rawAnnotationDocumentId);
                                 continue;
 
                             }
@@ -353,10 +470,10 @@ public class MtasDocumentIndex
                             Optional<SourceDocument> limitedToDocument = aRequest
                                     .getLimitedToDocument();
                             if (limitedToDocument.isPresent() && !Objects
-                                    .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
+                                .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
                                 log.trace("Query limited to document {}, skipping results for "
-                                        + "document {}",
-                                        limitedToDocument.get().getId(), sourceDocumentId);
+                                        + "document {}", limitedToDocument.get().getId(),
+                                    sourceDocumentId);
                                 continue;
                             }
 
@@ -369,14 +486,14 @@ public class MtasDocumentIndex
                                         + "document", sourceDocumentId);
                                 continue;
                             }
-                            else if (annotationDocumentId != -1
-                                    && !aRequest.getUser().getUsername().equals(user)) {
+                            else if (annotationDocumentId != -1 && !aRequest.getUser().getUsername()
+                                .equals(user)) {
                                 // Exclude result if the retrieved document is an annotation
                                 // document (that is, annotationDocument != -1 and its username
                                 // is different from the quering user
                                 log.trace("Skipping results from annotation document for user {} "
                                         + "which does not match the requested user {}", user,
-                                        aRequest.getUser().getUsername());
+                                    aRequest.getUser().getUsername());
                                 continue;
                             }
 
@@ -388,16 +505,25 @@ public class MtasDocumentIndex
                             // log.debug("******** New doc {}-{}", + spans.docID(), idValue);
 
                             while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                                if (current < offset) {
+                                    current++;
+                                    continue;
+                                }
+                                if (current - offset + 1 > count) {
+                                    break resultIteration;
+                                }
+                                current++;
                                 int matchStart = spans.startPosition();
                                 int matchEnd = spans.endPosition();
-                                
+
                                 int windowStart = Math.max(matchStart - RESULT_WINDOW_SIZE, 0);
                                 int windowEnd = matchEnd + RESULT_WINDOW_SIZE - 1;
-                                
+
                                 // Retrieve all indexed objects within the matching range
-                                List<MtasTokenString> tokens = mtasCodecInfo.getObjectsByPositions(
-                                        field, spans.docID(), windowStart, windowEnd);
-                                
+                                List<MtasTokenString> tokens = mtasCodecInfo
+                                    .getObjectsByPositions(field, spans.docID(), windowStart,
+                                        windowEnd);
+
                                 tokens.sort(Comparator.comparing(MtasTokenString::getOffsetStart));
 
                                 if (tokens.isEmpty()) {
@@ -411,17 +537,14 @@ public class MtasDocumentIndex
                                 result.setDocumentId(sourceDocumentId);
                                 result.setDocumentTitle(documentTitle);
                                 result.setOffsetStart(tokens.stream()
-                                        .filter(t -> t.getPositionStart() >= matchStart && 
-                                                t.getPositionEnd() < matchEnd)
-                                        .mapToInt(MtasTokenString::getOffsetStart)
-                                        .min()
+                                        .filter(t -> t.getPositionStart() >= matchStart
+                                                && t.getPositionEnd() < matchEnd)
+                                        .mapToInt(MtasTokenString::getOffsetStart).min()
                                         .getAsInt());
                                 result.setOffsetEnd(tokens.stream()
-                                        .filter(t -> t.getPositionStart() >= matchStart && 
-                                                t.getPositionEnd() < matchEnd)
-                                        .mapToInt(MtasTokenString::getOffsetEnd)
-                                        .max()
-                                        .getAsInt());
+                                        .filter(t -> t.getPositionStart() >= matchStart
+                                                && t.getPositionEnd() < matchEnd)
+                                        .mapToInt(MtasTokenString::getOffsetEnd).max().getAsInt());
                                 result.setTokenStart(matchStart);
                                 result.setTokenLength(matchEnd - matchStart);
                                 result.setReadOnly(annotationDocument != null
@@ -433,14 +556,14 @@ public class MtasDocumentIndex
                                     if (!token.getPrefix().equals(DEFAULT_PREFIX)) {
                                         continue;
                                     }
-                                    
+
                                     // When searching for an annotation, we don't get the matching
                                     // text back... not sure why...
                                     String tokenText = CodecUtil.termValue(token.getValue());
                                     if (tokenText == null) {
                                         continue;
                                     }
-                                    
+
                                     if (token.getPositionStart() < matchStart) {
                                         fill(leftContext, prevToken, token);
                                         leftContext.append(tokenText);
@@ -568,7 +691,7 @@ public class MtasDocumentIndex
     }
 
     private void indexDocument(String aDocumentTitle, long aSourceDocumentId,
-            long aAnnotationDocumentId, String aUser, CAS aCas)
+            long aAnnotationDocumentId, String aUser, byte[] aBinaryCas)
         throws IOException
     {
         if (indexWriter != null) {
@@ -580,12 +703,7 @@ public class MtasDocumentIndex
                         aAnnotationDocumentId, aUser);
                 
                 // Prepare bytearray with document content to be indexed
-                String encodedCAS; 
-                try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-                    //XmiCasSerializer.serialize(aCas, null, bos, true, null);
-                    CasIOUtils.save(aCas, bos, SERIALIZED_TSI);
-                    encodedCAS = new String(MtasUtils.bytesToChars(bos.toByteArray()));
-                }
+                String encodedCAS = new String(MtasUtils.bytesToChars(aBinaryCas));
 
                 // Calculate timestamp that will be indexed
                 String timestamp = DateTools.dateToString(new Date(),
@@ -631,17 +749,17 @@ public class MtasDocumentIndex
     };
 
     @Override
-    public void indexDocument(SourceDocument aDocument, CAS aCas) throws IOException
+    public void indexDocument(SourceDocument aDocument, byte[] aBinaryCas) throws IOException
     {
-        indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aCas);
+        indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aBinaryCas);
     };
 
     @Override
-    public void indexDocument(AnnotationDocument aDocument, CAS aCas) throws IOException
+    public void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException
     {
         log.debug("***** Indexing annotation document");
         indexDocument(aDocument.getName(), aDocument.getDocument().getId(), aDocument.getId(),
-                aDocument.getUser(), aCas);
+                aDocument.getUser(), aBinaryCas);
         log.debug("***** End of Indexing annotation document");
     };
 
@@ -952,7 +1070,6 @@ public class MtasDocumentIndex
 
     private void indexAllDocuments()
     {
-
         int users = 0;
         int annotationDocs = 0;
         int sourceDocs = 0;
@@ -965,7 +1082,8 @@ public class MtasDocumentIndex
                 users++;
                 for (AnnotationDocument document : documentService.listAnnotationDocuments(project,
                         user)) {
-                    indexDocument(document, documentService.readAnnotationCas(document));
+                    indexDocument(document,
+                            casToByteArray(documentService.readAnnotationCas(document)));
                     annotationDocs++;
                 }
             }
@@ -974,7 +1092,8 @@ public class MtasDocumentIndex
                     project.getId());
 
             for (SourceDocument document : documentService.listSourceDocuments(project)) {
-                indexDocument(document, documentService.createOrReadInitialCas(document));
+                indexDocument(document,
+                        casToByteArray(documentService.createOrReadInitialCas(document)));
                 sourceDocs++;
             }
         }

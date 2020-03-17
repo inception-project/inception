@@ -20,9 +20,9 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-content flex-v-container panel-default">
-      <div class="panel-heading">
-        <div class="pull-right form-inline">
+    <div class="flex-content card">
+      <div class="card-header">
+        <div class="float-right form-inline">
           <input type="checkbox" wicket:id="showAllInstances"/>
           <wicket:message key="instance.showall"/>
         </div>
@@ -31,7 +31,7 @@
           <wicket:container wicket:id="count"></wicket:container>
         </div>
       </div>      
-      <div class="flex-content flex-v-container" style="padding: 0px;">
+      <div class="flex-content scrolling flex-v-container" style="padding: 0px;">
         <div class="flex-v-container flex-content fit-child-snug">
           <wicket:enclosure child="noInstancesNotice">
             <div class="list-empty-notice">
@@ -41,8 +41,8 @@
           <select wicket:id="instances" class="form-control list-panel"></select>
         </div>
       </div>
-      <div class="panel-footer text-right">
-        <button wicket:id="add" type="submit" class="btn btn-primary"><i class="fa fa-plus" aria-hidden="true"></i> <wicket:container wicket:id="label"></wicket:container></button>
+      <div class="card-footer text-right">
+        <button wicket:id="add" type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> <wicket:container wicket:id="label"></wicket:container></button>
       </div>
     </div>
   </wicket:panel>

@@ -103,8 +103,8 @@ public class SchedulingService
     public synchronized void enqueue(Task aTask)
     {
         if (getScheduledTasks().contains(aTask)) {
-            log.debug("Task already in queue: {}", aTask);
-            return;
+            log.debug("Task already in queue, requeueing at the end: {}", aTask);
+            executor.remove(aTask);
         }
 
         log.debug("Enqueuing task [{}]", aTask);

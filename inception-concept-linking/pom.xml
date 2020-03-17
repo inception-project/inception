@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.13.0-SNAPSHOT</version>
+    <version>0.15.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-concept-linking</artifactId>
   <name>INCEpTION - Concept Linking</name>
@@ -198,7 +198,11 @@
       <artifactId>inception-testing</artifactId>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-security</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-datasets-asl</artifactId>

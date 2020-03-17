@@ -82,7 +82,7 @@ public class AnnotationSuggestion
     private final String label;
     private final String uiLabel;
     private final double confidence;
-    private final Optional<String> confidenceExplanation;
+    private final String confidenceExplanation;
 
     private int hidingFlags = 0;
 
@@ -98,7 +98,7 @@ public class AnnotationSuggestion
         feature = aFeature;
         recommenderName = aRecommenderName;
         confidence = aConfidence;
-        confidenceExplanation = Optional.ofNullable(aConfidenceExplanation);
+        confidenceExplanation = aConfidenceExplanation;
         recommenderId = aRecommenderId;
         begin = aBegin;
         end = aEnd;
@@ -190,7 +190,7 @@ public class AnnotationSuggestion
     
     public Optional<String> getConfidenceExplanation() 
     {
-        return confidenceExplanation;
+        return Optional.ofNullable(confidenceExplanation);
     }
 
     public long getRecommenderId()
@@ -250,7 +250,9 @@ public class AnnotationSuggestion
 
     public VID getVID()
     {
-        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, VID.NONE, VID.NONE);
+        String payload = new VID(layerId, (int) recommenderId, id).toString();
+        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id,
+                payload);
     }
 
     @Override

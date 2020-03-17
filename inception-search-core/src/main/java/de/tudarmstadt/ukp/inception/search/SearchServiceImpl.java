@@ -28,7 +28,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
-import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -163,7 +162,7 @@ public class SearchServiceImpl
     }
 
     @EventListener
-    public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws Exception
+    public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws IOException
     {
         log.trace("Starting beforeDocumentRemove");
 
@@ -226,7 +225,7 @@ public class SearchServiceImpl
     }
     
     @Override
-    public void indexDocument(SourceDocument aSourceDocument, CAS aJCas)
+    public void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
         // Retrieve index entry for the project
         Index index = getIndexFromMemory(aSourceDocument.getProject());
@@ -243,7 +242,7 @@ public class SearchServiceImpl
 
             // Add annotation document to the index again
             log.trace("Add source document to index");
-            index.getPhysicalIndex().indexDocument(aSourceDocument, aJCas);
+            index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
         }
         catch (IOException e) {
             log.error("Error indexing source document [{}]({}) in project [{}]({})",
@@ -255,7 +254,7 @@ public class SearchServiceImpl
 
 
     @Override
-    public void indexDocument(AnnotationDocument aAnnotationDocument, CAS aCas)
+    public void indexDocument(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
     {
         log.debug("Indexing annotation document [{}]({}) in project [{}]({})",
                 aAnnotationDocument.getName(), aAnnotationDocument.getId(),
@@ -276,7 +275,7 @@ public class SearchServiceImpl
                         aAnnotationDocument.getName(), aAnnotationDocument.getId(),
                         aAnnotationDocument.getProject().getName(),
                         aAnnotationDocument.getProject().getId());
-                index.getPhysicalIndex().indexDocument(aAnnotationDocument, aCas);
+                index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
                 
                 // If there was a previous timestamped indexed annotation document, remove it from 
                 // index
@@ -305,7 +304,7 @@ public class SearchServiceImpl
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent) throws Exception
+    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
     {
         log.trace("Starting afterAnnotationUpdate");
 
@@ -326,7 +325,7 @@ public class SearchServiceImpl
         SourceDocument aDocument) throws IOException, ExecutionException
     {
         Map<String, List<SearchResult>> groupedResults = query(aUser, aProject, aQuery, aDocument,
-            null, null);
+            null, null, 0, Integer.MAX_VALUE);
         List<SearchResult> resultsAsList = new ArrayList<>();
         groupedResults.values().stream()
             .forEach(resultsGroup -> resultsAsList.addAll(resultsGroup));
@@ -335,9 +334,10 @@ public class SearchServiceImpl
 
     @Override
     @Transactional
-    public Map<String, List<SearchResult>> query(User aUser,
-        Project aProject, String aQuery, SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature) throws IOException, ExecutionException
+    public Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,
+            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature, long offset, long count)
+        throws IOException, ExecutionException
     {
         log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
                 aProject.getName(), aProject.getId());
@@ -383,7 +383,7 @@ public class SearchServiceImpl
 
                 results = index.getPhysicalIndex().executeQuery(
                     new SearchQueryRequest(aProject, aUser, aQuery, aDocument,
-                        aAnnotationLayer, aAnnotationFeature));
+                        aAnnotationLayer, aAnnotationFeature, offset, count));
             }
 
         }
@@ -392,7 +392,7 @@ public class SearchServiceImpl
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent) throws Exception
+    public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent)
     {
         log.trace("Starting afterDocumentCreate");
 
@@ -404,7 +404,6 @@ public class SearchServiceImpl
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
-        throws Exception
     {
         log.trace("Starting beforeLayerConfigurationChanged");
 
@@ -504,5 +503,56 @@ public class SearchServiceImpl
     public boolean isIndexInProgress(Project aProject)
     {
         return indexScheduler.isIndexInProgress(aProject);
+    }
+
+    @Override public long determineNumOfQueryResults(User aUser, Project aProject, String aQuery,
+        SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+        AnnotationFeature aAnnotationFeature) throws ExecutionException
+    {
+        log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
+            aProject.getName(), aProject.getId());
+
+        long numResults;
+
+        Index index = getIndexFromMemory(aProject);
+
+        if (index.getInvalid()) {
+            if (!indexScheduler.isIndexInProgress(aProject)) {
+                // Index is invalid, schedule a new index rebuild
+                indexScheduler.enqueueReindexTask(aProject);
+            }
+
+            // Throw execution exception so that the user knows the query was not run
+            throw (new ExecutionException("Index still building. Try again later."));
+        }
+        
+        // Index is valid, try to execute the query
+        if (!index.getPhysicalIndex().isCreated()) {
+            // Physical index does not exist.
+
+            // Set the invalid flag
+            index.setInvalid(true);
+            updateIndex(index);
+
+            // Schedule new re-indexing process
+            indexScheduler.enqueueReindexTask(aProject);
+
+            // Throw execution exception so that the user knows the query was not run
+            throw (new ExecutionException("Index still building. Try again later."));
+        }
+        
+        // Physical index exists
+
+        if (!index.getPhysicalIndex().isOpen()) {
+            // Physical index is not open. Open it.
+            index.getPhysicalIndex().openPhysicalIndex();
+        }
+
+        log.debug("Executing query: [{}]", aQuery);
+
+        numResults = index.getPhysicalIndex().numberOfQueryResults(new SearchQueryRequest(aProject,
+                aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
+        
+        return numResults;
     }
 }

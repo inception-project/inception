@@ -40,6 +40,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
@@ -54,12 +55,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 @RunWith(Parameterized.class)
 @ContextConfiguration(classes = SpringConfig.class)
 @Transactional
@@ -113,9 +118,10 @@ public class KnowledgeBaseServiceRemoteTest
 
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
+        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = testFixtures.createProject(PROJECT_NAME);
         kb.setProject(project);
         if (kb.getType() == RepositoryType.LOCAL) {

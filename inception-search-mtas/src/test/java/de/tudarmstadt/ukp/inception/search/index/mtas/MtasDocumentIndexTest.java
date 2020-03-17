@@ -62,10 +62,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -96,6 +98,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
@@ -497,9 +501,21 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public FeatureSupport featureSupport()
+        public StringFeatureSupport stringFeatureSupport()
         {
-            return new PrimitiveUimaFeatureSupport();
+            return new StringFeatureSupport();
+        }
+
+        @Bean
+        public BooleanFeatureSupport booleanFeatureSupport()
+        {
+            return new BooleanFeatureSupport();
+        }
+
+        @Bean
+        public NumberFeatureSupport numberFeatureSupport()
+        {
+            return new NumberFeatureSupport();
         }
 
         @Bean
@@ -570,7 +586,7 @@ public class MtasDocumentIndexTest
         @Bean
         public KnowledgeBaseService knowledgeBaseService()
         {
-            return new KnowledgeBaseServiceImpl(repositoryProperties());
+            return new KnowledgeBaseServiceImpl(repositoryProperties(), knowledgeBaseProperties());
         }
 
         @Bean
@@ -618,6 +634,12 @@ public class MtasDocumentIndexTest
         public RepositoryProperties repositoryProperties()
         {
             return new RepositoryProperties();
+        }
+
+        @Bean
+        public KnowledgeBaseProperties knowledgeBaseProperties()
+        {
+            return new KnowledgeBasePropertiesImpl();
         }
 
         @Bean

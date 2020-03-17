@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2015
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,28 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.less;
+package de.tudarmstadt.ukp.inception.ui.core.footer.resources;
 
-import de.agilecoders.wicket.less.LessResourceReference;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class KnowledgeBasePageLRR extends LessResourceReference {
+public class EnjoyHintJsReference extends JavaScriptResourceReference
+{
+    private static final long serialVersionUID = 1L;
 
-    private static final long serialVersionUID = -5906752913389722261L;
-    private static final KnowledgeBasePageLRR INSTANCE = new KnowledgeBasePageLRR();
+    private static final EnjoyHintJsReference INSTANCE = new EnjoyHintJsReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static KnowledgeBasePageLRR get() {
+    public static EnjoyHintJsReference get()
+    {
         return INSTANCE;
     }
 
     /**
      * Private constructor
      */
-    private KnowledgeBasePageLRR() {
-        super(KnowledgeBasePageLRR.class, "inception-ui-kbp.less");
+    private EnjoyHintJsReference()
+    {
+        super(EnjoyHintJsReference.class, "enjoyhint.js");
     }
 }

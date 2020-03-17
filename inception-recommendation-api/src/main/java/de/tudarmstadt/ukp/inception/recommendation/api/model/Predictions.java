@@ -17,17 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import static java.util.Arrays.asList;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang3.Validate;
+import org.apache.wicket.util.collections.ConcurrentHashSet;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -36,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * Stores references to the recommendationService, the currently used JCas and the annotatorState.
@@ -50,19 +55,18 @@ public class Predictions
     private static final long serialVersionUID = -1598768729246662885L;
     
     private Map<ExtendedId, AnnotationSuggestion> predictions = new ConcurrentHashMap<>();
+    private Set<String> seenDocumentsForPrediction = new ConcurrentHashSet<>();
     
     private final Project project;
     private final User user;
-    
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final List<LogMessage> log = new ArrayList<>();
     
     public Predictions(Project aProject, User aUser,
             Map<ExtendedId, AnnotationSuggestion> aPredictions)
     {
-        if (aProject == null) {
-            throw new IllegalArgumentException("The Project is necessary! It cannot be null.");
-        }
-
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aUser, "User must be specified");
+        
         project = aProject;
         user = aUser;
 
@@ -71,7 +75,8 @@ public class Predictions
         }
     }
     
-    public Predictions(User aUser, Project aProject) {
+    public Predictions(User aUser, Project aProject)
+    {
         this(aProject, aUser, null);
     }
 
@@ -156,21 +161,19 @@ public class Predictions
     }
     
     /**
-     * 
-     * @param aLayerId
      * @param aPredictions - list of sentences containing recommendations
      */
-    public void putPredictions(long aLayerId, List<AnnotationSuggestion> aPredictions)
+    public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {
-        aPredictions.forEach(prediction -> {
+        aPredictions.forEach(prediction -> 
             predictions.put(new ExtendedId(user.getUsername(), project.getId(),
-                    prediction.getDocumentName(), aLayerId, prediction.getOffset(),
-                    prediction.getRecommenderId(), prediction.getId(), -1), prediction);
-
-        });
+                    prediction.getDocumentName(), prediction.getLayerId(), prediction.getOffset(),
+                    prediction.getRecommenderId(), prediction.getId(), -1), prediction)
+        );
     }
-
-    public Project getProject() {
+    
+    public Project getProject()
+    {
         return project;
     }
 
@@ -187,6 +190,7 @@ public class Predictions
     public void clearPredictions()
     {
         predictions.clear();
+        seenDocumentsForPrediction.clear();
     }
 
     public void removePredictions(Long recommenderId)
@@ -220,11 +224,50 @@ public class Predictions
             .collect(Collectors.toList());
     }
 
-    public List<AnnotationSuggestion> getPredictionsByRecommender(Recommender aRecommender)
+    public List<AnnotationSuggestion> getPredictionsByRecommenderAndDocument(
+            Recommender aRecommender, String aDocument)
     {
         return predictions.entrySet().stream()
-                .filter(f -> f.getKey().getRecommenderId() == (long) aRecommender.getId())
+                .filter(f -> 
+                        f.getKey().getRecommenderId() == (long) aRecommender.getId() &&
+                        f.getKey().getDocumentName().equals(aDocument))
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
+    }
+
+    public List<AnnotationSuggestion> getPredictionsByDocument(String aDocument)
+    {
+        return predictions.entrySet().stream()
+                .filter(f -> 
+                        f.getKey().getDocumentName().equals(aDocument))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+    }
+
+    public void markDocumentAsPredictionCompleted(SourceDocument aDocument)
+    {
+        seenDocumentsForPrediction.add(aDocument.getName());
+    }
+
+    public boolean hasRunPredictionOnDocument(SourceDocument aDocument)
+    {
+        return seenDocumentsForPrediction.contains(aDocument.getName());
+    }
+    
+    public void log(LogMessage aMessage)
+    {
+        synchronized (log) {
+            log.add(aMessage);
+        }
+    }
+    
+    public List<LogMessage> getLog()
+    {
+        synchronized (log) {
+            // Making a copy here because we may still write to the log and don't want to hand out
+            // a live copy... which might cause problems, e.g. if the live copy would be used in the
+            // Wicket UI and becomes subject to serialization.
+            return asList(log.stream().toArray(LogMessage[]::new));
+        }
     }
 }
