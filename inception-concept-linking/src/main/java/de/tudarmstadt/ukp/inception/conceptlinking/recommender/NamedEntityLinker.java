@@ -69,8 +69,8 @@ public class NamedEntityLinker
         = new Key<>("model");
 
     public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
-                             KnowledgeBaseService aKbService, ConceptLinkingService aClService,
-                             FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits)
+        KnowledgeBaseService aKbService, ConceptLinkingService aClService,
+        FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits)
     {
         super(aRecommender);
 
