@@ -67,7 +67,7 @@ public class Conll2012FormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(Conll2012Reader.class,
+        return createReaderDescription(Conll2012Reader.class, aTSD,
                 // Constituents are not supported by WebAnno and trying to read a file which does
                 // not have them triggers an NPE in DKPro Core 1.11.0
                 Conll2012Reader.PARAM_READ_CONSTITUENT, false);
@@ -78,6 +78,6 @@ public class Conll2012FormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(Conll2012Writer.class);
+        return createEngineDescription(Conll2012Writer.class, aTSD);
     }
 }

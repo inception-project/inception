@@ -90,6 +90,8 @@ public class ImportExportServiceImplTest
         // ensure this is actually callable and doesn't run into a mocked version which simply 
         // returns null.
         when(schemaService.getFullProjectTypeSystem(any(), anyBoolean())).thenCallRealMethod();
+        when(schemaService.getTypeSystemForExport(any())).thenCallRealMethod();
+        when(schemaService.prepareCasForExport(any(), any(), any())).thenCallRealMethod();
         doCallRealMethod().when(schemaService).upgradeCas(any(), any(),
                 any(TypeSystemDescription.class));
     }

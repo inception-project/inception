@@ -942,11 +942,24 @@ public class AnnotationSchemaServiceImpl
     }
     
     @Override
-    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+    public TypeSystemDescription getTypeSystemForExport(Project aProject)
+        throws ResourceInitializationException
+    {
+        return getFullProjectTypeSystem(aProject, false);
+    }
+    
+    @Override
+    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws ResourceInitializationException, UIMAException, IOException
     {
+        TypeSystemDescription tsd = aFullProjectTypeSystem;
+        if (tsd == null) {
+            tsd = getTypeSystemForExport(aSourceDocument.getProject());
+        }
+        
         CAS exportCas = WebAnnoCasUtil.createCas();
-        upgradeCas(aCas, exportCas, getFullProjectTypeSystem(aSourceDocument.getProject(), false));
+        upgradeCas(aCas, exportCas, tsd);
         return exportCas;
     }
     
