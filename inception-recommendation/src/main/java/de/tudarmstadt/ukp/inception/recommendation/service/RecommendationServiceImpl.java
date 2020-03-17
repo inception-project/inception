@@ -1470,9 +1470,15 @@ public class RecommendationServiceImpl
                     for (AnnotationFS annotation : annotations.get(oi.getB())) {
                         String label = annotation.getFeatureValueAsString(feat);
                         for (AnnotationSuggestion suggestion : group) {
-                            if ((!aLayer.isAllowStacking() && label != null)
-                                    || (label != null && label.equals(suggestion.getLabel()))
-                                    || suggestion.getLabel() == null) {
+                            // If the annotation feature is null,
+                            // then we never want to hide respective suggestions
+                            if (label == null ) {
+                                continue;
+                            }
+
+                            if (!aLayer.isAllowStacking()
+                                || label.equals(suggestion.getLabel())
+                                || suggestion.getLabel() == null) {
                                 suggestion.hide(FLAG_OVERLAP);
                             }
                         }
