@@ -17,16 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentUri;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.indexCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -40,7 +35,6 @@ import org.apache.uima.fit.util.CasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -90,33 +84,6 @@ public class NamedEntityLinker
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasList)
     {
-    }
-
-    private Collection<ImmutablePair<String, Collection<AnnotationFS>>> extractNamedEntities(
-        List<CAS> aCasList)
-    {
-        Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples = new HashSet<>();
-        for (CAS cas : aCasList) {
-            Type predictedType = getPredictedType(cas);
-            Feature predictedFeature = getPredictedFeature(cas);
-
-            Collection<AnnotationFS> namesPerDocument = new ArrayList<>();
-            Type sentenceType = getType(cas, Sentence.class);
-
-            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
-                predictedType);
-            for (Map.Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
-                Collection<AnnotationFS> tokens = e.getValue().stream()
-                    // If the identifier has not been set
-                    .filter(a -> a.getStringValue(predictedFeature) == null)
-                    .collect(Collectors.toSet());
-                namesPerDocument.addAll(tokens);
-            }
-
-            // TODO #176 use the document Id once it is available in the CAS
-            nameSamples.add(new ImmutablePair<>(getDocumentUri(cas), namesPerDocument));
-        }
-        return nameSamples;
     }
 
     // TODO #176 use the document Id once it is available in the CAS
