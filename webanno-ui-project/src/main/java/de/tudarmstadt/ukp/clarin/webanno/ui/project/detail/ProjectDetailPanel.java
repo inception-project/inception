@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData.CURRENT_PROJECT;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.RuntimeConfigurationType;
+import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -169,6 +171,8 @@ public class ProjectDetailPanel
         else {
             projectService.updateProject(project);
         }
+
+        Session.get().setMetaData(CURRENT_PROJECT, project);
     }
 
     private class ProjectNameValidator
