@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
 import static java.lang.Math.ceil;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -215,7 +216,8 @@ public class AnnotationDocumentExporter
                     });
 
             // Export annotations from regular users
-            for (AnnotationDocument annDoc : srcToAnnIdx.get(srcDoc)) {
+            for (AnnotationDocument annDoc : 
+                srcToAnnIdx.computeIfAbsent(srcDoc, key -> emptyList())) {
                 
                 // copy annotation document only for existing users and the state of the 
                 // annotation document is not NEW/IGNORE
