@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+@JsonSerialize
 public class NamedEntityLinkerTraits
     implements Serializable
 {
