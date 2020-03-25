@@ -62,9 +62,9 @@
 
     <mockito.version>2.28.2</mockito.version>
     <assertj.version>3.14.0</assertj.version>
-    <spring.version>5.2.2.RELEASE</spring.version>
-    <spring.boot.version>2.2.2.RELEASE</spring.boot.version>
-    <spring.security.version>5.2.1.RELEASE</spring.security.version>
+    <spring.version>5.2.3.RELEASE</spring.version>
+    <spring.boot.version>2.2.4.RELEASE</spring.boot.version>
+    <spring.security.version>5.2.2.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
     <wicketstuff.version>8.6.0</wicketstuff.version>
     <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
@@ -128,12 +128,15 @@
     <module>inception-example-imls-data-majority</module>
     <!-- Documentation -->
     <module>inception-doc</module>
+    <!-- Curation -->
+    
+    <module>inception-curation</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
     <repository>
       <id>ukp-oss-releases</id>
-      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
+      <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
       <releases>
         <enabled>true</enabled>
         <updatePolicy>never</updatePolicy>
@@ -146,7 +149,7 @@
     <!-- For SNAPSHOTs of WebAnno / DKPro Core -->
     <repository>
       <id>ukp-oss-snapshots</id>
-      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
+      <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -159,12 +162,12 @@
     <pluginRepository>
       <id>jcenter-snapshots</id>
       <name>jcenter</name>
-      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
+      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
     </pluginRepository>
     <pluginRepository>
       <id>jcenter-releases</id>
       <name>jcenter</name>
-      <url>http://jcenter.bintray.com</url>
+      <url>https://jcenter.bintray.com</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
@@ -730,7 +733,7 @@
         <artifactId>h2</artifactId>
         <version>1.4.197</version>
       </dependency>
-
+     
       <!-- JAXB DEPENDENCIES -->
       <dependency>
         <groupId>javax.xml.bind</groupId>
@@ -1151,6 +1154,12 @@
         <artifactId>d3js</artifactId>
         <version>5.5.0</version>
       </dependency>
+      
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-curation</artifactId>
+        <version>0.15.0-SNAPSHOT</version>
+      </dependency>
       <dependency>
         <groupId>org.webjars.bowergithub.xbsoftware</groupId>
         <artifactId>enjoyhint</artifactId>
@@ -1327,6 +1336,17 @@
             <dependency>org.awaitility:awaitility</dependency>
           </ignoredDependencies>
         </configuration>
+        <dependencies>
+          <dependency>
+            <!--
+              - Required to use the dependency plugin on newer Java versions.
+              - See: https://issues.apache.org/jira/browse/MDEP-613 
+              -->
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-dependency-analyzer</artifactId>
+            <version>1.11.1</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

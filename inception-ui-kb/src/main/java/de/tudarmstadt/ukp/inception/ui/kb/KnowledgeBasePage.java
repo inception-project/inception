@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.ui.kb.less.KnowledgeBasePageLRR;
+import de.tudarmstadt.ukp.inception.ui.kb.sass.KnowledgeBasePageLRR;
 
 /**
  * Knowledge Base Page. Current UI/UX issues:

@@ -20,23 +20,24 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
 <wicket:panel>
-  <div class="flex-content panel panel-default panel-flex">
-    <div class="panel-heading">
-      <form wicket:id="form" class="pull-right form-inline">
+  <div class="flex-content card">
+    <div class="card-header">
+      <form wicket:id="form" class="float-right form-inline">
         <input type="checkbox" wicket:id="showAllConcepts"/>
         <wicket:message key="concept.list.showall"/>
       </form>
-      <h3 class="panel-title">
-        <wicket:message key="concepts"/>
-      </h3>
+      <wicket:message key="concepts"/>
     </div>
-    <div class="panel-body flex-v-container" style="padding: 0px;">
+    <div class="card-body flex-v-container" style="padding: 0px;">
       <div class="flex-content fit-child-snug">
         <div wicket:id="tree" class="scrolling"></div>
       </div>
     </div>
-    <div class="panel-footer text-right">
-      <button wicket:id="add" type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> <wicket:container wicket:id="label"></wicket:container></button>
+    <div class="card-footer text-right">
+      <button wicket:id="add" type="submit" class="btn btn-primary">
+        <i class="fas fa-plus"></i> 
+        <wicket:container wicket:id="label">
+      </wicket:container></button>
     </div>
   </div>
 </wicket:panel>
