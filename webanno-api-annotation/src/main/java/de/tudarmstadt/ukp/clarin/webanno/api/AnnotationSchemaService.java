@@ -304,17 +304,18 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer layer);
      
     /**
-     * List all the features in a {@link AnnotationLayer} for this {@link Project}
+     * List all the features in a {@link AnnotationLayer} for this {@link Project}. This includes
+     * disabled features.
      * 
-     * @param type
+     * @param aLayer
      *            the layer.
      * 
      * @return the features.
      */
-    List<AnnotationFeature> listAnnotationFeature(AnnotationLayer type);
+    List<AnnotationFeature> listAnnotationFeature(AnnotationLayer aLayer);
 
     /**
-     * List all features in the project
+     * List all features in the project. This includes disabled features.
      * 
      * @param project
      *            the project.
@@ -322,6 +323,16 @@ public interface AnnotationSchemaService
      */
     List<AnnotationFeature> listAnnotationFeature(Project project);
 
+    /**
+     * List enabled features in a {@link AnnotationLayer} for this {@link Project}.
+     * 
+     * @param aLayer
+     *            the layer.
+     * 
+     * @return the features.
+     */
+    List<AnnotationFeature> listEnabledFeatures(AnnotationLayer aLayer);
+    
     /**
      * list all {@link Tag} in the system
      *
