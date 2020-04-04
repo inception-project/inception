@@ -452,6 +452,9 @@ public class RecommendationServiceImpl
             // document, we start the predictions so that the user gets recommendations
             // as quickly as possible without any interaction needed
             User user = userRepository.get(username);
+            if (user == null) {
+                return;
+            }
             Predictions predictions = getPredictions(user, project);
             if (
                     predictions == null ||
@@ -580,12 +583,11 @@ public class RecommendationServiceImpl
             SourceDocument aCurrentDocument)
     {
         User user = userRepository.get(aUser);
-        
         // do not trigger training during when viewing others' work
-        if (!user.equals(userRepository.getCurrentUser())) {
+        if (user == null || !user.equals(userRepository.getCurrentUser())) {
             return;
         }
-
+        
         // Update the task count
         AtomicInteger count = trainingTaskCounter.computeIfAbsent(
             new RecommendationStateKey(user.getUsername(), aProject),
@@ -1468,10 +1470,56 @@ public class RecommendationServiceImpl
                     for (AnnotationFS annotation : annotations.get(oi.getB())) {
                         String label = annotation.getFeatureValueAsString(feat);
                         for (AnnotationSuggestion suggestion : group) {
-                            if (!aLayer.isAllowStacking()
-                                    || (label != null && label.equals(suggestion.getLabel()))
-                                    || suggestion.getLabel() == null) {
-                                suggestion.hide(FLAG_OVERLAP);
+                            // The suggestion would just create an annotation and not set any 
+                            // feature
+                            if (suggestion.getLabel() == null) {
+                                // If there is already an annotation, then we hide any suggestions
+                                // that would just trigger the creation of the same annotation and
+                                // not set any new feature. This applies whether stacking is allowed
+                                // or not.
+                                if (
+                                        suggestion.getBegin() == annotation.getBegin() &&
+                                        suggestion.getEnd() == annotation.getEnd()
+                                ) {
+                                    suggestion.hide(FLAG_OVERLAP);
+                                    continue;
+                                }
+                                
+                                // If stacking is enabled, we do allow suggestions that create an
+                                // annotation with no label, but only if the offsets differ
+                                if (
+                                        aLayer.isAllowStacking() &&
+                                        (suggestion.getBegin() != annotation.getBegin() ||
+                                        suggestion.getEnd() != annotation.getEnd())
+                                ) {
+                                    suggestion.hide(FLAG_OVERLAP);
+                                    continue;
+                                }
+                            }
+                            // The suggestion would merge the suggested feature value into an
+                            // existing annotation or create a new annotation with the feature if
+                            // stacking were enabled.
+                            else {
+                                // Is the feature still unset in the current annotation - i.e. would
+                                // accepting the suggestion merge the feature into it? If yes, we do
+                                // not hide
+                                if (label == null ) {
+                                    continue;
+                                }
+                                
+                                // Does the suggested label match the label of an existing
+                                // annotation, then we hide
+                                if (label.equals(suggestion.getLabel())) {
+                                    suggestion.hide(FLAG_OVERLAP);
+                                    continue;
+                                }
+
+                                // Would accepting the suggestion create a new annotation but
+                                // stacking is not enabled - then we need to hide
+                                if (!aLayer.isAllowStacking()) {
+                                    suggestion.hide(FLAG_OVERLAP);
+                                    continue;
+                                }
                             }
                         }
                     }

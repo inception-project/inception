@@ -125,6 +125,13 @@ public class RecommendationEditorExtension
             AjaxRequestTarget aTarget, CAS aCas, VID aVID, String aAction)
         throws IOException, AnnotationException
     {
+        // only process actions relevant to recommendation
+        if (!aVID.getExtensionId().equals(BEAN_NAME)) {
+            return;
+        }
+        VID vid = VID.parse(aVID.getExtensionPayload());
+        VID extendedVID = new VID(aVID.getExtensionId(), vid.getLayerId(), vid.getId(), 
+                vid.getSubId(), vid.getAttribute(), vid.getSlot(), aVID.getExtensionPayload());
         // Create annotation
         if (SpanAnnotationResponse.is(aAction)) {
             actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
@@ -153,10 +160,13 @@ public class RecommendationEditorExtension
         SourceDocument document = aState.getDocument();
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(document, aVID);
+        VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+        Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(document, 
+                recommendationVid);
 
         if (!prediction.isPresent()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            log.error("Could not find annotation in [{}] with id [{}]", document, 
+                    recommendationVid);
             aTarget.getPage().error("Could not find annotation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;
@@ -193,7 +203,7 @@ public class RecommendationEditorExtension
 
         // Send a UI event that the suggestion has been accepted
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-                new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
+                new AjaxRecommendationAcceptedEvent(aTarget, aState, recommendationVid));
     }
     
     /**
@@ -213,18 +223,21 @@ public class RecommendationEditorExtension
                 aState.getProject());
         
         SourceDocument document = aState.getDocument();
-        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID);
+        VID recommendationVID = VID.parse(aVID.getExtensionPayload());
+        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, 
+                recommendationVID);
         
         if (!oPrediction.isPresent()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            log.error("Could not find annotation in [{}] with id [{}]", document, 
+                    recommendationVID);
             aTarget.getPage().error("Could not find annotation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;
         }
 
         AnnotationSuggestion suggestion = oPrediction.get();
-        Recommender recommender = recommendationService.getRecommender(aVID.getId());
-        AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
+        Recommender recommender = recommendationService.getRecommender(recommendationVID.getId());
+        AnnotationLayer layer = annotationService.getLayer(recommendationVID.getLayerId());
         AnnotationFeature feature = recommender.getFeature();
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
@@ -245,7 +258,7 @@ public class RecommendationEditorExtension
 
         // Send a UI event that the suggestion has been rejected
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-                new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
+                new AjaxRecommendationRejectedEvent(aTarget, aState, recommendationVID));
     }
     
     @Override
@@ -279,4 +292,5 @@ public class RecommendationEditorExtension
                 recommendationService, learningRecordService, fsRegistry, documentService,
                 aWindowBeginOffset, aWindowEndOffset);
     }
+
 }
