@@ -39,4 +39,11 @@ public interface AnnotationSidebarFactory
     AnnotationSidebar_ImplBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
             AnnotationPage aAnnotationPage);
+    
+    /**
+     * Override for cases when sidebar should not be added by default
+     */
+    default boolean applies(AnnotatorState aState) {
+        return true;
+    }
 }

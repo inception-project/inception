@@ -32,13 +32,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class VDocument
 {
-    private Map<VID, VArc> arcs = new LinkedHashMap<>();
-    private Map<VID, VSpan> spans = new LinkedHashMap<>();
-    private ListValuedMap<VID, VComment> comments = new ArrayListValuedHashMap<>();
-    private ListValuedMap<Long, VArc> arcsByLayer = new ArrayListValuedHashMap<>();
-    private ListValuedMap<Long, VSpan> spansByLayer = new ArrayListValuedHashMap<>();
-    private Map<Long, AnnotationLayer> annotationLayers = new LinkedHashMap<>();
-    private List<VMarker> markers = new ArrayList<>();
+    private final Map<VID, VArc> arcs = new LinkedHashMap<>();
+    private final Map<VID, VSpan> spans = new LinkedHashMap<>();
+    private final ListValuedMap<VID, VComment> comments = new ArrayListValuedHashMap<>();
+    private final ListValuedMap<Long, VArc> arcsByLayer = new ArrayListValuedHashMap<>();
+    private final ListValuedMap<Long, VSpan> spansByLayer = new ArrayListValuedHashMap<>();
+    private final Map<Long, AnnotationLayer> annotationLayers = new LinkedHashMap<>();
+    private final List<VMarker> markers = new ArrayList<>();
 
     public void add(VArc aArc)
     {
@@ -136,5 +136,18 @@ public class VDocument
     public Collection<AnnotationLayer> getAnnotationLayers()
     {
         return Collections.unmodifiableCollection(annotationLayers.values());
+    }
+
+    public void add(VObject aVobj)
+    {
+        if (aVobj instanceof VSpan) {
+            add((VSpan) aVobj);
+        }
+        else if (aVobj instanceof VArc) {
+            add((VArc) aVobj);
+        }
+        else {
+            throw new IllegalArgumentException("VObject is neither VSpan nor VArc.");
+        }
     }
 }

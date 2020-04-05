@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
+import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
+
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +50,7 @@ class ProjectSelectionPanel
 
     private OverviewListChoice<Project> overviewList;
     private LambdaAjaxLink createLink;
+    private ProjectImportPanel importProjectPanel;
 
     public ProjectSelectionPanel(String id, IModel<Project> aModel)
     {
@@ -61,6 +66,11 @@ class ProjectSelectionPanel
         add(createLink = new LambdaAjaxLink("create", this::actionCreate));
         MetaDataRoleAuthorizationStrategy.authorize(createLink, Component.RENDER, StringUtils.join(
                 new String[] { Role.ROLE_ADMIN.name(), Role.ROLE_PROJECT_CREATOR.name() }, ","));
+        
+        importProjectPanel = new ProjectImportPanel("importPanel", aModel);
+        add(importProjectPanel);
+        authorize(importProjectPanel, Component.RENDER,
+                String.join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
     }
 
     private List<Project> listProjects()

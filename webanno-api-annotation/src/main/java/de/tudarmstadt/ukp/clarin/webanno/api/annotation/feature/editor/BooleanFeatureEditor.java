@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
@@ -56,7 +56,7 @@ public class BooleanFeatureEditor
     }
 
     @Override
-    public Component getFocusComponent()
+    public FormComponent getFocusComponent()
     {
         return field;
     }

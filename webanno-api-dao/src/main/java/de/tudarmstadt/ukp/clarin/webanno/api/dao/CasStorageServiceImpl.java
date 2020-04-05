@@ -39,8 +39,6 @@ import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -55,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -484,7 +483,7 @@ public class CasStorageServiceImpl
         
         CAS cas;
         try {
-            cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+            cas = WebAnnoCasUtil.createCas();
         }
         catch (UIMAException e) {
             throw new IOException("Unable to create empty CAS", e);

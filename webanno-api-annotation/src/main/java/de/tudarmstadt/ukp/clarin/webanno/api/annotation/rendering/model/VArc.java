@@ -31,10 +31,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class VArc
     extends VObject
 {
-    private VID source;
-    private VID target;
-    private String colorHint;
-    private String labelHint;
+    private final VID source;
+    private final VID target;
 
     public VArc(AnnotationLayer aLayer, AnnotationFS aFS, String aType, FeatureStructure aSourceFS,
             FeatureStructure aTargetFS, Map<String, String> aFeatures)
@@ -59,41 +57,22 @@ public class VArc
     }
 
     public VArc(AnnotationLayer aLayer, VID aVid, String aType, VID aSource, VID aTarget,
-            String aLabelHint, Map<String, String> aFeatures, String aColor)
+            String aLabel, Map<String, String> aFeatures, String aColor)
     {
         super(aLayer, aVid, aType, aFeatures, Collections.emptyMap());
+        setColorHint(aColor);
+        setLabelHint(aLabel);
         source = aSource;
         target = aTarget;
-        labelHint = aLabelHint;
-        colorHint = aColor;
     }
 
-    public String getColorHint () {
-        return colorHint;
-    }
-    
-    public String getLabelHint()
-    {
-        return labelHint;
-    }
-    
     public VID getSource()
     {
         return source;
     }
 
-    public void setSource(VID aSource)
-    {
-        source = aSource;
-    }
-
     public VID getTarget()
     {
         return target;
-    }
-
-    public void setTarget(VID aTarget)
-    {
-        target = aTarget;
     }
 }

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -28,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
 public class PreRendererImpl implements PreRenderer
@@ -47,9 +50,23 @@ public class PreRendererImpl implements PreRenderer
     public void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
             List<AnnotationLayer> aLayers)
     {
+        if (aLayers.isEmpty()) {
+            return;
+        }
+        
+        // The project for all layers must be the same, so we just fetch the project from the 
+        // first layer
+        Project project = aLayers.get(0).getProject();
+        
+        // Listing the features once is faster than repeatedly hitting the DB to list features for
+        // every layer.
+        List<AnnotationFeature> allFeatures = annotationService.listAnnotationFeature(project);
+        
         // Render (custom) layers
         for (AnnotationLayer layer : aLayers) {
-            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            List<AnnotationFeature> features = allFeatures.stream()
+                    .filter(feature -> feature.getLayer().equals(layer))
+                    .collect(toList());
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
             renderer.render(aCas, features, aResponse, windowBeginOffset, windowEndOffset);
         }

@@ -48,6 +48,7 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -85,12 +86,12 @@ public class ImportExportServiceImplTest
         sut.onContextRefreshedEvent();
         
         when(schemaService.listAnnotationLayer(any(Project.class))).thenReturn(emptyList());
-        // We don't want to re-write the prepareCasForExport method - call the original
-        when(schemaService.prepareCasForExport(any(), any())).thenCallRealMethod();
         // The prepareCasForExport method internally calls getFullProjectTypeSystem, so we need to
         // ensure this is actually callable and doesn't run into a mocked version which simply 
         // returns null.
         when(schemaService.getFullProjectTypeSystem(any(), anyBoolean())).thenCallRealMethod();
+        when(schemaService.getTypeSystemForExport(any())).thenCallRealMethod();
+        when(schemaService.prepareCasForExport(any(), any(), any())).thenCallRealMethod();
         doCallRealMethod().when(schemaService).upgradeCas(any(), any(),
                 any(TypeSystemDescription.class));
     }

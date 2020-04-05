@@ -17,30 +17,32 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel>
-    <form wicket:id="form" class="w_flex_container">
-      <div class="w_flex_content">
-        <div class="fluid-container">
-          <div class="row">
-            <div class="col-sm-12">
-              <p>
-                <wicket:container wicket:id="content" />
-              </p>
-              <p>
-                <span wicket:id="feedback"></span>
-              </p>
-            </div>
+<wicket:panel>
+  <form wicket:id="form" class="w_flex_container">
+    <div class="w_flex_content">
+      <div class="fluid-container">
+        <div class="row">
+          <div class="col-sm-12">
+            <p>
+              <wicket:container wicket:id="content" />
+            </p>
+            <p>
+              <span wicket:id="feedback"></span>
+            </p>
           </div>
         </div>
       </div>
-      <div class="w_flex_footer panel-footer">
-        <div class="form-group pull-right">
-          <input wicket:id="confirm" type="submit" class="btn btn-primary" wicket:message="value:confirm.label" />
-          <input wicket:id="cancel" type="button" class="btn btn-default" wicket:message="value:cancel.label" />
-        </div>
-      </div>
-    </form>
-  </wicket:panel>
-</body>
+    </div>
+    <div class="w_flex_footer card-footer text-right">
+      <button wicket:id="confirm" class="btn btn-primary">
+        <i class="fas fa-check"></i>&nbsp;
+        <wicket:message key="confirm.label"/>
+      </button>
+      <button wicket:id="cancel" class="btn btn-secondary">
+        <i class="fas fa-times"></i>&nbsp;
+        <wicket:message key="cancel.label"/>
+      </button>
+    </div>
+  </form>
+</wicket:panel>
 </html>

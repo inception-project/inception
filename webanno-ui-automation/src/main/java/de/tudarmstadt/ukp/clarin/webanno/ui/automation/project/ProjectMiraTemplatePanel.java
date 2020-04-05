@@ -49,6 +49,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -66,9 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Status;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.TabSepDocModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
@@ -98,7 +97,7 @@ public class ProjectMiraTemplatePanel
     private ProjectTrainingDocumentsPanel targetLayerTarinDocumentsPanel;
     private ProjectTrainingDocumentsPanel otherLayerTarinDocumentsPanel;
     private ProjectTrainingDocumentsPanel freeTrainDocumentsPanel;
-    private TargetLaerDetailForm targetLayerDetailForm;
+    private TargetLayerDetailForm targetLayerDetailForm;
 
     private Model<AnnotationFeature> featureModel = new Model<>();
 
@@ -154,7 +153,7 @@ public class ProjectMiraTemplatePanel
         if (targetLayerDetailForm != null) {
             targetLayerDetailForm.remove();
         }
-        targetLayerDetailForm = new TargetLaerDetailForm("targetLayerDetailForm");
+        targetLayerDetailForm = new TargetLayerDetailForm("targetLayerDetailForm");
         targetLayerDetailForm.setOutputMarkupPlaceholderTag(true);
         add(targetLayerDetailForm);
     }
@@ -241,17 +240,16 @@ public class ProjectMiraTemplatePanel
 
     }
 
-    public class TargetLaerDetailForm
+    public class TargetLayerDetailForm
         extends Form<MiraTemplate>
     {
         private static final long serialVersionUID = -4655869081345550397L;
         @SuppressWarnings("rawtypes")
         private BootstrapAjaxTabbedPanel<ITab> autoTabs;
 
-        public TargetLaerDetailForm(String id)
+        public TargetLayerDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<>(new EntityModel<>(
-                    new MiraTemplate())));
+            super(id, new CompoundPropertyModel<>(new MiraTemplate()));
 
             List<ITab> tabs = new ArrayList<>();
             tabs.add(new AbstractTab(new Model<>("Target layer"))
@@ -437,12 +435,11 @@ public class ProjectMiraTemplatePanel
 
         public MiraTemplateDetailForm(String id)
         {
-            super(id, new CompoundPropertyModel<>(new EntityModel<>(
-                    new MiraTemplate())));
+            super(id, new CompoundPropertyModel<>(new MiraTemplate()));
 
             add(new CheckBox("annotateAndRepeat"));
 
-            add(new Button("save", new StringResourceModel("label"))
+            add(new Button("save")
             {
                 private static final long serialVersionUID = 1L;
 

@@ -93,6 +93,20 @@ public class SourceDocument
     @Deprecated
     private boolean processed = false;
 
+    public SourceDocument()
+    {
+        // Nothing to do
+    }
+    
+    public SourceDocument(String aName, Project aProject, String aFormat)
+    {
+        super();
+        name = aName;
+        project = aProject;
+        format = aFormat;
+        state = SourceDocumentState.NEW;
+    }
+
     public Long getId()
     {
         return id;

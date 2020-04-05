@@ -24,6 +24,7 @@ import static java.util.Collections.emptyList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -56,12 +58,13 @@ public class SpanAdapter
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     private final List<SpanLayerBehavior> behaviors;
-    
-    public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+
+    public SpanAdapter(LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures, List<SpanLayerBehavior> aBehaviors)
+            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
-        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
         
         if (aBehaviors == null) {
             behaviors = emptyList();
@@ -122,7 +125,10 @@ public class SpanAdapter
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
-        
+
+        log.trace("Created span annotation {}-{} [{}]", newAnnotation.getBegin(),
+                newAnnotation.getEnd(), newAnnotation.getCoveredText());
+
         // If if the layer attaches to a feature, then set the attach-feature to the newly
         // created annotation.
         if (getAttachFeatureName() != null) {

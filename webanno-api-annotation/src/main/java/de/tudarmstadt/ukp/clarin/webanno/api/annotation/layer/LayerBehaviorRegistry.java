@@ -25,6 +25,6 @@ public interface LayerBehaviorRegistry
 {
     List<LayerBehavior> getLayerBehaviors();
 
-    <T> List<T> getLayerBehaviors(LayerSupport<?> aLayerSupport,
+    <T> List<T> getLayerBehaviors(LayerSupport<?, ?> aLayerSupport,
             Class<? extends T> aAPI);
 }

@@ -1,0 +1,121 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_formats_conll2009]]
+= CoNLL 2009
+
+The CoNLL 2009 format targets semantic role labeling. Columns are tab-separated. Sentences are separated by a blank new line.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| link:http://ufal.mff.cuni.cz/conll2009-st/task-description.html[CoNLL 2009]
+| yes
+| yes
+| no
+| Lemma, POS, dependencies (basic)
+|====
+
+
+.Columns
+[cols="1,2,3", options="header"]
+|====
+| Column  | Type/Feature | Description
+
+| ID      
+| ignored 
+| Token counter, starting at 1 for each new sentence.
+
+| FORM    
+| Token 
+| Word form or punctuation symbol.
+
+| LEMMA   
+| Lemma 
+| Lemma of the word form.
+
+| PLEMMA 
+| ignored 
+| Automatically predicted lemma of FORM.
+
+| POS  
+| POS PosValue 
+| Fine-grained part-of-speech tag, where the tagset depends on the language.
+
+| PPOS
+| ignored
+| Automatically predicted major POS by a language-specific tagger.
+
+
+| FEATS   
+| MorphologicalFeatures 
+| Unordered set of syntactic and/or morphological features (depending on the particular language), separated by a vertical bar (`\|`), or an underscore if not available.
+
+| PFEAT
+| ignored)
+| Automatically predicted morphological features (if applicable).
+
+
+| HEAD    
+| Dependency 
+| Head of the current token, which is either a value of ID or zero (`0). Note that depending on the original treebank annotation, there may be multiple tokens with an ID of zero.
+
+| PHEAD
+| ignored
+| Automatically predicted syntactic head.
+
+
+| DEPREL  
+| Dependency 
+| Dependency relation to the HEAD. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningful or simply `ROOT`.
+
+| PDEPREL
+| ignored
+| Automatically predicted dependency relation to PHEAD.
+
+| FILLPRED
+| ignored
+| Contains `Y` for argument-bearing tokens.
+
+| PRED
+| SemPred
+| (sense) identifier of a semantic 'predicate' coming from a current token.
+
+| APREDs
+| SemArg
+| Columns with argument labels for each semantic predicate (in the ID order).
+|====
+ 
+.Example
+[source,text,tabsize=0]
+----
+1	The	the	the	DT	DT	_	_	4	4	NMOD	NMOD	_	_	_	_
+2	most	most	most	RBS	RBS	_	_	3	3	AMOD	AMOD	_	_	_	_
+3	troublesome	troublesome	troublesome	JJ	JJ	_	_	4	4	NMOD	NMOD	_	_	_	_
+4	report	report	report	NN	NN	_	_	5	5	SBJ	SBJ	_	_	_	_
+5	may	may	may	MD	MD	_	_	0	0	ROOT	ROOT	_	_	_	_
+6	be	be	be	VB	VB	_	_	5	5	VC	VC	_	_	_	_
+7	the	the	the	DT	DT	_	_	11	11	NMOD	NMOD	_	_	_	_
+8	August	august	august	NNP	NNP	_	_	11	11	NMOD	NMOD	_	_	_	AM-TMP
+9	merchandise	merchandise	merchandise	NN	NN	_	_	10	10	NMOD	NMOD	_	_	A1	_
+10	trade	trade	trade	NN	NN	_	_	11	11	NMOD	NMOD	Y	trade.01	_	A1
+11	deficit	deficit	deficit	NN	NN	_	_	6	6	PRD	PRD	Y	deficit.01	_	A2
+12	due	due	due	JJ	JJ	_	_	13	11	AMOD	APPO	_	_	_	_
+13	out	out	out	IN	IN	_	_	11	12	APPO	AMOD	_	_	_	_
+14	tomorrow	tomorrow	tomorrow	NN	NN	_	_	13	12	TMP	TMP	_	_	_	_
+15	.	.	.	.	.	_	_	5	5	P	P	_	_	_	_
+----

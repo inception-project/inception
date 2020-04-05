@@ -35,6 +35,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenc
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanOverlapBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -47,6 +49,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public class SpanRendererTest
 {
     private FeatureSupportRegistry featureSupportRegistry;
+    private LayerSupportRegistry layerSupportRegistry;
     private Project project;
     private AnnotationLayer neLayer;
     private JCas jcas;
@@ -70,6 +73,7 @@ public class SpanRendererTest
         neLayer.setId(1l);
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
+        layerSupportRegistry = new LayerSupportRegistryImpl(asList());
     }
     
     @Test
@@ -84,10 +88,10 @@ public class SpanRendererTest
         NamedEntity ne = new NamedEntity(jcas, 5, 15);
         ne.addToIndexes();
         
-        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
-                asList(new SpanCrossSentenceBehavior()));
+        SpanAdapter adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
+                neLayer, () -> asList(), asList(new SpanCrossSentenceBehavior()));
         
-        SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry,
+        SpanRenderer sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new SpanCrossSentenceBehavior()));
         
         VDocument vdoc = new VDocument();
@@ -110,10 +114,10 @@ public class SpanRendererTest
         NamedEntity ne2 = new NamedEntity(jcas, 3, 8);
         ne2.addToIndexes();
         
-        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
-                asList(new SpanOverlapBehavior()));
+        SpanAdapter adapter = new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
+                neLayer, () -> asList(), asList(new SpanOverlapBehavior()));
         
-        SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry,
+        SpanRenderer sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry,
                 asList(new SpanOverlapBehavior()));
         
         {

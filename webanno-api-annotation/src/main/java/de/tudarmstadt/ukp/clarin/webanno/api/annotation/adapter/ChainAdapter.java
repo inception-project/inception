@@ -26,6 +26,7 @@ import static org.apache.uima.fit.util.CasUtil.selectFS;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -45,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanCreatedEv
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -67,12 +69,13 @@ public class ChainAdapter
     public static final String FEAT_NEXT = "next";
 
     private final List<SpanLayerBehavior> behaviors;
-    
-    public ChainAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+
+    public ChainAdapter(LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures, List<SpanLayerBehavior> aBehaviors)
+            Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
-        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
 
         if (aBehaviors == null) {
             behaviors = emptyList();

@@ -27,13 +27,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public abstract class VObject
 {
-    private AnnotationLayer layer;
+    private final AnnotationLayer layer;
+    private final String type;
+    private final Map<String, String> features;
+    private final int equivalenceSet;
+    
     private VID vid;
-    private String type;
-    private Map<String, String> features = new HashMap<>();
     private Map<String, String> hoverFeatures = new HashMap<>();
     private List<VLazyDetailQuery> lazyDetails = new ArrayList<>();
-    private int equivalenceSet;
+    private String colorHint;
+    private String label;
 
     public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures, 
             Map<String, String> aHoverFeatures)
@@ -47,7 +50,7 @@ public abstract class VObject
         layer = aLayer;
         vid = aVid;
         type = aType;
-        features = aFeatures;
+        features = aFeatures != null ? aFeatures : new HashMap<>();
         setHoverFeatures(aHoverFeatures);
         equivalenceSet = aEquivalenceSet;
     }
@@ -55,6 +58,11 @@ public abstract class VObject
     public VID getVid()
     {
         return vid;
+    }
+
+    public void setVid(VID aVid)
+    {
+        vid = aVid;
     }
 
     public AnnotationLayer getLayer()
@@ -105,5 +113,25 @@ public abstract class VObject
     public void addLazyDetail(VLazyDetailQuery aDetail)
     {
         lazyDetails.add(aDetail);
+    }
+    
+    public void setColorHint(String aColor)
+    {
+        colorHint = aColor;
+    }
+
+    public String getColorHint()
+    {
+        return colorHint;
+    }
+    
+    public void setLabelHint(String aLabelHint)
+    {
+        label = aLabelHint;
+    }
+    
+    public String getLabelHint()
+    {
+        return label;
     }
 }

@@ -24,6 +24,10 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,7 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ChainRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
@@ -42,9 +45,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class ChainLayerSupport
-    implements LayerSupport<ChainAdapter>, InitializingBean
+    extends LayerSupport_ImplBase<ChainAdapter, ChainLayerTraits>
+    implements InitializingBean
 {
-    private final FeatureSupportRegistry featureSupportRegistry;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
@@ -57,7 +62,7 @@ public class ChainLayerSupport
             ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
             LayerBehaviorRegistry aLayerBehaviorsRegistry)
     {
-        featureSupportRegistry = aFeatureSupportRegistry;
+        super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
         schemaService = aSchemaService;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
@@ -96,8 +101,8 @@ public class ChainLayerSupport
     @Override
     public ChainAdapter createAdapter(AnnotationLayer aLayer)
     {
-        ChainAdapter adapter = new ChainAdapter(featureSupportRegistry, eventPublisher, aLayer,
-                schemaService.listAnnotationFeature(aLayer),
+        ChainAdapter adapter = new ChainAdapter(getLayerSupportRegistry(), featureSupportRegistry,
+                eventPublisher, aLayer, () -> schemaService.listAnnotationFeature(aLayer),
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
 
         return adapter;
@@ -105,7 +110,8 @@ public class ChainLayerSupport
     
     
     @Override
-    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
+    public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
+            List<AnnotationFeature> aAllFeaturesInProject)
     {
         TypeDescription tdChains = aTsd.addType(aLayer.getName() + "Chain", aLayer.getDescription(),
                 CAS.TYPE_NAME_ANNOTATION_BASE);
@@ -127,20 +133,29 @@ public class ChainLayerSupport
         return asList(aLayer.getName() + "Chain", aLayer.getName() + "Link");
     }
     
-    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationLayer aLayer)
-    {
-        List<AnnotationFeature> features = schemaService.listAnnotationFeature(aLayer);
-        for (AnnotationFeature feature : features) {
-            FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
-            fs.generateFeature(aTSD, aTD, feature);
-        }
-    }
-    
     @Override
     public Renderer getRenderer(AnnotationLayer aLayer)
     {
-        return new ChainRenderer(createAdapter(aLayer), featureSupportRegistry,
+        return new ChainRenderer(createAdapter(aLayer), getLayerSupportRegistry(),
+                featureSupportRegistry,
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
+    }
+    
+    @Override
+    public Panel createTraitsEditor(String aId,  IModel<AnnotationLayer> aLayerModel)
+    {
+        AnnotationLayer layer = aLayerModel.getObject();
+        
+        if (!accepts(layer)) {
+            throw unsupportedLayerTypeException(layer);
+        }
+        
+        return new ChainLayerTraitsEditor(aId, this, aLayerModel);
+    }
+
+    @Override
+    public ChainLayerTraits createTraits()
+    {
+        return new ChainLayerTraits();
     }
 }

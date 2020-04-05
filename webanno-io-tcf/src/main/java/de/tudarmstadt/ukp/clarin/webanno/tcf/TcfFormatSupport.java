@@ -24,6 +24,9 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.dkpro.core.io.tcf.TcfReader;
+import org.dkpro.core.io.tcf.TcfWriter;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -61,15 +64,17 @@ public class TcfFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
-        return createReaderDescription(TcfReader.class);
+        return createReaderDescription(TcfReader.class, aTSD);
     }
     
     @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(TcfWriter.class);
+        return createEngineDescription(TcfWriter.class, aTSD);
     }
 }

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.6.6-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-curation</artifactId>
   <name>WebAnno - Core - Curation</name>
@@ -67,10 +67,6 @@
 
     <dependency>
       <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-metadata-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-lexmorph-asl</artifactId>
     </dependency>
     <dependency>
@@ -79,22 +75,15 @@
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-metadata-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-syntax-asl</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-ner-asl</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.statistics</groupId>
-      <artifactId>dkpro-statistics-agreement</artifactId>
-      <version>2.0.0</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-csv</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->
@@ -119,7 +108,7 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-
+    
     <!-- Hibernate dependencies -->
     <dependency>
       <groupId>javax.persistence</groupId>
@@ -145,7 +134,6 @@
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>

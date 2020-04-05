@@ -24,6 +24,7 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.xmi.XmiReader;
 import org.dkpro.core.io.xmi.XmiWriter;
 import org.springframework.stereotype.Component;
@@ -63,16 +64,18 @@ public class XmiFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
         return createReaderDescription(XmiReader.class,
                 XmiReader.PARAM_LENIENT, true);
     }
     
     @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(XmiWriter.class);
+        return createEngineDescription(XmiWriter.class, aTSD);
     }
 }

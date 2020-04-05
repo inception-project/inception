@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
@@ -31,8 +33,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.LoggerFactory;
@@ -41,6 +41,8 @@ import org.springframework.beans.BeansException;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -49,8 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
@@ -64,9 +64,6 @@ public abstract class AnnotationPageBase
     private @SpringBean UserPreferencesService userPreferenceService;
     private @SpringBean UserDao userRepository;
     
-    private ChallengeResponseDialog resetDocumentDialog;
-    private ActionBarLink resetDocumentLink;
-
     public AnnotationPageBase()
     {
         super();
@@ -97,39 +94,11 @@ public abstract class AnnotationPageBase
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-    
-    protected ChallengeResponseDialog createOrGetResetDocumentDialog()
-    {
-        if (resetDocumentDialog == null) {
-            IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
-            resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
-                    new StringResourceModel("ResetDocumentDialog.title", this),
-                    new StringResourceModel("ResetDocumentDialog.text", this).setModel(getModel())
-                            .setParameters(documentNameModel),
-                    documentNameModel);
-            resetDocumentDialog.setConfirmAction(this::actionResetDocument);
-        }
-        return resetDocumentDialog;
-    }
-
-    protected ActionBarLink createOrGetResetDocumentLink()
-    {
-        if (resetDocumentLink == null) {
-            resetDocumentLink = new ActionBarLink("showResetDocumentDialog", t -> 
-                resetDocumentDialog.show(t));
-            resetDocumentLink.onConfigure(_this -> {
-                AnnotatorState state = AnnotationPageBase.this.getModelObject();
-                _this.setEnabled(state.getDocument() != null && !documentService
-                        .isAnnotationFinished(state.getDocument(), state.getUser())
-                                && state.getUser().equals(userRepository.getCurrentUser()));
-            });
-        }
-        return resetDocumentLink;
-    }
 
     /**
      * Show the previous document, if exist
      */
+    @Deprecated
     protected void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
         getModelObject().moveToPreviousDocument(getListOfDocs());
@@ -142,14 +111,6 @@ public abstract class AnnotationPageBase
     protected void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
         getModelObject().moveToNextDocument(getListOfDocs());
-        actionLoadDocument(aTarget);
-    }
-
-    protected void actionResetDocument(AjaxRequestTarget aTarget)
-        throws Exception
-    {
-        AnnotatorState state = getModelObject();
-        documentService.resetAnnotationCas(state.getDocument(), state.getUser());
         actionLoadDocument(aTarget);
     }
 
@@ -202,17 +163,17 @@ public abstract class AnnotationPageBase
         }
     }
 
-    protected abstract List<SourceDocument> getListOfDocs();
+    public abstract List<SourceDocument> getListOfDocs();
 
     public abstract CAS getEditorCas() throws IOException;
     
-    public abstract void writeEditorCas(CAS aCas) throws IOException;
+    public abstract void writeEditorCas(CAS aCas) throws IOException, AnnotationException;
     
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
      */
-    protected abstract void actionLoadDocument(AjaxRequestTarget aTarget);
+    public abstract void actionLoadDocument(AjaxRequestTarget aTarget);
 
     /**
      * Re-render the document and update all related UI elements.
@@ -262,7 +223,7 @@ public abstract class AnnotationPageBase
         }
     }
     
-    protected void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
+    public void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = getModelObject();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
@@ -312,4 +273,54 @@ public abstract class AnnotationPageBase
         PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
                 state, state.getUser().getUsername());
     }
+    
+    public void ensureIsEditable() throws NotEditableException
+    {
+        AnnotatorState state = getModelObject();
+        
+        if (state.getDocument() == null) {
+            throw new NotEditableException("No document selected");
+        }
+
+        if (state.getMode().equals(CURATION)) {
+            if (state.getDocument().getState().equals(CURATION_FINISHED)) {
+                throw new NotEditableException("Curation is already finished. You can put it back "
+                                + "into progress via the monitoring page.");
+            }
+            
+            return;
+        }
+
+        if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
+            throw new NotEditableException("This document is already closed for user ["
+                    + state.getUser().getUsername() + "]. Please ask your "
+                    + "project manager to re-open it via the monitoring page.");
+        }
+
+        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
+            throw new NotEditableException(
+                    "Viewing another users annotations - document is read-only!");
+        }
+    }
+    
+    public boolean isEditable()
+    {
+        AnnotatorState state = getModelObject();
+        
+        if (state.getDocument() == null) {
+            return false;
+        }
+        
+        // If curating, then it is editable unless the curation is finished
+        if (state.getMode().equals(CURATION)) {
+            return !state.getDocument().getState().equals(CURATION_FINISHED);
+        }
+        
+        // If annotating normally, then it is editable unless marked as finished and unless
+        // viewing another users annotations
+        return !documentService.isAnnotationFinished(state.getDocument(), state.getUser())
+                && !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser());
+    }
+    
+
 }

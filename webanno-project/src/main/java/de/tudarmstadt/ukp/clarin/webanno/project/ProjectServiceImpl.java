@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
@@ -33,6 +34,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,7 +61,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
@@ -70,6 +72,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
@@ -95,9 +98,7 @@ public class ProjectServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private @Autowired UserDao userRepository;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
-
-    @Value(value = "${repository.path}")
-    private File dir;
+    private @Autowired RepositoryProperties repositoryProperties;
 
     private boolean running = false;
 
@@ -125,7 +126,8 @@ public class ProjectServiceImpl
             log.info("Created project [{}]({})", aProject.getName(), aProject.getId());
         }
         
-        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId();
+        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId();
         FileUtils.forceMkdir(new File(path));
         
         applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
@@ -337,22 +339,22 @@ public class ProjectServiceImpl
     @Override
     public File getProjectLogFile(Project aProject)
     {
-        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + "project-"
-                + aProject.getId() + ".log");
+        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + "project-" + aProject.getId() + ".log");
     }
 
     @Override
     public File getGuidelinesFolder(Project aProject)
     {
-        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
-                + GUIDELINES_FOLDER + "/");
+        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/");
     }
 
     @Override
     public File getMetaInfFolder(Project aProject)
     {
-        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
-                + META_INF_FOLDER + "/");
+        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + aProject.getId() + "/" + META_INF_FOLDER + "/");
     }
 
     @Deprecated
@@ -366,8 +368,8 @@ public class ProjectServiceImpl
     @Override
     public File getGuideline(Project aProject, String aFilename)
     {
-        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
-                + GUIDELINES_FOLDER + "/" + aFilename);
+        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFilename);
     }
 
     @Override
@@ -519,8 +521,8 @@ public class ProjectServiceImpl
     public void createGuideline(Project aProject, InputStream aIS, String aFileName)
         throws IOException
     {
-        String guidelinePath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId()
-                + "/" + GUIDELINES_FOLDER + "/";
+        String guidelinePath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/";
         FileUtils.forceMkdir(new File(guidelinePath));
         copyLarge(aIS, new FileOutputStream(new File(guidelinePath + aFileName)));
 
@@ -601,6 +603,19 @@ public class ProjectServiceImpl
 
         return annotationGuidelineFiles;
     }
+    
+    @Override
+    public boolean hasGuidelines(Project aProject)
+    {
+        try (DirectoryStream<Path> d = newDirectoryStream(getGuidelinesFolder(aProject).toPath())) {
+            return d.iterator().hasNext();
+        }
+        catch (IOException e) {
+            // This may not be the best way to handle it, but if is a fairly sound assertion and
+            // saves the calling code from having to handle the exception.
+            return false;
+        }
+    }
 
     @Override
     @Transactional
@@ -634,7 +649,8 @@ public class ProjectServiceImpl
         entityManager.remove(project);
         
         // remove the project directory from the file system
-        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId();
+        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId();
         try {
             FileUtils.deleteDirectory(new File(path));
         }
@@ -655,8 +671,9 @@ public class ProjectServiceImpl
     public void removeGuideline(Project aProject, String aFileName)
         throws IOException
     {
-        FileUtils.forceDelete(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFileName));
+        FileUtils.forceDelete(
+                new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                        + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFileName));
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aProject.getId()))) {
@@ -683,8 +700,8 @@ public class ProjectServiceImpl
     public void savePropertiesFile(Project aProject, InputStream aIs, String aFileName)
         throws IOException
     {
-        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
-                + FilenameUtils.getFullPath(aFileName);
+        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId() + "/" + FilenameUtils.getFullPath(aFileName);
         FileUtils.forceMkdir(new File(path));
 
         File newTcfFile = new File(path, FilenameUtils.getName(aFileName));

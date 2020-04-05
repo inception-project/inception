@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.6.6-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-support</artifactId>
   <name>WebAnno - Core - Support</name>
@@ -118,14 +118,6 @@
       <artifactId>wicketstuff-urlfragment</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>jquery-selectors</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.github.openjson</groupId>
       <artifactId>openjson</artifactId>
     </dependency>
@@ -133,6 +125,15 @@
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.bit3</groupId>
+      <artifactId>jsass</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket.webjars</groupId>
+      <artifactId>wicket-webjars</artifactId>
+    </dependency>
+
 
     <!-- Hibernate dependencies -->
     <dependency>
@@ -183,7 +184,7 @@
               <configuration>
                 <excludes combine.children="append">
                   <!-- Apache License without header -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/*.java</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/sass/*.java</exclude>
                   <!-- MIT License -->
                   <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/wicketstuff/UrlParametersReceivingBehavior.java</exclude>
                   <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/css/*</exclude>

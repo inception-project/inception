@@ -1,0 +1,83 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_formats_conll2006]]
+= CoNLL 2006
+
+The CoNLL 2006 (aka CoNLL-X) format targets dependency parsing. Columns are tab-separated. Sentences are separated by a blank new line.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| link:http://ilk.uvt.nl/conll/[CoNLL 2006]
+| yes
+| yes
+| no
+| Lemma, POS, dependencies (basic)
+|====
+
+.Columns
+[cols="1,2,3", options="header"]
+|====
+| Column  | Type/Feature | Description
+
+| ID      
+| ignored 
+| Token counter, starting at 1 for each new sentence.
+
+| FORM    
+| Token 
+| Word form or punctuation symbol.
+
+| LEMMA   
+| Lemma 
+| Lemma of the word form.
+
+| CPOSTAG 
+| POS coarseValue
+|
+
+| POSTAG  
+| POS PosValue 
+| Fine-grained part-of-speech tag, where the tagset depends on the language, or identical to the coarse-grained part-of-speech tag if not available.
+
+| FEATS   
+| MorphologicalFeatures 
+| Unordered set of syntactic and/or morphological features (depending on the particular language), separated by a vertical bar (`\|`), or an underscore if not available.
+
+| HEAD    
+| Dependency 
+| Head of the current token, which is either a value of ID or zero ('0'). Note that depending on the original treebank annotation, there may be multiple tokens with an ID of zero.
+
+| DEPREL  
+| Dependency 
+| Dependency relation to the HEAD. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningful or simply 'ROOT'.
+
+| PHEAD 
+| ignored 
+| Projective head of current token, which is either a value of ID or zero ('0'), or an underscore if not available. Note that depending on the original treebank annotation, there may be multiple tokens an with ID of zero. The dependency structure resulting from the PHEAD column is guaranteed to be projective (but is not available for all languages), whereas the structures resulting from the HEAD column will be non-projective for some sentences of some languages (but is always available).
+
+| PDEPREL 
+| ignored 
+| Dependency relation to the PHEAD, or an underscore if not available. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningful or simply 'ROOT'.
+|====
+ 
+.Example
+[source,text,tabsize=0]
+----
+Heutzutage	heutzutage	ADV	_	_	ADV	_	_
+----

@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
@@ -27,7 +27,6 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,18 +53,17 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
+import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
-import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -83,6 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -103,14 +102,13 @@ public class AnnotationSchemaServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Value(value = "${repository.path}")
-    private File dir;
-
     private @PersistenceContext EntityManager entityManager;
+    
     private @Autowired FeatureSupportRegistry featureSupportRegistry;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired LayerSupportRegistry layerSupportRegistry;
     private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
+    
     private List<ProjectInitializer> initializers;
 
     public AnnotationSchemaServiceImpl()
@@ -764,10 +762,12 @@ public class AnnotationSchemaServiceImpl
         // Create a new type system from scratch
         TypeSystemDescription tsd = new TypeSystemDescription_impl();
 
+        List<AnnotationFeature> allFeaturesInProject = listAnnotationFeature(aProject);
+        
         listAnnotationLayer(aProject).stream()
                 .filter(layer -> !layer.isBuiltIn())
                 .forEachOrdered(layer -> layerSupportRegistry.getLayerSupport(layer)
-                        .generateTypes(tsd, layer));
+                        .generateTypes(tsd, layer, allFeaturesInProject));
 
         return tsd;
     }
@@ -781,10 +781,11 @@ public class AnnotationSchemaServiceImpl
 
         TypeSystemDescription builtInTypes = createTypeSystemDescription();
         
-        List<AnnotationLayer> layers = listAnnotationLayer(aProject);
+        List<AnnotationLayer> allLayersInProject = listAnnotationLayer(aProject);
+        List<AnnotationFeature> allFeaturesInProject = listAnnotationFeature(aProject);
         
-        for (AnnotationLayer layer : layers) {
-            LayerSupport<?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
+        for (AnnotationLayer layer : allLayersInProject) {
+            LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
             
             // for built-in layers, we clone the information from the built-in type descriptors
             if (layer.isBuiltIn()) {
@@ -794,7 +795,7 @@ public class AnnotationSchemaServiceImpl
             }
             // for custom layers, we use the information from the project settings
             else {
-                layerSupport.generateTypes(tsd, layer);
+                layerSupport.generateTypes(tsd, layer, allFeaturesInProject);
             }
         }
 
@@ -886,9 +887,21 @@ public class AnnotationSchemaServiceImpl
         switch (aMode) {
         case NO_CAS_UPGRADE:
             return;
-        case AUTO_CAS_UPGRADE:
-            upgradeCasIfRequired(aCas, aSourceDocument, aUser);
+        case AUTO_CAS_UPGRADE: {
+            boolean upgraded = upgradeCasIfRequired(aCas, aSourceDocument);
+            if (!upgraded) {
+                try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                        String.valueOf(aSourceDocument.getProject().getId()))) {
+                    log.debug(
+                            "CAS of user [{}] for document [{}]({}) in project [{}]({}) is already "
+                                    + "compatible with project type system - skipping upgrade",
+                            aUser, aSourceDocument.getName(), aSourceDocument.getId(),
+                            aSourceDocument.getProject().getName(),
+                            aSourceDocument.getProject().getId());
+                }
+            }
             return;
+        }
         case FORCE_CAS_UPGRADE:
             upgradeCas(aCas, aSourceDocument, aUser);
             return;
@@ -921,40 +934,56 @@ public class AnnotationSchemaServiceImpl
     }
     
     @Override
-    public void upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
+    public boolean upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException
     {
-        upgradeCasIfRequired(aCas, aAnnotationDocument.getDocument(),
-                aAnnotationDocument.getUser());
+        return upgradeCasIfRequired(asList(aCas), aAnnotationDocument.getProject());
     }
     
     @Override
-    public void upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument, String aUser)
+    public boolean upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument)
         throws UIMAException, IOException
     {
-        TypeSystemDescription ts = getFullProjectTypeSystem(aSourceDocument.getProject());
+        return upgradeCasIfRequired(asList(aCas), aSourceDocument.getProject());
+    }
+    
+    @Override
+    public boolean upgradeCasIfRequired(Iterable<CAS> aCasIter, Project aProject)
+        throws UIMAException, IOException
+    {
+        TypeSystemDescription ts = getFullProjectTypeSystem(aProject);
         
         // Check if the current CAS already contains the required type system
-        if (!isUpgradeRequired(aCas, ts)) {
-            log.debug(
-                    "CAS of user [{}] for document [{}]({}) in project [{}]({}) is already "
-                            + "compatible with project type system - skipping upgrade",
-                    aUser, aSourceDocument.getName(), aSourceDocument.getId(),
-                    aSourceDocument.getProject().getName(), aSourceDocument.getProject().getId());
-            return;
+        boolean upgradePerformed = false;
+        for (CAS cas : aCasIter) {
+            if (cas != null && isUpgradeRequired(cas, ts)) {
+                upgradeCas(cas, ts);
+                upgradePerformed = true;
+            }
         }
-
-        upgradeCas(aCas, ts);
+        
+        return upgradePerformed;
     }
     
-    
+    @Override
+    public TypeSystemDescription getTypeSystemForExport(Project aProject)
+        throws ResourceInitializationException
+    {
+        return getFullProjectTypeSystem(aProject, false);
+    }
     
     @Override
-    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws ResourceInitializationException, UIMAException, IOException
     {
-        CAS exportCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        upgradeCas(aCas, exportCas, getFullProjectTypeSystem(aSourceDocument.getProject(), false));
+        TypeSystemDescription tsd = aFullProjectTypeSystem;
+        if (tsd == null) {
+            tsd = getTypeSystemForExport(aSourceDocument.getProject());
+        }
+        
+        CAS exportCas = WebAnnoCasUtil.createCas();
+        upgradeCas(aCas, exportCas, tsd);
         return exportCas;
     }
     
@@ -979,16 +1008,17 @@ public class AnnotationSchemaServiceImpl
 
         // Save source CAS contents
         ByteArrayOutputStream serializedCasContents = new ByteArrayOutputStream();
-        Serialization.serializeWithCompression(aSourceCas, serializedCasContents, sourceTypeSystem);
+        Serialization.serializeWithCompression(getRealCas(aSourceCas), serializedCasContents,
+                sourceTypeSystem);
 
         // Re-initialize the target CAS with new type system
-        CAS tempCas = createCas(aTargetTypeSystem);
+        CAS tempCas = CasFactory.createCas(aTargetTypeSystem);
         CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) tempCas);
-        Serialization.deserializeCASComplete(serializer, (CASImpl) aTargetCas);
+        Serialization.deserializeCASComplete(serializer, (CASImpl) getRealCas(aTargetCas));
 
         // Leniently load the source CAS contents into the target CAS
-        CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()), aTargetCas,
-                sourceTypeSystem);
+        CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()),
+                getRealCas(aTargetCas), sourceTypeSystem);
     }
     
     /**

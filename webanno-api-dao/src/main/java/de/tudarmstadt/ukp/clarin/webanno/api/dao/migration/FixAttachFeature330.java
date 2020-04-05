@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -53,6 +55,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * <li>for "MorphologicalFeatures" layers to the "morph" feature of the "Token" layer
  * </ul>
  */
+@Component
+@Lazy(false)
 public class FixAttachFeature330
     implements SmartLifecycle
 {
@@ -104,6 +108,8 @@ public class FixAttachFeature330
 
     private void doMigration()
     {
+        long start = System.currentTimeMillis();
+        
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("migrationRoot");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -144,6 +150,9 @@ public class FixAttachFeature330
                 txManager.rollback(status);
             }
         }
+        
+        log.info("Migration [" + getClass().getSimpleName() + "] took {}ms",
+                System.currentTimeMillis() - start);
     }
     
     private void fix(Project aProject, Class<? extends TOP> aLayer, String aLayerType,

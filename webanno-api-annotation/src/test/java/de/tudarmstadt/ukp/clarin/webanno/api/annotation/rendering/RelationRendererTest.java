@@ -50,6 +50,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBeh
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationOverlapBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -65,6 +67,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class RelationRendererTest
 {
     private FeatureSupportRegistry featureSupportRegistry;
+    private LayerSupportRegistry layerSupportRegistry;
     private Project project;
     private AnnotationLayer depLayer;
     private AnnotationFeature dependencyLayerGovernor;
@@ -116,6 +119,7 @@ public class RelationRendererTest
                 Token.class.getName());
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
+        layerSupportRegistry = new LayerSupportRegistryImpl(asList());
         
         behaviors = asList(new RelationAttachmentBehavior(), new RelationOverlapBehavior(),
                 new RelationCrossSentenceBehavior());
@@ -133,9 +137,9 @@ public class RelationRendererTest
             pos.addToIndexes();
         }
 
-        RelationAdapter adapter = new RelationAdapter(featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+        RelationAdapter adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
+            null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+            () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
@@ -146,8 +150,8 @@ public class RelationRendererTest
         AnnotationFS dep = adapter.add(document, username, source, target, jcas.getCas());
         
         depLayer.setCrossSentence(false);
-        RelationRenderer sut = new RelationRenderer(adapter, featureSupportRegistry,
-                asList(new RelationCrossSentenceBehavior()));
+        RelationRenderer sut = new RelationRenderer(adapter, layerSupportRegistry,
+                featureSupportRegistry, asList(new RelationCrossSentenceBehavior()));
         
         VDocument vdoc = new VDocument();
         sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
@@ -170,17 +174,17 @@ public class RelationRendererTest
             pos.addToIndexes();
         }
 
-        RelationAdapter adapter = new RelationAdapter(featureSupportRegistry, null, depLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE,
-                asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
+        RelationAdapter adapter = new RelationAdapter(layerSupportRegistry, featureSupportRegistry,
+            null, depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+            () -> asList(dependencyLayerGovernor, dependencyLayerDependent), behaviors);
 
         List<POS> posAnnotations = new ArrayList<>(select(jcas, POS.class));
 
         POS source = posAnnotations.get(0);
         POS target = posAnnotations.get(1);
         
-        RelationRenderer sut = new RelationRenderer(adapter, featureSupportRegistry,
-                asList(new RelationOverlapBehavior()));
+        RelationRenderer sut = new RelationRenderer(adapter, layerSupportRegistry,
+                featureSupportRegistry, asList(new RelationOverlapBehavior()));
 
         // Create two annotations stacked annotations
         depLayer.setOverlapMode(ANY_OVERLAP);

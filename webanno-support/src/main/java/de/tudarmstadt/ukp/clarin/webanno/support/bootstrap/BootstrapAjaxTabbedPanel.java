@@ -52,6 +52,6 @@ public class BootstrapAjaxTabbedPanel<T extends ITab>
     @Override
     protected String getTabContainerCssClass()
     {
-        return "nav nav-tabs";
+        return "nav nav-tabs card-header-tabs";
     }
 }

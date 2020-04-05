@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.jfreechart;
 
+import static org.apache.batik.constants.XMLConstants.XLINK_NAMESPACE_URI;
+import static org.apache.batik.constants.XMLConstants.XLINK_PREFIX;
+import static org.apache.batik.constants.XMLConstants.XMLNS_NAMESPACE_URI;
+import static org.apache.batik.constants.XMLConstants.XMLNS_PREFIX;
 import static org.apache.batik.util.SVGConstants.SVG_NAMESPACE_URI;
 import static org.apache.batik.util.SVGConstants.SVG_STYLE_ATTRIBUTE;
 import static org.apache.batik.util.SVGConstants.SVG_VIEW_BOX_ATTRIBUTE;
-import static org.apache.batik.util.XMLConstants.XLINK_NAMESPACE_URI;
-import static org.apache.batik.util.XMLConstants.XLINK_PREFIX;
-import static org.apache.batik.util.XMLConstants.XMLNS_NAMESPACE_URI;
-import static org.apache.batik.util.XMLConstants.XMLNS_PREFIX;
 
 import java.awt.Rectangle;
 import java.io.StringWriter;

@@ -330,11 +330,9 @@ public class WebannoTsv3Reader
                                 if (isMultitoken) {
                                     Feature endF = type
                                             .getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
-                                    
                                     prevAnnoFs.getCAS().removeFsFromIndexes(prevAnnoFs);
                                     prevAnnoFs.setIntValue(endF, end);
                                     prevAnnoFs.getCAS().addFsToIndexes(prevAnnoFs);
-                                    
                                     mAnno = getEscapeChars(mAnno);
                                     prevAnnoFs.setFeatureValueFromString(feat, mAnno);
                                     if (feat.getShortName().equals(REF_LINK)) {
@@ -484,9 +482,10 @@ public class WebannoTsv3Reader
                                         if (depFs.getBegin() <= annos.get(i).getBegin()) {
                                             Feature beginF = type.getFeatureByBaseName(
                                                     CAS.FEATURE_BASE_NAME_BEGIN);
-                                            annos.get(i).getCAS().removeFsFromIndexes(annos.get(i));
-                                            annos.get(i).setIntValue(beginF, depFs.getBegin());
-                                            annos.get(i).getCAS().addFsToIndexes(annos.get(i));
+                                            AnnotationFS ann = annos.get(i);
+                                            ann.getCAS().removeFsFromIndexes(ann);
+                                            ann.setIntValue(beginF, depFs.getBegin());
+                                            ann.getCAS().addFsToIndexes(ann);
                                         }
                                         else {
                                             Feature endF = type.getFeatureByBaseName(

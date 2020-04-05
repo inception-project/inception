@@ -23,15 +23,17 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class NopRenderer
     extends Renderer_ImplBase<TypeAdapter>
 {
-    public NopRenderer(TypeAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
+    public NopRenderer(TypeAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        super(aTypeAdapter, aFeatureSupportRegistry);
+        super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
     }
     
     @Override

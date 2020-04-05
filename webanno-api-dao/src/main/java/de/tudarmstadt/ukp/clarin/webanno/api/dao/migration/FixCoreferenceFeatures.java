@@ -31,6 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -41,6 +43,8 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
  * and "referenceRelation" wrongly to "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference" - 
  * it should be "uima.cas.String"
  */
+@Component
+@Lazy(false)
 public class FixCoreferenceFeatures
     implements SmartLifecycle
 {
@@ -91,6 +95,8 @@ public class FixCoreferenceFeatures
 
     private void doMigration()
     {
+        long start = System.currentTimeMillis();
+        
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("migrationRoot");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -127,5 +133,8 @@ public class FixCoreferenceFeatures
                 txManager.rollback(status);
             }
         }
+        
+        log.info("Migration [" + getClass().getSimpleName() + "] took {}ms",
+                System.currentTimeMillis() - start);
     }
 }

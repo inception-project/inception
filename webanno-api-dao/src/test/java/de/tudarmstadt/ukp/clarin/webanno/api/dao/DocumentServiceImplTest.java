@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -79,13 +80,14 @@ public class DocumentServiceImplTest
 
         sut = new DocumentServiceImpl(repositoryProperties, userRepository, storageService,
                 importExportService, projectService, applicationEventPublisher, entityManager);
+        
+        when(importExportService.importCasFromFile(any(File.class), any(Project.class),
+                any(), any())).thenReturn(JCasFactory.createText("Test").getCas());
     }
 
     @Test
     public void thatCreatingOrReadingInitialCasForNewDocumentCreatesNewCas() throws Exception
     {
-        when(importExportService.importCasFromFile(any(File.class), any(Project.class),
-                any())).thenReturn(JCasFactory.createText("Test").getCas());
 
         SourceDocument doc = makeSourceDocument(1l, 1l, "test");
 
@@ -103,8 +105,6 @@ public class DocumentServiceImplTest
         User user = makeUser();
         when(userRepository.get(user.getUsername())).thenReturn(user);
         when(entityManager.createQuery(anyString(), any())).thenThrow(NoResultException.class);
-        when(importExportService.importCasFromFile(any(File.class), any(Project.class),
-                any())).thenReturn(JCasFactory.createText("Test").getCas());
 
         JCas cas = sut.readAnnotationCas(sourceDocument, user.getUsername()).getJCas();
 

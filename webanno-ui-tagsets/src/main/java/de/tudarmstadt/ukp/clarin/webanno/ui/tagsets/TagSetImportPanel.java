@@ -17,13 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets;
 
+import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.JSON_FORMAT;
+import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.TAB_FORMAT;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +36,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.form.upload.FileUploadField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -44,17 +45,16 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 
 public class TagSetImportPanel
     extends Panel
@@ -67,12 +67,11 @@ public class TagSetImportPanel
     
     private IModel<Project> selectedProject;
     private IModel<Preferences> preferences;
-    private IModel<TagSet> selectedTagSet;
-    private FileUploadField fileUpload;
+    private BootstrapFileInputField fileUpload;
 
     private AjaxCallback importCompleteAction;
     
-    public TagSetImportPanel(String aId, IModel<Project> aModel, IModel<TagSet> aTagSet)
+    public TagSetImportPanel(String aId, IModel<Project> aModel)
     {
         super(aId);
         
@@ -81,23 +80,28 @@ public class TagSetImportPanel
         
         preferences = Model.of(new Preferences());
         selectedProject = aModel;
-        selectedTagSet = aTagSet;
         
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
-        form.add(new BootstrapSelect<>("format", LambdaModel.of(this::supportedFormats))
-                .setRequired(true));
+
+        BootstrapSelect<String> format = new BootstrapSelect<>("format",
+                asList(JSON_FORMAT, TAB_FORMAT));
+        form.add(format);
+        format.setModelObject(JSON_FORMAT); // Set after adding to form to have access to for model
+        format.setRequired(true);
+        
         form.add(new CheckBox("overwrite"));
-        form.add(fileUpload = new FileUploadField("content", new ListModel<>()));
+        
+        form.add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
+        fileUpload.getConfig().showPreview(false);
+        fileUpload.getConfig().showUpload(false);
+        fileUpload.getConfig().showRemove(false);
         fileUpload.setRequired(true);
+        
         form.add(new LambdaAjaxButton<>("import", this::actionImport));
+        
         add(form);
     }
     
-    private List<String> supportedFormats()
-    {
-        return Arrays.asList(ExportedTagSetConstant.JSON_FORMAT, ExportedTagSetConstant.TAB_FORMAT);
-    }
-
     private void actionImport(AjaxRequestTarget aTarget, Form<Preferences> aForm)
     {
         List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
@@ -111,8 +115,7 @@ public class TagSetImportPanel
             error("Project not yet created, please save project details!");
             return;
         }
-        if (aForm.getModelObject().format.equals(
-                ExportedTagSetConstant.JSON_FORMAT)) {
+        if (aForm.getModelObject().format.equals(JSON_FORMAT)) {
             for (FileUpload tagFile : uploadedFiles) {
                 InputStream tagInputStream;
                 try {
@@ -132,8 +135,7 @@ public class TagSetImportPanel
                 }
             }
         }
-        else if (aForm.getModelObject().format.equals(
-                ExportedTagSetConstant.TAB_FORMAT)) {
+        else if (aForm.getModelObject().format.equals(TAB_FORMAT)) {
             for (FileUpload tagFile : uploadedFiles) {
                 InputStream tagInputStream;
                 try {

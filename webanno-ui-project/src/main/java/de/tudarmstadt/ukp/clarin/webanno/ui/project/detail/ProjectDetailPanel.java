@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData.CURRENT_PROJECT;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.RuntimeConfigurationType;
+import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -48,6 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -55,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
@@ -103,9 +105,9 @@ public class ProjectDetailPanel
         scriptDirection.setChoices(Arrays.asList(ScriptDirection.values()));
         form.add(scriptDirection);
         
-        form.add(new CheckBox("disableExport"));
+        form.add(new CheckBox("disableExport").setOutputMarkupPlaceholderTag(true));
 
-        form.add(new CheckBox("anonymousCuration"));
+        form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
 
         form.add(projectTypes = makeProjectTypeChoice());
         
@@ -169,6 +171,8 @@ public class ProjectDetailPanel
         else {
             projectService.updateProject(project);
         }
+
+        Session.get().setMetaData(CURRENT_PROJECT, project);
     }
 
     private class ProjectNameValidator

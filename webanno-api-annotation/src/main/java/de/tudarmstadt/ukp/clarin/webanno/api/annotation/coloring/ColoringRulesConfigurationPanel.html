@@ -1,0 +1,49 @@
+<!--
+  ~ Copyright 2020
+  ~ Ubiquitous Knowledge Processing (UKP) Lab
+  ~ Technische Universität Darmstadt
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE html>
+<html lang="en" xmlns:wicket="http://www.w3.org/1999/xhtml">
+<body>
+<wicket:panel>
+  <form wicket:id="coloringRulesForm">
+    <div wicket:id="coloringRulesContainer">
+      <div class="flex-h-container flex-gutter flex-only-internal-gutter">
+        <input wicket:id="pattern" class="form-control" placeholder="Label regex..."/>
+        <input wicket:id="color" class="form-control" placeholder="#rrggbb..."/>
+        <span class="flex-h-container flex-centered" style="white-space:nowrap;">
+          <button wicket:id="addColoringRule" class="btn btn-sm btn-primary pull-right">
+            <i class="fas fa-plus" aria-hidden="true"></i>
+          </button>
+        </span>
+      </div>
+      <div class="flex-v-container flex-gutter">
+        <div wicket:id="coloringRules" class="flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="flex-content">
+            <span class="badge font-weight-normal font-size-normal" style="font-size: inherit;" wicket:id="pattern"/>
+          </div>
+          <div class="flex-h-container flex-centered" style="white-space:nowrap;">
+            <a wicket:id="removeColoringRule" class="btn-sm btn-danger pull-right">
+              <i class="fas fa-trash" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</wicket:panel>
+</body>
+</html>

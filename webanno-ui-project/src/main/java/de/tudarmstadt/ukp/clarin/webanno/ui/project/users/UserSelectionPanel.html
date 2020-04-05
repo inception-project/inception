@@ -19,14 +19,17 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-content flex-v-container">
-      <form wicket:id="form" class="panel-default">
-        <div class="flex-h-container flex-centered flex-gutter flex-only-internal-gutter panel-heading">
+    <div class="flex-content flex-v-container border-right">
+      <form wicket:id="form" class="card-header">
+        <div class="flex-h-container flex-centered flex-gutter flex-only-internal-gutter">
           <label wicket:for="usersToAdd" class="text-nowrap">
             <wicket:label key="usersToAdd"/>
           </label>
           <select class="flex-content" wicket:id="usersToAdd"></select>
-          <input wicket:id="add" type="submit" class="btn btn-primary" wicket:message="value:add"></input>
+          <button wicket:id="add" class="btn btn-primary">
+            <i class="fas fa-plus-square"></i>&nbsp;
+            <wicket:message key="add"/>
+          </button>
         </div>
       </form>
       <div class="flex-content fit-child-snug">

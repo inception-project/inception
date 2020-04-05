@@ -121,7 +121,7 @@ of accessing it directly. This assumes that you already have the following packa
 server.ajp.port=18009
 server.ajp.secret=SECRET_STRING_YOU_CHOOSE
 server.ajp.address=127.0.0.1
-server.contextPath=/webanno
+server.servlet.context-path=/webanno
 server.use-forward-headers=true
 ----
 +

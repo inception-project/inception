@@ -33,9 +33,6 @@ public class Selection
     
     private static final long serialVersionUID = 2257223261821341371L;
 
-    // is the annotation span or arc annotation
-    private boolean arc;
-
     // the span id of the dependent in arc annotation
     private int originSpanId;
 
@@ -56,7 +53,6 @@ public class Selection
     
     public void selectArc(VID aVid, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
-        arc = true;
         selectedAnnotationId = aVid;
         text = "[" + aOriginFs.getCoveredText() + "] - [" + aTargetFs.getCoveredText() + "]";
         beginOffset = Math.min(aOriginFs.getBegin(), aTargetFs.getBegin());
@@ -76,7 +72,6 @@ public class Selection
     
     public void selectSpan(VID aVid, CAS aCAS, int aBegin, int aEnd)
     {
-        arc = false;
         selectedAnnotationId = aVid;
         text = aCAS.getDocumentText().substring(aBegin, aEnd);
         beginOffset = aBegin;
@@ -85,7 +80,6 @@ public class Selection
         // Properties used when an arc is selected
         originSpanId = -1;
         targetSpanId = -1;
-        
         
         LOG.debug("Span: {}", this);
     }
@@ -97,7 +91,6 @@ public class Selection
     
     public void clear()
     {
-        arc = false;
         selectedAnnotationId = VID.NONE_ID;
         beginOffset = -1;
         endOffset = -1;
@@ -110,19 +103,24 @@ public class Selection
         LOG.debug("Clear: {}", this);
     }
 
+    public boolean isSet()
+    {
+        return isSpan() || isArc();
+    }
+    
     public boolean isSpan()
     {
-        return !arc;
+        return originSpanId == -1 && targetSpanId == -1 && beginOffset != -1 && endOffset != -1;
     }
 
     public boolean isArc()
     {
-        return arc;
+        return originSpanId != -1 && targetSpanId != -1;
     }
 
     public int getOrigin()
     {
-        if (!arc) {
+        if (!isArc()) {
             throw new IllegalStateException("Selected annotation is not an arc");
         }
         
@@ -131,7 +129,7 @@ public class Selection
 
     public int getTarget()
     {
-        if (!arc) {
+        if (!isArc()) {
             throw new IllegalStateException("Selected annotation is not an arc");
         }
         
@@ -158,6 +156,12 @@ public class Selection
         text = aText;
     }
 
+    /**
+     * If an existing annotation is selected, it is returned here. Mind that a selection does not
+     * have to point at an existing annotation. It can also point just at a span of text or at the
+     * endpoints of a relation. In this case, the enpoints or begin/end offsets are set, but not the
+     * annotation ID.
+     */
     public VID getAnnotation()
     {
         return selectedAnnotationId;
@@ -180,10 +184,13 @@ public class Selection
     {
         StringBuilder builder = new StringBuilder();
         builder.append("Selection [");
-        if (arc) {
+        if (!isSet()) {
+            builder.append("UNSET");
+        }
+        if (isArc()) {
             builder.append("arc");
         }
-        else {
+        if (isSpan()) {
             builder.append("span");
         }
         builder.append(", origin=");
@@ -205,7 +212,6 @@ public class Selection
     public Selection copy()
     {
         Selection sel = new Selection();
-        sel.arc = arc;
         sel.originSpanId = originSpanId;
         sel.targetSpanId = targetSpanId;
         sel.beginOffset = beginOffset;
@@ -217,7 +223,6 @@ public class Selection
     
     public void set(Selection aSelection)
     {
-        arc = aSelection.arc;
         originSpanId = aSelection.originSpanId;
         targetSpanId = aSelection.targetSpanId;
         beginOffset = aSelection.beginOffset;

@@ -30,6 +30,7 @@ public class LinkFeatureTraits
     private static final long serialVersionUID = -8450181605003189055L;
 
     private List<Long> defaultSlots = new ArrayList<>();
+    private boolean enableRoleLabels = true;
 
     public LinkFeatureTraits()
     {
@@ -44,5 +45,15 @@ public class LinkFeatureTraits
     public void setDefaultSlots(List<Long> aDefaultSlots)
     {
         defaultSlots = aDefaultSlots;
+    }
+    
+    public boolean isEnableRoleLabels()
+    {
+        return enableRoleLabels;
+    }
+    
+    public void setEnableRoleLabels(boolean enableRoleLabels)
+    {
+        this.enableRoleLabels = enableRoleLabels;
     }
 }

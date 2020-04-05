@@ -20,14 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_BEGIN;
 import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_END;
 import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_LANGUAGE;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovering;
-import static org.apache.uima.fit.util.CasUtil.selectFollowing;
 import static org.apache.uima.fit.util.CasUtil.selectSingle;
 
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -40,13 +39,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -65,6 +62,116 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class WebAnnoCasUtil
 {
+    private static final String PROP_ENFORCE_CAS_THREAD_LOCK = "webanno.debug.enforce_cas_thread_lock";
+
+    private static final boolean ENFORCE_CAS_THREAD_LOCK = System
+            .getProperty(PROP_ENFORCE_CAS_THREAD_LOCK, "false").equals("true");
+    
+    public static CAS createCas(TypeSystemDescription aTSD) throws ResourceInitializationException
+    {
+        CAS cas = CasCreationUtils.createCas(aTSD, null, null);
+        
+        if (ENFORCE_CAS_THREAD_LOCK) {
+            cas = (CAS) Proxy.newProxyInstance(cas.getClass().getClassLoader(),
+                    new Class[] { CAS.class }, new ThreadLockingInvocationHandler(cas));
+        }
+        
+        return cas;
+    }
+    
+    public static CAS createCas() throws ResourceInitializationException
+    {
+        return createCas(null);
+    }
+    
+    public static CAS getRealCas(CAS aCas)
+    {
+        if (!ENFORCE_CAS_THREAD_LOCK) {
+            return aCas;
+        }
+        
+        if (!Proxy.isProxyClass(aCas.getClass())) {
+            return aCas;
+        }
+
+        ThreadLockingInvocationHandler handler = (ThreadLockingInvocationHandler) Proxy
+                .getInvocationHandler(aCas);
+        return (CAS) handler.getTarget();
+    }
+    
+    /**
+     * Return true if these two annotations agree on every non slot features
+     */
+    public static boolean isEquivalentAnnotation(AnnotationFS aFs1, AnnotationFS aFs2)
+    {
+        // Check offsets (because they are excluded by shouldIgnoreFeatureOnMerge())
+        if (aFs1.getBegin() != aFs2.getBegin() || aFs1.getEnd() != aFs2.getEnd()) {
+            return false;
+        }
+        
+        // Check the features (basically limiting to the primitive features)
+        for (Feature f : aFs1.getType().getFeatures()) {
+            if (shouldIgnoreFeatureOnMerge(aFs1, f)) {
+                continue;
+            }
+
+            Object value1 = getFeatureValue(aFs1, f);
+            Object value2 = getFeatureValue(aFs2, f);
+            
+            if (!Objects.equals(value1, value2)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean shouldIgnoreFeatureOnMerge(FeatureStructure aFS, Feature aFeature)
+    {
+        return !WebAnnoCasUtil.isPrimitiveType(aFeature.getRange()) || 
+                isBasicFeature(aFeature) ||
+                aFeature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN) ||
+                aFeature.getName().equals(CAS.FEATURE_FULL_NAME_END);
+    }
+
+    /**
+     * Do not check on agreement on Position and SOfa feature - already checked
+     */
+    private static boolean isBasicFeature(Feature aFeature)
+    {
+        // FIXME The two parts of this OR statement seem to be redundant. Also the order
+        // of the check should be changes such that equals is called on the constant.
+        return aFeature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                || aFeature.toString().equals("uima.cas.AnnotationBase:sofa");
+    }
+
+    /**
+     * Get the feature value of this {@code Feature} on this annotation
+     */
+    private static Object getFeatureValue(FeatureStructure aFS, Feature aFeature)
+    {
+        switch (aFeature.getRange().getName()) {
+        case CAS.TYPE_NAME_STRING:
+            return aFS.getFeatureValueAsString(aFeature);
+        case CAS.TYPE_NAME_BOOLEAN:
+            return aFS.getBooleanValue(aFeature);
+        case CAS.TYPE_NAME_FLOAT:
+            return aFS.getFloatValue(aFeature);
+        case CAS.TYPE_NAME_INTEGER:
+            return aFS.getIntValue(aFeature);
+        case CAS.TYPE_NAME_BYTE:
+            return aFS.getByteValue(aFeature);
+        case CAS.TYPE_NAME_DOUBLE:
+            return aFS.getDoubleValue(aFeature);
+        case CAS.TYPE_NAME_LONG:
+            aFS.getLongValue(aFeature);
+        case CAS.TYPE_NAME_SHORT:
+            aFS.getShortValue(aFeature);
+        default:
+            return null;
+        // return aFS.getFeatureValue(aFeature);
+        }
+    }
+    
     /**
      * Annotation a and annotation b are the same if they have the same address.
      *
@@ -126,6 +233,7 @@ public class WebAnnoCasUtil
      */
     public static boolean isBeginEndInSameSentence(CAS aCas, int aBegin, int aEnd)
     {
+//        return !aCas.select(getType(aCas, Sentence.class)).covering(aBegin, aEnd).isEmpty();
         return StreamSupport.stream(aCas.getAnnotationIndex(
                     getType(aCas, Sentence.class)).spliterator(), false)
                 .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd())
@@ -176,15 +284,6 @@ public class WebAnnoCasUtil
             .orElse(null);
     }
     
-    /**
-     * @deprecated use {@link #selectSentenceAt(CAS, int)}
-     */
-    @Deprecated
-    public static AnnotationFS getSentence(CAS aCas, int aBegin)
-    {
-        return selectSentenceAt(aCas, aBegin);
-    }
-    
     public static AnnotationFS createToken(CAS aCas, int aBegin, int aEnd)
     {
         return aCas.createAnnotation(getType(aCas, Token.class), aBegin, aEnd);
@@ -197,7 +296,8 @@ public class WebAnnoCasUtil
     
     public static boolean exists(CAS aCas, Type aType)
     {
-        return aCas.getAnnotationIndex(aType).iterator().hasNext();
+        return !aCas.select(aType).isEmpty();
+        //return aCas.getAnnotationIndex(aType).iterator().hasNext();
     }
 
     /**
@@ -234,25 +334,6 @@ public class WebAnnoCasUtil
         }
 
         return annotations;
-    }
-
-    /**
-     * Get the internal address of the first sentence annotation from CAS. This will be used as a
-     * reference for moving forward/backward sentences positions
-     *
-     * @param aCas
-     *            The CAS object assumed to contains some sentence annotations
-     * @return the sentence number or -1 if aCas don't have sentence annotation
-     */
-    public static int getFirstSentenceAddress(CAS aCas)
-    {
-        int firstSentenceAddress = -1;
-
-        for (AnnotationFS selectedSentence : select(aCas, getType(aCas, Sentence.class))) {
-            firstSentenceAddress = getAddr(selectedSentence);
-            break;
-        }
-        return firstSentenceAddress;
     }
 
     /**
@@ -340,185 +421,6 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Get the last sentence CAS address in the current display window
-     *
-     * @param aCas
-     *            the CAS.
-     * @param aFirstSentenceAddress
-     *            the CAS address of the first sentence in the display window
-     * @param aWindowSize
-     *            the window size
-     * @return The address of the last sentence address in the current display window.
-     */
-    public static AnnotationFS getLastSentenceInDisplayWindow(CAS aCas, int aFirstSentenceAddress,
-            int aWindowSize)
-    {
-        int count = 0;
-        FSIterator<AnnotationFS> si = seekByAddress(aCas, getAnnotationType(aCas, Sentence.class),
-                aFirstSentenceAddress);
-        AnnotationFS s = si.get();
-        while (count < aWindowSize - 1) {
-            si.moveToNext();
-            if (si.isValid()) {
-                s = si.get();
-            }
-            else {
-                break;
-            }
-            count++;
-        }
-
-        return s;
-    }
-
-    /**
-     * Get an iterator position at the annotation with the specified address.
-     *
-     * @param aCas
-     *            the CAS object
-     * @param aType
-     *            the expected annotation type
-     * @param aAddr
-     *            the annotation address
-     * @return the iterator.
-     */
-    private static FSIterator<AnnotationFS> seekByAddress(CAS aCas, Type aType, int aAddr)
-    {
-        AnnotationIndex<AnnotationFS> idx = aCas.getAnnotationIndex(aType);
-        return idx.iterator(selectFsByAddr(aCas, aAddr));
-    }
-
-    public static int getNextSentenceAddress(CAS aCas, AnnotationFS aSentence)
-    {
-        try {
-            return getAddr(
-                    selectFollowing(aCas, getAnnotationType(aCas, Sentence.class), aSentence, 1)
-                            .get(0));
-        }
-        catch (Exception e) { // end of the document reached
-            return WebAnnoCasUtil.getAddr(aSentence);
-        }
-    }
-
-    /**
-     * Move to the next page of size display window.
-     *
-     * @param aCas
-     *            the CAS.
-     * @param aCurrenSentenceBeginAddress
-     *            The beginning sentence address of the current window.
-     * @param aWindowSize
-     *            the window size.
-     * @return the Beginning address of the next window
-     */
-    public static int getNextPageFirstSentenceAddress(CAS aCas, int aCurrenSentenceBeginAddress,
-            int aWindowSize)
-    {
-        List<Integer> beginningAddresses = getDisplayWindowBeginningSentenceAddresses(aCas,
-                aWindowSize);
-
-        int beginningAddress = aCurrenSentenceBeginAddress;
-        for (int i = 0; i < beginningAddresses.size(); i++) {
-            if (i == beginningAddresses.size() - 1) {
-                beginningAddress = beginningAddresses.get(i);
-                break;
-            }
-
-            if (beginningAddresses.get(i) == aCurrenSentenceBeginAddress) {
-                beginningAddress = beginningAddresses.get(i + 1);
-                break;
-            }
-
-            if ((beginningAddresses.get(i) < aCurrenSentenceBeginAddress && beginningAddresses
-                    .get(i + 1) > aCurrenSentenceBeginAddress)) {
-                beginningAddress = beginningAddresses.get(i + 1);
-                break;
-            }
-        }
-
-        return beginningAddress;
-    }
-
-    /**
-     * Return the beginning position of the Sentence for the previous display window
-     *
-     * @param aCas
-     *            the CAS.
-     *
-     * @param aCurrenSentenceBeginAddress
-     *            The beginning address of the current sentence of the display window
-     * @param aWindowSize
-     *            the window size.
-     * @return hum?
-     */
-    public static int getPreviousDisplayWindowSentenceBeginAddress(CAS aCas,
-            int aCurrenSentenceBeginAddress, int aWindowSize)
-    {
-        List<Integer> beginningAddresses = getDisplayWindowBeginningSentenceAddresses(aCas,
-                aWindowSize);
-
-        int beginningAddress = aCurrenSentenceBeginAddress;
-        for (int i = 0; i < beginningAddresses.size() - 1; i++) {
-            if (i == 0 && aCurrenSentenceBeginAddress >= beginningAddresses.get(i)
-                    && beginningAddresses.get(i + 1) >= aCurrenSentenceBeginAddress) {
-                beginningAddress = beginningAddresses.get(i);
-                break;
-            }
-            if (aCurrenSentenceBeginAddress >= beginningAddresses.get(i)
-                    && beginningAddresses.get(i + 1) >= aCurrenSentenceBeginAddress) {
-                beginningAddress = beginningAddresses.get(i);
-                break;
-            }
-            beginningAddress = beginningAddresses.get(i);
-        }
-        return beginningAddress;
-    }
-
-    public static int getLastDisplayWindowFirstSentenceAddress(CAS aCas, int aWindowSize)
-    {
-        List<Integer> displayWindowBeginingSentenceAddresses = 
-                getDisplayWindowBeginningSentenceAddresses(aCas, aWindowSize);
-        return displayWindowBeginingSentenceAddresses
-                .get(displayWindowBeginingSentenceAddresses.size() - 1);
-    }
-
-    /**
-     * Get the total number of sentences
-     *
-     * @param aCas
-     *            the CAS.
-     * @return the number of sentences.
-     */
-    public static int getNumberOfPages(CAS aCas)
-    {
-        return selectSentences(aCas).size();
-    }
-
-    /**
-     * Returns the beginning address of all pages. This is used properly display<b> Page X of Y </b>
-     *
-     * @param aCas
-     *            the CAS.
-     * @param aWindowSize
-     *            the window size.
-     * @return hum?
-     */
-    public static List<Integer> getDisplayWindowBeginningSentenceAddresses(CAS aCas,
-            int aWindowSize)
-    {
-        List<Integer> beginningAddresses = new ArrayList<>();
-        int j = 0;
-        for (AnnotationFS sentence : select(aCas, getType(aCas, Sentence.class))) {
-            if (j % aWindowSize == 0) {
-                beginningAddresses.add(getAddr(sentence));
-            }
-            j++;
-        }
-        return beginningAddresses;
-
-    }
-
-    /**
      * Get the sentence number at this specific position
      *
      * @param aCas
@@ -547,11 +449,6 @@ public class WebAnnoCasUtil
         return sentenceNumber;
     }
 
-    public static int getSentenceCount(CAS aCas)
-    {
-        return selectSentences(aCas).size();
-    }
-
     public static Collection<AnnotationFS> selectSentences(CAS aCas)
     {
         return CasUtil.select(aCas, getType(aCas, Sentence.class));
@@ -571,36 +468,6 @@ public class WebAnnoCasUtil
     {
         return CasUtil.selectCovered(aCover.getCAS(), getType(aCover.getCAS(), Token.class),
                 aCover);
-    }
-
-    /**
-     * Get Sentence address for this ordinal sentence number. Used to go to specific sentence number
-     *
-     * @param aCas
-     *            the CAS.
-     * @param aSentenceNumber
-     *            the sentence number.
-     * @return the ID.
-     */
-    public static int getSentenceAddress(CAS aCas, int aSentenceNumber)
-    {
-        int i = 1;
-        int address = 0;
-        if (aSentenceNumber < 1) {
-            return 0;
-        }
-        for (AnnotationFS sentence : selectSentences(aCas)) {
-            if (i == aSentenceNumber) {
-                address = getAddr(sentence);
-                break;
-            }
-            address = getAddr(sentence);
-            i++;
-        }
-        if (aSentenceNumber > i) {
-            return 0;
-        }
-        return address;
     }
 
     /**
@@ -988,15 +855,5 @@ public class WebAnnoCasUtil
         catch (IllegalArgumentException e) {
             return null;
         }
-    }
-
-    public static CAS createCas() throws ResourceInitializationException
-    {
-        return createCas(null);
-    }
-
-    public static CAS createCas(TypeSystemDescription aTSD) throws ResourceInitializationException
-    {
-        return CasCreationUtils.createCas(aTSD, null, null);
     }
 }

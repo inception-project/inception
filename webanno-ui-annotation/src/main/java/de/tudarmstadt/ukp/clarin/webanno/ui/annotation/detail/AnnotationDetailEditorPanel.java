@@ -59,6 +59,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -85,13 +86,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
@@ -101,11 +102,9 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -363,18 +362,6 @@ public abstract class AnnotationDetailEditorPanel
         return form;
     }
 
-    boolean isAnnotationFinished()
-    {
-        AnnotatorState state = getModelObject();
-
-        if (state.getMode().equals(Mode.CURATION)) {
-            return state.getDocument().getState().equals(SourceDocumentState.CURATION_FINISHED);
-        }
-        else {
-            return documentService.isAnnotationFinished(state.getDocument(), state.getUser());
-        }
-    }
-
     private void createNewAnnotation(AjaxRequestTarget aTarget, TypeAdapter aAdapter, CAS aCas)
         throws AnnotationException, IOException
     {
@@ -476,15 +463,8 @@ public abstract class AnnotationDetailEditorPanel
         assert aCas != null;
 
         AnnotatorState state = getModelObject();
-        
-        if (isUserViewingOthersWork()) {
-            throw new NotEditableException("This document belongs to another user.");
-        }
 
-        if (isAnnotationFinished()) {
-            throw new NotEditableException("This document is already closed. Please ask your "
-                + "project manager to re-open it via the Monitoring page.");
-        }
+        page.ensureIsEditable(); 
     
         // If this method is called when no slot is armed, it must be a bug!
         if (!state.isSlotArmed()) {
@@ -542,7 +522,7 @@ public abstract class AnnotationDetailEditorPanel
         // to the CAS
         if (state.getSelection().getAnnotation().equals(state.getArmedFeature().vid)) {
             // Make sure that panel is re-rendered when a slot is filled
-            aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
+            annotationFeatureForm.refresh(aTarget);
                         
             // Loading feature editor values from CAS
             loadFeatureEditorModels(aCas, aTarget);
@@ -573,15 +553,8 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         LOG.trace("actionAnnotate");
-        
-        if (isUserViewingOthersWork()) {
-            return;
-        }
 
-        if (isAnnotationFinished()) {
-            throw new NotEditableException("This document is already closed. Please ask your "
-                + "project manager to re-open it via the Monitoring page");
-        }
+        page.ensureIsEditable(); 
 
         AnnotatorState state = getModelObject();
 
@@ -599,6 +572,10 @@ public abstract class AnnotationDetailEditorPanel
             AnnotationFS targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
             
             if (!originFS.getType().equals(targetFS.getType())) {
+                state.getSelection().clear();
+                loadFeatureEditorModels(aCas, aTarget);
+                send(getPage(), Broadcast.BREADTH, new RenderSlotsEvent(aTarget));
+                onChange(aTarget);
                 throw new IllegalPlacementException(
                         "Cannot create relation between spans on different layers");
             }
@@ -646,6 +623,9 @@ public abstract class AnnotationDetailEditorPanel
         internalCommitAnnotation(aTarget, aCas);
 
         internalCompleteAnnotation(aTarget, aCas);
+    
+        state.clearArmedSlot();    
+        send(getPage(), Broadcast.BREADTH, new RenderSlotsEvent(aTarget));
     }
     
     private Optional<AnnotationLayer> getRelationLayerFor(AnnotationLayer aSpanLayer)
@@ -680,15 +660,8 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         LOG.trace("actionCreateForward()");
-        
-        if (isUserViewingOthersWork()) {
-            return;
-        }
 
-        if (isAnnotationFinished()) {
-            throw new NotEditableException("This document is already closed. Please ask your "
-                    + "project manager to re-open it via the Monitoring page");
-        }
+        page.ensureIsEditable();
 
         AnnotatorState state = getModelObject();
 
@@ -771,12 +744,6 @@ public abstract class AnnotationDetailEditorPanel
         internalCompleteAnnotation(aTarget, aCas);
         
         aTarget.add(annotationFeatureForm);
-    }
-
-
-    private boolean isUserViewingOthersWork()
-    {
-        return !getModelObject().getUser().equals(userRepository.getCurrentUser());
     }
 
     /**
@@ -882,7 +849,7 @@ public abstract class AnnotationDetailEditorPanel
                 state.getDefaultAnnotationLayer().getUiName());
 
         // #186 - After filling a slot, the annotation detail panel is not updated
-        aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
+        annotationFeatureForm.refresh(aTarget);
 
         // internalCommitAnnotation is used to update an existing annotation as well as to create
         // a new one. In either case, the selectedAnnotationLayer indicates the layer type! Do not
@@ -1232,7 +1199,9 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         try {
-            if (selection.isSpan()) {
+            // If we reset the layers while doing a relation, we won't be able to complete the 
+            // relation - so in this case, we leave the layers alone...
+            if (!selection.isArc()) {
                 annotationFeatureForm.updateLayersDropdown();
             }
 
@@ -1292,7 +1261,7 @@ public abstract class AnnotationDetailEditorPanel
             annotationFeatureForm.updateRememberLayer();
 
             if (aTarget != null) {
-                aTarget.add(annotationFeatureForm);
+                annotationFeatureForm.refresh(aTarget);
             }
         }
         catch (Exception e) {
@@ -1347,16 +1316,19 @@ public abstract class AnnotationDetailEditorPanel
             if (featureState != null) {
                 state.getFeatureStates().add(featureState);
 
-                // verification to check whether constraints exist for this project or NOT
-                if (state.getConstraints() != null
-                        && state.getSelection().getAnnotation().isSet()) {
-                    // indicator.setRulesExist(true);
-                    populateTagsBasedOnRules(aCas, featureState);
-                }
-                else {
-                    // indicator.setRulesExist(false);
-                    featureState.tagset = annotationService
-                            .listTags(featureState.feature.getTagset());
+                // Populate tagsets if necessary
+                if (featureState.feature.getTagset() != null) {
+                    // verification to check whether constraints exist for this project or NOT
+                    if (state.getConstraints() != null
+                            && state.getSelection().getAnnotation().isSet()) {
+                        // indicator.setRulesExist(true);
+                        populateTagsBasedOnRules(aCas, featureState);
+                    }
+                    else {
+                        // indicator.setRulesExist(false);
+                        featureState.tagset = annotationService
+                                .listTags(featureState.feature.getTagset());
+                    }
                 }
             }
         }
@@ -1417,7 +1389,7 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("clearFeatureEditorModels()");
         getModelObject().getFeatureStates().clear();
         if (aTarget != null) {
-            aTarget.add(annotationFeatureForm);
+            annotationFeatureForm.refresh(aTarget);
         }
     }
 

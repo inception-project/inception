@@ -86,7 +86,7 @@ public interface AnnotatorState
     // REC: would be very nice if we didn't need the mode - the behaviors specific to annotation,
     // curation, automation, correction, etc. should be local to the respective modules / pages
     Mode getMode();
-
+    
     // ---------------------------------------------------------------------------------------------
     // Remembered feature values
     //
@@ -115,6 +115,11 @@ public interface AnnotatorState
     User getUser();
 
     void setUser(User aUser);
+    
+    /**
+     * User is viewing other people's work (read-only), but not as Curation User
+     */
+    boolean isUserViewingOthersWork(User aCurrentUser);
 
     // ---------------------------------------------------------------------------------------------
     // Project
@@ -178,4 +183,12 @@ public interface AnnotatorState
     List<FeatureState> getFeatureStates();
 
     FeatureState getFeatureState(AnnotationFeature aFeature);
+    
+    // ---------------------------------------------------------------------------------------------
+    // Meta data
+    // ---------------------------------------------------------------------------------------------
+    
+    <M extends Serializable> M getMetaData(final AnnotatorStateMetaDataKey<M> aKey);
+    
+    <M extends Serializable> void setMetaData(final AnnotatorStateMetaDataKey<M> aKey, M aMetadata);
 }

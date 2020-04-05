@@ -3964,10 +3964,8 @@ Util.profileReport();
         }
       };
       
-// BEGIN WEBANNO EXTENSION - #790 - Differential updates for brat view 
-      var renderDataPatch = function(patchData) {
-        Util.profileEnd('invoke getDocument');
-        sourceData = jsonpatch.applyPatch(sourceData, patchData).newDocument;
+// BEGIN WEBANNO EXTENSION - #1519 - Optimize re-rendering of brat view when window is resizes
+      var rerender = function() {
         dispatcher.post('startedRendering', [coll, doc, args]);
         dispatcher.post('spin');
         setTimeout(function() {
@@ -3982,6 +3980,14 @@ Util.profileReport();
             }
             dispatcher.post('unspin');
         }, 0);
+      }
+// END WEBANNO EXTENSION - #1519 - Optimize re-rendering of brat view when window is resizes
+      
+// BEGIN WEBANNO EXTENSION - #790 - Differential updates for brat view 
+      var renderDataPatch = function(patchData) {
+        Util.profileEnd('invoke getDocument');
+        sourceData = jsonpatch.applyPatch(sourceData, patchData).newDocument;
+        rerender();
       }
 // END WEBANNO EXTENSION - #790 - Differential updates for brat view 
 
@@ -4482,6 +4488,9 @@ Util.profileStart('before render');
           on('collectionChanged', collectionChanged).
           on('collectionLoaded', collectionLoaded).
           on('renderData', renderData).
+// BEGIN WEBANNO EXTENSION - #1519 - Optimize re-rendering of brat view when window is resizes
+          on('rerender', rerender).
+// END WEBANNO EXTENSION - #1519 - Optimize re-rendering of brat view when window is resizes
 // BEGIN WEBANNO EXTENSION - #790 - Differential updates for brat view 
           on('renderDataPatch', renderDataPatch).
 // END WEBANNO EXTENSION - #790 - Differential updates for brat view 

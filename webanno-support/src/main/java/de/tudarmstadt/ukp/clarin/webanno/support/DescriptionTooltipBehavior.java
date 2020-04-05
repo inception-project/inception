@@ -79,6 +79,7 @@ public class DescriptionTooltipBehavior
     {
         Options options = new Options();
         options.set("position", "{ my: 'center bottom', at: 'center top', of: '.page-footer' }");
+        options.set("classes", "{ 'ui-tooltip': 'ui-corner-all shadow' }");
         options.set("show", false);
         options.set("hide", false);
         return options;
