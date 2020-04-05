@@ -42,7 +42,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 public class ProjectLogExporter
     implements ProjectExporter
 {
-    private static final String LOG_FOLDER = "/" + ProjectService.LOG_FOLDER;
+    private static final String LOG = ProjectService.LOG_FOLDER;
+    private static final String LOG_FOLDER = "/" + LOG;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -83,7 +84,7 @@ public class ProjectLogExporter
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ZipUtils.normalizeEntryName(entry);
 
-            if (entryName.startsWith(LOG_FOLDER + "/")) {
+            if (entryName.startsWith(LOG + "/")) {
                 FileUtils.copyInputStreamToFile(aZip.getInputStream(entry),
                         projectService.getProjectLogFile(aProject));
                 log.info("Imported log for project [" + aProject.getName() + "] with id ["
