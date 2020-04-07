@@ -550,7 +550,7 @@ public class AnnotationPage
                 
                 // nothing changed, do not check for project, because inception always opens 
                 // on a project
-                if (document.isEmpty() && focus.isEmpty()) {
+                if (document.isEmpty() && name.isEmpty() && focus.isEmpty()) {
                     return;
                 }
                 SourceDocument previousDoc = getModelObject().getDocument();
