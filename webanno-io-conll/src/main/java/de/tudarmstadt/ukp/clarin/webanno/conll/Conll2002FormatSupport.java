@@ -67,7 +67,7 @@ public class Conll2002FormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(Conll2000Reader.class);
+        return createReaderDescription(Conll2000Reader.class, aTSD);
     }
     
     @Override
@@ -75,6 +75,6 @@ public class Conll2002FormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(Conll2000Writer.class);
+        return createEngineDescription(Conll2000Writer.class, aTSD);
     }
 }

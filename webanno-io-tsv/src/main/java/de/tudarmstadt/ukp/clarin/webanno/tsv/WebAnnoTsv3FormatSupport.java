@@ -65,7 +65,7 @@ public class WebAnnoTsv3FormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(WebannoTsv3XReader.class);
+        return createReaderDescription(WebannoTsv3XReader.class, aTSD);
     }
     
     @Override
@@ -73,6 +73,6 @@ public class WebAnnoTsv3FormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(WebannoTsv3XWriter.class);
+        return createEngineDescription(WebannoTsv3XWriter.class, aTSD);
     }
 }

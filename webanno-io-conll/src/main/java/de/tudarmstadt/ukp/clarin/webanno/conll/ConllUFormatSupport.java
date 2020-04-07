@@ -67,7 +67,7 @@ public class ConllUFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(ConllUReader.class);
+        return createReaderDescription(ConllUReader.class, aTSD);
     }
     
     @Override
@@ -77,6 +77,6 @@ public class ConllUFormatSupport
     {
         // TODO: The backported ConllUWriter should be removed again when DKPro Core 2.0.1 or higher
         // is released with the appropriate fix for the line breaks within sentences
-        return createEngineDescription(ConllUWriter.class);
+        return createEngineDescription(ConllUWriter.class, aTSD);
     }
 }

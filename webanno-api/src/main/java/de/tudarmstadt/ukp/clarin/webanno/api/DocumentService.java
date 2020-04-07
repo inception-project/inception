@@ -442,6 +442,22 @@ public interface DocumentService
         throws IOException;
 
     /**
+     * List all the {@link AnnotationDocument annotation documents} in a given project.
+     * <p>
+     * Note that this method does may not return an {@link AnnotationDocument annotation document}
+     * for every user in the project because they are created lazily when a user opens a document
+     * for annotation the first time.
+     * <p>
+     * Note that this method <b>DOES NOT</b> return an {@link AnnotationDocument annotation
+     * document} if the user owning the document does not actually exist in the system! It does not
+     * matter whether the user is enabled or not.
+     * 
+     * @return {@link AnnotationDocument}
+     * @see #createOrGetAnnotationDocument(SourceDocument, User)
+     */
+    List<AnnotationDocument> listAnnotationDocuments(Project aProject);
+
+    /**
      * List all the {@link AnnotationDocument annotation documents} for a given
      * {@link SourceDocument}.
      * <p>
@@ -604,4 +620,6 @@ public interface DocumentService
      */
     Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, String aUsername)
         throws IOException;
+
+    boolean existsInitialCas(SourceDocument aDocument) throws IOException;
 }

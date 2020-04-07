@@ -59,6 +59,6 @@ public class JsonFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(JsonWriter.class);
+        return createEngineDescription(JsonWriter.class, aTSD);
     }
 }

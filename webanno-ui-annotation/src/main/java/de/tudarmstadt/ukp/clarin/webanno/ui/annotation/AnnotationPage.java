@@ -547,7 +547,12 @@ public class AnnotationPage
                 StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_ID);
                 StringValue name = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_NAME);
                 StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
-
+                
+                // nothing changed, do not check for project, because inception always opens 
+                // on a project
+                if (document.isEmpty() && focus.isEmpty()) {
+                    return;
+                }
                 SourceDocument previousDoc = getModelObject().getDocument();
                 handleParameters(project, document, name, focus, false);
                 

@@ -87,7 +87,8 @@
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.10.2</jackson.version>
-    <tomcat.version>9.0.31</tomcat.version>
+    <tomcat.version>9.0.33</tomcat.version>
+    <servlet-api.version>4.0.1</servlet-api.version>
   </properties>
   <repositories>
     <!--
@@ -764,7 +765,7 @@
       <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>javax.servlet-api</artifactId>
-        <version>3.1.0</version>
+        <version>${servlet-api.version}</version>
       </dependency>
 
       <dependency>

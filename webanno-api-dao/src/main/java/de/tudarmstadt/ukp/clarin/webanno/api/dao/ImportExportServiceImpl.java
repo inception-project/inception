@@ -20,15 +20,30 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils.readSerializedCas;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.AUTOMATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
+import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
+import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableList;
+import static org.apache.commons.io.FileUtils.copyFile;
+import static org.apache.commons.io.FileUtils.forceDelete;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
-import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
+import static org.apache.uima.fit.factory.ConfigurationParameterFactory.addConfigurationParameters;
 import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
+import static org.apache.uima.fit.util.LifeCycleUtil.collectionProcessComplete;
+import static org.apache.uima.fit.util.LifeCycleUtil.destroy;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,14 +51,16 @@ import java.io.IOException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
+import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -54,7 +71,6 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.ConfigurationParameterFactory;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.io.ResourceCollectionReaderBase;
@@ -73,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -81,7 +96,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
@@ -185,11 +199,6 @@ public class ImportExportServiceImpl
         return unmodifiableList(new ArrayList<>(formats.values()));
     }
     
-    /**
-     * A new directory is created using UUID so that every exported file will reside in its own
-     * directory. This is useful as the written file can have multiple extensions based on the
-     * Writer class used.
-     */
     @Override
     @Transactional
     public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
@@ -205,19 +214,34 @@ public class ImportExportServiceImpl
             FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension)
         throws UIMAException, IOException, ClassNotFoundException
     {
+        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode,
+                aStripExtension, null);
+    }
+    
+    @Override
+    @Transactional
+    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
+            FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
+        throws UIMAException, IOException, ClassNotFoundException
+    {
+        Map<Pair<Project, String>, Object> bulkOperationContext = aBulkOperationContext;
+        if (bulkOperationContext == null) {
+            bulkOperationContext = new HashMap<>();
+        }
+        
         File annotationFolder = casStorageService.getAnnotationFolder(aDocument);
         String serializedCasFileName;
         // for Correction, it will export the corrected document (of the logged in user)
         // (CORRECTION_USER.ser is the automated result displayed for the user to correct it, not
         // the final result) for automation, it will export either the corrected document
         // (Annotated) or the automated document
-        if (aMode.equals(Mode.ANNOTATION) || aMode.equals(Mode.AUTOMATION)
-                || aMode.equals(Mode.CORRECTION)) {
+        if (aMode.equals(ANNOTATION) || aMode.equals(AUTOMATION) || aMode.equals(CORRECTION)) {
             serializedCasFileName = aUser + ".ser";
         }
         // The merge result will be exported
         else {
-            serializedCasFileName = WebAnnoConst.CURATION_USER + ".ser";
+            serializedCasFileName = CURATION_USER + ".ser";
         }
 
         // Read file
@@ -228,13 +252,14 @@ public class ImportExportServiceImpl
         }
 
         CAS cas = WebAnnoCasUtil.createCas();
-        CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
+        readSerializedCas(cas, serializedCasFile);
 
-        File exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension);
+        File exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension,
+                aBulkOperationContext);
 
         Project project = aDocument.getProject();
         
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+        try (MDC.MDCCloseable closable = MDC.putCloseable(KEY_PROJECT_ID,
                 String.valueOf(project.getId()))) {
             log.info("Exported annotations [{}]({}) for user [{}] from project [{}]({}) "
                     + "using format [{}]", aDocument.getName(), aDocument.getId(), aUser, 
@@ -394,25 +419,47 @@ public class ImportExportServiceImpl
         case '\u2028': return true; // LINE SEPARATOR
         case '\u2029': return true; // PARAGRAPH SEPARATOR
         default:
-            return  Character.isWhitespace(aChar);
+            return Character.isWhitespace(aChar);
         }
     }    
-    
+
     @Override
     public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
             FormatSupport aFormat, boolean aStripExtension)
         throws IOException, UIMAException
     {
-        // Update type system the CAS, compact it (remove all non-reachable feature strucutres)
+        return exportCasToFile(aCas, aDocument, aFileName, aFormat, aStripExtension, null);
+    }
+
+    @Override
+    public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
+            FormatSupport aFormat, boolean aStripExtension,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
+        throws IOException, UIMAException
+    {
+        Project project = aDocument.getProject();
+        
+        Map<Pair<Project, String>, Object> bulkOperationContext = aBulkOperationContext;
+        if (bulkOperationContext == null) {
+            bulkOperationContext = new HashMap<>();
+        }
+        
+        // Either fetch the type system from the bulk-context or fetch it from the DB and store it
+        // in the bulk-context to avoid further lookups in the same bulk operation
+        Pair<Project, String> exportTypeSystemKey = Pair.of(project, "exportTypeSystem");
+        TypeSystemDescription exportTypeSystem = (TypeSystemDescription) bulkOperationContext
+                .get(exportTypeSystemKey);
+        if (exportTypeSystem == null) {
+            exportTypeSystem = annotationService.getTypeSystemForExport(project);
+            bulkOperationContext.put(exportTypeSystemKey, exportTypeSystem);
+        }
+        
+        // Update type system the CAS, compact it (remove all non-reachable feature structures)
         // and remove all internal feature structures in the process
-        CAS exportCas = WebAnnoCasUtil.createCas();
-        TypeSystemDescription fullProjectTypeSystem = annotationService
-                .getFullProjectTypeSystem(aDocument.getProject(), false);
-        annotationService.upgradeCas(aCas, exportCas, fullProjectTypeSystem);
+        CAS exportCas = annotationService.prepareCasForExport(aCas, aDocument, exportTypeSystem);
         
         // Update the source file name in case it is changed for some reason. This is necessary
         // for the writers to create the files under the correct names.
-        Project project = aDocument.getProject();
         File currentDocumentUri = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
                 + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/"
                 + aDocument.getId() + "/" + SOURCE_FOLDER);
@@ -424,40 +471,54 @@ public class ImportExportServiceImpl
         documentMetadata.setDocumentId(aFileName);
 
         // update with the correct tagset name
-        List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
+        Pair<Project, String> annotationFeaturesKey = Pair.of(project, "annotationFeatures");
+        @SuppressWarnings("unchecked")
+        List<AnnotationFeature> features = (List<AnnotationFeature>) bulkOperationContext
+                .get(annotationFeaturesKey);
+        if (features == null) {
+            features = annotationService.listAnnotationFeature(project);
+            bulkOperationContext.put(annotationFeaturesKey, features);
+        }
         for (AnnotationFeature feature : features) {
-
             TagSet tagSet = feature.getTagset();
-            if (tagSet == null) {
+            if (tagSet == null || CHAIN_TYPE.equals(feature.getLayer().getType())) {
                 continue;
             }
-            else if (!feature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                updateCasWithTagSet(exportCas, feature.getLayer().getName(), tagSet.getName());
-            }
+            
+            updateCasWithTagSet(exportCas, feature.getLayer().getName(), tagSet.getName());
         }
 
-        File exportTempDir = File.createTempFile("webanno", "export");
+        File exportTempDir = createTempFile("webanno", "export");
         try {
             exportTempDir.delete();
             exportTempDir.mkdirs();
             
             AnalysisEngineDescription writer = aFormat.getWriterDescription(aDocument.getProject(),
-                    fullProjectTypeSystem, exportCas);
-            ConfigurationParameterFactory.addConfigurationParameters(writer,
+                    exportTypeSystem, exportCas);
+            addConfigurationParameters(writer,
                     JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
                     JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
 
+            // Not using SimplePipeline.runPipeline here now because it internally works with an
+            // aggregate engine which is slow due to https://issues.apache.org/jira/browse/UIMA-6200
+            AnalysisEngine engine = null;
+            try {
+                engine = createEngine(writer);
+                engine.process(getRealCas(exportCas));
+                collectionProcessComplete(engine);
+            }
+            finally {
+                destroy(engine);
+            }
             
-            runPipeline(getRealCas(exportCas), writer);
-    
             // If the writer produced more than one file, we package it up as a ZIP file
             File exportFile;
             if (exportTempDir.listFiles().length > 1) {
                 exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
                 try {
-                    ZipUtils.zipFolder(exportTempDir, exportFile);
+                    zipFolder(exportTempDir, exportFile);
                 }
                 catch (Exception e) {
                     try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
@@ -469,14 +530,14 @@ public class ImportExportServiceImpl
             else {
                 exportFile = new File(exportTempDir.getParent(),
                         exportTempDir.listFiles()[0].getName());
-                FileUtils.copyFile(exportTempDir.listFiles()[0], exportFile);
+                copyFile(exportTempDir.listFiles()[0], exportFile);
             }
             
             return exportFile;
         }
         finally {
             if (exportTempDir != null) {
-                FileUtils.forceDelete(exportTempDir);
+                forceDelete(exportTempDir);
             }
         }
     }
@@ -493,13 +554,13 @@ public class ImportExportServiceImpl
      */
     private static void updateCasWithTagSet(CAS aCas, String aLayer, String aTagSetName)
     {
-        Type TagsetType = CasUtil.getType(aCas, TagsetDescription.class);
-        Feature layerFeature = TagsetType.getFeatureByBaseName("layer");
-        Feature nameFeature = TagsetType.getFeatureByBaseName("name");
+        Type tagsetType = getType(aCas, TagsetDescription.class);
+        Feature layerFeature = tagsetType.getFeatureByBaseName("layer");
+        Feature nameFeature = tagsetType.getFeatureByBaseName("name");
 
         boolean tagSetModified = false;
         // modify existing tagset Name
-        for (FeatureStructure fs : CasUtil.select(aCas, TagsetType)) {
+        for (FeatureStructure fs : select(aCas, tagsetType)) {
             String layer = fs.getStringValue(layerFeature);
             String tagSetName = fs.getStringValue(nameFeature);
             if (layer.equals(aLayer)) {
@@ -512,8 +573,9 @@ public class ImportExportServiceImpl
                 break;
             }
         }
+        
         if (!tagSetModified) {
-            FeatureStructure fs = aCas.createFS(TagsetType);
+            FeatureStructure fs = aCas.createFS(tagsetType);
             fs.setStringValue(layerFeature, aLayer);
             fs.setStringValue(nameFeature, aTagSetName);
             aCas.addFsToIndexes(fs);
