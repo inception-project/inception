@@ -68,3 +68,8 @@ an example of how the parameter can be configured below:
 | 5m
 | 30m
 |===
+
+NOTE: Disabling the knowledge base support will lead to the loss of concept linked features from
+      documents/projects that were using them. If you wish to run the application without knowledge, it
+      is strongly recommended to disable the feature immediately after the installation and not after any
+      projects have potentially started using it.
