@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.support.test.recommendation.Recommend
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -142,13 +144,23 @@ public class NamedEntityLinkerTest
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
+        Dataset ds = null;
+        
+        try {
+            ds = loader.load("germeval2014-de", CONTINUE);
+        }
+        catch (Exception e) {
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
+        
         return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
     }
 
     private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2002Reader.class,
+        CollectionReader reader = createReader(
+            Conll2002Reader.class,
             Conll2002Reader.PARAM_PATTERNS, files, 
             Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
             Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
