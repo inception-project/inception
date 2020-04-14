@@ -22,10 +22,13 @@ import static de.tudarmstadt.ukp.inception.support.test.recommendation.Recommend
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +42,6 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
@@ -194,14 +196,21 @@ public class StringMatchingRecommenderTest
 
     private CAS getTestCasNoLabelLabels() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
-        Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
-        Feature valFeature = neType.getFeatureByBaseName("value");
-        JCasUtil.select(cas.getJCas(), NamedEntity.class)
-                .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
-
-        return cas;
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
+            Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
+            Feature valFeature = neType.getFeatureByBaseName("value");
+            select(cas.getJCas(), NamedEntity.class)
+                    .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
+    
+            return cas;
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     @Test

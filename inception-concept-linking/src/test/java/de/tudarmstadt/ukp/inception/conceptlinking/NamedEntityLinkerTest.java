@@ -150,6 +150,7 @@ public class NamedEntityLinkerTest
             ds = loader.load("germeval2014-de", CONTINUE);
         }
         catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
             assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
             throw e;
         }
