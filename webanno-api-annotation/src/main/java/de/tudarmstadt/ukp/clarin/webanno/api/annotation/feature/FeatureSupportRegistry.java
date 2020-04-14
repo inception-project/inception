@@ -69,7 +69,7 @@ public interface FeatureSupportRegistry
 
     /**
      * Get the feature support providing the given feature. This method must only be called on
-     * completely configured and saved features, not on unsafed features.
+     * completely configured and saved features, not on unsaved features.
      */
     <T> FeatureSupport<T> getFeatureSupport(AnnotationFeature aFeature);
     
