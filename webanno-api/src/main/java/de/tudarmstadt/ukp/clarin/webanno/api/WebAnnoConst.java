@@ -29,6 +29,7 @@ public class WebAnnoConst
     // Page parameters
     public static final String PAGE_PARAM_PROJECT_ID = "p";
     public static final String PAGE_PARAM_DOCUMENT_ID = "d";
+    public static final String PAGE_PARAM_DOCUMENT_NAME = "n";
     public static final String PAGE_PARAM_FOCUS = "f";
 
     // Annotation types, for span or arc annotations.

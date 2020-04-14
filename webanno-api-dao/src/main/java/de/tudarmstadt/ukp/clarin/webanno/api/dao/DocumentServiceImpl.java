@@ -583,7 +583,7 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
         
-        log.info("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
+        log.debug("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
                 aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
