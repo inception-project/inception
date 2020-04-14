@@ -31,8 +31,6 @@ import de.tudarmstadt.ukp.inception.search.model.Index;
 
 public interface SearchService
 {
-    static final String SERVICE_NAME = "searchService";
-
     List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException;
 

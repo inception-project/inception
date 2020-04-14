@@ -1,5 +1,10 @@
 = Document metadata
 
+NOTE: This is an experimental feature not recommended for serious use. In 
+      particular, curation of document metadata annotations is not possible and they are not supported
+      by the TSV format. They can be im-/exported via XMI or Binary CAS though. However, you can try it out
+      and enable it by adding `documentmetadata.enabled=true` to the `settings.properties` file (see <<admin-guide.adoc#sect_settings_documentmetadata>>). 
+
 Before being able to configure document-level annotations, you need to define an annotation layer of 
 type *Document metadata* on the project *Settings*, *Layers* tab. For this:
 
@@ -17,9 +22,4 @@ On the annotation page, you can now:
 * Clicking the plus sign will add a new annotation whose feature you can fill in.
 
 image::metadata-sidebar.png[align="center"]
-
-NOTE: This is an experimental feature not recommended for serious use. In 
-      particular, curation of document metadata annotations is not possible and they are not supported
-      by the TSV format. They can be im-/exported via XMI or Binary CAS though. However, you can try it out
-      and enable it by adding `documentmetadata.enabled=true` to the `settings.properties` file (see <<admin-guide.adoc#sect_settings>>). 
 
