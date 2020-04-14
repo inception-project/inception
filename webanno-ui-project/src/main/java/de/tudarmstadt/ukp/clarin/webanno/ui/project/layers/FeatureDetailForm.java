@@ -89,7 +89,7 @@ public class FeatureDetailForm
     private final CheckBox required;
     private final WebMarkupContainer traitsContainer;
     private final ConfirmationDialog confirmationDialog;
-    private final TextField<String> name;
+    private final TextField<String> uiName;
 
     public FeatureDetailForm(String id, IModel<AnnotationFeature> aFeature)
     {
@@ -101,10 +101,10 @@ public class FeatureDetailForm
         traitsContainer.setOutputMarkupId(true);
         
         add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
-        name = new TextField<>("uiName");
-        name.setRequired(true);
-        name.setOutputMarkupId(true);
-        add(name);
+        uiName = new TextField<>("uiName");
+        uiName.setRequired(true);
+        uiName.setOutputMarkupId(true);
+        add(uiName);
         add(new TextArea<String>("description"));
         add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
@@ -199,7 +199,7 @@ public class FeatureDetailForm
     
     public Component getInitialFocusComponent()
     {
-        return name;
+        return uiName;
     }
 
     @Override

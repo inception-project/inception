@@ -102,6 +102,7 @@ public class LayerDetailForm
     private DropDownChoice<LayerType> layerTypeSelect;
     private DropDownChoice<AnnotationLayer> attachTypeSelect;
     private Label effectiveAttachType;
+    private TextField<String> uiName;
 
     private FeatureSelectionForm featureSelectionForm;
     private FeatureDetailForm featureDetailForm;
@@ -120,10 +121,14 @@ public class LayerDetailForm
         
         setOutputMarkupPlaceholderTag(true);
 
+        
         add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupId(true);
 
-        add(new TextField<String>("uiName").setRequired(true));
+        uiName = new TextField<String>("uiName");
+        uiName.setOutputMarkupId(true);
+        uiName.setRequired(true);
+        add(uiName);
         add(new TextArea<String>("description").setOutputMarkupPlaceholderTag(true));
 
         add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
@@ -455,5 +460,10 @@ public class LayerDetailForm
         super.onConfigure();
 
         setVisible(getModelObject() != null);
+    }
+
+    public Component getInitialFocusComponent()
+    {
+        return uiName;
     }
 }

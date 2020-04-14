@@ -50,7 +50,6 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
@@ -168,6 +167,11 @@ public class ProjectLayersPanel
                 featureDetailForm.setModelObject(null);
                 
                 _target.add(ProjectLayersPanel.this);
+                
+                // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor
+                // does not actually appear in the input field. However, using JQuery here works.
+                _target.appendJavaScript("$('#"
+                        + layerDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();");
             }));
 
             final Map<AnnotationLayer, String> colors = new HashMap<>();
@@ -405,7 +409,7 @@ public class ProjectLayersPanel
     public class FeatureSelectionForm
         extends Form<AnnotationFeature>
     {
-        private static final String CID_CREATE_FEATURE = "createFeature";
+        private static final String CID_CREATE_FEATURE = "new";
         
         private static final long serialVersionUID = -1L;
 
@@ -465,30 +469,17 @@ public class ProjectLayersPanel
             // cancel selection of feature list
             selectedFeature.setObject(null);
 
-            add(new Button("new")
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit()
-                {
-                    // cancel selection of feature list
-                    selectedFeature.setObject(null);
-
-                    AnnotationFeature newFeature = new AnnotationFeature();
-                    newFeature.setLayer(layerDetailForm.getModelObject());
-                    newFeature.setProject(ProjectLayersPanel.this.getModelObject());
-                    featureDetailForm.setDefaultModelObject(newFeature);
-                }
-
-                @Override
-                public boolean isEnabled()
-                {
-                    return layerDetailForm.getModelObject() != null
-                            && !layerDetailForm.getModelObject().isBuiltIn()
-                            && !layerDetailForm.getModelObject().getType().equals(CHAIN_TYPE);
-                }
-            });
+            AnnotationFeature newFeature = new AnnotationFeature();
+            newFeature.setLayer(layerDetailForm.getModelObject());
+            newFeature.setProject(ProjectLayersPanel.this.getModelObject());
+            featureDetailForm.setDefaultModelObject(newFeature);
+            
+            aTarget.add(featureSelectionForm);
+            aTarget.add(featureDetailForm);
+            // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor does
+            // not actually appear in the input field. However, using JQuery here works.
+            aTarget.appendJavaScript("$('#"
+                    + featureDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();");
         }
 
         private List<AnnotationFeature> listFeatures()
