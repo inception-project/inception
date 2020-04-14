@@ -368,14 +368,28 @@ public class StringMatchingRecommenderTest
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDataFiles());
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            return loadData(ds, ds.getDataFiles());
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException

@@ -113,10 +113,12 @@ public class ExternalRecommenderIntegrationTest
     }
 
     @Test
-    public void thatTrainingWorks()
+    public void thatTrainingWorks() throws Exception
     {
+        List<CAS> data = loadDevelopmentData();
+        
         assertThatCode(() ->
-            sut.train(context, loadDevelopmentData())
+            sut.train(context, data)
         ).doesNotThrowAnyException();
     }
 
