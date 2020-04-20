@@ -20,8 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static org.apache.uima.fit.util.CasUtil.select;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ProjectState.CURATION_FINISHED;
 
 import java.io.IOException;
 import java.util.List;
@@ -29,6 +28,8 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -203,15 +204,22 @@ public abstract class AnnotationPageBase
         }
 
         // Check each feature structure of this layer
-        for (AnnotationFS fs : select(editorCas, aAdapter.getAnnotationType(editorCas))) {
+        Type layerType = aAdapter.getAnnotationType(editorCas);
+        Type annotationFsType = editorCas.getAnnotationType();
+        for (FeatureStructure fs : editorCas.select(layerType)) {
             for (AnnotationFeature f : features) {
                 if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
-                    // Find the sentence that contains the annotation with the missing
-                    // required feature value
-                    AnnotationFS s = WebAnnoCasUtil.selectSentenceCovering(aCas, fs.getBegin());
-                    // Put this sentence into the focus
-                    state.setFirstVisibleUnit(s);
-                    actionRefreshDocument(aTarget);
+                    // If it is an annotation, then we jump to it if it has required empty features
+                    if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
+                        // Find the sentence that contains the annotation with the missing
+                        // required feature value
+                        AnnotationFS s = WebAnnoCasUtil.selectSentenceCovering(aCas,
+                                ((AnnotationFS) fs).getBegin());
+                        // Put this sentence into the focus
+                        state.setFirstVisibleUnit(s);
+                        actionRefreshDocument(aTarget);
+                    }
+
                     // Inform the user
                     throw new IllegalStateException(
                             "Document cannot be marked as finished. Annotation with ID ["
