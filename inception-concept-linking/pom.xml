@@ -69,6 +69,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -128,6 +132,10 @@
       <artifactId>spring-boot</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
     </dependency>
@@ -179,11 +187,6 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-autoconfigure</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-test-autoconfigure</artifactId>
       <scope>test</scope>
     </dependency>
@@ -196,11 +199,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-testing</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-security</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -29,12 +29,18 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
-@Component
-public class StatementColoringRegistryImpl implements StatementColoringRegistry
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#statementColoringRegistry}.
+ * </p>
+ */
+public class StatementColoringRegistryImpl
+    implements StatementColoringRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 

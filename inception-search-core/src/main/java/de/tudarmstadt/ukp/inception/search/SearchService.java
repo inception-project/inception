@@ -30,8 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface SearchService
 {
-    static final String SERVICE_NAME = "searchService";
-
     List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException;
 

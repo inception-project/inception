@@ -1,6 +1,6 @@
 /*
- * Copyright 2018
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Copyright 2020
+ * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,20 +18,20 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties("documentmetadata")
 public class DocumentMetadataLayerSupportPropertiesImpl
     implements DocumentMetadataLayerSupportProperties
 {
-    private boolean enabled = false;
+    private boolean enabled;
 
+    @Override
     public boolean isEnabled()
     {
         return enabled;
     }
 
+    @Override
     public void setEnabled(boolean aEnabled)
     {
         enabled = aEnabled;

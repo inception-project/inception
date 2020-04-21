@@ -1,6 +1,6 @@
 /*
- * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Copyright 2020
+ * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.config;
 
 public interface DocumentMetadataLayerSupportProperties
 {
-    boolean isEnabled();
-    
     void setEnabled(boolean aEnabled);
+
+    boolean isEnabled();
 }

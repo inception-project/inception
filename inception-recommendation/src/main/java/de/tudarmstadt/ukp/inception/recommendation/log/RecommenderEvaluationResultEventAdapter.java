@@ -21,16 +21,21 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommenderEvaluationResultEventAdapter}.
+ * </p>
+ */
 public class RecommenderEvaluationResultEventAdapter
     implements EventLoggingAdapter<RecommenderEvaluationResultEvent>
 {

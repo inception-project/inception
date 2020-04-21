@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_settings_knowledge-base]]
+[[sect_settings_search]]
 === Search Settings
 
 This section describes the global settings related to the search module.
@@ -34,7 +34,13 @@ an example of how the parameter can be configured below:
 | Default
 | Example
 
-| inception.search.resultsPerPage
+
+| search.enable
+| Enable/disable search
+| true
+| false
+
+| search.resultsPerPage
 | list of possible numbers of results per page for in-project search
 | 10, 20, 50, 100, 500, 1000
 | 100, 1000, 2000, 3000

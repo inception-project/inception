@@ -22,7 +22,15 @@ import org.apache.uima.cas.CAS;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
+/**
+ * Indexer scheduler. Does the project re-indexing in an asynchronous way.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link SearchServiceAutoConfiguration#indexScheduler}.
+ * </p>
+ */
 public interface IndexScheduler
 {
     void enqueueReindexTask(Project aProject);

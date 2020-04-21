@@ -29,7 +29,6 @@ import java.util.zip.ZipFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.LayerExporter;
@@ -43,10 +42,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
-@Component
-public class RecommenderExporter implements ProjectExporter {
-
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommenderExporter}.
+ * </p>
+ */
+public class RecommenderExporter
+    implements ProjectExporter
+{
     private static final String KEY = "recommenders";
     private static final Logger LOG = LoggerFactory.getLogger(RecommenderExporter.class);
 

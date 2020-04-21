@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,71 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.conceptlinking.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-@Component
-@ConfigurationProperties("inception.entity-linking")
-public class EntityLinkingProperties
+public interface EntityLinkingProperties
 {
-    private int cacheSize = 1024;
+    int getCacheSize();
 
-    private int mentionContextSize = 5;
-    private int candidateQueryLimit = 2500;
-    private int candidateDisplayLimit = 100;
-    private int signatureQueryLimit = Integer.MAX_VALUE;
+    int getMentionContextSize();
 
-    public int getCacheSize()
-    {
-        return cacheSize;
-    }
+    int getCandidateQueryLimit();
 
-    public void setCacheSize(int cacheSize)
-    {
-        this.cacheSize = cacheSize;
-    }
+    int getCandidateDisplayLimit();
 
-    public int getMentionContextSize()
-    {
-        return mentionContextSize;
-    }
-
-    public void setMentionContextSize(int mentionContextSize)
-    {
-        this.mentionContextSize = mentionContextSize;
-    }
-
-    public int getCandidateQueryLimit()
-    {
-        return candidateQueryLimit;
-    }
-
-    public void setCandidateQueryLimit(int candidateQueryLimit)
-    {
-        this.candidateQueryLimit = candidateQueryLimit;
-    }
-
-    public int getCandidateDisplayLimit()
-    {
-        return candidateDisplayLimit;
-    }
-
-    public void setCandidateDisplayLimit(int candidateDisplayLimit)
-    {
-        this.candidateDisplayLimit = candidateDisplayLimit;
-    }
-
-    public int getSignatureQueryLimit()
-    {
-        return signatureQueryLimit;
-    }
-
-    public void setSignatureQueryLimit(int signatureQueryLimit)
-    {
-        this.signatureQueryLimit = signatureQueryLimit;
-    }
+    int getSignatureQueryLimit();
 }
-

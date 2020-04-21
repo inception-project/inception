@@ -67,8 +67,11 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
  * so we can compare the mention context to the KB context. However, the present implementation
  * is very slow and doesn't help much. Before reenabling this we need to properly evaluate this, 
  * test this, and see how performance can be improved.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link EntityLinkingServiceAutoConfiguration#semanticSignatureFeatureGenerator}.
+ * </p>
  */
-//@Component
 public class SemanticSignatureFeatureGenerator
     implements EntityRankingFeatureGenerator
 {
