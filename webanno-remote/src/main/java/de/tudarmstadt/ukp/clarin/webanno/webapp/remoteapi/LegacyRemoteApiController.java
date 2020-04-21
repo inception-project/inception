@@ -166,7 +166,7 @@ public class LegacyRemoteApiController
         Project project = new Project();
         project.setName(aName);
         projectRepository.createProject(project);
-        annotationService.initializeProject(project);
+        projectRepository.initializeProject(project);
         
         // Create permission for the project creator
         projectRepository.createProjectPermission(

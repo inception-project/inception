@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.get
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -82,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -390,19 +393,26 @@ public class BratRenderer
     /**
      * Generates brat type definitions from the WebAnno layer definitions.
      *
+     * @param aProject
+     *            the project to which the layers belong
      * @param aAnnotationLayers
      *            the layers
      * @param aAnnotationService
      *            the annotation service
      * @return the brat type definitions
      */
-    public static Set<EntityType> buildEntityTypes(List<AnnotationLayer> aAnnotationLayers,
-            AnnotationSchemaService aAnnotationService)
+    public static Set<EntityType> buildEntityTypes(Project aProject, 
+            List<AnnotationLayer> aAnnotationLayers, AnnotationSchemaService aAnnotationService)
     {
         // Sort layers
         List<AnnotationLayer> layers = new ArrayList<>(aAnnotationLayers);
         layers.sort(Comparator.comparing(AnnotationLayer::getName));
 
+        // Look up all the features once to avoid hammering the database in the loop below
+        Map<AnnotationLayer, List<AnnotationFeature>> layerToFeatures = aAnnotationService
+                .listSupportedFeatures(aProject).stream()
+                .collect(groupingBy(AnnotationFeature::getLayer));
+        
         // Now build the actual configuration
         Set<EntityType> entityTypes = new LinkedHashSet<>();
         for (AnnotationLayer layer : layers) {
@@ -413,12 +423,13 @@ public class BratRenderer
             // For link features, we also need to configure the arcs, even though there is no arc
             // layer here.
             boolean hasLinkFeatures = false;
-            for (AnnotationFeature f : aAnnotationService.listSupportedFeatures(layer)) {
+            for (AnnotationFeature f : layerToFeatures.computeIfAbsent(layer, k -> emptyList())) {
                 if (!LinkMode.NONE.equals(f.getLinkMode())) {
                     hasLinkFeatures = true;
                     break;
                 }
             }
+            
             if (hasLinkFeatures) {
                 String bratTypeName = getBratTypeName(layer);
                 arcs.add(new RelationType(layer.getName(), layer.getUiName(), bratTypeName,

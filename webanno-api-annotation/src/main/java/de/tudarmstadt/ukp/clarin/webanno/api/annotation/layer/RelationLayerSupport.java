@@ -24,7 +24,9 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -37,7 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -54,7 +55,6 @@ public class RelationLayerSupport
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     private final ApplicationEventPublisher eventPublisher;
-    private final AnnotationSchemaService schemaService;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
     private String layerSupportId;
@@ -62,12 +62,11 @@ public class RelationLayerSupport
 
     @Autowired
     public RelationLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
+            ApplicationEventPublisher aEventPublisher,
             LayerBehaviorRegistry aLayerBehaviorsRegistry)
     {
         super(aFeatureSupportRegistry);
         eventPublisher = aEventPublisher;
-        schemaService = aSchemaService;
         layerBehaviorsRegistry = aLayerBehaviorsRegistry;
     }
 
@@ -102,12 +101,13 @@ public class RelationLayerSupport
     }
 
     @Override
-    public RelationAdapter createAdapter(AnnotationLayer aLayer)
+    public RelationAdapter createAdapter(AnnotationLayer aLayer,
+            Supplier<Collection<AnnotationFeature>> aFeatures)
     {
         RelationAdapter adapter = new RelationAdapter(getLayerSupportRegistry(),
-            featureSupportRegistry, eventPublisher, aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
-            () -> schemaService.listAnnotationFeature(aLayer),
-            layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
+                featureSupportRegistry, eventPublisher, aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+                aFeatures,
+                layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
 
         return adapter;
     }
@@ -130,9 +130,10 @@ public class RelationLayerSupport
     }
 
     @Override
-    public Renderer getRenderer(AnnotationLayer aLayer)
+    public Renderer createRenderer(AnnotationLayer aLayer,
+            Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        return new RelationRenderer(createAdapter(aLayer), getLayerSupportRegistry(),
+        return new RelationRenderer(createAdapter(aLayer, aFeatures), getLayerSupportRegistry(),
                 featureSupportRegistry,
                 layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
     }

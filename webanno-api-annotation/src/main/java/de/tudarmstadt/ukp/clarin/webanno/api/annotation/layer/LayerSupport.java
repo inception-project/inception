@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import static java.util.Arrays.asList;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
@@ -75,7 +77,7 @@ public interface LayerSupport<A extends TypeAdapter, T>
      *            the annotation layer.
      * @return the adapter.
      */
-    A createAdapter(AnnotationLayer aLayer);
+    A createAdapter(AnnotationLayer aLayer, Supplier<Collection<AnnotationFeature>> aFeatures);
 
     /**
      * Add the types required for this layer to the given type system.
@@ -102,7 +104,8 @@ public interface LayerSupport<A extends TypeAdapter, T>
         return asList(aLayer.getName());
     }
 
-    Renderer getRenderer(AnnotationLayer aLayer);
+    Renderer createRenderer(AnnotationLayer aLayer,
+            Supplier<Collection<AnnotationFeature>> aFeatures);
     
     /**
      * Returns a Wicket component to configure the specific traits of this layer type. Note that

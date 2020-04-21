@@ -159,7 +159,7 @@ public class ProjectDetailPanel
                 projectService.createProjectPermission(
                         new ProjectPermission(project, username, PermissionLevel.ANNOTATOR));
 
-                annotationService.initializeProject(project);
+                projectService.initializeProject(project);
             }
             catch (IOException e) {
                 error("Project repository path not found " + ":"

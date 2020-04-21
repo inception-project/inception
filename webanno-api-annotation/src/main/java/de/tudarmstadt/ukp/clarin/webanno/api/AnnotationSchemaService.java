@@ -268,26 +268,14 @@ public interface AnnotationSchemaService
     boolean existsType(String name, String type);
 
     /**
-     * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
-     * s. This is done per Project.
-     * 
-     * @param aProject
-     *            the project.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */ 
-    void initializeProject(Project aProject)
-            throws IOException;
-    
-    /**
      * List all annotation types in a project. This includes disabled layers and layers for which
      * no {@link LayerSupport} can be obtained via the {@link LayerSupportRegistry}.
      * 
-     * @param project
+     * @param aProject
      *            the project.
      * @return the layers.
      */
-    List<AnnotationLayer> listAnnotationLayer(Project project);
+    List<AnnotationLayer> listAnnotationLayer(Project aProject);
     
     /**
      * List all supported annotation layers in a project. This includes disabled layers. Supported

@@ -327,7 +327,7 @@ public class AeroRemoteApiController
         project.setScriptDirection(ScriptDirection.LTR);
         project.setState(ProjectState.NEW);
         projectService.createProject(project);
-        annotationService.initializeProject(project);
+        projectService.initializeProject(project);
         
         // Create permission for the project creator
         String owner = aCreator.isPresent() ? aCreator.get() : user.getUsername();
