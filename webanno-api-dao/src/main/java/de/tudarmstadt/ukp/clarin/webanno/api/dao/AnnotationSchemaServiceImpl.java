@@ -588,14 +588,6 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public List<AnnotationLayer> listAnnotationType()
-    {
-        return entityManager.createQuery("FROM AnnotationLayer ORDER BY name",
-                AnnotationLayer.class).getResultList();
-    }
-
-    @Override
-    @Transactional
     public List<AnnotationLayer> listAnnotationLayer(Project aProject)
     {
         return entityManager
@@ -757,14 +749,82 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
+    public List<AnnotationLayer> listSupportedLayers(Project aProject)
+    {
+        List<AnnotationLayer> supportedLayers = new ArrayList<>();
+        
+        for (AnnotationLayer l : listAnnotationLayer(aProject)) {
+            try {
+                layerSupportRegistry.getLayerSupport(l);
+            }
+            catch (IllegalArgumentException e) {
+                // Skip unsupported layers
+                continue;
+            }
+            
+            // Add supported layers to the result
+            supportedLayers.add(l);
+        }
+        
+        return supportedLayers;
+        
+    }
+    
+    @Override
+    @Transactional
+    public List<AnnotationFeature> listSupportedFeatures(Project aProject)
+    {
+        List<AnnotationFeature> supportedFeatures = new ArrayList<>();
+        
+        for (AnnotationFeature f : listAnnotationFeature(aProject)) {
+            try {
+                featureSupportRegistry.getFeatureSupport(f);
+            }
+            catch (IllegalArgumentException e) {
+                // Skip unsupported features
+                continue;
+            }
+            
+            // Add supported features to the result
+            supportedFeatures.add(f);
+        }
+        
+        return supportedFeatures;
+    }
+    
+    @Override
+    @Transactional
+    public List<AnnotationFeature> listSupportedFeatures(AnnotationLayer aLayer)
+    {
+        List<AnnotationFeature> supportedFeatures = new ArrayList<>();
+        
+        for (AnnotationFeature f : listAnnotationFeature(aLayer)) {
+            try {
+                featureSupportRegistry.getFeatureSupport(f);
+            }
+            catch (IllegalArgumentException e) {
+                // Skip unsupported features
+                continue;
+            }
+            
+            // Add supported features to the result
+            supportedFeatures.add(f);
+        }
+        
+        return supportedFeatures;
+    }
+    
+
+    @Override
     public TypeSystemDescription getCustomProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
         TypeSystemDescription tsd = new TypeSystemDescription_impl();
 
-        List<AnnotationFeature> allFeaturesInProject = listAnnotationFeature(aProject);
+        List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
         
-        listAnnotationLayer(aProject).stream()
+        listSupportedLayers(aProject).stream()
                 .filter(layer -> !layer.isBuiltIn())
                 .forEachOrdered(layer -> layerSupportRegistry.getLayerSupport(layer)
                         .generateTypes(tsd, layer, allFeaturesInProject));
@@ -781,8 +841,8 @@ public class AnnotationSchemaServiceImpl
 
         TypeSystemDescription builtInTypes = createTypeSystemDescription();
         
-        List<AnnotationLayer> allLayersInProject = listAnnotationLayer(aProject);
-        List<AnnotationFeature> allFeaturesInProject = listAnnotationFeature(aProject);
+        List<AnnotationLayer> allLayersInProject = listSupportedLayers(aProject);
+        List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
         
         for (AnnotationLayer layer : allLayersInProject) {
             LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);

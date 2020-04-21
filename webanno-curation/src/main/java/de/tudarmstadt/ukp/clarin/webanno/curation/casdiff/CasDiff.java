@@ -1043,7 +1043,7 @@ public class CasDiff
             }
             
             Set<String> labelFeatures = new LinkedHashSet<>();
-            nextFeature: for (AnnotationFeature f : schemaService.listAnnotationFeature(layer)) {
+            nextFeature: for (AnnotationFeature f : schemaService.listSupportedFeatures(layer)) {
                 if (!f.isEnabled()) {
                     continue nextFeature;
                 }
@@ -1076,7 +1076,7 @@ public class CasDiff
 
             adapters.add(adapter);
 
-            nextFeature: for (AnnotationFeature f : schemaService.listAnnotationFeature(layer)) {
+            nextFeature: for (AnnotationFeature f : schemaService.listSupportedFeatures(layer)) {
                 if (!f.isEnabled()) {
                     continue nextFeature;
                 }

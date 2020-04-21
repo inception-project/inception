@@ -413,7 +413,7 @@ public class BratRenderer
             // For link features, we also need to configure the arcs, even though there is no arc
             // layer here.
             boolean hasLinkFeatures = false;
-            for (AnnotationFeature f : aAnnotationService.listAnnotationFeature(layer)) {
+            for (AnnotationFeature f : aAnnotationService.listSupportedFeatures(layer)) {
                 if (!LinkMode.NONE.equals(f.getLinkMode())) {
                     hasLinkFeatures = true;
                     break;

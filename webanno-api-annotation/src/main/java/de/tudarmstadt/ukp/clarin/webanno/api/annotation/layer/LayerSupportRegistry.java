@@ -28,6 +28,15 @@ public interface LayerSupportRegistry
 {
     List<LayerSupport> getLayerSupports();
 
+    /**
+     * Retrieves the layer support for the given layer.
+     * 
+     * @param aLayer
+     *            the layer to get the support for.
+     * @return the layer support.
+     * @throws IllegalArgumentException
+     *             if there is no support for the given layer.
+     */
     LayerSupport getLayerSupport(AnnotationLayer aLayer);
 
     LayerSupport getLayerSupport(String aId);

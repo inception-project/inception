@@ -67,9 +67,16 @@ public interface FeatureSupportRegistry
 
     List<FeatureSupport> getFeatureSupports();
 
+    
     /**
      * Get the feature support providing the given feature. This method must only be called on
      * completely configured and saved features, not on unsaved features.
+     * 
+     * @param aFeature
+     *            the feture to get the support for.
+     * @return the feature support.
+     * @throws IllegalArgumentException
+     *             if there is no support for the given feature.
      */
     <T> FeatureSupport<T> getFeatureSupport(AnnotationFeature aFeature);
     
