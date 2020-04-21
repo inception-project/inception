@@ -580,7 +580,8 @@ public class MtasDocumentIndexTest
         @Bean
         public AnnotationSchemaService annotationSchemaService()
         {
-            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), entityManager);
+            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), featureSupportRegistry(),
+                    entityManager);
         }
 
         @Bean
