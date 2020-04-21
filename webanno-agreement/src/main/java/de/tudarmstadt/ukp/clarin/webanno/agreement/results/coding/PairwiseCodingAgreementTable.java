@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementReportExportFormat.CSV;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static java.util.Arrays.asList;
 
@@ -419,12 +420,10 @@ public class PairwiseCodingAgreementTable
                 
                 Map<String, List<CAS>> casMap = casMapSupplier.get();
 
-                List<DiffAdapter> adapters = CasDiff.getAdapters(annotationService,
-                        feature.getProject());
+                List<DiffAdapter> adapters = CasDiff.getDiffAdapters(annotationService,
+                        asList(feature.getLayer()));
 
-                CasDiff diff = CasDiff.doDiff(
-                        asList(feature.getLayer().getName()), adapters,
-                        traits.getLinkCompareBehavior(), casMap);
+                CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), casMap);
 
 //                AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
 //                        feature.getLayer().getName(), feature.getName(),

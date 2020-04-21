@@ -22,17 +22,24 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static java.lang.Math.ceil;
 import static java.util.Arrays.asList;
+import static org.apache.commons.io.FileUtils.copyFileToDirectory;
+import static org.apache.commons.io.FileUtils.forceDelete;
+import static org.apache.commons.io.FileUtils.forceMkdir;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,6 +100,10 @@ public class CuratedDocumentsExporter
     {
         Project project = aRequest.getProject();
         
+        // The export process may store project-related information in this context to ensure it
+        // is looked up only once during the bulk operation and the DB is not hit too often.
+        Map<Pair<Project, String>, Object> bulkOperationContext = new HashMap<>();
+
         // Get all the source documents from the project
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
 
@@ -100,10 +111,10 @@ public class CuratedDocumentsExporter
         int i = 1;
         for (SourceDocument sourceDocument : documents) {
             File curationCasDir = new File(aStage, CURATION_CAS_FOLDER + sourceDocument.getName());
-            FileUtils.forceMkdir(curationCasDir);
+            forceMkdir(curationCasDir);
 
             File curationDir = new File(aStage, CURATION_FOLDER + sourceDocument.getName());
-            FileUtils.forceMkdir(curationDir);
+            forceMkdir(curationDir);
 
             // If depending on aInProgress, include only the the curation documents that are
             // finished or also the ones that are in progress
@@ -115,7 +126,7 @@ public class CuratedDocumentsExporter
                 File curationCasFile = documentService.getCasFile(sourceDocument, CURATION_USER);
                 if (curationCasFile.exists()) {
                     // Copy CAS - this is used when importing the project again
-                    FileUtils.copyFileToDirectory(curationCasFile, curationCasDir);
+                    copyFileToDirectory(curationCasFile, curationCasDir);
 
                     // Determine which format to use for export
                     String formatId = FORMAT_AUTO.equals(aRequest.getFormat())
@@ -135,9 +146,10 @@ public class CuratedDocumentsExporter
                     // Copy secondary export format for convenience - not used during import
                     try {
                         File curationFile = importExportService.exportAnnotationDocument(
-                                sourceDocument, CURATION_USER, format, CURATION_USER, CURATION);
-                        FileUtils.copyFileToDirectory(curationFile, curationDir);
-                        FileUtils.forceDelete(curationFile);
+                                sourceDocument, CURATION_USER, format, CURATION_USER, CURATION,
+                                true, bulkOperationContext);
+                        copyFileToDirectory(curationFile, curationDir);
+                        forceDelete(curationFile);
                     }
                     catch (Exception e) {
                         // error("Unexpected error while exporting project: " +
@@ -148,8 +160,7 @@ public class CuratedDocumentsExporter
                 }
             }
 
-            aMonitor.setProgress(initProgress
-                    + (int) Math.ceil(((double) i) / documents.size() * 10.0));
+            aMonitor.setProgress(initProgress + (int) ceil(((double) i) / documents.size() * 10.0));
             i++;
         }
     }

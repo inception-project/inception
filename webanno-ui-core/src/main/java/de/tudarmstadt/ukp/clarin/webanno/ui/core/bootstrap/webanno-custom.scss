@@ -17,7 +17,7 @@
  ******************************************************************************/
 
 html, body {
-  font-family: 'Open Sans', Frutiger, Calibri, 'Myriad Pro', Myriad, sans-serif;
+//  font-family: 'Open Sans', Frutiger, Calibri, 'Myriad Pro', Myriad, sans-serif;
   min-height: 100%;
   max-height: 100%;
   height: 100%;
@@ -397,51 +397,6 @@ div.navigatorLabel{
 
 div.navigator{
     text-align:right;
-}
-
-/* -------------------------------------------------------------------------------------------------
- * JQuery UI overrides - Probably should roll own theme instead...
- */
-.ui-widget {
-    font-size: 1.0em;
-}
-  
-.ui-widget-content {
-  background: #fff;
-  color: #000;
-}
-
-.ui-tooltip {
-  padding: 0px;
-    -webkit-box-shadow: 0 0 5px #4D4D4D;
-    box-shadow: 0 0 5px #4D4D4D;
-    border: 1px solid #4D4D4D;
-}
-
-/* -------------------------------------------------------------------------------------------------
- * DescriptionTooltipBehavior
- */
- 
-.ui-tooltip .tooltip-title {
-  text-align: center;
-    font-weight: bold;
-    color: #fff;
-    background-color: #B90F22;
-    padding: 4px;
-    margin-bottom: 4px;
-}
-
-.ui-tooltip .tooltip-content {
-    padding: 4px;
-}
-
-.ui-tooltip .tooltip-pre {
-  word-break: keep-all; /* webkit */
-  word-wrap: break-word;
-  white-space: pre;
-  white-space: -moz-pre-wrap; /* fennec */
-  white-space: pre-wrap;
-    white-space: pre\9; /* IE7+ */  
 }
 
 /* -------------------------------------------------------------------------------------------------

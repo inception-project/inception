@@ -17,11 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceState.AGREE;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceState.DISAGREE;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -53,7 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
@@ -84,7 +89,7 @@ public class SuggestionBuilder
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService schemaService;
     private final DocumentService documentService;
     private final CorrectionDocumentService correctionDocumentService;
     private final CurationDocumentService curationDocumentService;
@@ -106,17 +111,17 @@ public class SuggestionBuilder
         documentService = aDocumentService;
         correctionDocumentService = aCorrectionDocumentService;
         curationDocumentService = aCurationDocumentService;
-        annotationService = aAnnotationService;
+        schemaService = aAnnotationService;
         userRepository = aUserDao;
         casStorageService = aCasStorageService;
     }
 
-    public CurationContainer buildCurationContainer(AnnotatorState aBModel)
+    public CurationContainer buildCurationContainer(AnnotatorState aState)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         CurationContainer curationContainer = new CurationContainer();
         // initialize Variables
-        SourceDocument sourceDocument = aBModel.getDocument();
+        SourceDocument sourceDocument = aState.getDocument();
         Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
         Map<Integer, Integer> segmentNumber = new HashMap<>();
         Map<String, Map<Integer, Integer>> segmentAdress = new HashMap<>();
@@ -125,7 +130,7 @@ public class SuggestionBuilder
         List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
 
         for (AnnotationDocument annotationDocument : documentService
-                .listAnnotationDocuments(aBModel.getDocument())) {
+                .listAnnotationDocuments(aState.getDocument())) {
             if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                 finishedAnnotationDocuments.add(annotationDocument);
             }
@@ -137,54 +142,44 @@ public class SuggestionBuilder
         CAS mergeCas;
 
         // get the correction/automation CAS for the logged in user
-        if (aBModel.getMode().equals(Mode.AUTOMATION)
-                || aBModel.getMode().equals(Mode.CORRECTION)) {
+        if (aState.getMode().equals(AUTOMATION) || aState.getMode().equals(CORRECTION)) {
             casses = listCasesforCorrection(randomAnnotationDocument, sourceDocument,
-                    aBModel.getMode());
-            mergeCas = getMergeCas(aBModel, sourceDocument, casses, randomAnnotationDocument,
-                    false, false);
+                    aState.getMode());
+            mergeCas = getMergeCas(aState, sourceDocument, casses, randomAnnotationDocument, false,
+                    false);
             String username = casses.keySet().iterator().next();
-            updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
-                    casses.get(username), username, aBModel.getWindowBeginOffset(),
-                    aBModel.getWindowEndOffset());
+            updateSegment(aState, segmentBeginEnd, segmentNumber, segmentAdress,
+                    casses.get(username), username, aState.getWindowBeginOffset(),
+                    aState.getWindowEndOffset());
         }
         else {
             casses = listCassesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
-                    aBModel.getMode());
-            mergeCas = getMergeCas(aBModel, sourceDocument, casses, randomAnnotationDocument,
+                    aState.getMode());
+            mergeCas = getMergeCas(aState, sourceDocument, casses, randomAnnotationDocument,
                     false, false);
-            updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeCas,
-                    WebAnnoConst.CURATION_USER,
-                    WebAnnoCasUtil.getFirstSentence(mergeCas).getBegin(),
+            updateSegment(aState, segmentBeginEnd, segmentNumber, segmentAdress, mergeCas,
+                    CURATION_USER, getFirstSentence(mergeCas).getBegin(),
                     mergeCas.getDocumentText().length());
 
         }
 
-        List<Type> entryTypes = null;
-
-        segmentAdress.put(WebAnnoConst.CURATION_USER, new HashMap<>());
+        segmentAdress.put(CURATION_USER, new HashMap<>());
         Type sentenceType = getType(mergeCas, Sentence.class);
-        for (AnnotationFS sentence : selectCovered(mergeCas, sentenceType, diffRangeBegin,
-                diffRangeEnd)) {
-            segmentAdress.get(WebAnnoConst.CURATION_USER).put(sentence.getBegin(),
-                    getAddr(sentence));
+        for (AnnotationFS s : selectCovered(mergeCas, sentenceType, diffRangeBegin, diffRangeEnd)) {
+            segmentAdress.get(CURATION_USER).put(s.getBegin(), getAddr(s));
         }
 
-        if (entryTypes == null) {
-            entryTypes = getEntryTypes(mergeCas, aBModel.getAnnotationLayers(), annotationService);
-        }
+        List<DiffAdapter> adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
 
         // for cross-sentences annotation, update the end of the segment
         if (firstload) {
             long start = System.currentTimeMillis();
             log.debug("Updating cross sentence annotation list...");
-            updateCrossSentAnnoList(segmentBeginEnd, segmentNumber, casses, entryTypes);
+            updateCrossSentAnnoList(segmentBeginEnd, segmentNumber, casses, adapters);
             firstload = false;
             log.debug("Cross sentence annotation list complete in {}ms",
                     (System.currentTimeMillis() - start));
         }
-
-        List<DiffAdapter> adapters = CasDiff.getAdapters(annotationService, aBModel.getProject());
 
         long diffStart = System.currentTimeMillis();
         log.debug("Calculating differences...");
@@ -198,8 +193,8 @@ public class SuggestionBuilder
                         segmentBeginEnd.size());
             }
 
-            DiffResult diff = CasDiff.doDiffSingle(entryTypes, adapters, LINK_ROLE_AS_LABEL,
-                    casses, begin, end).toResult();
+            DiffResult diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, begin, end)
+                    .toResult();
 
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
@@ -220,17 +215,17 @@ public class SuggestionBuilder
                 }
 
                 if (stackedDiff) {
-                    curationSegment.setSentenceState(SentenceState.DISAGREE);
+                    curationSegment.setSentenceState(DISAGREE);
                 }
                 else if (!diff.getIncompleteConfigurationSets().isEmpty()) {
-                    curationSegment.setSentenceState(SentenceState.DISAGREE);
+                    curationSegment.setSentenceState(DISAGREE);
                 }
                 else {
-                    curationSegment.setSentenceState(SentenceState.AGREE);
+                    curationSegment.setSentenceState(AGREE);
                 }
             }
             else {
-                curationSegment.setSentenceState(SentenceState.AGREE);
+                curationSegment.setSentenceState(AGREE);
             }
 
             for (String username : segmentAdress.keySet()) {
@@ -246,7 +241,8 @@ public class SuggestionBuilder
     }
 
     private void updateCrossSentAnnoList(Map<Integer, Integer> aSegmentBeginEnd,
-            Map<Integer, Integer> aSegmentNumber, Map<String, CAS> aCases, List<Type> aEntryTypes)
+            Map<Integer, Integer> aSegmentNumber, Map<String, CAS> aCases,
+            Iterable<DiffAdapter> aAdapters)
     {
         // FIXME Remove this side-effect and instead return this hashmap
         crossSentenceLists = new HashMap<>();
@@ -273,8 +269,10 @@ public class SuggestionBuilder
 
             Set<Integer> crossSents = new HashSet<>();
 
-            for (Type t : aEntryTypes) {
+            for (DiffAdapter adapter : aAdapters) {
                 for (CAS c : aCases.values()) {
+                    Type t = getType(c, adapter.getType());
+                    
                     // Determine sentence number for the current segment begin. This takes quite
                     // a while, so we only do it for the first CAS in the batch. Will be the
                     // same for all others anyway.
@@ -479,6 +477,7 @@ public class SuggestionBuilder
         }
     }
 
+    @Deprecated
     public static List<Type> getEntryTypes(CAS aMergeCas, List<AnnotationLayer> aLayers,
             AnnotationSchemaService aAnnotationService)
     {
@@ -491,8 +490,7 @@ public class SuggestionBuilder
             if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
                 continue;
             }
-            entryTypes.add(
-                    aAnnotationService.getAdapter(layer).getAnnotationType(aMergeCas));
+            entryTypes.add(aAnnotationService.getAdapter(layer).getAnnotationType(aMergeCas));
         }
         return entryTypes;
     }
@@ -534,17 +532,16 @@ public class SuggestionBuilder
             }
         }
 
-        List<Type> entryTypes = getEntryTypes(mergeCas, aAnnotationLayers, annotationService);
+        List<DiffAdapter> adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
         
         DiffResult diff;
         try (StopWatch watch = new StopWatch(log, "CasDiff")) {
-            diff = CasDiff.doDiffSingle(annotationService, aState.getProject(), entryTypes,
-                    LINK_ROLE_AS_LABEL, aCasses, 0,
+            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCasses, 0,
                     mergeCas.getDocumentText().length()).toResult();
         }
 
         try (StopWatch watch = new StopWatch(log, "CasMerge")) {
-            CasMerge casMerge = new CasMerge(annotationService);
+            CasMerge casMerge = new CasMerge(schemaService);
             casMerge.setMergeIncompleteAnnotations(aMergeIncompleteAnnotations);
             casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
                     mergeCas, aCasses);

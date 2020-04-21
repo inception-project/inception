@@ -556,9 +556,33 @@ public class AnnotationSchemaServiceImpl
             return new ArrayList<>();
         }
 
-        return entityManager
-                .createQuery("FROM AnnotationFeature  WHERE layer =:layer ORDER BY uiName",
-                        AnnotationFeature.class).setParameter("layer", aLayer).getResultList();
+        String query = String.join("\n",
+                "FROM AnnotationFeature",
+                "WHERE layer = :layer",
+                "ORDER BY uiName");
+        
+        return entityManager.createQuery(query, AnnotationFeature.class)
+                .setParameter("layer", aLayer)
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationFeature> listEnabledFeatures(AnnotationLayer aLayer)
+    {
+        if (isNull(aLayer) || isNull(aLayer.getId())) {
+            return new ArrayList<>();
+        }
+
+        String query = String.join("\n",
+                "FROM AnnotationFeature",
+                "WHERE layer = :layer",
+                "AND enabled = true",
+                "ORDER BY uiName");
+        
+        return entityManager.createQuery(query, AnnotationFeature.class)
+                .setParameter("layer", aLayer)
+                .getResultList();
     }
 
     @Override
@@ -759,7 +783,7 @@ public class AnnotationSchemaServiceImpl
         // Types declared within the project
         typeSystems.add(getCustomProjectTypes(aProject));
 
-        return (TypeSystemDescription_impl) mergeTypeSystems(typeSystems);
+        return mergeTypeSystems(typeSystems);
     }
     
     @Override
@@ -856,11 +880,24 @@ public class AnnotationSchemaServiceImpl
     }
     
     @Override
-    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+    public TypeSystemDescription getTypeSystemForExport(Project aProject)
+        throws ResourceInitializationException
+    {
+        return getFullProjectTypeSystem(aProject, false);
+    }
+    
+    @Override
+    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws ResourceInitializationException, UIMAException, IOException
     {
+        TypeSystemDescription tsd = aFullProjectTypeSystem;
+        if (tsd == null) {
+            tsd = getTypeSystemForExport(aSourceDocument.getProject());
+        }
+        
         CAS exportCas = WebAnnoCasUtil.createCas();
-        upgradeCas(aCas, exportCas, getFullProjectTypeSystem(aSourceDocument.getProject(), false));
+        upgradeCas(aCas, exportCas, tsd);
         return exportCas;
     }
     

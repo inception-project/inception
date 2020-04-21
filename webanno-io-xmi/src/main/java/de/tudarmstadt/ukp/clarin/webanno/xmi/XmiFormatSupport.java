@@ -76,6 +76,6 @@ public class XmiFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(XmiWriter.class);
+        return createEngineDescription(XmiWriter.class, aTSD);
     }
 }

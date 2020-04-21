@@ -85,10 +85,11 @@ public class FeatureDetailForm
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     
-    private DropDownChoice<FeatureType> featureType;
-    private CheckBox required;
-    private WebMarkupContainer traitsContainer;
-    private ConfirmationDialog confirmationDialog;
+    private final DropDownChoice<FeatureType> featureType;
+    private final CheckBox required;
+    private final WebMarkupContainer traitsContainer;
+    private final ConfirmationDialog confirmationDialog;
+    private final TextField<String> uiName;
 
     public FeatureDetailForm(String id, IModel<AnnotationFeature> aFeature)
     {
@@ -100,7 +101,10 @@ public class FeatureDetailForm
         traitsContainer.setOutputMarkupId(true);
         
         add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
-        add(new TextField<String>("uiName").setRequired(true));
+        uiName = new TextField<>("uiName");
+        uiName.setRequired(true);
+        uiName.setOutputMarkupId(true);
+        add(uiName);
         add(new TextArea<String>("description"));
         add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
@@ -191,6 +195,11 @@ public class FeatureDetailForm
         confirmationDialog
                 .setTitleModel(new StringResourceModel("DeleteFeatureDialog.title", this));
         add(confirmationDialog);
+    }
+    
+    public Component getInitialFocusComponent()
+    {
+        return uiName;
     }
 
     @Override

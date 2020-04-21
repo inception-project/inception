@@ -55,6 +55,6 @@ public class WebAnnoTsv2FormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(WebannoTsv2Reader.class);
+        return createReaderDescription(WebannoTsv2Reader.class, aTSD);
     }
 }

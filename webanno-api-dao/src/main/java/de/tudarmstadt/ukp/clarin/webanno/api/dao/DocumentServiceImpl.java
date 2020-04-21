@@ -583,7 +583,7 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
         
-        log.info("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
+        log.debug("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
                 aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
@@ -601,6 +601,14 @@ public class DocumentServiceImpl
                     throw new IOException("Unable to create CAS: " + e.getMessage(), e);
                 }
             });
+    }
+    
+    @Override
+    public boolean existsInitialCas(SourceDocument aDocument) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+
+        return casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
     }
     
     @Override
@@ -772,24 +780,45 @@ public class DocumentServiceImpl
     }
 
     @Override
+    public List<AnnotationDocument> listAnnotationDocuments(Project aProject)
+    {
+        String query = String.join("\n",
+                "SELECT doc",
+                " FROM AnnotationDocument AS doc",
+                " JOIN ProjectPermission AS perm",
+                "   ON doc.project = perm.project AND doc.user = perm.user",
+                " JOIN User as u",
+                "   ON doc.user = u.username",
+                "WHERE doc.project = :project",
+                "  AND perm.level = :level");
+
+        return entityManager
+                .createQuery(query, AnnotationDocument.class)
+                .setParameter("project", aProject)
+                .setParameter("level", ANNOTATOR)
+                .getResultList();
+    }
+    
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<AnnotationDocument> listAnnotationDocuments(SourceDocument aDocument)
     {
-        // Get all annotators in the project
-        List<String> users = getAllAnnotators(aDocument.getProject());
-        // Bail out already. HQL doesn't seem to like queries with an empty
-        // parameter right of "in"
-        if (users.isEmpty()) {
-            return new ArrayList<>();
-        }
+        String query = String.join("\n",
+                "SELECT doc",
+                " FROM AnnotationDocument AS doc",
+                " JOIN ProjectPermission AS perm",
+                "   ON doc.project = perm.project AND doc.user = perm.user",
+                " JOIN User as u",
+                "   ON doc.user = u.username",
+                "WHERE doc.project = :project",
+                "  AND doc.document = :document",
+                "  AND perm.level = :level");
 
         return entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE project = :project AND document = :document "
-                                + "AND user in (:users)", AnnotationDocument.class)
+                .createQuery(query, AnnotationDocument.class)
                 .setParameter("project", aDocument.getProject())
-                .setParameter("users", users)
                 .setParameter("document", aDocument)
+                .setParameter("level", ANNOTATOR)
                 .getResultList();
     }
     
