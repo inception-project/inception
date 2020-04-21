@@ -480,8 +480,9 @@ public class SuggestionViewPanel
         throws IOException
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-        info.setEntityTypes(BratRenderer.buildEntityTypes(
-                aCurationContainer.getState().getAnnotationLayers(), aAnnotationService));
+        info.setEntityTypes(
+                BratRenderer.buildEntityTypes(aCurationContainer.getState().getProject(),
+                        aCurationContainer.getState().getAnnotationLayers(), aAnnotationService));
 
         return JSONUtil.toInterpretableJsonString(info);
     }

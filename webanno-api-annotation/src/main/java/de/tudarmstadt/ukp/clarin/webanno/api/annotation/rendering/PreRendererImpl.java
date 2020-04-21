@@ -67,7 +67,8 @@ public class PreRendererImpl implements PreRenderer
             List<AnnotationFeature> features = allFeatures.stream()
                     .filter(feature -> feature.getLayer().equals(layer))
                     .collect(toList());
-            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
+            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
+                () -> annotationService.listAnnotationFeature(layer));
             renderer.render(aCas, features, aResponse, windowBeginOffset, windowEndOffset);
         }
     }

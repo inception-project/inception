@@ -29,21 +29,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
-import org.apache.commons.collections4.SetUtils;
-import org.apache.commons.lang3.ClassUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -64,11 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,13 +64,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -104,47 +90,19 @@ public class AnnotationSchemaServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
     
-    private @Autowired FeatureSupportRegistry featureSupportRegistry;
-    private @Autowired ApplicationEventPublisher applicationEventPublisher;
-    private @Autowired LayerSupportRegistry layerSupportRegistry;
-    private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
+    private final LayerSupportRegistry layerSupportRegistry;
     
-    private List<ProjectInitializer> initializers;
-
-    public AnnotationSchemaServiceImpl()
+    @Autowired
+    public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry)
     {
-        // Nothing to do
+        layerSupportRegistry = aLayerSupportRegistry;
     }
 
-    @EventListener
-    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
+            EntityManager aEntityManager)
     {
-        init();
-    }
-    
-    /* package private */ void init()
-    {
-        List<ProjectInitializer> inits = new ArrayList<>();
-
-        if (initializerProxy != null) {
-            inits.addAll(initializerProxy);
-            AnnotationAwareOrderComparator.sort(inits);
-        
-            Set<Class<? extends ProjectInitializer>> initializerClasses = new HashSet<>();
-            for (ProjectInitializer init : inits) {
-                if (initializerClasses.add(init.getClass())) {
-                    log.info("Found project initializer: {}",
-                            ClassUtils.getAbbreviatedName(init.getClass(), 20));
-                }
-                else {
-                    throw new IllegalStateException("There cannot be more than once instance "
-                            + "of each project initializer class! Duplicate instance of class: "
-                                    + init.getClass());
-                }
-            }
-        }
-        
-        initializers = Collections.unmodifiableList(inits);
+        this(aLayerSupportRegistry);
+        entityManager = aEntityManager;
     }
 
     @Override
@@ -540,50 +498,6 @@ public class AnnotationSchemaServiceImpl
         }
         
         return tagSet;
-    }
-
-    @Override
-    @Transactional
-    public void initializeProject(Project aProject)
-        throws IOException
-    {
-        Deque<ProjectInitializer> deque = new LinkedList<>(initializers);
-        Set<Class<? extends ProjectInitializer>> initsSeen = new HashSet<>();
-        Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
-
-        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
-
-        for (ProjectInitializer initializer : deque) {
-            allInits.add(initializer.getClass());
-        }
-        
-        while (!deque.isEmpty()) {
-            ProjectInitializer initializer = deque.pop();
-
-            if (!allInits.containsAll(initializer.getDependencies())) {
-                throw new IllegalStateException(
-                        "Missing dependencies of " + initializer + " initializer from " + deque);
-            }
-
-            if (initsDeferred.contains(initializer)) {
-                throw new IllegalStateException("Circular initializer dependencies in "
-                        + initsDeferred + " via " + initializer);
-            }
-            
-            if (initsSeen.containsAll(initializer.getDependencies())) {
-                log.debug("Applying project initializer: {}", initializer);
-                initializer.configure(aProject);
-                initsSeen.add(initializer.getClass());
-                initsDeferred.clear();
-            }
-            else {
-                log.debug(
-                        "Deferring project initializer as dependencies are not yet fulfilled: [{}]",
-                        initializer);
-                deque.add(initializer);
-                initsDeferred.add(initializer);
-            }
-        }
     }
 
     @Override
@@ -1090,7 +1004,8 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
-        return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer);
+        return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer,
+            () -> listAnnotationFeature(aLayer));
     }
     
     @Override

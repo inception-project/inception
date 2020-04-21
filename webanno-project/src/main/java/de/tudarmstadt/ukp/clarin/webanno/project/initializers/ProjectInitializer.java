@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers;
+package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import java.io.IOException;
 import java.util.List;
