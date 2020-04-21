@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.log.SearchQueryEventAdapter;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
+import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 
 @Configuration
 @EnableConfigurationProperties(SearchServicePropertiesImpl.class)
@@ -80,7 +81,7 @@ public class SearchServiceAutoConfiguration
     @Bean 
     public IndexScheduler indexScheduler()
     {
-        return new IndexScheduler();
+        return new IndexSchedulerImpl();
     }
     
     @Bean
