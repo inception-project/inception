@@ -93,6 +93,10 @@ public class RecommendationSidebar
         tip.setOption("width", Options.asString("300px"));
         warning.add(tip);
         
+        add(new LambdaAjaxLink("showLog", this::actionShowLog));
+        
+        add(new LambdaAjaxLink("retrain", this::actionRetrain));
+        
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class)
@@ -101,10 +105,6 @@ public class RecommendationSidebar
                 .setStep(1));
 
         form.add(new CheckBox("showAllPredictions"));
-
-        form.add(new LambdaAjaxLink("showLog", this::actionShowLog));
-        
-        form.add(new LambdaAjaxLink("retrain", this::actionRetrain));
 
         form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
                 aAnnotationPage.actionRefreshDocument(_target)));

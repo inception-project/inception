@@ -37,10 +37,16 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.PropertyFeatureSupport;
 
-//@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#factLayerInitializer}.
+ * </p>
+ */
 public class FactLayerInitializer
     implements LayerInitializer
 {

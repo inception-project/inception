@@ -24,13 +24,17 @@ import java.io.File;
 import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 
 /**
  * Assigns frequency priors from a pre-defined dictionary.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link EntityLinkingServiceAutoConfiguration#frequencyFeatureGenerator}.
+ * </p>
  */
-// @Component
 public class FrequencyFeatureGenerator
     implements EntityRankingFeatureGenerator
 {

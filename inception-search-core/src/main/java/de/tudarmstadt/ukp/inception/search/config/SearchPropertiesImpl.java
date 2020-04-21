@@ -26,7 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties("inception.search")
+@ConfigurationProperties("search")
 public class SearchPropertiesImpl implements SearchProperties
 {
     public static final String ALL = "all";

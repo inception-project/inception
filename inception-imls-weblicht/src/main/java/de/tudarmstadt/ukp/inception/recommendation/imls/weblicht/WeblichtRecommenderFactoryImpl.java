@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -31,12 +29,16 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.WeblichtChainService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.config.WeblichtRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtRecommenderTraitsEditor;
 
-@Component
-@ConditionalOnProperty(prefix = "recommenders.weblicht", name = "enabled",
-        matchIfMissing = true)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WeblichtRecommenderAutoConfiguration#weblichtRecommenderFactory}.
+ * </p>
+ */
 public class WeblichtRecommenderFactoryImpl
     extends RecommendationEngineFactoryImplBase<WeblichtRecommenderTraits>
     implements WeblichtRecommenderFactory

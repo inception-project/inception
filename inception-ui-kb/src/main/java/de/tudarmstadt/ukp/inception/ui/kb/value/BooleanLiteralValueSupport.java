@@ -26,18 +26,23 @@ import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.BooleanLiteralValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.BooleanLiteralValuePresenter;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#booleanLiteralValueSupport}.
+ * </p>
+ */
 public class BooleanLiteralValueSupport
     implements ValueTypeSupport
 {
