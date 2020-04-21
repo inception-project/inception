@@ -490,8 +490,8 @@ public class BratAnnotationEditor
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
         if (getModelObject().getProject() != null) {
-            info.setEntityTypes(BratRenderer
-                    .buildEntityTypes(getModelObject().getAnnotationLayers(), annotationService));
+            info.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject().getProject(),
+                    getModelObject().getAnnotationLayers(), annotationService));
             info.getVisualOptions()
                     .setArcBundle(getModelObject().getPreferences().isCollapseArcs()
                             ? VisualOptions.ARC_BUNDLE_ALL
@@ -735,8 +735,8 @@ public class BratAnnotationEditor
     private String bratLoadCollectionCommand()
     {
         GetCollectionInformationResponse response = actionGetCollectionInformation();
-        response.setEntityTypes(BratRenderer
-                .buildEntityTypes(getModelObject().getAnnotationLayers(), annotationService));
+        response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject().getProject(),
+                getModelObject().getAnnotationLayers(), annotationService));
         String json = toJson(response);
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
                 + "]);";
