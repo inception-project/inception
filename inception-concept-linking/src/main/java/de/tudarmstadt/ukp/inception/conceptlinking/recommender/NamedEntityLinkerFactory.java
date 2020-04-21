@@ -25,12 +25,12 @@ import static java.util.Arrays.asList;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -38,7 +38,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link EntityLinkingServiceAutoConfiguration#namedEntityLinkerFactory}.
+ * </p>
+ */
 public class NamedEntityLinkerFactory
     extends RecommendationEngineFactoryImplBase<NamedEntityLinkerTraits>
 {
@@ -49,9 +54,18 @@ public class NamedEntityLinkerFactory
 
     private static final String PREFIX = "kb:";
 
-    private @Autowired KnowledgeBaseService kbService;
-    private @Autowired ConceptLinkingService clService;
-    private @Autowired FeatureSupportRegistry fsRegistry;
+    private final KnowledgeBaseService kbService;
+    private final ConceptLinkingService clService;
+    private final FeatureSupportRegistry fsRegistry;
+
+    @Autowired
+    public NamedEntityLinkerFactory(KnowledgeBaseService aKbService,
+            ConceptLinkingService aClService, FeatureSupportRegistry aFsRegistry)
+    {
+        kbService = aKbService;
+        clService = aClService;
+        fsRegistry = aFsRegistry;
+    }
 
     @Override
     public String getId()

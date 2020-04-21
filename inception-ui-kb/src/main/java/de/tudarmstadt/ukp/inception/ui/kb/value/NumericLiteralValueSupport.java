@@ -41,18 +41,23 @@ import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.NumericLiteralValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.NumericLiteralValuePresenter;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValueEditor;
 import de.tudarmstadt.ukp.inception.ui.kb.value.editor.ValuePresenter;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#numericLiteralValueSupport}.
+ * </p>
+ */
 public class NumericLiteralValueSupport
     implements ValueTypeSupport
 {

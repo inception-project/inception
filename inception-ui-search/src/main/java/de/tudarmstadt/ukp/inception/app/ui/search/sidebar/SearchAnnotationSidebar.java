@@ -100,6 +100,7 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
+import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 
 
 public class SearchAnnotationSidebar
@@ -112,6 +113,7 @@ public class SearchAnnotationSidebar
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean SearchService searchService;
+    private @SpringBean IndexScheduler indexScheduler;
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean SearchProperties searchProperties;
@@ -171,7 +173,7 @@ public class SearchAnnotationSidebar
         mainContainer.add(searchForm);
 
         WebMarkupContainer searchOptionsPanel = new WebMarkupContainer("searchOptionsPanel");
-        searchOptionsPanel.add(new CheckBox("limitedToCurrentDocument"));
+        searchOptionsPanel.add(new CheckBox("limitedToCurrentDocument").setOutputMarkupId(true));
         searchOptionsPanel.add(createLayerDropDownChoice("groupingLayer",
             annotationService.listAnnotationLayer(getModelObject().getProject())));
         groupingFeature = new BootstrapSelect<>("groupingFeature", emptyList(),
@@ -189,11 +191,11 @@ public class SearchAnnotationSidebar
             _target.add(searchOptionsPanel);
         }));
 
-        executeSearchResultsGroupedQuery();
+        resultsProvider.emptyQuery();
 
         // Add link for re-indexing the project
         searchOptionsPanel.add(new LambdaAjaxLink("reindexProject", t -> {
-            searchService.reindex(getAnnotationPage().getModelObject().getProject());
+            indexScheduler.enqueueReindexTask(getAnnotationPage().getModelObject().getProject());
         }));
 
         resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
@@ -349,6 +351,7 @@ public class SearchAnnotationSidebar
     private CheckBox createLowLevelPagingCheckBox()
     {
         CheckBox checkbox = new CheckBox("lowLevelPaging");
+        checkbox.setOutputMarkupId(true);
         checkbox.add(enabledWhen(() -> searchOptions.getObject().getGroupingLayer() == null
                 && searchOptions.getObject().getGroupingFeature() == null));
         checkbox.add(AttributeModifier.append("title",
@@ -403,7 +406,7 @@ public class SearchAnnotationSidebar
     {
         selectedResult = null;
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
-        executeSearchResultsGroupedQuery();
+        executeSearchResultsGroupedQuery(aTarget);
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
@@ -416,10 +419,19 @@ public class SearchAnnotationSidebar
         aTarget.add(mainContainer);
     }
 
-    private void executeSearchResultsGroupedQuery()
+    private void executeSearchResultsGroupedQuery(AjaxRequestTarget aTarget)
     {
         if (isBlank(targetQuery.getObject())) {
             resultsProvider.emptyQuery();
+            return;
+        }
+        
+        AnnotatorState state = getModelObject();
+        Project project = state.getProject();
+
+        if (searchService.isIndexInProgress(state.getProject())) {
+            info("Indexing in progress... cannot perform query at this time");
+            aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
@@ -433,8 +445,6 @@ public class SearchAnnotationSidebar
         }
 
         try {
-            AnnotatorState state = getModelObject();
-            Project project = state.getProject();
             SourceDocument limitToDocument = searchOptions.getObject().isLimitedToCurrentDocument()
                     ? state.getDocument()
                     : null;
