@@ -109,6 +109,7 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
+import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
@@ -478,9 +479,15 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public PhysicalIndexFactory mtasDocumentIndexFactory()
+        public PhysicalIndexFactory mtasDocumentIndexFactory(DocumentService aDocumentService,
+                AnnotationSchemaService aSchemaService,
+                RepositoryProperties aRepositoryProperties,
+                FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
+                FeatureSupportRegistry aFeatureSupportRegistry)
         {
-            return new MtasDocumentIndexFactory();
+            return new MtasDocumentIndexFactory(aSchemaService, aDocumentService,
+                    aRepositoryProperties, aFeatureIndexingSupportRegistry,
+                    aFeatureSupportRegistry);
         }
 
         @Bean
@@ -559,7 +566,7 @@ public class MtasDocumentIndexTest
         @Bean
         public IndexScheduler indexScheduler()
         {
-            return new IndexScheduler();
+            return new IndexSchedulerImpl();
         }
 
         @Bean

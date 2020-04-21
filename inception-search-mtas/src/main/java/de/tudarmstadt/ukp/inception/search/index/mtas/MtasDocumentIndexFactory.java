@@ -17,14 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactoryImplBase;
 
@@ -32,8 +33,25 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactoryImplBase;
 public class MtasDocumentIndexFactory
     extends PhysicalIndexFactoryImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final AnnotationSchemaService schemaService;
+    private final DocumentService documentService;
+    private final RepositoryProperties repositoryProperties;
+    private final FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
+    private final FeatureSupportRegistry featureSupportRegistry;
     
+    @Autowired
+    public MtasDocumentIndexFactory(AnnotationSchemaService aSchemaService,
+            DocumentService aDocumentService, RepositoryProperties aRepositoryProperties,
+            FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry)
+    {
+        schemaService = aSchemaService;
+        documentService = aDocumentService;
+        repositoryProperties = aRepositoryProperties;
+        featureIndexingSupportRegistry = aFeatureIndexingSupportRegistry;
+        featureSupportRegistry = aFeatureSupportRegistry;
+    }
+
     @Override
     public String getDisplayName()
     {
@@ -41,25 +59,10 @@ public class MtasDocumentIndexFactory
     }
 
     @Override
-    public PhysicalIndex getNewIndex(Project aProject,
-            AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
-            ProjectService aProjectService, String aDir)
+    public PhysicalIndex getPhysicalIndex(Project aProject)
     {
-        PhysicalIndex indexBase = null;
-        try {
-            indexBase = new MtasDocumentIndex(aProject, aDocumentService, aProjectService,
-                    aDir);
-        }
-        catch (Exception e) {
-            log.error("Unable to get index", e);
-        }
-        return indexBase;
+        return new MtasDocumentIndex(aProject, documentService, schemaService,
+                repositoryProperties.getPath().getAbsolutePath(), featureIndexingSupportRegistry,
+                featureSupportRegistry);
     }
-
-    @Override
-    public int getOrder()
-    {
-        return 0;
-    }
-
 }
