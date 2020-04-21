@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -28,8 +27,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactoryImplBase;
+import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 
-@Component("mtasDocumentIndexFactory")
+/**
+ * Support for MTAS-based internal search.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link MtasDocumentIndexAutoConfiguration#mtasDocumentIndexFactory}.
+ * </p>
+ */
 public class MtasDocumentIndexFactory
     extends PhysicalIndexFactoryImplBase
 {
