@@ -218,7 +218,7 @@ public class ImageSidebar
         // Collect all image features
         List<AnnotationFeature> imageFeatures = new ArrayList<>();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(project)) {
-            for (AnnotationFeature feat : annotationService.listAnnotationFeature(layer)) {
+            for (AnnotationFeature feat : annotationService.listSupportedFeatures(layer)) {
                 if (feat.getType().startsWith(ImageFeatureSupport.PREFIX)) {
                     imageFeatures.add(feat);
                 }

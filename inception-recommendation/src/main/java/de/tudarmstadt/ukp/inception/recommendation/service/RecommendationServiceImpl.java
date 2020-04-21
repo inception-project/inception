@@ -1420,7 +1420,7 @@ public class RecommendationServiceImpl
         List<LearningRecord> recordedAnnotations = learningRecordService.listRecords(aUser,
                 aLayer);
 
-        for (AnnotationFeature feature : annoService.listAnnotationFeature(aLayer)) {
+        for (AnnotationFeature feature : annoService.listSupportedFeatures(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());
 
             if (feat == null) {

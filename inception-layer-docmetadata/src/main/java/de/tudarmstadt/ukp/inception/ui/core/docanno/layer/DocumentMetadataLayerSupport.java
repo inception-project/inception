@@ -107,7 +107,7 @@ public class DocumentMetadataLayerSupport
     {
         DocumentMetadataLayerAdapter adapter = new DocumentMetadataLayerAdapter(
             getLayerSupportRegistry(), featureSupportRegistry, eventPublisher, aLayer,
-            () -> schemaService.listAnnotationFeature(aLayer));
+            () -> schemaService.listSupportedFeatures(aLayer));
 
         return adapter;
     }
