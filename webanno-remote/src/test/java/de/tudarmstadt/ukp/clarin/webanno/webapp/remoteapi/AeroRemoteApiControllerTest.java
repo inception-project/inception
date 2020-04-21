@@ -310,7 +310,8 @@ public class AeroRemoteApiControllerTest
         @Bean
         public AnnotationSchemaService annotationService()
         {
-            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), entityManager);
+            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), featureSupportRegistry(),
+                    entityManager);
         }
         
         @Bean

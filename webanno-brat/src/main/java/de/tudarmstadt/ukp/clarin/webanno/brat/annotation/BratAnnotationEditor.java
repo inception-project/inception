@@ -378,7 +378,7 @@ public class BratAnnotationEditor
             AnnotationLayer layer = annotationService.getLayer(layerId);
             if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
                 // parse the action
-                List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+                List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
                 AnnotationFS anno = selectAnnotationByAddr(aCas, paramId.getId());
                 Map<String, Object> functionParams = OnClickActionParser.parse(layer, features,
                         getModelObject().getDocument(), anno);

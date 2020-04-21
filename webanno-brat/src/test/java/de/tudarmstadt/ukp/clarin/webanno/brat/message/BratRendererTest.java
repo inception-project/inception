@@ -135,7 +135,10 @@ public class BratRendererTest
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
         
+        when(schemaService.listSupportedLayers(any())).thenReturn(asList(posLayer));
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
+        when(schemaService.listSupportedFeatures(any(Project.class)))
+                .thenReturn(asList(posFeature));
         when(schemaService.listAnnotationFeature(any(Project.class)))
                 .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {

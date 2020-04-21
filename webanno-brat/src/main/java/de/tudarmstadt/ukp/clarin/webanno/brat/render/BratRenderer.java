@@ -410,7 +410,7 @@ public class BratRenderer
 
         // Look up all the features once to avoid hammering the database in the loop below
         Map<AnnotationLayer, List<AnnotationFeature>> layerToFeatures = aAnnotationService
-                .listAnnotationFeature(aProject).stream()
+                .listSupportedFeatures(aProject).stream()
                 .collect(groupingBy(AnnotationFeature::getLayer));
         
         // Now build the actual configuration

@@ -312,6 +312,10 @@ public class CasMergeTestBase
             throw new IllegalStateException("Unknown layer type: " + type);
         });
         
+        when(schemaService.listSupportedFeatures((any(AnnotationLayer.class))))
+                .thenAnswer(call -> schemaService
+                        .listAnnotationFeature(call.getArgument(0, AnnotationLayer.class)));
+        
         when(schemaService.listAnnotationFeature(any(AnnotationLayer.class))).thenAnswer(call -> { 
             AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
             if (type.getName().equals(Sentence.class.getName())) {

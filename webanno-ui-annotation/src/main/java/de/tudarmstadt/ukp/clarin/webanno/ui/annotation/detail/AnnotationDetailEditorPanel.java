@@ -1278,7 +1278,7 @@ public abstract class AnnotationDetailEditorPanel
         AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
 
         // Populate from feature structure
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
+        for (AnnotationFeature feature : annotationService.listSupportedFeatures(aLayer)) {
             if (!feature.isEnabled()) {
                 continue;
             }

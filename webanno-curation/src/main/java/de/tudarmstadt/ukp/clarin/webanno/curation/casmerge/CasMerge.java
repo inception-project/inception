@@ -442,7 +442,7 @@ public class CasMerge
     {
         // Cache the feature list instead of hammering the database
         List<AnnotationFeature> features = featureCache.computeIfAbsent(aAdapter.getLayer(),
-            key -> schemaService.listAnnotationFeature(key));
+            key -> schemaService.listSupportedFeatures(key));
         for (AnnotationFeature feature : features) {
             Type sourceFsType = aAdapter.getAnnotationType(aSourceFs.getCAS());
             Feature sourceFeature = sourceFsType.getFeatureByBaseName(feature.getName());
