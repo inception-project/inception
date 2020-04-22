@@ -23,7 +23,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerType;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -52,10 +51,10 @@ public class DocumentMetadataLayerSupportAutoConfiguration
     @Bean
     public DocumentMetadataLayerSupport documentMetadataLayerSupport(
             FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
+            ApplicationEventPublisher aEventPublisher,
             DocumentMetadataLayerSupportProperties aProperties)
     {
         return new DocumentMetadataLayerSupport(aFeatureSupportRegistry, aEventPublisher,
-                aSchemaService, aProperties);
+                aProperties);
     }
 }
