@@ -24,12 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -63,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
@@ -78,9 +76,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.PartOfSpeechLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -88,6 +83,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -130,7 +128,6 @@ public class MtasDocumentIndexTest
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
-    private @Autowired AnnotationSchemaService annotationSchemaService;
 
     @Rule
     public TestWatcher watcher = new TestWatcher()
@@ -154,7 +151,7 @@ public class MtasDocumentIndexTest
     private void createProject(Project aProject) throws Exception
     {
         projectService.createProject(aProject);
-        annotationSchemaService.initializeProject(aProject);
+        projectService.initializeProject(aProject);
     }
 
     @SafeVarargs
@@ -470,24 +467,10 @@ public class MtasDocumentIndexTest
     @Configuration
     public static class TestContext
     {
-        @Autowired
-        ApplicationEventPublisher applicationEventPublisher;
-
-        private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
-        private final File temporaryFolder;
+        private @Autowired ApplicationEventPublisher applicationEventPublisher;
+        private @Autowired EntityManager entityManager;
 
         @Rule TemporaryFolder folder;
-        
-        public TestContext()
-        {
-            try {
-                FileUtils.deleteDirectory(new File(temporaryFolderPath));
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            temporaryFolder = new File(temporaryFolderPath);
-        }
         
         @Bean
         public ProjectService projectService()
@@ -508,28 +491,12 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public StringFeatureSupport stringFeatureSupport()
+        public FeatureSupportRegistry featureSupportRegistry()
         {
-            return new StringFeatureSupport();
-        }
-
-        @Bean
-        public BooleanFeatureSupport booleanFeatureSupport()
-        {
-            return new BooleanFeatureSupport();
-        }
-
-        @Bean
-        public NumberFeatureSupport numberFeatureSupport()
-        {
-            return new NumberFeatureSupport();
-        }
-
-        @Bean
-        public FeatureSupportRegistry featureSupportRegistry(
-                @Lazy @Autowired List<FeatureSupport> aFeatureSupports)
-        {
-            return new FeatureSupportRegistryImpl(aFeatureSupports);
+            return new FeatureSupportRegistryImpl(asList(
+                    new NumberFeatureSupport(),
+                    new BooleanFeatureSupport(), 
+                    new StringFeatureSupport()));
         }
 
         @Bean
@@ -607,13 +574,14 @@ public class MtasDocumentIndexTest
         {
             return new DocumentServiceImpl(repositoryProperties(), userRepository(),
                     casStorageService(), importExportService(), projectService(),
-                    applicationEventPublisher);
+                    applicationEventPublisher, entityManager);
         }
 
         @Bean
         public AnnotationSchemaService annotationSchemaService()
         {
-            return new AnnotationSchemaServiceImpl();
+            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), featureSupportRegistry(),
+                    entityManager);
         }
 
         @Bean
@@ -662,16 +630,14 @@ public class MtasDocumentIndexTest
         }
         
         @Bean
-        public LayerSupportRegistry layerSupportRegistry(
-                @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
+        public LayerSupportRegistry layerSupportRegistry()
         {
+            FeatureSupportRegistry fsr = featureSupportRegistry();
+            
             return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService(),
-                            null),
-                    new RelationLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService(), null),
-                    new ChainLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService(), null)));
+                    new SpanLayerSupport(fsr, null, null),
+                    new RelationLayerSupport(fsr, null, null),
+                    new ChainLayerSupport(fsr, null, null)));
         }
     }
 }
