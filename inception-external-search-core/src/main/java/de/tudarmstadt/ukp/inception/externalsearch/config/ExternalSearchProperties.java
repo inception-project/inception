@@ -22,7 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties("inception.external-search")
+@ConfigurationProperties("external-search")
 public class ExternalSearchProperties
 {
     private boolean enabled = false;

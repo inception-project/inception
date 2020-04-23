@@ -18,18 +18,21 @@
 package de.tudarmstadt.ukp.inception.htmleditor;
 
 import org.apache.wicket.model.IModel;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
 
-@Component("htmlEditor")
-@ConditionalOnProperty(prefix = "ui.html", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+/**
+ * Support for HTML-oriented editor component.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlAnnotationEditorFactory()}.
+ * </p>
+ */
 public class HtmlAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {

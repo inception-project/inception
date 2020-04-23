@@ -125,11 +125,6 @@ public class ConceptFeatureIndexingSupportTest
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
-        when(annotationSchemaService.listAnnotationFeature(any(AnnotationLayer.class)))
-                .thenReturn(asList(
-                        new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
-                        new AnnotationFeature(2l, layer, "identifier", "kb:<ANY>")));
-        
         when(kbService.readInstance(any(Project.class), any(String.class))).thenReturn(
                 Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
         
@@ -146,8 +141,10 @@ public class ConceptFeatureIndexingSupportTest
         when(kbService.getParentConceptList(any(KnowledgeBase.class), any(String.class),
                 any(Boolean.class))).thenReturn(dummyValue);
 
-        MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
-                featureIndexingSupportRegistry);
+        MtasUimaParser sut = new MtasUimaParser(
+                asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
+                        new AnnotationFeature(2l, layer, "identifier", "kb:<ANY>")),
+                annotationSchemaService, featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         MtasUtils.print(tc);
         

@@ -17,6 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
+import static de.tudarmstadt.ukp.inception.kb.SchemaProfile.CUSTOMSCHEMA;
+import static de.tudarmstadt.ukp.inception.kb.SchemaProfile.WIKIDATASCHEMA;
+import static de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators.IRI_VALIDATOR;
+import static java.util.Arrays.asList;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,13 +44,11 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
-import de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators;
 
 public class KnowledgeBaseIriPanel
     extends Panel
@@ -62,7 +68,9 @@ public class KnowledgeBaseIriPanel
 
         kbModel = aModel;
 
-        add(selectReificationStrategy("reification", "kb.reification"));
+        DropDownChoice<Reification> reificationChoice = selectReificationStrategy("reification",
+                "kb.reification");
+        add(reificationChoice);
 
         // The Kendo comboboxes do not redraw properly when added directly to an
         // AjaxRequestTarget (for each combobox, a text field and a dropdown will be shown).
@@ -130,7 +138,7 @@ public class KnowledgeBaseIriPanel
                 propertyDescriptionField
                     .setModelObject(profile.getPropertyDescriptionIri().stringValue());
             }
-            _target.add(comboBoxWrapper, iriSchemaChoice);
+            _target.add(comboBoxWrapper, iriSchemaChoice, reificationChoice);
         }));
         comboBoxWrapper.add(iriSchemaChoice);
     }
@@ -151,11 +159,10 @@ public class KnowledgeBaseIriPanel
                     null) );
 
         ComboBox<String> comboBox = new ComboBox<>(id, adapter, choices);
-        comboBox.add(LambdaBehavior.enabledWhen(() -> 
-                SchemaProfile.CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject())));
+        comboBox.add(enabledWhen(() -> CUSTOMSCHEMA.equals(selectedSchemaProfile.getObject())));
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
-        comboBox.add(Validators.IRI_VALIDATOR);
+        comboBox.add(IRI_VALIDATOR);
         // Do nothing just update the model values
         comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         return comboBox;
@@ -163,11 +170,19 @@ public class KnowledgeBaseIriPanel
 
     private DropDownChoice<Reification> selectReificationStrategy(String id, String property)
     {
-        final List<Reification> reificationList = Arrays.asList(Reification.values());
-
         DropDownChoice<Reification> reificationDropDownChoice = new BootstrapSelect<>(id,
-            kbModel.bind(property), reificationList);
+            kbModel.bind(property), asList(Reification.values()));
         reificationDropDownChoice.setRequired(true);
+        reificationDropDownChoice.setOutputMarkupPlaceholderTag(true);
+        
+        // The current reification implementation only really does something useful when the
+        // Wikidata schema is used on the actual Wikidata knowledge base (or a mirror). 
+        // Thus, we enable the option to activate reification only in this case.
+        reificationDropDownChoice.add(visibleWhen(() -> 
+                WIKIDATASCHEMA.equals(selectedSchemaProfile.getObject()) &&
+                kbModel.getObject().getKb().isReadOnly() &&
+                REMOTE.equals(kbModel.getObject().getKb().getType())));
+        
         return reificationDropDownChoice;
     }
 }

@@ -110,7 +110,7 @@ public class SearchResultsProvider
                     annotationLayer, annotationFeature);
             return totalResults;
         }
-        catch (ExecutionException e) {
+        catch (IOException | ExecutionException e) {
             LOG.error("Unable to retrieve results", e);
             return 0;
         }

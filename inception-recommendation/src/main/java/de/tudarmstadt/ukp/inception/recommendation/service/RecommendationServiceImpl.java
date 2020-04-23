@@ -46,7 +46,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -81,7 +80,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -125,6 +123,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderState;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
@@ -139,8 +138,11 @@ import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 
 /**
  * The implementation of the RecommendationService.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationService}.
+ * </p>
  */
-@Component(RecommendationService.SERVICE_NAME)
 public class RecommendationServiceImpl
     implements RecommendationService
 {
@@ -148,7 +150,7 @@ public class RecommendationServiceImpl
 
     private static final int TRAININGS_PER_SELECTION = 5;
 
-    private @PersistenceContext EntityManager entityManager;
+    private final EntityManager entityManager;
     
     private final SessionRegistry sessionRegistry;
     private final UserDao userRepository;
@@ -185,7 +187,8 @@ public class RecommendationServiceImpl
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, LearningRecordService aLearningRecordService,
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
+            ProjectService aProjectService, EntityManager aEntityManager,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         sessionRegistry = aSessionRegistry;
         userRepository = aUserRepository;
@@ -195,6 +198,7 @@ public class RecommendationServiceImpl
         documentService = aDocumentService;
         learningRecordService = aLearningRecordService;
         projectService = aProjectService;
+        entityManager = aEntityManager;
         applicationEventPublisher = aApplicationEventPublisher;
         
         trainingTaskCounter = new ConcurrentHashMap<>();
@@ -209,16 +213,12 @@ public class RecommendationServiceImpl
     {
         this(aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry, aSchedulingService,
                 aAnnoService, aDocumentService, aLearningRecordService, (ProjectService) null,
-                null);
-        
-        entityManager = aEntityManager;
+                aEntityManager, null);
     }
 
     public RecommendationServiceImpl(EntityManager aEntityManager)
     {
-        this(null, null, null, null, null, null, null, (ProjectService) null, null);
-
-        entityManager = aEntityManager;
+        this(null, null, null, null, null, null, null, (ProjectService) null, aEntityManager, null);
     }
 
     @Override
@@ -1487,10 +1487,56 @@ public class RecommendationServiceImpl
                     for (AnnotationFS annotation : annotations.get(oi.getB())) {
                         String label = annotation.getFeatureValueAsString(feat);
                         for (AnnotationSuggestion suggestion : group) {
-                            if (!aLayer.isAllowStacking()
-                                    || (label != null && label.equals(suggestion.getLabel()))
-                                    || suggestion.getLabel() == null) {
-                                suggestion.hide(FLAG_OVERLAP);
+                            // The suggestion would just create an annotation and not set any 
+                            // feature
+                            if (suggestion.getLabel() == null) {
+                                // If there is already an annotation, then we hide any suggestions
+                                // that would just trigger the creation of the same annotation and
+                                // not set any new feature. This applies whether stacking is allowed
+                                // or not.
+                                if (
+                                        suggestion.getBegin() == annotation.getBegin() &&
+                                        suggestion.getEnd() == annotation.getEnd()
+                                ) {
+                                    suggestion.hide(FLAG_OVERLAP);
+                                    continue;
+                                }
+                                
+                                // If stacking is enabled, we do allow suggestions that create an
+                                // annotation with no label, but only if the offsets differ
+                                if (
+                                        aLayer.isAllowStacking() &&
+                                        (suggestion.getBegin() != annotation.getBegin() ||
+                                        suggestion.getEnd() != annotation.getEnd())
+                                ) {
+                                    suggestion.hide(FLAG_OVERLAP);
+                                    continue;
+                                }
+                            }
+                            // The suggestion would merge the suggested feature value into an
+                            // existing annotation or create a new annotation with the feature if
+                            // stacking were enabled.
+                            else {
+                                // Is the feature still unset in the current annotation - i.e. would
+                                // accepting the suggestion merge the feature into it? If yes, we do
+                                // not hide
+                                if (label == null ) {
+                                    continue;
+                                }
+                                
+                                // Does the suggested label match the label of an existing
+                                // annotation, then we hide
+                                if (label.equals(suggestion.getLabel())) {
+                                    suggestion.hide(FLAG_OVERLAP);
+                                    continue;
+                                }
+
+                                // Would accepting the suggestion create a new annotation but
+                                // stacking is not enabled - then we need to hide
+                                if (!aLayer.isAllowStacking()) {
+                                    suggestion.hide(FLAG_OVERLAP);
+                                    continue;
+                                }
                             }
                         }
                     }

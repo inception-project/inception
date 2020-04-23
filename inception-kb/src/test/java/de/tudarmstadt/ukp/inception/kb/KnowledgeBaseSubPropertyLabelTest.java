@@ -41,9 +41,11 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,7 +64,6 @@ import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
-@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
 public class KnowledgeBaseSubPropertyLabelTest
@@ -270,5 +271,16 @@ public class KnowledgeBaseSubPropertyLabelTest
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
         return KnowledgeBaseProfile.readKnowledgeBaseProfiles();
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration 
+    @EntityScan(
+            basePackages = {
+                "de.tudarmstadt.ukp.inception.kb.model",
+                "de.tudarmstadt.ukp.clarin.webanno.model"
+    })
+    public static class SpringConfig {
+        // No content
     }
 }

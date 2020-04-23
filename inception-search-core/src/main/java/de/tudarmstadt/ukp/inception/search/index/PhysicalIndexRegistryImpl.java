@@ -30,9 +30,15 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
-@Component
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link SearchServiceAutoConfiguration#physicalIndexRegistry}.
+ * </p>
+ */
 public class PhysicalIndexRegistryImpl
     implements PhysicalIndexRegistry, BeanPostProcessor
 {
