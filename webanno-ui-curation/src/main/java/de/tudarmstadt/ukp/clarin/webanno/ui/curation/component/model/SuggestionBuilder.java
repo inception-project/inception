@@ -29,17 +29,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceState.AGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SentenceState.DISAGREE;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
@@ -96,11 +93,8 @@ public class SuggestionBuilder
     private final UserDao userRepository;
     private final CasStorageService casStorageService;
 
-    private int diffRangeBegin, diffRangeEnd;
-    private boolean firstload = true;
-    public static Map<Integer, Set<Integer>> crossSentenceLists;
-    //
-    Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
+    private int diffRangeBegin;
+    private int diffRangeEnd;
 
     public SuggestionBuilder(CasStorageService aCasStorageService,
             DocumentService aDocumentService,
@@ -171,16 +165,6 @@ public class SuggestionBuilder
 
         List<DiffAdapter> adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
 
-        // for cross-sentences annotation, update the end of the segment
-        if (firstload) {
-            long start = System.currentTimeMillis();
-            log.debug("Updating cross sentence annotation list...");
-            updateCrossSentAnnoList(segmentBeginEnd, segmentNumber, casses, adapters);
-            firstload = false;
-            log.debug("Cross sentence annotation list complete in {}ms",
-                    (System.currentTimeMillis() - start));
-        }
-
         long diffStart = System.currentTimeMillis();
         log.debug("Calculating differences...");
         int count = 0;
@@ -238,78 +222,6 @@ public class SuggestionBuilder
                 (System.currentTimeMillis() - diffStart));
 
         return curationContainer;
-    }
-
-    private void updateCrossSentAnnoList(Map<Integer, Integer> aSegmentBeginEnd,
-            Map<Integer, Integer> aSegmentNumber, Map<String, CAS> aCases,
-            Iterable<DiffAdapter> aAdapters)
-    {
-        // FIXME Remove this side-effect and instead return this hashmap
-        crossSentenceLists = new HashMap<>();
-
-        // Extract the sentences for all the CASes
-        Map<CAS, List<AnnotationFS>> idxSentences = new HashMap<>();
-        for (CAS c : aCases.values()) {
-            Type sentenceType = getType(c, Sentence.class);
-            idxSentences.put(c, new ArrayList<>(select(c, sentenceType)));
-        }
-
-        Set<Integer> sentenceBegins = aSegmentBeginEnd.keySet();
-        int count = 0;
-        for (int sentBegin : sentenceBegins) {
-            count++;
-
-            if (count % 100 == 0) {
-                log.debug("Updating cross-sentence annoations: {} of {} sentences...", count,
-                        sentenceBegins.size());
-            }
-
-            int sentEnd = aSegmentBeginEnd.get(sentBegin);
-            int currentSentenceNumber = -1;
-
-            Set<Integer> crossSents = new HashSet<>();
-
-            for (DiffAdapter adapter : aAdapters) {
-                for (CAS c : aCases.values()) {
-                    Type t = getType(c, adapter.getType());
-                    
-                    // Determine sentence number for the current segment begin. This takes quite
-                    // a while, so we only do it for the first CAS in the batch. Will be the
-                    // same for all others anyway.
-                    if (currentSentenceNumber == -1) {
-                        currentSentenceNumber = aSegmentNumber.get(sentBegin);
-                    }
-
-                    // update cross-sentence annotation lists
-                    for (AnnotationFS fs : selectCovered(c, t, diffRangeBegin, diffRangeEnd)) {
-                        // CASE 1. annotation begins here
-                        if (sentBegin <= fs.getBegin() && fs.getBegin() <= sentEnd) {
-                            if (fs.getEnd() < sentBegin || sentEnd < fs.getEnd()) {
-                                AnnotationFS s = getSentenceByAnnoEnd(idxSentences.get(c),
-                                        fs.getEnd());
-                                int thatSent = idxSentences.get(c).indexOf(s) + 1;
-                                crossSents.add(thatSent);
-                            }
-                        }
-                        // CASE 2. Annotation ends here
-                        else if (sentBegin <= fs.getEnd() && fs.getEnd() <= sentEnd) {
-                            if (fs.getBegin() < sentBegin || sentEnd < fs.getBegin()) {
-                                int thatSent = WebAnnoCasUtil.getSentenceNumber(c, fs.getBegin());
-                                crossSents.add(thatSent);
-                            }
-                        }
-                    }
-
-                    for (AnnotationFS fs : selectCovered(c, t, sentBegin, diffRangeEnd)) {
-                        if (fs.getBegin() <= sentEnd && fs.getEnd() > sentEnd) {
-                            AnnotationFS s = getSentenceByAnnoEnd(idxSentences.get(c), fs.getEnd());
-                            aSegmentBeginEnd.put(sentBegin, s.getEnd());
-                        }
-                    }
-                }
-            }
-            crossSentenceLists.put(currentSentenceNumber, crossSents);
-        }
     }
 
     /**

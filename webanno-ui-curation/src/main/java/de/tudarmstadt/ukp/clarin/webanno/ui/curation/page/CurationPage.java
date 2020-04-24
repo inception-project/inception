@@ -44,7 +44,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Session;
-import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
@@ -150,7 +149,6 @@ public class CurationPage
 
     private WebMarkupContainer sentenceListContainer;
     private WebMarkupContainer sentencesListView;
-    private WebMarkupContainer crossSentAnnoView;
 
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel editor;
@@ -356,47 +354,7 @@ public class CurationPage
         annotationEditor.setOutputMarkupPlaceholderTag(true);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         centerArea.add(annotationEditor);
-    
-        // add container for the list of sentences where annotations exists crossing multiple
-        // sentences outside of the current page
-        crossSentAnnoView = new WebMarkupContainer("crossSentAnnoView");
-        crossSentAnnoView.setOutputMarkupPlaceholderTag(true);
-        centerArea.add(crossSentAnnoView);
-        
-        IModel<List<String>> crossSentenceAnnotations = LoadableDetachableModel.of(
-                this::invisibleCrossSentenceAnnotations);
-        crossSentAnnoList = new ListView<String>("crossSentAnnoList", crossSentenceAnnotations)
-        {
-            private static final long serialVersionUID = 8539162089561432091L;
-    
-            @Override
-            protected void populateItem(ListItem<String> item)
-            {
-                String crossSentAnno = item.getModelObject();
-    
-                // ajax call when clicking on a sentence on the left side
-                final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
-                {
-                    private static final long serialVersionUID = 5803814168152098822L;
-    
-                    @Override
-                    protected void respond(AjaxRequestTarget aTarget)
-                    {
-                        // Expand curation view
-                    }
-                };
-    
-                // add subcomponents to the component
-                item.add(click);
-                item.add(new AjaxLabel("crossAnnoSent", crossSentAnno, click));
-            }
-    
-        };
-        crossSentAnnoView.add(visibleWhen(() -> getModelObject() != null && 
-                getModelObject().getDocument() != null && 
-                !crossSentenceAnnotations.getObject().isEmpty()));
-        crossSentAnnoView.add(crossSentAnnoList);
-
+            
         // add container for sentences panel
         sentenceListContainer = new WebMarkupContainer("sentenceListContainer");
         sentenceListContainer.setOutputMarkupPlaceholderTag(true);
@@ -809,31 +767,6 @@ public class CurationPage
                 }
             }
         }
-    }
-    
-    private List<String> invisibleCrossSentenceAnnotations()
-    {
-        int fSN = getModelObject().getFirstVisibleUnitIndex();
-        int lSN = getModelObject().getLastVisibleUnitIndex();
-
-        List<String> crossSentAnnos = new ArrayList<>();
-        if (SuggestionBuilder.crossSentenceLists != null) {
-            for (int sn : SuggestionBuilder.crossSentenceLists.keySet()) {
-                if (sn >= fSN && sn <= lSN) {
-                    List<Integer> cr = new ArrayList<>();
-                    for (int c : SuggestionBuilder.crossSentenceLists.get(sn)) {
-                        if (c < fSN || c > lSN) {
-                            cr.add(c);
-                        }
-                    }
-                    if (!cr.isEmpty()) {
-                        crossSentAnnos.add(sn + "-->" + cr);
-                    }
-                }
-            }
-        }
-
-        return crossSentAnnos;
     }
     
     public class SentenceLink extends AjaxLink<SourceListView>
