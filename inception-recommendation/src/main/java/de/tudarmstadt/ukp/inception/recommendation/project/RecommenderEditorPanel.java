@@ -432,7 +432,7 @@ public class RecommenderEditorPanel
     {
         if (recommenderModel != null && recommenderModel.getObject().getLayer() != null) {
             return annotationSchemaService
-                    .listAnnotationFeature(recommenderModel.getObject().getLayer())
+                    .listSupportedFeatures(recommenderModel.getObject().getLayer())
                     .stream()
                     .filter(feat -> feat.getType() != null)
                     .collect(Collectors.toList());

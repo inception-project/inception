@@ -116,7 +116,7 @@ public class RecommendationSpanRenderer
                 layer.getProject());
         
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        Map<String, AnnotationFeature> features = aAnnotationService.listAnnotationFeature(layer)
+        Map<String, AnnotationFeature> features = aAnnotationService.listSupportedFeatures(layer)
             .stream().collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
 
         for (SuggestionGroup suggestion : groups) {
