@@ -30,8 +30,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 
 public interface LearningRecordService
 {
-    String SERVICE_NAME = "LearningRecordService";
-
     List<LearningRecord> listRecords(String user, AnnotationLayer layer);
 
     /**

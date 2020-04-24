@@ -36,10 +36,10 @@
 | Java Runtime Environment
 | version 8 or higher
 
-| Apache Tomcat
-| version 8.5 or higher (Servlet API 3.1.0)
+| Apache Tomcat (or compatible)
+| version 9.0 or higher (Servlet API 4.0.0)
 
-| MySQL Server
-| version 5 or higher
+| MySQL Server (or compatible)
+| version 5 or higher 
 |===
 

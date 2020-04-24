@@ -54,6 +54,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -103,6 +104,8 @@ public class ProjectsOverviewPage
     private static final String MID_PROJECT_ARCHIVE_UPLOAD = "projectArchiveUpload";
     private static final String MID_LEAVE_PROJECT = "leaveProject";
     private static final String MID_CONFIRM_LEAVE = "confirmLeave";
+    private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
+    private static final String MID_START_TUTORIAL = "startTutorial";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
@@ -111,23 +114,29 @@ public class ProjectsOverviewPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
-    
+
     private BootstrapFileInputField fileUpload;
     private WebMarkupContainer projectListContainer;
     private WebMarkupContainer roleFilters;
     private IModel<Set<PermissionLevel>> activeRoleFilters;
     private ConfirmationDialog confirmLeaveDialog;
     
+    private Label emptyListLabel;
+    
     public ProjectsOverviewPage()
     {
         add(projectListContainer = createProjectList());
         add(createNewProjectLink());
+        add(createStartTutorialLink());
         add(createImportProjectForm());
         add(roleFilters = createRoleFilters());
         add(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
                 new StringResourceModel("leaveDialog.title", this),
                 new StringResourceModel("leaveDialog.text", this)));
         activeRoleFilters = Model.ofSet(new HashSet<>());
+        
+        emptyListLabel = new Label(MID_EMPTY_LIST_LABEL, new ResourceModel("noProjects"));
+        projectListContainer.add(emptyListLabel);
     }
     
     private LambdaAjaxLink createNewProjectLink()
@@ -141,6 +150,27 @@ public class ProjectsOverviewPage
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
         
         return newProjectLink;
+    }
+    
+    private LambdaAjaxLink createStartTutorialLink()
+    {
+        LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
+                this::startTutorial);
+        startTutorialLink.add(visibleWhen(
+            () -> {
+                User currentUser = userRepository.getCurrentUser();
+                return userRepository.isAdministrator(currentUser) ||
+                        userRepository.isProjectCreator(currentUser);
+            }));
+
+        add(startTutorialLink);
+
+        return startTutorialLink;
+    }
+
+    private void startTutorial(AjaxRequestTarget aTarget)
+    {
+        aTarget.appendJavaScript(" startTutorial(); ");
     }
     
     private Form<Void> createImportProjectForm()
@@ -202,6 +232,10 @@ public class ProjectsOverviewPage
 
                 if (getModelObject().isEmpty()) {
                     warn("There are no projects accessible to you matching the filter criteria.");
+                    emptyListLabel.setVisible(true);
+                }
+                else {
+                    emptyListLabel.setVisible(false);
                 }
             }
         };

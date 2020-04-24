@@ -53,6 +53,7 @@ import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -60,7 +61,9 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 @RunWith(Parameterized.class)
 public class SPARQLQueryBuilderGenericTest
 {
@@ -183,10 +186,10 @@ public class SPARQLQueryBuilderGenericTest
                                 .asHandles(conn, true)
                                 .stream()
                                 .map(KBHandle::getIdentifier)
-                                .map(v -> { 
-                                    System.out.printf("C: %s%n", v); 
-                                    return v;
-                                })
+//                                .map(v -> { 
+//                                    System.out.printf("C: %s%n", v); 
+//                                    return v;
+//                                })
                                 .anyMatch(iri -> rootIdentifiers.contains(iri)));
             }
         });

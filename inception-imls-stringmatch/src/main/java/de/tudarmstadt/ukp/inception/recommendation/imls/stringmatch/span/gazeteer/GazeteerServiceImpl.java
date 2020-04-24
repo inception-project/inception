@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -39,36 +38,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.model.Gazeteer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.model.GazeteerEntry;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link StringMatchingRecommenderAutoConfiguration#gazeteerService}.
+ * </p>
+ */
 public class GazeteerServiceImpl
     implements GazeteerService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
     
     private final RepositoryProperties repositoryProperties;
     
     @Autowired
-    public GazeteerServiceImpl(RepositoryProperties aRepositoryProperties)
-    {
-        repositoryProperties = aRepositoryProperties;
-    }    
-
     public GazeteerServiceImpl(RepositoryProperties aRepositoryProperties,
             EntityManager aEntityManager)
     {
-        this(aRepositoryProperties);
+        repositoryProperties = aRepositoryProperties;
         entityManager = aEntityManager;
     }
     

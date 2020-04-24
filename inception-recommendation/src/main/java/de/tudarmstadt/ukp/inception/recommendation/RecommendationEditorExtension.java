@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -64,6 +63,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
@@ -79,8 +79,11 @@ import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer
  * <li>Intercept user actions on the annotation suggestions, in particular accepting or rejecting
  *     annotatons.</li>
  * </ul>
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationEditorExtension}.
+ * </p>
  */
-@Component(RecommendationEditorExtension.BEAN_NAME)
 public class RecommendationEditorExtension
     extends AnnotationEditorExtensionImplBase
     implements AnnotationEditorExtension
@@ -125,6 +128,15 @@ public class RecommendationEditorExtension
             AjaxRequestTarget aTarget, CAS aCas, VID aVID, String aAction)
         throws IOException, AnnotationException
     {
+        // only process actions relevant to recommendation
+        if (!aVID.getExtensionId().equals(BEAN_NAME)) {
+            return;
+        }
+        VID vid = VID.parse(aVID.getExtensionPayload());
+        VID extendedVID = new VID(aVID.getExtensionId(), vid.getLayerId(), vid.getId(), 
+                vid.getSubId(), vid.getAttribute(), vid.getSlot(), aVID.getExtensionPayload());
+
+        // Create annotation
         if (SpanAnnotationResponse.is(aAction)) {
             actionAcceptSpanRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         } else if (ArcAnnotationResponse.is(aAction)) {
@@ -153,12 +165,15 @@ public class RecommendationEditorExtension
         SourceDocument document = aState.getDocument();
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<SpanSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
+        VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+        Optional<SpanSuggestion> prediction = predictions
+                .getPredictionByVID(document, recommendationVid)
                 .filter(f -> f instanceof SpanSuggestion)
                 .map(f -> (SpanSuggestion) f);
 
         if (!prediction.isPresent()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            log.error("Could not find annotation in [{}] with id [{}]", document, 
+                    recommendationVid);
             aTarget.getPage().error("Could not find annotation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;
@@ -184,7 +199,7 @@ public class RecommendationEditorExtension
         learningRecordService.logRecord(document, aState.getUser().getUsername(),
                 suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
 
-        acceptRecommendation(suggestion, aState, aTarget, aCas, aVID, address);
+        acceptRecommendation(suggestion, aState, aTarget, aCas, recommendationVid, address);
     }
 
     private void actionAcceptRelationRecommendation(AnnotationActionHandler aActionHandler,
@@ -195,7 +210,9 @@ public class RecommendationEditorExtension
 
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<RelationSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
+        VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+        Optional<RelationSuggestion> prediction = predictions
+                .getPredictionByVID(document, recommendationVid)
                 .filter(f -> f instanceof RelationSuggestion)
                 .map(f -> (RelationSuggestion) f);
 
@@ -226,7 +243,7 @@ public class RecommendationEditorExtension
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // TODO: Log the action to the learning record
-        acceptRecommendation(suggestion, aState, aTarget, aCas, aVID, address);
+        acceptRecommendation(suggestion, aState, aTarget, aCas, recommendationVid, address);
     }
 
     private void acceptRecommendation(AnnotationSuggestion aSuggestion,
@@ -269,10 +286,13 @@ public class RecommendationEditorExtension
                 aState.getProject());
         
         SourceDocument document = aState.getDocument();
-        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID);
+        VID recommendationVID = VID.parse(aVID.getExtensionPayload());
+        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, 
+                recommendationVID);
         
         if (!oPrediction.isPresent()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            log.error("Could not find annotation in [{}] with id [{}]", document, 
+                    recommendationVID);
             aTarget.getPage().error("Could not find annotation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;
@@ -280,9 +300,8 @@ public class RecommendationEditorExtension
 
         AnnotationSuggestion suggestion = oPrediction.get();
 
-        VID extensionVID = VID.parse(aVID.getExtensionPayload());
-        Recommender recommender = recommendationService.getRecommender(extensionVID.getId());
-        AnnotationLayer layer = annotationService.getLayer(extensionVID.getLayerId());
+        Recommender recommender = recommendationService.getRecommender(recommendationVID.getId());
+        AnnotationLayer layer = annotationService.getLayer(recommendationVID.getLayerId());
         AnnotationFeature feature = recommender.getFeature();
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
@@ -347,4 +366,5 @@ public class RecommendationEditorExtension
                 recommendationService, learningRecordService, fsRegistry, documentService,
                 aWindowBeginOffset, aWindowEndOffset);
     }
+
 }

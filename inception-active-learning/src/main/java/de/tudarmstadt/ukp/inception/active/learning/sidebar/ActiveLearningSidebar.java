@@ -203,8 +203,9 @@ public class ActiveLearningSidebar
         // Set up the AL state in the page if it is not already there or if for some reason the
         // suggestions have completely disappeared (e.g. after a system restart)
         AnnotatorState state = getModelObject();
-        Predictions predictions = recommendationService.getPredictions(state.getUser(),
-                state.getProject());
+        Predictions predictions = state.getProject() != null
+                ? recommendationService.getPredictions(state.getUser(), state.getProject())
+                : null;
         if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null || predictions == null) {
             ActiveLearningUserState alState = new ActiveLearningUserState();
             alState.setStrategy(new UncertaintySamplingStrategy());

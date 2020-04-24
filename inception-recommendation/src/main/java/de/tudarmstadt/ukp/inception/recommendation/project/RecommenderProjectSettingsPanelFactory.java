@@ -20,12 +20,17 @@ package de.tudarmstadt.ukp.inception.recommendation.project;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommenderProjectSettingsPanelFactory}.
+ * </p>
+ */
 @Order(400)
 public class RecommenderProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory

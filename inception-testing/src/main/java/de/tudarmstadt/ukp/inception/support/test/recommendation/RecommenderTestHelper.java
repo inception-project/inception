@@ -59,8 +59,8 @@ public class RecommenderTestHelper
                 TYPE_NAME_STRING);
         typeDescription.addFeature(FEATURE_NAME_IS_PREDICTION, "Is prediction", TYPE_NAME_BOOLEAN);
 
-        AnnotationSchemaService annotationSchemaService = new AnnotationSchemaServiceImpl();
-        annotationSchemaService.upgradeCas(aCas, tsd);
+        AnnotationSchemaService schemaService = new AnnotationSchemaServiceImpl(null, null);
+        schemaService.upgradeCas(aCas, tsd);
     }
 
     public static <T extends Annotation> void addScoreFeature(CAS aCas, Class<T> aClass,

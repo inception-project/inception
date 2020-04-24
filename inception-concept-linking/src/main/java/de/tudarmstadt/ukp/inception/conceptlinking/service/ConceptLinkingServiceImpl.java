@@ -51,11 +51,12 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.ranking.BaselineRankingStrategy;
@@ -68,7 +69,12 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryPrimaryConditions;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link EntityLinkingServiceAutoConfiguration#conceptLinkingService}.
+ * </p>
+ */
 public class ConceptLinkingServiceImpl
     implements InitializingBean, ConceptLinkingService
 {
@@ -85,7 +91,7 @@ public class ConceptLinkingServiceImpl
     
     @Autowired
     public ConceptLinkingServiceImpl(KnowledgeBaseService aKbService,
-            EntityLinkingProperties aProperties,
+            EntityLinkingPropertiesImpl aProperties,
             RepositoryProperties aRepoProperties,
             @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> 
                     aFeatureGenerators)
@@ -365,7 +371,7 @@ public class ConceptLinkingServiceImpl
         long startTime = currentTimeMillis();
         
         // Set the feature values
-        List<CandidateEntity> candidates = aCandidates.parallelStream()
+        List<CandidateEntity> candidates = aCandidates.stream()
                 .map(CandidateEntity::new)
                 .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBegin))
                 .map(candidate -> {
@@ -386,7 +392,6 @@ public class ConceptLinkingServiceImpl
                     handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
                     return handle;
                 })
-                .limit(properties.getCandidateDisplayLimit())
                 .collect(Collectors.toList());
         
         int rank = 1;

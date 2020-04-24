@@ -30,15 +30,16 @@ import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,10 +57,14 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 
-@ContextConfiguration(classes =  SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class KnowledgeBaseServiceImplQualifierIntegrationTest {
+public class KnowledgeBaseServiceImplQualifierIntegrationTest
+{
+    static {
+        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+        System.setProperty("spring.main.banner-mode", "off");
+    }
 
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
@@ -86,12 +91,6 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     private KBHandle conceptHandle;
     private KBHandle propertyHandle;
     private KBStatement statement;
-
-    @BeforeClass
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
 
     @Before
     public void setUp() throws Exception
@@ -323,5 +322,16 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
 
         assertThat(qualifiers)
             .isEmpty();
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration 
+    @EntityScan(
+            basePackages = {
+                "de.tudarmstadt.ukp.inception.kb.model",
+                "de.tudarmstadt.ukp.clarin.webanno.model"
+    })
+    public static class SpringConfig {
+        // No content
     }
 }

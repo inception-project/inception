@@ -67,7 +67,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
@@ -80,7 +79,6 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
 
     private static final String CID_EDITOR = "editor";
     private static final String CID_FEATURE_VALUES = "featureValues";
-    private static final String CID_DELETE = "delete";
 
     public static final String ID_PREFIX = "metaFeatureEditorHead";
     
@@ -117,8 +115,6 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         state = aState;
         
         add(featureList = createFeaturesList());
-        
-        add(new LambdaAjaxLink(CID_DELETE, this::actionDelete));
         
         add(LambdaBehavior.visibleWhen(this::isVisible));
     }
@@ -272,30 +268,6 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             
             // persist changes
             annotationPage.writeEditorCas(cas);
-        }
-        catch (Exception e) {
-            handleException(DocumentMetadataAnnotationDetailPanel.this, aTarget, e);
-        }
-    }
-    
-    private void actionDelete(AjaxRequestTarget aTarget)
-    {
-        try {
-            // Load the boiler-plate
-            CAS cas = jcasProvider.get();
-            FeatureStructure fs = selectFsByAddr(cas, getModelObject().getId());
-            AnnotationLayer layer = annotationService.findLayer(project.getObject(), fs);
-            TypeAdapter adapter = annotationService.getAdapter(layer);
-            
-            // Perform actual actions
-            adapter.delete(sourceDocument.getObject(), username.getObject(), cas, new VID(fs));
-            
-            // persist changes
-            annotationPage.writeEditorCas(cas);
-            
-            aTarget.add(getParent());
-            
-            selectionPanel.actionDelete(aTarget, this);
         }
         catch (Exception e) {
             handleException(DocumentMetadataAnnotationDetailPanel.this, aTarget, e);
