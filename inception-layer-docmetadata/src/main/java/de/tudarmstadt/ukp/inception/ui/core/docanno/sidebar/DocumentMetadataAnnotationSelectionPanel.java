@@ -322,7 +322,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         
         List<AnnotationListItem> items = new ArrayList<>();
         for (AnnotationLayer layer : listMetadataLayers()) {            
-            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
                 () -> annotationService.listAnnotationFeature(layer));
