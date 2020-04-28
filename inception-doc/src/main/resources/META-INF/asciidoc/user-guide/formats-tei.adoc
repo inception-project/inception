@@ -28,7 +28,7 @@ For more details about the supported element types, see the link:https://dkpro.g
 | link:https://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html[TEI P5]
 | yes
 | yes
-| yes
-| UIMA XMI CAS
+| no
+| Lemma, POS (xpos), named entities
 |====
 
