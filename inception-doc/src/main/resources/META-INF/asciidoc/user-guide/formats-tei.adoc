@@ -29,6 +29,6 @@ For more details about the supported element types, see the link:https://dkpro.g
 | yes
 | yes
 | no
-| Lemma, POS (xpos), named entities
+| Lemma, POS (xpos), named entities (value)
 |====
 
