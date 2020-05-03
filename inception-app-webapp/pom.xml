@@ -289,6 +289,10 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-doc</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app.ui.monitoring</groupId>
+      <artifactId>inception-ui-workload-management-and-monitoring</artifactId>
+    </dependency>
 
     <!-- UIMA DEPENDENCIES -->
     <dependency>
@@ -500,6 +504,12 @@
 	    <groupId>org.webjars.bower</groupId>
 	    <artifactId>jquery.scrollTo</artifactId>
 	</dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-ui-workload-management-and-monitoring</artifactId>
+          <version>0.16.0-SNAPSHOT</version>
+          <scope>compile</scope>
+      </dependency>
   </dependencies>
   <build>
     <plugins>

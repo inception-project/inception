@@ -131,6 +131,7 @@
     <!-- Curation -->
     
     <module>inception-curation</module>
+    <module>inception-ui-workload-management-and-monitoring</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -416,6 +417,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mtas</artifactId>
+        <version>0.16.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app.ui.monitoring</groupId>
+        <artifactId>inception-ui-workload-management-and-monitoring</artifactId>
         <version>0.16.0-SNAPSHOT</version>
       </dependency>
 
