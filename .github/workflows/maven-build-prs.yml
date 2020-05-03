@@ -1,9 +1,6 @@
 name: Build Pull Requests
 
-on:
-  push:
-    branches:
-    - pull/**
+on: [pull_request]
 
 jobs:
   build:
