@@ -1,6 +1,10 @@
 name: Java CI
 
-on: [push]
+on:
+	push:
+		branches:
+			- master
+			- 3.6.x
 
 jobs:
   build:
@@ -13,7 +17,7 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 8
-    - name: Build with Maven
+    - name: Build with Maven and publish SNAPSHOT to GitHub packages
       run: mvn --file pom.xml -B -DdeployAtEnd=true -DaltDeploymentRepository=github::https://maven.pkg.github.com/webanno/webanno package org.apache.maven.plugins:maven-deploy-plugin:3.0.0-M1:deploy
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
