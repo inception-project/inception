@@ -1,6 +1,9 @@
-name: Java CI
+name: Build Pull Requests
 
-on: [push]
+on:
+  push:
+    branches:
+    - pull/**
 
 jobs:
   build:
@@ -14,4 +17,4 @@ jobs:
       with:
         java-version: 8
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn --file pom.xml -B package
