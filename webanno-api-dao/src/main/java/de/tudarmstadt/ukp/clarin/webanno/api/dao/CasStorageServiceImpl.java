@@ -57,6 +57,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -366,7 +368,18 @@ public class CasStorageServiceImpl
             boolean aAnalyzeAndRepair, CasUpgradeMode aUpgradeMode, CasProvider aSupplier)
         throws IOException
     {
+        return readOrCreateCas(aDocument, aUsername, aAnalyzeAndRepair, aUpgradeMode, aSupplier,
+                CasAccessMode.EXCLUSIVE_WRITE_ACCESS);
+    }
+
+    public CAS readOrCreateCas(SourceDocument aDocument, String aUsername,
+            boolean aAnalyzeAndRepair, CasUpgradeMode aUpgradeMode, CasProvider aSupplier,
+            CasAccessMode aAccessMode)
+        throws IOException
+    {
         synchronized (lock) {
+            CasStorageSession session = CasStorageSession.get();
+            
             long start = System.currentTimeMillis();
             
             // Check if we have the CAS in the cache
@@ -432,6 +445,8 @@ public class CasStorageServiceImpl
                 log.debug("Loaded CAS [{},{}] from {} in {}ms", aDocument.getId(), aUsername,
                         source, duration);
             }
+            
+            session.add(aDocument, aUsername, aAccessMode, cas);
             
             return cas;
         }
@@ -790,4 +805,5 @@ public class CasStorageServiceImpl
             return true;
         }
     }
+    
 }

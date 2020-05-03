@@ -205,9 +205,14 @@ public class UserDaoImpl
     @Transactional
     public Set<String> getRoles(User aUser)
     {
+        if (aUser == null || aUser.getUsername() == null) {
+            System.out.println(aUser);
+        }            
+        
         // When looking up roles for the user who is currently logged in, then we look in the
         // security context - otherwise we ask the database.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
         Set<String> roles = new HashSet<>();
         if (authentication != null && aUser.getUsername().equals(authentication.getName())) {
             for (GrantedAuthority ga : SecurityContextHolder.getContext().getAuthentication()
