@@ -17,6 +17,6 @@ jobs:
       run: mvn -B package --file pom.xml
     - name: Publish package
       run: mvn -B org.apache.maven.plugins:maven-deploy-plugin:3.0.0-M1:deploy -DaltDeploymentRepository=github::https://maven.pkg.github.com/webanno/webanno
+      working-directory: webanno-webapp
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
