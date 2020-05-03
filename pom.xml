@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>23</version>
+    <version>24</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -56,10 +56,10 @@
   <properties>
     <jackson.version>2.9.10</jackson.version>
     <uima.version>2.10.4</uima.version>
-    <uimafit.version>2.4.0</uimafit.version>
-    <spring.version>5.1.9.RELEASE </spring.version>
+    <uimafit.version>2.5.0</uimafit.version>
+    <spring.version>5.1.15.RELEASE </spring.version>
     <spring.boot.version>1.5.22.RELEASE</spring.boot.version>
-    <spring.security.version>4.2.13.RELEASE</spring.security.version>
+    <spring.security.version>4.2.15.RELEASE</spring.security.version>
     <slf4j.version>1.7.26</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
@@ -78,7 +78,7 @@
     <json.version>20180813</json.version>
     <mockito.version>2.27.0</mockito.version>
     <assertj.version>3.13.2</assertj.version>
-    <tomcat.version>8.5.51</tomcat.version>
+    <tomcat.version>8.5.54</tomcat.version>
   </properties>
   <repositories>
     <repository>
