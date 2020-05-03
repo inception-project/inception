@@ -1,10 +1,10 @@
 name: Java CI
 
 on:
-	push:
-		branches:
-			- master
-			- 3.6.x
+  push:
+    branches:
+    - master
+    - 3.6.x
 
 jobs:
   build:
