@@ -20,14 +20,12 @@ package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-
 import java.util.List;
 
 public class TableMetaData extends AbstractColumn
@@ -41,7 +39,8 @@ public class TableMetaData extends AbstractColumn
 
     private static final long serialVersionUID = 1L;
 
-    public TableMetaData(final DataProvider provider, final int aColumn, List<SourceDocument> documentList)
+    public TableMetaData(final DataProvider provider,
+                         final int aColumn, List<SourceDocument> documentList)
     {
         super(new AbstractReadOnlyModel<String>()
         {
@@ -64,7 +63,8 @@ public class TableMetaData extends AbstractColumn
     public void populateItem(Item aItem, String aID, IModel iModel)
     {
 
-        //Populate items of the table, one column, check which column is called to enter correct data
+        //Populate items of the table, one column, check which column is called
+        //to enter correct data
         if (column == 0)
         {
             aItem.add(new Label(aID, documentList.get(loop).getName()));

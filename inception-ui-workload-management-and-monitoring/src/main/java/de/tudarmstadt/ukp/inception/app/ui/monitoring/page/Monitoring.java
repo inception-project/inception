@@ -28,10 +28,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DataProvider;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.TableMetaData;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.*;
-
-import org.apache.wicket.extensions.markup.html.repeater.data.table.*;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
@@ -39,10 +40,10 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
-import org.wicketstuff.annotation.mount.MountPath;
-
 import javax.persistence.NoResultException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
@@ -84,7 +85,8 @@ public class Monitoring extends ApplicationPageBase
         Optional<Project> currentProject = getProjectFromParameters(projectParameter);
 
         //get Documents for current project
-        List<SourceDocument> documentList = documentService.listSourceDocuments(currentProject.get());
+        List<SourceDocument> documentList = documentService.listSourceDocuments(currentProject.
+            get());
 
         //Headers of the Table
         List<String> headers = new ArrayList<>();
@@ -109,12 +111,11 @@ public class Monitoring extends ApplicationPageBase
 
         //Columns of the table
         List<IColumn<?,?>> columns = new ArrayList<>();
-
-            for (int j = 0; j < dataProvider.getTableHeaders().size(); j++)
-            {
-                //Each column creates TableMetaData
-                columns.add(new TableMetaData(dataProvider, j, documentList));
-            }
+        for (int j = 0; j < dataProvider.getTableHeaders().size(); j++)
+        {
+            //Each column creates TableMetaData
+            columns.add(new TableMetaData(dataProvider, j, documentList));
+        }
 
         //The DefaultDataTable
         table = new DefaultDataTable("dataTable", columns, dataProvider, 10);

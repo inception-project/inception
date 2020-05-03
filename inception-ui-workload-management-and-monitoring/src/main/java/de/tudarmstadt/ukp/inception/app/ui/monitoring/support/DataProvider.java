@@ -19,12 +19,16 @@
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
-import org.apache.wicket.model.*;
-
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 
 public class DataProvider extends SortableDataProvider<List<String>, Object>
 {
@@ -94,8 +98,10 @@ public class DataProvider extends SortableDataProvider<List<String>, Object>
         //TODO sorting
         public int compare(final SourceDocument aDoc1, final SourceDocument aDoc2)
         {
-            PropertyModel<Comparable> model1 = new PropertyModel<Comparable>(aDoc1, getSort().getProperty().toString());
-            PropertyModel<Comparable> model2 = new PropertyModel<Comparable>(aDoc2, getSort().getProperty().toString());
+            PropertyModel<Comparable> model1 = new PropertyModel<Comparable>(aDoc1, getSort().
+                getProperty().toString());
+            PropertyModel<Comparable> model2 = new PropertyModel<Comparable>(aDoc2, getSort().
+                getProperty().toString());
 
             int result = model1.getObject().compareTo(model2.getObject());
 
