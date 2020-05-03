@@ -30,33 +30,39 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 
 public interface PhysicalIndex
 {
-    public boolean connect(String aUrl, String aUser, String aPassword);
-
-    void createPhysicalIndex();
-
-    void dropPhysicalIndex() throws IOException;
-
-    void openPhysicalIndex();
-
-    void closePhysicalIndex();
-
+    /**
+     * @return if whether the index has data that can be deleted, e.g. index files on disk.
+     */
     boolean isCreated();
 
+    /**
+     * Deletes the index data, e.g. by removing the index files from disk. If necessary, the index
+     * is closed before.
+     */
+    void delete() throws IOException;
+
     boolean isOpen();
+
+    void close();
 
     Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest)
             throws IOException, ExecutionException;
 
-    public void indexDocument(SourceDocument aDocument, byte[] aBinaryCas) throws IOException;
+    long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
+        throws IOException, ExecutionException;
+    
+    void indexDocument(SourceDocument aDocument, byte[] aBinaryCas) throws IOException;
 
-    public void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
+    void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
 
-    public void deindexDocument(SourceDocument aDocument) throws IOException;
+    void deindexDocument(SourceDocument aDocument) throws IOException;
 
-    public void deindexDocument(AnnotationDocument aDocument) throws IOException;
+    void deindexDocument(AnnotationDocument aDocument) throws IOException;
 
-    public void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException;
+    void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException;
 
+    void clear() throws IOException;
+    
     /**
      * Retrieve the timestamp of this annotation document
      * @param aDocument
@@ -66,6 +72,4 @@ public interface PhysicalIndex
      * @throws IOException
      */
     public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException;
-
-    long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest) throws ExecutionException;
 }

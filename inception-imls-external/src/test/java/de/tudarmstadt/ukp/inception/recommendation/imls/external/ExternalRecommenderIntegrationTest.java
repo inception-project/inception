@@ -26,9 +26,11 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -111,10 +113,12 @@ public class ExternalRecommenderIntegrationTest
     }
 
     @Test
-    public void thatTrainingWorks()
+    public void thatTrainingWorks() throws Exception
     {
+        List<CAS> data = loadDevelopmentData();
+        
         assertThatCode(() ->
-            sut.train(context, loadDevelopmentData())
+            sut.train(context, data)
         ).doesNotThrowAnyException();
     }
 
@@ -187,14 +191,21 @@ public class ExternalRecommenderIntegrationTest
 
     private List<CAS> loadDevelopmentData() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
-
-        for (int i = 0; i < data.size(); i++) {
-            CAS cas = data.get(i);
-            addCasMetadata(cas.getJCas(), i);
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+    
+            for (int i = 0; i < data.size(); i++) {
+                CAS cas = data.get(i);
+                addCasMetadata(cas.getJCas(), i);
+            }
+            return data;
         }
-        return data;
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException

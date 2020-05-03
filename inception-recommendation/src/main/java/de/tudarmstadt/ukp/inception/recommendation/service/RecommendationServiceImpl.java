@@ -46,7 +46,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -81,7 +80,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -125,6 +123,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
@@ -136,8 +135,11 @@ import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * The implementation of the RecommendationService.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationService}.
+ * </p>
  */
-@Component(RecommendationService.SERVICE_NAME)
 public class RecommendationServiceImpl
     implements RecommendationService
 {
@@ -145,7 +147,7 @@ public class RecommendationServiceImpl
 
     private static final int TRAININGS_PER_SELECTION = 5;
 
-    private @PersistenceContext EntityManager entityManager;
+    private final EntityManager entityManager;
     
     private final SessionRegistry sessionRegistry;
     private final UserDao userRepository;
@@ -180,7 +182,8 @@ public class RecommendationServiceImpl
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, LearningRecordService aLearningRecordService,
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
+            ProjectService aProjectService, EntityManager aEntityManager,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         sessionRegistry = aSessionRegistry;
         userRepository = aUserRepository;
@@ -190,6 +193,7 @@ public class RecommendationServiceImpl
         documentService = aDocumentService;
         learningRecordService = aLearningRecordService;
         projectService = aProjectService;
+        entityManager = aEntityManager;
         applicationEventPublisher = aApplicationEventPublisher;
         
         trainingTaskCounter = new ConcurrentHashMap<>();
@@ -204,16 +208,12 @@ public class RecommendationServiceImpl
     {
         this(aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry, aSchedulingService,
                 aAnnoService, aDocumentService, aLearningRecordService, (ProjectService) null,
-                null);
-        
-        entityManager = aEntityManager;
+                aEntityManager, null);
     }
 
     public RecommendationServiceImpl(EntityManager aEntityManager)
     {
-        this(null, null, null, null, null, null, null, (ProjectService) null, null);
-
-        entityManager = aEntityManager;
+        this(null, null, null, null, null, null, null, (ProjectService) null, aEntityManager, null);
     }
 
     @Override
@@ -1420,7 +1420,7 @@ public class RecommendationServiceImpl
         List<LearningRecord> recordedAnnotations = learningRecordService.listRecords(aUser,
                 aLayer);
 
-        for (AnnotationFeature feature : annoService.listAnnotationFeature(aLayer)) {
+        for (AnnotationFeature feature : annoService.listSupportedFeatures(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());
 
             if (feat == null) {

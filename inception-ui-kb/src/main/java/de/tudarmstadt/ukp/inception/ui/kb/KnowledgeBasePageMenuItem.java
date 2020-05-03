@@ -21,7 +21,6 @@ import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -31,14 +30,30 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#knowledgeBasePageMenuItem}.
+ * </p>
+ */
 @Order(220)
-public class KnowledgeBasePageMenuItem implements MenuItem
+public class KnowledgeBasePageMenuItem
+    implements MenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired KnowledgeBaseService kbService;
+    private final UserDao userRepo;
+    private final ProjectService projectService;
+    private final KnowledgeBaseService kbService;
+    
+    @Autowired
+    public KnowledgeBasePageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+            KnowledgeBaseService aKbService)
+    {
+        userRepo = aUserRepo;
+        projectService = aProjectService;
+        kbService = aKbService;
+    }
     
     @Override
     public String getPath()

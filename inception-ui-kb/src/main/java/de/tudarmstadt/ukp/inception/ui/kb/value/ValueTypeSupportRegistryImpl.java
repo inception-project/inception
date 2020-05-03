@@ -34,12 +34,17 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#valueTypeSupportRegistry}.
+ * </p>
+ */
 public class ValueTypeSupportRegistryImpl
     implements ValueTypeSupportRegistry
 {

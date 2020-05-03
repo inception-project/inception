@@ -113,7 +113,7 @@ public class MtasUimaParserTest
         // Only tokens and sentences here, no extra layers
         when(annotationSchemaService.listAnnotationLayer(project)).thenReturn(asList());
         
-        MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
+        MtasUimaParser sut = new MtasUimaParser(asList(), annotationSchemaService,
                 featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         
@@ -158,13 +158,10 @@ public class MtasUimaParserTest
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
-        when(annotationSchemaService.listAnnotationFeature(any(AnnotationLayer.class)))
-                .thenReturn(asList(
-                        new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
-                        new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)));
-        
-        MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
-                featureIndexingSupportRegistry);
+        MtasUimaParser sut = new MtasUimaParser(
+                asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
+                        new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)),
+                annotationSchemaService, featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         
         MtasUtils.print(tc);
@@ -198,12 +195,11 @@ public class MtasUimaParserTest
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
-        when(annotationSchemaService.listAnnotationFeature(any(AnnotationLayer.class)))
-                .thenReturn(asList(
-                        new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
-                        new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)));
-        
-        MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
+        MtasUimaParser sut = new MtasUimaParser(asList(
+                new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
+                new AnnotationFeature(2l, layer, "identifier",
+                        CAS.TYPE_NAME_STRING)),
+                annotationSchemaService,
                 featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         
@@ -271,15 +267,6 @@ public class MtasUimaParserTest
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(tokenLayer, posLayer, depLayer));
 
-        when(annotationSchemaService.listAnnotationFeature(tokenLayer))
-                .thenReturn(asList(tokenLayerPos));
-
-        when(annotationSchemaService.listAnnotationFeature(posLayer))
-                .thenReturn(asList(posLayerValue));
-
-        when(annotationSchemaService.listAnnotationFeature(depLayer))
-                .thenReturn(asList(dependencyLayerGovernor, dependencyLayerDependent));
-
         when(annotationSchemaService.getAdapter(posLayer)).thenReturn(new SpanAdapter(
             layerSupportRegistry, featureSupportRegistry, null, posLayer, 
             () -> asList(posLayerValue), null));
@@ -291,8 +278,10 @@ public class MtasUimaParserTest
                     () -> asList(dependencyLayerGovernor, dependencyLayerDependent),
                     emptyList()));
 
-        MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
-                featureIndexingSupportRegistry);
+        MtasUimaParser sut = new MtasUimaParser(
+                asList(tokenLayerPos, posLayerValue, dependencyLayerGovernor,
+                        dependencyLayerDependent),
+                annotationSchemaService, featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         
         MtasUtils.print(tc);

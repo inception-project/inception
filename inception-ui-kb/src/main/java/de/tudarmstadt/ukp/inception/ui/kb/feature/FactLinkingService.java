@@ -30,8 +30,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public interface FactLinkingService
 {
-    String SERVICE_NAME = "factLinkingService";
-
     List<KBProperty> listProperties(Project aProject, ConceptFeatureTraits traits);
 
     KBHandle getKBHandleFromCasByAddr(CAS aCas, int targetAddr, Project aProject,

@@ -18,18 +18,21 @@
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
 import org.apache.wicket.model.IModel;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportAutoConfiguration;
 
-@Component("pdfEditor")
-@ConditionalOnProperty(prefix = "ui.pdf", name = "enabled", havingValue = "true", 
-        matchIfMissing = true)
+/**
+ * Support for HTML-oriented editor component.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link PdfAnnotationEditorSupportAutoConfiguration#pdfAnnotationEditorFactory()}.
+ * </p>
+ */
 public class PdfAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {

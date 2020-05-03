@@ -26,18 +26,29 @@ import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link EntityLinkingServiceAutoConfiguration#wikidataIdRankFeatureGenerator}.
+ * </p>
+ */
 public class WikidataIdRankFeatureGenerator
     implements EntityRankingFeatureGenerator
 {
-    private @Autowired KnowledgeBaseService kbService;
+    private final KnowledgeBaseService kbService;
 
+    @Autowired
+    public WikidataIdRankFeatureGenerator(KnowledgeBaseService aKbService)
+    {
+        kbService = aKbService;
+    }
+    
     @Override
     public void apply(CandidateEntity aCandidate)
     {
