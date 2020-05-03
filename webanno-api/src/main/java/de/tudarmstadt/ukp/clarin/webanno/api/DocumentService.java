@@ -31,6 +31,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -348,6 +349,22 @@ public interface DocumentService
      *             if there was an I/O error.
      */
     CAS readAnnotationCas(AnnotationDocument annotationDocument)
+        throws IOException;
+
+    /**
+     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * necessary. The converted CAS is analyzed using CAS doctor and saved. If the CAS already
+     * existed on disk, its type system is <b>NOT</b> upgraded.
+     *
+     * @param annotationDocument
+     *            the annotation document.
+     * @param aMode
+     *            CAS access mode.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    CAS readAnnotationCas(AnnotationDocument annotationDocument, CasAccessMode aMode)
         throws IOException;
 
     CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasUpgradeMode aUpgradeMode)

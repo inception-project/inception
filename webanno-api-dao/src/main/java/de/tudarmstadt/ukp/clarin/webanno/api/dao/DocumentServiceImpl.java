@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
@@ -72,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -638,9 +640,25 @@ public class DocumentServiceImpl
     }
 
     @Override
+    public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasAccessMode aMode)
+        throws IOException
+    {
+        return readAnnotationCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser(),
+                NO_CAS_UPGRADE, aMode);
+    }
+    
+    @Override
     @Transactional
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
             CasUpgradeMode aUpgradeMode)
+            throws IOException
+    {
+        return readAnnotationCas(aDocument, aUserName, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS);
+    }
+
+    @Transactional
+    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
+            CasUpgradeMode aUpgradeMode, CasAccessMode aMode)
             throws IOException
     {
         // If there is no CAS yet for the source document, create one.
@@ -648,7 +666,7 @@ public class DocumentServiceImpl
             () -> {
                 // Convert the source file into an annotation CAS
                 return createOrReadInitialCas(aDocument);
-            });
+            }, aMode);
 
         // We intentionally do not upgrade the CAS here because in general the IDs
         // must remain stable. If an upgrade is required the caller should do it

@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface CasStorageService
@@ -67,33 +68,64 @@ public interface CasStorageService
      *            the user.
      * @param aAnalyzeAndRepair
      *            whether to apply the CAS doctor.
+     * @param aAccessMode
+     *            in which mode to read the CAS.
      * @return the CAS.
      * @throws IOException
      *             if there was a problem loading or creating the CAS.
      */
-    CAS readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
+    CAS readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair,
+            CasAccessMode aAccessMode)
         throws IOException;
 
     /**
-     * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. If it does
-     * not exist, create it using the given supplier. The result is immediately persisted to the
-     * storage.
+     * Reads the CAS containing the annotation data for the given user on the given document. If
+     * there is no CAS yet for that user/document combination, create one using the given
+     * {@link CasProvider}.
      * 
      * @param aDocument
-     *            the document.
+     *            the document to obtain the CAS for.
      * @param aUsername
-     *            the user.
+     *            the user to obtain the CAS for.
+     * @param aAnalyzeAndRepair
+     *            whether the CAS should be analyzed and repaired after being retrieved.
+     * @param aUpgradeMode
+     *            whether the CAS should be upgraded to the latest project type system.
      * @param aSupplier
-     *            a function to create a new CAS if there is none yet.
-     * @return the CAS.
+     *            used to create a new CAS if none for the given user/document combination exists in
+     *            the storage.
+     * @return the CAS
      * @throws IOException
-     *             if there was a problem loading or creating the CAS.
+     *             if the CAS could not be loaded or created.
      */
-    CAS readOrCreateCas(SourceDocument aDocument, String aUsername, CasProvider aSupplier)
-        throws IOException;
-
     CAS readOrCreateCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair,
             CasUpgradeMode aUpgradeMode, CasProvider aSupplier)
+        throws IOException;
+
+    /**
+     * Reads the CAS containing the annotation data for the given user on the given document. If
+     * there is no CAS yet for that user/document combination, create one using the given
+     * {@link CasProvider}.
+     * 
+     * @param aDocument
+     *            the document to obtain the CAS for.
+     * @param aUsername
+     *            the user to obtain the CAS for.
+     * @param aAnalyzeAndRepair
+     *            whether the CAS should be analyzed and repaired after being retrieved.
+     * @param aUpgradeMode
+     *            whether the CAS should be upgraded to the latest project type system.
+     * @param aSupplier
+     *            used to create a new CAS if none for the given user/document combination exists in
+     *            the storage.
+     * @param aAccessMode
+     *            the CAS access mode.
+     * @return the CAS
+     * @throws IOException
+     *             if the CAS could not be loaded or created.
+     */
+    CAS readOrCreateCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair,
+            CasUpgradeMode aUpgradeMode, CasProvider aSupplier, CasAccessMode aAccessMode)
         throws IOException;
 
     boolean deleteCas(SourceDocument aDocument, String aUsername) throws IOException;
@@ -104,6 +136,20 @@ public interface CasStorageService
 
     boolean existsCas(SourceDocument aDocument, String aUser) throws IOException;
 
+    /**
+     * Runs {@code CasDoctor} in repair mode on the given CAS (if repairs are active), otherwise
+     * it runs only in analysis mode.
+     * <p>
+     * <b>Note:</b> {@code CasDoctor} is an optional service. If no {@code CasDoctor} implementation
+     * is available, this method returns without doing anything.
+     * 
+     * @param aDocument
+     *            the document
+     * @param aUsername
+     *            the user owning the CAS (used for logging)
+     * @param aCas
+     *            the CAS object
+     */
     void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas);
     
     boolean isCacheEnabled();

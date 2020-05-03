@@ -20,12 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 
 public class CasStorageSession
     implements AutoCloseable
@@ -121,23 +123,66 @@ public class CasStorageSession
     /**
      * Register the given CAS into the session.
      * 
-     * @param aDocument
-     *            the document for which the CAS was retrieved.
+     * @param aDocumentId
+     *            the document ID for which the CAS was retrieved.
      * @param aUser
      *            the user owning the CAS.
      * @param aMode
      *            the access mode.
      * @param aCas
      *            the CAS itself.
+     * @return the managed CAS state.
      */
-    public void add(SourceDocument aDocument, String aUser, CasAccessMode aMode, CAS aCas)
+    public SessionManagedCas add(Long aDocumentId, String aUser, CasAccessMode aMode, CAS aCas)
     {
+        Validate.notNull(aDocumentId, "The document ID cannot be null");
+        Validate.notNull(aUser, "The username cannot be null");
+        
         Map<String, SessionManagedCas> casByUser = managedCases
-                .computeIfAbsent(aDocument.getId(), key -> new LinkedHashMap<>());
+                .computeIfAbsent(aDocumentId, key -> new LinkedHashMap<>());
+        
+        
 
-        SessionManagedCas managedCas = new SessionManagedCas(aDocument.getId(), aUser, aMode, aCas);
+        SessionManagedCas managedCas = new SessionManagedCas(aDocumentId, aUser, aMode, aCas);
         casByUser.put(aUser, managedCas);
         
-        LOGGER.trace("Added CAS to storage session [{}]: ", hashCode(), managedCas);
+        LOGGER.trace("Added CAS to storage session [{}]: {}", hashCode(), managedCas);
+        
+        return managedCas;
+    }
+
+    /**
+     * Returns the managed state of the CAS for the given CAS (if any).
+     * 
+     * @param aCas
+     *            a CAS.
+     * @return the managed CAS state.
+     */
+    public Optional<SessionManagedCas> getManagedState(CAS aCas)
+    {
+        Validate.notNull(aCas, "The CAS cannot be null");
+        
+        return managedCases.values().stream()
+                .flatMap(casByUser -> casByUser.values().stream()
+                        .filter(metadata -> metadata.getCas() == aCas))
+                .findFirst();
+    }
+
+    /**
+     * Returns the managed state of the CAS for the given document/user combination (if any).
+     * 
+     * @param aDocumentId
+     *            document ID.
+     * @param aUsername
+     *            user name.
+     * @return the managed CAS state.
+     */
+    public Optional<SessionManagedCas> getManagedState(Long aDocumentId, String aUsername)
+    {
+        Validate.notNull(aDocumentId, "The document ID cannot be null");
+        Validate.notNull(aUsername, "The username cannot be null");
+        
+        return Optional.ofNullable(managedCases.get(aDocumentId))
+            .map(casByUser -> casByUser.get(aUsername));
     }
 }

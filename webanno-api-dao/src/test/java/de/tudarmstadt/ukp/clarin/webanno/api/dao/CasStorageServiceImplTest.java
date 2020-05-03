@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
@@ -109,7 +110,7 @@ public class CasStorageServiceImplTest
         SourceDocument doc = makeSourceDocument(2l, 2l);
         String user = "test";
         
-        JCas cas = sut.readOrCreateCas(doc, user, () -> {
+        JCas cas = sut.readOrCreateCas(doc, user, true, NO_CAS_UPGRADE, () -> {
             try {
                 return JCasFactory.createText("This is a test").getCas();
             }

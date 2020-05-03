@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRAD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.failOnConcurrentModification;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils.writeSerializedCas;
 
@@ -57,8 +58,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.SessionManagedCas;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -156,6 +158,27 @@ public class CasStorageServiceImpl
     private void realWriteCas(SourceDocument aDocument, String aUserName, CAS aCas)
         throws IOException
     {
+        CasStorageSession session = CasStorageSession.get();
+        
+        if (session != null) {
+            Optional<SessionManagedCas> mCas = session.getManagedState(aCas);
+            
+            if (!mCas.isPresent()) {
+                log.warn("Given CAS for [{}]@[{}]({}) not managed", aUserName, aDocument.getName(),
+                        aDocument.getId());
+            }
+            else {
+                if (!EXCLUSIVE_WRITE_ACCESS.equals(mCas.get().getMode())) {
+                    log.warn("Performing write operation fo CAS [{}]@[{}]({}) opened with mode {}",
+                            aUserName, aDocument.getName(), aDocument.getId(),
+                            mCas.get().getMode());
+                }
+            }
+        }
+        else {
+            log.warn("No CAS storage session found!");
+        }
+        
         analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
         
         log.debug("Preparing to update annotations for user [{}] on document [{}]({}) in project [{}]({})",
@@ -346,21 +369,17 @@ public class CasStorageServiceImpl
     public CAS readCas(SourceDocument aDocument, String aUsername)
         throws IOException
     {
-        return readCas(aDocument, aUsername, true);
+        return readOrCreateCas(aDocument, aUsername, true, NO_CAS_UPGRADE, null,
+                EXCLUSIVE_WRITE_ACCESS);
     }
     
     @Override
-    public CAS readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
+    public CAS readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair,
+            CasAccessMode aAccessMode)
         throws IOException
     {
-        return readOrCreateCas(aDocument, aUsername, aAnalyzeAndRepair, NO_CAS_UPGRADE, null);
-    }
-
-    @Override
-    public CAS readOrCreateCas(SourceDocument aDocument, String aUsername, CasProvider aSupplier)
-        throws IOException
-    {
-        return readOrCreateCas(aDocument, aUsername, true, NO_CAS_UPGRADE, aSupplier);
+        return readOrCreateCas(aDocument, aUsername, aAnalyzeAndRepair, NO_CAS_UPGRADE, null,
+                aAccessMode);
     }
 
     @Override
@@ -369,18 +388,36 @@ public class CasStorageServiceImpl
         throws IOException
     {
         return readOrCreateCas(aDocument, aUsername, aAnalyzeAndRepair, aUpgradeMode, aSupplier,
-                CasAccessMode.EXCLUSIVE_WRITE_ACCESS);
+                EXCLUSIVE_WRITE_ACCESS);
     }
 
+    @Override
     public CAS readOrCreateCas(SourceDocument aDocument, String aUsername,
             boolean aAnalyzeAndRepair, CasUpgradeMode aUpgradeMode, CasProvider aSupplier,
             CasAccessMode aAccessMode)
         throws IOException
     {
         synchronized (lock) {
-            CasStorageSession session = CasStorageSession.get();
-            
             long start = System.currentTimeMillis();
+            
+            CasStorageSession session = CasStorageSession.get();
+
+            if (session != null) {
+                Optional<SessionManagedCas> mCas = session.getManagedState(aDocument.getId(),
+                        aUsername);
+                if (!mCas.isPresent()) {
+                    log.trace("No managed CAS for [{}]@[{}]({}) found in session", aUsername,
+                            aDocument.getName(), aDocument.getId());
+                }
+                else {
+                    log.trace("Managed CAS for [{}]@[{}]({}) found in session", aUsername,
+                            aDocument.getName(), aDocument.getId());
+                    mCas.get().incrementReadCount();
+                }
+            }
+            else {
+                log.warn("No CAS storage session found!");
+            }
             
             // Check if we have the CAS in the cache
             if (isCacheEnabled()) {
@@ -392,9 +429,11 @@ public class CasStorageServiceImpl
                 }
             }
             
-            // If the CAS is not in the cache, load it from disk
+            // If the CAS is not in the cache, then we need to create it
             CAS cas;
             String source;
+            
+            // If the CAS exists on disk already, load it from there
             File casFile = getCasFile(aDocument, aUsername);
             if (casFile.exists()) {
                 cas = realReadCas(aDocument, aUsername, aAnalyzeAndRepair);
@@ -408,6 +447,7 @@ public class CasStorageServiceImpl
                 }
                 source = "disk";
             }
+            // If the CAS does NOT exist on disk, try obtaining it through the given CAS provider
             else if (aSupplier != null) {
                 cas = aSupplier.get();
                 if (schemaService != null) {
@@ -421,6 +461,7 @@ public class CasStorageServiceImpl
                 source = "importer";
                 realWriteCas(aDocument, aUsername, cas);
             }
+            // If no CAS provider is given, fail
             else {
                 throw new FileNotFoundException("CAS file for [" + aDocument.getId() + ","
                         + aUsername + "] does not exist at [" + casFile
@@ -446,7 +487,10 @@ public class CasStorageServiceImpl
                         source, duration);
             }
             
-            session.add(aDocument, aUsername, aAccessMode, cas);
+            if (session != null) {
+                session.add(aDocument.getId(), aUsername, aAccessMode, cas)
+                       .incrementReadCount();
+            }
             
             return cas;
         }
@@ -528,6 +572,24 @@ public class CasStorageServiceImpl
                 aCas);
     }
 
+    /**
+     * Runs {@link CasDoctor} in repair mode on the given CAS (if repairs are active), otherwise
+     * it runs only in analysis mode.
+     * <p>
+     * <b>Note:</b> {@link CasDoctor} is an optional service. If no {@link CasDoctor} implementation
+     * is available, this method returns without doing anything.
+     * 
+     * @param aProject
+     *            the project
+     * @param aDocumentName
+     *            the document name (used for logging)
+     * @param aDocumentId
+     *            the aDocument ID (used for logging)
+     * @param aUsername
+     *            the user owning the CAS (used for logging)
+     * @param aCas
+     *            the CAS object
+     */
     private void analyzeAndRepair(Project aProject, String aDocumentName, long aDocumentId,
             String aUsername, CAS aCas)
     {
@@ -555,6 +617,23 @@ public class CasStorageServiceImpl
         }
     }
     
+    /**
+     * Runs {@link CasDoctor} in anaylsis mode on the given CAS.
+     * <p>
+     * <b>Note:</b> {@link CasDoctor} is an optional service. If no {@link CasDoctor} implementation
+     * is available, this method returns without doing anything.
+     * 
+     * @param aProject
+     *            the project
+     * @param aDocumentName
+     *            the document name (used for logging)
+     * @param aDocumentId
+     *            the aDocument ID (used for logging)
+     * @param aUsername
+     *            the user owning the CAS (used for logging)
+     * @param aCas
+     *            the CAS object
+     */
     private void analyze(Project aProject, String aDocumentName, long aDocumentId,
             String aUsername, CAS aCas)
     {
