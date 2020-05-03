@@ -1,4 +1,4 @@
-name: Java CI
+name: Build Pull Requests
 
 on:
   push:
