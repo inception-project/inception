@@ -161,19 +161,8 @@ public class CasStorageServiceImpl
         CasStorageSession session = CasStorageSession.get();
         
         if (session != null) {
-            Optional<SessionManagedCas> mCas = session.getManagedState(aCas);
-            
-            if (!mCas.isPresent()) {
-                log.warn("Given CAS for [{}]@[{}]({}) not managed", aUserName, aDocument.getName(),
-                        aDocument.getId());
-            }
-            else {
-                if (!EXCLUSIVE_WRITE_ACCESS.equals(mCas.get().getMode())) {
-                    log.warn("Performing write operation fo CAS [{}]@[{}]({}) opened with mode {}",
-                            aUserName, aDocument.getName(), aDocument.getId(),
-                            mCas.get().getMode());
-                }
-            }
+            session.logCasPresentInSession("realWriteCas", aCas);
+            session.logWriteAccessAttempt("realWriteCas", aCas);
         }
         else {
             log.warn("No CAS storage session found!");
@@ -403,17 +392,9 @@ public class CasStorageServiceImpl
             CasStorageSession session = CasStorageSession.get();
 
             if (session != null) {
-                Optional<SessionManagedCas> mCas = session.getManagedState(aDocument.getId(),
-                        aUsername);
-                if (!mCas.isPresent()) {
-                    log.trace("No managed CAS for [{}]@[{}]({}) found in session", aUsername,
-                            aDocument.getName(), aDocument.getId());
-                }
-                else {
-                    log.trace("Managed CAS for [{}]@[{}]({}) found in session", aUsername,
-                            aDocument.getName(), aDocument.getId());
-                    mCas.get().incrementReadCount();
-                }
+                session.logCasPresentInSession("readOrCreateCas", aDocument, aUsername);
+                session.getManagedState(aDocument.getId(), aUsername)
+                        .ifPresent(SessionManagedCas::incrementReadCount);
             }
             else {
                 log.warn("No CAS storage session found!");

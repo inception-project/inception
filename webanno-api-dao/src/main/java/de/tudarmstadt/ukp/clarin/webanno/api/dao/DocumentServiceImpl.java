@@ -27,7 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
@@ -615,28 +614,17 @@ public class DocumentServiceImpl
     
     @Override
     @Transactional
-    @Deprecated
-    public CAS readAnnotationCas(SourceDocument aDocument, User aUser)
-        throws IOException
-    {
-        // Check if there is an annotation document entry in the database. If there is none,
-        // create one.
-        AnnotationDocument annotationDocument = createOrGetAnnotationDocument(aDocument, aUser);
-
-        // Change the state of the source document to in progress
-        transitionSourceDocumentState(aDocument, NEW_TO_ANNOTATION_IN_PROGRESS);
-        transitionAnnotationDocumentState(annotationDocument,
-                AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
-
-        return readAnnotationCas(annotationDocument);
-    }
-
-    @Override
-    @Transactional
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName)
             throws IOException
     {
-        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE);
+        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
+    }
+    
+    @Override
+    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasAccessMode aMode)
+        throws IOException
+    {
+        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, aMode);
     }
 
     @Override

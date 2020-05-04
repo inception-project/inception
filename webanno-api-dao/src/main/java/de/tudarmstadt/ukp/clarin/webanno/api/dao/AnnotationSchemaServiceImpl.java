@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -981,6 +982,25 @@ public class AnnotationSchemaServiceImpl
     public void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException
     {
+        CasStorageSession session = CasStorageSession.get();
+        if (session != null) {
+            // Upgrading involves serialization and the CAS is not thread-safe on serialization,
+            // so it is necessary that there is exclusive access to the source and target CAS
+            if (aTargetCas != aSourceCas) {
+                session.logCasPresentInSession("upgradeCas: source CAS", aSourceCas);
+                session.logCasPresentInSession("upgradeCas: target CAS", aTargetCas);
+                session.logWriteAccessAttempt("upgradeCas: source CAS", aSourceCas);
+                session.logWriteAccessAttempt("upgradeCas: target CAS", aTargetCas);
+            }
+            else {
+                session.logCasPresentInSession("upgradeCas: source/target CAS", aTargetCas);
+                session.logWriteAccessAttempt("upgradeCas: source/target CAS", aTargetCas);
+            }
+        }
+        else {
+            log.warn("No CAS storage session found!");
+        }
+        
         // Save source CAS type system (do this early since we might do an in-place upgrade)
         TypeSystem sourceTypeSystem = aSourceCas.getTypeSystem();
 

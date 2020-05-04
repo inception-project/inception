@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+
 import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class CasStorageSession
     implements AutoCloseable
@@ -184,5 +187,41 @@ public class CasStorageSession
         
         return Optional.ofNullable(managedCases.get(aDocumentId))
             .map(casByUser -> casByUser.get(aUsername));
+    }
+    
+    public void logCasPresentInSession(String aContext, SourceDocument aDocument, String aUsername)
+    {
+        Optional<SessionManagedCas> mCas = getManagedState(aDocument.getId(), aUsername);
+        if (!mCas.isPresent()) {
+            LOGGER.trace("{} - CAS for [{}]@[{}]({}) not found in session", aContext, aUsername,
+                    aDocument.getName(), aDocument.getId());
+        }
+        else {
+            LOGGER.trace("{} - CAS for [{}]@[{}]({}) found in session", aContext, aUsername,
+                    aDocument.getName(), aDocument.getId());
+        }
+    }
+    
+    public void logCasPresentInSession(String aContext, CAS aCas)
+    {
+        Optional<SessionManagedCas> mCas = getManagedState(aCas);
+        if (!mCas.isPresent()) {
+            LOGGER.trace("{} - CAS not found in session", aContext);
+        }
+        else {
+            LOGGER.trace("{} - CAS found in session", aContext);
+        }
+    }
+    
+    public void logWriteAccessAttempt(String aContext, CAS aCas)
+    {
+        Optional<SessionManagedCas> mCas = getManagedState(aCas);
+        if (mCas.isPresent()) {
+            if (!EXCLUSIVE_WRITE_ACCESS.equals(mCas.get().getMode())) {
+                LOGGER.warn("Performing write operation fo CAS [{}]@({}) opened with mode {}",
+                        mCas.get().getUserId(), mCas.get().getSourceDocumentId(),
+                        mCas.get().getMode());
+            }
+        }
     }
 }

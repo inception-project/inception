@@ -372,27 +372,6 @@ public interface DocumentService
     
     void deleteAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
-    
-    /**
-     * Gets the CAS for the given source document. Converts it form the source document if
-     * necessary. If necessary, no annotation document exists, one is created. The source document
-     * is set into state {@link SourceDocumentState#ANNOTATION_IN_PROGRESS}.
-     *
-     * @param document
-     *            the source document.
-     * @param user
-     *            the user.
-     * @return the CAS.
-     * @throws IOException
-     *             if there was an I/O error.
-     * @deprecated use {@link #createOrGetAnnotationDocument(SourceDocument, User)} and
-     *             {@link #readAnnotationCas(AnnotationDocument)} instead and manually set source
-     *             document status manually if desired or use
-     *             {@link #readAnnotationCas(SourceDocument, String)}
-     */
-    @Deprecated
-    CAS readAnnotationCas(SourceDocument document, User user)
-        throws IOException;
 
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
@@ -407,6 +386,23 @@ public interface DocumentService
      *             if there was an I/O error.
      */
     CAS readAnnotationCas(SourceDocument document, String userName)
+        throws IOException;
+
+    /**
+     * Gets the CAS for the given source document. Converts it form the source document if
+     * necessary. The state of the source document is not changed.
+     *
+     * @param document
+     *            the source document.
+     * @param userName
+     *            the username.
+     * @param aMode
+     *            the access mode.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    CAS readAnnotationCas(SourceDocument document, String userName, CasAccessMode aMode)
         throws IOException;
 
     CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode)
