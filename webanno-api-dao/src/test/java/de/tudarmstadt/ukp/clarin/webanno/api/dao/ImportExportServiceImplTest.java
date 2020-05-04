@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -45,7 +45,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
@@ -60,7 +61,7 @@ public class ImportExportServiceImplTest
     private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
     private CasStorageServiceImpl storageService;
-    private @Mock AnnotationSchemaService schemaService;
+    private @Spy AnnotationSchemaService schemaService;
     
     public @Rule TemporaryFolder testFolder = new TemporaryFolder();
     
@@ -71,7 +72,8 @@ public class ImportExportServiceImplTest
     {
         initMocks(this);
         
-        schemaService = mock(AnnotationSchemaServiceImpl.class);
+        //schemaService = mock(AnnotationSchemaServiceImpl.class);
+        schemaService = Mockito.spy(new AnnotationSchemaServiceImpl(null, null));
         
         backupProperties = new BackupProperties();
 
@@ -85,13 +87,14 @@ public class ImportExportServiceImplTest
                 storageService, schemaService);
         sut.onContextRefreshedEvent();
         
-        when(schemaService.listAnnotationLayer(any(Project.class))).thenReturn(emptyList());
+        doReturn(emptyList()).when(schemaService).listAnnotationLayer(any());
+        doReturn(emptyList()).when(schemaService).listAnnotationFeature((Project) any());
         // The prepareCasForExport method internally calls getFullProjectTypeSystem, so we need to
         // ensure this is actually callable and doesn't run into a mocked version which simply 
         // returns null.
         when(schemaService.getFullProjectTypeSystem(any(), anyBoolean())).thenCallRealMethod();
         when(schemaService.getTypeSystemForExport(any())).thenCallRealMethod();
-        when(schemaService.prepareCasForExport(any(), any(), any())).thenCallRealMethod();
+        doCallRealMethod().when(schemaService).prepareCasForExport(any(), any(), any());
         doCallRealMethod().when(schemaService).upgradeCas(any(), any(),
                 any(TypeSystemDescription.class));
     }
