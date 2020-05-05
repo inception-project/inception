@@ -350,8 +350,14 @@ public class MtasUimaParser
     {
         int mtasId = aMtasId;
 
+        // If there are no features on the layer, do not attempt to index them
+        List<AnnotationFeature> features = layerFeatures.get(aAnnotation.getType().getName());
+        if (features == null) {
+            return mtasId;
+        }
+        
         // Iterate over the features of this layer and index them one-by-one
-        for (AnnotationFeature feature : layerFeatures.get(aAnnotation.getType().getName())) {
+        for (AnnotationFeature feature : features) {
             Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
                     .getIndexingSupport(feature);
             if (fis.isPresent()) {
