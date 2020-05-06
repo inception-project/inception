@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
 @Component
-@Order(400)
+@Order(360)
 public class RecommenderProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
