@@ -26,6 +26,9 @@
 .Requirements to run the standalone version
 [cols="2*"]
 |===
+| Operating System
+| Linux (64bit), macOS (64bit), Windows (64bit)
+
 | Java Runtime Environment
 | version 8 or higher
 |===
@@ -33,6 +36,9 @@
 .Requirements run the server version
 [cols="2*"]
 |===
+| Operating System
+| Linux (64bit), macOS (64bit), Windows (64bit)
+
 | Java Runtime Environment
 | version 8 or higher
 
