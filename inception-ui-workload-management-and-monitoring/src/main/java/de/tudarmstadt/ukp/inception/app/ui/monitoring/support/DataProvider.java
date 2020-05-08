@@ -19,65 +19,84 @@
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
+
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-public class DataProvider extends SortableDataProvider<List<String>, Object>
+import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
+import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
+
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
+
+
+public class DataProvider extends SortableDataProvider
+    <SourceDocument, String> implements Serializable
 {
-    private List<List<String>> data = new ArrayList<>();
-    private List<String> headers;
-    private int size;
-    private SortableDataProviderComparator comparator = new SortableDataProviderComparator();
-    private IModel<List<List<String>>> model;
 
 
-    public DataProvider(List<String> aTableHeaders, List<List<String>> aContents)
+    private List<SourceDocument> data;
+    private IModel<List<SourceDocument>> model;
+
+
+    public DataProvider(List<SourceDocument> aContents)
     {
-        this.headers = aTableHeaders;
-        this.size = aContents.size();
-        this.data = aContents;
+
+        data = aContents;
+
+        setSort("Document", SortOrder.ASCENDING);
 
         //Required
-        model = new LoadableDetachableModel<List<List<String>>>()
-        {
+        model = new LoadableDetachableModel<List<SourceDocument>>() {
             @Override
-            protected List<List<String>> load()
-            {
-                return data;
+            protected List<SourceDocument> load() {
+                return aContents;
             }
         };
+
+
     }
-
-    public Iterator<List<String>> iterator(long aFirst, long aCount)
+    @Override
+    public Iterator<SourceDocument> iterator(long first, long count)
     {
+        List<SourceDocument> newList = data;
 
-        List<List<String>> newList = new ArrayList<>(data);
+        //Sorting, check for which column was clicked and return new sorting accordingly
+        Collections.sort(newList, (o1, o2) ->
+        {
+            int dir = getSort().isAscending() ? 1 : -1;
+            if ("Document".equals(getSort().getProperty()))
+            {
+                return dir * (o1.getName().compareTo(o2.getName()));
 
-        //TODO Sort data
-        //Collections.sort(newList, comparator);
+            } else if ("Finished".equals(getSort().getProperty()))
+            {
+                return dir * (o1.getName().compareTo(o2.getName()));
 
-        //Return data
-        return newList.subList((int)aFirst, (int)(aFirst + aCount)).iterator();
+            }  else if ("In Progress".equals(getSort().getProperty()))
+            {
+                return dir * (o1.getName().compareTo(o2.getName()));
+
+            } else return 0;
+        });
+
+        return newList.subList((int)first, Math.
+            min((int)first + (int)count, newList.size())).iterator();
     }
 
     @Override
     public long size()
     {
-        return size;
+        return data.size();
     }
 
     @Override
-    public IModel<List<String>> model(List<String> aObject)
+    public IModel<SourceDocument> model(SourceDocument sourceDocument)
     {
-        return Model.ofList(aObject);
+        return Model.of(sourceDocument);
     }
 
     @Override
@@ -85,37 +104,11 @@ public class DataProvider extends SortableDataProvider<List<String>, Object>
     {
         model.detach();
         super.detach();
-
     }
 
-    public List<String> getTableHeaders()
+    public String getName(int i)
     {
-        return headers;
-    }
-
-    private class SortableDataProviderComparator implements Comparator<SourceDocument>, Serializable
-    {
-        //TODO sorting
-        public int compare(final SourceDocument aDoc1, final SourceDocument aDoc2)
-        {
-            PropertyModel<Comparable> model1 = new PropertyModel<Comparable>(aDoc1, getSort().
-                getProperty().toString());
-            PropertyModel<Comparable> model2 = new PropertyModel<Comparable>(aDoc2, getSort().
-                getProperty().toString());
-
-            int result = model1.getObject().compareTo(model2.getObject());
-
-            if (!getSort().isAscending())
-            {
-                result = -result;
-            }
-            return result;
-        }
-
-        @Override
-        public Comparator<SourceDocument> reversed()
-        {
-            return null;
-        }
+        return data.get(i).getName();
     }
 }
+

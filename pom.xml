@@ -95,6 +95,8 @@
     <module>inception-testing</module>
     <module>inception-ui-core</module>
     <module>inception-app-webapp</module>
+    <module>inception-ui-workload-management-and-monitoring</module>
+
     <!-- Internal search -->
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
@@ -131,7 +133,9 @@
     <!-- Curation -->
     
     <module>inception-curation</module>
-    <module>inception-ui-workload-management-and-monitoring</module>
+      <module>untitled</module>
+      <module>untitled1</module>
+      <module>untitled</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -420,7 +424,7 @@
         <version>0.16.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app.ui.monitoring</groupId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-workload-management-and-monitoring</artifactId>
         <version>0.16.0-SNAPSHOT</version>
       </dependency>

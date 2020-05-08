@@ -17,28 +17,25 @@
  - limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org" xmlns="http://www.w3.org/1999/html" lang="">
-  <body>
-    <wicket:extend>
-      <div class="dashboard-sidebar flex-sidebar scrolling">
-        <wicket:container wicket:id="menu" />
-      </div>
-      <form>
-        <div>
-          <div class="form-group form-row" wicket:enclosure="defaultDocumentsTextField">
+<body>
+<wicket:extend>
+    <div>
+        <div class="form-group form-row" wicket:enclosure="defaultDocumentsNumberTextField">
             <label class="col-sm-8.5 col-form-label" >
-              <wicket:message key="defaultDocumentsTextField"/>
+                <wicket:message key="defaultDocumentsLabel"/>
             </label>
             <div class="col-sm-1.5">
-              <input wicket:id="defaultDocumentsTextField" type="text" class="form-control"/>
+               <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control"/>
             </div>
-          </div>
-          <div class="flex-content scrolling">
-            <div class="col-sm-12">
-              <table class="table table-sm" wicket:id="dataTable"></table>
-            </div>
-          </div>
         </div>
-      </form>
-    </wicket:extend>
-  </body>
+        <form>
+            <div class="flex-content scrolling">
+                <div class="col-sm-12">
+                  <table class="table table-sm" wicket:id="dataTable"></table>
+                </div>
+            </div>
+        </form>
+    </div>
+</wicket:extend>
+</body>
 </html>

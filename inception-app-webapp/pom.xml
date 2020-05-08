@@ -290,7 +290,7 @@
       <artifactId>webanno-doc</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app.ui.monitoring</groupId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-workload-management-and-monitoring</artifactId>
     </dependency>
 
@@ -504,12 +504,6 @@
 	    <groupId>org.webjars.bower</groupId>
 	    <artifactId>jquery.scrollTo</artifactId>
 	</dependency>
-      <dependency>
-          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-          <artifactId>inception-ui-workload-management-and-monitoring</artifactId>
-          <version>0.16.0-SNAPSHOT</version>
-          <scope>compile</scope>
-      </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -720,6 +714,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-workload-management-and-monitoring</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>

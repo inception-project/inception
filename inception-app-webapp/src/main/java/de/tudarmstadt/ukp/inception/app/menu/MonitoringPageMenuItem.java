@@ -30,10 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.page.*;
-
-//Fallback to old Webanno page
-//import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.page.MonitoringPage;
 
 
 @Component
@@ -86,6 +83,6 @@ public class MonitoringPageMenuItem implements MenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return Monitoring.class;
+        return MonitoringPage.class;
     }
 }
