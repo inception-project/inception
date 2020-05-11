@@ -44,6 +44,11 @@ public class ThreadLockingInvocationHandler
         return method.invoke(target, args);
     }
     
+    public void transferOwnershipToCurrentThread()
+    {
+        owner = Thread.currentThread();
+    }
+    
     public Object getTarget()
     {
         Thread current = Thread.currentThread();

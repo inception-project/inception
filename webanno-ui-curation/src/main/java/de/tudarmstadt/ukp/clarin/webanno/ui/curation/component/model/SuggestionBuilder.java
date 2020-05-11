@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorSt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
@@ -417,18 +418,10 @@ public class SuggestionBuilder
         Validate.notNull(aState, "State must be specified");
         Validate.notNull(aRandomAnnotationDocument, "Annotation document must be specified");
         
-        CAS mergeCas;
-        boolean cacheEnabled = false;
-        try {
-            cacheEnabled = casStorageService.isCacheEnabled();
-            casStorageService.disableCache();
-            mergeCas = documentService.readAnnotationCas(aRandomAnnotationDocument);
-        }
-        finally {
-            if (cacheEnabled) {
-                casStorageService.enableCache();
-            }
-        }
+        // We need a modifiable copy of some annotation document which we can use to initialize
+        // the curation CAS. This is an exceptional case where BYPASS is the correct choice
+        CAS mergeCas = documentService.readAnnotationCas(aRandomAnnotationDocument,
+                UNMANAGED_ACCESS);
 
         List<DiffAdapter> adapters = getDiffAdapters(schemaService, aState.getAnnotationLayers());
         

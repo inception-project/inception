@@ -26,9 +26,47 @@ public enum CasAccessMode
      * lock on the CAS.
      */
     EXCLUSIVE_WRITE_ACCESS,
+    
     /**
      * The CAS may be shared between multiple callers. The callers must not make any kind of 
      * modifications to the CAS and they cannot save the CAS.
      */
-    SHARED_READ_ONLY_ACCESS;
+    SHARED_READ_ONLY_ACCESS,
+    
+    /**
+     * Loads a CAS directly from the storage without fetching it from a pool or cache, without
+     * adding it to a cache and without adding it to a session. Also, no analysis and repairs will
+     * be performed.
+     * <p>
+     * <b>NOTE:</b> This mode is reserved for very special occasions. E.g. when loading an
+     * annotation CAS defers to loading the INITIAL_CAS, or when initializing the curation CAS.
+     */
+    UNMANAGED_ACCESS,
+    /**
+     * Loads a CAS directly from the storage without fetching it from a pool or cache, without 
+     * adding it to a cache and without adding it to a session. Also, no analysis and repairs
+     * will be performed. Finally, it does not consider any possibly supplied CAS provider. If the
+     * file does not exist in the storage already, an exception will be generated.
+     * <p>
+     * <b>NOTE:</b> This mode is reserved for very special occasions, e.g. when the CASDoctor needs
+     * to load the current state from disk.
+     */
+    UNMANAGED_NON_INITIALIZING_ACCESS;
+    
+    public boolean alsoPermits(CasAccessMode aOtherMode)
+    {
+        switch (this) {
+        case EXCLUSIVE_WRITE_ACCESS:
+            return EXCLUSIVE_WRITE_ACCESS.equals(aOtherMode) || 
+                    SHARED_READ_ONLY_ACCESS.equals(aOtherMode); 
+        case SHARED_READ_ONLY_ACCESS:
+            return SHARED_READ_ONLY_ACCESS.equals(aOtherMode);
+        case UNMANAGED_ACCESS:
+            return false;
+        case UNMANAGED_NON_INITIALIZING_ACCESS:
+            return false;
+        default:
+            throw new IllegalArgumentException("Unknown mode: [" + aOtherMode + "]");
+        }
+    }
 }

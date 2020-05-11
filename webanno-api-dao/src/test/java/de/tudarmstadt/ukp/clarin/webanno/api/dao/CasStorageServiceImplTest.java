@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
@@ -32,6 +33,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,6 +41,7 @@ import org.junit.rules.TemporaryFolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -48,6 +51,7 @@ public class CasStorageServiceImplTest
     private CasStorageService sut;
     private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
+    private CasStorageSession casStorageSession;
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
@@ -55,6 +59,8 @@ public class CasStorageServiceImplTest
     @Before
     public void setup() throws Exception
     {
+        casStorageSession = CasStorageSession.open();
+        
         backupProperties = new BackupProperties();
         
         repositoryProperties = new RepositoryProperties();
@@ -63,11 +69,18 @@ public class CasStorageServiceImplTest
         sut = new CasStorageServiceImpl(null, null, repositoryProperties, backupProperties);
     }
     
+    @After
+    public void tearDown()
+    {
+        CasStorageSession.get().close();
+    }
+
     @Test
     public void testWriteReadExistsDeleteCas() throws Exception
     {
         SourceDocument doc = makeSourceDocument(1l, 1l);
         JCas cas = JCasFactory.createText("This is a test");
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas.getCas());
         String user = "test";
         
         sut.writeCas(doc, cas.getCas(), user);
@@ -88,12 +101,15 @@ public class CasStorageServiceImplTest
         List<TypeSystemDescription> typeSystems = new ArrayList<>();
         typeSystems.add(createTypeSystemDescription());
         typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
+        
         JCas cas = JCasFactory.createJCas(mergeTypeSystems(typeSystems));
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas.getCas());
         
         SourceDocument doc = makeSourceDocument(1l, 1l);
         String user = "test";
         
         sut.writeCas(doc, cas.getCas(), user);
+        
         JCas cas2 = sut.readCas(doc, user).getJCas();
         
         List<CASMetadata> cmds = new ArrayList<>(select(cas2, CASMetadata.class));
@@ -110,14 +126,14 @@ public class CasStorageServiceImplTest
         SourceDocument doc = makeSourceDocument(2l, 2l);
         String user = "test";
         
-        JCas cas = sut.readOrCreateCas(doc, user, true, NO_CAS_UPGRADE, () -> {
+        JCas cas = sut.readOrCreateCas(doc, user, NO_CAS_UPGRADE, () -> {
             try {
                 return JCasFactory.createText("This is a test").getCas();
             }
             catch (UIMAException e) {
                 throw new IOException(e);
             }
-        }).getJCas();
+        }, EXCLUSIVE_WRITE_ACCESS).getJCas();
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
         

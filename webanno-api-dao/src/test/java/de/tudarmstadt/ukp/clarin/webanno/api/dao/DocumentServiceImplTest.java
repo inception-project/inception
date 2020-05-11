@@ -30,6 +30,7 @@ import javax.persistence.NoResultException;
 
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -61,6 +63,7 @@ public class DocumentServiceImplTest
     private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
     private CasStorageService storageService;
+    private CasStorageSession casStorageSession;
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
@@ -69,6 +72,8 @@ public class DocumentServiceImplTest
     public void setup() throws Exception
     {
         initMocks(this);
+
+        casStorageSession = CasStorageSession.open();
 
         backupProperties = new BackupProperties();
 
@@ -83,6 +88,12 @@ public class DocumentServiceImplTest
         
         when(importExportService.importCasFromFile(any(File.class), any(Project.class),
                 any(), any())).thenReturn(JCasFactory.createText("Test").getCas());
+    }
+
+    @After
+    public void tearDown()
+    {
+        CasStorageSession.get().close();
     }
 
     @Test

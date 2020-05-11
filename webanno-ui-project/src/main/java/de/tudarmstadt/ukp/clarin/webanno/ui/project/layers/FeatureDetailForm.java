@@ -245,30 +245,24 @@ public class FeatureDetailForm
             // re-opens the document because the force upgrade invalidates the VIDs used in the
             // annotation editor. How exactly (if at all) the user gets information of this is
             // currently undefined.
-            casStorageService.performExclusiveBulkOperation(() -> {
-                for (SourceDocument doc : documentService.listSourceDocuments(project)) {
-                    for (AnnotationDocument ann : documentService.listAllAnnotationDocuments(doc)) {
-                        try {
-                            CAS cas = casStorageService.readCas(doc, ann.getUser());
-                            annotationService.upgradeCas(cas, doc, ann.getUser());
-                            casStorageService.writeCas(doc, cas, ann.getUser());
-                        }
-                        catch (FileNotFoundException e) {
-                            // If there is no CAS file, we do not have to upgrade it. Ignoring.
-                        }
-                    }
-                    
-                    // Also upgrade the curation CAS if it exists
+            for (SourceDocument doc : documentService.listSourceDocuments(project)) {
+                for (AnnotationDocument ann : documentService.listAllAnnotationDocuments(doc)) {
                     try {
-                        CAS cas = casStorageService.readCas(doc, CURATION_USER);
-                        annotationService.upgradeCas(cas, doc, CURATION_USER);
-                        casStorageService.writeCas(doc, cas, CURATION_USER);
+                        casStorageService.upgradeCas(doc, ann.getUser());
                     }
                     catch (FileNotFoundException e) {
                         // If there is no CAS file, we do not have to upgrade it. Ignoring.
                     }
                 }
-            });
+                
+                // Also upgrade the curation CAS if it exists
+                try {
+                    casStorageService.upgradeCas(doc, CURATION_USER);
+                }
+                catch (FileNotFoundException e) {
+                    // If there is no CAS file, we do not have to upgrade it. Ignoring.
+                }
+            }
 
             // Trigger LayerConfigurationChangedEvent
             applicationEventPublisherHolder.get()

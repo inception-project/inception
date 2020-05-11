@@ -50,8 +50,11 @@ public class OpenCasStorageSessionForRequestFilter
         try (CasStorageSession session = CasStorageSession.open()) {
             chain.doFilter(req, resp);
         }
+        catch (IOException |  ServletException e) {
+            throw e;
+        }
         catch (Exception e) {
-            log.error("Error creating a CAS storage session, ", e);
+            log.error("Error creating a CAS storage session", e);
         }
     }
 

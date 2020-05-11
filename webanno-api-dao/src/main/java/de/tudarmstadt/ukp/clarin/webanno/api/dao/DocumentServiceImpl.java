@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDE
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
@@ -582,13 +583,21 @@ public class DocumentServiceImpl
             TypeSystemDescription aFullProjectTypeSystem)
         throws IOException
     {
+        return createOrReadInitialCas(aDocument, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS,
+                aFullProjectTypeSystem);
+    }
+    
+    private CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode, TypeSystemDescription aFullProjectTypeSystem)
+        throws IOException
+    {
         Validate.notNull(aDocument, "Source document must be specified");
         
         log.debug("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
                 aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
-        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, true, 
+        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, 
                 aUpgradeMode, () -> {
                 // Normally, the initial CAS should be created on document import, but after
                 // adding this feature, the existing projects do not yet have initial CASes, so
@@ -601,7 +610,7 @@ public class DocumentServiceImpl
                 catch (UIMAException e) {
                     throw new IOException("Unable to create CAS: " + e.getMessage(), e);
                 }
-            });
+            }, aAccessMode);
     }
     
     @Override
@@ -650,11 +659,10 @@ public class DocumentServiceImpl
             throws IOException
     {
         // If there is no CAS yet for the source document, create one.
-        CAS cas = casStorageService.readOrCreateCas(aDocument, aUserName, true, aUpgradeMode,
-            () -> {
-                // Convert the source file into an annotation CAS
-                return createOrReadInitialCas(aDocument);
-            }, aMode);
+        CAS cas = casStorageService.readOrCreateCas(aDocument, aUserName, aUpgradeMode,
+            // Convert the source file into an annotation CAS
+            () -> createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, UNMANAGED_ACCESS, null),
+            aMode);
 
         // We intentionally do not upgrade the CAS here because in general the IDs
         // must remain stable. If an upgrade is required the caller should do it

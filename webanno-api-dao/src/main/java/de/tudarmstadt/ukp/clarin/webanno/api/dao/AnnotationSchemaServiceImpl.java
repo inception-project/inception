@@ -69,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -935,6 +934,8 @@ public class AnnotationSchemaServiceImpl
         // Check if the current CAS already contains the required type system
         boolean upgradePerformed = false;
         for (CAS cas : aCasIter) {
+            CasStorageSession.get().assertWritingPermitted(cas);
+            
             if (cas != null && isUpgradeRequired(cas, ts)) {
                 upgradeCas(cas, ts);
                 upgradePerformed = true;
@@ -952,7 +953,7 @@ public class AnnotationSchemaServiceImpl
     }
     
     @Override
-    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument,
+    public void prepareCasForExport(CAS aSourceCas, CAS aTargetCas, SourceDocument aSourceDocument,
             TypeSystemDescription aFullProjectTypeSystem)
         throws ResourceInitializationException, UIMAException, IOException
     {
@@ -961,9 +962,7 @@ public class AnnotationSchemaServiceImpl
             tsd = getTypeSystemForExport(aSourceDocument.getProject());
         }
         
-        CAS exportCas = WebAnnoCasUtil.createCas();
-        upgradeCas(aCas, exportCas, tsd);
-        return exportCas;
+        upgradeCas(aSourceCas, aTargetCas, tsd);
     }
     
     @Override
@@ -982,24 +981,12 @@ public class AnnotationSchemaServiceImpl
     public void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException
     {
-        CasStorageSession session = CasStorageSession.get();
-        if (session != null) {
-            // Upgrading involves serialization and the CAS is not thread-safe on serialization,
-            // so it is necessary that there is exclusive access to the source and target CAS
-            if (aTargetCas != aSourceCas) {
-                session.logCasPresentInSession("upgradeCas: source CAS", aSourceCas);
-                session.logCasPresentInSession("upgradeCas: target CAS", aTargetCas);
-                session.logWriteAccessAttempt("upgradeCas: source CAS", aSourceCas);
-                session.logWriteAccessAttempt("upgradeCas: target CAS", aTargetCas);
-            }
-            else {
-                session.logCasPresentInSession("upgradeCas: source/target CAS", aTargetCas);
-                session.logWriteAccessAttempt("upgradeCas: source/target CAS", aTargetCas);
-            }
-        }
-        else {
-            log.warn("No CAS storage session found!");
-        }
+        // Because serialization is a process which modifies internal data structures of the CAS,
+        // we need exclusive access to both, the source and that target CAS for the time being.
+        // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
+        // for https://issues.apache.org/jira/browse/UIMA-6162
+        CasStorageSession.get().assertWritingPermitted(aSourceCas);
+        CasStorageSession.get().assertWritingPermitted(aTargetCas);
         
         // Save source CAS type system (do this early since we might do an in-place upgrade)
         TypeSystem sourceTypeSystem = aSourceCas.getTypeSystem();

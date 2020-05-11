@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
@@ -41,6 +42,7 @@ import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,6 +52,7 @@ import org.mockito.Spy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -61,6 +64,7 @@ public class ImportExportServiceImplTest
     private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
     private CasStorageServiceImpl storageService;
+    private CasStorageSession casStorageSession;
     private @Spy AnnotationSchemaService schemaService;
     
     public @Rule TemporaryFolder testFolder = new TemporaryFolder();
@@ -94,9 +98,17 @@ public class ImportExportServiceImplTest
         // returns null.
         when(schemaService.getFullProjectTypeSystem(any(), anyBoolean())).thenCallRealMethod();
         when(schemaService.getTypeSystemForExport(any())).thenCallRealMethod();
-        doCallRealMethod().when(schemaService).prepareCasForExport(any(), any(), any());
+        doCallRealMethod().when(schemaService).prepareCasForExport(any(), any(), any(), any());
         doCallRealMethod().when(schemaService).upgradeCas(any(), any(),
                 any(TypeSystemDescription.class));
+        
+        casStorageSession = CasStorageSession.open();
+    }
+    
+    @After
+    public void tearDown()
+    {
+        CasStorageSession.get().close();
     }
 
     @Test
@@ -114,6 +126,7 @@ public class ImportExportServiceImplTest
         // Prepare a test CAS with a CASMetadata annotation (DocumentMetaData is added as well
         // because the DKPro Core writers used by the ImportExportService expect it.
         JCas jcas = JCasFactory.createJCas(ts);
+        casStorageSession.add("jcas", EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
         jcas.setDocumentText("This is a test .");
         DocumentMetaData.create(jcas);
         CASMetadata cmd = new CASMetadata(jcas);
@@ -128,6 +141,7 @@ public class ImportExportServiceImplTest
         // Read the XMI back from the ZIP that was created by the exporter. This is because XMI
         // files are always serialized as XMI file + type system file.
         JCas jcas2 = JCasFactory.createJCas(ts);
+        casStorageSession.add("jcas2", EXCLUSIVE_WRITE_ACCESS, jcas.getCas());
         try (ZipArchiveInputStream zipInput = new ZipArchiveInputStream(
                 new FileInputStream(exportedXmi))) {
             ZipArchiveEntry entry;

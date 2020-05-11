@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 
 import java.lang.invoke.MethodHandles;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,7 +31,11 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.WriteAccessNotPermittedException;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class CasStorageSession
@@ -38,46 +44,98 @@ public class CasStorageSession
     private static final Logger LOGGER = LoggerFactory
             .getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final ThreadLocal<CasStorageSession> storageSession = ThreadLocal
+    private static final long SPECIAL_PURPOSE = -1;
+    
+    private static final ThreadLocal<CasStorageSession> activeSession = ThreadLocal
             .withInitial(() -> null);
 
+    private CasStorageSession previousSession;
+    private boolean isolated = false;
     private boolean closed = false;
     private StackTraceElement[] creatorStack;
 
     private final Map<Long, Map<String, SessionManagedCas>> managedCases = new LinkedHashMap<>();
 
     /**
+     * Open a new session. If a session already exists, this method throws an exception.
+     * 
      * @return a new session.
      * 
-     * @throws IllegalStateException
+     * @throws CasSessionException
      *             if a session already exists for the current thread.
      */
-    public static CasStorageSession open()
+    public static CasStorageSession open() throws CasSessionException
     {
-        if (storageSession.get() != null) {
-            throw new IllegalStateException("CAS storage session for thread ["
+        if (activeSession.get() != null) {
+            throw new CasSessionException("CAS storage session for thread ["
                     + Thread.currentThread().getName() + "] already initialized");
         }
 
         CasStorageSession session = new CasStorageSession();
-        storageSession.set(session);
+        activeSession.set(session);
 
         session.creatorStack = new Exception().getStackTrace();
 
-        LOGGER.trace("CAS storage session [{}] opened", session.hashCode());
+        LOGGER.trace("CAS storage session [{}]: opened root", session.hashCode());
 
         return session;
     }
 
     /**
-     * @return the current session. Returns {@code null} if there is no current session.
+     * Open a new nested non-isolated session. If a session already exists, the new session will
+     * replace the previous session. When the new session is closed, the previous session is
+     * restored.
+     * <p>
+     * This method is separate from {@link #open()} to make it easier to detect when sessions are
+     * accidentally created. {@link #openNested()} is meant to be used for short throw-away sessions
+     * which can e.g. be used to permit upgrading a CAS.
+     * 
+     * @return a new session.
      */
-    public static CasStorageSession get()
+    public static CasStorageSession openNested()
     {
-        CasStorageSession session = storageSession.get();
+        return openNested(false);
+    }
+
+    /**
+     * Open a new session. If a session already exists, the new session will replace the previous
+     * session. When the new session is closed, the previous session is restored.
+     * <p>
+     * This method is separate from {@link #open()} to make it easier to detect when sessions are
+     * accidentally created. {@link #openNested()} is meant to be used for short throw-away sessions
+     * which can e.g. be used to permit upgrading a CAS.
+     * 
+     * @param aIsolated
+     *            whether methods such as {@link #getManagedState(CAS)} are allowed to access the
+     *            previous (parent) session or not.
+     * @return a new session.
+     */
+    public static CasStorageSession openNested(boolean aIsolated)
+    {
+        CasStorageSession session = new CasStorageSession();
+        session.previousSession = activeSession.get();
+        session.isolated = aIsolated;
+        activeSession.set(session);
+
+        session.creatorStack = new Exception().getStackTrace();
+
+        LOGGER.trace("CAS storage session [{}]: opened nested (isolated: {}, previous: {})",
+                session.hashCode(), aIsolated,
+                session.previousSession != null ? session.previousSession.hashCode() : "none");
+
+        return session;
+    }
+    /**
+     * @return the current session. Returns {@code null} if there is no current session.
+     * @throws CasSessionException
+     *             if no session is available.
+     */
+    public static CasStorageSession get() throws CasSessionException
+    {
+        CasStorageSession session = activeSession.get();
 
         if (session == null) {
-            LOGGER.trace("No CAS storage session available");
+            throw new CasSessionException("No CAS storage session available");
         }
 
         return session;
@@ -90,29 +148,29 @@ public class CasStorageSession
      *             if the current session is not associated with the current thread.
      */
     @Override
-    public void close() throws Exception
+    public void close() throws CasSessionException
     {
-        if (storageSession.get() != this) {
-            throw new IllegalStateException("CAS storage session on thread ["
+        if (activeSession.get() != this) {
+            throw new CasSessionException("CAS storage session on thread ["
                     + Thread.currentThread().getName() + "] is not the current session");
         }
 
         closed = true;
 
-        storageSession.set(null);
+        // For nested sessions, the previous session is set. For root sessions (non-nested), the
+        // previous session will be null, this thus clearing the active session.
+        activeSession.set(previousSession);
 
-        if (LOGGER.isTraceEnabled()) {
-            if (managedCases.isEmpty()) {
-                LOGGER.trace("CAS storage session [{}] closed - was empty", hashCode());
-            }
-            else {
-                LOGGER.trace("CAS storage session [{}] closed", hashCode());
-                LOGGER.trace("CAS storage session contained the following managed CASes:");
-                managedCases.values()
-                        .forEach(casByUser -> casByUser.values()
-                                .forEach(managedCas -> LOGGER.trace("- {}", managedCas)));
-            }
-        }
+        LOGGER.trace("CAS storage session [{}]: closing...", hashCode());
+        
+        managedCases.values()
+                .forEach(casByUser -> casByUser.values()
+                .forEach(managedCas -> {
+                    LOGGER.trace("CAS storage session [{}]: releasing {}", hashCode(), managedCas);
+                    managedCas.getCas().release();
+                }));
+
+        LOGGER.trace("CAS storage session [{}]: closed", hashCode());
     }
 
     /**
@@ -123,6 +181,47 @@ public class CasStorageSession
         return closed;
     }
 
+    /**
+     * Register the given CAS for a special purpose into the session.
+     * 
+     * @param aSpecialPurpose
+     *            the unique purpose identifier - unique with respect to the current session.
+     * @param aMode
+     *            the access mode.
+     * @param aCas
+     *            the CAS itself.
+     * @return the managed CAS state.
+     */
+    public SessionManagedCas add(String aSpecialPurpose, CasAccessMode aMode, CAS aCas)
+    {
+        Validate.notNull(aSpecialPurpose, "The purpose cannot be null");
+        Validate.notNull(aMode, "The access mode cannot be null");
+        Validate.notNull(aCas, "The CAS cannot be null");
+
+        SessionManagedCas managedCas = new SessionManagedCas(SPECIAL_PURPOSE, aSpecialPurpose,
+                aMode, aCas);
+
+        Map<String, SessionManagedCas> casByUser = managedCases
+                .computeIfAbsent(SPECIAL_PURPOSE, key -> new LinkedHashMap<>());
+        casByUser.put(aSpecialPurpose, managedCas);
+        
+        LOGGER.trace("CAS storage session [{}]: added {}", hashCode(), managedCas);
+        
+        return managedCas;
+    }
+    
+    public void remove(CAS aCas)
+    {
+        if (aCas == null) {
+            return;
+        }
+        
+        managedCases.values().stream()
+                .forEach(casByUser -> casByUser.values()
+                        .removeIf(metadata -> metadata.getCas() == aCas));
+    }
+
+    
     /**
      * Register the given CAS into the session.
      * 
@@ -139,21 +238,32 @@ public class CasStorageSession
     public SessionManagedCas add(Long aDocumentId, String aUser, CasAccessMode aMode, CAS aCas)
     {
         Validate.notNull(aDocumentId, "The document ID cannot be null");
+        Validate.isTrue(aDocumentId >= 0, "The document ID cannot be negative");
         Validate.notNull(aUser, "The username cannot be null");
-        
-        Map<String, SessionManagedCas> casByUser = managedCases
-                .computeIfAbsent(aDocumentId, key -> new LinkedHashMap<>());
-        
-        
+        Validate.notNull(aMode, "The access mode cannot be null");
+        Validate.notNull(aCas, "The CAS cannot be null");
 
         SessionManagedCas managedCas = new SessionManagedCas(aDocumentId, aUser, aMode, aCas);
+
+        Map<String, SessionManagedCas> casByUser = managedCases
+                .computeIfAbsent(aDocumentId, key -> new LinkedHashMap<>());
         casByUser.put(aUser, managedCas);
         
-        LOGGER.trace("Added CAS to storage session [{}]: {}", hashCode(), managedCas);
+        LOGGER.trace("CAS storage session [{}]: added {}", hashCode(), managedCas);
         
         return managedCas;
     }
 
+    public boolean contains(CAS aCas)
+    {
+        return getManagedState(aCas).isPresent();
+    }
+    
+    public List<StackTraceElement> getCreatorStack()
+    {
+        return unmodifiableList(asList(creatorStack));
+    }
+    
     /**
      * Returns the managed state of the CAS for the given CAS (if any).
      * 
@@ -165,10 +275,16 @@ public class CasStorageSession
     {
         Validate.notNull(aCas, "The CAS cannot be null");
         
-        return managedCases.values().stream()
+        Optional<SessionManagedCas> result = managedCases.values().stream()
                 .flatMap(casByUser -> casByUser.values().stream()
                         .filter(metadata -> metadata.getCas() == aCas))
                 .findFirst();
+        
+        if (!result.isPresent() && !isolated && previousSession != null) {
+            return previousSession.getManagedState(aCas);
+        }
+        
+        return result;
     }
 
     /**
@@ -185,43 +301,71 @@ public class CasStorageSession
         Validate.notNull(aDocumentId, "The document ID cannot be null");
         Validate.notNull(aUsername, "The username cannot be null");
         
-        return Optional.ofNullable(managedCases.get(aDocumentId))
+        Optional<SessionManagedCas> result = Optional.ofNullable(managedCases.get(aDocumentId))
             .map(casByUser -> casByUser.get(aUsername));
+        
+        if (!result.isPresent() && !isolated && previousSession != null) {
+            return previousSession.getManagedState(aDocumentId, aUsername);
+        }
+        
+        return result;
     }
     
-    public void logCasPresentInSession(String aContext, SourceDocument aDocument, String aUsername)
+    /**
+     * Checks if writing the CAS is permitted. This is the case if the CAS is in the session and if
+     * it has the {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}. Any CAS used in the system must have
+     * been obtained through the {@link CasStorageService} and must be in a session.
+     * 
+     * @param aDocument
+     *            document.
+     * @param aUsername
+     *            user name.
+     */
+    public boolean hasExclusiveAccess(SourceDocument aDocument, String aUsername)
     {
-        Optional<SessionManagedCas> mCas = getManagedState(aDocument.getId(), aUsername);
-        if (!mCas.isPresent()) {
-            LOGGER.trace("{} - CAS for [{}]@[{}]({}) not found in session", aContext, aUsername,
-                    aDocument.getName(), aDocument.getId());
-        }
-        else {
-            LOGGER.trace("{} - CAS for [{}]@[{}]({}) found in session", aContext, aUsername,
-                    aDocument.getName(), aDocument.getId());
-        }
+        return getManagedState(aDocument.getId(), aUsername)
+                .map(SessionManagedCas::isWritingPermitted)
+                .orElse(false);
     }
     
-    public void logCasPresentInSession(String aContext, CAS aCas)
+    /**
+     * Checks if writing the CAS is permitted. This is the case if the CAS is in the session and if
+     * it has the {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}. Any CAS used in the system must have
+     * been obtained through the {@link CasStorageService} and must be in a session.
+     * 
+     * @param aCas a CAS.
+     */
+    public boolean isWritingPermitted(CAS aCas)
+    {
+        return getManagedState(aCas)
+                .map(SessionManagedCas::isWritingPermitted)
+                .orElse(false);
+    }
+    
+    /**
+     * Checks if writing the CAS is permitted. If writing is not permitted, a
+     * {@link WriteAccessNotPermittedException} is thrown.
+     * 
+     * @param aCas
+     *            a CAS.
+     * @throws WriteAccessNotPermittedException if writing is not permitted.
+     */
+    public void assertWritingPermitted(CAS aCas) throws WriteAccessNotPermittedException
     {
         Optional<SessionManagedCas> mCas = getManagedState(aCas);
         if (!mCas.isPresent()) {
-            LOGGER.trace("{} - CAS not found in session", aContext);
+            // CasMetadataUtils.getSourceDocumentName(aCas)
+            String docId = WebAnnoCasUtil.getDocumentId(aCas);
+            String docTitle = WebAnnoCasUtil.getDocumentTitle(aCas);
+            throw new WriteAccessNotPermittedException(
+                    "CAS [" + docTitle + "](" + docId + ") not found in current sesssion");
         }
-        else {
-            LOGGER.trace("{} - CAS found in session", aContext);
-        }
-    }
-    
-    public void logWriteAccessAttempt(String aContext, CAS aCas)
-    {
-        Optional<SessionManagedCas> mCas = getManagedState(aCas);
-        if (mCas.isPresent()) {
-            if (!EXCLUSIVE_WRITE_ACCESS.equals(mCas.get().getMode())) {
-                LOGGER.warn("Performing write operation fo CAS [{}]@({}) opened with mode {}",
-                        mCas.get().getUserId(), mCas.get().getSourceDocumentId(),
-                        mCas.get().getMode());
-            }
+        
+        if (!mCas.map(SessionManagedCas::isWritingPermitted).orElse(false)) {
+            throw new WriteAccessNotPermittedException(
+                    "Write access to CAS for user [" + mCas.get().getUserId() + "] for document ["
+                            + mCas.get().getSourceDocumentId()
+                            + "] is not permitted in the current sesssion");
         }
     }
 }

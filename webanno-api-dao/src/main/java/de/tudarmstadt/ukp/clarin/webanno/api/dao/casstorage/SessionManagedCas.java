@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+
 import java.util.Objects;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -83,6 +85,14 @@ public class SessionManagedCas
     {
         return writeCount;
     }
+    
+    /**
+     * @return whether making modifications to the managed CAS is permitted.
+     */
+    public boolean isWritingPermitted()
+    {
+        return EXCLUSIVE_WRITE_ACCESS.equals(mode);
+    }
 
     @Override
     public boolean equals(final Object other)
@@ -91,8 +101,9 @@ public class SessionManagedCas
             return false;
         }
         SessionManagedCas castOther = (SessionManagedCas) other;
-        return Objects.equals(sourceDocumentId, castOther.sourceDocumentId)
-                && Objects.equals(userId, castOther.userId) && Objects.equals(mode, castOther.mode);
+        return Objects.equals(sourceDocumentId, castOther.sourceDocumentId) && 
+                Objects.equals(userId, castOther.userId) && 
+                Objects.equals(mode, castOther.mode);
     }
 
     @Override
@@ -104,12 +115,22 @@ public class SessionManagedCas
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE)
-                .append("doc", sourceDocumentId)
-                .append("user", userId)
+        ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE);
+        
+        if (sourceDocumentId >= 0l) {
+            builder.append("doc", sourceDocumentId)
+                    .append("user", userId);
+        }
+        else {
+            builder.append("purpose", userId);
+        }
+        
+        return builder
+                .append("cas", cas.hashCode())
                 .append("m", mode)
                 .append("r", readCount)
                 .append("w", writeCount)
                 .toString();
+
     }
 }

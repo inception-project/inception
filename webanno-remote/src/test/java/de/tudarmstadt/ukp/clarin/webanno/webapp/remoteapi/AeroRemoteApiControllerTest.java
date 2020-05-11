@@ -75,6 +75,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.OpenCasStorageSessionForRequestFilter;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
@@ -117,6 +118,7 @@ public class AeroRemoteApiControllerTest
                 .webAppContextSetup(context)
                 .alwaysDo(print())
                 .apply(SecurityMockMvcConfigurers.springSecurity())
+                .addFilters(new OpenCasStorageSessionForRequestFilter())
                 .build();
         
         if (!initialized) {

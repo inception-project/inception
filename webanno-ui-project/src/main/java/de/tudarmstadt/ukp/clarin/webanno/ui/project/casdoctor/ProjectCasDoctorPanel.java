@@ -21,8 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static java.util.Arrays.asList;
@@ -151,8 +150,6 @@ public class ProjectCasDoctorPanel
     private void actionRepair(AjaxRequestTarget aTarget, Form<?> aForm)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        casStorageService.disableCache();
-        
         CasDoctor casDoctor = new CasDoctor();
         casDoctor.setApplicationContext(ApplicationContextProvider.getApplicationContext());
         casDoctor.setFatalChecks(false);
@@ -188,8 +185,8 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CORRECTION_USER + "]");
                 try {
-                    CAS correctionCas = casStorageService.readCas(sd, CORRECTION_USER, false,
-                            EXCLUSIVE_WRITE_ACCESS);
+                    CAS correctionCas = casStorageService.readCas(sd, CORRECTION_USER,
+                            UNMANAGED_NON_INITIALIZING_ACCESS);
                     casDoctor.repair(project, correctionCas, messageSet.messages);
                     CasPersistenceUtils.writeSerializedCas(correctionCas,
                             documentService.getCasFile(sd, CORRECTION_USER));
@@ -218,8 +215,8 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CURATION_USER + "]");
                 try {
-                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER, false,
-                            EXCLUSIVE_WRITE_ACCESS);
+                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER,
+                            UNMANAGED_NON_INITIALIZING_ACCESS);
                     casDoctor.repair(project, curationCas, messageSet.messages);
                     CasPersistenceUtils.writeSerializedCas(curationCas,
                             documentService.getCasFile(sd, CURATION_USER));
@@ -255,7 +252,7 @@ public class ProjectCasDoctorPanel
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {
                         CAS userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
-                                false, EXCLUSIVE_WRITE_ACCESS);
+                                UNMANAGED_NON_INITIALIZING_ACCESS);
                         casDoctor.repair(project, userCas, messageSet.messages);
                         CasPersistenceUtils.writeSerializedCas(userCas,
                                 documentService.getCasFile(ad.getDocument(), ad.getUser()));
@@ -279,8 +276,6 @@ public class ProjectCasDoctorPanel
     private void actionCheck(AjaxRequestTarget aTarget, Form<?> aForm)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        casStorageService.disableCache();
-        
         CasDoctor casDoctor = new CasDoctor();
         casDoctor.setApplicationContext(ApplicationContextProvider.getApplicationContext());
         casDoctor.setFatalChecks(false);
@@ -315,8 +310,8 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CORRECTION_USER + "]");
                 try {
-                    CAS correctionCas = casStorageService.readCas(sd, CORRECTION_USER, false,
-                            SHARED_READ_ONLY_ACCESS);
+                    CAS correctionCas = casStorageService.readCas(sd, CORRECTION_USER,
+                            UNMANAGED_NON_INITIALIZING_ACCESS);
                     casDoctor.analyze(project, correctionCas, messageSet.messages);
                 }
                 catch (FileNotFoundException e) {
@@ -343,8 +338,8 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CURATION_USER + "]");
                 try {
-                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER, false,
-                            SHARED_READ_ONLY_ACCESS);
+                    CAS curationCas = casStorageService.readCas(sd, CURATION_USER,
+                            UNMANAGED_NON_INITIALIZING_ACCESS);
                     casDoctor.analyze(project, curationCas, messageSet.messages);
                 }
                 catch (FileNotFoundException e) {
@@ -372,7 +367,7 @@ public class ProjectCasDoctorPanel
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {
                         CAS userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
-                                false, SHARED_READ_ONLY_ACCESS);
+                                UNMANAGED_NON_INITIALIZING_ACCESS);
                         casDoctor.analyze(project, userCas, messageSet.messages);
                     }
                     catch (Exception e) {
@@ -398,8 +393,8 @@ public class ProjectCasDoctorPanel
     {
         CAS cas;
         if (casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER)) {
-            cas = casStorageService.readCas(aDocument, INITIAL_CAS_PSEUDO_USER, false,
-                    SHARED_READ_ONLY_ACCESS);
+            cas = casStorageService.readCas(aDocument, INITIAL_CAS_PSEUDO_USER,
+                    UNMANAGED_NON_INITIALIZING_ACCESS);
         }
         else {
             cas = importExportService.importCasFromFile(
