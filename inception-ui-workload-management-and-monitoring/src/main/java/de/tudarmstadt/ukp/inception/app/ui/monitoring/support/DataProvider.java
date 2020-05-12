@@ -18,8 +18,6 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
@@ -27,10 +25,11 @@ import java.util.List;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
-
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 
 public class DataProvider extends SortableDataProvider
@@ -80,7 +79,10 @@ public class DataProvider extends SortableDataProvider
             {
                 return dir * (o1.getName().compareTo(o2.getName()));
 
-            } else return 0;
+            }
+            else {
+                return 0;
+            }
         });
 
         return newList.subList((int)first, Math.

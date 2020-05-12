@@ -19,22 +19,14 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.page;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import javax.persistence.NoResultException;
 
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DataProvider;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.MetaImageColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
@@ -44,8 +36,17 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
-
 import org.wicketstuff.annotation.mount.MountPath;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DataProvider;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.MetaImageColumn;
 
 
 @MountPath("MonitoringPage.html")

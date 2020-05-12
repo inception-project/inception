@@ -19,8 +19,6 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.page.MonitoringPage;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -33,6 +31,9 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
+
+import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.support.EmbeddableImage;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.page.MonitoringPage;
 
 public class MetaImageColumn extends AbstractColumn
 {
