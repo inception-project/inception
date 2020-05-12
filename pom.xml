@@ -71,6 +71,7 @@
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <log4j.version>2.13.2</log4j.version>
+    <groovy.version>3.0.3</groovy.version>
 
     <webanno.version>4.0.0-SNAPSHOT</webanno.version>
     <servlet-api.version>4.0.1</servlet-api.version>
@@ -568,6 +569,15 @@
         <version>${spring.security.version}</version>
       </dependency>
       
+      <!-- GROOVY -->
+      <dependency>
+        <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-bom</artifactId>
+        <version>${groovy.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <!-- LOG4J -->
       
       <dependency>
