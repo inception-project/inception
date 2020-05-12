@@ -80,7 +80,7 @@ $ chmod +x /srv/inception/inception.jar
 Description=INCEpTION
 
 [Service]
-ExecStart= /srv/inception/inception.jar
+ExecStart=/srv/inception/inception.jar
 User=www-data
 
 [Install]
@@ -98,7 +98,7 @@ $ systemctl enable inception
 +
 [source,bash]
 ----
-$ systemctl inception start
+$ systemctl start inception
 ----
 +
 * Check the log output
@@ -112,7 +112,7 @@ $ journalctl -u inception
 +
 [source,bash]
 ----
-$ systemctl inception stop
+$ systemctl stop inception
 ----
 
 == Running the standalone behind HTTPD
