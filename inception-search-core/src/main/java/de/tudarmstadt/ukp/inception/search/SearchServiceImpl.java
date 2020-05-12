@@ -22,6 +22,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
@@ -118,7 +120,7 @@ public class SearchServiceImpl
      * 
      * @param aProjectId
      *            the project ID
-     * @return the index
+     * @return the index or {@code null} if there is no suitable index factory.
      */
     private Index loadIndex(long aProjectId)
     {
@@ -145,9 +147,16 @@ public class SearchServiceImpl
             entityManager.persist(index);
         }
 
+        // Get the index factory
+        PhysicalIndexFactory indexFactory = physicalIndexRegistry
+                .getIndexFactory(DEFAULT_PHSYICAL_INDEX_FACTORY);
+        
+        if (indexFactory == null) {
+            return null;
+        }
+        
         // Acquire the low-level index object and attach it to the index state (transient)
-        index.setPhysicalIndex(physicalIndexRegistry.getIndexFactory(DEFAULT_PHSYICAL_INDEX_FACTORY)
-                .getPhysicalIndex(aProject));
+        index.setPhysicalIndex(indexFactory.getPhysicalIndex(aProject));
 
         return index;
     }
@@ -168,6 +177,11 @@ public class SearchServiceImpl
 
         // Retrieve index entry for the project
         Index index = indexByProject.get(project.getId());
+
+        // If the index is null, then indexing is not supported.
+        if (index == null) {
+            return;
+        }
 
         synchronized (index) {
             // Physical index exists, drop it
@@ -195,6 +209,11 @@ public class SearchServiceImpl
                 document.getName(), document.getId(), project.getName(), project.getId());
 
         Index index = indexByProject.get(project.getId());
+
+        // If the index is null, then indexing is not supported.
+        if (index == null) {
+            return;
+        }
 
         synchronized (index) {
             // If the index has not been created yet, there is nothing to do
@@ -243,6 +262,12 @@ public class SearchServiceImpl
         Project project = aEvent.getProject();
 
         Index index = indexByProject.get(project.getId());
+
+        // If the index is null, then indexing is not supported.
+        if (index == null) {
+            return;
+        }
+
         synchronized (index) {
             index.setInvalid(true);
             entityManager.merge(index);
@@ -262,6 +287,11 @@ public class SearchServiceImpl
                 project.getId());
 
         Index index = indexByProject.get(project.getId());
+        
+        // If the index is null, then indexing is not supported.
+        if (index == null) {
+            return;
+        }
 
         synchronized (index) {
             // Index already initialized? If not, schedule full re-indexing job. This will also
@@ -301,6 +331,12 @@ public class SearchServiceImpl
                 project.getId());
 
         Index index = indexByProject.get(project.getId());
+        
+        // If the index is null, then indexing is not supported.
+        if (index == null) {
+            return;
+        }
+        
         synchronized (index) {
             // Index already initialized? If not, schedule full re-indexing job. This will also
             // index the given document, so we can stop here after scheduling the re-indexing.
@@ -389,6 +425,11 @@ public class SearchServiceImpl
 
         Index index = indexByProject.get(aProject.getId());
 
+        // If the index is null, then indexing is not supported.
+        if (index == null) {
+            return Collections.emptyMap();
+        }
+
         ensureIndexIsCreatedAndValid(aProject, index);
 
         return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser, aQuery,
@@ -405,6 +446,12 @@ public class SearchServiceImpl
         log.info("Re-indexing project [{}]({}) ", aProject.getName(), aProject.getId());
 
         Index index = indexByProject.get(aProject.getId());
+
+        // If the index is null, then indexing is not supported.
+        if (index == null) {
+            return;
+        }
+
         synchronized (index) {
             index.setInvalid(true);
             
@@ -455,6 +502,11 @@ public class SearchServiceImpl
 
         Index index = indexByProject.get(aProject.getId());
 
+        // If the index is null, then indexing is not supported.
+        if (index == null) {
+            return 0;
+        }
+        
         ensureIndexIsCreatedAndValid(aProject, index);
 
         // Index is valid, try to execute the query

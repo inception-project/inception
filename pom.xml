@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>23</version>
+    <version>24</version>
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
@@ -60,17 +60,18 @@
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
 
-    <mockito.version>2.28.2</mockito.version>
-    <assertj.version>3.14.0</assertj.version>
-    <spring.version>5.2.3.RELEASE</spring.version>
-    <spring.boot.version>2.2.4.RELEASE</spring.boot.version>
-    <spring.security.version>5.2.2.RELEASE</spring.security.version>
-    <wicket.version>8.6.1</wicket.version>
-    <wicketstuff.version>8.6.0</wicketstuff.version>
+    <mockito.version>3.3.3</mockito.version>
+    <assertj.version>3.15.0</assertj.version>
+    <spring.version>5.2.6.RELEASE</spring.version>
+    <spring.boot.version>2.2.6.RELEASE</spring.boot.version>
+    <spring.security.version>5.2.3.RELEASE</spring.security.version>
+    <wicket.version>8.8.0</wicket.version>
+    <wicketstuff.version>8.8.0</wicketstuff.version>
     <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
-    <log4j.version>2.12.1</log4j.version>
+    <log4j.version>2.13.2</log4j.version>
+    <groovy.version>3.0.3</groovy.version>
 
     <webanno.version>4.0.0-SNAPSHOT</webanno.version>
     <servlet-api.version>4.0.1</servlet-api.version>
@@ -81,8 +82,8 @@
     <okhttp.version>3.14.2</okhttp.version>
     
     <asciidoctor.plugin.version>2.0.0-RC.1</asciidoctor.plugin.version>
-    <asciidoctor.version>2.2.0</asciidoctor.version>
-    <asciidoctor-diagram.version>2.0.1</asciidoctor-diagram.version>
+    <asciidoctor.version>2.3.0</asciidoctor.version>
+    <asciidoctor-diagram.version>2.0.2</asciidoctor-diagram.version>
   </properties>
   <modules>
     <!-- Build infrastructure modules -->
@@ -568,6 +569,15 @@
         <version>${spring.security.version}</version>
       </dependency>
       
+      <!-- GROOVY -->
+      <dependency>
+        <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-bom</artifactId>
+        <version>${groovy.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <!-- LOG4J -->
       
       <dependency>
