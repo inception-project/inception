@@ -71,8 +71,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.inception.curation.CurationMetadata;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
-import de.tudarmstadt.ukp.inception.curation.merge.AutomaticMergeStrategy;
-import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
 
@@ -89,8 +87,8 @@ public class CurationSidebar
     private @SpringBean CurationService curationService;
     private @SpringBean DocumentService documentService;
     
-    private @SpringBean ManualMergeStrategy manualMergeStrat;
-    private @SpringBean AutomaticMergeStrategy autoMergeStrat;
+    private @SpringBean MergeStrategy manualMergeStrat;
+    private @SpringBean MergeStrategy autoMergeStrat;
     
     private CheckGroup<User> selectedUsers;
     private Form<List<User>> usersForm;
