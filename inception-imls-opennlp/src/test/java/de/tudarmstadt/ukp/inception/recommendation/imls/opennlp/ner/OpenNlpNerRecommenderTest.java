@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -152,19 +154,34 @@ public class OpenNlpNerRecommenderTest
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDataFiles());
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            return loadData(ds, ds.getDataFiles());
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2002Reader.class,
+        CollectionReader reader = createReader(
+            Conll2002Reader.class,
             Conll2002Reader.PARAM_PATTERNS, files, 
             Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
             Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),

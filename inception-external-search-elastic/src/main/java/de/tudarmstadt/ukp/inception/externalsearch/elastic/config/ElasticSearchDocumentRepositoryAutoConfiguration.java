@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.externalsearch.elastic.config;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,6 +32,8 @@ import de.tudarmstadt.ukp.inception.externalsearch.elastic.ElasticSearchProvider
  */
 @Configuration
 @AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
+@ConditionalOnProperty(prefix = "external-search.elastic-search", name = "enabled", 
+        havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(ExternalSearchService.class)
 public class ElasticSearchDocumentRepositoryAutoConfiguration
 {

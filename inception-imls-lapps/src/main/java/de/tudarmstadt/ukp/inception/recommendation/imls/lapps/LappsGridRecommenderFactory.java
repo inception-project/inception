@@ -24,8 +24,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.Lapp
 import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.POS_LAYER;
 
 import org.apache.wicket.model.IModel;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -33,12 +31,17 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.config.LappsGridRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor;
 
-@Component
-@ConditionalOnProperty(prefix = "recommenders.lappsgrid", name = "enabled",
-        matchIfMissing = true)
+/**
+ * Provides support for calling out to LAPPS Grid for recommendations.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link LappsGridRecommenderAutoConfiguration#lappsGridRecommenderFactory()}.
+ * </p>
+ */
 public class LappsGridRecommenderFactory
     extends RecommendationEngineFactoryImplBase<LappsGridRecommenderTraits>
 {

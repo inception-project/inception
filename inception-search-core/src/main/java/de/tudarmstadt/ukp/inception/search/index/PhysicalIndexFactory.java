@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.search.index;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface PhysicalIndexFactory
@@ -31,6 +28,5 @@ public interface PhysicalIndexFactory
 
     String getDisplayName();
 
-    PhysicalIndex getNewIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
-            DocumentService aDocumentService, ProjectService aProjectService, String aDir);
+    PhysicalIndex getPhysicalIndex(Project aProject);
 }

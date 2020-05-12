@@ -24,21 +24,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("ui.pdf")
 public class PdfEditorPropertiesImpl implements PdfEditorProperties
 {
-    private boolean enabled = false;
-
     private boolean debug = false;
-
-    @Override
-    public boolean isEnabled()
-    {
-        return enabled;
-    }
-
-    @Override
-    public void setEnabled(boolean aEnabled)
-    {
-        enabled = aEnabled;
-    }
 
     @Override
     public boolean isDebug()

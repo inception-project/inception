@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -29,10 +27,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
 
-@Component("documentMetadataSidebar")
-@ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+/**
+ * Support for document-level annotations through a sidebar.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DocumentMetadataLayerSupportAutoConfiguration#documentMetadataSidebarFactory()}.
+ * </p>
+ */
 public class DocumentMetadataSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {

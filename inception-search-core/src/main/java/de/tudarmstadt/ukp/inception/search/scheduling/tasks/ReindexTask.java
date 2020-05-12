@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 /**
- * Search indexer task. Runs the reindexing process for a given project
+ * Search indexer task. Runs the re-indexing process for a given project
  */
 public class ReindexTask
     extends Task

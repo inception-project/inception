@@ -26,11 +26,16 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.similarity.LevenshteinDistance;
-import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link EntityLinkingServiceAutoConfiguration#levenshteinFeatureGenerator()}.
+ * </p>
+ */
 public class LevenshteinFeatureGenerator
     implements EntityRankingFeatureGenerator
 {
