@@ -312,24 +312,30 @@ public class CurationServiceImpl
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
-        if (info != null) {
-            String username = (String) info.getPrincipal();
-            storeCurationSettings(username);
-            clearState(username);
+        
+        if (info == null) {
+            return;
         }
+        
+        User user = userRegistry.get((String) info.getPrincipal());
+        if (user == null) {
+            // This happens e.g. when a session for "anonymousUser" is destroyed or if (for some
+            // reason), the user owning the session no longer exists in the system.
+            return;
+        }
+        
+        storeCurationSettings(user);
+        clearState(user);
     }
 
     /**
      * Write settings for all projects of this user to the data base
      */
-    private void storeCurationSettings(String aUsername)
+    private void storeCurationSettings(User aUser)
     {
-        User currentUser = userRegistry.get(aUsername);
-        if (currentUser == null) {
-            return;
-        }
+        String aUsername = aUser.getUsername();
         
-        for (Project project : projectService.listAccessibleProjects(currentUser)) {
+        for (Project project : projectService.listAccessibleProjects(aUser)) {
             Long projectId = project.getId();
             Set<String> usernames = null;
             if (curationStates.containsKey(new CurationStateKey(aUsername, projectId))) {
@@ -364,11 +370,11 @@ public class CurationServiceImpl
         }
     }
 
-    private void clearState(String aUsername)
+    private void clearState(User aUser)
     {
-        projectService.listAccessibleProjects(userRegistry.get(aUsername)).stream()
+        projectService.listAccessibleProjects(aUser).stream()
             .map(Project::getId)
-            .forEach(pId -> removeCurrentUserInformation(aUsername, pId));
+            .forEach(pId -> removeCurrentUserInformation(aUser.getUsername(), pId));
     }
 
     @Override
