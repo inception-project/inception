@@ -1,5 +1,5 @@
 <!--
-  Copyright 2017
+  Copyright 2020
   Ubiquitous Knowledge Processing (UKP) Lab
   Technische Universität Darmstadt
 
@@ -70,7 +70,6 @@
       <dependency>
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
-        <version>1.11.3</version>
        </dependency>
        <dependency>
         <groupId>org.springframework</groupId>
@@ -137,9 +136,9 @@
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
       </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-            <artifactId>webanno-ui-monitoring</artifactId>
-        </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-ui-monitoring</artifactId>
+      </dependency>
     </dependencies>
 </project>

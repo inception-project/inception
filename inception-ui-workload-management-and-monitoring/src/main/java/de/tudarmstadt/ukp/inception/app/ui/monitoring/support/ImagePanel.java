@@ -16,4 +16,18 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.app.ui.monitoring.page;
+package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
+
+import org.apache.wicket.markup.html.image.Image;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.request.resource.ResourceReference;
+
+public class ImagePanel extends Panel
+{
+    public ImagePanel(String aID, ResourceReference aImageReference)
+    {
+        super(aID);
+        add(new Image("image", aImageReference));
+    }
+
+}

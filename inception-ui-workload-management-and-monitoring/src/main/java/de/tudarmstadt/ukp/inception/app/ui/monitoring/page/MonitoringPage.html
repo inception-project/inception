@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
- - Copyright 2017
+ - Copyright 2020
  - Ubiquitous Knowledge Processing (UKP) Lab
  - Technische Universität Darmstadt
  -
@@ -18,24 +18,25 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org" xmlns="http://www.w3.org/1999/html" lang="">
 <body>
-<wicket:extend>
+  <wicket:extend>
     <div>
-        <div class="form-group form-row" wicket:enclosure="defaultDocumentsNumberTextField">
-            <label class="col-sm-8.5 col-form-label" >
-                <wicket:message key="defaultDocumentsLabel"/>
-            </label>
-            <div class="col-sm-1.5">
-               <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control"/>
-            </div>
+      <div class="form-group form-row" wicket:enclosure="defaultDocumentsNumberTextField">
+        <label class="col-sm-8.5 col-form-label" >
+          <wicket:message key="defaultDocumentsLabel"/>
+        </label>
+        <div class="col-sm-1.5">
+          <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control"/>
         </div>
-        <form>
-            <div class="flex-content scrolling">
-                <div class="col-sm-12">
-                  <table class="table table-sm" wicket:id="dataTable"></table>
-                </div>
-            </div>
-        </form>
+      </div>
+      <form>
+        <div class="flex-content scrolling">
+          <div class="col-sm-12">
+            <table class="table table-sm" wicket:id="dataTable"></table>
+          </div>
+        </div>
+      </form>
+      <div wicket:id="modalWindow"></div>
     </div>
-</wicket:extend>
+  </wicket:extend>
 </body>
 </html>

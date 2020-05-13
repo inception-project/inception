@@ -43,7 +43,7 @@ public class MonitoringPageMenuItem implements MenuItem
     @Override
     public String getPath()
     {
-        return "/monitoring";
+        return "/workload";
     }
     
     @Override
@@ -55,7 +55,7 @@ public class MonitoringPageMenuItem implements MenuItem
     @Override
     public String getLabel()
     {
-        return "Monitoring";
+        return "Workload";
     }
     
     /**

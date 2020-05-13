@@ -131,11 +131,7 @@
     <!-- Documentation -->
     <module>inception-doc</module>
     <!-- Curation -->
-    
     <module>inception-curation</module>
-      <module>untitled</module>
-      <module>untitled1</module>
-      <module>untitled</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->

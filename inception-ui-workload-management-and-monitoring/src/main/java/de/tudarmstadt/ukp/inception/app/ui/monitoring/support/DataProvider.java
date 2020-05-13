@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -37,17 +37,20 @@ public class DataProvider extends SortableDataProvider
     <SourceDocument, String> implements Serializable
 {
 
-
+    private List<String> headers;
     private List<SourceDocument> data;
     private IModel<List<SourceDocument>> model;
 
 
-    public DataProvider(List<SourceDocument> aContents)
+    public DataProvider(List<SourceDocument> aContents, List<String> headers)
     {
 
-        data = aContents;
+        this.data = aContents;
+        this.headers = headers;
 
-        setSort("Document", SortOrder.ASCENDING);
+
+        //Initial Sorting
+        setSort(headers.get(0), SortOrder.ASCENDING);
 
         //Required
         model = new LoadableDetachableModel<List<SourceDocument>>() {
@@ -64,19 +67,22 @@ public class DataProvider extends SortableDataProvider
     {
         List<SourceDocument> newList = data;
 
+        //
+
         //Sorting, check for which column was clicked and return new sorting accordingly
+        //TODO rework of comparator needed
         Collections.sort(newList, (o1, o2) ->
         {
             int dir = getSort().isAscending() ? 1 : -1;
-            if ("Document".equals(getSort().getProperty()))
+            if (getSort().getProperty().equals(headers.get(0)))
             {
                 return dir * (o1.getName().compareTo(o2.getName()));
 
-            } else if ("Finished".equals(getSort().getProperty()))
+            } else if (getSort().getProperty().equals(headers.get(1)))
             {
                 return dir * (o1.getName().compareTo(o2.getName()));
 
-            }  else if ("In Progress".equals(getSort().getProperty()))
+            }  else if (getSort().getProperty().equals(headers.get(2)))
             {
                 return dir * (o1.getName().compareTo(o2.getName()));
 
@@ -106,9 +112,5 @@ public class DataProvider extends SortableDataProvider
         super.detach();
     }
 
-    public String getName(int i)
-    {
-        return data.get(i).getName();
-    }
 }
 
