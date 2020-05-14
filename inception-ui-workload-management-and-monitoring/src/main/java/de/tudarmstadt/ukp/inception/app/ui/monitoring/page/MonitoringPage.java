@@ -19,32 +19,25 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.page;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import javax.persistence.NoResultException;
 
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DataProvider;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ImagePanel;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ModalPanel;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.*;
-import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
 import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
@@ -55,36 +48,50 @@ import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
-
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DataProvider;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ImagePanel;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ModalPanel;
 
 @MountPath("workload.html")
 public class MonitoringPage extends ApplicationPageBase
 {
 
+    //Feedbackpanel
+    BootstrapFeedbackPanel feedbackPanel;
+
     //Layout Panel
-    private final Panel table;
+    private Panel table;
 
     //Modal Window (popup panel on clicking the image in the metadata column)
-    ModalWindow modalWindow;
+    private ModalWindow modalWindow;
 
     //Default annotations label and textbox
-    private final NumberTextField DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD;
+    private NumberTextField DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD;
 
     //The Icons
-    private final ResourceReference META =
-        new PackageResourceReference(getClass(), "book_open.png");
+    private static final ResourceReference META =
+        new PackageResourceReference(MonitoringPage.class, "book_open.png");
 
     //Current Project
-    Optional<Project> currentProject;
+    private Project currentProject;
 
     //List containing all documents
     private List<SourceDocument> documentList;
 
-    //List containing all documents finished in their progress of annotation by any user in the project
+    //List containing all documents finished in their
+    // progress of annotation by any user in the project
     private List<String> annotatedDocuments;
-
 
 
     //Default annotations
@@ -97,19 +104,85 @@ public class MonitoringPage extends ApplicationPageBase
     private @SpringBean MenuItemRegistry menuItemService;
     private @SpringBean DocumentService documentService;
 
-    //Constructor
-    public MonitoringPage(final PageParameters aPageParameters)
-    {
+    //Default constructor, no project selected (only when workload.html
+    // put directly in the browser without any parameters)
+    public MonitoringPage() {
+        super();
 
 
+        feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
+        feedbackPanel.setOutputMarkupId(true);
 
+        //Required due to wicket
+        add(new ModalWindow("modalWindow"));
+        add(new NumberTextField("defaultDocumentsNumberTextField"));
+        add(new EmptyPanel("dataTable"));
+
+        //Error, user is returned to home page, nothing else to do
+        //TODO show errors properly
+        feedbackPanel.error("No Project selected, please enter the monitoring page only with a valid project reference");
+        setResponsePage(getApplication().getHomePage());
+
+    }
+
+
+    //Constructor with a project
+    public MonitoringPage(final PageParameters aPageParameters) {
+        super(aPageParameters);
         //Get current Project
         StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        currentProject = getProjectFromParameters(projectParameter);
+        if (getProjectFromParameters(projectParameter).isPresent()) {
+            currentProject = getProjectFromParameters(projectParameter).get();
+        } else {
+            currentProject = null;
+        }
 
+
+
+        //Get the current user
+        User user = userRepository.getCurrentUser();
+        //Check if Project exists
+        if (currentProject != null) {
+
+            feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
+            feedbackPanel.setOutputMarkupId(true);
+
+
+            //Check if user is allowed to see the monitoring page of this project
+            if (currentProject != null && !(projectService.isCurator(currentProject, user)
+                || projectService.isManager(currentProject, user)))
+            {
+                //Required even in case of error due to wicket
+                add(new ModalWindow("modalWindow"));
+                add(new NumberTextField("defaultDocumentsNumberTextField"));
+                add(new EmptyPanel("dataTable"));
+                feedbackPanel.error("You have no permission to access project [" + currentProject.getId() + "]");
+                setResponsePage(getApplication().getHomePage());
+
+            } else {
+                initialize();
+            }
+
+        }
+
+        else {
+            //Required even in case of error due to wicket
+            add(new ModalWindow("modalWindow"));
+            add(new NumberTextField("defaultDocumentsNumberTextField"));
+            add(new EmptyPanel("dataTable"));
+            //Project does not exists, returning to homepage
+            error("Project [" + projectParameter + "] does not exist");
+            setResponsePage(getApplication().getHomePage());
+
+        }
+
+    }
+
+    public void initialize()
+    {
         //get Documents for current project
         documentList = documentService.
-            listSourceDocuments(currentProject.get());
+            listSourceDocuments(currentProject);
 
         //Create list with data for the provider
         List<SourceDocument> data = new ArrayList<>();
@@ -122,16 +195,13 @@ public class MonitoringPage extends ApplicationPageBase
         annotatedDocuments = new ArrayList<>();
 
 
-
         //List for annotated documents
-        for (int i = 0; i < documentService.listFinishedAnnotationDocuments(currentProject.get()).size(); i++)
+        for (int i = 0; i < documentService.listFinishedAnnotationDocuments
+            (currentProject).size(); i++)
         {
-            annotatedDocuments.add(documentService.listFinishedAnnotationDocuments(currentProject.get()).get(i).getName());
+            annotatedDocuments.add(documentService.
+                listFinishedAnnotationDocuments(currentProject).get(i).getName());
         }
-
-        System.out.println(annotatedDocuments);
-        System.out.println(projectService.listProjectUsersWithPermissions(currentProject.get()));
-
 
 
         //Headers of the table
@@ -145,7 +215,8 @@ public class MonitoringPage extends ApplicationPageBase
         DataProvider dataProvider = new DataProvider(data, headers);
 
         //Init defaultDocumentsNumberTextField
-        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD = new NumberTextField("defaultDocumentsNumberTextField");
+        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD = new
+            NumberTextField("defaultDocumentsNumberTextField");
 
         //Create the modalWindow
         modalWindow = new ModalWindow("modalWindow");
@@ -165,36 +236,37 @@ public class MonitoringPage extends ApplicationPageBase
 
         //own column type, contains only a clickable image (AJAX event)
         // , creates a small panel dialog containing metadata
-        columns.add(new PropertyColumn(new Model(getString("Metadata")), getString("Metadata")) {
-                private static final long serialVersionUID = 1L;
-                @Override
-                public void populateItem(Item aItem, String aID, IModel aModel) {
+        columns.add(new PropertyColumn(new Model(getString("Metadata")),
+            getString("Metadata")) {
+            private static final long serialVersionUID = 1L;
+            @Override
+            public void populateItem(Item aItem, String aID, IModel aModel) {
 
-                    //Add the Icon
-                    ImagePanel icon = new ImagePanel(aID, META);
-                    icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
-                    aItem.add(icon);
+                //Add the Icon
+                ImagePanel icon = new ImagePanel(aID, META);
+                icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
+                aItem.add(icon);
+                aItem.add(AttributeModifier.append("class", "centering"));
 
+                //Click event in the metadata column
+                aItem.add(new AjaxEventBehavior("click") {
+                    @Override
+                    protected void onEvent(AjaxRequestTarget aTarget) {
 
-                    //Click event in the metadata column
-                    aItem.add(new AjaxEventBehavior("click") {
-                        @Override
-                        protected void onEvent(AjaxRequestTarget aTarget) {
+                        //Get the current selected Row
+                        Item rowItem = aItem.findParent( Item.class );
+                        int rowIndex = rowItem.getIndex();
 
-                            //Get the current selected Row
-                            Item rowItem = aItem.findParent( Item.class );
-                            int rowIndex = rowItem.getIndex();
+                        //Set contents of the modalWindow
+                        modalWindow.setContent(new ModalPanel(modalWindow.
+                            getContentId(), documentList.get(rowIndex)));
 
-                            //Set contents of the modalWindow
-                            modalWindow.setContent(new ModalPanel(modalWindow.
-                                getContentId(), documentList.get(rowIndex)));
-
-                            //Open the dialog
-                            modalWindow.show(aTarget);
-                        }
-                    });
-                }
-            });
+                        //Open the dialog
+                        modalWindow.show(aTarget);
+                    }
+                });
+            }
+        });
 
 
 
@@ -203,7 +275,7 @@ public class MonitoringPage extends ApplicationPageBase
         table = new DefaultDataTable("dataTable", columns, dataProvider, 20);
 
         //Miscellaneous for fields
-        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setRequired(true);
+        //DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setRequired(true);
 
         //Add to page according to the following structure
 
@@ -248,11 +320,13 @@ public class MonitoringPage extends ApplicationPageBase
         return amount;
     }
 
-    //Helper methods, returns for a document how often it is currently in progress within the project
+    //Helper methods, returns for a document how often it is
+    // currently in progress within the project
     public int getInProgressAmountForDocument(SourceDocument aDocument)
     {
         int amount = 0;
-        int amountUser = projectService.listProjectUsersWithPermissions(currentProject.get()).size();
+        int amountUser = projectService.listProjectUsersWithPermissions
+            (currentProject).size();
 
         for (int i = 0; i <  annotatedDocuments.size(); i++)
         {
