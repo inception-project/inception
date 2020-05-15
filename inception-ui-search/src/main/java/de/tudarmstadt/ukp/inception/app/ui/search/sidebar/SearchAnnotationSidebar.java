@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
@@ -508,21 +510,28 @@ public class SearchAnnotationSidebar
                         // Do nothing
                     }
 
-                    // Load annotated document
-                    CAS cas = documentService.readAnnotationCas(sourceDoc,
-                            currentUser.getUsername());
+                    // Holder for lazily-loaded CAS
+                    Optional<CAS> cas = Optional.empty();
 
                     // Apply bulk operations to all hits from this document
                     for (SearchResult result : resultsGroup.getValue()) {
                         if (result.isReadOnly() || !result.isSelectedForAnnotation()) {
                             continue;
                         }
+                        
+                        if (!cas.isPresent()) {
+                         // Lazily load annotated document
+                            cas = Optional.of(documentService.readAnnotationCas(sourceDoc,
+                                    currentUser.getUsername(), AUTO_CAS_UPGRADE));
+                        }
 
-                        aConsumer.apply(sourceDoc, cas, adapter, result, bulkResult);
+                        aConsumer.apply(sourceDoc, cas.get(), adapter, result, bulkResult);
                     }
 
                     // Persist annotated document
-                    writeJCasAndUpdateTimeStamp(sourceDoc, cas);
+                    if (cas.isPresent()) {
+                        writeJCasAndUpdateTimeStamp(sourceDoc, cas.get());
+                    }
                 }
 
                 if (bulkResult.created > 0) {
