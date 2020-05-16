@@ -33,7 +33,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.SerialFormat;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.jcas.tcas.DocumentAnnotation;
 import org.apache.uima.util.CasIOUtils;
 import org.apache.uima.util.TypeSystemUtil;
 import org.slf4j.Logger;
@@ -67,9 +66,6 @@ public final class CasPersistenceUtils
             // Reason we do this: https://issues.apache.org/jira/browse/UIMA-6162
             CAS dummy = WebAnnoCasUtil.createCas();
             deserializeCASComplete(serializer, (CASImpl) getRealCas(dummy));
-            if (dummy.select(DocumentAnnotation.class).asList().size() > 1) {
-                System.out.println("Double!");
-            }
             // END SAFEGUARD --------------
         }
         catch (Exception e) {
