@@ -241,6 +241,10 @@ a.disabled {
 	}
 }
 
+.context-menu {
+	z-index: 999;
+}
+
 // A class for something that needs to be there in order to get events but should not actually be
 // visible to the user (i.e. use no space)
 .there-but-not-visible {
