@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.metrics;
 
 import org.springframework.jmx.export.annotation.ManagedMetric;
+import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 import org.springframework.stereotype.Component;
@@ -87,6 +88,19 @@ public class BratMetricsImpl implements BratMetrics
         return sentRenderedSize;
     }
     
+    @ManagedOperation
+    public void reset()
+    {
+        fullRenderCount = 0;
+        fullRenderedSize = 0;
+        diffRenderCount = 0;
+        diffRenderedSize = 0;
+        savedRenderedSize = 0;
+        sentRenderedSize = 0;
+        renderTime = 0;
+        maxRenderTime = 0;
+    }
+    
     @Override
     public synchronized void renderComplete(RenderType aType, long aTime, String aFull,
             String aDiff)
@@ -104,7 +118,7 @@ public class BratMetricsImpl implements BratMetrics
         }
         
         renderTime += aTime;
-        maxRenderTime = Math.max(maxRenderTime, renderTime);
+        maxRenderTime = Math.max(maxRenderTime, aTime);
         
         fullRenderedSize += aFull.length();
 
