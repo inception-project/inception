@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchU
  * {@link ExternalSearchUIAutoConfiguration#documentRepositoryProjectSettingsPanelFactory()}.
  * </p>
  */
-@Order(400)
+@Order(450)
 public class DocumentRepositoryProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
