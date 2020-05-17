@@ -78,12 +78,12 @@
                 <select wicket:id="defaultAnnotationLayer" class="form-control" 
                     data-container="body"></select>
               </div>
-              <div class="offset-sm-3 col-sm-9 text-muted">
+              <div class="col-sm-12 text-muted">
                 <small wicket:id="relationHint"></small>
               </div>
             </div>
             <div class="form-group form-row" wicket:id="forwardAnnotationGroup">
-              <div class="offset-sm-3 col-sm-9">
+              <div class="col-sm-12">
                 <div class="form-check">
                   <input wicket:id="forwardAnnotation" class="form-check-input" type="checkbox"/>
                   <label wicket:for="forwardAnnotation" class="form-check-label">
@@ -98,17 +98,17 @@
           <div class="card-header">
             Annotation
             <div wicket:id="buttonContainer" class="actions">
-              <button wicket:id="delete" class="btn btn-danger">
-                <i class="fas fa-trash"></i>&nbsp;
-                <wicket:message key="delete"/>
+              <button wicket:id="delete" class="btn btn-danger" wicket:message="title:delete">
+                <i class="fas fa-trash"></i>
+                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="delete"/></span>
               </button>
-              <button wicket:id="reverse" class="btn btn-secondary">
-                <i class="fas fa-arrows-alt-h"></i>&nbsp;
-                <wicket:message key="reverse"/>
+              <button wicket:id="reverse" class="btn btn-secondary" wicket:message="title:reverse">
+                <i class="fas fa-arrows-alt-h"></i>
+                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="reverse"/></span>
               </button>
-              <button wicket:id="clear" class="btn btn-secondary">
-                <i class="fas fa-times"></i>&nbsp;
-                <wicket:message key="clear"/>
+              <button wicket:id="clear" class="btn btn-secondary" wicket:message="title:clear">
+                <i class="fas fa-times"></i>
+                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="clear"/></span>
               </button>
             </div>
           </div>
