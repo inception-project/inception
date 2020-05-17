@@ -123,7 +123,7 @@ function runRoutines() {
 			}
 			
 			
-			else if (currentPage.includes("project.html") && ps == "projectView") 
+			else if (!currentPage.includes("projectsetting.html") && ps == "projectView") 
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
@@ -139,7 +139,10 @@ function runRoutines() {
 					enjoyhint_instance.runScript();
 			} 
 			
-			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingView") {
+			// this is kind of an ugly work around for instances with context path root, 
+			// setting cookie contextpath to /project on dashboard, see #1668
+			else if (currentPage.includes("projectsetting.html") && 
+					(ps == "projectsettingView" || ps == "projectView")) {
 				
 				enjoyhint_instance = new EnjoyHint({     
 					
@@ -192,7 +195,7 @@ function runRoutines() {
 				enjoyhint_instance.runScript();
 			}
 			
-			else if (currentPage.includes("project.html") && ps == "projectsettingsConfigured")
+			else if (ps == "projectsettingsConfigured")
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
@@ -215,7 +218,7 @@ function runRoutines() {
 				enjoyhint_instance.runScript();
 			}
 			
-			else if (currentPage.includes("project.html") && ps == "farewell")
+			else if (ps == "farewell")
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
@@ -460,7 +463,7 @@ function createRecommenderSettingsRoutine(enjoyHint) {
 				'showSkip': false
 			},
 			{
-				'click [href=\'./project.html\']:last' : "Now, let's go back to the Dashboard.",
+				'click [href=\'.\']:last' : "Now, let's go back to the Dashboard.",
 				'showSkip': false
 			} 
 			];
