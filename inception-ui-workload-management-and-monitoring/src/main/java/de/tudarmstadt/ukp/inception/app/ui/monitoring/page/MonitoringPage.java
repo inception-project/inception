@@ -24,19 +24,27 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJ
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import javax.persistence.NoResultException;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.HeadersToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigationToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.FilterForm;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.FilterToolbar;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
@@ -63,6 +71,8 @@ import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DataProvider;
 import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ImagePanel;
 import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ModalPanel;
 
+
+
 @MountPath("workload.html")
 public class MonitoringPage extends ApplicationPageBase
 {
@@ -76,8 +86,11 @@ public class MonitoringPage extends ApplicationPageBase
     //Modal Window (popup panel on clicking the image in the metadata column)
     private ModalWindow modalWindow;
 
-    //Default annotations label and textbox
+    //Default annotations textbox
     private NumberTextField DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD;
+
+    //Label for Filter
+    private TextField filterTextfield;
 
     //The Icons
     private static final ResourceReference META =
@@ -214,9 +227,34 @@ public class MonitoringPage extends ApplicationPageBase
         //Data Provider for the table
         DataProvider dataProvider = new DataProvider(data, headers);
 
+
         //Init defaultDocumentsNumberTextField
         DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD = new
-            NumberTextField("defaultDocumentsNumberTextField");
+            NumberTextField("defaultDocumentsNumberTextField", new Model<Integer>(), Integer.class);
+        //Set minimum value for input
+        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setMinimum(1);
+
+        //If first craetion, set value to 1
+        if (defaultAnnotations < 1) {
+            defaultAnnotations = 1;
+
+        }
+
+        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setConvertEmptyInputStringToNull(false);
+
+
+        System.out.println("Int: " + defaultAnnotations);
+
+        //add AJAX event handler on changing input value
+        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.add(new OnChangeAjaxBehavior() {
+            @Override
+            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
+            {
+                defaultAnnotations = Integer.parseInt
+                    (DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.getInput());
+                System.out.println("Int: " + defaultAnnotations);
+            }
+        });
 
         //Create the modalWindow
         modalWindow = new ModalWindow("modalWindow");
@@ -226,6 +264,13 @@ public class MonitoringPage extends ApplicationPageBase
         //Columns of the table
         List<IColumn> columns = new ArrayList<>();
 
+        //Filter properties
+        FilterForm<SourceDocument> filter = new FilterForm(getString("filter"), dataProvider);
+        filter.add(new DropDownChoice(getString("filterDropDown"), this::getFilter));
+
+        //Filter Label
+        filterTextfield = new TextField("filterTextfield", new Model<String>(), String.class);
+
         //Each column creates TableMetaData
         columns.add(new LambdaColumn<>(new ResourceModel(getString("Document"))
             , getString("Finished"), SourceDocument::getName));
@@ -234,8 +279,8 @@ public class MonitoringPage extends ApplicationPageBase
         columns.add(new LambdaColumn<>(new ResourceModel(getString("InProgress"))
             , getString("InProgress"), this::getInProgressAmountForDocument));
 
-        //own column type, contains only a clickable image (AJAX event)
-        // , creates a small panel dialog containing metadata
+        //own column type, contains only a clickable image (AJAX event),
+        //creates a small panel dialog containing metadata
         columns.add(new PropertyColumn(new Model(getString("Metadata")),
             getString("Metadata")) {
             private static final long serialVersionUID = 1L;
@@ -268,22 +313,36 @@ public class MonitoringPage extends ApplicationPageBase
             }
         });
 
-
-
-
         //The DefaultDataTable
-        table = new DefaultDataTable("dataTable", columns, dataProvider, 20);
+        table = new DataTable("dataTable", columns, dataProvider, 20);
+        table.setOutputMarkupId(true);
+
+
+        //FilterToolbar
+        FilterToolbar filterToolbar = new FilterToolbar((DataTable)table, filter);
+        ((DataTable) table).addTopToolbar(filterToolbar);
+        ((DataTable) table).addTopToolbar(new NavigationToolbar((DataTable)table));
+        ((DataTable) table).addTopToolbar(new HeadersToolbar((DataTable)table, dataProvider));
+
+        //Add the table to the filter form, as well as the input textfield
+        filter.add(filterTextfield);
+        filter.add(table);
+
+
+
 
         //Miscellaneous for fields
-        //DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setRequired(true);
+        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setRequired(true);
+
 
         //Add to page according to the following structure
 
-        //Then default annotations
+        //Then default annotations texfield
         add(DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD);
 
-        //Finally the table
-        add(table);
+
+        //Filter components with the table
+        add(filter);
 
     }
 
@@ -321,7 +380,7 @@ public class MonitoringPage extends ApplicationPageBase
     }
 
     //Helper methods, returns for a document how often it is
-    // currently in progress within the project
+    //currently in progress within the project
     public int getInProgressAmountForDocument(SourceDocument aDocument)
     {
         int amount = 0;
@@ -337,5 +396,41 @@ public class MonitoringPage extends ApplicationPageBase
         }
 
         return amountUser - amount;
+    }
+
+
+    //Helper methods, Additional filters
+    public List<String> getFilter() {
+        List<String> filterList = new ArrayList<String>();
+        filterList.add("Document creation time:");
+        filterList.add("User:");
+        filterList.add("Unused documents:");
+
+        return filterList;
+    }
+
+    //Returns a random document out of all documents in the project.
+    //Only a document is chosen which is not yet given to annotators more than the default number
+    //per document number
+    public SourceDocument getRandomDocument()
+    {
+        //Create an empty document
+        SourceDocument document = null;
+        Random r = new Random();
+        
+        while (document == null)
+        {
+            //If the random chosen document wont surpass the amount of "inProgress" for the document
+            if (getInProgressAmountForDocument(documentList.
+                get(r.nextInt(documentList.size() - 1))) + 1 <= defaultAnnotations)
+            {
+                //If that was not the case, assign this document
+                document = documentList.get(r.nextInt(documentList.size() - 1));
+            }  
+        }
+        //return the document
+        //REMINDER: Document MIGHT BE NULL if there is not a single document left!
+        // Annotator should then get the message: "No more documents to annotate"
+        return document;
     }
 }

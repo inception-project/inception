@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -33,12 +34,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 
 public class DataProvider extends SortableDataProvider
-    <SourceDocument, String> implements Serializable
+    <SourceDocument, String> implements Serializable, IFilterStateLocator<Filter>
 {
 
     private List<String> headers;
     private List<SourceDocument> data;
     private IModel<List<SourceDocument>> model;
+    private Filter filter;
 
 
     public DataProvider(List<SourceDocument> aContents, List<String> headers)
@@ -46,6 +48,7 @@ public class DataProvider extends SortableDataProvider
 
         this.data = aContents;
         this.headers = headers;
+        this.filter = new Filter();
 
 
         //Initial Sorting
@@ -93,6 +96,11 @@ public class DataProvider extends SortableDataProvider
 
         return newList.subList((int)first, Math.
             min((int)first + (int)count, newList.size())).iterator();
+/*
+        return filterTable(contactsFound).subList((int)first, (int)(first + count)).
+            iterator();
+
+ */
     }
 
     @Override
@@ -114,5 +122,20 @@ public class DataProvider extends SortableDataProvider
         super.detach();
     }
 
+    @Override
+    public Filter getFilterState() {
+        return filter;
+    }
+
+    @Override
+    public void setFilterState(Filter filter) {
+        this.filter = filter;
+    }
+
+    public List<String> filterTable(List<String> data)
+    {
+        return null;
+
+    }
 }
 

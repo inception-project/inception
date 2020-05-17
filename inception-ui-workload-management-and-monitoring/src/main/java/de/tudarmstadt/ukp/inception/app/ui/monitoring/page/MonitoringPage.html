@@ -28,13 +28,23 @@
           <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control"/>
         </div>
       </div>
-      <form>
-        <div class="flex-content scrolling">
-          <div class="col-sm-12">
-            <table class="table table-sm" wicket:id="dataTable"></table>
-          </div>
+      <div>
+        <div>
+          <form wicket:id="filter">
+            <div class="form-group form-row" wicket:enclosure="filterTextfield">
+              <select wicket:id="filterDropDown"/>
+              <div class="col-sm-1.5">
+              <input wicket:id="filterTextfield" type="text" class="form-control"/>
+              </div>
+            </div>
+              <div class="flex-content scrolling">
+                <div class="col-sm-12">
+                  <table class="table table-sm" wicket:id="dataTable"></table>
+                </div>
+              </div>
+          </form>
         </div>
-      </form>
+      </div>
       <div wicket:id="modalWindow"></div>
     </div>
   </wicket:extend>

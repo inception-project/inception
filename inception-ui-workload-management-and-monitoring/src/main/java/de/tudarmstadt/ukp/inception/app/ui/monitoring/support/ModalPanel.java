@@ -38,11 +38,18 @@ public class ModalPanel extends Panel
             +  aDocument.getProject().getName());
         Label source = new Label("source", "Source of the Document: "
             + aDocument.getState().getName());
+        //TODO List all users in Progress and Finished for the document
+        Label userInProgress = new Label("userInProgress", "Source of the Document: "
+            + aDocument.getState().getName());
+        Label userFinished = new Label("userFinished", "Source of the Document: "
+            + aDocument.getState().getName());
 
         add(documentName);
         add(size);
         add(createdDate);
         add(source);
+        add(userInProgress);
+        add(userFinished);
 
     }
 }
