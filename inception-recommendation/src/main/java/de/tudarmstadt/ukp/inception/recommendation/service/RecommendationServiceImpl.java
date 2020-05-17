@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
@@ -1082,7 +1084,8 @@ public class RecommendationServiceImpl
                         if (!originalCas.isPresent()) {
                             try {
                                 originalCas = Optional
-                                        .of(documentService.readAnnotationCas(document, username));
+                                        .of(documentService.readAnnotationCas(document, username,
+                                                AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS));
                             }
                             catch (IOException e) {
                                 predictions.log(LogMessage.error(this,

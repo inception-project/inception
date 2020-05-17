@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 
@@ -245,7 +247,10 @@ public class TrainingTask
                 AnnotationDocumentState state = annotationDocument != null ?
                         annotationDocument.getState() : AnnotationDocumentState.NEW;
 
-                CAS cas = documentService.readAnnotationCas(sourceDocument, aUser.getUsername());
+                // During training, we should not have to modify the CASes... right? Fingers
+                // crossed.
+                CAS cas = documentService.readAnnotationCas(sourceDocument, aUser.getUsername(),
+                        AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
                 casses.add(new TrainingDocument(cas, state));
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
