@@ -89,8 +89,8 @@ public class CurationSidebar
     private @SpringBean CurationService curationService;
     private @SpringBean DocumentService documentService;
     
-    private @SpringBean ManualMergeStrategy manualMergeStrat;
-    private @SpringBean AutomaticMergeStrategy autoMergeStrat;
+    private @SpringBean(name = ManualMergeStrategy.BEAN_NAME) MergeStrategy manualMergeStrat;
+    private @SpringBean(name = AutomaticMergeStrategy.BEAN_NAME) MergeStrategy autoMergeStrat;
     
     private CheckGroup<User> selectedUsers;
     private Form<List<User>> usersForm;
