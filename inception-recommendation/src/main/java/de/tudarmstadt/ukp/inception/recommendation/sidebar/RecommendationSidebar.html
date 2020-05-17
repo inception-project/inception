@@ -25,13 +25,13 @@
         <wicket:message key="recommender"/>
         <i wicket:id="warning" class="fas fa-exclamation-triangle" style="color: orange" wicket:message="value:mismatch"></i>
         <div class="actions">
-          <button wicket:id="showLog" class="btn btn-secondary">
-            <i class="fas fa-clipboard-list"></i>&nbsp;
-            <wicket:message key="showLog"/>
+          <button wicket:id="showLog" class="btn btn-secondary" wicket:message="title:showLog">
+            <i class="fas fa-clipboard-list"></i>
+            <span class="d-none d-xl-inline">&nbsp;<wicket:message key="showLog"/></span>
           </button> 
-          <button wicket:id="retrain" class="btn btn-secondary">
-            <i class="fas fa-redo"></i>&nbsp;
-            <wicket:message key="retrain"/>
+          <button wicket:id="retrain" class="btn btn-secondary" wicket:message="title:retrain">
+            <i class="fas fa-redo"></i>
+            <span class="d-none d-xl-inline">&nbsp;<wicket:message key="retrain"/></span>
           </button> 
         </div>
       </div>
