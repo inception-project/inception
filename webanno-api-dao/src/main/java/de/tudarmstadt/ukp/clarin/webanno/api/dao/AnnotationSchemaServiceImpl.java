@@ -22,6 +22,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
+import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
+import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
@@ -45,7 +48,6 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
@@ -981,11 +983,6 @@ public class AnnotationSchemaServiceImpl
     public void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException
     {
-        // Because serialization is a process which modifies internal data structures of the CAS,
-        // we need exclusive access to both, the source and that target CAS for the time being.
-        // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
-        // for https://issues.apache.org/jira/browse/UIMA-6162
-        CasStorageSession.get().assertWritingPermitted(aSourceCas);
         CasStorageSession.get().assertWritingPermitted(aTargetCas);
         
         // Save source CAS type system (do this early since we might do an in-place upgrade)
@@ -993,17 +990,24 @@ public class AnnotationSchemaServiceImpl
 
         // Save source CAS contents
         ByteArrayOutputStream serializedCasContents = new ByteArrayOutputStream();
-        Serialization.serializeWithCompression(getRealCas(aSourceCas), serializedCasContents,
-                sourceTypeSystem);
+        CAS realSourceCas = getRealCas(aSourceCas);
+        // UIMA-6162 Workaround: synchronize CAS during de/serialization
+        synchronized (((CASImpl) realSourceCas).getBaseCAS()) {
+            serializeWithCompression(realSourceCas, serializedCasContents, sourceTypeSystem);
+        }
 
         // Re-initialize the target CAS with new type system
-        CAS tempCas = CasFactory.createCas(aTargetTypeSystem);
-        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) tempCas);
-        Serialization.deserializeCASComplete(serializer, (CASImpl) getRealCas(aTargetCas));
-
-        // Leniently load the source CAS contents into the target CAS
-        CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()),
-                getRealCas(aTargetCas), sourceTypeSystem);
+        CAS realTargetCas = getRealCas(aTargetCas);
+        // UIMA-6162 Workaround: synchronize CAS during de/serialization
+        synchronized (((CASImpl) realTargetCas).getBaseCAS()) {
+            CAS tempCas = CasFactory.createCas(aTargetTypeSystem);
+            CASCompleteSerializer serializer = serializeCASComplete((CASImpl) tempCas);
+            deserializeCASComplete(serializer, (CASImpl) realTargetCas);
+    
+            // Leniently load the source CAS contents into the target CAS
+            CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()),
+                    getRealCas(aTargetCas), sourceTypeSystem);
+        }
     }
     
     /**

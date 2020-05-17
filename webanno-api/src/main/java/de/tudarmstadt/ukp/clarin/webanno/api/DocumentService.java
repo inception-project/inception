@@ -408,6 +408,10 @@ public interface DocumentService
     CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode)
         throws IOException;
 
+    CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aMode)
+        throws IOException;
+
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created. 
      * This method does not perform an upgrade of the type system in the CAS.

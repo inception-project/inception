@@ -653,6 +653,7 @@ public class DocumentServiceImpl
         return readAnnotationCas(aDocument, aUserName, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS);
     }
 
+    @Override
     @Transactional
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
             CasUpgradeMode aUpgradeMode, CasAccessMode aMode)
