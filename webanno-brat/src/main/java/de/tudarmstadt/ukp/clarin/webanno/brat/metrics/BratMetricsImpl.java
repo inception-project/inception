@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.metrics;
 
 import org.springframework.jmx.export.annotation.ManagedMetric;
+import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,7 @@ public class BratMetricsImpl implements BratMetrics
     private long fullRenderCount = 0;
     private long fullRenderedSize = 0;
     
+    private long diffRenderAttempts = 0;
     private long diffRenderCount = 0;
     private long diffRenderedSize = 0;
     
@@ -38,6 +40,7 @@ public class BratMetricsImpl implements BratMetrics
     
     private long renderTime = 0;
     private long maxRenderTime = 0;
+    private long lastRenderTime = 0;
     
     @ManagedMetric(metricType = MetricType.COUNTER)
     public long getFullRenderCount()
@@ -49,6 +52,12 @@ public class BratMetricsImpl implements BratMetrics
     public long getFullRenderedSize()
     {
         return fullRenderedSize;
+    }
+
+    @ManagedMetric(metricType = MetricType.COUNTER)
+    public long getDiffRenderAttempts()
+    {
+        return diffRenderAttempts;
     }
 
     @ManagedMetric(metricType = MetricType.COUNTER)
@@ -81,10 +90,31 @@ public class BratMetricsImpl implements BratMetrics
         return maxRenderTime;
     }
 
+    @ManagedMetric(metricType = MetricType.COUNTER, unit = "ms")
+    public long getLastRenderTime()
+    {
+        return lastRenderTime;
+    }
+
     @ManagedMetric(metricType = MetricType.COUNTER, unit = "chars")
     public long getSentRenderedSize()
     {
         return sentRenderedSize;
+    }
+    
+    @ManagedOperation
+    public void reset()
+    {
+        fullRenderCount = 0;
+        fullRenderedSize = 0;
+        diffRenderAttempts = 0;
+        diffRenderCount = 0;
+        diffRenderedSize = 0;
+        savedRenderedSize = 0;
+        sentRenderedSize = 0;
+        renderTime = 0;
+        maxRenderTime = 0;
+        lastRenderTime = 0;
     }
     
     @Override
@@ -94,22 +124,22 @@ public class BratMetricsImpl implements BratMetrics
         switch (aType) {
         case DIFFERENTIAL:
             diffRenderCount++;
+            diffRenderedSize += aDiff.length();
             sentRenderedSize += aDiff.length();
             savedRenderedSize += aFull.length() - aDiff.length();
             break;
         case FULL:
             fullRenderCount++;
+            fullRenderedSize += aFull.length();
             sentRenderedSize += aFull.length();
+            if (aDiff != null) {
+                diffRenderAttempts++;
+            }
             break;
         }
         
         renderTime += aTime;
-        maxRenderTime = Math.max(maxRenderTime, renderTime);
-        
-        fullRenderedSize += aFull.length();
-
-        if (aDiff != null) {
-            diffRenderedSize += aDiff.length();
-        }
+        maxRenderTime = Math.max(maxRenderTime, aTime);
+        lastRenderTime = aTime;
     }
 }
