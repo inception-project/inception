@@ -1012,4 +1012,22 @@ public class DocumentServiceImpl
     {
         projectService.recalculateProjectState(aEvent.getDocument().getProject());
     }
+
+    @Override
+    public long getNumOfSourceDocuments()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM SourceDocument");
+        return (long) entityManager.createQuery(query).getSingleResult();
+    }
+
+    @Override
+    public long getNumOfAnnotationDocuments()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM AnnotationDocument");
+        return (long) entityManager.createQuery(query).getSingleResult();
+    }
 }

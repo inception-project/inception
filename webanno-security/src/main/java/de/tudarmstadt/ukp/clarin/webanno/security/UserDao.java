@@ -113,4 +113,9 @@ public interface UserDao
     boolean isProjectCreator(User aUser);
 
     Set<String> getRoles(User aUser);
+
+    /**
+     * Retrieve the number of enabled users
+     */
+    long getNumOfEnabledUsers();
 }
