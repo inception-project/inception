@@ -1633,4 +1633,17 @@ public class RecommendationServiceImpl
             }
         };
     }
+
+    @Override
+    public long getNumOfEnabledRecommenders()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM Recommender WHERE",
+                "enabled = :enabled");
+
+        return (long) entityManager.createQuery(query)
+                .setParameter("enabled", true)
+                .getSingleResult();
+    }
 }
