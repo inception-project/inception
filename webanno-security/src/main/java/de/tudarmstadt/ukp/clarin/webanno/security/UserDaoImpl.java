@@ -231,7 +231,7 @@ public class UserDaoImpl
                 "FROM " +  User.class.getName(),
                 "WHERE enabled = :enabled");
         
-        return (long) entityManager.createQuery(query)
+        return entityManager.createQuery(query, Long.class)
                 .setParameter("enabled", true)
                 .getSingleResult();
     }

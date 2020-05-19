@@ -1028,6 +1028,6 @@ public class DocumentServiceImpl
         String query = String.join("\n",
                 "SELECT COUNT(*)",
                 "FROM AnnotationDocument");
-        return (long) entityManager.createQuery(query).getSingleResult();
+        return entityManager.createQuery(query, Long.class).getSingleResult();
     }
 }
