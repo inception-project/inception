@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
@@ -41,7 +40,6 @@ import java.util.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Component;
-import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
@@ -49,6 +47,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
+import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
@@ -82,7 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
@@ -213,8 +211,10 @@ public class ProjectsOverviewPage
             @Override
             protected void populateItem(ListItem<Project> aItem)
             {
-                LambdaStatelessLink projectLink = new LambdaStatelessLink(MID_PROJECT_LINK,
-                    () -> selectProject(aItem.getModelObject()));
+                PageParameters pageParameters = new PageParameters().add(
+                        ProjectDashboardPage.PAGE_PARAM_PROJECT_ID, aItem.getModelObject().getId());
+                BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
+                        MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
                 DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
                     () -> aItem.getModelObject().getCreated(), "yyyy-MM-dd");
@@ -346,12 +346,6 @@ public class ProjectsOverviewPage
         
         aTarget.add(projectListContainer, roleFilters);
         aTarget.addChildren(getPage(), IFeedback.class);
-    }
-    
-    private void selectProject(Project aProject)
-    {
-        Session.get().setMetaData(CURRENT_PROJECT, aProject);
-        setResponsePage(ProjectDashboardPage.class);
     }
     
     private List<Project> listProjects()

@@ -90,7 +90,9 @@ public class PhysicalIndexRegistryImpl
             return null;
         }
         else {
-            return extensions.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
+            return extensions.stream()
+                    .filter(f -> aId.equals(f.getBeanName()))
+                    .findFirst()
                     .orElse(null);
         }
     }
