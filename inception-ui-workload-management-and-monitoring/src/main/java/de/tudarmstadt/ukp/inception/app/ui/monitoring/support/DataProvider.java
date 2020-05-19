@@ -48,7 +48,7 @@ public class DataProvider extends SortableDataProvider
 
         this.data = aContents;
         this.headers = headers;
-        this.filter = new Filter();
+        //this.filter = new Filter();
 
 
         //Initial Sorting

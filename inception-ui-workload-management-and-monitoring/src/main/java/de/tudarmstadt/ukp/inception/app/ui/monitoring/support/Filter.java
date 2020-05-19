@@ -17,29 +17,37 @@
  */
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 import java.io.Serializable;
-import java.util.Date;
 
+//Helper class for the Filter
 public class Filter implements Serializable
 {
     //All filter attributes
-    private Date craetionTime;
+    private long creationTime;
+    private boolean isUserForDocument;
+    private SourceDocument document;
 
 
     //Default constructor
-    public Filter()
+    public Filter(SourceDocument document)
     {
+        this.document = document;
+        this.creationTime = document.getCreated().getTime();
 
     }
 
-    public Date getCraetionTime() {
-        return craetionTime;
+    //Getter only required
+    public long getCreationTime() {
+        return creationTime;
     }
 
-    public void setCraetionTime(Date craetionTime) {
-        this.craetionTime = craetionTime;
+    public boolean isUserForDocument() {
+        return isUserForDocument;
     }
 
-
+    public SourceDocument getDocument() {
+        return document;
+    }
 }

@@ -279,7 +279,7 @@ public class MonitoringPage extends ApplicationPageBase
         columns.add(new LambdaColumn<>(new ResourceModel(getString("InProgress"))
             , getString("InProgress"), this::getInProgressAmountForDocument));
 
-        //own column type, contains only a clickable image (AJAX event),
+        //Own column type, contains only a clickable image (AJAX event),
         //creates a small panel dialog containing metadata
         columns.add(new PropertyColumn(new Model(getString("Metadata")),
             getString("Metadata")) {
@@ -428,7 +428,7 @@ public class MonitoringPage extends ApplicationPageBase
                 document = documentList.get(r.nextInt(documentList.size() - 1));
             }  
         }
-        //return the document
+        //Return the document
         //REMINDER: Document MIGHT BE NULL if there is not a single document left!
         // Annotator should then get the message: "No more documents to annotate"
         return document;
