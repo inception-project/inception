@@ -42,10 +42,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
 
 
-@Component("automaticStrategy")
+@Component(AutomaticMergeStrategy.BEAN_NAME)
 public class AutomaticMergeStrategy
     implements MergeStrategy
 {
+    public static final String BEAN_NAME = "automaticStrategy";
+    
     private String uiName = "Automatic";
     
     private Logger log = LoggerFactory.getLogger(getClass());

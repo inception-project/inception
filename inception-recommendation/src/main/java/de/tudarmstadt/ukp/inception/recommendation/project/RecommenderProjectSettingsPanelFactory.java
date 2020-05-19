@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
  * {@link RecommenderServiceAutoConfiguration#recommenderProjectSettingsPanelFactory}.
  * </p>
  */
-@Order(400)
+@Order(360)
 public class RecommenderProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
