@@ -127,6 +127,7 @@ public class BratAnnotationEditor
     private AbstractAjaxBehavior requestHandler;
     
     private String lastRenderedJson;
+    private int lastRenderedWindowStart = -1;
 
     public BratAnnotationEditor(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
@@ -585,38 +586,53 @@ public class BratAnnotationEditor
         RenderType renderType = RenderType.FULL;
         String cmd = "renderData";
         String data = json;
-
-        // ... try to render diff
         String diff = null;
-        JsonNode current = null;
-        JsonNode previous = null;
-        try {
-            ObjectMapper mapper = JSONUtil.getObjectMapper();
-            current = mapper.readTree(json);
-            previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
-        }
-        catch (IOException e) {
-            LOG.error("Unable to generate diff, falling back to full render.", e);
-            // Fall-through
-        }
         
-        if (previous != null && current != null) {
-            diff = JsonDiff.asJson(previous, current).toString();
- 
-            // Only sent a patch if it is smaller than sending the full data. E.g. when switching
-            // pages, the patch usually ends up being twice as large as the full data.
-            if (diff.length() < json.length()) {
-                cmd = "renderDataPatch";
-                data = diff;
-                renderType = RenderType.DIFFERENTIAL;
+        // Here, we try to balance server CPU load against network load. So if we have a chance
+        // of significantly reducing the data sent to the client via a differential update, then
+        // we try that. However, if it is pretty obvious that we won't save a lot, then we will
+        // not even try. I.e. we apply some heuristics to see if large parts of the editor have
+        // changed.
+        AnnotatorState aState = getModelObject();
+        boolean tryDifferentialUpdate = lastRenderedWindowStart >= 0
+                // Check if we did a far scroll or switch pages
+                && Math.abs(lastRenderedWindowStart - aState.getWindowBeginOffset()) < aState
+                        .getPreferences().getWindowSize() / 3;
+
+        if (tryDifferentialUpdate) {
+            // ... try to render diff
+            JsonNode current = null;
+            JsonNode previous = null;
+            try {
+                ObjectMapper mapper = JSONUtil.getObjectMapper();
+                current = mapper.readTree(json);
+                previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
+            }
+            catch (IOException e) {
+                LOG.error("Unable to generate diff, falling back to full render.", e);
+                // Fall-through
             }
             
-//            LOG.info("Diff:  " + diff);
-//            LOG.info("Full: {}   Patch: {}   Diff time: {}", json.length(), diff.length(), timer);
+            if (previous != null && current != null) {
+                diff = JsonDiff.asJson(previous, current).toString();
+     
+                // Only sent a patch if it is smaller than sending the full data. E.g. when
+                // switching pages, the patch usually ends up being twice as large as the full data.
+                if (diff.length() < json.length()) {
+                    cmd = "renderDataPatch";
+                    data = diff;
+                    renderType = RenderType.DIFFERENTIAL;
+                }
+                
+                // LOG.info("Diff: " + diff);
+                // LOG.info("Full: {} Patch: {} Diff time: {}", json.length(), diff.length(),
+                // timer);
+            }
         }
         
         // Storing the last rendered JSON as string because JsonNodes are not serializable.
         lastRenderedJson = json;
+        lastRenderedWindowStart = aState.getWindowBeginOffset();
         
         timer.stop();
 
