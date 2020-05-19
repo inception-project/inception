@@ -1642,8 +1642,7 @@ public class RecommendationServiceImpl
                 "FROM Recommender WHERE",
                 "enabled = :enabled");
 
-        return (long) entityManager.createQuery(query)
-                .setParameter("enabled", true)
+        return entityManager.createQuery(query, Long.class).setParameter("enabled", true)
                 .getSingleResult();
     }
 }

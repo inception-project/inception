@@ -15,27 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.metrics;
+package de.tudarmstadt.ukp.inception.recommendation.metrics;
 
-public interface InceptionMetrics
+public interface RecommendationMetrics
 {
-    /**
-     * Retrieve the total number of currently active (i.e. logged in) users
-     */
-    public long getActiveUsersTotal();
-    /**
-     * Retrieve the total number of enabled users
-     */
-    public long getEnbabledUsersTotal();
-    /**
-     * Retrieve the total number of documents
-     */
-    public long getDocumentsTotal();
-    /**
-     * Retrieve the total number of annotation documents
-     */
-    public long getAnnotationDocumentsTotal();
-    
     /**
      * Retrieve the total number of currently enabled recommenders
      */

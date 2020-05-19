@@ -15,53 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.metrics;
+package de.tudarmstadt.ukp.inception.recommendation.metrics;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Service;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 
 @ManagedResource
 @Service
-@ConditionalOnProperty(prefix = "inception.monitoring", name = "enabled", havingValue = "true")
-public class InceptionMetricsImpl
-    implements InceptionMetrics
+@ConditionalOnProperty(prefix = "monitoring.metrics", name = "enabled", havingValue = "true")
+public class RecommendationMetricsImpl
+    implements RecommendationMetrics
 {
-
-    @Autowired
-    private UserDao userRepository;
-    @Autowired
-    private SessionRegistry sessionRegistry;
-    @Autowired
-    private DocumentService documentService;
-    @Autowired
-    private RecommendationService recService;
+    private final RecommendationService recService;
     
-    @Override
-    @ManagedAttribute
-    public long getActiveUsersTotal() {
-        return sessionRegistry.getAllPrincipals().size();
-    }
-
-    @Override
-    @ManagedAttribute
-    public long getEnbabledUsersTotal()
+    @Autowired
+    public RecommendationMetricsImpl(RecommendationService aRecService)
     {
-        return userRepository.getNumOfEnabledUsers();
-    }
-
-    @Override
-    @ManagedAttribute
-    public long getDocumentsTotal()
-    {
-        return documentService.getNumOfSourceDocuments();
+        recService = aRecService;
     }
 
     @Override
@@ -70,11 +45,5 @@ public class InceptionMetricsImpl
     {
         return recService.getNumOfEnabledRecommenders();
     }
-
-    @Override
-    @ManagedAttribute
-    public long getAnnotationDocumentsTotal()
-    {
-        return documentService.getNumOfAnnotationDocuments();
-    }
+    
 }

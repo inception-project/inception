@@ -25,7 +25,8 @@ We expose some metrics of the running INCEpTION instance via JMX. These are curr
 * the number of enabled recommenders
 * the number of annotation documents i.e. documents being annotated per user
 
-To make the metrics available `spring.jmx.enabled=true` and `inception.metrics.enabled=true` 
+To make the metrics available `spring.jmx.enabled=true`
+and `monitoring.metrics.enabled=true` 
 must be set in the `settings.properties` file 
 (see <<sect_home_folder>> on this file).
 
@@ -36,20 +37,29 @@ you can e.g. use https://github.com/prometheus/jmx_exporter[the JMX exporter] as
 
 The JMX exporter can be run as a .jar file that should be placed together with its `config.yml` 
 file next to the INCEpTION .jar file. An example `config.yml` file that exposes metrics from 
-INCEpTION but not webanno metrics (metrics associated with brat rendering) and conforms JMX metric 
+INCEpTION but not webanno brat metrics (metrics associated with brat rendering) and conforms JMX metric 
 names to https://prometheus.io/docs/practices/naming/[Prometheus Naming conventions] is:
 
 ....
 ssl: false
-whitelistObjectNames: ["de.tudarmstadt.ukp.inception.metrics:*"]
+whitelistObjectNames: ["de.tudarmstadt.ukp.inception.recommendation.metrics:*", 
+"de.tudarmstadt.ukp.clarin.webanno.api.dao.metrics:*", "de.tudarmstadt.ukp.clarin.webanno.security.metrics:*",
+"de.tudarmstadt.ukp.clarin.webanno.security.metrics:*"]
 blacklistObjectNames: ["de.tudarmstadt.ukp.clarin.webanno.brat.metrics:*"]
 lowercaseOutputName: true
 lowercaseOutputLabelNames: true
 rules:
-  - pattern: 'de.tudarmstadt.ukp.inception.metrics<name=inceptiontMetricsImpl, type=InceptionMetricsImpl><>(\w+): (\d+)'
+  - pattern: 'de.tudarmstadt.ukp.inception.recommendation.metrics<name=RecommendationMetricsImpl, type=RecommendationMetricsImpl><>(\w+): (\d+)'
     name: inception_$1
     value: $2
     help: "Inception metric $1"
+    type: GAUGE
+    attrNameSnakeCase: true
+  
+  - pattern: 'de.tudarmstadt.ukp.clarin.webanno.(\w+).metrics<name=(\w+), type=(\w+)><>(\w+): (\d+)'
+    name: webanno_$4
+    value: $5
+    help: "Inception metric $4"
     type: GAUGE
     attrNameSnakeCase: true
 ....
