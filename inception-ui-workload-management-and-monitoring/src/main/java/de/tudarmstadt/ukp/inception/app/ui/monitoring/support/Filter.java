@@ -17,24 +17,24 @@
  */
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 import java.io.Serializable;
 
 //Helper class for the Filter
 public class Filter implements Serializable
 {
+
+    private static final long serialVersionUID = 256259364194000084L;
     //All filter attributes
     private long creationTime;
-    private boolean isUserForDocument;
-    private SourceDocument document;
+    private String user;
 
 
     //Default constructor
-    public Filter(SourceDocument document)
+    public Filter(long creationTime)
     {
-        this.document = document;
-        this.creationTime = document.getCreated().getTime();
+        this.creationTime = creationTime;
+        this.user = user;
 
     }
 
@@ -43,11 +43,16 @@ public class Filter implements Serializable
         return creationTime;
     }
 
-    public boolean isUserForDocument() {
-        return isUserForDocument;
+    public void setCreationTime(long creationTime)
+    {
+        this.creationTime = creationTime;
     }
 
-    public SourceDocument getDocument() {
-        return document;
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
     }
 }
