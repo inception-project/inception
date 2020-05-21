@@ -19,80 +19,47 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Random;
-
-import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 
-
-
-
 //Helper methods for documents
-public class Documents {
+public class DocumentSupport implements Serializable {
 
 
-    private List<SourceDocument> documentList;
-    private static Project project;
-    private int defaultAnnotations;
-    private static List<String> annotatedDocuments;
+    private static final long serialVersionUID = -714653412126656866L;
+    private final List<SourceDocument> documentList;
+    private Project project;
+    private final int defaultAnnotations;
 
-    private static @SpringBean ProjectService projectService;
-    private @SpringBean DocumentService documentService;
-
-    public Documents(Project project,List<SourceDocument> documentList)
+    public DocumentSupport(
+        Project project, List<SourceDocument> documentList)
     {
+
         this.project = project;
         this.documentList = documentList;
-        annotatedDocuments = getAnnotatedDocuments();
-        //TODO rework when own tableentry
+        //TODO rework when own table entry
         this.defaultAnnotations = 6;
 
     }
 
-    //Returns a random document out of all documents in the project.
-    //Only a document is chosen which is not yet given to annotators more than the default number
-    //per document number
-    public SourceDocument getRandomDocument()
-    {
-        //Create an empty document
-        SourceDocument document = null;
-        Random r = new Random();
 
-        while (document == null)
-        {
-            int i = r.nextInt(documentList.size() - 1);
-            //If the random chosen document wont surpass the amount of default number combining
-            // "inProgress" for the document + "finished" amount for the document + 1
-            if ((getInProgressAmountForDocument(documentList.
-                get(i)) + getFinishedAmountForDocument(documentList.get(i)))
-                + 1 <= defaultAnnotations)
-            {
-                //If that was not the case, assign this document
-                document = documentList.get(r.nextInt(documentList.size() - 1));
-            }
-        }
-        //Return the document
-        //REMINDER: Document MIGHT BE NULL if there is not a single document left!
-        // Annotator should then get the message: "No more documents to annotate"
-        return document;
-    }
+
+
+
 
 
 
     //Helper method, returns for a document how often it is finished within the project
-    public static int getFinishedAmountForDocument(SourceDocument aDocument)
+    public int getFinishedAmountForDocument(
+        SourceDocument aDocument, List<String> annotatedDocuments)
     {
         int amount = 0;
-        for (int i = 0; i < annotatedDocuments.size(); i++)
-        {
-            if (aDocument.getName().equals(annotatedDocuments.get(i)))
-            {
+        for (String annotatedDocument : annotatedDocuments) {
+            if (aDocument.getName().equals(annotatedDocument)) {
                 amount++;
             }
         }
@@ -101,17 +68,16 @@ public class Documents {
 
     //Helper methods, returns for a document how often it is
     //currently in progress within the project
-    public static int getInProgressAmountForDocument(SourceDocument aDocument)
+    public int getInProgressAmountForDocument(
+        SourceDocument aDocument, List<String> annotatedDocuments)
     {
         int amount = 0;
-        int amountUser = projectService.listProjectUsersWithPermissions
-            (project).size();
+        //TODO get correct value
+        int amountUser = 6;
 
 
-        for (int i = 0; i <  annotatedDocuments.size(); i++)
-        {
-            if (annotatedDocuments.get(i).equals(aDocument.getName()))
-            {
+        for (String annotatedDocument : annotatedDocuments) {
+            if (annotatedDocument.equals(aDocument.getName())) {
                 amount++;
             }
         }
@@ -119,16 +85,14 @@ public class Documents {
         return amountUser - amount;
     }
 
-    public List<String> getAnnotatedDocuments()
+    public boolean isUserForDocument(SourceDocument aDocument, String user)
     {
-        //List for annotated documents
-        for (int i = 0; i < documentService.listFinishedAnnotationDocuments
-            (project).size(); i++)
-        {
-            annotatedDocuments.add(documentService.
-                listFinishedAnnotationDocuments(project).get(i).getName());
+        if (true) {
+            return true;
+        } else {
+            return false;
         }
 
-        return annotatedDocuments;
     }
+
 }

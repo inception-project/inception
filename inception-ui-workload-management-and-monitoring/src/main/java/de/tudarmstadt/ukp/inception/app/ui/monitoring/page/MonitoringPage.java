@@ -28,6 +28,7 @@ import java.util.Random;
 
 import javax.persistence.NoResultException;
 
+
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -48,18 +49,19 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.*;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -68,14 +70,21 @@ import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPane
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DataProvider;
+import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DocumentSupport;
 import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ImagePanel;
 import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ModalPanel;
 
 
 
-@MountPath("workload.html")
+
+
+@MountPath("/workload.html")
 public class MonitoringPage extends ApplicationPageBase
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MonitoringPage.class);
+    private static final long serialVersionUID = 1180618893870240262L;
+
 
     //Feedbackpanel
     BootstrapFeedbackPanel feedbackPanel;
@@ -89,8 +98,10 @@ public class MonitoringPage extends ApplicationPageBase
     //Default annotations textbox
     private NumberTextField DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD;
 
-    //Label for Filter
+    //FilterTextField and input
     private TextField filterTextfield;
+    private String filterTextFieldInput;
+    private DropDownChoice filterDropDown;
 
     //The Icons
     private static final ResourceReference META =
@@ -116,6 +127,7 @@ public class MonitoringPage extends ApplicationPageBase
     private @SpringBean ProjectService projectService;
     private @SpringBean MenuItemRegistry menuItemService;
     private @SpringBean DocumentService documentService;
+    private DocumentSupport documentSupport;
 
     //Default constructor, no project selected (only when workload.html
     // put directly in the browser without any parameters)
@@ -140,22 +152,24 @@ public class MonitoringPage extends ApplicationPageBase
 
 
     //Constructor with a project
-    public MonitoringPage(final PageParameters aPageParameters) {
+    public MonitoringPage(final PageParameters aPageParameters)
+    {
         super(aPageParameters);
         //Get current Project
         StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        if (getProjectFromParameters(projectParameter).isPresent()) {
+        if (getProjectFromParameters(projectParameter).isPresent())
+        {
             currentProject = getProjectFromParameters(projectParameter).get();
         } else {
             currentProject = null;
         }
 
 
-
         //Get the current user
         User user = userRepository.getCurrentUser();
         //Check if Project exists
-        if (currentProject != null) {
+        if (currentProject != null)
+        {
 
             feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
             feedbackPanel.setOutputMarkupId(true);
@@ -176,9 +190,7 @@ public class MonitoringPage extends ApplicationPageBase
                 initialize();
             }
 
-        }
-
-        else {
+        } else {
             //Required even in case of error due to wicket
             add(new ModalWindow("modalWindow"));
             add(new NumberTextField("defaultDocumentsNumberTextField"));
@@ -197,62 +209,59 @@ public class MonitoringPage extends ApplicationPageBase
         documentList = documentService.
             listSourceDocuments(currentProject);
 
-        //Create list with data for the provider
-        List<SourceDocument> data = new ArrayList<>();
-        for (int i = 0; i < documentList.size(); i++)
-        {
-            data.add(documentList.get(i));
-        }
+        //Get access to advanced methods for documents
+        documentSupport = new DocumentSupport(currentProject, documentList);
+
 
         //Initialize list for all Finished documents
-        annotatedDocuments = new ArrayList<>();
-
-
-        //List for annotated documents
-        for (int i = 0; i < documentService.listFinishedAnnotationDocuments
-            (currentProject).size(); i++)
-        {
-            annotatedDocuments.add(documentService.
-                listFinishedAnnotationDocuments(currentProject).get(i).getName());
-        }
+        annotatedDocuments = getAnnotatedDocuments();
 
 
         //Headers of the table
-        List<String> headers = new ArrayList<String>();
+        List<String> headers = new ArrayList<>();
         headers.add(getString("Document"));
         headers.add(getString("Finished"));
         headers.add(getString("InProgress"));
         headers.add(getString("Metadata"));
 
         //Data Provider for the table
-        DataProvider dataProvider = new DataProvider(data, headers);
+        DataProvider dataProvider = new DataProvider(documentList,
+            headers, currentProject, annotatedDocuments);
+
+        //Filter Dropdown and Textfield
+        filterDropDown = new DropDownChoice(getString("filterDropDown")
+            , PropertyModel.of(dataProvider,"filterState.type"), this::getFilter);
+        filterTextfield = new TextField("filterTextfield",
+            PropertyModel.of(dataProvider, "filterState.input"), String.class);
 
 
         //Init defaultDocumentsNumberTextField
-        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD = new
-            NumberTextField("defaultDocumentsNumberTextField", new Model<Integer>(), Integer.class);
+        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD = new NumberTextField
+        ("defaultDocumentsNumberTextField", Integer.class);
+
         //Set minimum value for input
         DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setMinimum(1);
+        //After upstream change
+        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setRequired(true);
 
-        //If first craetion, set value to 1
-        if (defaultAnnotations < 1) {
-            defaultAnnotations = 1;
 
-        }
 
+
+        //Get value for the project and set it accordingly
+        //TODO get correct value after upstream change
+        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setDefaultModel(new CompoundPropertyModel<Integer>(6));
         DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setConvertEmptyInputStringToNull(false);
 
-
-        System.out.println("Int: " + defaultAnnotations);
-
         //add AJAX event handler on changing input value
-        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.add(new OnChangeAjaxBehavior() {
+        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.add(new OnChangeAjaxBehavior()
+        {
+            private static final long serialVersionUID = 2607214157084529408L;
+
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
             {
                 defaultAnnotations = Integer.parseInt
                     (DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.getInput());
-                System.out.println("Int: " + defaultAnnotations);
             }
         });
 
@@ -265,27 +274,31 @@ public class MonitoringPage extends ApplicationPageBase
         List<IColumn> columns = new ArrayList<>();
 
         //Filter properties
-        FilterForm<SourceDocument> filter = new FilterForm(getString("filter"), dataProvider);
-        filter.add(new DropDownChoice(getString("filterDropDown"), this::getFilter));
+        FilterForm<SourceDocument> filter = new FilterForm(getString("filter"),
+            dataProvider);
+        filter.add(filterDropDown);
 
-        //Filter Label
-        filterTextfield = new TextField("filterTextfield", new Model<String>(), String.class);
+
 
         //Each column creates TableMetaData
         columns.add(new LambdaColumn<>(new ResourceModel(getString("Document"))
-            , getString("Finished"), SourceDocument::getName));
-        columns.add(new LambdaColumn<>(new ResourceModel(getString("Finished"))
-            , getString("Finished"), this::getFinishedAmountForDocument));
+            , getString("Document"), SourceDocument::getName));
+        columns.add(new LambdaColumn(new ResourceModel(getString("Finished"))
+            , getString("Finished"), aDocument -> documentSupport.getFinishedAmountForDocument
+            ((SourceDocument)aDocument, annotatedDocuments)));
         columns.add(new LambdaColumn<>(new ResourceModel(getString("InProgress"))
-            , getString("InProgress"), this::getInProgressAmountForDocument));
+            , getString("InProgress"), aDocument -> documentSupport.getInProgressAmountForDocument
+            ((SourceDocument)aDocument, annotatedDocuments)));
 
         //Own column type, contains only a clickable image (AJAX event),
         //creates a small panel dialog containing metadata
         columns.add(new PropertyColumn(new Model(getString("Metadata")),
-            getString("Metadata")) {
+            getString("Metadata"))
+        {
             private static final long serialVersionUID = 1L;
             @Override
-            public void populateItem(Item aItem, String aID, IModel aModel) {
+            public void populateItem(Item aItem, String aID, IModel aModel)
+            {
 
                 //Add the Icon
                 ImagePanel icon = new ImagePanel(aID, META);
@@ -294,9 +307,13 @@ public class MonitoringPage extends ApplicationPageBase
                 aItem.add(AttributeModifier.append("class", "centering"));
 
                 //Click event in the metadata column
-                aItem.add(new AjaxEventBehavior("click") {
+                aItem.add(new AjaxEventBehavior("click")
+                {
+                    private static final long serialVersionUID = 7624208971279187266L;
+
                     @Override
-                    protected void onEvent(AjaxRequestTarget aTarget) {
+                    protected void onEvent(AjaxRequestTarget aTarget)
+                    {
 
                         //Get the current selected Row
                         Item rowItem = aItem.findParent( Item.class );
@@ -329,12 +346,6 @@ public class MonitoringPage extends ApplicationPageBase
         filter.add(table);
 
 
-
-
-        //Miscellaneous for fields
-        DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.setRequired(true);
-
-
         //Add to page according to the following structure
 
         //Then default annotations texfield
@@ -345,7 +356,6 @@ public class MonitoringPage extends ApplicationPageBase
         add(filter);
 
     }
-
 
     //Return current project, required for several purposes,
     // might be put globally to be accessible for all packages
@@ -365,48 +375,31 @@ public class MonitoringPage extends ApplicationPageBase
 
 
 
-    //Helper method, returns for a document how often it is finished within the project
-    public int getFinishedAmountForDocument(SourceDocument aDocument)
-    {
-        int amount = 0;
-        for (int i = 0; i < annotatedDocuments.size(); i++)
-        {
-            if (aDocument.getName().equals(annotatedDocuments.get(i)))
-            {
-                amount++;
-            }
-        }
-        return amount;
-    }
-
-    //Helper methods, returns for a document how often it is
-    //currently in progress within the project
-    public int getInProgressAmountForDocument(SourceDocument aDocument)
-    {
-        int amount = 0;
-        int amountUser = projectService.listProjectUsersWithPermissions
-            (currentProject).size();
-
-        for (int i = 0; i <  annotatedDocuments.size(); i++)
-        {
-            if (annotatedDocuments.get(i).equals(aDocument.getName()))
-            {
-                amount++;
-            }
-        }
-
-        return amountUser - amount;
-    }
-
 
     //Helper methods, Additional filters
-    public List<String> getFilter() {
-        List<String> filterList = new ArrayList<String>();
+    public List<String> getFilter()
+    {
+        List<String> filterList = new ArrayList<>();
+        filterList.add("None");
         filterList.add("Document creation time:");
         filterList.add("User:");
         filterList.add("Unused documents:");
 
         return filterList;
+    }
+
+    public List<String> getAnnotatedDocuments()
+    {
+        //List for annotated documents
+        List<String> list = new ArrayList<>();
+
+        for (AnnotationDocument doc: documentService.listFinishedAnnotationDocuments
+            (currentProject))
+        {
+            list.add(doc.getName());
+        }
+
+        return list;
     }
 
     //Returns a random document out of all documents in the project.
@@ -417,16 +410,21 @@ public class MonitoringPage extends ApplicationPageBase
         //Create an empty document
         SourceDocument document = null;
         Random r = new Random();
-        
+
         while (document == null)
         {
-            //If the random chosen document wont surpass the amount of "inProgress" for the document
-            if (getInProgressAmountForDocument(documentList.
-                get(r.nextInt(documentList.size() - 1))) + 1 <= defaultAnnotations)
+            int i = r.nextInt(documentList.size() - 1);
+            //If the random chosen document wont surpass the amount of default number combining
+            // "inProgress" for the document + "finished" amount for the document + 1
+            if ((documentSupport.getInProgressAmountForDocument(documentList.
+                get(i), annotatedDocuments) +
+                documentSupport.getFinishedAmountForDocument(documentList.
+                    get(i), annotatedDocuments))
+                + 1 <= defaultAnnotations)
             {
                 //If that was not the case, assign this document
                 document = documentList.get(r.nextInt(documentList.size() - 1));
-            }  
+            }
         }
         //Return the document
         //REMINDER: Document MIGHT BE NULL if there is not a single document left!

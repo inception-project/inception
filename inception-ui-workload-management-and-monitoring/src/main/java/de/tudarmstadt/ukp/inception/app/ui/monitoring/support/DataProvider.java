@@ -18,8 +18,10 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
 
-import java.io.Serializable;
-import java.util.Collections;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -30,25 +32,37 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 
 public class DataProvider extends SortableDataProvider
-    <SourceDocument, String> implements Serializable, IFilterStateLocator<Filter>
+    <SourceDocument, String> implements IFilterStateLocator<Filter>
 {
 
-    private List<String> headers;
-    private List<SourceDocument> data;
-    private IModel<List<SourceDocument>> model;
+
+    private static final long serialVersionUID = 4125678936105494485L;
+    private final List<String> headers;
+    private final List<SourceDocument> data;
+    private final IModel<List<SourceDocument>> model;
     private Filter filter;
+    private final Project project;
+    private final DocumentSupport documentSupport;
+    private List<String> annotatedDocuments;
+    private String input;
+    private String type;
 
-
-    public DataProvider(List<SourceDocument> aContents, List<String> headers)
+    public DataProvider(
+        List<SourceDocument> aContents,
+        List<String> headers, Project project, List<String> annotatedDocuments)
     {
-
+        this.project = project;
         this.data = aContents;
         this.headers = headers;
-        //this.filter = new Filter();
+        this.annotatedDocuments = annotatedDocuments;
+        this.documentSupport = new DocumentSupport(this.project,data);
+        filter = new Filter();
+
 
 
         //Initial Sorting
@@ -56,6 +70,8 @@ public class DataProvider extends SortableDataProvider
 
         //Required
         model = new LoadableDetachableModel<List<SourceDocument>>() {
+            private static final long serialVersionUID = -3938543310389673460L;
+
             @Override
             protected List<SourceDocument> load() {
                 return aContents;
@@ -69,38 +85,53 @@ public class DataProvider extends SortableDataProvider
     {
         List<SourceDocument> newList = data;
 
-        //
+        System.out.println("------------");
+        input = filter.getInput();
+        type = filter.getType();
 
-        //Sorting, check for which column was clicked and return new sorting accordingly
-        //TODO rework of comparator needed
-        Collections.sort(newList, (o1, o2) ->
+        if (input != null) {
+            System.out.println(input);
+        }
+        if (type != null) {
+            System.out.println(type);
+        }
+
+
+        //Apply Filter
+        //Filter only if initialised
+        if (input != null && type != null)
+        {
+            newList = filterTable(data);
+        }
+
+
+        //Apply sorting
+        newList.sort((o1, o2) ->
         {
             int dir = getSort().isAscending() ? 1 : -1;
-            if (getSort().getProperty().equals(headers.get(0)))
-            {
-                return dir * (o1.getName().compareTo(o2.getName()));
 
-            } else if (getSort().getProperty().equals(headers.get(1)))
-            {
-                return dir * (o1.getName().compareTo(o2.getName()));
+            if (getSort().getProperty().equals(headers.get(0))) {
+                return dir * (o1.getName().toString().compareTo(o2.getName().toString()));
 
-            }  else if (getSort().getProperty().equals(headers.get(2)))
-            {
-                return dir * (o1.getName().compareTo(o2.getName()));
+            } else if (getSort().getProperty().equals(headers.get(1))) {
+                return dir * ((Integer)documentSupport.
+                    getFinishedAmountForDocument(o1, annotatedDocuments))
+                        .compareTo(documentSupport.
+                            getFinishedAmountForDocument(o2, annotatedDocuments));
 
-            }
-            else {
+            } else if (getSort().getProperty().equals(headers.get(2))) {
+                return dir * ((Integer)documentSupport.
+                    getInProgressAmountForDocument(o1, annotatedDocuments))
+                    .compareTo(documentSupport.
+                        getInProgressAmountForDocument(o2, annotatedDocuments));
+
+
+            } else {
                 return 0;
             }
         });
 
-        return newList.subList((int)first, Math.
-            min((int)first + (int)count, newList.size())).iterator();
-/*
-        return filterTable(contactsFound).subList((int)first, (int)(first + count)).
-            iterator();
-
- */
+        return newList.subList(0, newList.size()).iterator();
     }
 
     @Override
@@ -118,8 +149,9 @@ public class DataProvider extends SortableDataProvider
     @Override
     public void detach()
     {
-        model.detach();
         super.detach();
+        model.detach();
+
     }
 
     @Override
@@ -132,9 +164,50 @@ public class DataProvider extends SortableDataProvider
         this.filter = filter;
     }
 
-    public List<String> filterTable(List<String> data)
+    public List<SourceDocument> filterTable(List<SourceDocument> data)
     {
-        return null;
+        List<SourceDocument> resultList = new ArrayList<>();
+
+        if (this.type.equals("None"))
+        {
+            return data;
+        }
+
+
+        for (SourceDocument doc: data)
+        {
+            if (this.type.equals("Document creation time:"))
+            {
+                System.out.println("Time:");
+                System.out.println(input);
+                try {
+                    //TODO Rework of try catch
+                    Date date = new SimpleDateFormat("dd/MM/yyyy").parse(input);
+                    if (doc.getCreated().compareTo(date) >= 0)
+                    {
+                        resultList.add(doc);
+                    }
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+
+            } else if (this.type.equals("User:"))
+            {
+                System.out.println("Name:");
+                System.out.println(input);
+                //TODO Add all right now, need extra method
+                if (doc.getName().equals("New Entity") || doc.getName().equals("Corona"))
+                {
+                    resultList.add(doc);
+                }
+
+            } else {
+                resultList = data;
+            }
+        }
+
+        return resultList;
 
     }
 }

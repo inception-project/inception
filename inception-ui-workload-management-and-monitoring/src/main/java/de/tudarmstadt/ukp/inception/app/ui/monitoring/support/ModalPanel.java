@@ -18,13 +18,17 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
 public class ModalPanel extends Panel
 {
+
+    private static final long serialVersionUID = 2797336810690526392L;
+
     public ModalPanel(String aID, SourceDocument aDocument)
     {
         super(aID);
@@ -33,16 +37,18 @@ public class ModalPanel extends Panel
         Label documentName = new Label("documentName", "Document name: "
             + aDocument.getName());
         Label size = new Label("size", "Document size: "
-            + aDocument.getId());
+            + "");
         Label createdDate = new Label("createdDate", "Created Date: "
-            +  aDocument.getProject().getName());
-        Label source = new Label("source", "Source of the Document: "
-            + aDocument.getState().getName());
+            +  aDocument.getCreated());
         //TODO List all users in Progress and Finished for the document
-        Label userInProgress = new Label("userInProgress", "Source of the Document: "
-            + aDocument.getState().getName());
-        Label userFinished = new Label("userFinished", "Source of the Document: "
-            + aDocument.getState().getName());
+        Label source = new Label("source", "Source of the Document: "
+            + aDocument.getId());
+
+
+        Label userInProgress = new Label("userInProgress", "Users working on the Document: "
+            + "");
+        Label userFinished = new Label("userFinished", "Users finished the document: "
+            + "");
 
         add(documentName);
         add(size);

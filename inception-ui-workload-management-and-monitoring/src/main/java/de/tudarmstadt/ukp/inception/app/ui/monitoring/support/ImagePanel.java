@@ -22,12 +22,20 @@ import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.request.resource.ResourceReference;
 
+
+
 public class ImagePanel extends Panel
 {
+
+    private static final long serialVersionUID = -1523791110624911889L;
+
     public ImagePanel(String aID, ResourceReference aImageReference)
     {
         super(aID);
-        add(new Image("image", aImageReference));
+        add(new Image("image", aImageReference) {
+
+            private static final long serialVersionUID = 8399717826846571064L;
+        });
     }
 
 }

@@ -25,34 +25,32 @@ public class Filter implements Serializable
 {
 
     private static final long serialVersionUID = 256259364194000084L;
-    //All filter attributes
-    private long creationTime;
-    private String user;
+
+    //Type of the Dropdown
+    private String type;
+    //Input field value
+    private String input;
 
 
     //Default constructor
-    public Filter(long creationTime)
+    public Filter()
     {
-        this.creationTime = creationTime;
-        this.user = user;
 
     }
 
-    //Getter only required
-    public long getCreationTime() {
-        return creationTime;
+    public String getType() {
+        return type;
     }
 
-    public void setCreationTime(long creationTime)
-    {
-        this.creationTime = creationTime;
+    public void setType(String type) {
+        this.type = type;
     }
 
-    public String getUser() {
-        return user;
+    public String getInput() {
+        return input;
     }
 
-    public void setUser(String user) {
-        this.user = user;
+    public void setInput(String input) {
+        this.input = input;
     }
 }
