@@ -43,13 +43,13 @@ public interface FeatureSupportRegistry
     FeatureType getFeatureType(AnnotationFeature aFeature);
     
     /**
-     * @deprecated Use {@link #findExtension(AnnotationFeature)} instead;
+     * @deprecated Use {@link #findExtension} instead;
      */
     @Deprecated
     <T extends FeatureSupport<?>> T getFeatureSupport(AnnotationFeature aFeature);
     
     /**
-     * @deprecated Use {@link #getExtension(String)} instead;
+     * @deprecated Use {@link #getExtension} instead;
      */
     @Deprecated
     <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId);
