@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static java.util.function.Function.identity;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -172,6 +176,10 @@ public class SourceDocumentExporter
     @SuppressWarnings("rawtypes")
     private void importSourceDocumentContents(ZipFile zip, Project aProject) throws IOException
     {
+        // Query once for all the documents to avoid hitting the DB in the loop below
+        Map<String, SourceDocument> docs = documentService.listSourceDocuments(aProject).stream()
+                .collect(Collectors.toMap(SourceDocument::getName, identity()));
+        
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
@@ -183,8 +191,8 @@ public class SourceDocumentExporter
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
-                SourceDocument sourceDocument = documentService.getSourceDocument(aProject,
-                        fileName);
+                
+                SourceDocument sourceDocument = docs.get(fileName);
                 File sourceFilePath = documentService.getSourceDocumentFile(sourceDocument);
                 FileUtils.copyInputStreamToFile(zip.getInputStream(entry), sourceFilePath);
 

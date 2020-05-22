@@ -137,6 +137,21 @@ public interface DocumentService
     void removeSourceDocument(SourceDocument document)
         throws IOException;
 
+    void removeAllSourceDocuments(Project aProject) throws IOException;
+    
+    /**
+     * Upload a SourceDocument, obtained as Inputstream, such as from remote API Zip folder to a
+     * repository directory. This way we don't need to create the file to a temporary folder
+     *
+     * @param file
+     *            the file.
+     * @param document
+     *            the source document.
+     * @throws IOException
+     *             if an I/O error occurs.
+     * @throws UIMAException
+     *             if a conversion error occurs.
+     */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER','ROLE_REMOTE')")
     void uploadSourceDocument(File file, SourceDocument document)
         throws IOException, UIMAException;

@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
@@ -75,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -482,14 +484,57 @@ public class DocumentServiceImpl
         entityManager.remove(
                 entityManager.contains(aDocument) ? aDocument : entityManager.merge(aDocument));
 
+        deleteSourceDocumentFile(aDocument);
+    }
+    
+    @Override
+    @Transactional
+    public void removeAllSourceDocuments(Project aProject)
+            throws IOException
+    {
+        Validate.notNull(aProject, "Project must be specified");
+
+        List<SourceDocument> sourceDocuments = listSourceDocuments(aProject);
+        
+        // BeforeDocumentRemovedEvent is triggered first, since methods that rely 
+        // on it might need to have access to the associated annotation documents 
+        for (SourceDocument doc : sourceDocuments) {
+            applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, doc));
+        }
+
+        // There should be a cascade-on-delete for annotation documents when the respective
+        // source document is deleted, but that is not there at the moment...
+        String deleteAnnotationDocumentsQuery = String.join("\n",
+                "DELETE FROM AnnotationDocument",
+                "WHERE project = :project");
+        entityManager.createQuery(deleteAnnotationDocumentsQuery)
+                .setParameter("project", aProject)
+                .executeUpdate();
+
+        // Delete all the source documents for the given project
+        String deleteSourceDocumentsQuery = String.join("\n",
+                "DELETE FROM SourceDocument",
+                "WHERE project = :project");
+        entityManager.createQuery(deleteSourceDocumentsQuery)
+                .setParameter("project", aProject)
+                .executeUpdate();
+        
+        // Delete all the source documents files for the given project
+        for (SourceDocument doc : sourceDocuments) {
+            deleteSourceDocumentFile(doc);
+        }        
+    }
+    
+    private void deleteSourceDocumentFile(SourceDocument aDocument) throws IOException
+    {
         String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
                 + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId();
-        
+
         // remove from file both source and related annotation file
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
         }
-
+        
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aDocument.getProject().getId()))) {
             Project project = aDocument.getProject();
@@ -853,7 +898,6 @@ public class DocumentServiceImpl
     @Override
     public int numberOfExpectedAnnotationDocuments(Project aProject)
     {
-
         // Get all annotators in the project
         List<String> users = getAllAnnotators(aProject);
         // Bail out already. HQL doesn't seem to like queries with an empty
@@ -963,5 +1007,12 @@ public class DocumentServiceImpl
     public void onBeforeDocumentRemovedEvent(BeforeDocumentRemovedEvent aEvent)
     {
         projectService.recalculateProjectState(aEvent.getDocument().getProject());
+    }
+    
+    @EventListener
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
+        throws IOException
+    {
+        removeAllSourceDocuments(aEvent.getProject());
     }
 }
