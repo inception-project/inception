@@ -23,34 +23,39 @@
   $(document).ready(function() {
     // Based on this accepted answer of so
     // http://stackoverflow.com/questions/2335553/jquery-how-to-catch-enter-key-and-change-event-to-tab
+    
+    function moveToNextInput(current) {
+      var inputs = $(current).parents("#annotationFeatureForm").eq(0).find(":input");
+      var idx = inputs.index(current);
+      if (idx == inputs.length - 1) {
+        inputs[idx].blur();
+      } else {
+        inputs[idx + 1].focus(); //  handles submit buttons
+        inputs[idx + 1].select();
+      }
+      // If it is a forward annotation on free text, trigger change even on Enter key up
+      if($('#annotationFeatureForm :checkbox:checked').length > 0) {
+        $(this).trigger("change")
+      }
+    }
+    
     function manageEnter() {
       $("#annotationFeatureForm :input").keydown(function(e) {
         if (e.which == 13) {
-              // On a textarea, we consider the enter as a submit only if CTRL or CMD is pressed
-              if ($(this).is("textarea") && !(e.ctrlKey || e.metaKey)) {
-                return true;
-              }
-              
-              // Avoid Kendo Comboboxes submitting their value twice
-              if ($(this).attr('role') == 'combobox') {
-                return true;
-              }
-          
-              e.preventDefault();
-              var inputs = $(this).parents("#annotationFeatureForm").eq(0).find(":input");
-                  var idx = inputs.index(this);
-                  if (idx == inputs.length - 1) {
-                      inputs[idx].blur();
-                  } else {
-                      inputs[idx + 1].focus(); //  handles submit buttons
-                      inputs[idx + 1].select();
-                  }
-                  // If it is a forward annotation on free text, trigger change even on Enter key up
-                  if($('#annotationFeatureForm :checkbox:checked').length > 0) {
-                      $(this).trigger("change")
-                  }
-                  return false;
+          // On a textarea, we consider the enter as a submit only if CTRL or CMD is pressed
+          if ($(this).is("textarea") && !(e.ctrlKey || e.metaKey)) {
+            return true;
           }
+          
+          // Avoid Kendo Comboboxes submitting their value twice
+          if ($(this).attr('role') == 'combobox') {
+            return true;
+          }
+      
+          e.preventDefault();
+          moveToNextInput(this);
+          return false;
+        }
       });    
     }
     $(document).on("keypress", manageEnter);
