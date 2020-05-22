@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
@@ -33,13 +34,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -51,18 +56,23 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Isolation;
@@ -70,6 +80,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
@@ -80,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -95,9 +107,9 @@ public class ProjectServiceImpl
     private @PersistenceContext EntityManager entityManager;
     private @Autowired UserDao userRepository;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
-
-    @Value(value = "${repository.path}")
-    private File dir;
+    private @Autowired RepositoryProperties repositoryProperties;
+    private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
+    private List<ProjectInitializer> initializers;
 
     private boolean running = false;
 
@@ -125,7 +137,8 @@ public class ProjectServiceImpl
             log.info("Created project [{}]({})", aProject.getName(), aProject.getId());
         }
         
-        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId();
+        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId();
         FileUtils.forceMkdir(new File(path));
         
         applicationEventPublisher.publishEvent(new AfterProjectCreatedEvent(this, aProject));
@@ -337,22 +350,22 @@ public class ProjectServiceImpl
     @Override
     public File getProjectLogFile(Project aProject)
     {
-        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + "project-"
-                + aProject.getId() + ".log");
+        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + "project-" + aProject.getId() + ".log");
     }
 
     @Override
     public File getGuidelinesFolder(Project aProject)
     {
-        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
-                + GUIDELINES_FOLDER + "/");
+        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/");
     }
 
     @Override
     public File getMetaInfFolder(Project aProject)
     {
-        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
-                + META_INF_FOLDER + "/");
+        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + aProject.getId() + "/" + META_INF_FOLDER + "/");
     }
 
     @Deprecated
@@ -366,8 +379,8 @@ public class ProjectServiceImpl
     @Override
     public File getGuideline(Project aProject, String aFilename)
     {
-        return new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
-                + GUIDELINES_FOLDER + "/" + aFilename);
+        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFilename);
     }
 
     @Override
@@ -519,8 +532,8 @@ public class ProjectServiceImpl
     public void createGuideline(Project aProject, InputStream aIS, String aFileName)
         throws IOException
     {
-        String guidelinePath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId()
-                + "/" + GUIDELINES_FOLDER + "/";
+        String guidelinePath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/";
         FileUtils.forceMkdir(new File(guidelinePath));
         copyLarge(aIS, new FileOutputStream(new File(guidelinePath + aFileName)));
 
@@ -601,6 +614,19 @@ public class ProjectServiceImpl
 
         return annotationGuidelineFiles;
     }
+    
+    @Override
+    public boolean hasGuidelines(Project aProject)
+    {
+        try (DirectoryStream<Path> d = newDirectoryStream(getGuidelinesFolder(aProject).toPath())) {
+            return d.iterator().hasNext();
+        }
+        catch (IOException e) {
+            // This may not be the best way to handle it, but if is a fairly sound assertion and
+            // saves the calling code from having to handle the exception.
+            return false;
+        }
+    }
 
     @Override
     @Transactional
@@ -634,7 +660,8 @@ public class ProjectServiceImpl
         entityManager.remove(project);
         
         // remove the project directory from the file system
-        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId();
+        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId();
         try {
             FileUtils.deleteDirectory(new File(path));
         }
@@ -655,8 +682,9 @@ public class ProjectServiceImpl
     public void removeGuideline(Project aProject, String aFileName)
         throws IOException
     {
-        FileUtils.forceDelete(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFileName));
+        FileUtils.forceDelete(
+                new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                        + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFileName));
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aProject.getId()))) {
@@ -683,8 +711,8 @@ public class ProjectServiceImpl
     public void savePropertiesFile(Project aProject, InputStream aIs, String aFileName)
         throws IOException
     {
-        String path = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/"
-                + FilenameUtils.getFullPath(aFileName);
+        String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
+                + aProject.getId() + "/" + FilenameUtils.getFullPath(aFileName);
         FileUtils.forceMkdir(new File(path));
 
         File newTcfFile = new File(path, FilenameUtils.getName(aFileName));
@@ -1040,5 +1068,80 @@ public class ProjectServiceImpl
         }
 
         return user;
+    }
+
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<ProjectInitializer> inits = new ArrayList<>();
+
+        if (initializerProxy != null) {
+            inits.addAll(initializerProxy);
+            AnnotationAwareOrderComparator.sort(inits);
+        
+            Set<Class<? extends ProjectInitializer>> initializerClasses = new HashSet<>();
+            for (ProjectInitializer init : inits) {
+                if (initializerClasses.add(init.getClass())) {
+                    log.info("Found project initializer: {}",
+                            ClassUtils.getAbbreviatedName(init.getClass(), 20));
+                }
+                else {
+                    throw new IllegalStateException("There cannot be more than once instance "
+                            + "of each project initializer class! Duplicate instance of class: "
+                                    + init.getClass());
+                }
+            }
+        }
+        
+        initializers = Collections.unmodifiableList(inits);
+    }
+    
+    @Override
+    @Transactional
+    public void initializeProject(Project aProject)
+        throws IOException
+    {
+        Deque<ProjectInitializer> deque = new LinkedList<>(initializers);
+        Set<Class<? extends ProjectInitializer>> initsSeen = new HashSet<>();
+        Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
+
+        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
+
+        for (ProjectInitializer initializer : deque) {
+            allInits.add(initializer.getClass());
+        }
+        
+        while (!deque.isEmpty()) {
+            ProjectInitializer initializer = deque.pop();
+
+            if (!allInits.containsAll(initializer.getDependencies())) {
+                throw new IllegalStateException(
+                        "Missing dependencies of " + initializer + " initializer from " + deque);
+            }
+
+            if (initsDeferred.contains(initializer)) {
+                throw new IllegalStateException("Circular initializer dependencies in "
+                        + initsDeferred + " via " + initializer);
+            }
+            
+            if (initsSeen.containsAll(initializer.getDependencies())) {
+                log.debug("Applying project initializer: {}", initializer);
+                initializer.configure(aProject);
+                initsSeen.add(initializer.getClass());
+                initsDeferred.clear();
+            }
+            else {
+                log.debug(
+                        "Deferring project initializer as dependencies are not yet fulfilled: [{}]",
+                        initializer);
+                deque.add(initializer);
+                initsDeferred.add(initializer);
+            }
+        }
     }
 }

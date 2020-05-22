@@ -17,31 +17,34 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProfileSelfServiceAllowed;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import java.util.Optional;
 
 import javax.servlet.http.HttpSession;
 
-import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.WicketAjaxJQueryResourceReference;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
-import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.PriorityHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.StatelessLink;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 /**
  * A wicket panel for logout.
@@ -57,20 +60,11 @@ public class LogoutPanel
     public LogoutPanel(String id)
     {
         super(id);
-        commonInit();
-    }
-
-    public LogoutPanel(String id, IModel<?> model)
-    {
-        super(id, model);
-        commonInit();
-    }
-
-    @SuppressWarnings("serial")
-    private void commonInit()
-    {
+        
         add(new StatelessLink<Void>("logout")
         {
+            private static final long serialVersionUID = -4031945370627254798L;
+
             @Override
             public void onClick()
             {
@@ -79,51 +73,20 @@ public class LogoutPanel
                 setResponsePage(getApplication().getHomePage());
             }
         });
-
-        add(new StatelessLink<Void>("profile")
-        {
-            {
-                add(new Label("username").setDefaultModel(new Model<>(SecurityContextHolder
-                        .getContext().getAuthentication().getName())));
-            }
-            
-            @Override
-            public void onClick()
-            {
-                PageParameters params = new PageParameters();
-                params.add(ManageUsersPage.PARAM_USER,
-                        userRepository.getCurrentUser().getUsername());
-                setResponsePage(ManageUsersPage.class, params);
-            }
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setEnabled(isProfileSelfServiceAllowed());
-            }
-            
-            @Override
-            protected void onComponentTag(ComponentTag aTag)
-            {
-                super.onComponentTag(aTag);
-                
-                if (!isEnabled()) {
-                    aTag.append("class", "disabled", " ");
-                }
-            }
-        });
-
-        add(new MarkupContainer("logoutTimer")
-        {
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(getAutoLogoutTime() > 0);
-            }
-        });
+        
+        String username = Optional.ofNullable(userRepository.getCurrentUser())
+                .map(User::getUsername).orElse("");
+        BookmarkablePageLink<Void> profileLink = new BookmarkablePageLink<>("profile",
+                ManageUsersPage.class, new PageParameters().add(
+                        ManageUsersPage.PARAM_USER, username));
+        profileLink.add(enabledWhen(SecurityUtil::isProfileSelfServiceAllowed));
+        profileLink.add(visibleWhen(() -> isNotBlank(username)));
+        profileLink.add(new Label("username", username));
+        add(profileLink);
+        
+        WebMarkupContainer logoutTimer = new WebMarkupContainer("logoutTimer");
+        logoutTimer.add(visibleWhen(() -> getAutoLogoutTime() > 0));
+        add(logoutTimer);
     }
     
     @Override

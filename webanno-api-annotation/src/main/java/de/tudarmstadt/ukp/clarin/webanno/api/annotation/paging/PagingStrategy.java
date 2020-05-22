@@ -136,13 +136,13 @@ public interface PagingStrategy
     default void moveToPreviousPage(AnnotatorViewState aState, CAS aCas, FocusPosition aPos)
     {
         moveToUnit(aState, aCas,
-                aState.getFocusUnitIndex() - aState.getPreferences().getWindowSize(), aPos);
+                aState.getFirstVisibleUnitIndex() - aState.getPreferences().getWindowSize(), aPos);
     }
 
     default void moveToNextPage(AnnotatorViewState aState, CAS aCas, FocusPosition aPos)
     {
         moveToUnit(aState, aCas,
-                aState.getFocusUnitIndex() + aState.getPreferences().getWindowSize(), aPos);
+                aState.getFirstVisibleUnitIndex() + aState.getPreferences().getWindowSize(), aPos);
     }
 
     default void moveToFirstPage(AnnotatorViewState aState, CAS aCas, FocusPosition aPos)

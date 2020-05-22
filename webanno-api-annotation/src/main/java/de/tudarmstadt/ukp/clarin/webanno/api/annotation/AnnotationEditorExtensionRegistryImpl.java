@@ -34,6 +34,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
+import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -99,13 +101,15 @@ public class AnnotationEditorExtensionRegistryImpl
     
     @Override
     public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction, int aBegin,
-            int aEnd)
+            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
         throws IOException, AnnotationException
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction,
-                    aBegin, aEnd);
+
+            if (!ext.getBeanName().equals(aParamId.getExtensionId())) {
+                continue;
+            }
+            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction);
         }
     }
     
@@ -115,6 +119,14 @@ public class AnnotationEditorExtensionRegistryImpl
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
             ext.render(aCas, aModelObject, aVdoc, aWindowBeginOffset, aWindowEndOffset);
+        }
+    }
+
+    @Override
+    public void generateContextMenuItems(List<IMenuItem> aItems)
+    {
+        for (AnnotationEditorExtension ext : getExtensions()) {
+            ext.generateContextMenuItems(aItems);
         }
     }
 }

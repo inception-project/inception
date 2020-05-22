@@ -17,45 +17,40 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<head>
-  <wicket:head>
-    <style>
-      .page-content {
-        justify-content: center;
-      }
-     </style>
-  </wicket:head>
-</head><body>
+<body>
   <wicket:extend>
-    <form wicket:id="form" class="flex-content flex-v-container flex-gutter" style="max-width: 60em;">
-      <div class="flex-h-container flex-gutter">
-        <div class="flex-content">
-          <p>
-            In order to support the development of <wicket:message key="product.name"/>, it would
-            like to collect some data and send it home. Please review the settings below and 
-            opt in or our of the respective data collections. Once you are done, use the 
-            <b><wicket:message key="save"/></b> button on the left side to save your choices. If
-            there were any changes to the data collection process, this page will appear again
-            when an administrator logs in. You can always revise your choices by accessing this
-            page via the <i class="fa fa-heartbeat"></i> icon in the page footer.
-          </p>
-        </div>
-        <div>
-          <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"/> 
-        </div>
-      </div>
-      <div class="flex-content flex-h-container flex-gutter">
-        <div class="scrolling flex-content flex-v-container flex-gutter">
-          <div wicket:id="settings" class="panel panel-default">
-            <div class="panel-heading">
-              <h3 class="panel-title flex-h-container">
-                <span wicket:id="name" class="flex-content"/>
-                <span>
-                  <input wicket:id="toggleDetails" type="button" class="btn btn-xs btn-default" value="Toggle details..."/> 
-                </span>
-              </h3>
+    <div class="scrolling flex-content flex-h-container justify-content-center">
+      <div class="container pt-3" style="max-width: 60em;">
+        <form wicket:id="form">
+          <div class="flex-h-container flex-gutter">
+            <div class="flex-content">
+              <p>
+                In order to support the development of <wicket:message key="product.name"/>, it would
+                like to collect some data and send it home. Please review the settings below and 
+                opt in or our of the respective data collections. Once you are done, use the 
+                <b><wicket:message key="save"/></b> button on the left side to save your choices. If
+                there were any changes to the data collection process, this page will appear again
+                when an administrator logs in. You can always revise your choices by accessing this
+                page via the <i class="fa fa-heartbeat"></i> icon in the page footer.
+              </p>
             </div>
-            <div class="panel-body flex-v-container">
+            <div>
+              <button wicket:id="save" class="btn btn-primary">
+                <i class="fas fa-save"></i>&nbsp;
+                <wicket:message key="save"/>
+              </button>
+            </div>
+          </div>
+          <div wicket:id="settings" class="card">
+            <div class="card-header">
+              <span wicket:id="name"/>
+              <div class="actions">
+                <button wicket:id="toggleDetails" class="btn btn-sm btn-secondary">
+                  Toggle details...
+                </button> 
+              </div>
+            </div>
+            <div class="card-body">
               <div class="alert alert-warning" wicket:id="reviewRequiredMessage">
                 The behavior of this data collector has changed. Please review the description
                 and settings.
@@ -64,9 +59,9 @@
               <div wicket:id="details"/>
             </div>
           </div>
-        </div>
+        </form>
       </div>
-    </form>
+    </div>
   </wicket:extend>
 </body>
 </html>

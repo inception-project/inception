@@ -19,13 +19,17 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <ul class="nav nav-tabs" wicket:id="tabs-container">
-      <li wicket:id="tabs">
-        <a wicket:id="link"><span wicket:id="title"></span></a>
-      </li>
-    </ul>
-    <div class="panel panel-default flex-content flex-h-container" style="margin: 0px;">
-      <div wicket:id="panel" class="flex-content flex-h-container"></div>
+    <div class="card flex-content">
+      <div class="card-header">
+        <ul wicket:id="tabs-container">
+          <li wicket:id="tabs" class="nav-item nav-link">
+            <a wicket:id="link" style="text-decoration: none;"><span wicket:id="title"></span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="card-body flex-content flex-h-container" style="margin: 0px; padding: 0px;">
+        <div wicket:id="panel" class="flex-content flex-h-container"></div>
+      </div>
     </div>
   </wicket:panel>
 </body>

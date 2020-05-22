@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.copyDocumentMetadata;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
@@ -35,6 +35,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.factory.CasFactory;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -81,15 +83,15 @@ public class BratAnnotatorUtility
     {
         CAS target;
         try {
-            target = createCas();
+            target = CasFactory.createCas((TypeSystemDescription) null);
         }
         catch (UIMAException e) {
             throw new IOException(e);
         }
         
         // Copy the CAS - basically we do this just to keep the full type system information
-        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aCas);
-        deserializeCASComplete(serializer, (CASImpl) target);
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+        deserializeCASComplete(serializer, (CASImpl) getRealCas(target));
 
         // Remove all annotations from the target CAS but we keep the type system!
         target.reset();

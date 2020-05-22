@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -43,6 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 public class TagSetExporter
     implements ProjectExporter
 {
+    private static final Logger LOG = LoggerFactory.getLogger(TagSetExporter.class);
+
     private @Autowired AnnotationSchemaService annotationService;
 
     @Override
@@ -70,6 +74,9 @@ public class TagSetExporter
         }
 
         aExProject.setTagSets(extTagSets);
+        
+        LOG.info("Exported [{}] tagsets for project [{}]", extTagSets.size(),
+                aRequest.getProject().getName());
     }
     
     @Override

@@ -34,11 +34,7 @@
   </div>
   
   <div class="page-header">
-    <nav class="nav navbar navbar-inverse" role="navigation" style="border-radius: 0px;">
-      <div class="container-fluid">
-        <wicket:container wicket:id="menubar"/>
-      </div>
-    </nav>
+    <wicket:container wicket:id="menubar"/>
   </div>
   
   <div class="page-content flex-h-container">
@@ -49,9 +45,9 @@
 
   <div wicket:id="feedbackPanel" class="feedback-panel"></div>
 
-  <div class="page-footer">
+  <div wicket:id="footer" class="page-footer">
     <wicket:container wicket:id="footerItems">
-      <wicket:container wicket:id="item"/>
+      <div wicket:id="item"/>
     </wicket:container>
   </div>
 </body>

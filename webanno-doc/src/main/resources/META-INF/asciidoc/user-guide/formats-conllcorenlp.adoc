@@ -1,0 +1,80 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_formats_conllcorenlp]]
+= CoreNLP CoNLL-like format
+
+The CoreNLP CoNLL format is used by the Stanford CoreNLP package. Columns are tab-separated. 
+Sentences are separated by a blank new line.
+
+[cols="2,1,1,1,3"]
+|====
+| Format | Read | Write | Custom Layers | Description
+
+| link:https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/pipeline/CoNLLOutputter.html[CoreNLP CoNLL-like format]
+| yes
+| yes
+| no
+|
+|====
+
+.Columns
+[cols="1,2,3", options="header"]
+|====
+| Column  | Type/Feature | Description
+
+| ID
+| ignored
+| Token counter, starting at 1 for each new sentence.
+
+| FORM
+| Token 
+| Word form or punctuation symbol.
+
+| LEMMA
+| Lemma
+| Lemma of the word form.
+
+| POSTAG
+| POS PosValue 
+| Fine-grained part-of-speech tag, where the tagset depends on the language, or identical to the coarse-grained part-of-speech tag if not available.
+
+| NER
+| NamedEntity
+| Named Entity tag, or underscore if not available. If a named entity covers multiple tokens, all
+of the tokens simply carry the same label without (no sequence encoding).
+
+| HEAD    
+| Dependency 
+| Head of the current token, which is either a value of ID or zero ('0'). Note that depending on the original treebank annotation, there may be multiple tokens with an ID of zero.
+
+| DEPREL  
+| Dependency 
+| Dependency relation to the HEAD. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningful or simply 'ROOT'.
+|====
+
+.Example
+[source,text,tabsize=0]
+----
+1	Selectum	Selectum	NNP	O	_	_
+2	,	,	,	O	_	_
+3	Société	Société	NNP	O	_	_
+4	d'Investissement	d'Investissement	NNP	O	_	_
+5	à	à	NNP	O	_	_
+6	Capital	Capital	NNP	O	_	_
+7	Variable	Variable	NNP	O	_	_
+8	.	.	.	O	_	_
+----

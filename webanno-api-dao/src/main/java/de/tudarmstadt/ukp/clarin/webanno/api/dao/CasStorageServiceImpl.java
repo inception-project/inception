@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRAD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.failOnConcurrentModification;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils.writeSerializedCas;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -39,8 +41,6 @@ import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -133,30 +134,6 @@ public class CasStorageServiceImpl
     public void writeCas(SourceDocument aDocument, CAS aCas, String aUserName)
         throws IOException
     {
-        try {
-            if (casDoctor != null) {
-                casDoctor.analyze(aDocument.getProject(), aCas);
-            }
-        }
-        catch (CasDoctorException e) {
-            StringBuilder detailMsg = new StringBuilder();
-            detailMsg.append("CAS Doctor found problems for user [").append(aUserName)
-                    .append("] in source document [").append(aDocument.getName()).append("] (")
-                    .append(aDocument.getId()).append(") in project [")
-                    .append(aDocument.getProject().getName()).append("] (")
-                    .append(aDocument.getProject().getId()).append(")\n");
-            e.getDetails().forEach(m -> 
-                    detailMsg.append(String.format("- [%s] %s%n", m.level, m.message)));
-
-            throw new IOException(detailMsg.toString());
-        }
-        catch (Exception e) {
-            throw new IOException("Error analyzing CAS of user [" + aUserName
-                    + "] in source document [" + aDocument.getName() + "] (" + aDocument.getId()
-                    + ") in project [" + aDocument.getProject().getName() + "] ("
-                    + aDocument.getProject().getId() + ")", e);
-        }
-        
         synchronized (lock) {
             realWriteCas(aDocument, aUserName, aCas);
     
@@ -177,6 +154,8 @@ public class CasStorageServiceImpl
     private void realWriteCas(SourceDocument aDocument, String aUserName, CAS aCas)
         throws IOException
     {
+        analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
+        
         log.debug("Preparing to update annotations for user [{}] on document [{}]({}) in project [{}]({})",
                 aUserName, aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
                 aDocument.getProject().getId());
@@ -194,8 +173,7 @@ public class CasStorageServiceImpl
         try {
             // Check if there was a concurrent change to the file on disk
             if (currentVersion.exists()) {
-                CasMetadataUtils.failOnConcurrentModification(aCas, currentVersion, aDocument,
-                        username);
+                failOnConcurrentModification(aCas, currentVersion, aDocument, username);
             }
             
             // Make a backup of the current version of the file before overwriting
@@ -207,8 +185,7 @@ public class CasStorageServiceImpl
             WebAnnoCasUtil.setDocumentId(aCas, aUserName);
             
             long start = System.currentTimeMillis();
-            CasPersistenceUtils.writeSerializedCas(aCas,
-                    new File(annotationFolder, aUserName + ".ser"));
+            writeSerializedCas(aCas, new File(annotationFolder, aUserName + ".ser"));
             long duration = System.currentTimeMillis() - start;
 
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
@@ -484,7 +461,7 @@ public class CasStorageServiceImpl
         
         CAS cas;
         try {
-            cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+            cas = WebAnnoCasUtil.createCas();
         }
         catch (UIMAException e) {
             throw new IOException("Unable to create empty CAS", e);
@@ -539,47 +516,59 @@ public class CasStorageServiceImpl
     private void analyzeAndRepair(Project aProject, String aDocumentName, long aDocumentId,
             String aUsername, CAS aCas)
     {
-        if (casDoctor != null) {
-            // Check if repairs are active - if this is the case, we only need to run the repairs
-            // because the repairs do an analysis as a pre- and post-condition. 
-            if (casDoctor.isRepairsActive()) {
-                try {
-                    casDoctor.repair(aProject, aCas);
-                }
-                catch (Exception e) {
-                    throw new DataRetrievalFailureException("Error repairing CAS of user ["
-                            + aUsername + "] for document ["
-                            + aDocumentName + "] (" + aDocumentId + ") in project["
-                            + aProject.getName() + "] ("
-                            + aProject.getId() + ")", e);
-                }
+        if (casDoctor == null) {
+            return;
+        }
+        
+        // Check if repairs are active - if this is the case, we only need to run the repairs
+        // because the repairs do an analysis as a pre- and post-condition. 
+        if (casDoctor.isRepairsActive()) {
+            try {
+                casDoctor.repair(aProject, aCas);
             }
-            // If the repairs are not active, then we run the analysis explicitly
-            else {
-                try {
-                    casDoctor.analyze(aProject, aCas);
-                }
-                catch (CasDoctorException e) {
-                    StringBuilder detailMsg = new StringBuilder();
-                    detailMsg.append("CAS Doctor found problems for user [")
-                        .append(aUsername)
-                        .append("] in document [")
-                        .append(aDocumentName).append("] (").append(aDocumentId)
-                        .append(") in project [")
-                        .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
-                    e.getDetails().forEach(m -> detailMsg.append(
-                            String.format("- [%s] %s%n", m.level, m.message)));
-                    
-                    throw new DataRetrievalFailureException(detailMsg.toString());
-                }
-                catch (Exception e) {
-                    throw new DataRetrievalFailureException("Error analyzing CAS of user ["
-                            + aUsername + "] in document [" + aDocumentName + "] ("
-                            + aDocumentId + ") in project["
-                            + aProject.getName() + "] ("
-                            + aProject.getId() + ")", e);
-                }
+            catch (Exception e) {
+                throw new DataRetrievalFailureException("Error repairing CAS of user ["
+                        + aUsername + "] for document ["
+                        + aDocumentName + "] (" + aDocumentId + ") in project["
+                        + aProject.getName() + "] ("
+                        + aProject.getId() + ")", e);
             }
+        }
+        // If the repairs are not active, then we run the analysis explicitly
+        else {
+            analyze(aProject, aDocumentName, aDocumentId, aUsername, aCas);
+        }
+    }
+    
+    private void analyze(Project aProject, String aDocumentName, long aDocumentId,
+            String aUsername, CAS aCas)
+    {
+        if (casDoctor == null) {
+            return;
+        }        
+
+        try {
+            casDoctor.analyze(aProject, aCas);
+        }
+        catch (CasDoctorException e) {
+            StringBuilder detailMsg = new StringBuilder();
+            detailMsg.append("CAS Doctor found problems for user [")
+                .append(aUsername)
+                .append("] in document [")
+                .append(aDocumentName).append("] (").append(aDocumentId)
+                .append(") in project [")
+                .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
+            e.getDetails().forEach(m -> detailMsg.append(
+                    String.format("- [%s] %s%n", m.level, m.message)));
+            
+            throw new DataRetrievalFailureException(detailMsg.toString());
+        }
+        catch (Exception e) {
+            throw new DataRetrievalFailureException("Error analyzing CAS of user ["
+                    + aUsername + "] in document [" + aDocumentName + "] ("
+                    + aDocumentId + ") in project["
+                    + aProject.getName() + "] ("
+                    + aProject.getId() + ")", e);
         }
     }
     

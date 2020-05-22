@@ -31,7 +31,7 @@ public abstract class SpanLayerBehavior
     implements LayerBehavior
 {
     @Override
-    public boolean accepts(LayerSupport<?> aLayerType)
+    public boolean accepts(LayerSupport<?, ?> aLayerType)
     {
         return aLayerType instanceof SpanLayerSupport;
     }

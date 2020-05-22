@@ -93,4 +93,6 @@ public interface CurationDocumentService
      * @return the source documents.
      */
     List<SourceDocument> listCuratedDocuments(Project project);
+
+    boolean isCurationFinished(SourceDocument aDocument);
 }

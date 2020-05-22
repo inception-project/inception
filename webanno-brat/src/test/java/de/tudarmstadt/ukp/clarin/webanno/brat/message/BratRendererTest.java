@@ -36,6 +36,7 @@ import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.dkpro.core.io.tcf.TcfReader;
 import org.dkpro.core.io.text.TextReader;
 import org.dkpro.core.tokit.BreakIteratorSegmenter;
 import org.junit.Before;
@@ -43,9 +44,12 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -65,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -119,36 +122,34 @@ public class BratRendererTest
         posFeature.setVisible(true);        
 
         FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
-                asList(new PrimitiveUimaFeatureSupport(),
-                        new SlotFeatureSupport(schemaService)));
+                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
+                        new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
         featureSupportRegistry.init();
         
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
         
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
         
+        when(schemaService.listSupportedLayers(any())).thenReturn(asList(posLayer));
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
-        when(schemaService.listAnnotationFeature(any(AnnotationLayer.class)))
+        when(schemaService.listSupportedFeatures(any(Project.class)))
+                .thenReturn(asList(posFeature));
+        when(schemaService.listAnnotationFeature(any(Project.class)))
                 .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(layer).createAdapter(layer);
+            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
+                () -> asList(posFeature));
         });
         
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
     }
     
-    /**
-     * generate brat JSON data for the document
-     */
     @Test
     public void thatSentenceOrientedStrategyRenderCorrectly() throws Exception
     {
@@ -171,7 +172,9 @@ public class BratRendererTest
                 cas, schemaService.listAnnotationLayer(project));
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, state, vdoc, cas, schemaService);
+        BratRenderer renderer = new BratRenderer(schemaService,
+                new ColoringServiceImpl(schemaService));
+        renderer.render(response, state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -207,7 +210,9 @@ public class BratRendererTest
                 cas, schemaService.listAnnotationLayer(project));
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, state, vdoc, cas, schemaService);
+        BratRenderer renderer = new BratRenderer(schemaService,
+                new ColoringServiceImpl(schemaService));
+        renderer.render(response, state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 

@@ -46,7 +46,7 @@ public class LayerSupportRegistryImpl
     
     private List<LayerSupport> layerSupports;
     
-    private final Map<Long, LayerSupport<?>> supportCache = new HashMap<>();
+    private final Map<Long, LayerSupport<?, ?>> supportCache = new HashMap<>();
 
     public LayerSupportRegistryImpl(
             @Lazy @Autowired(required = false) List<LayerSupport> aLayerSupports)
@@ -68,9 +68,10 @@ public class LayerSupportRegistryImpl
             lsp.addAll(layerSupportsProxy);
             AnnotationAwareOrderComparator.sort(lsp);
         
-            for (LayerSupport<?> fs : lsp) {
+            for (LayerSupport<?, ?> fs : lsp) {
                 log.info("Found layer support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                fs.setLayerSupportRegistry(this);
             }
         }
         
@@ -97,7 +98,7 @@ public class LayerSupportRegistryImpl
         }
         
         if (support == null) {
-            for (LayerSupport<?> s : getLayerSupports()) {
+            for (LayerSupport<?, ?> s : getLayerSupports()) {
                 if (s.accepts(aLayer)) {
                     support = s;
                     if (aLayer.getId() != null) {

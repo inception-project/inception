@@ -20,7 +20,7 @@
 <body>
   <wicket:panel>
     <wicket:container wicket:id="warnings">
-      <div class="dev-warnings pull-right">
+      <div class="dev-warnings float-right">
         <a class="alert alert-warning"
            role="button"
            data-toggle="popover"
@@ -30,11 +30,11 @@
            title="Warnings"
            data-html="true"
            data-popover-content="#warning-popover">
-             <i class="fa fa-fw fa-warning"></i> Warnings</a>
+             <i class="fas fa-exclamation-triangle"></i> Warnings</a>
       </div>
     </wicket:container>
     
-    <div id="warning-popover" class="hidden">
+    <div id="warning-popover" class="d-none">
         <div class="popover-body">
           <ul>
             <li wicket:id="embeddedDbWarning"></li>

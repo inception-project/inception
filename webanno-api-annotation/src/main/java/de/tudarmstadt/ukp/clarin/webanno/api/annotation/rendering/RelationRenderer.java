@@ -49,11 +49,11 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
@@ -67,9 +67,10 @@ public class RelationRenderer
     private final List<RelationLayerBehavior> behaviors;
 
     public RelationRenderer(RelationAdapter aTypeAdapter,
+            LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry, List<RelationLayerBehavior> aBehaviors)
     {
-        super(aTypeAdapter, aFeatureSupportRegistry);
+        super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
 
         if (aBehaviors == null) {
             behaviors = emptyList();
@@ -119,8 +120,9 @@ public class RelationRenderer
                 governorFs = fs.getFeatureValue(governorFeature);
             }
 
-            String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-            Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
+            String bratTypeName = typeAdapter.getUiTypeName();
+            Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs,
+                    visibleFeatures);
             
             if (dependentFs == null || governorFs == null) {
                 StringBuilder message = new StringBuilder();

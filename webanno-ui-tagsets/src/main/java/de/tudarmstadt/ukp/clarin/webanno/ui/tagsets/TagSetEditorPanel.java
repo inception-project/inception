@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.tagsets;
 
+import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.JSON_FORMAT;
+import static de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant.TAB_FORMAT;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior.onUpdateChoice;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,7 +33,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +44,7 @@ import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -49,21 +53,18 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 
@@ -96,7 +97,7 @@ public class TagSetEditorPanel
         
         Form<TagSet> form = new Form<>("form", CompoundPropertyModel.of(aTagSet));
         add(form);
-        
+
         form.add(new TextField<String>("name")
                 .add(new TagSetExistsValidator())
                 .setRequired(true));
@@ -109,10 +110,14 @@ public class TagSetEditorPanel
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
         
-        form.add(new BootstrapSelect<>("format", exportFormat,
-                LambdaModel.of(this::supportedFormats))
-                .add(new LambdaAjaxFormComponentUpdatingBehavior("change",  (t) -> { })));
-        form.add(new AjaxDownloadLink("export", LambdaModel.of(this::export)));
+        BootstrapRadioChoice<String> format = new BootstrapRadioChoice<>("format", exportFormat,
+                LoadableDetachableModel.of(this::supportedFormats));
+        // The AjaxDownloadLink does not submit the form, so the format radio-buttons need to 
+        // submit themselves so their value is available when the export button is pressed
+        format.add(onUpdateChoice(_target -> { /*NO-OP*/ }));
+        form.add(format);
+        
+        form.add(new AjaxDownloadLink("export", LoadableDetachableModel.of(this::export)));
         
         confirmationDialog = new ConfirmationDialog("confirmationDialog");
         confirmationDialog.setTitleModel(new StringResourceModel("DeleteDialog.title", this));
@@ -121,7 +126,7 @@ public class TagSetEditorPanel
     
     private List<String> supportedFormats()
     {
-        return Arrays.asList(ExportedTagSetConstant.JSON_FORMAT, ExportedTagSetConstant.TAB_FORMAT);
+        return asList(JSON_FORMAT, TAB_FORMAT);
     }
     
     private void actionSave(AjaxRequestTarget aTarget, Form<Tag> aForm) {
@@ -173,7 +178,7 @@ public class TagSetEditorPanel
     private FileResourceStream export()
     {
         File exportFile = null;
-        if (exportFormat.getObject().equals(ExportedTagSetConstant.JSON_FORMAT)) {
+        if (exportFormat.getObject().equals(JSON_FORMAT)) {
             try {
                 exportFile = File.createTempFile("exportedtagsets", ".json");
             }
@@ -212,7 +217,7 @@ public class TagSetEditorPanel
                 info("TagSets successfully exported to :" + exportFile.getAbsolutePath());
             }
         }
-        else if (exportFormat.getObject().equals(ExportedTagSetConstant.TAB_FORMAT)) {
+        else if (exportFormat.getObject().equals(TAB_FORMAT)) {
             TagSet tagSet = selectedTagSet.getObject();
             try {
                 exportFile = File.createTempFile("exportedtagsets", ".txt");

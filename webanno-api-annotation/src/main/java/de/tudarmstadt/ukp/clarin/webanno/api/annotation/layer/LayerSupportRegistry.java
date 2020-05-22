@@ -28,6 +28,15 @@ public interface LayerSupportRegistry
 {
     List<LayerSupport> getLayerSupports();
 
+    /**
+     * Retrieves the layer support for the given layer.
+     * 
+     * @param aLayer
+     *            the layer to get the support for.
+     * @return the layer support.
+     * @throws IllegalArgumentException
+     *             if there is no support for the given layer.
+     */
     LayerSupport getLayerSupport(AnnotationLayer aLayer);
 
     LayerSupport getLayerSupport(String aId);
@@ -42,9 +51,11 @@ public interface LayerSupportRegistry
     {
         List<LayerType> allTypes = new ArrayList<>();
 
-        for (LayerSupport layerSupport : getLayerSupports()) {
+        for (LayerSupport<?,?> layerSupport : getLayerSupports()) {
             List<LayerType> types = layerSupport.getSupportedLayerTypes();
-            types.stream().forEach(allTypes::add);
+            types.stream()
+                    .filter(l -> !l.isInternal())
+                    .forEach(allTypes::add);
         }
 
         allTypes.sort(comparing(LayerType::getUiName));

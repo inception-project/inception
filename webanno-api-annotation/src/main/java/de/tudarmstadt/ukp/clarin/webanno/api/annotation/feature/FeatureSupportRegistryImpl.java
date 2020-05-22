@@ -114,7 +114,8 @@ public class FeatureSupportRegistryImpl
         }
         
         if (support == null) {
-            throw new IllegalArgumentException("Unsupported feature: [" + aFeature.getName() + "]");
+            throw new IllegalArgumentException("Unsupported feature: [" + aFeature.getName()
+                    + "] of type [" + aFeature.getType() + "]");
         }
         
         return support;

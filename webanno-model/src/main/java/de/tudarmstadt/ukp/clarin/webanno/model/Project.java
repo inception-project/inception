@@ -87,6 +87,13 @@ public class Project
     {
         // Nothing to do
     }
+    
+    public Project(String aName)
+    {
+        super();
+        name = aName;
+        mode = "annotation";
+    }
 
     public Long getId()
     {

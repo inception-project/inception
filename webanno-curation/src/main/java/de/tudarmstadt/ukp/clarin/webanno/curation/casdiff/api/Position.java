@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
 
+import java.io.Serializable;
+
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 
 /**
@@ -24,7 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
  * logical position in the document are collected under this. Within the position, there are
  * groups that represent the different configurations of the annotation made by different users.
  */
-public interface Position extends Comparable<Position>
+public interface Position
+    extends Comparable<Position>, Serializable
 {
     /**
      * @return the CAS id.

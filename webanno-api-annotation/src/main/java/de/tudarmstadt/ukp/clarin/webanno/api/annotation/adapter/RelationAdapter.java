@@ -25,6 +25,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEve
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -69,30 +71,14 @@ public class RelationAdapter
 
     private final List<RelationLayerBehavior> behaviors;
     
-    /**
-     * @deprecated
-     * @param aAttacheFeatureName argument is ignored and value obtained from layer instead.
-     * @param aAttachType argument is ignored and value obtained from layer instead.
-     * @param aTypeId argument is ignored and value obtained from layer instead.
-     * @param aLayer argument is ignored and value obtained from layer instead.
-     */
-    @Deprecated
-    public RelationAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer, long aTypeId,
-            String aTypeName, String aTargetFeatureName, String aSourceFeatureName, 
-            /* String aArcSpanType, */ String aAttacheFeatureName, String aAttachType, 
-            Collection<AnnotationFeature> aFeatures)
-    {
-        this(aFeatureSupportRegistry, aEventPublisher, aLayer,
-                aTargetFeatureName, aSourceFeatureName, aFeatures, emptyList());
-    }
-    
-    public RelationAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+    public RelationAdapter(LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             String aTargetFeatureName, String aSourceFeatureName,
-            Collection<AnnotationFeature> aFeatures, List<RelationLayerBehavior> aBehaviors)
+            Supplier<Collection<AnnotationFeature>> aFeatures,
+            List<RelationLayerBehavior> aBehaviors)
     {
-        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
         
         if (aBehaviors == null) {
             behaviors = emptyList();

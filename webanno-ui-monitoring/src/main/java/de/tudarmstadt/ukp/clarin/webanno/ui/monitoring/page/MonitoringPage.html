@@ -17,17 +17,24 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+  <style type="text/css">
+    .page-content {
+      overflow: auto;
+    }
+  </style>
+</wicket:head>
+</head>
 <body>
   <wicket:extend>
     <div class="flex-content flex-h-container flex-gutter">
       <form wicket:id="projectSelectionForm" class="flex-sidebar flex-v-container flex-gutter">
-        <div class="flex-content panel panel-default panel-flex">
-          <div class="panel-heading">
-            <h3 class="panel-title">
-              <wicket:message key="projects" />
-            </h3>
+        <div class="flex-content card">
+          <div class="card-header">
+            <wicket:message key="projects" />
           </div>
-          <div class="scrolling panel-body fit-child-snug">
+          <div class="scrolling card-body fit-child-snug">
             <select wicket:id="project" size="20" class="form-control"></select>
           </div>
         </div>
@@ -35,13 +42,11 @@
 
       <div class="flex-content flex-v-container flex-gutter">
         <div class="flex-content flex-v-container" wicket:enclosure="overallProjectProgressImage">
-          <div class="flex-content panel panel-default panel-flex">
-            <div class="panel-heading">
-              <h3 class="panel-title">
-                <wicket:message key="progress" />
-              </h3>
+          <div class="flex-content card">
+            <div class="card-header">
+              <wicket:message key="progress" />
             </div>
-            <div class="scrolling panel-body">
+            <div class="scrolling card-body">
               <div wicket:id="overallProjectProgressImage" style="max-width: 600px;"></div>
             </div>
           </div>
@@ -51,67 +56,64 @@
           <div class="page-header">
             <h1><wicket:container wicket:id="name"/></h1>
           </div>
-          <div class="flex-h-container flex-gutter flex-only-internal-gutter" style="margin-top: 0px;">
-            <div class="flex-content panel panel-default">
-              <div class="panel-heading">
-                <h3 class="panel-title">Documents finished</h3>
+          <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" style="margin-top: 0px; flex: 0.5;">
+            <div class="flex-content card" style="min-height: 220px;">
+              <div class="card-header">
+                Documents finished
               </div>
-              <div class="panel-body">
+              <div class="scrolling card-body">
                 <div wicket:id="annotator" style="max-width: 300px;"></div>
               </div>
             </div>
             
-            <div class="flex-content panel panel-default">
-              <div class="panel-heading">
-                <h3 class="panel-title">
-                  <wicket:message key="progress" />
-                </h3>
+            <div class="flex-content card" style="min-height: 220px;">
+              <div class="card-header">
+                <wicket:message key="progress" />
               </div>
-              <div class="panel-body">
+              <div class="scrolling card-body">
                 <div wicket:id="annotatorPercentage" style="max-width: 300px;"></div>
               </div>
             </div>
           </div>
   
-          <div class="flex-content panel panel-default panel-flex">
-            <div class="panel-heading">
-              <h3 class="panel-title">
-                <wicket:message key="document_status" />
-                <span class="pull-right"><a target="_blank"
-                  wicket:message="href:document_status.help.link"><wicket:message key="help" /></a></span>
-              </h3>
+          <div class="flex-content card" style="min-height: 220px;">
+            <div class="card-header">
+              <wicket:message key="document_status" />
+              <a target="_blank" wicket:message="href:document_status.help.link">
+                <i class="fas fa-question-circle"></i>
+              </a>
             </div>
-            <div class="scrolling panel-body">
-              <p>
-                <b><wicket:message key="document_status.hint">[Status hint]</wicket:message></b>
-              </p>
-              <div class="table-responsive">
-                <table class="table table-condensed" wicket:id="rsTable"></table>
+            <div class="card-body flex-v-container">
+              <div>
+                <small class="text-muted"><wicket:message key="document_status.hint">[Status hint]</wicket:message></small>
+              </div>
+              <div class="flex-content scrolling">
+                <div class="fit-child-snug">
+                  <table class="table table-sm" wicket:id="rsTable"></table>
+                </div>
               </div>
             </div>
           </div>
         </form>
 
-        <form wicket:id="trainingResultForm" class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
-          <div class="panel panel-default panel-flex" style="flex: 0.5; margin-left: 0px;">
-            <div class="panel-heading">
-              <h3 class="panel-title">
-                <wicket:message key="features" />
-              </h3>
+        <form wicket:id="trainingResultForm" class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" style="flex: 0.4;">
+          <div class="panel card" style="flex: 0.5; margin-left: 0px;">
+            <div class="card-header">
+              <wicket:message key="features" />
             </div>
-            <div class="scrolling panel-body fit-child-snug">
+            <div class="scrolling card-body fit-child-snug">
               <select wicket:id="layerResult" class="form-control"></select>
             </div>
           </div>
           
-          <div class="flex-content panel panel-default panel-flex">
-            <div class="panel-heading">
-              <h3 class="panel-title">Training results /status</h3>
+          <div class="flex-content card">
+            <div class="card-header">
+              Training results /status
             </div>
-            <div class="scrolling panel-body flex-v-container">
+            <div class="scrolling card-body flex-v-container">
                 <div wicket:id="resultLabel"></div>
               
-                <table class="table table-condensed">
+                <table class="table table-sm">
                   <thead>
                     <tr>
                       <th>Train.Doc</th>

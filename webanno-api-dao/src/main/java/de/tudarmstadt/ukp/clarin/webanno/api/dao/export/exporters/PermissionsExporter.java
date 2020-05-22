@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipFile;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +50,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public class PermissionsExporter
     implements ProjectExporter
 {
+    private static final Logger LOG = LoggerFactory.getLogger(PermissionsExporter.class);
+
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userService;
     
@@ -69,6 +73,9 @@ public class PermissionsExporter
             }
         }
         aExProject.setProjectPermissions(projectPermissions);
+        
+        LOG.info("Exported [{}] permissions for project [{}]", projectPermissions.size(),
+                aRequest.getProject().getName());
     }
 
     /**

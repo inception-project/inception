@@ -97,6 +97,9 @@ public class ExportedAnnotationLayer
     @JsonProperty("on_click_javascript_action")
     private String onClickJavascriptAction;
 
+    @JsonProperty("traits")
+    private String traits;
+
     public String getName()
     {
         return name;
@@ -341,6 +344,16 @@ public class ExportedAnnotationLayer
     public void setOnClickJavascriptAction(String onClickAction)
     {
         this.onClickJavascriptAction = onClickAction;
+    }
+
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
     }
 
     @Override

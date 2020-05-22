@@ -20,11 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -86,7 +89,9 @@ public interface ImportExportService
     // --------------------------------------------------------------------------------------------
     
     /**
-     * Convert a file to a CAS.
+     * Convert a file to a CAS. This method collects the project's type system as part of the call.
+     * It is not well-suited for bulk-imports. For these, use 
+     * {@link #importCasFromFile(File, Project, String, TypeSystemDescription)} instead.
      *
      * @param aFile
      *            the file.
@@ -104,6 +109,29 @@ public interface ImportExportService
         throws UIMAException, IOException;
 
     /**
+     * Convert a file to a CAS. This method is good for bulk-importing because it accepts the 
+     * project type system as a parameter instead of collecting it on every call.
+     *
+     * @param aFile
+     *            the file.
+     * @param aProject
+     *            the project to which this file belongs (required to get the type system).
+     * @param aFormatId
+     *            ID of a supported file format
+     * @param aFullProjectTypeSystem
+     *            the project type system. If this parameter is {@code null}, then the method will
+     *            try to resolve the type system itself. 
+     * @return the CAS.
+     * @throws UIMAException
+     *             if a conversion error occurs.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */    
+    CAS importCasFromFile(File aFile, Project aProject, String aFormatId,
+            TypeSystemDescription aFullProjectTypeSystem)
+                    throws UIMAException, IOException;
+
+    /**
      * Exports the given CAS to a file on disk. 
      * 
      * A new directory is created using UUID so that every exported file will reside in its own
@@ -112,6 +140,17 @@ public interface ImportExportService
      */
     File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat,
             boolean aStripExtension)
+        throws IOException, UIMAException;
+
+    /**
+     * Exports the given CAS to a file on disk. 
+     * 
+     * A new directory is created using UUID so that every exported file will reside in its own
+     * directory. This is useful as the written file can have multiple extensions based on the
+     * Writer class used.
+     */
+    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat,
+            boolean aStripExtension, Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException;
     
     /**
@@ -142,5 +181,10 @@ public interface ImportExportService
 
     File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
             String fileName, Mode mode, boolean stripExtension)
+        throws UIMAException, IOException, ClassNotFoundException;
+
+    File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
+            String fileName, Mode mode, boolean stripExtension,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws UIMAException, IOException, ClassNotFoundException;
 }

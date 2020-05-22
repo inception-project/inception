@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 
@@ -55,7 +56,7 @@ public final class CasPersistenceUtils
     {
         try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
             CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
-            deserializeCASComplete(serializer, (CASImpl) aCas);
+            deserializeCASComplete(serializer, (CASImpl) getRealCas(aCas));
         }
         catch (ClassNotFoundException e) {
             throw new IOException(e);

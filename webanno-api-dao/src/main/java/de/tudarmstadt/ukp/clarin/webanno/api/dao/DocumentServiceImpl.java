@@ -25,12 +25,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,6 +54,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -70,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
@@ -81,7 +83,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -247,17 +248,17 @@ public class DocumentServiceImpl
         Validate.notNull(aProject, "Project must be specified");
         Validate.notBlank(aFileName, "File name must be specified");
         
-        try {
-            entityManager
-                    .createQuery(
-                            "FROM SourceDocument WHERE project = :project AND " + "name =:name ",
-                            SourceDocument.class).setParameter("project", aProject)
-                    .setParameter("name", aFileName).getSingleResult();
-            return true;
-        }
-        catch (NoResultException ex) {
-            return false;
-        }
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM SourceDocument",
+                "WHERE project = :project AND name =:name ");
+
+        long count = entityManager.createQuery(query, Long.class)
+                .setParameter("project", aProject)
+                .setParameter("name", aFileName)
+                .getSingleResult();
+        
+        return count > 0;
     }
 
     @Override
@@ -554,17 +555,16 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public void uploadSourceDocument(File aFile, SourceDocument aDocument)
+    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument)
         throws IOException
     {
-        try (InputStream is = new FileInputStream(aFile)) {
-            uploadSourceDocument(is, aDocument);
-        }
+        uploadSourceDocument(aIs, aDocument, null);
     }
 
     @Override
     @Transactional
-    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument)
+    public void uploadSourceDocument(InputStream aIs, SourceDocument aDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws IOException
     {
         // Create the metadata record - this also assigns the ID to the document
@@ -582,7 +582,7 @@ public class DocumentServiceImpl
             
             // Check if the file has a valid format / can be converted without error
             // This requires that the document ID has already been assigned
-            cas = createOrReadInitialCas(aDocument);
+            cas = createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, aFullProjectTypeSystem);
         }
         catch (IOException e) {
             FileUtils.forceDelete(targetFile);
@@ -611,16 +611,24 @@ public class DocumentServiceImpl
     public CAS createOrReadInitialCas(SourceDocument aDocument)
         throws IOException
     {
-        return createOrReadInitialCas(aDocument, CasUpgradeMode.NO_CAS_UPGRADE);
+        return createOrReadInitialCas(aDocument, NO_CAS_UPGRADE);
     }
     
     @Override
     public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode)
+            throws IOException
+    {
+        return createOrReadInitialCas(aDocument, aUpgradeMode, null);
+    }
+    
+    @Override
+    public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            TypeSystemDescription aFullProjectTypeSystem)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
         
-        log.info("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
+        log.debug("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
                 aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
@@ -632,12 +640,20 @@ public class DocumentServiceImpl
                 try {
                     return importExportService.importCasFromFile(
                             getSourceDocumentFile(aDocument), aDocument.getProject(),
-                            aDocument.getFormat());
+                            aDocument.getFormat(), aFullProjectTypeSystem);
                 }
                 catch (UIMAException e) {
                     throw new IOException("Unable to create CAS: " + e.getMessage(), e);
                 }
             });
+    }
+    
+    @Override
+    public boolean existsInitialCas(SourceDocument aDocument) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+
+        return casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
     }
     
     @Override
@@ -772,47 +788,83 @@ public class DocumentServiceImpl
     }
     
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional
     public boolean isAnnotationFinished(SourceDocument aDocument, User aUser)
     {
-        try {
-            AnnotationDocument annotationDocument = entityManager
-                    .createQuery(
-                            "FROM AnnotationDocument WHERE document = :document AND "
-                                    + "user =:user", AnnotationDocument.class)
-                    .setParameter("document", aDocument).setParameter("user", aUser.getUsername())
-                    .getSingleResult();
-            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-        // User even didn't start annotating
-        catch (NoResultException e) {
-            return false;
-        }
+        String query = String.join("\n",
+                "SELECT COUNT(*) FROM AnnotationDocument",
+                "WHERE document = :document",
+                "  AND user     = :user",
+                "  AND state    = :state");
+        
+        return entityManager.createQuery(query, Long.class)
+                .setParameter("document", aDocument)
+                .setParameter("user", aUser.getUsername())
+                .setParameter("state", AnnotationDocumentState.FINISHED)
+                .getSingleResult() > 0;
+        
+//        try {
+//            AnnotationDocument annotationDocument = entityManager
+//                    .createQuery(
+//                            "FROM AnnotationDocument WHERE document = :document AND "
+//                                    + "user =:user", AnnotationDocument.class)
+//                    .setParameter("document", aDocument)
+//                    .setParameter("user", aUser.getUsername())
+//                    .getSingleResult();
+//            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+//                return true;
+//            }
+//            else {
+//                return false;
+//            }
+//        }
+//        // User even didn't start annotating
+//        catch (NoResultException e) {
+//            return false;
+//        }
     }
 
+    @Override
+    public List<AnnotationDocument> listAnnotationDocuments(Project aProject)
+    {
+        String query = String.join("\n",
+                "SELECT doc",
+                " FROM AnnotationDocument AS doc",
+                " JOIN ProjectPermission AS perm",
+                "   ON doc.project = perm.project AND doc.user = perm.user",
+                " JOIN User as u",
+                "   ON doc.user = u.username",
+                "WHERE doc.project = :project",
+                "  AND perm.level = :level");
+
+        return entityManager
+                .createQuery(query, AnnotationDocument.class)
+                .setParameter("project", aProject)
+                .setParameter("level", ANNOTATOR)
+                .getResultList();
+    }
+    
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<AnnotationDocument> listAnnotationDocuments(SourceDocument aDocument)
     {
-        // Get all annotators in the project
-        List<String> users = getAllAnnotators(aDocument.getProject());
-        // Bail out already. HQL doesn't seem to like queries with an empty
-        // parameter right of "in"
-        if (users.isEmpty()) {
-            return new ArrayList<>();
-        }
+        String query = String.join("\n",
+                "SELECT doc",
+                " FROM AnnotationDocument AS doc",
+                " JOIN ProjectPermission AS perm",
+                "   ON doc.project = perm.project AND doc.user = perm.user",
+                " JOIN User as u",
+                "   ON doc.user = u.username",
+                "WHERE doc.project = :project",
+                "  AND doc.document = :document",
+                "  AND perm.level = :level");
 
         return entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE project = :project AND document = :document "
-                                + "AND user in (:users)", AnnotationDocument.class)
-                .setParameter("project", aDocument.getProject()).setParameter("users", users)
-                .setParameter("document", aDocument).getResultList();
+                .createQuery(query, AnnotationDocument.class)
+                .setParameter("project", aDocument.getProject())
+                .setParameter("document", aDocument)
+                .setParameter("level", ANNOTATOR)
+                .getResultList();
     }
     
     @Override
@@ -821,7 +873,8 @@ public class DocumentServiceImpl
         return entityManager
                 .createQuery("FROM AnnotationDocument WHERE project = :project AND user = :user",
                         AnnotationDocument.class)
-                .setParameter("project", aProject).setParameter("user", aUser.getUsername())
+                .setParameter("project", aProject)
+                .setParameter("user", aUser.getUsername())
                 .getResultList();
     }
 
@@ -941,24 +994,19 @@ public class DocumentServiceImpl
     
     private List<String> getAllAnnotators(Project aProject)
     {
+        String query = String.join("\n",
+                "SELECT DISTINCT p.user",
+                "FROM ProjectPermission p, User u",
+                "WHERE p.project = :project",
+                "  AND p.level   = :level",
+                "  AND p.user    = u.username");
+        
         // Get all annotators in the project
         List<String> users = entityManager
-                .createQuery(
-                        "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
-                                + "AND level = :level", String.class)
-                .setParameter("project", aProject).setParameter("level", PermissionLevel.ANNOTATOR)
+                .createQuery(query, String.class)
+                .setParameter("project", aProject)
+                .setParameter("level", ANNOTATOR)
                 .getResultList();
-
-        // check if the username is in the Users database (imported projects
-        // might have username
-        // in the ProjectPermission entry while it is not in the Users database
-        List<String> notInUsers = new ArrayList<>();
-        for (String user : users) {
-            if (!userRepository.exists(user)) {
-                notInUsers.add(user);
-            }
-        }
-        users.removeAll(notInUsers);
 
         return users;
     }

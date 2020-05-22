@@ -27,9 +27,12 @@ import java.util.zip.ZipFile;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -362,6 +365,15 @@ public interface ProjectService
     List<String> listGuidelines(Project project);
 
     /**
+     * Checks if the given project defines any guidelines.
+     *
+     * @param project
+     *            the project.
+     * @return the filenames.
+     */
+    boolean hasGuidelines(Project project);
+
+    /**
      * Remove an annotation guideline document from the file system
      *
      * @param project
@@ -453,4 +465,16 @@ public interface ProjectService
         throws Exception;
     
     List<ProjectType> listProjectTypes();
+
+    /**
+     * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
+     * s. This is done per Project.
+     * 
+     * @param aProject
+     *            the project.
+     * @throws IOException
+     *             if an I/O error occurs.
+     */ 
+    void initializeProject(Project aProject)
+            throws IOException;
 }

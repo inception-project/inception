@@ -20,10 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -35,6 +38,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -42,28 +46,49 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
+    private final LayerSupportRegistry layerSupportRegistry;
+    
     private final FeatureSupportRegistry featureSupportRegistry;
     
     private final AnnotationLayer layer;
+    
+    private final Supplier<Collection<AnnotationFeature>> featureSupplier;
 
-    private final Map<String, AnnotationFeature> features;
+    private Map<String, AnnotationFeature> features;
 
     private ApplicationEventPublisher applicationEventPublisher;
 
-    public TypeAdapter_ImplBase(FeatureSupportRegistry aFeatureSupportRegistry,
+    private Map<AnnotationLayer, Object> layerTraitsCache;
+
+    /**
+     * Constructor.
+     * 
+     * @param aLayerSupportRegistry
+     *            the layer support registry to allow e.g. convenient decoding of layer traits.
+     * @param aFeatureSupportRegistry
+     *            the feature support registry to allow e.g. convenient generation of features or
+     *            getting/setting feature values.
+     * @param aEventPublisher
+     *            an optional publisher for Spring events.
+     * @param aLayer
+     *            the layer for which the adapter is created.
+     * @param aFeatures
+     *            supplier for the features, typically
+     *            {@link AnnotationSchemaService#listAnnotationFeature(AnnotationLayer)}. Since the
+     *            features are not always needed, we use a supplied here so they can be loaded
+     *            lazily. To facilitate testing, we do not pass the entire
+     *            {@link AnnotationSchemaService}.
+     */
+    public TypeAdapter_ImplBase(LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures)
+            Supplier<Collection<AnnotationFeature>> aFeatures)
     {
+        layerSupportRegistry = aLayerSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;
         applicationEventPublisher = aEventPublisher;
         layer = aLayer;
-
-        // Using a sorted map here so we have reliable positions in the map when iterating. We use
-        // these positions to remember the armed slots!
-        features = new TreeMap<>();
-        for (AnnotationFeature f : aFeatures) {
-            features.put(f.getName(), f);
-        }
+        featureSupplier = aFeatures;
     }
     
     @Override
@@ -75,6 +100,15 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public Collection<AnnotationFeature> listFeatures()
     {
+        if (features == null) {
+            // Using a sorted map here so we have reliable positions in the map when iterating. We
+            // use these positions to remember the armed slots!
+            features = new TreeMap<>();
+            for (AnnotationFeature f : featureSupplier.get()) {
+                features.put(f.getName(), f);
+            }
+        }
+        
         return features.values();
     }
     
@@ -156,5 +190,27 @@ public abstract class TypeAdapter_ImplBase
     public void silenceEvents()
     {
         applicationEventPublisher = null;
+    }
+
+    /**
+     * Decodes the traits for the current layer and returns them if they implement the requested
+     * interface. This method internally caches the decoded traits, so it can be called often.
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Optional<T> getTraits(Class<T> aInterface)
+    {
+        if (layerTraitsCache == null) {
+            layerTraitsCache = new HashMap<>();
+        }
+        
+        Object trait = layerTraitsCache.computeIfAbsent(getLayer(), feature ->
+               layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
+        
+        if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
+            return Optional.of((T) trait);
+        }
+        
+        return Optional.empty();
     }
 }

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.6.6-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-ui-core</artifactId>
   <name>WebAnno - UI - Core</name>
@@ -149,16 +149,12 @@
       <artifactId>wicket-webjars</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-less</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.github.sommeri</groupId>
-      <artifactId>less4j</artifactId>
+      <groupId>io.bit3</groupId>
+      <artifactId>jsass</artifactId>
     </dependency>
   </dependencies>
   <profiles>
@@ -185,9 +181,6 @@
                   <excludes combine.children="append">
                     <!-- otherwise license files mentioned in NOTICE.txt -->
                     <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/css_browser_selector.js</exclude>
-                    <!-- Customized simple Bootstrap files (MIT license) -->
-                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/bootstrap.less</exclude>
-                    <exclude>**/de/tudarmstadt/ukp/clarin/webanno/ui/core/css/theme/variables.less</exclude>
                   </excludes>
                 </configuration>
               </execution>

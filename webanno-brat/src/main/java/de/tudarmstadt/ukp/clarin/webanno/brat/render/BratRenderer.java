@@ -18,8 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiHoverText;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -33,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -46,6 +50,9 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -55,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
@@ -78,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -95,10 +102,19 @@ public class BratRenderer
     
     private static final boolean DEBUG = false;
     
-    public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
-            VDocument aVDoc, CAS aCas, AnnotationSchemaService aAnnotationService)
+    private final AnnotationSchemaService schemaService;
+    private final ColoringService coloringService;
+    
+    public BratRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService)
     {
-        render(aResponse, aState, aVDoc, aCas, aAnnotationService, null);
+        schemaService = aSchemaService;
+        coloringService = aColoringService;
+    }
+
+    public void render(GetDocumentResponse aResponse, AnnotatorState aState,
+            VDocument aVDoc, CAS aCas)
+    {
+        render(aResponse, aState, aVDoc, aCas, null);
     }
     
     /**
@@ -110,12 +126,9 @@ public class BratRenderer
      *            the annotator model.
      * @param aCas
      *            the CAS.
-     * @param aAnnotationService
-     *            the annotation service.s
      */
-    public static void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
-            CAS aCas, AnnotationSchemaService aAnnotationService,
-            ColoringStrategy aColoringStrategy)
+    public void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
+            CAS aCas, ColoringStrategy aColoringStrategy)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
         aResponse.setFontZoom(aState.getPreferences().getFontZoom());
@@ -130,10 +143,9 @@ public class BratRenderer
         
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aAnnotationService.listAnnotationLayer(aState.getProject())) {
+        for (AnnotationLayer layer : schemaService.listAnnotationLayer(aState.getProject())) {
             ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
-                    : ColoringStrategy.getStrategy(aAnnotationService, layer,
-                            aState.getPreferences(), colorQueues);
+                    : coloringService.getStrategy(layer, aState.getPreferences(), colorQueues);
             
             // If the layer is not included in the rendering, then we skip here - but only after
             // we have obtained a coloring strategy for this layer and thus secured the layer
@@ -143,7 +155,10 @@ public class BratRenderer
                 continue;
             }
 
-            TypeAdapter typeAdapter = aAnnotationService.getAdapter(layer);
+            TypeAdapter typeAdapter = schemaService.getAdapter(layer);
+            
+            ColoringRules coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
+                    .map(ColoringRulesTrait::getColoringRules).orElse(null);
             
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<Offsets> offsets = vspan.getRanges().stream()
@@ -152,23 +167,19 @@ public class BratRenderer
                                         aState.getWindowBeginOffset(),
                                         aState.getWindowEndOffset()),
                                 range.getBegin(), range.getEnd()).stream())
-                        .collect(Collectors.toList());
-                String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, vspan.getFeatures());
-                String bratHoverText = TypeUtil.getUiHoverText(typeAdapter, 
-                        vspan.getHoverFeatures());
-                String color;
-                if (vspan.getColorHint() == null) {
-                    color = getColor(vspan, coloringStrategy, bratLabelText);
-                } else {
-                    color = vspan.getColorHint();
-                }
+                        .collect(toList());
+                
+                String labelText = getUiLabelText(typeAdapter, vspan);
+                String hoverText = getUiHoverText(typeAdapter, vspan.getHoverFeatures());
+                
+                String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
                 
                 if (DEBUG) {
-                    bratHoverText = vspan.getOffsets() + "\n" + bratHoverText;
+                    hoverText = vspan.getOffsets() + "\n" + hoverText;
                 }
                 
                 aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets,
-                        bratLabelText, color, bratHoverText));
+                        labelText, color, hoverText));
                 
                 vspan.getLazyDetails().stream()
                         .map(d ->  new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))
@@ -176,27 +187,19 @@ public class BratRenderer
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                String bratLabelText;
-                if (varc.getLabelHint() == null) {
-                    bratLabelText = TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures());
-                }
-                else {
-                    bratLabelText = varc.getLabelHint();
-                }
-                
-                String color;
-                if (varc.getColorHint() == null) {
-                    color = getColor(varc, coloringStrategy, bratLabelText);
-                } else {
-                    color = varc.getColorHint();
-                }
+                String bratLabelText = getUiLabelText(typeAdapter, varc);
+                String color = coloringStrategy.getColor(varc, bratLabelText, coloringRules);
+
                 aResponse.addRelation(new Relation(varc.getVid(), varc.getType(),
                         getArgument(varc.getSource(), varc.getTarget()), bratLabelText, color));
+                
+                varc.getLazyDetails().stream()
+                        .map(d ->  new Normalization(varc.getVid(), d.getFeature(), d.getQuery()))
+                        .forEach(aResponse::addNormalization);
             }
         }
         
-        List<AnnotationFS> sentences = new ArrayList<>(
-                select(aCas, getType(aCas, Sentence.class)));
+        List<AnnotationFS> sentences = new ArrayList<>(select(aCas, getType(aCas, Sentence.class)));
         for (VComment vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
@@ -248,21 +251,6 @@ public class BratRenderer
                 LOG.warn("Unknown how to render marker: [" + vmarker + "]");
             }
         }
-    }
-    
-    private static String getColor(VObject aVObject, ColoringStrategy aColoringStrategy,
-            String aLabelText)
-    {
-        String color;
-        if (aVObject.getEquivalenceSet() >= 0) {
-            // Every chain is supposed to have a different color
-            color = ColoringStrategy.PALETTE_NORMAL_FILTERED[aVObject.getEquivalenceSet()
-                    % ColoringStrategy.PALETTE_NORMAL_FILTERED.length];
-        }
-        else {
-            color = aColoringStrategy.getColor(aVObject.getVid(), aLabelText);
-        }
-        return color;
     }
     
     /**
@@ -405,19 +393,26 @@ public class BratRenderer
     /**
      * Generates brat type definitions from the WebAnno layer definitions.
      *
+     * @param aProject
+     *            the project to which the layers belong
      * @param aAnnotationLayers
      *            the layers
      * @param aAnnotationService
      *            the annotation service
      * @return the brat type definitions
      */
-    public static Set<EntityType> buildEntityTypes(List<AnnotationLayer> aAnnotationLayers,
-            AnnotationSchemaService aAnnotationService)
+    public static Set<EntityType> buildEntityTypes(Project aProject, 
+            List<AnnotationLayer> aAnnotationLayers, AnnotationSchemaService aAnnotationService)
     {
         // Sort layers
         List<AnnotationLayer> layers = new ArrayList<>(aAnnotationLayers);
         layers.sort(Comparator.comparing(AnnotationLayer::getName));
 
+        // Look up all the features once to avoid hammering the database in the loop below
+        Map<AnnotationLayer, List<AnnotationFeature>> layerToFeatures = aAnnotationService
+                .listSupportedFeatures(aProject).stream()
+                .collect(groupingBy(AnnotationFeature::getLayer));
+        
         // Now build the actual configuration
         Set<EntityType> entityTypes = new LinkedHashSet<>();
         for (AnnotationLayer layer : layers) {
@@ -428,12 +423,13 @@ public class BratRenderer
             // For link features, we also need to configure the arcs, even though there is no arc
             // layer here.
             boolean hasLinkFeatures = false;
-            for (AnnotationFeature f : aAnnotationService.listAnnotationFeature(layer)) {
+            for (AnnotationFeature f : layerToFeatures.computeIfAbsent(layer, k -> emptyList())) {
                 if (!LinkMode.NONE.equals(f.getLinkMode())) {
                     hasLinkFeatures = true;
                     break;
                 }
             }
+            
             if (hasLinkFeatures) {
                 String bratTypeName = getBratTypeName(layer);
                 arcs.add(new RelationType(layer.getName(), layer.getUiName(), bratTypeName,
@@ -575,7 +571,7 @@ public class BratRenderer
      * 
      * @param aText
      *            the text.
-     * @param aSpan
+     * @param aOffsets
      *            the offsets.
      */
     static private void trim(CharSequence aText, Offsets aOffsets)

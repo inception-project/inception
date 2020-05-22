@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.HOST_
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.NER_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.SENTENCE_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.TOKEN_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
@@ -41,9 +43,11 @@ import org.junit.Before;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -96,7 +100,6 @@ public class CasMergeTestBase
     protected AnnotationFeature multiValSpanF1;
     protected AnnotationFeature multiValSpanF2;
     protected SourceDocument document;
-    protected List<String> entryTypes;
     protected List<DiffAdapter> diffAdapters;
     
     protected static final RelationDiffAdapter MULTIVALREL_DIFF_ADAPTER = new RelationDiffAdapter(
@@ -114,22 +117,14 @@ public class CasMergeTestBase
         slotHostDiffAdapter.addLinkFeature("links", "role", "target");
 
         diffAdapters = new ArrayList<>();
+        diffAdapters.add(TOKEN_DIFF_ADAPTER);
+        diffAdapters.add(SENTENCE_DIFF_ADAPTER);
         diffAdapters.add(POS_DIFF_ADAPTER);
         diffAdapters.add(NER_DIFF_ADAPTER);
         diffAdapters.add(DEPENDENCY_DIFF_ADAPTER);
         diffAdapters.add(MULTIVALREL_DIFF_ADAPTER);
         diffAdapters.add(MULTIVALSPAN_DIFF_ADAPTER);
         diffAdapters.add(slotHostDiffAdapter);
-        
-        entryTypes = new ArrayList<>();
-        entryTypes.add(Sentence.class.getName());
-        entryTypes.add(Token.class.getName());
-        entryTypes.add(POS.class.getName());
-        entryTypes.add(NamedEntity.class.getName());
-        entryTypes.add(Dependency.class.getName());
-        entryTypes.add(CurationTestUtils.HOST_TYPE);
-        entryTypes.add("webanno.custom.Multivalrel");
-        entryTypes.add("webanno.custom.Multivalspan");
         
         project = new Project();
         
@@ -317,6 +312,10 @@ public class CasMergeTestBase
             throw new IllegalStateException("Unknown layer type: " + type);
         });
         
+        when(schemaService.listSupportedFeatures((any(AnnotationLayer.class))))
+                .thenAnswer(call -> schemaService
+                        .listAnnotationFeature(call.getArgument(0, AnnotationLayer.class)));
+        
         when(schemaService.listAnnotationFeature(any(AnnotationLayer.class))).thenAnswer(call -> { 
             AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
             if (type.getName().equals(Sentence.class.getName())) {
@@ -348,24 +347,22 @@ public class CasMergeTestBase
 
         when(schemaService.getAdapter(any(AnnotationLayer.class))).thenAnswer(call -> { 
             AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
-            return layerSupportRegistry.getLayerSupport(type).createAdapter(type);
+            return layerSupportRegistry.getLayerSupport(type).createAdapter(type, 
+                () -> schemaService.listAnnotationFeature(type));
         });
         
         featureSupportRegistry = new FeatureSupportRegistryImpl(
-                asList(new PrimitiveUimaFeatureSupport(),
-                        new SlotFeatureSupport(schemaService)));
+                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
+                        new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, schemaService,
-                        layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerSupportRegistry.init();
         
         sut = new CasMerge(schemaService);

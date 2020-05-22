@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.Serializable;
@@ -35,6 +36,7 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.request.cycle.RequestCycle;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
@@ -168,6 +170,8 @@ public class AnnotatorStateImpl
     private PagingStrategy pagingStrategy;
     
     private List<Unit> visibleUnits;
+    
+    private Map<AnnotatorStateMetaDataKey<?>, Object> metaData = new HashMap<>();
     
     public AnnotatorStateImpl(Mode aMode)
     {
@@ -350,7 +354,10 @@ public class AnnotatorStateImpl
         
         // Make sure the currently selected layer is actually visible/exists
         if (!annotationLayers.contains(selectedAnnotationLayer)) {
-            selectedAnnotationLayer = !annotationLayers.isEmpty() ? annotationLayers.get(0) : null;
+            selectedAnnotationLayer = annotationLayers.stream()
+                .filter(layer -> layer.getType().equals(WebAnnoConst.SPAN_TYPE))
+                .findFirst()
+                .orElse(null);
             defaultAnnotationLayer = selectedAnnotationLayer;
         }
     }
@@ -546,15 +553,7 @@ public class AnnotatorStateImpl
     {
         armedFeatureState = aState;
         armedSlot = aIndex;
-        
-        // Rerender all slots to deselect all slots that are not armed anymore
-        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
-        if (handler.isPresent()) {
-            Page page = (Page) handler.get().getPage();
-            page.send(page, Broadcast.BREADTH,
-                    new RenderSlotsEvent(
-                            RequestCycle.get().find(IPartialPageRequestHandler.class).get()));
-        }
+        rerenderSlots();
     }
 
     @Override
@@ -567,12 +566,24 @@ public class AnnotatorStateImpl
         return Objects.equals(aState.vid, armedFeatureState.vid)
                 && Objects.equals(aState.feature, armedFeatureState.feature) && aIndex == armedSlot;
     }
+    
+    private void rerenderSlots() {
+        // Rerender all slots to deselect all slots that are not armed anymore
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent()) {
+            Page page = (Page) handler.get().getPage();
+            page.send(page, Broadcast.BREADTH,
+                    new RenderSlotsEvent(
+                            RequestCycle.get().find(IPartialPageRequestHandler.class).get()));
+        }
+    } 
 
     @Override
     public void clearArmedSlot()
     {
         armedFeatureState = null;
         armedSlot = -1;
+        rerenderSlots();
     }
 
     @Override
@@ -632,5 +643,28 @@ public class AnnotatorStateImpl
     public void setPagingStrategy(PagingStrategy aPagingStrategy)
     {
         pagingStrategy = aPagingStrategy;
+    }
+
+    @Override
+    public boolean isUserViewingOthersWork(User aCurrentUser)
+    {
+        return !user.getUsername().equals(CURATION_USER) && 
+                !user.equals(aCurrentUser);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <M extends Serializable> M getMetaData(AnnotatorStateMetaDataKey<M> aKey)
+    {
+        if (metaData.containsKey(aKey)) {
+            return (M) metaData.get(aKey);
+        }
+        return null;
+    }
+
+    @Override
+    public <M extends Serializable> void setMetaData(AnnotatorStateMetaDataKey<M> aKey, M aMetadata)
+    {
+        metaData.put(aKey, aMetadata);
     }
 }

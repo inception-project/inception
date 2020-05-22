@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag;
 
+import static java.lang.System.currentTimeMillis;
+
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -47,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class CasDoctor
     implements InitializingBean, ApplicationContextAware
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private static Logger LOG = LoggerFactory.getLogger(CasDoctor.class);
 
     @Value(value = "${debug.casDoctor.checks}")
     private String activeChecks;
@@ -127,8 +129,8 @@ public class CasDoctor
     {
         List<LogMessage> messages = new ArrayList<>();
         repair(aProject, aCas, messages);
-        if (log.isWarnEnabled() && !messages.isEmpty()) {
-            messages.forEach(s -> log.warn("{}", s));
+        if (LOG.isWarnEnabled() && !messages.isEmpty()) {
+            messages.forEach(s -> LOG.warn("{}", s));
         }
     }
     
@@ -153,21 +155,21 @@ public class CasDoctor
                 if (context != null) {
                     context.getAutowireCapableBeanFactory().autowireBean(repair);
                 }
-                log.info("CasDoctor repair [" + repairClass.getSimpleName() + "] running...");
+                LOG.info("CasDoctor repair [" + repairClass.getSimpleName() + "] running...");
                 repair.repair(aProject, aCas, aMessages);
-                log.info("CasDoctor repair [" + repairClass.getSimpleName() + "] completed in "
+                LOG.info("CasDoctor repair [" + repairClass.getSimpleName() + "] completed in "
                         + (System.currentTimeMillis() - tStartTask) + "ms");
             }
             catch (Exception e) {
 //                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot perform repair [%s]: %s",
 //                        repairClass.getSimpleName(), ExceptionUtils.getRootCauseMessage(e)));
-                log.error("Cannot perform repair [" + repairClass.getSimpleName() + "]", e);
+                LOG.error("Cannot perform repair [" + repairClass.getSimpleName() + "]", e);
                 throw new IllegalStateException("Repair attempt failed - ask system administrator "
                         + "for details.");
             }
         }
         
-        log.info("CasDoctor completed all repairs in " + (System.currentTimeMillis() - tStart) + "ms");
+        LOG.info("CasDoctor completed all repairs in " + (System.currentTimeMillis() - tStart) + "ms");
         
         // POST-CONDITION: CAS must be consistent
         // Ensure that the repairs actually fixed the CAS
@@ -179,8 +181,8 @@ public class CasDoctor
     {
         List<LogMessage> messages = new ArrayList<>();
         boolean result = analyze(aProject, aCas, messages);
-        if (log.isDebugEnabled()) {
-            messages.forEach(s -> log.debug("{}", s));
+        if (LOG.isDebugEnabled()) {
+            messages.forEach(s -> LOG.debug("{}", s));
         }
         return result;
     }
@@ -205,27 +207,27 @@ public class CasDoctor
                 if (context != null) {
                     context.getAutowireCapableBeanFactory().autowireBean(check);
                 }
-                log.debug("CasDoctor analysis [" + checkClass.getSimpleName() + "] running...");
+                LOG.debug("CasDoctor analysis [" + checkClass.getSimpleName() + "] running...");
                 ok &= check.check(aProject, aCas, aMessages);
-                log.debug("CasDoctor analysis [" + checkClass.getSimpleName() + "] completed in "
+                LOG.debug("CasDoctor analysis [" + checkClass.getSimpleName() + "] completed in "
                         + (System.currentTimeMillis() - tStartTask) + "ms");
             }
             catch (InstantiationException | IllegalAccessException e) {
                 aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot instantiate [%s]: %s",
                         checkClass.getSimpleName(), ExceptionUtils.getRootCauseMessage(e)));
-                log.error("Error running check", e);
+                LOG.error("Error running check", e);
             }
         }
 
         if (!ok) {
-            aMessages.forEach(s -> log.error("{}", s));
+            aMessages.forEach(s -> LOG.error("{}", s));
         }
         
         if (!ok && aFatalChecks) {
             throw new CasDoctorException(aMessages);
         }
 
-        log.debug("CasDoctor completed all analyses in " + (System.currentTimeMillis() - tStart) + "ms");
+        LOG.debug("CasDoctor completed all analyses in " + (System.currentTimeMillis() - tStart) + "ms");
 
         return ok;
     }
@@ -262,12 +264,12 @@ public class CasDoctor
                 version.contains("-beta-")
         ) {
             if (disableAutoScan) {
-                log.info("Detected SNAPSHOT/beta version - but FORCING release mode and NOT "
+                LOG.info("Detected SNAPSHOT/beta version - but FORCING release mode and NOT "
                         + "auto-enabling checks");
             }
             else {
                 checkClasses.addAll(scanChecks());
-                log.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
+                LOG.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
             }
         }
         
@@ -287,7 +289,7 @@ public class CasDoctor
         }
         
         for (Class<? extends Check> c : checkClasses) {
-            log.info("Check activated: " + c.getSimpleName());
+            LOG.info("Check activated: " + c.getSimpleName());
         }
         
         if (StringUtils.isNotBlank(activeRepairs)) {
@@ -303,26 +305,32 @@ public class CasDoctor
         }
         
         for (Class<? extends Repair> c : repairClasses) {
-            log.info("Repair activated: " + c.getSimpleName());
+            LOG.info("Repair activated: " + c.getSimpleName());
         }
     }
     
     public static List<Class<? extends Check>> scanChecks()
     {
+        long start = currentTimeMillis();
         Reflections reflections = new Reflections(Check.class.getPackage().getName());
-        return reflections.getSubTypesOf(Check.class).stream()
+        List<Class<? extends Check>> checks = reflections.getSubTypesOf(Check.class).stream()
                 .filter(c -> !Modifier.isAbstract(c.getModifiers()))
                 .sorted(Comparator.comparing(Class::getName))
                 .collect(Collectors.toList());
+        LOG.info("Found {} checks in {}ms", checks.size(), currentTimeMillis() - start);
+        return checks;
     }
 
     public static List<Class<? extends Repair>> scanRepairs()
     {
+        long start = currentTimeMillis();
         Reflections reflections = new Reflections(Repair.class.getPackage().getName());
-        return reflections.getSubTypesOf(Repair.class).stream()
+        List<Class<? extends Repair>> repairs = reflections.getSubTypesOf(Repair.class).stream()
                 .filter(c -> !Modifier.isAbstract(c.getModifiers()))
                 .sorted(Comparator.comparing(Class::getName))
                 .collect(Collectors.toList());
+        LOG.info("Found {} repairs in {}ms", repairs.size(), currentTimeMillis() - start);
+        return repairs;
     }
 
     @Override

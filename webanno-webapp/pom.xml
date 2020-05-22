@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.6.6-SNAPSHOT</version>
+    <version>4.0.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-webapp</artifactId>
   <name>WebAnno - Application</name>
@@ -88,6 +88,19 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-manager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-api</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-core</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -169,6 +182,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-io-conll</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-io-tsv</artifactId>
     </dependency>
     <dependency>
@@ -185,10 +202,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-conll</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-io-xmi</artifactId>
     </dependency>
 
@@ -199,8 +212,8 @@
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-dbcp</groupId>
-      <artifactId>commons-dbcp</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-dbcp2</artifactId>
     </dependency>
     <dependency>
       <groupId>mysql</groupId>
@@ -233,6 +246,10 @@
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
         </exclusion>
+        <exclusion>
+          <artifactId>log4j-to-slf4j</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -254,9 +271,8 @@
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-      <scope>compile</scope>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
@@ -310,7 +326,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
               <imagesDir>./user-guide/images</imagesDir>
               <attributes>
@@ -327,7 +342,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
               <imagesDir>./developer-guide/images</imagesDir>
               <attributes>
@@ -344,7 +358,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
               <attributes>
                 <toc>left</toc>
@@ -448,10 +461,10 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-text</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
-              <usedDependency>commons-dbcp:commons-dbcp</usedDependency>
               <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.liquibase:liquibase-core</usedDependency>
+              <usedDependency>org.apache.commons:commons-dbcp2</usedDependency>
               <!-- JMX -->
               <usedDependency>org.apache.wicket:wicket-jmx</usedDependency>
               <!-- Themes -->
@@ -467,6 +480,11 @@
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
               <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
+              <!-- Spring AOP
+                <usedDependency>org.springframework:spring-aop</usedDependency>
+                <usedDependency>org.springframework:spring-aspects</usedDependency>
+                <usedDependency>org.aspectj:aspectjrt</usedDependency>
+              -->
             </usedDependencies>
           </configuration>
         </plugin>
@@ -637,7 +655,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
                     <imagesDir>./user-guide/images</imagesDir>
                     <attributes>
@@ -654,7 +671,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
                     <imagesDir>./developer-guide/images</imagesDir>
                     <attributes>
@@ -671,7 +687,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
                     <attributes>
                       <toc>preamble</toc>

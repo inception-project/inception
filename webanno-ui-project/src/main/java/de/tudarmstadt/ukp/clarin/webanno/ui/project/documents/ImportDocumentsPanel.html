@@ -19,15 +19,20 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <form wicket:id="form" class="flex-content panel-default">
-      <div class="panel-heading flex-h-container flex-centered flex-gutter flex-only-internal-gutter">
-        <label wicket:for="documents" class="text-nowrap"><wicket:label key="filesToImport"/></label>
-        <input wicket:id="documents" type="file" multiple class="flex-content"></input>
+    <form wicket:id="form" class="flex-content">
+      <div class="card-header flex-h-container flex-centered flex-gutter flex-only-internal-gutter">
+        <label class="text-nowrap"><wicket:message key="filesToImport"/></label>
+        <div class="flex-content">
+          <input wicket:id="documents" type="file" multiple></input>
+        </div>
         
         <label wicket:for="format" class="text-nowrap"><wicket:label key="format"/></label>
         <select wicket:id="format" class="form-component flex-content input-group-btn" data-container="body"></select>
         
-        <input wicket:id="import" type="submit" class="btn btn-primary" wicket:message="value:import"></input>
+        <button wicket:id="import" class="btn btn-primary">
+          <i class="fas fa-file-upload"></i>&nbsp;
+          <wicket:message key="import"/>
+        </button>
       </div>
     </form>
   </wicket:panel>

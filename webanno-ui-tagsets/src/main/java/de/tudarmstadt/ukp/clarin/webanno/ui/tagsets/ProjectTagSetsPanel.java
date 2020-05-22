@@ -37,7 +37,6 @@ public class ProjectTagSetsPanel
     private TagSelectionPanel tagSelectionPanel;
     private TagSetEditorPanel tagSetEditorPanel;
     private TagEditorPanel tagEditorPanel;
-    private TagSetImportPanel tagSetImportPanel;
 
     private IModel<Project> selectedProject;
     private IModel<TagSet> selectedTagSet;
@@ -50,16 +49,6 @@ public class ProjectTagSetsPanel
         selectedProject = aProjectModel;
         selectedTagSet = Model.of();
         selectedTag = Model.of();
-        
-        tagSetImportPanel = new TagSetImportPanel("tagSetImport", selectedProject, selectedTagSet);
-        tagSetImportPanel.setImportCompleteAction(target -> {
-            selectedTag.setObject(null);
-            target.add(tagSetSelectionPanel);
-            target.add(tagSetEditorPanel);
-            target.add(tagSelectionPanel);
-            target.add(tagEditorPanel);
-        });
-        add(tagSetImportPanel);
         
         tagSetSelectionPanel = new TagSetSelectionPanel("tagSetSelector", selectedProject,
                 selectedTagSet);

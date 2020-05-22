@@ -1,0 +1,50 @@
+<!--
+  ~ Copyright 2019
+  ~ Ubiquitous Knowledge Processing (UKP) Lab
+  ~ Technische Universität Darmstadt
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE html>
+<html lang="en" xmlns:wicket="http://www.w3.org/1999/xhtml">
+<body>
+<wicket:panel>
+  <form wicket:id="keyBindingForm">
+    <div wicket:id="keyBindingsContainer">
+      <div class="flex-h-container flex-gutter flex-only-internal-gutter flex-centered">
+        <div wicket:id="value" class="flex-content"/>
+        <input wicket:id="keyCombo" class="flex-content form-control" placeholder="Key combo..."/>
+        <button wicket:id="addKeyBinding" class="btn btn-sm btn-primary pull-right">
+          <i class="fas fa-plus" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="flex-v-container flex-gutter">
+        <div wicket:id="keyBindings" class="flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="flex-content">
+            <span wicket:id="value"/>
+          </div>
+          <div>
+            <span wicket:id="keyCombo" style="white-space:nowrap;"/>
+          </div>
+          <div class="flex-h-container flex-centered" style="white-space:nowrap;">
+            <a wicket:id="removeKeyBinding" class="btn-sm btn-danger pull-right">
+              <i class="fas fa-trash" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</wicket:panel>
+</body>
+</html>

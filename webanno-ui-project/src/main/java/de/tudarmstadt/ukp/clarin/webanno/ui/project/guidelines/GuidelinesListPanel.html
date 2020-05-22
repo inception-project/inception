@@ -22,10 +22,13 @@
     <div wicket:id="confirmationDialog"></div>
     <form wicket:id="form" class="flex-content flex-v-container">
       <div class="flex-content fit-child-snug">
-        <select wicket:id="guidelines"></select>
+        <select wicket:id="guidelines" class="form-control"></select>
       </div>
-       <div class="panel-footer text-right">
-        <input wicket:id="delete" type="button" class="btn btn-danger" wicket:message="value:delete" />
+       <div class="card-footer text-right">
+          <button wicket:id="delete" class="btn btn-danger">
+            <i class="fas fa-trash"></i>&nbsp;
+            <wicket:message key="delete"/>
+          </button>
       </div>            
     </form>
   </wicket:panel>

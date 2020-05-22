@@ -26,6 +26,9 @@
 .Requirements to run the standalone version
 [cols="2*"]
 |===
+| Operating System
+| Linux (64bit), macOS (64bit), Windows (64bit)
+
 | Java Runtime Environment
 | version 8 or higher
 |===
@@ -33,13 +36,15 @@
 .Requirements run a WebAnno server
 [cols="2*"]
 |===
+| Operating System
+| Linux (64bit), macOS (64bit), Windows (64bit)
+
 | Java Runtime Environment
 | version 8 or higher
 
-| Apache Tomcat
-| version 8.5 or higher (Servlet API 3.1.0)
+| Apache Tomcat (or compatible)
+| version 9.0 or higher (Servlet API 4.0.0)
 
-| MySQL Server
-| version 5 or higher
+| MySQL Server (or compatible)
+| version 5 or higher 
 |===
-
