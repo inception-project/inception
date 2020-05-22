@@ -21,13 +21,12 @@ package de.tudarmstadt.ukp.inception.app.ui.monitoring.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 import javax.persistence.NoResultException;
-
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -49,7 +48,11 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.model.*;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
@@ -61,7 +64,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -74,16 +76,18 @@ import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DocumentSupport;
 import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ImagePanel;
 import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ModalPanel;
 
-
-
-
-
 @MountPath("/workload.html")
-public class MonitoringPage extends ApplicationPageBase
+public class MonitoringPage extends ApplicationPageBase implements Serializable
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(MonitoringPage.class);
     private static final long serialVersionUID = 1180618893870240262L;
+
+    //Dataprovider for table
+    private DataProvider dataProvider;
+
+    //Support class for documents
+    private DocumentSupport documentSupport;
 
 
     //Feedbackpanel
@@ -127,13 +131,12 @@ public class MonitoringPage extends ApplicationPageBase
     private @SpringBean ProjectService projectService;
     private @SpringBean MenuItemRegistry menuItemService;
     private @SpringBean DocumentService documentService;
-    private DocumentSupport documentSupport;
+
 
     //Default constructor, no project selected (only when workload.html
     // put directly in the browser without any parameters)
     public MonitoringPage() {
         super();
-
 
         feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
         feedbackPanel.setOutputMarkupId(true);
@@ -214,7 +217,7 @@ public class MonitoringPage extends ApplicationPageBase
 
 
         //Initialize list for all Finished documents
-        annotatedDocuments = getAnnotatedDocuments();
+        annotatedDocuments = documentSupport.getAnnotatedDocuments();
 
 
         //Headers of the table
@@ -225,8 +228,8 @@ public class MonitoringPage extends ApplicationPageBase
         headers.add(getString("Metadata"));
 
         //Data Provider for the table
-        DataProvider dataProvider = new DataProvider(documentList,
-            headers, currentProject, annotatedDocuments);
+        dataProvider = new DataProvider(documentList,
+            headers, currentProject);
 
         //Filter Dropdown and Textfield
         filterDropDown = new DropDownChoice(getString("filterDropDown")
@@ -285,10 +288,10 @@ public class MonitoringPage extends ApplicationPageBase
             , getString("Document"), SourceDocument::getName));
         columns.add(new LambdaColumn(new ResourceModel(getString("Finished"))
             , getString("Finished"), aDocument -> documentSupport.getFinishedAmountForDocument
-            ((SourceDocument)aDocument, annotatedDocuments)));
+            ((SourceDocument)aDocument)));
         columns.add(new LambdaColumn<>(new ResourceModel(getString("InProgress"))
             , getString("InProgress"), aDocument -> documentSupport.getInProgressAmountForDocument
-            ((SourceDocument)aDocument, annotatedDocuments)));
+            ((SourceDocument)aDocument)));
 
         //Own column type, contains only a clickable image (AJAX event),
         //creates a small panel dialog containing metadata
@@ -357,8 +360,7 @@ public class MonitoringPage extends ApplicationPageBase
 
     }
 
-    //Return current project, required for several purposes,
-    // might be put globally to be accessible for all packages
+    //Return current project, required for several purposes
     private Optional<Project> getProjectFromParameters(StringValue projectParam)
     {
         if (projectParam == null || projectParam.isEmpty()) {
@@ -388,47 +390,4 @@ public class MonitoringPage extends ApplicationPageBase
         return filterList;
     }
 
-    public List<String> getAnnotatedDocuments()
-    {
-        //List for annotated documents
-        List<String> list = new ArrayList<>();
-
-        for (AnnotationDocument doc: documentService.listFinishedAnnotationDocuments
-            (currentProject))
-        {
-            list.add(doc.getName());
-        }
-
-        return list;
-    }
-
-    //Returns a random document out of all documents in the project.
-    //Only a document is chosen which is not yet given to annotators more than the default number
-    //per document number
-    public SourceDocument getRandomDocument()
-    {
-        //Create an empty document
-        SourceDocument document = null;
-        Random r = new Random();
-
-        while (document == null)
-        {
-            int i = r.nextInt(documentList.size() - 1);
-            //If the random chosen document wont surpass the amount of default number combining
-            // "inProgress" for the document + "finished" amount for the document + 1
-            if ((documentSupport.getInProgressAmountForDocument(documentList.
-                get(i), annotatedDocuments) +
-                documentSupport.getFinishedAmountForDocument(documentList.
-                    get(i), annotatedDocuments))
-                + 1 <= defaultAnnotations)
-            {
-                //If that was not the case, assign this document
-                document = documentList.get(r.nextInt(documentList.size() - 1));
-            }
-        }
-        //Return the document
-        //REMINDER: Document MIGHT BE NULL if there is not a single document left!
-        // Annotator should then get the message: "No more documents to annotate"
-        return document;
-    }
 }

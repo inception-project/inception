@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -32,12 +33,14 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class DataProvider extends SortableDataProvider
-    <SourceDocument, String> implements IFilterStateLocator<Filter>
+    <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
 {
 
 
@@ -46,24 +49,31 @@ public class DataProvider extends SortableDataProvider
     private final List<SourceDocument> data;
     private final IModel<List<SourceDocument>> model;
     private Filter filter;
-    private final Project project;
+
     private final DocumentSupport documentSupport;
-    private List<String> annotatedDocuments;
     private String input;
     private String type;
+    private Project project;
+
+    private UserDao userRepository;
+    private DocumentService documentService;
+
 
     public DataProvider(
         List<SourceDocument> aContents,
-        List<String> headers, Project project, List<String> annotatedDocuments)
+        List<String> headers, Project project)
     {
         this.project = project;
         this.data = aContents;
         this.headers = headers;
-        this.annotatedDocuments = annotatedDocuments;
         this.documentSupport = new DocumentSupport(this.project,data);
+
+        //Initialise beans with helper methods and class
+        userRepository = documentSupport.getUserRepository();
+        documentService = documentSupport.getDocumentService();
+
+        //Init filter
         filter = new Filter();
-
-
 
         //Initial Sorting
         setSort(headers.get(0), SortOrder.ASCENDING);
@@ -85,17 +95,8 @@ public class DataProvider extends SortableDataProvider
     {
         List<SourceDocument> newList = data;
 
-        System.out.println("------------");
         input = filter.getInput();
         type = filter.getType();
-
-        if (input != null) {
-            System.out.println(input);
-        }
-        if (type != null) {
-            System.out.println(type);
-        }
-
 
         //Apply Filter
         //Filter only if initialised
@@ -110,20 +111,21 @@ public class DataProvider extends SortableDataProvider
         {
             int dir = getSort().isAscending() ? 1 : -1;
 
-            if (getSort().getProperty().equals(headers.get(0))) {
-                return dir * (o1.getName().toString().compareTo(o2.getName().toString()));
+            if (getSort().getProperty().equals(headers.get(0)))
+            {
+                return dir * (o1.getName().compareTo(o2.getName()));
 
-            } else if (getSort().getProperty().equals(headers.get(1))) {
-                return dir * ((Integer)documentSupport.
-                    getFinishedAmountForDocument(o1, annotatedDocuments))
-                        .compareTo(documentSupport.
-                            getFinishedAmountForDocument(o2, annotatedDocuments));
+            } else if (getSort().getProperty().equals(headers.get(1)))
+            {
+                return dir * Integer.compare(documentSupport.
+                    getFinishedAmountForDocument(o1), documentSupport.
+                    getFinishedAmountForDocument(o2));
 
-            } else if (getSort().getProperty().equals(headers.get(2))) {
-                return dir * ((Integer)documentSupport.
-                    getInProgressAmountForDocument(o1, annotatedDocuments))
-                    .compareTo(documentSupport.
-                        getInProgressAmountForDocument(o2, annotatedDocuments));
+            } else if (getSort().getProperty().equals(headers.get(2)))
+            {
+                return dir * Integer.compare(documentSupport.
+                    getInProgressAmountForDocument(o1), documentSupport.
+                    getInProgressAmountForDocument(o2));
 
 
             } else {
@@ -168,6 +170,7 @@ public class DataProvider extends SortableDataProvider
     {
         List<SourceDocument> resultList = new ArrayList<>();
 
+        //No filter selected
         if (this.type.equals("None"))
         {
             return data;
@@ -176,39 +179,58 @@ public class DataProvider extends SortableDataProvider
 
         for (SourceDocument doc: data)
         {
+            //Creation time filter
             if (this.type.equals("Document creation time:"))
             {
-                System.out.println("Time:");
-                System.out.println(input);
                 try {
-                    //TODO Rework of try catch
+                    //TODO Rework of try catch and add Error (or regex for field input)
                     Date date = new SimpleDateFormat("dd/MM/yyyy").parse(input);
                     if (doc.getCreated().compareTo(date) >= 0)
                     {
                         resultList.add(doc);
+                        continue;
                     }
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
 
 
+            //User filter
             } else if (this.type.equals("User:"))
             {
-                System.out.println("Name:");
-                System.out.println(input);
-                //TODO Add all right now, need extra method
-                if (doc.getName().equals("New Entity") || doc.getName().equals("Corona"))
+                //Get the current user
+                User user = userRepository.get(this.input);
+
+                //The entered username is not available, simply return the full list
+                if (user == null)
+                {
+                    resultList = data;
+                    break;
+
+                } else {
+                    //If the user is working / has finished that document, add it to the list
+                    if (documentService.existsAnnotationDocument(doc, user))
+                    {
+                        resultList.add(doc);
+                    }
+                }
+
+            //Unused Document filter used
+            } else if (this.type.equals("Unused documents:"))
+            {
+                System.out.println("Checking");
+                if ((documentSupport.getInProgressAmountForDocument(doc) == 0)
+                    && (documentSupport.getFinishedAmountForDocument(doc) == 0))
                 {
                     resultList.add(doc);
                 }
-
             } else {
+                //Default case to avoid unexpected errors, simply return the list
                 resultList = data;
+                break;
             }
         }
-
         return resultList;
-
     }
 }
 
