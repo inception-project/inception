@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 
 @Order(1000)
 @Component
@@ -41,6 +42,12 @@ public class CurationWorkflowActionBarExtension implements ActionBarExtension
     public int getPriority()
     {
         return MAX_VALUE;
+    }
+    
+    @Override
+    public boolean accepts(AnnotationPageBase aPage)
+    {
+        return aPage instanceof CurationPage;
     }
     
     @Override
