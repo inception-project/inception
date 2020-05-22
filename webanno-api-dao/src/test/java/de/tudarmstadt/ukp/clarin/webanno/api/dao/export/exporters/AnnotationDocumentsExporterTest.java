@@ -108,8 +108,8 @@ public class AnnotationDocumentsExporterTest
                             invocation.getArgument(1, String.class));
                 });
                 
-        sut = new AnnotationDocumentExporter(documentService, schemaService, null,
-                importExportSerivce);
+        sut = new AnnotationDocumentExporter(documentService, null, importExportSerivce,
+                repositoryProperties);
     }
 
     @Test

@@ -89,6 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(DocumentService.SERVICE_NAME)
@@ -485,52 +486,9 @@ public class DocumentServiceImpl
         entityManager.remove(
                 entityManager.contains(aDocument) ? aDocument : entityManager.merge(aDocument));
 
-        deleteSourceDocumentFile(aDocument);
-    }
-    
-    @Override
-    @Transactional
-    public void removeAllSourceDocuments(Project aProject)
-            throws IOException
-    {
-        Validate.notNull(aProject, "Project must be specified");
-
-        List<SourceDocument> sourceDocuments = listSourceDocuments(aProject);
-        
-        // BeforeDocumentRemovedEvent is triggered first, since methods that rely 
-        // on it might need to have access to the associated annotation documents 
-        for (SourceDocument doc : sourceDocuments) {
-            applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, doc));
-        }
-
-        // There should be a cascade-on-delete for annotation documents when the respective
-        // source document is deleted, but that is not there at the moment...
-        String deleteAnnotationDocumentsQuery = String.join("\n",
-                "DELETE FROM AnnotationDocument",
-                "WHERE project = :project");
-        entityManager.createQuery(deleteAnnotationDocumentsQuery)
-                .setParameter("project", aProject)
-                .executeUpdate();
-
-        // Delete all the source documents for the given project
-        String deleteSourceDocumentsQuery = String.join("\n",
-                "DELETE FROM SourceDocument",
-                "WHERE project = :project");
-        entityManager.createQuery(deleteSourceDocumentsQuery)
-                .setParameter("project", aProject)
-                .executeUpdate();
-        
-        // Delete all the source documents files for the given project
-        for (SourceDocument doc : sourceDocuments) {
-            deleteSourceDocumentFile(doc);
-        }        
-    }
-    
-    private void deleteSourceDocumentFile(SourceDocument aDocument) throws IOException
-    {
         String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
                 + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId();
-
+        
         // remove from file both source and related annotation file
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
@@ -543,7 +501,7 @@ public class DocumentServiceImpl
                     aDocument.getId(), project.getName(), project.getId());
         }
     }
-
+    
     @Override
     @Transactional
     public void removeAnnotationDocument(AnnotationDocument aAnnotationDocument)
@@ -1058,9 +1016,51 @@ public class DocumentServiceImpl
     }
     
     @EventListener
+    @Transactional
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
         throws IOException
     {
-        removeAllSourceDocuments(aEvent.getProject());
+        Project project = aEvent.getProject();
+        
+        Validate.notNull(project, "Project must be specified");
+
+        // Since the project is being deleted anyway, we don't bother sending around
+        // BeforeDocumentRemovedEvent anymore. If we did, we would likely trigger a
+        // a lot of CPU usage and DB bashing (e.g. for re-calculating the project state
+        // (ProjectServiceImpl.recalculateProjectState).
+        // List<SourceDocument> sourceDocuments = listSourceDocuments(project);
+        // for (SourceDocument doc : sourceDocuments) {
+        // applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, doc));
+        // }
+
+        // There should be a cascade-on-delete for annotation documents when the respective
+        // source document is deleted, but that is not there at the moment...
+        String deleteAnnotationDocumentsQuery = String.join("\n",
+                "DELETE FROM AnnotationDocument",
+                "WHERE project = :project");
+        entityManager.createQuery(deleteAnnotationDocumentsQuery)
+                .setParameter("project", project)
+                .executeUpdate();
+
+        // Delete all the source documents for the given project
+        String deleteSourceDocumentsQuery = String.join("\n",
+                "DELETE FROM SourceDocument",
+                "WHERE project = :project");
+        entityManager.createQuery(deleteSourceDocumentsQuery)
+                .setParameter("project", project)
+                .executeUpdate();
+        
+        // Delete all the source documents files for the given project
+        File docFolder = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/");
+        if (docFolder.exists()) {
+            FastIOUtils.delete(docFolder);
+        }
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(project.getId()))) {
+            log.info("Removed all documents from project [{}]({}) being deleted", project.getName(),
+                    project.getId());
+        }
     }
 }

@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
@@ -24,7 +27,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CO
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
+import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
 import static java.lang.Math.ceil;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
@@ -32,21 +37,25 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.io.FileUtils.copyFileToDirectory;
-import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.forceMkdir;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
@@ -57,9 +66,9 @@ import org.springframework.stereotype.Component;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -87,19 +96,18 @@ public class AnnotationDocumentExporter
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     private final DocumentService documentService;
-    private final AnnotationSchemaService schemaService;
     private final UserDao userRepository;
     private final ImportExportService importExportService;
+    private final RepositoryProperties repositoryProperties;
     
     @Autowired
-    public AnnotationDocumentExporter(DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService, UserDao aUserRepository,
-            ImportExportService aImportExportService)
+    public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
+            ImportExportService aImportExportService, RepositoryProperties aRepositoryProperties)
     {
         documentService = aDocumentService;
-        schemaService = aSchemaService;
         userRepository = aUserRepository;
         importExportService = aImportExportService;
+        repositoryProperties = aRepositoryProperties;
     }
 
     @Override
@@ -296,12 +304,18 @@ public class AnnotationDocumentExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
+        long start = currentTimeMillis();
+        
         Map<String, SourceDocument> nameToDoc = documentService
                 .listSourceDocuments(aProject).stream()
                 .collect(toMap(SourceDocument::getName, identity()));
         
         importAnnotationDocuments(aExProject, aProject, nameToDoc);
         importAnnotationDocumentContents(aZip, aProject, nameToDoc);
+
+        log.info("Imported [{}] annotation documents for project [{}] ({})",
+                aExProject.getSourceDocuments().size(), aExProject.getName(),
+                DurationFormatUtils.formatDurationWords(currentTimeMillis() - start, true, true));
     }
     
     /**
@@ -350,6 +364,14 @@ public class AnnotationDocumentExporter
             Map<String, SourceDocument> aNameToDoc)
         throws IOException
     {
+        int n = 0;
+        
+        // NOTE: we resort to internal knowledge about the CasStorageService here, but
+        // it makes the import quite a bit faster than using DocumentService.getCasFile(...)
+        Path docRoot = repositoryProperties.getPath().toPath().resolve(
+                PROJECT_FOLDER).resolve(aProject.getId().toString()).resolve(DOCUMENT_FOLDER);
+        
+        Set<SourceDocument> annotationFolderInitialized = new HashSet<>();
         
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
@@ -374,13 +396,24 @@ public class AnnotationDocumentExporter
             // name of the annotation document
             fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
             SourceDocument sourceDocument = aNameToDoc.get(fileName);
-            File annotationFilePath = documentService.getCasFile(sourceDocument, username);
 
-            copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
+            Path annFolder = docRoot.resolve(sourceDocument.getId().toString())
+                    .resolve(ANNOTATION_FOLDER);
+            
+            // Check if the annotation folder for the given source document has already been
+            // created. Using the set to check here is faster than querying the file system.
+            if (!annotationFolderInitialized.contains(sourceDocument)) {
+                Files.createDirectory(annFolder);
+                annotationFolderInitialized.add(sourceDocument);
+            }
+            
+            copy(zip.getInputStream(entry), annFolder.resolve(username + ".ser").toFile());
 
-            log.info("Imported annotation document content for user [" + username
-                    + "] for source document [" + sourceDocument.getId() + "] in project ["
-                    + aProject.getName() + "] with id [" + aProject.getId() + "]");
+            n++;
+            log.info(
+                    "Imported content for annotation document {}: user [{}] for [{}]({}) in project [{}]({})",
+                    n, username, sourceDocument.getName(), sourceDocument.getId(),
+                    aProject.getName(), aProject.getId());
         }
     }
 }
