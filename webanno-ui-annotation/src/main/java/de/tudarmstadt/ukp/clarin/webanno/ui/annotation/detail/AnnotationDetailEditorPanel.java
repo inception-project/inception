@@ -548,6 +548,10 @@ public abstract class AnnotationDetailEditorPanel
     public void actionSelect(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
+        if (aTarget != null) {
+            aTarget.add(buttonContainer);
+        }
+        
         // Edit existing annotation
         loadFeatureEditorModels(aTarget);
 
@@ -630,8 +634,11 @@ public abstract class AnnotationDetailEditorPanel
 
         internalCompleteAnnotation(aTarget, aCas);
     
-        state.clearArmedSlot();    
-        send(getPage(), Broadcast.BREADTH, new RenderSlotsEvent(aTarget));
+        if (aTarget != null) {
+            aTarget.add(buttonContainer);
+        }
+
+        state.clearArmedSlot();
     }
     
     private Optional<AnnotationLayer> getRelationLayerFor(AnnotationLayer aSpanLayer)
@@ -828,9 +835,6 @@ public abstract class AnnotationDetailEditorPanel
                 state.getSelectedAnnotationLayer().getUiName());
         LOG.trace("actionAnnotate() defaultLayer: {}",
                 state.getDefaultAnnotationLayer().getUiName());
-
-        // #186 - After filling a slot, the annotation detail panel is not updated
-        aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel);
 
         // internalCommitAnnotation is used to update an existing annotation as well as to create
         // a new one. In either case, the selectedAnnotationLayer indicates the layer type! Do not
@@ -1146,7 +1150,6 @@ public abstract class AnnotationDetailEditorPanel
     {
         reset(aTarget);
         aTarget.addChildren(getPage(), IFeedback.class);
-        refresh(aTarget);
         onChange(aTarget);
     }
 
