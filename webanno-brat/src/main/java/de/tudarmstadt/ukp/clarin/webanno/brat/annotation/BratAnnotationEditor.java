@@ -422,7 +422,7 @@ public class BratAnnotationEditor
                     getActionHandler().actionCreateOrUpdate(aTarget, aCas);
                 }
                 else {
-                    getActionHandler().actionSelect(aTarget, aCas);
+                    getActionHandler().actionSelect(aTarget);
                 }
             }
         }
@@ -448,7 +448,7 @@ public class BratAnnotationEditor
             getActionHandler().actionCreateOrUpdate(aTarget, aCas);
         }
         else {
-            getActionHandler().actionSelect(aTarget, aCas);
+            getActionHandler().actionSelect(aTarget);
         }
 
         return new ArcAnnotationResponse();

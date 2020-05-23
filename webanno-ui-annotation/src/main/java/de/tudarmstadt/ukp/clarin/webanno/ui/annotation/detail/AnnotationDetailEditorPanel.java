@@ -552,14 +552,14 @@ public abstract class AnnotationDetailEditorPanel
         // select SLOT FILLER an open it there
         else {
             state.getSelection().selectSpan(selectAnnotationByAddr(aCas, slotFillerAddr));
-            actionSelect(aTarget, aCas);
+            actionSelect(aTarget);
         }
         
         state.clearArmedSlot();
     }
 
     @Override
-    public void actionSelect(AjaxRequestTarget aTarget, CAS aCas)
+    public void actionSelect(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
         // Edit existing annotation
