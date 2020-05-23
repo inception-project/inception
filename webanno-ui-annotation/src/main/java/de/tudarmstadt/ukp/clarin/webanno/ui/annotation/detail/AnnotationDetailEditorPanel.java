@@ -150,9 +150,6 @@ public abstract class AnnotationDetailEditorPanel
     private final FeatureEditorListPanel featureEditorListPanel;
     private final WebMarkupContainer buttonContainer;
 
-    // Parent
-    private final AnnotationDetailEditorPanel editorPanel;
-
     // Components
     private final ConfirmationDialog deleteAnnotationDialog;
     private final ConfirmationDialog replaceAnnotationDialog;
@@ -167,7 +164,6 @@ public abstract class AnnotationDetailEditorPanel
         super(id, new CompoundPropertyModel<>(aModel));
         
         page = aPage;
-        editorPanel = this;
         
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
@@ -550,7 +546,7 @@ public abstract class AnnotationDetailEditorPanel
             refresh(aTarget);
                         
             // Loading feature editor values from CAS
-            loadFeatureEditorModels(aCas, aTarget);
+            loadFeatureEditorModels(aTarget);
         }
         // ... if the SLOT HOST annotation is NOT open in the detail panel on the right, then 
         // select SLOT FILLER an open it there
@@ -564,10 +560,10 @@ public abstract class AnnotationDetailEditorPanel
 
     @Override
     public void actionSelect(AjaxRequestTarget aTarget, CAS aCas)
-        throws AnnotationException
+        throws IOException, AnnotationException
     {
         // Edit existing annotation
-        loadFeatureEditorModels(aCas, aTarget);
+        loadFeatureEditorModels(aTarget);
 
         // Ensure we re-render and update the highlight
         onChange(aTarget);
@@ -598,7 +594,7 @@ public abstract class AnnotationDetailEditorPanel
             
             if (!originFS.getType().equals(targetFS.getType())) {
                 state.getSelection().clear();
-                loadFeatureEditorModels(aCas, aTarget);
+                loadFeatureEditorModels(aTarget);
                 send(getPage(), Broadcast.BREADTH, new RenderSlotsEvent(aTarget));
                 onChange(aTarget);
                 throw new IllegalPlacementException(
@@ -635,7 +631,7 @@ public abstract class AnnotationDetailEditorPanel
             if (!Objects.equals(previousLayer, state.getSelectedAnnotationLayer())) {
                 LOG.trace("Layer changed from {} to {} - need to reload feature editors",
                         previousLayer, state.getSelectedAnnotationLayer());
-                loadFeatureEditorModels(aCas, aTarget);
+                loadFeatureEditorModels(aTarget);
             }
         }
         else {
@@ -792,7 +788,7 @@ public abstract class AnnotationDetailEditorPanel
         state.rememberFeatures();
 
         // Loading feature editor values from CAS
-        loadFeatureEditorModels(aCas, aTarget);
+        loadFeatureEditorModels(aTarget);
 
         // onAnnotate callback
         onAnnotate(aTarget);
@@ -868,7 +864,7 @@ public abstract class AnnotationDetailEditorPanel
         // create the annotation
         if (state.getSelection().getAnnotation().isNotSet()) {
             // Load the feature editors with the remembered values (if any)
-            loadFeatureEditorModels(aCas, aTarget);
+            loadFeatureEditorModels(aTarget);
             createNewAnnotation(aTarget, adapter, aCas);
         }
 
@@ -1193,29 +1189,16 @@ public abstract class AnnotationDetailEditorPanel
         getModelObject().moveToSelection(aCas);
     }
 
-    public void loadFeatureEditorModels(AjaxRequestTarget aTarget)
-        throws AnnotationException
-    {
-        try {
-            CAS annotationCas = getEditorCas();
-            loadFeatureEditorModels(annotationCas, aTarget);
-        }
-        catch (AnnotationException e) {
-            throw e;
-        }
-        catch (Exception e) {
-            throw new AnnotationException(e);
-        }
-    }
-
     /**
      * Loads the feature states either from the CAS (if an annotation is selected) or from the
      * remembered values (if no annotation is selected).
      */
-    public void loadFeatureEditorModels(CAS aCas, AjaxRequestTarget aTarget)
-        throws AnnotationException
+    public void loadFeatureEditorModels(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
     {
         LOG.trace("loadFeatureEditorModels()");
+
+        CAS aCas = getEditorCas();
 
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
@@ -1372,7 +1355,7 @@ public abstract class AnnotationDetailEditorPanel
         setVisible(getModelObject() != null && getModelObject().getDocument() != null);
         
         // Set read only if annotation is finished or the user is viewing other's work
-        setEnabled(editorPanel.getEditorPage().isEditable());
+        setEnabled(getEditorPage().isEditable());
     }
 
     protected void onChange(AjaxRequestTarget aTarget)
@@ -1694,16 +1677,16 @@ public abstract class AnnotationDetailEditorPanel
 
     private LambdaAjaxLink createClearButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("clear", editorPanel::actionClear);
+        LambdaAjaxLink link = new LambdaAjaxLink("clear", this::actionClear);
         link.setOutputMarkupPlaceholderTag(true);
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
-                && editorPanel.getEditorPage().isEditable()));
+                && getEditorPage().isEditable()));
         return link;
     }
 
     private Component createReverseButton()
     {
-        LambdaAjaxLink link = new LambdaAjaxLink("reverse", editorPanel::actionReverse);
+        LambdaAjaxLink link = new LambdaAjaxLink("reverse", this::actionReverse);
         link.setOutputMarkupPlaceholderTag(true);
         link.add(LambdaBehavior.onConfigure(_this -> {
             AnnotatorState state = getModelObject();
@@ -1711,7 +1694,7 @@ public abstract class AnnotationDetailEditorPanel
             _this.setVisible(state.getSelection().getAnnotation().isSet() 
                     && state.getSelection().isArc()
                     && RELATION_TYPE.equals(state.getSelectedAnnotationLayer().getType())
-                    && editorPanel.getEditorPage().isEditable());
+                    && getEditorPage().isEditable());
 
             // Avoid reversing in read-only layers
             _this.setEnabled(state.getSelectedAnnotationLayer() != null
@@ -1725,7 +1708,7 @@ public abstract class AnnotationDetailEditorPanel
         LambdaAjaxLink link = new LambdaAjaxLink("delete", this::actionDelete);
         link.setOutputMarkupPlaceholderTag(true);
         link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
-                && editorPanel.getEditorPage().isEditable()));
+                && getEditorPage().isEditable()));
         // Avoid deleting in read-only layers
         link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
                 && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
@@ -1738,7 +1721,7 @@ public abstract class AnnotationDetailEditorPanel
 
         AnnotationLayer newLayer = state.getDefaultAnnotationLayer();
 
-        CAS cas = editorPanel.getEditorCas();
+        CAS cas = getEditorCas();
         AnnotationFS fs = selectAnnotationByAddr(cas,
                 state.getSelection().getAnnotation().getId());
         AnnotationLayer currentLayer = annotationService.findLayer(state.getProject(), fs);
@@ -1749,7 +1732,7 @@ public abstract class AnnotationDetailEditorPanel
             return;
         }
         
-        AttachStatus attachStatus = editorPanel.checkAttachStatus(aTarget, state.getProject(), fs);
+        AttachStatus attachStatus = checkAttachStatus(aTarget, state.getProject(), fs);
         if (attachStatus.readOnlyAttached) {
             error("Cannot replace an annotation to which annotations on read-only layers attach.");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -1762,10 +1745,10 @@ public abstract class AnnotationDetailEditorPanel
         replaceAnnotationDialog.setConfirmAction((_target) -> {
             // The delete action clears the selection, but we need it to create
             // the new annotation - so we save it.
-            Selection savedSel = editorPanel.getModelObject().getSelection().copy();
+            Selection savedSel = getModelObject().getSelection().copy();
 
             // Delete current annotation
-            editorPanel.actionDelete(_target);
+            actionDelete(_target);
 
             // Set up the action to create the replacement annotation
             AnnotationLayer layer = state.getDefaultAnnotationLayer();
@@ -1773,10 +1756,10 @@ public abstract class AnnotationDetailEditorPanel
             state.getSelection().setAnnotation(VID.NONE_ID);
             state.setSelectedAnnotationLayer(layer);
             state.setDefaultAnnotationLayer(layer);
-            editorPanel.loadFeatureEditorModels(_target);
+            loadFeatureEditorModels(_target);
 
             // Create the replacement annotation
-            editorPanel.actionCreateOrUpdate(_target, editorPanel.getEditorCas());
+            actionCreateOrUpdate(_target, getEditorCas());
             refresh(_target);
         });
         replaceAnnotationDialog.setCancelAction((_target) -> {
@@ -1822,7 +1805,7 @@ public abstract class AnnotationDetailEditorPanel
         // Auto-commit if working on existing annotation
         if (getModelObject().getSelection().getAnnotation().isSet()) {
             try {
-                editorPanel.actionCreateOrUpdate(target, editorPanel.getEditorCas());
+                actionCreateOrUpdate(target, getEditorCas());
             }
             catch (Exception e) {
                 handleException(this, target, e);
@@ -1849,7 +1832,7 @@ public abstract class AnnotationDetailEditorPanel
                     && state.getSelection().getAnnotation().isSet()) {
                 try {
                     if (state.getSelection().isArc()) {
-                        editorPanel.actionClear(target);
+                        actionClear(target);
                     }
                     else {
                         actionReplace(target);
@@ -1863,7 +1846,7 @@ public abstract class AnnotationDetailEditorPanel
             else {
                 state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
                 target.add(selectedAnnotationInfoPanel);
-                editorPanel.clearFeatureEditorModels(target);
+                clearFeatureEditorModels(target);
             }
         }
     }

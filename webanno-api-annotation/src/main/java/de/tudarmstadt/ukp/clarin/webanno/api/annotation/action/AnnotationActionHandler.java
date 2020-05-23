@@ -41,7 +41,7 @@ public interface AnnotationActionHandler
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
      */
     void actionSelect(AjaxRequestTarget aTarget, CAS aCas)
-        throws AnnotationException;
+        throws IOException, AnnotationException;
 
     /**
      * Delete currently selected annotation.

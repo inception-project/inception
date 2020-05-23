@@ -177,7 +177,9 @@ public class AnnotationPage
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
         StringValue name = aPageParameters.get(PAGE_PARAM_DOCUMENT_NAME);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
-        if (focus == null) focus = StringValue.valueOf(0);
+        if (focus == null) {
+            focus = StringValue.valueOf(0);
+        }
         
         handleParameters(project, document, name, focus, true);
         commonInit(focus);
@@ -470,7 +472,7 @@ public class AnnotationPage
             // a double-update, we pass null here)
             detailEditor.reset(null);
             // Populate the layer dropdown box
-            detailEditor.loadFeatureEditorModels(editorCas, null);
+            detailEditor.loadFeatureEditorModels(null);
             
             if (aTarget != null) {
                 // Update URL for current document
