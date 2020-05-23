@@ -403,7 +403,7 @@ public class AnnotationDocumentExporter
             // Check if the annotation folder for the given source document has already been
             // created. Using the set to check here is faster than querying the file system.
             if (!annotationFolderInitialized.contains(sourceDocument)) {
-                Files.createDirectory(annFolder);
+                Files.createDirectories(annFolder);
                 annotationFolderInitialized.add(sourceDocument);
             }
             
