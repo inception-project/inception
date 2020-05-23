@@ -223,7 +223,8 @@ public abstract class AnnotationDetailEditorPanel
                     
                     aTarget.add(textfield);
                     
-                    annotationFeatureForm.getFirstFeatureEditor().ifPresent(aTarget::add);
+                    annotationFeatureForm.getFeatureEditorContainer().getFirstFeatureEditor()
+                            .ifPresent(aTarget::add);
                 }
                 catch (Exception e) {
                     handleException(textfield, aTarget, e);

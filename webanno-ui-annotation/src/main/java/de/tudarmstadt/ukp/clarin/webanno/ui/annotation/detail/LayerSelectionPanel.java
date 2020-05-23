@@ -209,7 +209,7 @@ public class LayerSelectionPanel
             }
         }));
         checkbox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> 
-                owner.focusForwardAnnotationComponent(_target, true)));
+                owner.getFeatureEditorContainer().focusForwardAnnotationComponent(_target, true)));
         
         return checkbox;
     }

@@ -102,21 +102,8 @@
             </div>
           </div>
           <div class="scrolling card-body flex-v-container">
-            <div wicket:id="noAnnotationWarning" class="flex-content flex-h-container no-data-notice">
-              <div>No annotation selected</div>
-            </div>
             <div wicket:id="infoContainer"/>
-            <div wicket:id="noFeaturesWarning" class="flex-content flex-h-container no-data-notice mt-2 border-top">
-              <div>No features on this layer</div>
-            </div>
-            <div class="flex-content feature-editors-sidebar" wicket:id="featureEditorContainer">
-              <wicket:container wicket:id="featureEditors">
-                <div wicket:id="editor"></div>
-              </wicket:container>
-              <div style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">
-                <input wicket:id="focusResetHelper" tabindex="-1"></input>
-              </div>
-            </div>
+            <div wicket:id="featureEditorContainer"/>
           </div>
         </div>
       </div>

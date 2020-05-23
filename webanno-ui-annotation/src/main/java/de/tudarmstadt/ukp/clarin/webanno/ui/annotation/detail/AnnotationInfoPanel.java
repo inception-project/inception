@@ -25,6 +25,7 @@ import java.io.IOException;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -40,17 +41,30 @@ public class AnnotationInfoPanel extends Panel
 {
     private static final long serialVersionUID = -2911353962253404751L;
 
+    private final WebMarkupContainer noAnnotationWarning;
+    private final WebMarkupContainer annotationInfo;
+
     public AnnotationInfoPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
 
         setOutputMarkupPlaceholderTag(true);
         
-        add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
-        add(createSelectedAnnotationTypeLabel());
-        add(createSelectedTextLabel());
-        add(createJumpToAnnotationLink());
-        add(createSelectedAnnotationLayerLabel());
+        noAnnotationWarning = new WebMarkupContainer("noAnnotationWarning");
+        noAnnotationWarning.setOutputMarkupPlaceholderTag(true);
+        noAnnotationWarning
+                .add(visibleWhen(() -> !getModelObject().getSelection().getAnnotation().isSet()));
+        add(noAnnotationWarning);
+        
+        annotationInfo = new WebMarkupContainer("annotationInfo");
+        annotationInfo.setOutputMarkupPlaceholderTag(true);
+        annotationInfo
+                .add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        annotationInfo.add(createSelectedAnnotationTypeLabel());
+        annotationInfo.add(createSelectedTextLabel());
+        annotationInfo.add(createJumpToAnnotationLink());
+        annotationInfo.add(createSelectedAnnotationLayerLabel());
+        add(annotationInfo);
     }
     
     public AnnotationPageBase getEditorPage()
