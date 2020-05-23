@@ -872,24 +872,23 @@ public abstract class AnnotationDetailEditorPanel
             
             LOG.trace("Committing feature states to CAS: {} = {}", featureState.feature.getUiName(),
                     featureState.value);
-            aAdapter.setFeatureValue(aDocment, aUsername, aTargetCas,
-                    aTargetFsAddr, featureState.feature,
-                    featureState.value);
+            aAdapter.setFeatureValue(aDocment, aUsername, aTargetCas, aTargetFsAddr,
+                    featureState.feature, featureState.value);
         }
         
-        String bratLabelText = TypeUtil.getUiLabelText(aAdapter,
-                selectFsByAddr(aTargetCas, aTargetFsAddr), features);
-        info(generateMessage(aAdapter.getLayer(), bratLabelText, false));
+        String label = TypeUtil.getUiLabelText(aAdapter, selectFsByAddr(aTargetCas, aTargetFsAddr),
+                features);
+        info(generateMessage(aAdapter.getLayer(), label, false));
     }
 
-    public AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
+    private AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
             AnnotationFS aFS)
     {
         AnnotationLayer layer = annotationService.findLayer(aProject, aFS);
         
         AttachStatus attachStatus = new AttachStatus();
         
-        Set<AnnotationFS> attachedRels = getAttachedRels(aFS, layer);
+        Set<AnnotationFS> attachedRels = getAttachedRels(annotationService, aFS, layer);
         boolean attachedToReadOnlyRels = attachedRels.stream().anyMatch(relFS -> {
             AnnotationLayer relLayer = annotationService.findLayer(aProject, relFS);
             return relLayer.isReadonly();
@@ -988,13 +987,10 @@ public abstract class AnnotationDetailEditorPanel
 
         info(generateMessage(state.getSelectedAnnotationLayer(), null, true));
 
-        state.getSelection().clear();
-
-        // after delete will follow annotation
-        refresh(aTarget);
+        reset(aTarget);
 
         onChange(aTarget);
-        onDelete(aTarget, fs);        
+        onDelete(aTarget, fs);
     }
     
 
@@ -1007,7 +1003,7 @@ public abstract class AnnotationDetailEditorPanel
         // NOTE: It is important that this happens before UNATTACH SPANS since the attach feature
         // is no longer set after UNATTACH SPANS!
         if (adapter instanceof SpanAdapter) {
-            for (AnnotationFS attachedFs : getAttachedRels(fs, layer)) {
+            for (AnnotationFS attachedFs : getAttachedRels(annotationService, fs, layer)) {
                 aCas.removeFsFromIndexes(attachedFs);
                 info("The attached annotation for relation type [" + annotationService
                     .findLayer(state.getProject(), attachedFs.getType().getName()).getUiName()
@@ -1033,7 +1029,7 @@ public abstract class AnnotationDetailEditorPanel
             Type spanType = CasUtil.getType(aCas, layer.getAttachType().getName());
             Feature attachFeature = spanType.getFeatureByBaseName(layer.getAttachFeature()
                 .getName());
-            for (AnnotationFS attachedFs : getAttachedSpans(fs, layer)) {
+            for (AnnotationFS attachedFs : getAttachedSpans(annotationService, fs, layer)) {
                 attachedFs.setFeatureValue(attachFeature, null);
                 LOG.debug("Unattached [" + attachFeature.getShortName() + "] on annotation ["
                     + getAddr(attachedFs) + "]");
@@ -1379,18 +1375,6 @@ public abstract class AnnotationDetailEditorPanel
     }
 
     /**
-     * Clear the values from the feature editors.
-     */
-    void clearFeatureEditorModels(AjaxRequestTarget aTarget)
-    {
-        LOG.trace("clearFeatureEditorModels()");
-        getModelObject().getFeatureStates().clear();
-        if (aTarget != null) {
-            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel);
-        }
-    }
-
-    /**
      * Adds and sorts tags based on Constraints rules
      */
     private void populateTagsBasedOnRules(CAS aCas, FeatureState aModel)
@@ -1515,7 +1499,7 @@ public abstract class AnnotationDetailEditorPanel
         getModelObject().getFeatureStates().clear();
         state.getSelection().clear();
         if (aTarget != null) {
-            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel);
+            aTarget.add(selectedAnnotationInfoPanel, buttonContainer, featureEditorListPanel);
         }        
         
         // Refresh the selectable layers dropdown
@@ -1558,11 +1542,12 @@ public abstract class AnnotationDetailEditorPanel
         return attachedLinks;
     }
     
-    private Set<AnnotationFS> getAttachedSpans(AnnotationFS aFs, AnnotationLayer aLayer)
+    private static Set<AnnotationFS> getAttachedSpans(AnnotationSchemaService aAS, AnnotationFS aFs,
+            AnnotationLayer aLayer)
     {
         CAS cas = aFs.getCAS();
         Set<AnnotationFS> attachedSpans = new HashSet<>();
-        TypeAdapter adapter = annotationService.getAdapter(aLayer);
+        TypeAdapter adapter = aAS.getAdapter(aLayer);
         if (adapter instanceof SpanAdapter && aLayer.getAttachType() != null) {
             Type spanType = CasUtil.getType(cas, aLayer.getAttachType().getName());
             Feature attachFeature = spanType.getFeatureByBaseName(aLayer.getAttachFeature()
@@ -1578,14 +1563,13 @@ public abstract class AnnotationDetailEditorPanel
         return attachedSpans;
     }
     
-    private Set<AnnotationFS> getAttachedRels(AnnotationFS aFs, AnnotationLayer aLayer)
+    private static Set<AnnotationFS> getAttachedRels(AnnotationSchemaService aAS, AnnotationFS aFs,
+            AnnotationLayer aLayer)
     {
         CAS cas = aFs.getCAS();
         Set<AnnotationFS> toBeDeleted = new HashSet<>();
-        for (AnnotationLayer relationLayer : annotationService
-            .listAttachedRelationLayers(aLayer)) {
-            RelationAdapter relationAdapter = (RelationAdapter) annotationService
-                    .getAdapter(relationLayer);
+        for (AnnotationLayer relationLayer : aAS.listAttachedRelationLayers(aLayer)) {
+            RelationAdapter relationAdapter = (RelationAdapter) aAS.getAdapter(relationLayer);
             Type relationType = CasUtil.getType(cas, relationLayer.getName());
             Feature sourceFeature = relationType.getFeatureByBaseName(relationAdapter
                 .getSourceFeatureName());
