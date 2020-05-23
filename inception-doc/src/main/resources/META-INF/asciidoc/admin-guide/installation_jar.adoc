@@ -128,7 +128,9 @@ of accessing it directly. This assumes that you already have the following packa
 +
 [source,text]
 ----
-tomcat.ajp.port=18009
+server.ajp.port=18009
+server.ajp.secret=SECRET_STRING_YOU_CHOOSE
+server.ajp.address=127.0.0.1
 server.servlet.context-path=/inception
 server.use-forward-headers=true
 ----
@@ -146,7 +148,7 @@ ProxyPreserveHost On
 </Proxy>
 
 <Location /inception >
-  ProxyPass ajp://localhost:18009/inception timeout=1200
+  ProxyPass ajp://localhost:18009/inception timeout=1200 secret="SECRET_STRING_YOU_CHOOSE"
   ProxyPassReverse http://localhost/inception
 </Location>
 ----
@@ -156,3 +158,8 @@ ProxyPreserveHost On
 ----
 $ service apache2 restart
 ----
+
+NOTE: The `secret` option is supported e.g. in link:https://httpd.apache.org/docs/trunk/mod/
+       mod_proxy_ajp.html[Apache HTTP 2.5 mod_proxy_ajp]. If you are using reverse proxy which does not	
+       support passing along a secret, you may set `server.ajp.secret-required=false` in the 
+       `settings.properties` file.
