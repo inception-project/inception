@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatu
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
@@ -378,6 +379,8 @@ public class FeatureEditorListPanel
     private void actionFeatureUpdate(Component aComponent, AjaxRequestTarget aTarget)
     {
         try {
+            findParent(AnnotationPageBase.class).ensureIsEditable(); 
+            
             AnnotatorState state = getModelObject();
     
             if (state.getConstraints() != null) {
@@ -400,7 +403,9 @@ public class FeatureEditorListPanel
             ) {
                 editorPanel.actionCreateForward(aTarget, cas);
             } else {
-                editorPanel.actionCreateOrUpdate(aTarget, cas);
+                editorPanel.internalCommitAnnotation(aTarget, cas);
+                editorPanel.internalCompleteAnnotation(aTarget, cas);
+                state.clearArmedSlot();
             }
             
             // If the focus was lost during the update, then try force-focusing the

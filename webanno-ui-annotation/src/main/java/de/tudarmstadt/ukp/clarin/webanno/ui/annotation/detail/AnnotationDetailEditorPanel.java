@@ -762,7 +762,7 @@ public abstract class AnnotationDetailEditorPanel
      * using the latest info from the CAS, updates the sentence number and focus unit, performs
      * auto-scrolling.
      */
-    private void internalCompleteAnnotation(AjaxRequestTarget aTarget, CAS aCas)
+    protected void internalCompleteAnnotation(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException
     {
         AnnotatorState state = getModelObject();
@@ -814,7 +814,7 @@ public abstract class AnnotationDetailEditorPanel
     /**
      * Creates or updates an annotation using the information from the feature editors.
      */
-    private void internalCommitAnnotation(AjaxRequestTarget aTarget, CAS aCas)
+    protected void internalCommitAnnotation(AjaxRequestTarget aTarget, CAS aCas)
         throws AnnotationException, IOException
     {
         AnnotatorState state = getModelObject();
