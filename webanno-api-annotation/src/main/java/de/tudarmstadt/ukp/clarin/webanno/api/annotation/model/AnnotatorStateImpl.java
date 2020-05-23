@@ -551,9 +551,12 @@ public class AnnotatorStateImpl
     @Override
     public void setArmedSlot(FeatureState aState, int aIndex)
     {
+        boolean needRerender = armedFeatureState != aState || armedSlot != aIndex;
         armedFeatureState = aState;
         armedSlot = aIndex;
-        rerenderSlots();
+        if (needRerender) {
+            rerenderSlots();
+        }
     }
 
     @Override
@@ -568,7 +571,7 @@ public class AnnotatorStateImpl
     }
     
     private void rerenderSlots() {
-        // Rerender all slots to deselect all slots that are not armed anymore
+        // Re-render all slots to de-select all slots that are not armed anymore
         Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
         if (handler.isPresent()) {
             Page page = (Page) handler.get().getPage();
@@ -581,9 +584,12 @@ public class AnnotatorStateImpl
     @Override
     public void clearArmedSlot()
     {
+        boolean needRerender = armedFeatureState != null || armedSlot != -1;
         armedFeatureState = null;
         armedSlot = -1;
-        rerenderSlots();
+        if (needRerender) {
+            rerenderSlots();
+        }
     }
 
     @Override
