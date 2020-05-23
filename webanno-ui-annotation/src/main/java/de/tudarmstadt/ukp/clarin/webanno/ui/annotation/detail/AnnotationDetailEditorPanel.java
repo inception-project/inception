@@ -129,7 +129,7 @@ public abstract class AnnotationDetailEditorPanel
     private @SpringBean UserDao userRepository;
     
     private AnnotationPageBase page;
-    private AnnotationFeatureForm annotationFeatureForm;
+    private AnnotationEditorPanel annotationFeatureForm;
 
     private String forwardAnnotationKeySequence = "";
     private TextField<String> forwardAnnotationTextField;
@@ -223,7 +223,7 @@ public abstract class AnnotationDetailEditorPanel
                     
                     aTarget.add(textfield);
                     
-                    annotationFeatureForm.getFeatureEditorContainer().getFirstFeatureEditor()
+                    annotationFeatureForm.getFeatureEditorListPanel().getFirstFeatureEditor()
                             .ifPresent(aTarget::add);
                 }
                 catch (Exception e) {
@@ -340,9 +340,9 @@ public abstract class AnnotationDetailEditorPanel
         return aBindTags.get(aBindTags.keySet().iterator().next());
     }
 
-    private AnnotationFeatureForm createAnnotationFeatureForm()
+    private AnnotationEditorPanel createAnnotationFeatureForm()
     {
-        AnnotationFeatureForm form = new AnnotationFeatureForm(this, "annotationFeatureForm",
+        AnnotationEditorPanel form = new AnnotationEditorPanel(this, "annotationFeatureForm",
                 getModel());
         form.setOutputMarkupId(true);
         return form;
@@ -777,33 +777,18 @@ public abstract class AnnotationDetailEditorPanel
 
     private void refresh(AnnotatorState state) 
     {
-        // This already happens in loadFeatureEditorModels() above - probably not needed
-        // here again
-        // annotationFeatureForm.updateLayersDropdown();
-
-        LOG.trace("actionAnnotate() setting selected layer (not sure why)");
-        if (annotationFeatureForm.getLayerContainer().getAnnotationLayers().isEmpty()) {
+        if (annotationFeatureForm.getLayerSelectionPanel().getAnnotationLayers().isEmpty()) {
             state.setSelectedAnnotationLayer(new AnnotationLayer());
         }
         else if (state.getSelectedAnnotationLayer() == null) {
             if (state.getRememberedSpanLayer() == null) {
-                state.setSelectedAnnotationLayer(
-                        annotationFeatureForm.getLayerContainer().getAnnotationLayers().get(0));
+                state.setSelectedAnnotationLayer(annotationFeatureForm.getLayerSelectionPanel()
+                        .getAnnotationLayers().get(0));
             }
             else {
                 state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
             }
         }
-        LOG.trace("actionAnnotate() selectedLayer: {}",
-            state.getSelectedAnnotationLayer().getUiName());
-
-        // Actually not sure why we would want to clear these here - in fact, they should
-        // still be around for the rendering phase of the feature editors...
-        //clearFeatureEditorModels(aTarget);
-
-        // This already happens in loadFeatureEditorModels() above - probably not needed
-        // here again
-        // annotationFeatureForm.updateRememberLayer();
     }
     
     /**
@@ -1185,7 +1170,7 @@ public abstract class AnnotationDetailEditorPanel
             // If we reset the layers while doing a relation, we won't be able to complete the 
             // relation - so in this case, we leave the layers alone...
             if (!selection.isArc()) {
-                annotationFeatureForm.getLayerContainer().updateLayersDropdown();
+                annotationFeatureForm.getLayerSelectionPanel().updateLayersDropdown();
             }
 
             if (selection.getAnnotation().isSet()) {
@@ -1603,7 +1588,7 @@ public abstract class AnnotationDetailEditorPanel
         return toBeDeleted;
     }
 
-    public AnnotationFeatureForm getAnnotationFeatureForm()
+    public AnnotationEditorPanel getAnnotationFeatureForm()
     {
         return annotationFeatureForm;
     }

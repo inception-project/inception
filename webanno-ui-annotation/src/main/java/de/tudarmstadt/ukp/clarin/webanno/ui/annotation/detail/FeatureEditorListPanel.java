@@ -59,13 +59,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.util.CachingReuseStrategy;
 
-public class FeatureEditorPanel
+public class FeatureEditorListPanel
     extends Panel
 {
     private static final long serialVersionUID = 908046548492420524L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationFeatureForm.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotationEditorPanel.class);
     
     public static final String ID_PREFIX = "featureEditorHead";
 
@@ -75,10 +76,10 @@ public class FeatureEditorPanel
     private final WebMarkupContainer featureEditorContainer;
     private final WebMarkupContainer noFeaturesWarning;
     private final FeatureEditorPanelContent featureEditorPanelContent;
-    private final AnnotationFeatureForm owner;
+    private final AnnotationEditorPanel owner;
 
-    public FeatureEditorPanel(String aId, IModel<AnnotatorState> aModel,
-            AnnotationFeatureForm aOwner)
+    public FeatureEditorListPanel(String aId, IModel<AnnotatorState> aModel,
+            AnnotationEditorPanel aOwner)
     {
         super(aId, aModel);
         
@@ -279,7 +280,7 @@ public class FeatureEditorPanel
             FeatureSupport featureSupport = featureSupportRegistry
                     .getFeatureSupport(featureState.feature);
             AnnotationDetailEditorPanel editorPanel = findParent(AnnotationDetailEditorPanel.class);
-            editor = featureSupport.createEditor("editor", FeatureEditorPanel.this, editorPanel,
+            editor = featureSupport.createEditor("editor", FeatureEditorListPanel.this, editorPanel,
                     getModel(), item.getModel());
     
             // We need to enable the markup ID here because we use it during the AJAX behavior

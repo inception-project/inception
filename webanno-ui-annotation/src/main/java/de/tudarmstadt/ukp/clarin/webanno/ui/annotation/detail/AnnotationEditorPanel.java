@@ -56,9 +56,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.AttachStatus;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
 
-// The name "AnnotationFeatureForm" is historic. This class should be refactored into a Panel
-public class AnnotationFeatureForm
+public class AnnotationEditorPanel
     extends WebMarkupContainer
 {
     private static final long serialVersionUID = 3635145598405490893L;
@@ -66,7 +66,7 @@ public class AnnotationFeatureForm
     // Top-level containers
     private final LayerSelectionPanel layerSelectionPanel;
     private final AnnotationInfoPanel selectedAnnotationInfoPanel;
-    private final FeatureEditorPanel featureEditorContainer;
+    private final FeatureEditorListPanel featureEditorListPanel;
     private final WebMarkupContainer buttonContainer;
 
     // Parent
@@ -81,7 +81,7 @@ public class AnnotationFeatureForm
     private @SpringBean UserPreferencesService userPreferencesService;
     private @SpringBean UserDao userDao;
 
-    AnnotationFeatureForm(AnnotationDetailEditorPanel aEditorPanel, String id,
+    AnnotationEditorPanel(AnnotationDetailEditorPanel aEditorPanel, String id,
         IModel<AnnotatorState> aState)
     {
         super(id, new CompoundPropertyModel<>(aState));
@@ -94,8 +94,8 @@ public class AnnotationFeatureForm
                 new StringResourceModel("ReplaceDialog.text", this, null)));
         add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel(), this));
         add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel()));
-        add(featureEditorContainer = new FeatureEditorPanel("featureEditorContainer", getModel(),
-                this));
+        add(featureEditorListPanel = new FeatureEditorListPanel("featureEditorContainer",
+                getModel(), this));
         
         buttonContainer = new WebMarkupContainer("buttonContainer");
         buttonContainer.setOutputMarkupPlaceholderTag(true);
@@ -128,7 +128,7 @@ public class AnnotationFeatureForm
         LambdaAjaxLink link = new LambdaAjaxLink("reverse", editorPanel::actionReverse);
         link.setOutputMarkupPlaceholderTag(true);
         link.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+            AnnotatorState state = AnnotationEditorPanel.this.getModelObject();
             
             _this.setVisible(state.getSelection().getAnnotation().isSet() 
                     && state.getSelection().isArc()
@@ -156,7 +156,7 @@ public class AnnotationFeatureForm
     
     private void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException
     {
-        AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+        AnnotatorState state = AnnotationEditorPanel.this.getModelObject();
         
         AnnotationLayer layer = state.getSelectedAnnotationLayer();
         TypeAdapter adapter = annotationService.getAdapter(layer);
@@ -194,7 +194,7 @@ public class AnnotationFeatureForm
     
     private void actionReplace(AjaxRequestTarget aTarget) throws IOException
     {
-        AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+        AnnotatorState state = AnnotationEditorPanel.this.getModelObject();
 
         AnnotationLayer newLayer = state.getDefaultAnnotationLayer();
 
@@ -217,7 +217,7 @@ public class AnnotationFeatureForm
         }
         
         replaceAnnotationDialog.setContentModel(
-                new StringResourceModel("ReplaceDialog.text", AnnotationFeatureForm.this)
+                new StringResourceModel("ReplaceDialog.text", AnnotationEditorPanel.this)
                         .setParameters(currentLayer.getUiName(), newLayer.getUiName(),
                                 attachStatus.attachCount));
         replaceAnnotationDialog.setConfirmAction((_target) -> {
@@ -238,11 +238,11 @@ public class AnnotationFeatureForm
 
             // Create the replacement annotation
             editorPanel.actionCreateOrUpdate(_target, editorPanel.getEditorCas());
-            _target.add(AnnotationFeatureForm.this);
+            _target.add(AnnotationEditorPanel.this);
         });
         replaceAnnotationDialog.setCancelAction((_target) -> {
             state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
-            _target.add(AnnotationFeatureForm.this);
+            _target.add(AnnotationEditorPanel.this);
         });
         replaceAnnotationDialog.show(aTarget);
     }
@@ -269,20 +269,20 @@ public class AnnotationFeatureForm
         }
     }
 
-    public LayerSelectionPanel getLayerContainer()
+    public LayerSelectionPanel getLayerSelectionPanel()
     {
         return layerSelectionPanel;
     }
     
-    public FeatureEditorPanel getFeatureEditorContainer()
+    public FeatureEditorListPanel getFeatureEditorListPanel()
     {
-        return featureEditorContainer;
+        return featureEditorListPanel;
     }
     
     public void refresh(AjaxRequestTarget aTarget)
     {
         aTarget.add(layerSelectionPanel, buttonContainer, selectedAnnotationInfoPanel,
-                featureEditorContainer);
+                featureEditorListPanel);
     }
     
     @OnEvent(stop = true)

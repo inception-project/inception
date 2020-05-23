@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class LayerSelectionPanel
@@ -71,12 +72,12 @@ public class LayerSelectionPanel
     private final Label relationHint;
     private final DropDownChoice<AnnotationLayer> layerSelector;
     private final WebMarkupContainer forwardAnnotationGroup;
-    private final AnnotationFeatureForm owner;
+    private final AnnotationEditorPanel owner;
     
     private final List<AnnotationLayer> annotationLayers = new ArrayList<>();
 
     public LayerSelectionPanel(String aId, IModel<AnnotatorState> aModel,
-            AnnotationFeatureForm aOwner)
+            AnnotationEditorPanel aOwner)
     {
         super(aId, new CompoundPropertyModel<>(aModel));
         
@@ -209,7 +210,7 @@ public class LayerSelectionPanel
             }
         }));
         checkbox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> 
-                owner.getFeatureEditorContainer().focusForwardAnnotationComponent(_target, true)));
+                owner.getFeatureEditorListPanel().focusForwardAnnotationComponent(_target, true)));
         
         return checkbox;
     }
