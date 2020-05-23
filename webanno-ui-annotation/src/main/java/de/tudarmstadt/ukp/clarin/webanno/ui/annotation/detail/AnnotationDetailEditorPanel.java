@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextToken;
@@ -60,7 +62,6 @@ import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
@@ -79,7 +80,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
@@ -95,7 +95,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
@@ -550,6 +549,9 @@ public abstract class AnnotationDetailEditorPanel
         
         // Edit existing annotation
         loadFeatureEditorModels(aTarget);
+        if (aTarget != null) {
+            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel);
+        }
 
         // Ensure we re-render and update the highlight
         onChange(aTarget);
@@ -579,9 +581,7 @@ public abstract class AnnotationDetailEditorPanel
             AnnotationFS targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
             
             if (!originFS.getType().equals(targetFS.getType())) {
-                state.getSelection().clear();
-                loadFeatureEditorModels(aTarget);
-                send(getPage(), Broadcast.BREADTH, new RenderSlotsEvent(aTarget));
+                reset(aTarget);
                 onChange(aTarget);
                 throw new IllegalPlacementException(
                         "Cannot create relation between spans on different layers");
@@ -631,7 +631,11 @@ public abstract class AnnotationDetailEditorPanel
         internalCompleteAnnotation(aTarget, aCas);
     
         if (aTarget != null) {
+            // After the annotation has been created, we need to re-render the button container e.g.
+            // to make the buttons show up if previously no annotation was selected
             aTarget.add(buttonContainer);
+            // Also update the features and selected annotation info
+            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel);
         }
 
         state.clearArmedSlot();
@@ -1243,10 +1247,6 @@ public abstract class AnnotationDetailEditorPanel
             }
 
             updateRememberLayer();
-
-            if (aTarget != null) {
-                aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel);
-            }
         }
         catch (Exception e) {
             throw new AnnotationException(e);
@@ -1278,20 +1278,16 @@ public abstract class AnnotationDetailEditorPanel
             }
 
             FeatureState featureState = null;
-            if (WebAnnoConst.CHAIN_TYPE.equals(feature.getLayer().getType())) {
+            if (CHAIN_TYPE.equals(feature.getLayer().getType())) {
                 if (state.getSelection().isArc()) {
                     if (feature.getLayer().isLinkedListBehavior()
-                        && WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature
-                        .getName())) {
+                            && COREFERENCE_RELATION_FEATURE.equals(feature.getName())) {
                         featureState = new FeatureState(vid, feature, value);
                     }
                 }
-                else {
-                    if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(feature.getName())) {
-                        featureState = new FeatureState(vid, feature, value);
-                    }
+                else if (COREFERENCE_TYPE_FEATURE.equals(feature.getName())) {
+                    featureState = new FeatureState(vid, feature, value);
                 }
-
             }
             else {
                 featureState = new FeatureState(vid, feature, value);
@@ -1490,7 +1486,7 @@ public abstract class AnnotationDetailEditorPanel
         AnnotatorState state = getModelObject();
         
         // Clear selection and feature states
-        getModelObject().getFeatureStates().clear();
+        state.getFeatureStates().clear();
         state.getSelection().clear();
         if (aTarget != null) {
             aTarget.add(selectedAnnotationInfoPanel, buttonContainer, featureEditorListPanel);
@@ -1791,7 +1787,6 @@ public abstract class AnnotationDetailEditorPanel
         
         AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class).get();
 
-        
         // If "remember layer" is set, the we really just update the selected layer...
         // we do not touch the selected annotation not the annotation detail panel
         if (!state.getPreferences().isRememberLayer()) {
@@ -1816,13 +1811,12 @@ public abstract class AnnotationDetailEditorPanel
             // If no annotation is selected, then prime the annotation detail panel for the new type
             else {
                 state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
-                target.add(selectedAnnotationInfoPanel);
                 reset(target);
             }
         }
     }
 
-    public static class AttachStatus {
+    private static class AttachStatus {
         boolean readOnlyAttached;
         int attachCount;
     }
