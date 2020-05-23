@@ -1214,7 +1214,7 @@ public abstract class AnnotationDetailEditorPanel
                             state.getSelectedAnnotationLayer().getUiName());
                 }
                 catch (NoResultException e) {
-                    clearFeatureEditorModels(aTarget);
+                    reset(aTarget);
                     throw new IllegalStateException(
                         "Unknown layer [" + annoFs.getType().getName() + "]", e);
                 }
@@ -1267,7 +1267,7 @@ public abstract class AnnotationDetailEditorPanel
             AnnotationLayer aLayer, FeatureStructure aFS,
             Map<AnnotationFeature, Serializable> aRemembered)
     {
-        clearFeatureEditorModels(aTarget);
+        getModelObject().getFeatureStates().clear();
 
         AnnotatorState state = AnnotationDetailEditorPanel.this.getModelObject();
 
@@ -1500,12 +1500,29 @@ public abstract class AnnotationDetailEditorPanel
         return returnList;
     }
 
+    /**
+     * Clears the selection in the {@link AnnotatorState} and clears the feature editors. Also
+     * refreshes the selectable layers dropdown.
+     * 
+     * @param aTarget
+     *            (optional) current AJAX target
+     */
     public void reset(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
+        
+        // Clear selection and feature states
+        getModelObject().getFeatureStates().clear();
         state.getSelection().clear();
-        clearFeatureEditorModels(aTarget);
+        if (aTarget != null) {
+            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel);
+        }        
+        
+        // Refresh the selectable layers dropdown
         layerSelectionPanel.refreshSelectableLayers();
+        if (aTarget != null) {
+            aTarget.add(layerSelectionPanel);
+        }
     }
 
     private Set<FeatureStructure> getAttachedLinks(AnnotationFS aFs, AnnotationLayer aLayer)
@@ -1822,7 +1839,7 @@ public abstract class AnnotationDetailEditorPanel
             else {
                 state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
                 target.add(selectedAnnotationInfoPanel);
-                clearFeatureEditorModels(target);
+                reset(target);
             }
         }
     }
