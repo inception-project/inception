@@ -486,8 +486,6 @@ public class CorrectionPage
 
             // Reset the editor
             detailEditor.reset(aTarget);
-            // Populate the layer dropdown box
-            detailEditor.loadFeatureEditorModels(aTarget);
         }
         catch (Exception e) {
             handleException(aTarget, e);

@@ -471,8 +471,6 @@ public class AnnotationPage
             // Reset the editor (we reload the page content below, so in order not to schedule
             // a double-update, we pass null here)
             detailEditor.reset(null);
-            // Populate the layer dropdown box
-            detailEditor.loadFeatureEditorModels(null);
             
             if (aTarget != null) {
                 // Update URL for current document

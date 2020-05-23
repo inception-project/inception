@@ -595,9 +595,6 @@ public class CurationPage
             editor.reset(aTarget);
             init(aTarget, curationContainer);
             
-            // Populate the layer dropdown box
-            editor.loadFeatureEditorModels(aTarget);
-
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
                 WicketUtil.refreshPage(aTarget, getPage());

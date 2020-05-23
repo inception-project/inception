@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -40,13 +41,12 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -74,7 +74,7 @@ public class LayerSelectionPanel
     private final WebMarkupContainer forwardAnnotationGroup;
     private final AnnotationDetailEditorPanel owner;
     
-    private final List<AnnotationLayer> annotationLayers = new ArrayList<>();
+    private final List<AnnotationLayer> selectableLayers = new ArrayList<>();
 
     public LayerSelectionPanel(String aId, IModel<AnnotatorState> aModel,
             AnnotationDetailEditorPanel aOwner)
@@ -152,7 +152,7 @@ public class LayerSelectionPanel
     private DropDownChoice<AnnotationLayer> createDefaultAnnotationLayerSelector()
     {
         DropDownChoice<AnnotationLayer> selector = new BootstrapSelect<>("defaultAnnotationLayer");
-        selector.setChoices(new PropertyModel<>(this, "annotationLayers"));
+        selector.setChoices(LoadableDetachableModel.of(this::getSelectableLayers));
         selector.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         selector.setOutputMarkupId(true);
         selector.add(LambdaAjaxFormComponentUpdatingBehavior.onUpdate("change",
@@ -273,43 +273,35 @@ public class LayerSelectionPanel
                 .collect(Collectors.toList());
     }
 
-    public void updateLayersDropdown()
+    public void refreshSelectableLayers()
     {
         AnnotatorState state = getModelObject();
-        annotationLayers.clear();
-        AnnotationLayer l = null;
+        selectableLayers.clear();
+        
         for (AnnotationLayer layer : state.getAnnotationLayers()) {
-            if (!layer.isEnabled() || layer.isReadonly()
-                || layer.getName().equals(Token.class.getName())) {
+            if (
+                    !layer.isEnabled() || 
+                    layer.isReadonly() ||
+                    layer.getName().equals(Token.class.getName())
+            ) {
                 continue;
             }
-            if (layer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
-                annotationLayers.add(layer);
-                l = layer;
+            
+            if (layer.getType().equals(SPAN_TYPE) || layer.getType().equals(CHAIN_TYPE)) {
+                selectableLayers.add(layer);
             }
-            // manage chain type
-            else if (layer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
-                for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
-                    if (!feature.isEnabled()) {
-                        continue;
-                    }
-                    if (feature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)) {
-                        annotationLayers.add(layer);
-                    }
-                }
-            }
-            // chain
         }
+        
         if (state.getDefaultAnnotationLayer() != null) {
             state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
         }
-        else if (l != null) {
-            state.setSelectedAnnotationLayer(l);
+        else if (!selectableLayers.isEmpty()) {
+            state.setSelectedAnnotationLayer(selectableLayers.get(0));
         }
     }
     
-    public List<AnnotationLayer> getAnnotationLayers()
+    public List<AnnotationLayer> getSelectableLayers()
     {
-        return annotationLayers;
+        return selectableLayers;
     }
 }
