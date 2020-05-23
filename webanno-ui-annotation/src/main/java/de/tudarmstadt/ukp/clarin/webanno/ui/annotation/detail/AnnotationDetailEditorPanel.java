@@ -601,8 +601,7 @@ public abstract class AnnotationDetailEditorPanel
         else {
             // Re-set the selected layer from the drop-down since it might have changed if we
             // have previously created a relation annotation
-            state.setSelectedAnnotationLayer(
-                    annotationFeatureForm.getLayerSelector().getModelObject());
+            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
         }
         
         internalCommitAnnotation(aTarget, aCas);
@@ -652,8 +651,7 @@ public abstract class AnnotationDetailEditorPanel
 
         // Re-set the selected layer from the drop-down since it might have changed if we
         // have previously created a relation annotation
-        state.setSelectedAnnotationLayer(
-                annotationFeatureForm.getLayerSelector().getModelObject());
+        state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
 
         internalCommitAnnotation(aTarget, aCas);
 
@@ -684,8 +682,7 @@ public abstract class AnnotationDetailEditorPanel
             
             // Re-set the selected layer from the drop-down since it might have changed if we
             // have previously created a relation annotation
-            state.setSelectedAnnotationLayer(
-                    annotationFeatureForm.getLayerSelector().getModelObject());
+            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
 
             // If there is already an annotation on the next token and if stacking mode is
             // disabled, then select that annotation and load the feature value of that annotation
@@ -784,13 +781,13 @@ public abstract class AnnotationDetailEditorPanel
         // annotationFeatureForm.updateLayersDropdown();
 
         LOG.trace("actionAnnotate() setting selected layer (not sure why)");
-        if (annotationFeatureForm.getAnnotationLayers().isEmpty()) {
+        if (annotationFeatureForm.getLayerContainer().getAnnotationLayers().isEmpty()) {
             state.setSelectedAnnotationLayer(new AnnotationLayer());
         }
         else if (state.getSelectedAnnotationLayer() == null) {
             if (state.getRememberedSpanLayer() == null) {
-                state.setSelectedAnnotationLayer(annotationFeatureForm.getAnnotationLayers()
-                    .get(0));
+                state.setSelectedAnnotationLayer(
+                        annotationFeatureForm.getLayerContainer().getAnnotationLayers().get(0));
             }
             else {
                 state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
@@ -1187,7 +1184,7 @@ public abstract class AnnotationDetailEditorPanel
             // If we reset the layers while doing a relation, we won't be able to complete the 
             // relation - so in this case, we leave the layers alone...
             if (!selection.isArc()) {
-                annotationFeatureForm.updateLayersDropdown();
+                annotationFeatureForm.getLayerContainer().updateLayersDropdown();
             }
 
             if (selection.getAnnotation().isSet()) {
