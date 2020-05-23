@@ -302,12 +302,23 @@ public class FeatureEditorListPanel
                 // component for the feature lost focus - but updating is for every component
                 // edited LinkFeatureEditors must be excluded because the auto-update will break
                 // the ability to add slots. Adding a slot is NOT an annotation action.
-                if (state.getSelection().getAnnotation().isSet()
-                    && !(editor instanceof LinkFeatureEditor)) {
-                    addAnnotateActionBehavior(editor);
+                if (
+                        state.getSelection().getAnnotation().isSet() && 
+                        !(editor instanceof LinkFeatureEditor)
+                ) {
+                    editor.addFeatureUpdateBehavior();
                 }
                 else if (!(editor instanceof LinkFeatureEditor)) {
-                    addRefreshFeaturePanelBehavior(editor);
+                    editor.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior("change")
+                    {
+                        private static final long serialVersionUID = 5179816588460867471L;
+                    
+                        @Override
+                        protected void onUpdate(AjaxRequestTarget aTarget)
+                        {
+                            owner.refresh(aTarget);
+                        }
+                    });
                 }
     
                 // Add tooltip on label
@@ -347,11 +358,6 @@ public class FeatureEditorListPanel
             });
         }
     
-        private void addAnnotateActionBehavior(final FeatureEditor aFrag)
-        {
-            aFrag.addFeatureUpdateBehavior();
-        }
-        
         @Override
         protected Iterator<IModel<FeatureState>> getItemModels()
         {
@@ -377,7 +383,7 @@ public class FeatureEditorListPanel
             if (state.getConstraints() != null) {
                 // Make sure we update the feature editor panel because due to
                 // constraints the contents may have to be re-rendered
-                owner.refresh(aTarget);
+                aTarget.add(this);
             }
             
             // When updating an annotation in the sidebar, we must not force a

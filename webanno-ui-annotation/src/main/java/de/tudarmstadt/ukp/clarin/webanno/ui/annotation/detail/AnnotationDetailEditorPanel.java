@@ -793,10 +793,7 @@ public abstract class AnnotationDetailEditorPanel
         // onAnnotate callback
         onAnnotate(aTarget);
         
-        // Perform auto-scroll if it is enabled
-        if (state.getPreferences().isScrollPage()) {
-            autoScroll(aCas);
-        }
+        autoScroll(aCas);
 
         getForwardAnnotationTextField().setModelObject(null);
 
@@ -999,10 +996,7 @@ public abstract class AnnotationDetailEditorPanel
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
-        // Auto-scroll
-        if (state.getPreferences().isScrollPage()) {
-            autoScroll(cas);
-        }
+        autoScroll(cas);
 
         state.rememberFeatures();
 
@@ -1158,9 +1152,7 @@ public abstract class AnnotationDetailEditorPanel
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
-        if (state.getPreferences().isScrollPage()) {
-            autoScroll(cas);
-        }
+        autoScroll(cas);
 
         info("The arc has been reversed");
         state.rememberFeatures();
@@ -1182,11 +1174,15 @@ public abstract class AnnotationDetailEditorPanel
     }
 
     /**
-     * Scroll the window of visible annotations.
+     * Scroll the window of visible annotations if auto-scrolling is enabled.
      */
     private void autoScroll(CAS aCas)
     {
-        getModelObject().moveToSelection(aCas);
+        AnnotatorState state = getModelObject();
+        // Perform auto-scroll if it is enabled
+        if (state.getPreferences().isScrollPage()) {
+            getModelObject().moveToSelection(aCas);
+        }
     }
 
     /**
@@ -1794,7 +1790,10 @@ public abstract class AnnotationDetailEditorPanel
     
     public void refresh(AjaxRequestTarget aTarget)
     {
-        aTarget.add(layerSelectionPanel, buttonContainer, selectedAnnotationInfoPanel,
+        aTarget.add(
+                layerSelectionPanel, 
+                buttonContainer, 
+                selectedAnnotationInfoPanel,
                 featureEditorListPanel);
     }
     
