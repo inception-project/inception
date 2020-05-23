@@ -58,7 +58,6 @@ import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
@@ -345,20 +344,6 @@ public abstract class AnnotationDetailEditorPanel
         AnnotationFeatureForm form = new AnnotationFeatureForm(this, "annotationFeatureForm",
                 getModel());
         form.setOutputMarkupId(true);
-        form.add(new AjaxFormValidatingBehavior("submit") {
-            private static final long serialVersionUID = -5642108496844056023L;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget aTarget) {
-                try {
-                    CAS cas = getEditorCas();
-                    actionCreateOrUpdate(aTarget, cas);
-                }
-                catch (Exception e) {
-                    handleException(form, aTarget, e);
-                }
-            }
-        });
         return form;
     }
 
