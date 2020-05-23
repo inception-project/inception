@@ -789,26 +789,21 @@ public abstract class AnnotationDetailEditorPanel
         // If we created a new annotation, then refresh the available annotation layers in the
         // detail panel.
         if (state.getSelection().getAnnotation().isNotSet()) {
-            refresh(state);
+            if (layerSelectionPanel.getSelectableLayers().isEmpty()) {
+                state.setSelectedAnnotationLayer(new AnnotationLayer());
+            }
+            else if (state.getSelectedAnnotationLayer() == null) {
+                if (state.getRememberedSpanLayer() == null) {
+                    state.setSelectedAnnotationLayer(
+                            layerSelectionPanel.getSelectableLayers().get(0));
+                }
+                else {
+                    state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
+                }
+            }
         }
     }
 
-    private void refresh(AnnotatorState state)
-    {
-        if (layerSelectionPanel.getSelectableLayers().isEmpty()) {
-            state.setSelectedAnnotationLayer(new AnnotationLayer());
-        }
-        else if (state.getSelectedAnnotationLayer() == null) {
-            if (state.getRememberedSpanLayer() == null) {
-                state.setSelectedAnnotationLayer(
-                        layerSelectionPanel.getSelectableLayers().get(0));
-            }
-            else {
-                state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
-            }
-        }
-    }
-    
     /**
      * Creates or updates an annotation using the information from the feature editors.
      */
