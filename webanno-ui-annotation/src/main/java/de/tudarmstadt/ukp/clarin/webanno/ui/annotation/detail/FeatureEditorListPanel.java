@@ -66,7 +66,7 @@ public class FeatureEditorListPanel
 {
     private static final long serialVersionUID = 908046548492420524L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationEditorPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FeatureEditorListPanel.class);
     
     public static final String ID_PREFIX = "featureEditorHead";
 
@@ -76,10 +76,10 @@ public class FeatureEditorListPanel
     private final WebMarkupContainer featureEditorContainer;
     private final WebMarkupContainer noFeaturesWarning;
     private final FeatureEditorPanelContent featureEditorPanelContent;
-    private final AnnotationEditorPanel owner;
+    private final AnnotationDetailEditorPanel owner;
 
     public FeatureEditorListPanel(String aId, IModel<AnnotatorState> aModel,
-            AnnotationEditorPanel aOwner)
+            AnnotationDetailEditorPanel aOwner)
     {
         super(aId, aModel);
         

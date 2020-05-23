@@ -27,6 +27,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
@@ -60,15 +62,19 @@ import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
@@ -85,12 +91,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -107,6 +116,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
 
 /**
  * Annotation Detail Editor Panel.
@@ -126,10 +139,24 @@ public abstract class AnnotationDetailEditorPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean UserPreferencesService userPreferencesService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean UserDao userDao;
     
-    private AnnotationPageBase page;
-    private AnnotationEditorPanel annotationFeatureForm;
+    // Top-level containers
+    private final LayerSelectionPanel layerSelectionPanel;
+    private final AnnotationInfoPanel selectedAnnotationInfoPanel;
+    private final FeatureEditorListPanel featureEditorListPanel;
+    private final WebMarkupContainer buttonContainer;
+
+    // Parent
+    private final AnnotationDetailEditorPanel editorPanel;
+
+    // Components
+    private final ConfirmationDialog deleteAnnotationDialog;
+    private final ConfirmationDialog replaceAnnotationDialog;
+    private final AnnotationPageBase page;
 
     private String forwardAnnotationKeySequence = "";
     private TextField<String> forwardAnnotationTextField;
@@ -137,13 +164,34 @@ public abstract class AnnotationDetailEditorPanel
     public AnnotationDetailEditorPanel(String id, AnnotationPageBase aPage,
             IModel<AnnotatorState> aModel)
     {
-        super(id, aModel);
+        super(id, new CompoundPropertyModel<>(aModel));
+        
         page = aPage;
+        editorPanel = this;
+        
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
-        add(annotationFeatureForm = createAnnotationFeatureForm());
+        
         add(createForwardAnnotationKeySequenceCapturingForm());
+        
+        add(deleteAnnotationDialog = new ConfirmationDialog("deleteAnnotationDialog",
+                new StringResourceModel("DeleteDialog.title", this, null)));
+        add(replaceAnnotationDialog = new ConfirmationDialog("replaceAnnotationDialog",
+                new StringResourceModel("ReplaceDialog.title", this, null),
+                new StringResourceModel("ReplaceDialog.text", this, null)));
+        add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel(), this));
+        add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel()));
+        add(featureEditorListPanel = new FeatureEditorListPanel("featureEditorContainer",
+                getModel(), this));
+        
+        buttonContainer = new WebMarkupContainer("buttonContainer");
+        buttonContainer.setOutputMarkupPlaceholderTag(true);
+        buttonContainer.add(createDeleteButton());
+        buttonContainer.add(createReverseButton());
+        buttonContainer.add(createClearButton());
+        add(buttonContainer);
+
     }
     
     private Component createForwardAnnotationKeySequenceCapturingForm()
@@ -223,8 +271,7 @@ public abstract class AnnotationDetailEditorPanel
                     
                     aTarget.add(textfield);
                     
-                    annotationFeatureForm.getFeatureEditorListPanel().getFirstFeatureEditor()
-                            .ifPresent(aTarget::add);
+                    getFeatureEditorListPanel().getFirstFeatureEditor().ifPresent(aTarget::add);
                 }
                 catch (Exception e) {
                     handleException(textfield, aTarget, e);
@@ -338,14 +385,6 @@ public abstract class AnnotationDetailEditorPanel
         }
         // set it to the first in the tag list , when arbitrary key is pressed
         return aBindTags.get(aBindTags.keySet().iterator().next());
-    }
-
-    private AnnotationEditorPanel createAnnotationFeatureForm()
-    {
-        AnnotationEditorPanel form = new AnnotationEditorPanel(this, "annotationFeatureForm",
-                getModel());
-        form.setOutputMarkupId(true);
-        return form;
     }
 
     private void createNewAnnotation(AjaxRequestTarget aTarget, TypeAdapter aAdapter, CAS aCas)
@@ -508,7 +547,7 @@ public abstract class AnnotationDetailEditorPanel
         // to the CAS
         if (state.getSelection().getAnnotation().equals(state.getArmedFeature().vid)) {
             // Make sure that panel is re-rendered when a slot is filled
-            annotationFeatureForm.refresh(aTarget);
+            refresh(aTarget);
                         
             // Loading feature editor values from CAS
             loadFeatureEditorModels(aCas, aTarget);
@@ -726,7 +765,7 @@ public abstract class AnnotationDetailEditorPanel
         
         internalCompleteAnnotation(aTarget, aCas);
         
-        aTarget.add(annotationFeatureForm);
+        refresh(aTarget);
     }
 
     /**
@@ -775,15 +814,15 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private void refresh(AnnotatorState state) 
+    private void refresh(AnnotatorState state)
     {
-        if (annotationFeatureForm.getLayerSelectionPanel().getAnnotationLayers().isEmpty()) {
+        if (getLayerSelectionPanel().getAnnotationLayers().isEmpty()) {
             state.setSelectedAnnotationLayer(new AnnotationLayer());
         }
         else if (state.getSelectedAnnotationLayer() == null) {
             if (state.getRememberedSpanLayer() == null) {
-                state.setSelectedAnnotationLayer(annotationFeatureForm.getLayerSelectionPanel()
-                        .getAnnotationLayers().get(0));
+                state.setSelectedAnnotationLayer(
+                        getLayerSelectionPanel().getAnnotationLayers().get(0));
             }
             else {
                 state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
@@ -817,7 +856,7 @@ public abstract class AnnotationDetailEditorPanel
                 state.getDefaultAnnotationLayer().getUiName());
 
         // #186 - After filling a slot, the annotation detail panel is not updated
-        annotationFeatureForm.refresh(aTarget);
+        refresh(aTarget);
 
         // internalCommitAnnotation is used to update an existing annotation as well as to create
         // a new one. In either case, the selectedAnnotationLayer indicates the layer type! Do not
@@ -916,8 +955,8 @@ public abstract class AnnotationDetailEditorPanel
 
         AnnotatorState state = getModelObject();
 
-        AnnotationFS fs = selectAnnotationByAddr(cas,
-                state.getSelection().getAnnotation().getId());
+        int addr = state.getSelection().getAnnotation().getId();
+        AnnotationFS fs = selectAnnotationByAddr(cas, addr);
         AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
@@ -927,11 +966,32 @@ public abstract class AnnotationDetailEditorPanel
             return;
         }
         
-        if (checkAttachStatus(aTarget, state.getProject(), fs).readOnlyAttached) {
+        AttachStatus attachStatus = checkAttachStatus(aTarget, state.getProject(), fs);
+        if (attachStatus.readOnlyAttached) {
             error("Cannot delete an annotation to which annotations on read-only layers attach.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
+        
+        if (adapter instanceof SpanAdapter && attachStatus.attachCount > 0) {
+            deleteAnnotationDialog.setContentModel(
+                    new StringResourceModel("DeleteDialog.text", this, Model.of(layer))
+                            .setParameters(attachStatus.attachCount));
+            deleteAnnotationDialog.setConfirmAction(_target -> doDelete(_target, layer, addr));
+            deleteAnnotationDialog.show(aTarget);
+            return;
+        }
+        
+        doDelete(aTarget, layer, addr);
+    }
+    
+    private void doDelete(AjaxRequestTarget aTarget, AnnotationLayer layer, int aAddr)
+        throws IOException, AnnotationException
+    {
+        CAS cas = getEditorCas();
+        AnnotatorState state = getModelObject();
+        AnnotationFS fs = selectAnnotationByAddr(cas, aAddr);
+        TypeAdapter adapter = annotationService.getAdapter(layer);
         
         deleteAnnotation(cas, state, fs, layer, adapter);
 
@@ -955,11 +1015,12 @@ public abstract class AnnotationDetailEditorPanel
         state.getSelection().clear();
 
         // after delete will follow annotation
-        aTarget.add(annotationFeatureForm);
+        refresh(aTarget);
 
         onChange(aTarget);
-        onDelete(aTarget, fs);
+        onDelete(aTarget, fs);        
     }
+    
 
     private void deleteAnnotation(CAS aCas, AnnotatorState state, AnnotationFS fs,
             AnnotationLayer layer, TypeAdapter adapter) {
@@ -1120,7 +1181,7 @@ public abstract class AnnotationDetailEditorPanel
     {
         reset(aTarget);
         aTarget.addChildren(getPage(), IFeedback.class);
-        aTarget.add(annotationFeatureForm);
+        refresh(aTarget);
         onChange(aTarget);
     }
 
@@ -1170,7 +1231,7 @@ public abstract class AnnotationDetailEditorPanel
             // If we reset the layers while doing a relation, we won't be able to complete the 
             // relation - so in this case, we leave the layers alone...
             if (!selection.isArc()) {
-                annotationFeatureForm.getLayerSelectionPanel().updateLayersDropdown();
+                getLayerSelectionPanel().updateLayersDropdown();
             }
 
             if (selection.getAnnotation().isSet()) {
@@ -1226,10 +1287,10 @@ public abstract class AnnotationDetailEditorPanel
                 }
             }
 
-            annotationFeatureForm.updateRememberLayer();
+            updateRememberLayer();
 
             if (aTarget != null) {
-                annotationFeatureForm.refresh(aTarget);
+                refresh(aTarget);
             }
         }
         catch (Exception e) {
@@ -1309,6 +1370,9 @@ public abstract class AnnotationDetailEditorPanel
         
         // Only show sidebar if a document is selected
         setVisible(getModelObject() != null && getModelObject().getDocument() != null);
+        
+        // Set read only if annotation is finished or the user is viewing other's work
+        setEnabled(editorPanel.getEditorPage().isEditable());
     }
 
     protected void onChange(AjaxRequestTarget aTarget)
@@ -1357,7 +1421,7 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("clearFeatureEditorModels()");
         getModelObject().getFeatureStates().clear();
         if (aTarget != null) {
-            annotationFeatureForm.refresh(aTarget);
+            refresh(aTarget);
         }
     }
 
@@ -1588,11 +1652,6 @@ public abstract class AnnotationDetailEditorPanel
         return toBeDeleted;
     }
 
-    public AnnotationEditorPanel getAnnotationFeatureForm()
-    {
-        return annotationFeatureForm;
-    }
-
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
             Exception aException)
     {
@@ -1632,7 +1691,183 @@ public abstract class AnnotationDetailEditorPanel
     {
         return page;
     }
+
+    private LambdaAjaxLink createClearButton()
+    {
+        LambdaAjaxLink link = new LambdaAjaxLink("clear", editorPanel::actionClear);
+        link.setOutputMarkupPlaceholderTag(true);
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
+                && editorPanel.getEditorPage().isEditable()));
+        return link;
+    }
+
+    private Component createReverseButton()
+    {
+        LambdaAjaxLink link = new LambdaAjaxLink("reverse", editorPanel::actionReverse);
+        link.setOutputMarkupPlaceholderTag(true);
+        link.add(LambdaBehavior.onConfigure(_this -> {
+            AnnotatorState state = getModelObject();
+            
+            _this.setVisible(state.getSelection().getAnnotation().isSet() 
+                    && state.getSelection().isArc()
+                    && RELATION_TYPE.equals(state.getSelectedAnnotationLayer().getType())
+                    && editorPanel.getEditorPage().isEditable());
+
+            // Avoid reversing in read-only layers
+            _this.setEnabled(state.getSelectedAnnotationLayer() != null
+                    && !state.getSelectedAnnotationLayer().isReadonly());
+        }));
+        return link;
+    }
+
+    private LambdaAjaxLink createDeleteButton()
+    {
+        LambdaAjaxLink link = new LambdaAjaxLink("delete", this::actionDelete);
+        link.setOutputMarkupPlaceholderTag(true);
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
+                && editorPanel.getEditorPage().isEditable()));
+        // Avoid deleting in read-only layers
+        link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
+                && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
+        return link;
+    }
     
+    private void actionReplace(AjaxRequestTarget aTarget) throws IOException
+    {
+        AnnotatorState state = getModelObject();
+
+        AnnotationLayer newLayer = state.getDefaultAnnotationLayer();
+
+        CAS cas = editorPanel.getEditorCas();
+        AnnotationFS fs = selectAnnotationByAddr(cas,
+                state.getSelection().getAnnotation().getId());
+        AnnotationLayer currentLayer = annotationService.findLayer(state.getProject(), fs);
+        
+        if (currentLayer.isReadonly()) {
+            error("Cannot replace an annotation on a read-only layer.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
+        AttachStatus attachStatus = editorPanel.checkAttachStatus(aTarget, state.getProject(), fs);
+        if (attachStatus.readOnlyAttached) {
+            error("Cannot replace an annotation to which annotations on read-only layers attach.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
+        replaceAnnotationDialog
+                .setContentModel(new StringResourceModel("ReplaceDialog.text", this).setParameters(
+                        currentLayer.getUiName(), newLayer.getUiName(), attachStatus.attachCount));
+        replaceAnnotationDialog.setConfirmAction((_target) -> {
+            // The delete action clears the selection, but we need it to create
+            // the new annotation - so we save it.
+            Selection savedSel = editorPanel.getModelObject().getSelection().copy();
+
+            // Delete current annotation
+            editorPanel.actionDelete(_target);
+
+            // Set up the action to create the replacement annotation
+            AnnotationLayer layer = state.getDefaultAnnotationLayer();
+            state.getSelection().set(savedSel);
+            state.getSelection().setAnnotation(VID.NONE_ID);
+            state.setSelectedAnnotationLayer(layer);
+            state.setDefaultAnnotationLayer(layer);
+            editorPanel.loadFeatureEditorModels(_target);
+
+            // Create the replacement annotation
+            editorPanel.actionCreateOrUpdate(_target, editorPanel.getEditorCas());
+            refresh(_target);
+        });
+        replaceAnnotationDialog.setCancelAction((_target) -> {
+            state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
+            refresh(_target);
+        });
+        replaceAnnotationDialog.show(aTarget);
+    }
+
+    void updateRememberLayer()
+    {
+        AnnotatorState state = getModelObject();
+        if (state.getPreferences().isRememberLayer()) {
+            if (state.getDefaultAnnotationLayer() == null) {
+                state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
+            }
+        }
+        else if (!state.getSelection().isArc()) {
+            state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
+        }
+    }
+
+    public LayerSelectionPanel getLayerSelectionPanel()
+    {
+        return layerSelectionPanel;
+    }
+    
+    public FeatureEditorListPanel getFeatureEditorListPanel()
+    {
+        return featureEditorListPanel;
+    }
+    
+    public void refresh(AjaxRequestTarget aTarget)
+    {
+        aTarget.add(layerSelectionPanel, buttonContainer, selectedAnnotationInfoPanel,
+                featureEditorListPanel);
+    }
+    
+    @OnEvent(stop = true)
+    public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
+    {
+        AjaxRequestTarget target = aEvent.getTarget();
+        // Auto-commit if working on existing annotation
+        if (getModelObject().getSelection().getAnnotation().isSet()) {
+            try {
+                editorPanel.actionCreateOrUpdate(target, editorPanel.getEditorCas());
+            }
+            catch (Exception e) {
+                handleException(this, target, e);
+            }
+        }
+    }
+    
+    @OnEvent
+    public void onDefaultLayerChangedEvent(DefaultLayerChangedEvent aEvent)
+    {
+        AnnotatorState state = getModelObject();
+        
+        AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class).get();
+
+        
+        // If "remember layer" is set, the we really just update the selected layer...
+        // we do not touch the selected annotation not the annotation detail panel
+        if (!state.getPreferences().isRememberLayer()) {
+
+            // If "remember layer" is not set, then changing the layer means that we
+            // want to change the type of the currently selected annotation
+            if (!Objects
+                    .equals(state.getSelectedAnnotationLayer(), state.getDefaultAnnotationLayer())
+                    && state.getSelection().getAnnotation().isSet()) {
+                try {
+                    if (state.getSelection().isArc()) {
+                        editorPanel.actionClear(target);
+                    }
+                    else {
+                        actionReplace(target);
+                    }
+                }
+                catch (Exception e) {
+                    handleException(this, target, e);
+                }
+            }
+            // If no annotation is selected, then prime the annotation detail panel for the new type
+            else {
+                state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
+                target.add(selectedAnnotationInfoPanel);
+                editorPanel.clearFeatureEditorModels(target);
+            }
+        }
+    }
+
     public static class AttachStatus {
         boolean readOnlyAttached;
         int attachCount;

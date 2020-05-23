@@ -72,12 +72,12 @@ public class LayerSelectionPanel
     private final Label relationHint;
     private final DropDownChoice<AnnotationLayer> layerSelector;
     private final WebMarkupContainer forwardAnnotationGroup;
-    private final AnnotationEditorPanel owner;
+    private final AnnotationDetailEditorPanel owner;
     
     private final List<AnnotationLayer> annotationLayers = new ArrayList<>();
 
     public LayerSelectionPanel(String aId, IModel<AnnotatorState> aModel,
-            AnnotationEditorPanel aOwner)
+            AnnotationDetailEditorPanel aOwner)
     {
         super(aId, new CompoundPropertyModel<>(aModel));
         
