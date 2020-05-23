@@ -524,13 +524,9 @@ public abstract class AnnotationDetailEditorPanel
 
         internalCompleteAnnotation(aTarget, aCas);
 
-        // If the armed slot is located in the annotation detail editor panel (right side), then 
-        // we need to re-render it and also update the annotator state with the changes that we made
-        // to the CAS
+        // If the armed slot is located in the annotation detail editor panel (right side) update
+        // the annotator state with the changes that we made to the CAS
         if (state.getSelection().getAnnotation().equals(state.getArmedFeature().vid)) {
-            // Make sure that panel is re-rendered when a slot is filled
-            refresh(aTarget);
-                        
             // Loading feature editor values from CAS
             loadFeatureEditorModels(aTarget);
         }
