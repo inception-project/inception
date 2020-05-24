@@ -95,7 +95,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
@@ -875,9 +874,11 @@ public abstract class AnnotationDetailEditorPanel
                     featureState.feature, featureState.value);
         }
         
-        String label = TypeUtil.getUiLabelText(aAdapter, selectFsByAddr(aTargetCas, aTargetFsAddr),
-                features);
-        info(generateMessage(aAdapter.getLayer(), label, false));
+        // Save bandwidth by not sending trivial success messages
+        // String label = TypeUtil.getUiLabelText(aAdapter, selectFsByAddr(aTargetCas,
+        // aTargetFsAddr),
+        // features);
+        // info(generateMessage(aAdapter.getLayer(), label, false));
     }
 
     private AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
@@ -1135,7 +1136,6 @@ public abstract class AnnotationDetailEditorPanel
 
         autoScroll(cas);
 
-        info("The arc has been reversed");
         state.rememberFeatures();
 
         // in case the user re-reverse it
