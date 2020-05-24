@@ -19,11 +19,16 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-public class AnnotatorViewStateChangedEvent {
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+
+/**
+ * Fired by {@link AnnotatorState} when the selection changes.
+ */
+public class SelectionChangedEvent {
 
     private final AjaxRequestTarget requestHandler;
 
-    public AnnotatorViewStateChangedEvent(AjaxRequestTarget aRequestHandler) {
+    public SelectionChangedEvent(AjaxRequestTarget aRequestHandler) {
         requestHandler = aRequestHandler;
     }
 

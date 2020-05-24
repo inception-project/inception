@@ -33,6 +33,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -50,21 +51,29 @@ public class AnnotationInfoPanel extends Panel
 
         setOutputMarkupPlaceholderTag(true);
         
+        // If there are no features, we want this panel to fill its entire parent so the no-data
+        // info is shown prominently
+        add(new CssClassNameAppender(LoadableDetachableModel.of(() ->  {
+            return !isAnnotationSelected() ? "flex-content flex-v-container" : "";
+        })));
+        
         noAnnotationWarning = new WebMarkupContainer("noAnnotationWarning");
         noAnnotationWarning.setOutputMarkupPlaceholderTag(true);
-        noAnnotationWarning
-                .add(visibleWhen(() -> !getModelObject().getSelection().getAnnotation().isSet()));
+        noAnnotationWarning.add(visibleWhen(() -> !isAnnotationSelected()));
         add(noAnnotationWarning);
         
         annotationInfo = new WebMarkupContainer("annotationInfo");
         annotationInfo.setOutputMarkupPlaceholderTag(true);
-        annotationInfo
-                .add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        annotationInfo.add(visibleWhen(this::isAnnotationSelected));
         annotationInfo.add(createSelectedAnnotationTypeLabel());
         annotationInfo.add(createSelectedTextLabel());
         annotationInfo.add(createJumpToAnnotationLink());
         annotationInfo.add(createSelectedAnnotationLayerLabel());
         add(annotationInfo);
+    }
+    
+    private boolean isAnnotationSelected() {
+        return getModelObject().getSelection().getAnnotation().isSet();
     }
     
     public AnnotationPageBase getEditorPage()

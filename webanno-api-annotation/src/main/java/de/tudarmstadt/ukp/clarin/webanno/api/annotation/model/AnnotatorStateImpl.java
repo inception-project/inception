@@ -40,7 +40,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -696,7 +696,7 @@ public class AnnotatorStateImpl
         Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();
-            page.send(page, BREADTH, new AnnotatorViewStateChangedEvent(
+            page.send(page, BREADTH, new AnnotatorViewportChangedEvent(
                     RequestCycle.get().find(AjaxRequestTarget.class).orElse(null)));
         }
     }

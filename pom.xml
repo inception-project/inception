@@ -66,7 +66,7 @@
     <spring.security.version>5.2.3.RELEASE</spring.security.version>
     <wicket.version>8.8.0</wicket.version>
     <wicketstuff.version>8.8.0</wicketstuff.version>
-    <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>8.8.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>3.0.0-M15</wicket-bootstrap.version>
     <!-- 2.x is for Wicket 8; 3.x is for Wicket 9 -->
     <wicket-jquery-selectors.version>2.0.9</wicket-jquery-selectors.version>

@@ -86,7 +86,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.PreferencesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -271,6 +272,14 @@ public class AnnotationPage
     }
 
     /**
+     * Re-render the document when the selection has changed.
+     */
+    @OnEvent
+    public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
+    {
+        actionRefreshDocument(aEvent.getRequestHandler());
+    }
+    /**
      * Re-render the document when an annotation has been created or deleted (assuming that this
      * might have triggered a change in some feature that might be shown on screen.
      * <p>
@@ -322,7 +331,7 @@ public class AnnotationPage
      * Re-render the document when the view has changed, e.g. due to paging
      */
     @OnEvent
-    public void onViewStateChanged(AnnotatorViewStateChangedEvent aEvent)
+    public void onViewStateChanged(AnnotatorViewportChangedEvent aEvent)
     {
         aEvent.getRequestHandler().add(centerArea.get(MID_NUMBER_OF_PAGES));
         
