@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script.ScriptDirectionActionBarItem;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -270,9 +271,33 @@ public class AnnotationPage
     }
 
     /**
+     * Re-render the document when an annotation has been created or deleted (assuming that this
+     * might have triggered a change in some feature that might be shown on screen.
+     * <p>
+     * NOTE: Considering that this is a backend event, we check here if it even applies to the
+     * current view. It might be more efficient to have another event that more closely mimicks
+     * {@code AnnotationDetailEditorPanel.onChange()}.
+     */
+    @OnEvent
+    public void onAnnotationEvent(AnnotationEvent aEvent)
+    {
+        AnnotatorState state = getModelObject();
+        
+        if (
+                !Objects.equals(state.getProject(), aEvent.getProject()) ||
+                !Objects.equals(state.getDocument(), aEvent.getDocument()) ||
+                !Objects.equals(state.getUser().getUsername(), aEvent.getUser())
+        ) {
+            return;
+        }
+        
+        actionRefreshDocument(aEvent.getRequestTarget());
+    }
+
+    /**
      * Re-render the document when a feature value has changed (assuming that this might have 
      * triggered a change in some feature that might be shown on screen.
-     * <b>
+     * <p>
      * NOTE: Considering that this is a backend event, we check here if it even applies to the
      * current view. It might be more efficient to have another event that more closely 
      * mimicks {@code AnnotationDetailEditorPanel.onChange()}.
