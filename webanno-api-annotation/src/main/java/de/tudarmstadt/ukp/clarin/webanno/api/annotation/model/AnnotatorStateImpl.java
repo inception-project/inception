@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.unmodifiableList;
+import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,14 +32,15 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Page;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.request.cycle.RequestCycle;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -313,14 +315,22 @@ public class AnnotatorStateImpl
     public void setVisibleUnits(List<Unit> aUnits, int aTotalUnitCount)
     {
         unitCount = aTotalUnitCount;
+        visibleUnits = aUnits;
         firstVisibleUnitIndex = aUnits.get(0).getIndex();
         lastVisibleUnitIndex = aUnits.get(aUnits.size() - 1).getIndex();
-        focusUnitIndex = firstVisibleUnitIndex;
         
-        windowBeginOffset = aUnits.get(0).getBegin();
-        windowEndOffset = aUnits.get(aUnits.size() - 1).getEnd();
-        
-        visibleUnits = aUnits;
+        int newWindowBeginOffset = aUnits.get(0).getBegin();
+        int newWindowEndOffset = aUnits.get(aUnits.size() - 1).getEnd();
+        if (
+                windowBeginOffset != newWindowEndOffset || 
+                windowEndOffset != newWindowEndOffset ||
+                focusUnitIndex != firstVisibleUnitIndex
+        ) {
+            windowBeginOffset = newWindowBeginOffset;
+            windowEndOffset = newWindowEndOffset;
+            focusUnitIndex = firstVisibleUnitIndex;
+            fireViewStateChanged();
+        }
     }
     
     @Override
@@ -449,9 +459,12 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void setFocusUnitIndex(int aSentenceNumber)
+    public void setFocusUnitIndex(int aUnitIndex)
     {
-        focusUnitIndex = aSentenceNumber;
+        if (focusUnitIndex != aUnitIndex) {
+            focusUnitIndex = aUnitIndex;
+            fireViewStateChanged();
+        }
     }
 
     @Override
@@ -543,6 +556,8 @@ public class AnnotatorStateImpl
         windowBeginOffset = 0;
         windowEndOffset = 0;
         annotationDocumentTimestamp = null;
+        
+        fireViewStateChanged();
     }
 
     private FeatureState armedFeatureState;
@@ -573,11 +588,10 @@ public class AnnotatorStateImpl
     private void rerenderSlots() {
         // Re-render all slots to de-select all slots that are not armed anymore
         Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
-        if (handler.isPresent()) {
+        if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();
-            page.send(page, Broadcast.BREADTH,
-                    new RenderSlotsEvent(
-                            RequestCycle.get().find(IPartialPageRequestHandler.class).get()));
+            page.send(page, BREADTH, new RenderSlotsEvent(
+                    RequestCycle.get().find(IPartialPageRequestHandler.class).orElse(null)));
         }
     } 
 
@@ -648,7 +662,10 @@ public class AnnotatorStateImpl
     @Override
     public void setPagingStrategy(PagingStrategy aPagingStrategy)
     {
-        pagingStrategy = aPagingStrategy;
+        if (pagingStrategy != aPagingStrategy) {
+            pagingStrategy = aPagingStrategy;
+            fireViewStateChanged();
+        }
     }
 
     @Override
@@ -672,5 +689,15 @@ public class AnnotatorStateImpl
     public <M extends Serializable> void setMetaData(AnnotatorStateMetaDataKey<M> aKey, M aMetadata)
     {
         metaData.put(aKey, aMetadata);
+    }
+
+    private void fireViewStateChanged()
+    {
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
+            Page page = (Page) handler.get().getPage();
+            page.send(page, BREADTH, new AnnotatorViewStateChangedEvent(
+                    RequestCycle.get().find(AjaxRequestTarget.class).orElse(null)));
+        }
     }
 }
