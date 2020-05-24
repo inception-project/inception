@@ -51,6 +51,11 @@ public class Selection
     // selected span text
     private String text;
     
+    public Selection()
+    {
+        // Nothing to do
+    }
+    
     public void selectArc(VID aVid, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
         selectedAnnotationId = aVid;
