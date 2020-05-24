@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
@@ -33,10 +36,8 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -73,6 +74,17 @@ public class ChainRenderer
     public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
             int aPageBegin, int aPageEnd)
     {
+        ChainAdapter typeAdapter = getTypeAdapter();
+        Type chainType;
+        try {
+            chainType = getType(aCas, typeAdapter.getChainTypeName());
+        }
+        catch (IllegalArgumentException e) {
+            // If the type is not defined, then we do not need to try and render it because the
+            // CAS does not contain any instances of it
+            return;
+        }
+        
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
                 .filter(f -> f.isVisible() && f.isEnabled())
                 .collect(Collectors.toList());
@@ -82,18 +94,16 @@ public class ChainRenderer
         AnnotationFeature spanLabelFeature = null;
         AnnotationFeature arcLabelFeature = null;
         for (AnnotationFeature f : visibleFeatures) {
-            if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(f.getName())) {
+            if (COREFERENCE_TYPE_FEATURE.equals(f.getName())) {
                 spanLabelFeature = f;
             }
-            if (WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
+            if (COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
                 arcLabelFeature = f;
             }
         }
         // At this point arc and span feature labels must have been found! If not, the later code
         // will crash.
-
-        ChainAdapter typeAdapter = getTypeAdapter();
-        Type chainType = CasUtil.getType(aCas, typeAdapter.getChainTypeName());
+        
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
         // Sorted index mapping annotations to the corresponding rendered spans
