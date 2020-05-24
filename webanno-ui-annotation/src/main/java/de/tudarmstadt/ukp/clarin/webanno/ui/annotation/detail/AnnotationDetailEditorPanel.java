@@ -510,9 +510,9 @@ public abstract class AnnotationDetailEditorPanel
         LinkWithRoleModel link = links.get(state.getArmedSlot());
         link.targetAddr = slotFillerAddr;
         link.label = selectAnnotationByAddr(aCas, slotFillerAddr).getCoveredText();
-        commitFeatureStatesToFeatureStructure(state.getDocument(), state.getUser().getUsername(),
-                aCas, state.getArmedFeature().vid.getId(), slotHostAdapter,
-                asList(state.getArmedFeature()));
+        commitFeatureStatesToFeatureStructure(aTarget, state.getDocument(),
+                state.getUser().getUsername(), aCas, state.getArmedFeature().vid.getId(),
+                slotHostAdapter, asList(state.getArmedFeature()));
         
         // NOTE: we do NOT delegate to actionCreateOrUpdate here because most of the things
         // that actionCreateOrUpdate does are not required for slot filling and we also because
@@ -852,26 +852,34 @@ public abstract class AnnotationDetailEditorPanel
         // Update the features of the selected annotation from the values presently in the
         // feature editors
         List<FeatureState> featureStates = state.getFeatureStates();
-        commitFeatureStatesToFeatureStructure(state.getDocument(), state.getUser().getUsername(),
-                aCas, state.getSelection().getAnnotation().getId(), adapter, featureStates);
+        commitFeatureStatesToFeatureStructure(aTarget, state.getDocument(),
+                state.getUser().getUsername(), aCas, state.getSelection().getAnnotation().getId(),
+                adapter, featureStates);
     }
     
     /**
      * Commits the values from the given feature states into the annotation with the given
      * target FS address in the given target CAS using the provided type adapter.
      */
-    private void commitFeatureStatesToFeatureStructure(SourceDocument aDocment, String aUsername,
-            CAS aTargetCas, int aTargetFsAddr, TypeAdapter aAdapter,
-            List<FeatureState> aFeatureStates)
+    private void commitFeatureStatesToFeatureStructure(AjaxRequestTarget aTarget,
+            SourceDocument aDocment, String aUsername, CAS aTargetCas, int aTargetFsAddr,
+            TypeAdapter aAdapter, List<FeatureState> aFeatureStates)
     {
-        List<AnnotationFeature> features = new ArrayList<>();
+        // List<AnnotationFeature> features = new ArrayList<>();
         for (FeatureState featureState : aFeatureStates) {
-            features.add(featureState.feature);
+            try {
+                // features.add(featureState.feature);
             
-            LOG.trace("Committing feature states to CAS: {} = {}", featureState.feature.getUiName(),
-                    featureState.value);
-            aAdapter.setFeatureValue(aDocment, aUsername, aTargetCas, aTargetFsAddr,
-                    featureState.feature, featureState.value);
+                LOG.trace("Committing feature states to CAS: {} = {}", 
+                        featureState.feature.getUiName(), featureState.value);
+                aAdapter.setFeatureValue(aDocment, aUsername, aTargetCas, aTargetFsAddr,
+                        featureState.feature, featureState.value);
+            }
+            catch (Exception e) {
+                error("Cannot set feature [" + featureState.feature.getUiName() + "]: "
+                        + e.getMessage());
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
         }
         
         // Save bandwidth by not sending trivial success messages
