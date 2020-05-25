@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.NOT_STARTED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.RUNNING;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.File;
 import java.io.IOException;
@@ -249,6 +251,8 @@ public class ProjectExportServiceImpl
     public Project importProject(ProjectImportRequest aRequest, ZipFile aZip)
         throws ProjectExportException
     {
+        long start = currentTimeMillis();
+        
         Deque<ProjectExporter> deque = new LinkedList<>(exporters);
         Set<Class<? extends ProjectExporter>> initsSeen = new HashSet<>();
         Set<ProjectExporter> initsDeferred = SetUtils.newIdentityHashSet();
@@ -300,6 +304,9 @@ public class ProjectExportServiceImpl
         catch (Exception e) {
             throw new ProjectExportException("Project import failed", e);
         }
+        
+        log.info("Imported project [{}]({}) ({})", project.getName(), project.getId(),
+                formatDurationWords(currentTimeMillis() - start, true, true));
         
         return project;
     }

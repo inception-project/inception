@@ -41,7 +41,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
-import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -51,7 +50,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
@@ -97,8 +95,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.AttachStatus;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
+// The name "AnnotationFeatureForm" is historic. This class should be refactored into a Panel
 public class AnnotationFeatureForm
-    extends Form<AnnotatorState>
+    extends WebMarkupContainer
 {
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationFeatureForm.class);
     
@@ -142,7 +141,6 @@ public class AnnotationFeatureForm
         IModel<AnnotatorState> aState)
     {
         super(id, new CompoundPropertyModel<>(aState));
-        setDefaultButton(null);
         editorPanel = aEditorPanel;
 
         add(deleteAnnotationDialog = createDeleteDialog());
@@ -216,13 +214,21 @@ public class AnnotationFeatureForm
         buttonContainer.add(createClearButton());
         add(buttonContainer);
     }
+    
+    public AnnotatorState getModelObject() {
+        return (AnnotatorState) getDefaultModelObject();
+    }
+
+    @SuppressWarnings("unchecked")
+    public IModel<AnnotatorState> getModel() {
+        return (IModel<AnnotatorState>) getDefaultModel();
+    }
 
     private TextField<String> createFocusResetHelper()
     {
         TextField<String> textfield = new TextField<>("focusResetHelper");
         textfield.setModel(Model.of());
         textfield.setOutputMarkupId(true);
-        textfield.add(new AjaxPreventSubmitBehavior());
         textfield.add(new AjaxFormComponentUpdatingBehavior("focus")
         {
             private static final long serialVersionUID = -3030093250599939537L;
