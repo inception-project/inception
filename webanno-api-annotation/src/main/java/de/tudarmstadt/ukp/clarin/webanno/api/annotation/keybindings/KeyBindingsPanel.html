@@ -19,13 +19,13 @@
 <html lang="en" xmlns:wicket="http://www.w3.org/1999/xhtml">
 <body>
 <wicket:panel>
-  <a wicket:id="toggleKeyBindingHints" class="small">
+  <a wicket:id="toggleKeyBindingHints" class="small" tabindex="-1">
     <span wicket:id="showHideMessage"/>
   </a>
   <div wicket:id="keyBindingsContainer">
     <div wicket:id="keyBindings">
       <span wicket:id="keyCombo" class="pull-right"/>
-      <a wicket:id="shortcut"><span wicket:id="value"/></a>
+      <a tabindex="-1" wicket:id="shortcut"><span wicket:id="value"/></a>
     </div>
   </div>
 </wicket:panel>
