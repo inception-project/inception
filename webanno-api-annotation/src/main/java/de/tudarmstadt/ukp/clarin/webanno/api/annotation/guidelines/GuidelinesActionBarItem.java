@@ -34,7 +34,7 @@ public class GuidelinesActionBarItem
     private GuidelinesDialog guidelinesDialog;
     
     private @SpringBean ProjectService projectService;
-
+    
     public GuidelinesActionBarItem(String aId, AnnotationPageBase aPage)
     {
         super(aId);
