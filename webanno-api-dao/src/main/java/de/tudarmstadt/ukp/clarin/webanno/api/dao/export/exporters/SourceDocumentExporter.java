@@ -17,24 +17,38 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
+import static java.lang.System.currentTimeMillis;
+import static java.nio.file.Files.createDirectory;
+import static java.util.function.Function.identity;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -50,12 +64,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class SourceDocumentExporter
     implements ProjectExporter
 {
-    private static final String SOURCE = "source";
-    private static final String SOURCE_FOLDER = "/" + SOURCE;
+    private static final String SOURCE_FOLDER = "source";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired DocumentService documentService;
+    private @Autowired RepositoryProperties repositoryProperties;
 
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
@@ -93,7 +107,7 @@ public class SourceDocumentExporter
         throws IOException, ProjectExportException
     {
         Project project = aRequest.getProject();
-        File sourceDocumentDir = new File(aStage + SOURCE_FOLDER);
+        File sourceDocumentDir = new File(aStage, SOURCE_FOLDER);
         FileUtils.forceMkdir(sourceDocumentDir);
         // Get all the source documents from the project
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
@@ -125,8 +139,14 @@ public class SourceDocumentExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
+        long start = currentTimeMillis();
+
         importSourceDocuments(aExProject, aProject);
         importSourceDocumentContents(aZip, aProject);
+
+        log.info("Imported [{}] source documents for project [{}] ({})",
+                aExProject.getSourceDocuments().size(), aExProject.getName(),
+                DurationFormatUtils.formatDurationWords(currentTimeMillis() - start, true, true));
     }
     
     /**
@@ -172,25 +192,43 @@ public class SourceDocumentExporter
     @SuppressWarnings("rawtypes")
     private void importSourceDocumentContents(ZipFile zip, Project aProject) throws IOException
     {
+        // Query once for all the documents to avoid hitting the DB in the loop below
+        Map<String, SourceDocument> docs = documentService.listSourceDocuments(aProject).stream()
+                .collect(Collectors.toMap(SourceDocument::getName, identity()));
+        
+        // Create the folder structure for the project. This saves time over waiting for the
+        // mkdirs in FastIOUtils.copy to kick in.
+        Path docRoot = Paths.get(repositoryProperties.getPath().getAbsolutePath(), PROJECT_FOLDER, 
+                aProject.getId().toString(), DOCUMENT_FOLDER);
+        Files.createDirectories(docRoot);
+        for (SourceDocument doc : docs.values()) {
+            Path docFolder = docRoot.resolve(doc.getId().toString());
+            createDirectory(docFolder);
+            Path sourceDocFolder = docFolder.resolve(SOURCE_FOLDER);
+            createDirectory(sourceDocFolder);
+        }
+        
+        int n = 0;
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ProjectExporter.normalizeEntryName(entry);
 
-            if (entryName.startsWith(SOURCE)) {
+            if (entryName.startsWith(SOURCE_FOLDER)) {
                 String fileName = FilenameUtils.getName(entryName);
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
-                SourceDocument sourceDocument = documentService.getSourceDocument(aProject,
-                        fileName);
+                
+                SourceDocument sourceDocument = docs.get(fileName);
                 File sourceFilePath = documentService.getSourceDocumentFile(sourceDocument);
-                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), sourceFilePath);
+                copy(zip.getInputStream(entry), sourceFilePath);
 
-                log.info("Imported content for source document [" + sourceDocument.getId()
-                        + "] in project [" + aProject.getName() + "] with id [" + aProject.getId()
-                        + "]");
+                n++;
+                log.info("Imported content for source document {}/{}: [{}]({}) in project [{}]({})",
+                        n, docs.size(), sourceDocument.getName(), sourceDocument.getId(),
+                        aProject.getName(), aProject.getId());
             }
         }
     }

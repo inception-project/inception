@@ -26,6 +26,7 @@ import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,14 +43,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Deque;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -84,7 +82,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -95,7 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(ProjectService.SERVICE_NAME)
@@ -645,6 +642,8 @@ public class ProjectServiceImpl
     public void removeProject(Project aProject)
         throws IOException
     {
+        long start = System.currentTimeMillis();
+        
         // remove metadata from DB
         Project project = aProject;
         if (!entityManager.contains(project)) {
@@ -663,7 +662,7 @@ public class ProjectServiceImpl
         String path = repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
                 + aProject.getId();
         try {
-            FileUtils.deleteDirectory(new File(path));
+            FastIOUtils.delete(new File(path));
         }
         catch (FileNotFoundException e) {
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
@@ -674,7 +673,8 @@ public class ProjectServiceImpl
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aProject.getId()))) {
-            log.info("Removed project [{}]({})", aProject.getName(), aProject.getId());
+            log.info("Removed project [{}]({}) ({})", aProject.getName(), aProject.getId(),
+                    formatDurationWords(System.currentTimeMillis() - start, true, true));
         }
     }
 
@@ -767,143 +767,6 @@ public class ProjectServiceImpl
             }
         }
         return allowedProject;
-    }
-    
-    @Override
-    @Transactional
-    public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
-            Project aProject)
-        throws Exception
-    {
-        // create project log
-        createProjectLog(aZip, aProject);
-        
-        // create project guideline
-        createProjectGuideline(aZip, aProject);
-        
-        // create project META-INF
-        createProjectMetaInf(aZip, aProject);
-
-        // Import project permissions
-        createProjectPermission(aExportedProject, aProject);
-    }
-
-    /**
-     * copy project log files from the exported project
-     * @param zip the ZIP file.
-     * @param aProject the project.
-     * @throws IOException if an I/O error occurs.
-     */
-    @SuppressWarnings("rawtypes")
-    @Deprecated
-    private void createProjectLog(ZipFile zip, Project aProject)
-        throws IOException
-    {
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
-            
-            if (entryName.startsWith(LOG_FOLDER + "/")) {
-                FileUtils.copyInputStreamToFile(zip.getInputStream(entry),
-                        getProjectLogFile(aProject));
-                log.info("Imported log for project [" + aProject.getName() + "] with id ["
-                        + aProject.getId() + "]");
-            }
-        }
-    }
-    
-    /**
-     * copy guidelines from the exported project
-     * @param zip the ZIP file.
-     * @param aProject the project.
-     * @throws IOException if an I/O error occurs.
-     */
-    @Deprecated
-    @SuppressWarnings("rawtypes")
-    private void createProjectGuideline(ZipFile zip, Project aProject)
-        throws IOException
-    {
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
-            
-            if (entryName.startsWith(GUIDELINES_FOLDER + "/")) {
-                String fileName = FilenameUtils.getName(entry.getName());
-                if (fileName.trim().isEmpty()) {
-                    continue;
-                }
-                File guidelineDir = getGuidelinesFolder(aProject);
-                FileUtils.forceMkdir(guidelineDir);
-                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(guidelineDir,
-                        fileName));
-                
-                log.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
-                        + "] with id [" + aProject.getId() + "]");
-            }
-        }
-    }
-    
-    /**
-     * copy Project META_INF from the exported project
-     * @param zip the ZIP file.
-     * @param aProject the project.
-     * @throws IOException if an I/O error occurs.
-     */
-    @Deprecated
-    @SuppressWarnings("rawtypes")
-    private void createProjectMetaInf(ZipFile zip, Project aProject)
-        throws IOException
-    {
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
-
-            if (entryName.startsWith(META_INF_FOLDER + "/")) {
-                File metaInfDir = new File(getMetaInfFolder(aProject),
-                        FilenameUtils.getPath(entry.getName().replace(META_INF_FOLDER + "/", "")));
-                // where the file reside in the META-INF/... directory
-                FileUtils.forceMkdir(metaInfDir);
-                FileUtils.copyInputStreamToFile(zip.getInputStream(entry), new File(metaInfDir,
-                        FilenameUtils.getName(entry.getName())));
-                
-                log.info("Imported META-INF for project [" + aProject.getName() + "] with id ["
-                        + aProject.getId() + "]");
-            }
-        }
-    }
-
-    /**
-     * Create {@link ProjectPermission} from the exported
-     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission}
-     * 
-     * @param aImportedProjectSetting
-     *            the imported project.
-     * @param aImportedProject
-     *            the project.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    @Deprecated
-    private void createProjectPermission(
-            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aImportedProjectSetting,
-            Project aImportedProject)
-        throws IOException
-    {
-        for (ExportedProjectPermission importedPermission : aImportedProjectSetting
-                .getProjectPermissions()) {
-            ProjectPermission permission = new ProjectPermission();
-            permission.setLevel(importedPermission.getLevel());
-            permission.setProject(aImportedProject);
-            permission.setUser(importedPermission.getUser());
-            createProjectPermission(permission);
-        }
     }
     
     @Override
