@@ -14,11 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-= Monitoring the INCEpTION instance
+= Monitoring the {product-name} instance
 
 == Available metrics
 
-We expose some metrics of the running INCEpTION instance via JMX. These are currently
+We expose some metrics of the running {product-name} instance via JMX. These are currently
 
 * the number of active as well as enabled users
 * the overall number of documents
@@ -36,7 +36,7 @@ To export the metrics so they can be queried by the monitoring solution https://
 you can e.g. use https://github.com/prometheus/jmx_exporter[the JMX exporter] as a java agent.
 
 The JMX exporter can be run as a .jar file that should be placed together with its `config.yml` 
-file next to the INCEpTION .jar file. An example `config.yml` file that exposes metrics from 
+file next to the {product-name} .jar file. An example `config.yml` file that exposes metrics from 
 INCEpTION but not webanno brat metrics (metrics associated with brat rendering) and conforms JMX metric 
 names to https://prometheus.io/docs/practices/naming/[Prometheus Naming conventions] is:
 
@@ -84,6 +84,6 @@ and others.
 
 == Scheduling
 The default schedule for pulling of Prometheus is 10s, however it is necessary to make this a longer 
-interval to avoid overwhelming your INCEpTION instance with requests for metrics. 
+interval to avoid overwhelming your {product-name} instance with requests for metrics. 
 You will need to do this in your Prometheus config file.
 
