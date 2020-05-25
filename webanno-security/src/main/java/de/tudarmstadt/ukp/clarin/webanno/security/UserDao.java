@@ -117,5 +117,5 @@ public interface UserDao
     /**
      * Retrieve the number of enabled users
      */
-    long getNumOfEnabledUsers();
+    long countEnabledUsers();
 }

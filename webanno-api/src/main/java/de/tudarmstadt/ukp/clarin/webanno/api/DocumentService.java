@@ -626,11 +626,11 @@ public interface DocumentService
     /**
      * Retrieve overall number of source documents
      */
-    long getNumOfSourceDocuments();
+    long countSourceDocuments();
     
     /**
      * Retrieve overall number of annotation documents
      */
-    long getNumOfAnnotationDocuments();
+    long countAnnotationDocuments();
     
 }

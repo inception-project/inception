@@ -43,14 +43,14 @@ public class DocumentsMetricsImpl
     @ManagedAttribute
     public long getDocumentsTotal()
     {
-        return documentService.getNumOfSourceDocuments();
+        return documentService.countSourceDocuments();
     }
 
     @Override
     @ManagedAttribute
     public long getAnnotationDocumentsTotal()
     {
-        return documentService.getNumOfAnnotationDocuments();
+        return documentService.countAnnotationDocuments();
     }
 
 }

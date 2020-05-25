@@ -1014,7 +1014,7 @@ public class DocumentServiceImpl
     }
 
     @Override
-    public long getNumOfSourceDocuments()
+    public long countSourceDocuments()
     {
         String query = String.join("\n",
                 "SELECT COUNT(*)",
@@ -1023,7 +1023,7 @@ public class DocumentServiceImpl
     }
 
     @Override
-    public long getNumOfAnnotationDocuments()
+    public long countAnnotationDocuments()
     {
         String query = String.join("\n",
                 "SELECT COUNT(*)",

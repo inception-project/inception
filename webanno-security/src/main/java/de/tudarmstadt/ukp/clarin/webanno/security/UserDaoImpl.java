@@ -224,7 +224,7 @@ public class UserDaoImpl
     }
 
     @Override
-    public long getNumOfEnabledUsers()
+    public long countEnabledUsers()
     {
         String query = String.join("\n",
                 "SELECT COUNT(*)",

@@ -26,5 +26,5 @@ public interface UserMetrics
     /**
      * Retrieve the total number of enabled users
      */
-    public long getEnbabledUsersTotal();
+    public long getEnabledUsersTotal();
 }

@@ -50,8 +50,8 @@ public class UserMetricsImpl
 
     @Override
     @ManagedAttribute
-    public long getEnbabledUsersTotal()
+    public long getEnabledUsersTotal()
     {
-        return userRepository.getNumOfEnabledUsers();
+        return userRepository.countEnabledUsers();
     }
 }
