@@ -43,7 +43,7 @@ public class RecommendationMetricsImpl
     @ManagedAttribute
     public long getEnabledRecommendersTotal()
     {
-        return recService.getNumOfEnabledRecommenders();
+        return recService.countEnabledRecommenders();
     }
     
 }

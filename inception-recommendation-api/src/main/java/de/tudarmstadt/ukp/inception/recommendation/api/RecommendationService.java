@@ -164,5 +164,5 @@ public interface RecommendationService
     /**
      * Retrieve the total amount of enabled recommenders
      */
-    long getNumOfEnabledRecommenders();
+    long countEnabledRecommenders();
 }

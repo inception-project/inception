@@ -1635,7 +1635,7 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public long getNumOfEnabledRecommenders()
+    public long countEnabledRecommenders()
     {
         String query = String.join("\n",
                 "SELECT COUNT(*)",
