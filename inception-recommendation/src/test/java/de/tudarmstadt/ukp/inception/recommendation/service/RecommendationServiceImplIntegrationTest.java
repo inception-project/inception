@@ -132,6 +132,23 @@ public class RecommendationServiceImplIntegrationTest
     }
     
     @Test
+    public void getNumOfEnabledRecommenders_WithOneEnabledRecommender() {
+        sut.createOrUpdateRecommender(rec);
+        
+        long numOfRecommenders = sut.countEnabledRecommenders();
+        assertThat(numOfRecommenders).isEqualTo(1);
+    }
+    
+    @Test
+    public void getNumOfEnabledRecommenders_WithNoEnabledRecommender() {
+        rec.setEnabled(false);
+        testEntityManager.persist(rec);
+        
+        long numOfRecommenders = sut.countEnabledRecommenders();
+        assertThat(numOfRecommenders).isEqualTo(0);
+    }
+    
+    @Test
     public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
         Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());

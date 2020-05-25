@@ -46,6 +46,8 @@ include::{include-dir}installation_ssl_nginx_reverse_proxy.adoc[leveloffset=+2]
 
 include::{include-dir}installation_docker.adoc[leveloffset=+1]
 
+include::{include-dir}metrics_monitoring.adoc[leveloffset=+1]
+
 <<<
 
 
