@@ -43,20 +43,19 @@ names to https://prometheus.io/docs/practices/naming/[Prometheus Naming conventi
 ....
 ssl: false
 whitelistObjectNames: ["de.tudarmstadt.ukp.inception.recommendation.metrics:*", 
-"de.tudarmstadt.ukp.clarin.webanno.api.dao.metrics:*", "de.tudarmstadt.ukp.clarin.webanno.security.metrics:*",
-"de.tudarmstadt.ukp.clarin.webanno.security.metrics:*"]
+"de.tudarmstadt.ukp.clarin.webanno.api.dao.metrics:*", "de.tudarmstadt.ukp.clarin.webanno.security.metrics:*"]
 blacklistObjectNames: ["de.tudarmstadt.ukp.clarin.webanno.brat.metrics:*"]
 lowercaseOutputName: true
 lowercaseOutputLabelNames: true
 rules:
-  - pattern: 'de.tudarmstadt.ukp.inception.recommendation.metrics<name=RecommendationMetricsImpl, type=RecommendationMetricsImpl><>(\w+): (\d+)'
+  - pattern: 'de.tudarmstadt.ukp.inception.recommendation.metrics<name=recommendationMetricsImpl, type=RecommendationMetricsImpl><>(\w+): (\d+)'
     name: inception_$1
     value: $2
     help: "Inception metric $1"
     type: GAUGE
     attrNameSnakeCase: true
   
-  - pattern: 'de.tudarmstadt.ukp.clarin.webanno.(\w+).metrics<name=(\w+), type=(\w+)><>(\w+): (\d+)'
+  - pattern: 'de.tudarmstadt.ukp.clarin.webanno.([\.\w]+).metrics<name=(\w+), type=(\w+)><>(\w+): (\d+)'
     name: webanno_$4
     value: $5
     help: "Inception metric $4"
