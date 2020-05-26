@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.AnnotatorWorkflowActionBarItemGroup;
 
 @Order(1000)
 @Component

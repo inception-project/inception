@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotatorWorkflowActionBarItemGroup;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.AnnotatorWorkflowActionBarItemGroup;
 
 public class CorrectionWorkflowActionBarItemGroup
     extends AnnotatorWorkflowActionBarItemGroup
