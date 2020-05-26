@@ -84,6 +84,11 @@ public class AnnotatorWorkflowActionBarItemGroup
         resetDocumentLink.add(enabledWhen(() -> page.isEditable()));
     }
     
+    protected AnnotationPageBase getAnnotationPage()
+    {
+        return page;
+    }
+    
     public String getStateClass()
     {
         AnnotatorState state = page.getModelObject();
