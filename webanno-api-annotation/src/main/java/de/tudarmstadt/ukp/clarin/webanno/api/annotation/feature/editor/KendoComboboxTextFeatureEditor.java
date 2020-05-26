@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
@@ -116,6 +117,7 @@ public class KendoComboboxTextFeatureEditor
         }
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     protected AbstractTextComponent createInputField()
     {
@@ -127,6 +129,14 @@ public class KendoComboboxTextFeatureEditor
             protected IJQueryTemplate newTemplate()
             {
                 return KendoChoiceDescriptionScriptReference.templateReorderable();
+            }
+            
+            @Override
+            public void onConfigure(JQueryBehavior aBehavior)
+            {
+                super.onConfigure(aBehavior);
+                aBehavior.setOption("animation", false);
+                aBehavior.setOption("delay", 0);
             }
             
             @Override

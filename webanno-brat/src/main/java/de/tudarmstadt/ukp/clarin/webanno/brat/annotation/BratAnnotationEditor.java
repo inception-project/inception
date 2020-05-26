@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter.decodeTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
@@ -336,7 +337,7 @@ public class BratAnnotationEditor
             return response;
         }
 
-        long layerId = Long.parseLong(layerParam.beforeFirst('_'));
+        long layerId = decodeTypeName(layerParam.toString());
         try {
             AnnotationLayer layer = annotationService.getLayer(layerId);
             AnnotationFeature feature = annotationService.getFeature(databaseParam.toString(),
@@ -378,8 +379,9 @@ public class BratAnnotationEditor
         throws IOException
     {
         StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+        
         if (!layerParam.isEmpty()) {
-            long layerId = Long.parseLong(layerParam.beforeFirst('_'));
+            long layerId = decodeTypeName(layerParam.toString());
             AnnotationLayer layer = annotationService.getLayer(layerId);
             if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
                 // parse the action

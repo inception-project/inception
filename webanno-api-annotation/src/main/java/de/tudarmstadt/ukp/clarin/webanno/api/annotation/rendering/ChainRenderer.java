@@ -135,7 +135,7 @@ public class ChainRenderer
                     continue; // Go to next link
                 }
 
-                String bratTypeName = typeAdapter.getUiTypeName();
+                String bratTypeName = typeAdapter.getEncodedTypeName();
 
                 // Render span
                 {

@@ -91,7 +91,7 @@ public class SpanRenderer
 
         List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (AnnotationFS fs : annotations) {
-            String uiTypeName = typeAdapter.getUiTypeName();
+            String uiTypeName = typeAdapter.getEncodedTypeName();
             Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs, aFeatures);
             Map<String, String> hoverFeatures = renderHoverFeatureValues(typeAdapter, fs,
                     aFeatures);

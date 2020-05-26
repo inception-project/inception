@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static java.lang.Long.parseLong;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -197,9 +200,24 @@ public interface TypeAdapter
      */
     void silenceEvents();
     
-    default String getUiTypeName()
+    /**
+     * @return the encoded type name sent to the browser.
+     * @see #decodeTypeName(String)
+     */
+    default String getEncodedTypeName()
     {
-        return getTypeId() + "_" + getAnnotationTypeName();
+        return getTypeId() + "_" + getLayer().getUiName();
+    }
+
+    /**
+     * @param aType
+     *            a encoded type name from {@link #getEncodedTypeName()}
+     * @return the layer ID.
+     * @see #getEncodedTypeName()
+     */
+    static long decodeTypeName(String aType)
+    {
+        return parseLong(substringBefore(aType, "_"));
     }
     
     <T> Optional<T> getTraits(Class<T> aInterface);

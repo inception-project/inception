@@ -129,7 +129,7 @@ public class RelationRenderer
                 governorFs = fs.getFeatureValue(governorFeature);
             }
 
-            String bratTypeName = typeAdapter.getUiTypeName();
+            String bratTypeName = typeAdapter.getEncodedTypeName();
             Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs,
                     visibleFeatures);
             
