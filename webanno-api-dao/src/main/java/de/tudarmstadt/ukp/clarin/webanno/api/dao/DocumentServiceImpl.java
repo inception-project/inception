@@ -61,6 +61,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
@@ -79,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -89,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(DocumentService.SERVICE_NAME)
@@ -492,7 +495,7 @@ public class DocumentServiceImpl
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
         }
-
+        
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aDocument.getProject().getId()))) {
             Project project = aDocument.getProject();
@@ -500,7 +503,7 @@ public class DocumentServiceImpl
                     aDocument.getId(), project.getName(), project.getId());
         }
     }
-
+    
     @Override
     @Transactional
     public void removeAnnotationDocument(AnnotationDocument aAnnotationDocument)
@@ -921,7 +924,6 @@ public class DocumentServiceImpl
     @Override
     public int numberOfExpectedAnnotationDocuments(Project aProject)
     {
-
         // Get all annotators in the project
         List<String> users = getAllAnnotators(aProject);
         // Bail out already. HQL doesn't seem to like queries with an empty
@@ -1026,5 +1028,72 @@ public class DocumentServiceImpl
     public void onBeforeDocumentRemovedEvent(BeforeDocumentRemovedEvent aEvent)
     {
         projectService.recalculateProjectState(aEvent.getDocument().getProject());
+    }
+    
+    @EventListener
+    @Transactional
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
+        throws IOException
+    {
+        Project project = aEvent.getProject();
+        
+        Validate.notNull(project, "Project must be specified");
+
+        // Since the project is being deleted anyway, we don't bother sending around
+        // BeforeDocumentRemovedEvent anymore. If we did, we would likely trigger a
+        // a lot of CPU usage and DB bashing (e.g. for re-calculating the project state
+        // (ProjectServiceImpl.recalculateProjectState).
+        // List<SourceDocument> sourceDocuments = listSourceDocuments(project);
+        // for (SourceDocument doc : sourceDocuments) {
+        // applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, doc));
+        // }
+
+        // There should be a cascade-on-delete for annotation documents when the respective
+        // source document is deleted, but that is not there at the moment...
+        String deleteAnnotationDocumentsQuery = String.join("\n",
+                "DELETE FROM AnnotationDocument",
+                "WHERE project = :project");
+        entityManager.createQuery(deleteAnnotationDocumentsQuery)
+                .setParameter("project", project)
+                .executeUpdate();
+
+        // Delete all the source documents for the given project
+        String deleteSourceDocumentsQuery = String.join("\n",
+                "DELETE FROM SourceDocument",
+                "WHERE project = :project");
+        entityManager.createQuery(deleteSourceDocumentsQuery)
+                .setParameter("project", project)
+                .executeUpdate();
+        
+        // Delete all the source documents files for the given project
+        File docFolder = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/");
+        if (docFolder.exists()) {
+            FastIOUtils.delete(docFolder);
+        }
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(project.getId()))) {
+            log.info("Removed all documents from project [{}]({}) being deleted", project.getName(),
+                    project.getId());
+        }
+    }
+
+    @Override
+    public long countSourceDocuments()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM SourceDocument");
+        return entityManager.createQuery(query, Long.class).getSingleResult();
+    }
+
+    @Override
+    public long countAnnotationDocuments()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM AnnotationDocument");
+        return entityManager.createQuery(query, Long.class).getSingleResult();
     }
 }

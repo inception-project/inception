@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDet
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 
 /**
  * Extension point for new types of annotation features. 
@@ -53,8 +54,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
  * @param <T> the traits type. If no traits are supported, this should be {@link Void}.
  */
 public interface FeatureSupport<T>
-    extends BeanNameAware
+    extends BeanNameAware, Extension<AnnotationFeature>
 {
+    @Override
     String getId();
     
     /**
@@ -64,6 +66,7 @@ public interface FeatureSupport<T>
      *            a feature definition.
      * @return whether the given feature is provided by the current feature support.
      */
+    @Override
     boolean accepts(AnnotationFeature aFeature);
     
     /**

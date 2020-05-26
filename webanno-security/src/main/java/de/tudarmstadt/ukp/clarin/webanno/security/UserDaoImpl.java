@@ -227,4 +227,17 @@ public class UserDaoImpl
         }
         return roles;
     }
+
+    @Override
+    public long countEnabledUsers()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM " +  User.class.getName(),
+                "WHERE enabled = :enabled");
+        
+        return entityManager.createQuery(query, Long.class)
+                .setParameter("enabled", true)
+                .getSingleResult();
+    }
 }

@@ -639,4 +639,15 @@ public interface DocumentService
         throws IOException;
 
     boolean existsInitialCas(SourceDocument aDocument) throws IOException;
+    
+    /**
+     * Retrieve overall number of source documents
+     */
+    long countSourceDocuments();
+    
+    /**
+     * Retrieve overall number of annotation documents
+     */
+    long countAnnotationDocuments();
+    
 }

@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.zip.ZipFile;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -458,11 +457,6 @@ public interface ProjectService
     // --------------------------------------------------------------------------------------------
     // Methods related to other things
     // --------------------------------------------------------------------------------------------
-
-    void onProjectImport(ZipFile zip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
-            Project aProject)
-        throws Exception;
     
     List<ProjectType> listProjectTypes();
 

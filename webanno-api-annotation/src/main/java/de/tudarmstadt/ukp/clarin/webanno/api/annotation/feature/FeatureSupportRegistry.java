@@ -17,15 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
-import static java.util.Comparator.comparing;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ContextLookupExtensionPoint;
 
 public interface FeatureSupportRegistry
+    extends ContextLookupExtensionPoint<AnnotationFeature, FeatureSupport<?>>
 {
     String SERVICE_NAME = "featureSupportRegistry";
 
@@ -33,54 +32,25 @@ public interface FeatureSupportRegistry
      * Get the types of all features the user should be able to create. There can also be internal
      * types reserved for built-in features. These are not returned.
      */
-    default List<FeatureType> getAllTypes(AnnotationLayer aLayer)
-    {
-        List<FeatureType> allTypes = new ArrayList<>();
-
-        for (FeatureSupport<?> featureSupport : getFeatureSupports()) {
-            List<FeatureType> types = featureSupport.getSupportedFeatureTypes(aLayer);
-            types.stream().forEach(allTypes::add);
-        }
-
-        allTypes.sort(comparing(FeatureType::getUiName));
-
-        return allTypes;
-    }
+    List<FeatureType> getAllTypes(AnnotationLayer aLayer);
     
     /**
      * Get the types of all features the user should be able to create. There can also be internal
      * types reserved for built-in features. These are not returned.
      */
-    default List<FeatureType> getUserSelectableTypes(AnnotationLayer aLayer)
-    {
-        List<FeatureType> allTypes = new ArrayList<>();
-
-        for (FeatureSupport<?> featureSupport : getFeatureSupports()) {
-            List<FeatureType> types = featureSupport.getSupportedFeatureTypes(aLayer);
-            types.stream().filter(it -> !it.isInternal()).forEach(allTypes::add);
-        }
-
-        allTypes.sort(comparing(FeatureType::getUiName));
-
-        return allTypes;
-    }
-
-    List<FeatureSupport> getFeatureSupports();
-
-    
-    /**
-     * Get the feature support providing the given feature. This method must only be called on
-     * completely configured and saved features, not on unsaved features.
-     * 
-     * @param aFeature
-     *            the feture to get the support for.
-     * @return the feature support.
-     * @throws IllegalArgumentException
-     *             if there is no support for the given feature.
-     */
-    <T> FeatureSupport<T> getFeatureSupport(AnnotationFeature aFeature);
-    
-    <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId);
+    List<FeatureType> getUserSelectableTypes(AnnotationLayer aLayer);
 
     FeatureType getFeatureType(AnnotationFeature aFeature);
+    
+    /**
+     * @deprecated Use {@link #findExtension} instead;
+     */
+    @Deprecated
+    <T extends FeatureSupport<?>> T getFeatureSupport(AnnotationFeature aFeature);
+    
+    /**
+     * @deprecated Use {@link #getExtension} instead;
+     */
+    @Deprecated
+    <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId);
 }
