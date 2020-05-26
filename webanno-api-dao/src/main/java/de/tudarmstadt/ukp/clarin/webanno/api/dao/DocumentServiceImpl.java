@@ -1063,4 +1063,22 @@ public class DocumentServiceImpl
                     project.getId());
         }
     }
+
+    @Override
+    public long countSourceDocuments()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM SourceDocument");
+        return entityManager.createQuery(query, Long.class).getSingleResult();
+    }
+
+    @Override
+    public long countAnnotationDocuments()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM AnnotationDocument");
+        return entityManager.createQuery(query, Long.class).getSingleResult();
+    }
 }
