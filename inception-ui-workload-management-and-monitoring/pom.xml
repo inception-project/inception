@@ -22,7 +22,7 @@
     <parent>
         <artifactId>inception-app</artifactId>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <version>0.16.0-SNAPSHOT</version>
+        <version>0.17.0-SNAPSHOT</version>
     </parent>
     <artifactId>inception-ui-workload-management-and-monitoring</artifactId>
     <name>INCEpTION - Workload-management-and-monitoring - UI</name>
@@ -32,14 +32,6 @@
         <artifactId>webanno-ui-core</artifactId>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-support</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-api-annotation</artifactId>
-      </dependency>
-        <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-support</artifactId>
       </dependency>
@@ -55,44 +47,24 @@
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-security</artifactId>
       </dependency>
+
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-ui-annotation</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.uima</groupId>
-        <artifactId>uimaj-core</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-      </dependency>
-       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-beans</artifactId>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
-        <artifactId>spring-core</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
         <artifactId>spring-context</artifactId>
       </dependency>
+      
       <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-autoconfigure</artifactId>
+        <groupId>javax.persistence</groupId>
+        <artifactId>javax.persistence-api</artifactId>
       </dependency>
+
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-      </dependency>
-
-      <!-- JSOUP -->
-
-      <dependency>
-        <groupId>org.jsoup</groupId>
-        <artifactId>jsoup</artifactId>
       </dependency>
 
       <!-- WICKET DEPENDENCIES -->
@@ -123,26 +95,6 @@
       <dependency>
         <groupId>org.danekja</groupId>
         <artifactId>jdk-serializable-functional</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-external-search-core</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.wicketstuff</groupId>
-        <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>de.agilecoders.wicket</groupId>
-        <artifactId>wicket-bootstrap-extensions</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-ui-core</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-ui-monitoring</artifactId>
       </dependency>
     </dependencies>
 </project>
