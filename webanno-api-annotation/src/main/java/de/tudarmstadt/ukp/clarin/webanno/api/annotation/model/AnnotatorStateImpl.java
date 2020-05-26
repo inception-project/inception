@@ -318,17 +318,16 @@ public class AnnotatorStateImpl
         visibleUnits = aUnits;
         firstVisibleUnitIndex = aUnits.get(0).getIndex();
         lastVisibleUnitIndex = aUnits.get(aUnits.size() - 1).getIndex();
+        focusUnitIndex = firstVisibleUnitIndex;
         
         int newWindowBeginOffset = aUnits.get(0).getBegin();
         int newWindowEndOffset = aUnits.get(aUnits.size() - 1).getEnd();
         if (
-                windowBeginOffset != newWindowEndOffset || 
-                windowEndOffset != newWindowEndOffset ||
-                focusUnitIndex != firstVisibleUnitIndex
+                windowBeginOffset != newWindowBeginOffset || 
+                windowEndOffset != newWindowEndOffset
         ) {
             windowBeginOffset = newWindowBeginOffset;
             windowEndOffset = newWindowEndOffset;
-            focusUnitIndex = firstVisibleUnitIndex;
             fireViewStateChanged();
         }
     }
@@ -461,10 +460,7 @@ public class AnnotatorStateImpl
     @Override
     public void setFocusUnitIndex(int aUnitIndex)
     {
-        if (focusUnitIndex != aUnitIndex) {
-            focusUnitIndex = aUnitIndex;
-            fireViewStateChanged();
-        }
+        focusUnitIndex = aUnitIndex;
     }
 
     @Override
@@ -670,10 +666,7 @@ public class AnnotatorStateImpl
     @Override
     public void setPagingStrategy(PagingStrategy aPagingStrategy)
     {
-        if (pagingStrategy != aPagingStrategy) {
-            pagingStrategy = aPagingStrategy;
-            fireViewStateChanged();
-        }
+        pagingStrategy = aPagingStrategy;
     }
 
     @Override
