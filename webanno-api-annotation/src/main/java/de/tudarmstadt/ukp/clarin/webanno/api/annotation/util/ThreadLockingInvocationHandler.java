@@ -17,19 +17,24 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
+import static java.util.stream.Collectors.joining;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.stream.Stream;
 
 public class ThreadLockingInvocationHandler
     implements InvocationHandler
 {
     private Thread owner;
     private Object target;
+    private StackTraceElement[] trace;
 
     public ThreadLockingInvocationHandler(Object aTarget)
     {
         target = aTarget;
         owner = Thread.currentThread();
+        trace = new Exception().getStackTrace();
     }
 
     @Override
@@ -38,7 +43,9 @@ public class ThreadLockingInvocationHandler
         Thread current = Thread.currentThread();
         if (current != owner) {
             throw new IllegalStateException("Object " + target + " bound to thread " + owner
-                    + " but method " + method + " was called by thread " + current + ".");
+                    + " but method " + method + " was called by thread " + current
+                    + ". Object originally created at:\n" + getTrace());
+
         }
 
         return method.invoke(target, args);
@@ -54,9 +61,17 @@ public class ThreadLockingInvocationHandler
         Thread current = Thread.currentThread();
         if (current != owner) {
             throw new IllegalStateException("Object " + target + " bound to thread " + owner
-                    + " but unwrapping was requested by thread " + current + ".");
+                    + " but unwrapping was requested by thread " + current
+                    + ". Object originally created at:\n" + getTrace());
         }
         
         return target;
+    }
+    
+    private String getTrace() 
+    {
+        return Stream.of(trace)
+                .map(e -> "\t" + e.toString())
+                .collect(joining("\n"));
     }
 }

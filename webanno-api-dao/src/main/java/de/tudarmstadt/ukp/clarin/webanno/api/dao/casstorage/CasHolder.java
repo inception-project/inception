@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 
 /**
@@ -25,14 +26,15 @@ import org.apache.uima.cas.CAS;
  */
 public class CasHolder
 {
-    private CasKey key;
+    private final CasKey key;
+    
     private CAS cas;
     private Exception exception;
     private boolean typeSystemOutdated;
 
-    public CasHolder()
+    public CasHolder(CasKey aKey)
     {
-        // Nothing to do
+        key = aKey;
     }
     
     public CasHolder(CasKey aKey, Exception aException)
@@ -45,7 +47,7 @@ public class CasHolder
     public CasHolder(CasKey aKey, CAS aCas)
     {
         key = aKey;
-        cas = aCas;
+        setCas(aCas);
         exception = null;
     }
     
@@ -53,14 +55,25 @@ public class CasHolder
     {
         return key;
     }
+    
+    public boolean isCasSet()
+    {
+        return cas != null;
+    }
 
     public CAS getCas()
     {
+        if (cas == null) {
+            throw new IllegalStateException("Trying to get CAS before it was set");
+        }
+        
         return cas;
     }
 
     public void setCas(CAS aCas)
     {
+        Validate.notNull(aCas, "CAS cannot be null");
+        
         cas = aCas;
     }
 

@@ -245,13 +245,53 @@ public class CasStorageSession
 
         SessionManagedCas managedCas = new SessionManagedCas(aDocumentId, aUser, aMode, aCas);
 
-        Map<String, SessionManagedCas> casByUser = managedCases
-                .computeIfAbsent(aDocumentId, key -> new LinkedHashMap<>());
-        casByUser.put(aUser, managedCas);
-        
-        LOGGER.trace("CAS storage session [{}]: added {}", hashCode(), managedCas);
+        add(managedCas);
         
         return managedCas;
+    }
+    
+    /**
+     * Register the given CAS into the session.
+     * 
+     * @param aDocumentId
+     *            the document ID for which the CAS was retrieved.
+     * @param aUser
+     *            the user owning the CAS.
+     * @param aMode
+     *            the access mode.
+     * @param aCasHolder
+     *            the CAS holder.
+     * @return the managed CAS state.
+     */
+    public SessionManagedCas add(Long aDocumentId, String aUser, CasAccessMode aMode,
+            CasHolder aCasHolder)
+    {
+        Validate.notNull(aDocumentId, "The document ID cannot be null");
+        Validate.isTrue(aDocumentId >= 0, "The document ID cannot be negative");
+        Validate.notNull(aUser, "The username cannot be null");
+        Validate.notNull(aMode, "The access mode cannot be null");
+        Validate.notNull(aCasHolder, "The CAS holder cannot be null");
+
+        SessionManagedCas managedCas = new SessionManagedCas(aDocumentId, aUser, aMode, aCasHolder);
+        
+        add(managedCas);
+        
+        return managedCas;
+    }
+    
+    private void add(SessionManagedCas aMCas)
+    {
+        Map<String, SessionManagedCas> casByUser = managedCases
+                .computeIfAbsent(aMCas.getSourceDocumentId(), key -> new LinkedHashMap<>());
+        SessionManagedCas oldMCas = casByUser.put(aMCas.getUserId(), aMCas);
+        
+        if (oldMCas == null) {
+            LOGGER.trace("CAS storage session [{}]: added {}", hashCode(), aMCas);
+        }
+        else {
+            LOGGER.trace("CAS storage session [{}]: replaced {} with {}", hashCode(), oldMCas,
+                    aMCas);
+        }
     }
 
     public boolean contains(CAS aCas)

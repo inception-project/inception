@@ -441,6 +441,23 @@ public interface DocumentService
 
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.
+     * 
+     * @param aDocument
+     *            the source document.
+     * @param aUpgradeMode
+     *            whether to upgrade the type system in the CAS.
+     * @param aAccessMode
+     *            CAS access mode.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading the CAS.
+     */
+    CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode)
+        throws IOException;
+    
+    /**
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created.
      * This method is good for bulk-importing because it accepts the project type system as a
      * parameter instead of collecting it on every call.
      * 
@@ -649,5 +666,4 @@ public interface DocumentService
      * Retrieve overall number of annotation documents
      */
     long countAnnotationDocuments();
-    
 }

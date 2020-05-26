@@ -25,9 +25,9 @@ public class PooledCasHolderFactory
     extends BaseKeyedPooledObjectFactory<CasKey, CasHolder>
 {
     @Override
-    public CasHolder create(CasKey key) throws Exception
+    public CasHolder create(CasKey aKey) throws Exception
     {
-        return new CasHolder();
+        return new CasHolder(aKey);
     }
 
     @Override

@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FO
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setDocumentId;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.transferCasOwnershipToCurrentThread;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
@@ -49,6 +51,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.AbstractCas;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.CASImpl;
 import org.slf4j.Logger;
@@ -184,11 +187,30 @@ public class CasStorageServiceImpl
                         + aDocument.getProject().getId() + ") to be written");
             }
 
+            // When overriding a stored CAS using an different CAS, the new CAS must be unmanaged!
+            SessionManagedCas mCas = session.getManagedState(aDocument.getId(), aUserName).get();
+            if (mCas.getCas() != aCas) {
+                throw new IOException("Cannot override managed CAS [" + aUserName
+                        + "] on document [" + aDocument.getName() + "](" + aDocument.getId()
+                        + ") in project [" + aDocument.getProject().getName() + "]("
+                        + aDocument.getProject().getId() + ") with another managed CAS for user ["
+                        + mCas.getUserId() + "] on document [" + mCas.getSourceDocumentId() + "]");
+            }
+            
             realWriteCas(aDocument, aUserName, aCas);
         }
         else {
             try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUserName)) {
                 realWriteCas(aDocument, aUserName, aCas);
+                
+                // If the CAS which was written does not match the CAS in the session for the given
+                // document/user, then we replace the CAS in the session with the new CAS. This
+                // happens for example when a document is reset. In this case, the CAS in storage is
+                // overwritten with an unmanaged copy of the initial CAS which then becomes the new
+                // CAS for the given document/user.
+                if (access.getCas() != aCas) {
+                    access.setCas(aCas);
+                }
             }
             catch (IOException e) {
                 throw e;
@@ -236,7 +258,7 @@ public class CasStorageServiceImpl
             }
 
             // Now write the new version to "<username>.ser" or CURATION_USER.ser
-            WebAnnoCasUtil.setDocumentId(aCas, aUserName);
+            setDocumentId(aCas, aUserName);
             
             long start = System.currentTimeMillis();
             writeSerializedCas(aCas, new File(annotationFolder, aUserName + ".ser"));
@@ -447,7 +469,7 @@ public class CasStorageServiceImpl
                 
                 // If the CAS has not been loaded into the exclusive access pool, then we need to
                 // load it
-                if (holder.getCas() == null) {
+                if (!holder.isCasSet()) {
                     CasKey finalKey = key;
                     CasHolder finalHolder = holder;
                     CAS cas = readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
@@ -456,17 +478,18 @@ public class CasStorageServiceImpl
                     
                     // Hook up releasing of the CAS when CAS.release() is called via the
                     // CasStorageSession
-                    ((CASImpl) WebAnnoCasUtil.getRealCas(cas)).setOwner(casToBeReleased ->
-                            returnBorrowedCas(cas, aDocument, aUsername, finalKey, finalHolder));
+                    ((CASImpl) getRealCas(cas))
+                            .setOwner(_cas -> returnBorrowedCas(_cas, finalKey, finalHolder));
                 }
                 else {
                     log.trace(
                             "CAS storage session [{}]: borrowed CAS [] for [{}]@[{}]({}) was already in memory",
                             session.hashCode(), holder.getCas(), aUsername, aDocument.getName(),
                             aDocument.getId());
+                    
+                    transferCasOwnershipToCurrentThread(holder.getCas());
                 }
                 
-                WebAnnoCasUtil.transferCasOwnershipToCurrentThread(holder.getCas());
                 
                 casHolder = holder;
             }
@@ -547,12 +570,11 @@ public class CasStorageServiceImpl
         }
     }
     
-    private void returnBorrowedCas(CAS cas, SourceDocument aDocument, String aUsername, CasKey aKey,
-            CasHolder aHolder)
+    private void returnBorrowedCas(AbstractCas cas, CasKey aKey, CasHolder aHolder)
     {
         try {
-            log.trace("Returning borrowed CAS [{}] for [{}]@[{}]({})", cas.hashCode(), aUsername,
-                    aDocument.getName(), aDocument.getId());
+            log.trace("Returning borrowed CAS [{}] for [{}]@[{}]({})", cas.hashCode(),
+                    aKey.getUserId(), aKey.getDocumentName(), aKey.getDocumentId());
             exclusiveAccessPool.returnObject(aKey, aHolder);
         }
         catch (Exception e) {
@@ -878,7 +900,7 @@ public class CasStorageServiceImpl
     
     private class WithExclusiveAccess implements AutoCloseable {
         private final CasKey key;
-        private CasHolder holder = null;
+        private CasHolder holder;
         private String documentName;
         private long documentId;
         private String username;
@@ -896,13 +918,56 @@ public class CasStorageServiceImpl
             if (!session.hasExclusiveAccess(aDocument, aUser)) {
                 log.trace("CAS storage session [{}]: Borrowing briefly CAS [{}]@[{}]({})",
                         session.hashCode(), aUser, aDocument.getName(), aDocument.getId());
-                holder = borrowCas(key); 
+                holder = borrowCas(key);
+                if (holder.isCasSet()) {
+                    transferCasOwnershipToCurrentThread(holder.getCas());
+                }
+            }
+            else {
+                holder = null;
             }
         }
         
         public CasKey getKey()
         {
             return key;
+        }
+        
+        public void setCas(CAS aCas)
+        {
+            if (holder != null) {
+                // Unset the release hook for the old CAS
+                ((CASImpl) getRealCas(getCas())).setOwner(null);
+
+                // Set the release hook for the new CAS
+                ((CASImpl) getRealCas(aCas))
+                        .setOwner(_cas -> returnBorrowedCas(_cas, getKey(), holder));
+                
+                holder.setCas(aCas);
+            }
+            else {
+                CasStorageSession.get()
+                        .getManagedState(documentId, username)
+                        .orElseThrow(() -> new IllegalStateException("This should not happen. If "
+                                + "the no holder is set, then the CAS must already be part of the "
+                                + "session."))
+                        .setCas(aCas);
+            }
+        }
+        
+        public CAS getCas()
+        {
+            return holder != null ? holder.getCas() : CasStorageSession.get()
+                    .getManagedState(documentId, username)
+                    .orElseThrow(() -> new IllegalStateException("This should not happen. If "
+                            + "the no holder is set, then the CAS must already be part of the "
+                            + "session."))
+                    .getCas();
+        }
+        
+        public CasHolder getHolder()
+        {
+            return holder;
         }
         
         @Override
@@ -1009,5 +1074,4 @@ public class CasStorageServiceImpl
         sharedAccessCache.asMap().keySet()
                 .removeIf(key -> Objects.equals(key.getProjectId(), aEvent.getProject().getId()));
     }
-
 }

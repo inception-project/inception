@@ -578,9 +578,17 @@ public class DocumentServiceImpl
     public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode)
             throws IOException
     {
-        return createOrReadInitialCas(aDocument, aUpgradeMode, null);
+        return createOrReadInitialCas(aDocument, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS, null);
     }
-    
+
+    @Override
+    public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode)
+        throws IOException
+    {
+        return createOrReadInitialCas(aDocument, aUpgradeMode, aAccessMode, null);
+    }
+
     @Override
     public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
             TypeSystemDescription aFullProjectTypeSystem)
@@ -750,12 +758,17 @@ public class DocumentServiceImpl
         throws UIMAException, IOException
     {
         AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
-        CAS cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE);
+        
+        // We read the initial CAS and then use it to override the CAS for the given document/user.
+        // In order to do that, we must read the initial CAS unmanaged.
+        CAS cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
+        
         // Add/update the CAS metadata
         File casFile = getCasFile(aDocument, aUser.getUsername());
         if (casFile.exists()) {
             addOrUpdateCasMetadata(cas, casFile, aDocument, aUser.getUsername());
         }
+        
         writeAnnotationCas(cas, aDocument, aUser, false);
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, cas));
     }

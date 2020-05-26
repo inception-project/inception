@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 
 import java.util.Objects;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.uima.cas.CAS;
@@ -33,17 +34,36 @@ public class SessionManagedCas
     private final String userId;
     private final CasAccessMode mode;
     private final CAS cas;
+    private final CasHolder casHolder;
     
     private int readCount;
     private int writeCount;
-    
+
     public SessionManagedCas(long aSourceDocumentId, String aUserId, CasAccessMode aMode, CAS aCas)
     {
         super();
+        
+        Validate.notNull(aCas, "CAS cannot be null");
+        
         sourceDocumentId = aSourceDocumentId;
         userId = aUserId;
         mode = aMode;
         cas = aCas;
+        casHolder = null;
+    }
+
+    public SessionManagedCas(long aSourceDocumentId, String aUserId, CasAccessMode aMode,
+            CasHolder aCasHolder)
+    {
+        super();
+        
+        Validate.notNull(aCasHolder, "CAS holder cannot be null");
+        
+        sourceDocumentId = aSourceDocumentId;
+        userId = aUserId;
+        mode = aMode;
+        cas = null;
+        casHolder = aCasHolder;
     }
     
     public long getSourceDocumentId()
@@ -61,9 +81,25 @@ public class SessionManagedCas
         return mode;
     }
     
+    public void setCas(CAS aCas)
+    {
+        if (casHolder != null) {
+            casHolder.setCas(aCas);
+        }
+        else {
+            throw new IllegalStateException(
+                    "Managed CAS must have been borrowed in order to be replaced");
+        }
+    }
+    
     public CAS getCas()
     {
-        return cas;
+        if (cas != null) {
+            return cas;
+        }
+        else {
+            return casHolder.getCas();
+        }
     }
     
     public void incrementReadCount()
@@ -76,7 +112,7 @@ public class SessionManagedCas
         writeCount++;
     }
     
-    public int getReadCout()
+    public int getReadCount()
     {
         return readCount;
     }
