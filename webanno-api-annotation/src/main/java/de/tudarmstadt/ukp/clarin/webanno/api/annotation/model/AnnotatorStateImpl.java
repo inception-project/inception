@@ -585,13 +585,21 @@ public class AnnotatorStateImpl
                 && Objects.equals(aState.feature, armedFeatureState.feature) && aIndex == armedSlot;
     }
     
+    /**
+     *  Re-render all slots to de-select all slots that are not armed anymore
+     */
     private void rerenderSlots() {
-        // Re-render all slots to de-select all slots that are not armed anymore
-        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        RequestCycle requestCycle = RequestCycle.get();
+        
+        if (requestCycle == null) {
+            return;
+        }
+        
+        Optional<IPageRequestHandler> handler = requestCycle.find(IPageRequestHandler.class);
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();
             page.send(page, BREADTH, new RenderSlotsEvent(
-                    RequestCycle.get().find(IPartialPageRequestHandler.class).orElse(null)));
+                    requestCycle.find(IPartialPageRequestHandler.class).orElse(null)));
         }
     } 
 
@@ -693,11 +701,17 @@ public class AnnotatorStateImpl
 
     private void fireViewStateChanged()
     {
-        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        RequestCycle requestCycle = RequestCycle.get();
+        
+        if (requestCycle == null) {
+            return;
+        }
+        
+        Optional<IPageRequestHandler> handler = requestCycle.find(IPageRequestHandler.class);
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();
             page.send(page, BREADTH, new AnnotatorViewportChangedEvent(
-                    RequestCycle.get().find(AjaxRequestTarget.class).orElse(null)));
+                    requestCycle.find(AjaxRequestTarget.class).orElse(null)));
         }
     }
 }
