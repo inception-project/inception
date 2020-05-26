@@ -78,7 +78,7 @@ public class SentenceOrientedPagingStrategy
     {
         Label label = new Label(aId, () -> {
             AnnotatorState state = aModel.getObject();
-            return String.format("Showing %d-%d of %d sentences [document %d of %d]",
+            return String.format("%d-%d / %d sentences [doc %d / %d]",
                     state.getFirstVisibleUnitIndex(), state.getLastVisibleUnitIndex(),
                     state.getUnitCount(), state.getDocumentIndex() + 1,
                     state.getNumberOfDocuments());
