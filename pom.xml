@@ -480,6 +480,13 @@
         <version>${wicket-jquery-ui.version}</version>
       </dependency>
       
+      <!-- Wicketstuff -->
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-htmlcompressor</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+      
       <!-- SPRING -->
       <dependency>
         <groupId>org.springframework</groupId>
