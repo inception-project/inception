@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_NAME;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_NAME;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
@@ -104,7 +105,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
  */
 @MountPath(value = "/annotation.html", alt = { "/annotate/${" + PAGE_PARAM_PROJECT_ID + "}",
         "/annotate/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_DOCUMENT_ID + "}",
-        "/annotate-by-name/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_DOCUMENT_NAME + "}" })
+        "/annotate-by-name/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_DOCUMENT_NAME + "}",
+        "/annotate-by-project-and-document-name/${" + PAGE_PARAM_PROJECT_ID + "}/${" + PAGE_PARAM_DOCUMENT_NAME + "}" })
 @ProjectType(id = WebAnnoConst.PROJECT_TYPE_ANNOTATION, prio = 100)
 public class AnnotationPage
     extends AnnotationPageBase
@@ -151,11 +153,12 @@ public class AnnotationPage
             Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
 
             StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
+            StringValue projectName = fragmentParameters.get(PAGE_PARAM_PROJECT_NAME);
             StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
             StringValue name = fragmentParameters.get(PAGE_PARAM_DOCUMENT_NAME);
             focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
 
-            handleParameters(project, document, name, focus, false);
+            handleParameters(project, projectName, document, name, focus, false);
         }
         commonInit(focus);
     }
@@ -170,6 +173,7 @@ public class AnnotationPage
         getModelObject().setUser(userRepository.getCurrentUser());
         
         StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
+        StringValue projectName = aPageParameters.get(PAGE_PARAM_PROJECT_NAME);
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
         StringValue name = aPageParameters.get(PAGE_PARAM_DOCUMENT_NAME);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
@@ -177,7 +181,7 @@ public class AnnotationPage
             focus = StringValue.valueOf(0);
         }
         
-        handleParameters(project, document, name, focus, true);
+        handleParameters(project, projectName, document, name, focus, true);
         commonInit(focus);
     }
 
@@ -501,12 +505,14 @@ public class AnnotationPage
         updateUrlFragment(aTarget);
     }
 
-    private Project getProjectFromParameters(StringValue projectParam)
+    private Project getProjectFromParameters(StringValue projectParam, StringValue projectNameParam)
     {
         Project project = null;
         if (projectParam != null && !projectParam.isEmpty()) {
             long projectId = projectParam.toLong();
             project = projectService.getProject(projectId);
+        } else if (projectNameParam != null && !projectNameParam.isEmpty()) {
+            project = projectService.getProject(projectNameParam.toString());
         }
         return project;
     }
@@ -537,6 +543,8 @@ public class AnnotationPage
                 aTarget.addChildren(getPage(), IFeedback.class);
 
                 StringValue project = aRequestParameters.getParameterValue(PAGE_PARAM_PROJECT_ID);
+                StringValue projectName =
+                        aRequestParameters.getParameterValue(PAGE_PARAM_PROJECT_NAME);
                 StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_ID);
                 StringValue name = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_NAME);
                 StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
@@ -547,7 +555,7 @@ public class AnnotationPage
                     return;
                 }
                 SourceDocument previousDoc = getModelObject().getDocument();
-                handleParameters(project, document, name, focus, false);
+                handleParameters(project, projectName, document, name, focus, false);
                 
                 // url is from external link, not just paging through documents,
                 // tabs may have changed depending on user rights
@@ -589,13 +597,14 @@ public class AnnotationPage
     }
 
     private void handleParameters(StringValue aProjectParameter,
+            StringValue aProjectNameParameter,
             StringValue aDocumentParameter, StringValue aNameParameter,
             StringValue aFocusParameter, boolean aLockIfPreset)
     {
         // Get current project from parameters
         Project project = null;
         try {
-            project = getProjectFromParameters(aProjectParameter);
+            project = getProjectFromParameters(aProjectParameter,aProjectNameParameter);
         }
         catch (NoResultException e) {
             error("Project [" + aProjectParameter + "] does not exist");
@@ -609,7 +618,7 @@ public class AnnotationPage
                 document = getDocumentFromParameters(project, aDocumentParameter, aNameParameter);
             }
             catch (NoResultException e) {
-                error("Document [" + aDocumentParameter + "] does not exist in project ["
+                error("Document [" + aDocumentParameter + "/" + aNameParameter + "] does not exist in project ["
                         + project.getId() + "]");
             }
         }
