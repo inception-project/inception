@@ -607,7 +607,7 @@ public class AnnotationPage
             project = getProjectFromParameters(aProjectParameter,aProjectNameParameter);
         }
         catch (NoResultException e) {
-            error("Project [" + aProjectParameter + "] does not exist");
+            error("Project [" + aProjectParameter + "/" + aProjectNameParameter + "] does not exist");
             return;
         }
         
