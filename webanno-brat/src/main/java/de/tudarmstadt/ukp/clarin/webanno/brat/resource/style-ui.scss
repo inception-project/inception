@@ -554,5 +554,22 @@ $background_color_14: #dddddd;
       margin-top: 25px;
     }
   }
+  #span_accept_btn {
+    background-color: lightgreen;
+    border: none;
+	display: inline;
+    opacity: 0.7;
+  }
+  #span_reject_btn {
+    background-color: red;
+    border: none;
+    display:inline;
+    opacity: 0.7;
+  }
+  #span_btns_wrapper {
+	margin: 0;
+    position: fixed;
+//    display: inline;
+  }
 }
 
