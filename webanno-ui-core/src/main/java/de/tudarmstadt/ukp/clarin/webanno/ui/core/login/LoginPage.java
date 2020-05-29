@@ -26,17 +26,21 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.NonResettingRestartException;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.basic.MultiLineLabel;
+import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.HiddenField;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.StatelessForm;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -75,6 +79,9 @@ public class LoginPage
     private @SpringBean(required = false) SessionRegistry sessionRegistry;
 
     private LoginForm form;
+    private final MultiLineLabel tooManyUsersLabel;
+    private final Button signInBtn;
+    
     
     public LoginPage()
     {
@@ -82,6 +89,13 @@ public class LoginPage
         setVersioned(false);
         
         add(form = new LoginForm("loginForm"));
+        signInBtn = new Button("signInBtn", new ResourceModel("signIn"));
+        tooManyUsersLabel = new MultiLineLabel("usersLabel", new ResourceModel("tooManyUsers"));
+        tooManyUsersLabel.setVisible(false);
+        form.add(signInBtn);
+        form.add(tooManyUsersLabel);
+        
+        checkUsersLimit();
         
         redirectIfAlreadyLoggedIn();
 
@@ -99,6 +113,29 @@ public class LoginPage
             // We log this as a warning so the message sticks on the screen. Success and info
             // messages are set to auto-close after a short time.
             warn(msg);
+        }
+    }
+
+    private void checkUsersLimit()
+    {
+        String usersProp = SettingsUtil.getSettings().getProperty(SettingsUtil.PROP_MAX_USERS);
+        
+        if (usersProp == null || !StringUtils.isNumeric(usersProp)) {
+            return;
+        }
+        
+        // if there will be more users logged in (with current one) than max users allowed
+        if (sessionRegistry.getAllPrincipals().size() >= Integer.parseInt(usersProp)) {
+            form.setEnabled(false);
+            tooManyUsersLabel.setVisible(true);
+            signInBtn.setEnabled(false);
+            add(form);
+        }
+        else {
+            form.setEnabled(true);
+            tooManyUsersLabel.setVisible(false);
+            signInBtn.setEnabled(true);
+            add(form);
         }
     }
     

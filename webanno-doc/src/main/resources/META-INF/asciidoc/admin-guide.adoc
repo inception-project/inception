@@ -92,3 +92,5 @@ include::{include-dir}settings_custom-header-icons.adoc[leveloffset=+1]
 include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
 
 include::{include-dir}security-preauth.adoc[leveloffset=+1]
+
+include::{include-dir}login.adoc[leveloffset=+1]

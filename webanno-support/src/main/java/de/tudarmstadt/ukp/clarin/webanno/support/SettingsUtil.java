@@ -44,6 +44,8 @@ public class SettingsUtil
     
     private static final String PROP_USER_HOME = "user.home";
     
+    public static final String PROP_MAX_USERS = "max.users";
+    
     private static final String SETTINGS_FILE = "settings.properties";
     
     public static final String CFG_LOCALE = "locale";
