@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-#Copyright 2019
+#Copyright 2020
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 #Technische Universität Darmstadt
 #
@@ -17,17 +17,19 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<wicket:panel>
-  <div class="form-group form-row" wicket:enclosure="value">
-    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
-      <span wicket:id="feature"/>
-      <span class="float-right">
-        <span wicket:id="textIndicator"></span>
-      </span>
-    </label>
-    <div class="feature-editor-value">
-      <textarea wicket:id="value" class="form-control dynamic-textarea" style="resize: none;"  onfocus="resizeDynamicTextArea(this)" oninput="resizeDynamicTextArea(this)" onblur="resizeDynamicTextArea(this)"></textarea>
+<body>
+  <wicket:panel>
+    <div wicket:id="noFeaturesWarning" class="flex-content flex-h-container no-data-notice mt-2 border-top">
+      <div>No features on this layer</div>
     </div>
-  </div>
-</wicket:panel>
+    <div class="flex-content feature-editors-sidebar" wicket:id="featureEditorContainer">
+      <wicket:container wicket:id="featureEditors">
+        <div wicket:id="editor"></div>
+      </wicket:container>
+      <div style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">
+        <input wicket:id="focusResetHelper" tabindex="-1"></input>
+      </div>
+    </div>
+  </wicket:panel>
+</body>
 </html>

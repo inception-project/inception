@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
@@ -469,17 +470,10 @@ public class AutomationPage
 
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
             // annotations
-            CAS editorCas;
-            if (documentService.existsCas(state.getDocument(), state.getUser().getUsername())) {
-                editorCas = documentService.readAnnotationCas(annotationDocument);
-            }
-            else {
-                editorCas = documentService.createOrReadInitialCas(state.getDocument());
-                // In automation mode, we do not remove the existing annotations from the documents
-            }
+            CAS editorCas = documentService.readAnnotationCas(annotationDocument,
+                    FORCE_CAS_UPGRADE);
 
             // Update the CASes
-            annotationService.upgradeCas(editorCas, annotationDocument);
             correctionDocumentService.upgradeCorrectionCas(correctionCas, state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
@@ -533,8 +527,6 @@ public class AutomationPage
             
             // Reset the editor
             detailEditor.reset(aTarget);
-            // Populate the layer dropdown box
-            detailEditor.loadFeatureEditorModels(editorCas, aTarget);
         }
         catch (Exception e) {
             handleException(aTarget, e);

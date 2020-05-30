@@ -205,7 +205,7 @@ public abstract class AnnotationEditorBase
     
     /**
      * This is a special AJAX target response listener which implements hashCode and equals.
-     * It useds the markup ID of its host component to identify itself. This enables us to add
+     * It uses the markup ID of its host component to identify itself. This enables us to add
      * multiple instances of this listener to an AJAX response without *actually* adding
      * multiple instances since the AJAX response internally keeps track of the listeners
      * using a set.

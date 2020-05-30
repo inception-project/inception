@@ -21,6 +21,8 @@ import static com.googlecode.wicket.kendo.ui.KendoUIBehavior.widget;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
+import java.util.Objects;
+
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -30,7 +32,9 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
@@ -38,6 +42,7 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.TagEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 
@@ -92,6 +97,27 @@ public class KendoComboboxTextFeatureEditor
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
+    @OnEvent
+    public void onTagEvent(TagEvent aEvent) {
+        if (getModelObject() == null) {
+            return;
+        }
+        
+        // Check if the tagset that was updated is used by the current editor, otherwise return
+        if (!Objects.equals(aEvent.getTag().getTagSet().getId(),
+                getModelObject().getFeature().getTagset().getId())) {
+            return;
+        }
+        
+        // If the tag was created in the tagset used by this editor, then we re-render the editor
+        // to ensure it picks up the new tag
+        AjaxRequestTarget target = aEvent.getRequestTarget();
+        if (target != null) {
+            target.add(this);
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
     @Override
     protected AbstractTextComponent createInputField()
     {
@@ -103,6 +129,14 @@ public class KendoComboboxTextFeatureEditor
             protected IJQueryTemplate newTemplate()
             {
                 return KendoChoiceDescriptionScriptReference.templateReorderable();
+            }
+            
+            @Override
+            public void onConfigure(JQueryBehavior aBehavior)
+            {
+                super.onConfigure(aBehavior);
+                aBehavior.setOption("animation", false);
+                aBehavior.setOption("delay", 0);
             }
             
             @Override

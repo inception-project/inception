@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 
 import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 
@@ -49,6 +51,15 @@ public class BootstrapFeedbackPanel
             () -> getCurrentMessages().stream().filter(FeedbackMessage::isWarning)
                 .limit(2).count() > 1));
         messagesContainer.add(closeAll);
+    }
+    
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+        
+        aResponse.render(
+                JavaScriptHeaderItem.forReference(BootstrapFeedbackPanelJavascriptReference.get()));
     }
 
     @Override

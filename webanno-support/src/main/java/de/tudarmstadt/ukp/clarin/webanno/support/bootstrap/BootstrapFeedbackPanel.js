@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,15 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.metrics;
-
-public interface BratMetrics
-{
-    public static enum RenderType {
-        FULL,
-        DIFFERENTIAL,
-        SKIP;
-    }
-
-    void renderComplete(RenderType aType, long aTime, String aFull, String aDiff);
+function bootstrapFeedbackPanelFade() {
+  setTimeout(function() {
+    $(".alert.alert-success").fadeTo(600, 0, function(){
+      $(".alert.alert-success").alert('close');
+    });
+    $(".alert.alert-info").fadeTo(600, 0, function(){
+      $(".alert.alert-info").alert('close');
+    });
+  }, 2000);
 }

@@ -22,9 +22,11 @@ import org.springframework.context.ApplicationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
 public abstract class AnnotationEvent
     extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = -7460965556870957082L;
     
