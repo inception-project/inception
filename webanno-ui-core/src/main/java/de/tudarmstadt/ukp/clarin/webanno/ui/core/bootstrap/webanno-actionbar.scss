@@ -17,35 +17,66 @@
  ******************************************************************************/
 
 .action-bar {
-	@extend .border-bottom;
-	padding: 5px;
-	background-color: $card-cap-bg;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
+  @extend .border-bottom;
+  padding: 5px;
+  background-color: $card-cap-bg;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  
+  @include media-breakpoint-down(xl) {
+    font-size: 1vw !important;
+  }
 
-	> * {
-		padding-left: $grid-gutter-width / 4;
-		padding-right: $grid-gutter-width / 4;
-	}
-		
-	.action-bar-group {
-		padding: 2px;
-		background-color: lightgrey;
+  @include media-breakpoint-down(xl) {
+    .btn {
+      font-size: .9vw !important;
+    }
+  }
+
+  @include media-breakpoint-down(lg) {
+    .btn {
+      padding-left: $input-btn-padding-x / 2;
+      padding-right: $input-btn-padding-x / 2;
+    }
+  }
+
+  > * {
+    padding-left: $grid-gutter-width / 4;
+    padding-right: $grid-gutter-width / 4;
+  }
+
+  @include media-breakpoint-down(xl) {
+    > * {
+      padding-left: $grid-gutter-width / 8;
+      padding-right: $grid-gutter-width / 8;
+    }
+  }
+    
+  .action-bar-group {
+    padding: 2px;
+    background-color: lightgrey;
     border-radius: 5px;
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-		flex: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex: 0;
 
-		> * {
-			padding-left: $grid-gutter-width / 8;
-			padding-right: $grid-gutter-width / 8;
-		}
-	}
-	
-	.action-bar-group-title {
-		padding-left: $grid-gutter-width / 2;
-		padding-right: $grid-gutter-width / 2;
-	}
+    > * {
+      padding-left: $grid-gutter-width / 8;
+      padding-right: $grid-gutter-width / 8;
+    }
+
+    @include media-breakpoint-down(xl) {
+      > * {
+        padding-left: $grid-gutter-width / 16;
+        padding-right: $grid-gutter-width / 16;
+      }
+    }
+  }
+  
+  .action-bar-group-title {
+    padding-left: $grid-gutter-width / 2;
+    padding-right: $grid-gutter-width / 2;
+  }
 }
