@@ -187,14 +187,17 @@ public class CasStorageServiceImpl
                         + aDocument.getProject().getId() + ") to be written");
             }
 
-            // When overriding a stored CAS using an different CAS, the new CAS must be unmanaged!
-            SessionManagedCas mCas = session.getManagedState(aDocument.getId(), aUserName).get();
-            if (mCas.getCas() != aCas) {
+            // When overriding a stored CAS using an different CAS, the new CAS must be unmanaged
+            // or must have been added to the session using a "special purpose". This is to avoid
+            // having one CAS being accessible view two different username/docId pairs.
+            Optional<SessionManagedCas> mCas = session.getManagedState(aDocument.getId(),
+                    aUserName);
+            if (mCas.isPresent() && mCas.get().getCas() != aCas) {
                 throw new IOException("Cannot override managed CAS [" + aUserName
                         + "] on document [" + aDocument.getName() + "](" + aDocument.getId()
                         + ") in project [" + aDocument.getProject().getName() + "]("
                         + aDocument.getProject().getId() + ") with another managed CAS for user ["
-                        + mCas.getUserId() + "] on document [" + mCas.getSourceDocumentId() + "]");
+                        + mCas.get().getUserId() + "] on document [" + mCas.get().getSourceDocumentId() + "]");
             }
             
             realWriteCas(aDocument, aUserName, aCas);
@@ -208,7 +211,10 @@ public class CasStorageServiceImpl
                 // happens for example when a document is reset. In this case, the CAS in storage is
                 // overwritten with an unmanaged copy of the initial CAS which then becomes the new
                 // CAS for the given document/user.
-                if (access.getCas() != aCas) {
+                // It is possible that the CAS is not set in the exclusive access, in that case we
+                // use the exclusive access just to reserve access to the username/docID pair. This
+                // could e.g. happen when saving an unmanaged CAS under a new username/docId pair.
+                if (access.isCasSet() || access.getCas() != aCas) {
                     access.setCas(aCas);
                 }
             }
@@ -931,6 +937,21 @@ public class CasStorageServiceImpl
         public CasKey getKey()
         {
             return key;
+        }
+        
+        public boolean isCasSet()
+        {
+            if (holder != null) {
+                return holder.isCasSet();
+            }
+            else {
+                return CasStorageSession.get()
+                        .getManagedState(documentId, username)
+                        .orElseThrow(() -> new IllegalStateException("This should not happen. If "
+                                + "the no holder is set, then the CAS must already be part of the "
+                                + "session."))
+                        .isCasSet();
+            }
         }
         
         public void setCas(CAS aCas)

@@ -81,6 +81,11 @@ public class SessionManagedCas
         return mode;
     }
     
+    public boolean isCasSet()
+    {
+        return casHolder != null ? casHolder.isCasSet() : cas != null;
+    }
+    
     public void setCas(CAS aCas)
     {
         if (casHolder != null) {
