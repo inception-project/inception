@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.log.exporter.LoggedEventExporter;
 
 /**
  * <p>
@@ -47,7 +46,7 @@ public class DocumentRepositoryExporter
     implements ProjectExporter
 {
     private static final String KEY = "external_search";
-    private static final Logger LOG = LoggerFactory.getLogger(LoggedEventExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DocumentRepositoryExporter.class);
     
     private final ExternalSearchService externalSearchService;
     
