@@ -222,7 +222,7 @@ public final class TypeUtil
      * @param aUiTypeName
      *            the brat type name.
      * @return the layer ID.
-     * @see TypeAdapter#getUiTypeName
+     * @see TypeAdapter#getEncodedTypeName()
      */
     public static long getLayerId(String aUiTypeName)
     {
@@ -230,7 +230,7 @@ public final class TypeUtil
     }
 
     /**
-     * @see TypeAdapter#getUiTypeName
+     * @see TypeAdapter#getEncodedTypeName()
      */
     public static String getUiTypeName(AnnotationLayer aLayer)
     {
