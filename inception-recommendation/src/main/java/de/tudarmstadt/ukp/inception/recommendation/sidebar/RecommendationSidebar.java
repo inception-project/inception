@@ -104,7 +104,7 @@ public class RecommendationSidebar
                 .setMaximum(10)
                 .setStep(1));
 
-        form.add(new CheckBox("showAllPredictions"));
+        form.add(new CheckBox("showAllPredictions").setOutputMarkupId(true));
 
         form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
                 aAnnotationPage.actionRefreshDocument(_target)));
