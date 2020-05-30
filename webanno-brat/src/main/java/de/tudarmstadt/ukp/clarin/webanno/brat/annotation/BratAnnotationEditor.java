@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter.decodeTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -49,6 +53,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.flipkart.zjsonpatch.JsonDiff;
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
@@ -332,7 +337,7 @@ public class BratAnnotationEditor
             return response;
         }
 
-        long layerId = Long.parseLong(layerParam.beforeFirst('_'));
+        long layerId = decodeTypeName(layerParam.toString());
         try {
             AnnotationLayer layer = annotationService.getLayer(layerId);
             AnnotationFeature feature = annotationService.getFeature(databaseParam.toString(),
@@ -374,8 +379,9 @@ public class BratAnnotationEditor
         throws IOException
     {
         StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+        
         if (!layerParam.isEmpty()) {
-            long layerId = Long.parseLong(layerParam.beforeFirst('_'));
+            long layerId = decodeTypeName(layerParam.toString());
             AnnotationLayer layer = annotationService.getLayer(layerId);
             if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
                 // parse the action
@@ -422,7 +428,7 @@ public class BratAnnotationEditor
                     getActionHandler().actionCreateOrUpdate(aTarget, aCas);
                 }
                 else {
-                    getActionHandler().actionSelect(aTarget, aCas);
+                    getActionHandler().actionSelect(aTarget);
                 }
             }
         }
@@ -448,7 +454,7 @@ public class BratAnnotationEditor
             getActionHandler().actionCreateOrUpdate(aTarget, aCas);
         }
         else {
-            getActionHandler().actionSelect(aTarget, aCas);
+            getActionHandler().actionSelect(aTarget);
         }
 
         return new ArcAnnotationResponse();
@@ -646,7 +652,7 @@ public class BratAnnotationEditor
         });
     }
 
-    private String bratRenderCommand(CAS aCas)
+    private Optional<String> bratRenderCommand(CAS aCas)
     {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -656,10 +662,11 @@ public class BratAnnotationEditor
         String json = toJson(response);
         
         // By default, we do a full rendering...
-        RenderType renderType = RenderType.FULL;
+        RenderType renderType = FULL;
         String cmd = "renderData";
         String data = json;
-        String diff = null;
+        JsonNode diff;
+        String diffJsonStr = null;
         
         // Here, we try to balance server CPU load against network load. So if we have a chance
         // of significantly reducing the data sent to the client via a differential update, then
@@ -687,14 +694,20 @@ public class BratAnnotationEditor
             }
             
             if (previous != null && current != null) {
-                diff = JsonDiff.asJson(previous, current).toString();
-     
-                // Only sent a patch if it is smaller than sending the full data. E.g. when
-                // switching pages, the patch usually ends up being twice as large as the full data.
-                if (diff.length() < json.length()) {
+                diff = JsonDiff.asJson(previous, current);
+                diffJsonStr = diff.toString();
+                
+                if (diff instanceof ArrayNode && ((ArrayNode) diff).isEmpty()) {
+                    // No difference? Well, don't render at all :)
+                    renderType = SKIP;
+                }
+                else if (diffJsonStr.length() < json.length()) {
+                    // Only sent a patch if it is smaller than sending the full data. E.g. when
+                    // switching pages, the patch usually ends up being twice as large as the full
+                    // data.
                     cmd = "renderDataPatch";
-                    data = diff;
-                    renderType = RenderType.DIFFERENTIAL;
+                    data = diffJsonStr;
+                    renderType = DIFFERENTIAL;
                 }
                 
                 // LOG.info("Diff: " + diff);
@@ -709,10 +722,14 @@ public class BratAnnotationEditor
         
         timer.stop();
 
-        metrics.renderComplete(renderType, timer.getTime(), json, diff);
+        metrics.renderComplete(renderType, timer.getTime(), json, diffJsonStr);
         
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd + "', [" + data
-                + "]);";
+        if (SKIP.equals(renderType)) {
+            return Optional.empty();
+        }
+        
+        return Optional.of("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd + "', ["
+                + data + "]);");
     }
 
     private void render(GetDocumentResponse response, CAS aCas)
@@ -801,15 +818,14 @@ public class BratAnnotationEditor
                 bratRenderLaterCommand() +
                 "}, 0);";
         aResponse.render(OnDomReadyHeaderItem.forScript(script));
-        
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
         try {
-            aTarget.appendJavaScript("setTimeout(function() { "
-                    + bratRenderCommand(getCasProvider().get()) + " }, 0);");
+            bratRenderCommand(getCasProvider().get()).ifPresent(cmd -> 
+                    aTarget.appendJavaScript("setTimeout(function() { " + cmd + " }, 0);"));
         }
         catch (IOException e) {
             LOG.error("Unable to load data", e);

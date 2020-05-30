@@ -28,7 +28,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -137,8 +137,11 @@ public class DefaultPagingNavigator extends Panel
         return defaultFocusPosition;
     }
     
+    /**
+     * Re-render the current position if the position has been changed in the {@link AnnotatorState}
+     */
     @OnEvent
-    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    public void onAnnotatorViewStateChangedEvent(AnnotatorViewportChangedEvent aEvent)
     {
         aEvent.getRequestHandler().add(gotoPageTextField);
     }

@@ -393,8 +393,7 @@ public class CorrectionPage
 
             // Update the CASes
             annotationService.upgradeCas(editorCas, annotationDocument);
-            correctionDocumentService.upgradeCorrectionCas(correctionCas,
-                    state.getDocument());
+            correctionDocumentService.upgradeCorrectionCas(correctionCas, state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas,
@@ -447,8 +446,6 @@ public class CorrectionPage
 
             // Reset the editor
             detailEditor.reset(aTarget);
-            // Populate the layer dropdown box
-            detailEditor.loadFeatureEditorModels(editorCas, aTarget);
         }
         catch (Exception e) {
             handleException(aTarget, e);

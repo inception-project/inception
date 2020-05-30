@@ -18,13 +18,21 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.Page;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 
 public class Selection
     implements Serializable
@@ -51,6 +59,11 @@ public class Selection
     // selected span text
     private String text;
     
+    public Selection()
+    {
+        // Nothing to do
+    }
+    
     public void selectArc(VID aVid, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
         selectedAnnotationId = aVid;
@@ -63,6 +76,8 @@ public class Selection
         targetSpanId = getAddr(aTargetFs);
         
         LOG.debug("Arc: {}", this);
+        
+        fireSelectionChanged();
     }
 
     public void selectSpan(AnnotationFS aFS)
@@ -82,6 +97,8 @@ public class Selection
         targetSpanId = -1;
         
         LOG.debug("Span: {}", this);
+        
+        fireSelectionChanged();
     }
 
     public void selectSpan(CAS aCas, int aBegin, int aEnd)
@@ -101,6 +118,8 @@ public class Selection
         targetSpanId = -1;
         
         LOG.debug("Clear: {}", this);
+        
+        fireSelectionChanged();
     }
 
     public boolean isSet()
@@ -177,7 +196,20 @@ public class Selection
         int tempSpanId = originSpanId;
         originSpanId = targetSpanId;
         targetSpanId = tempSpanId;
+        
+        fireSelectionChanged();
     }
+    
+    private void fireSelectionChanged()
+    {
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
+            Page page = (Page) handler.get().getPage();
+            page.send(page, BREADTH, new SelectionChangedEvent(
+                    RequestCycle.get().find(AjaxRequestTarget.class).orElse(null)));
+        }
+    }
+
 
     @Override
     public String toString()
