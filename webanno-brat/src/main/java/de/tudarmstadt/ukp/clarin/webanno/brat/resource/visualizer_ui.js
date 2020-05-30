@@ -692,11 +692,11 @@ var VisualizerUI = (function($, window, undefined) {
 
             var onDoneRendering = function(coll, doc, args) {
                     if (args && !args.edited) {
-                        var svgtop = $('svg').offset().top;
                         var $inFocus = $('#svg animate[data-type="focus"]:first').parent();
                         if ($inFocus.length) {
+                            var svgtop = $('svg').offset().top;
                             $('html,body').
-                				animate({ scrollTop: $inFocus.offset().top - svgtop - window.innerHeight / 2 }, { duration: 'slow', easing: 'swing'});
+                            animate({ scrollTop: $inFocus.offset().top - svgtop - window.innerHeight / 2 }, { duration: 'slow', easing: 'swing'});
                         }
                     }
                     dispatcher.post('allowReloadByURL');

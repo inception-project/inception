@@ -70,7 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -135,7 +135,7 @@ public class BratAnnotationEditor
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
-    private @SpringBean BratProperties bratProperties;
+    private @SpringBean AnnotationEditorProperties bratProperties;
     
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -823,9 +823,43 @@ public class BratAnnotationEditor
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
+        // Controls whether rendering should happen within the AJAX request or after the AJAX
+        // request. Doing it within the request has the benefit of the browser only having to
+        // recalculate the layout once at the end of the AJAX request (at least theoretically)
+        // while deferring the rendering causes the AJAX request to complete faster, but then
+        // the browser needs to recalculate its layout twice - once of any Wicket components
+        // being re-rendered and once for the brat view to re-render.
+        final boolean deferredRendering = false;
+        
+        // Whether the profiling built into the the brat visualization JS should be enabled. If
+        // this is enabled, profiling data is collected and a report is printed to the browser's
+        // JS console after every rendering action
+        final boolean enableInBrowserProfiling = false;
+        
         try {
-            bratRenderCommand(getCasProvider().get()).ifPresent(cmd -> 
-                    aTarget.appendJavaScript("setTimeout(function() { " + cmd + " }, 0);"));
+            bratRenderCommand(getCasProvider().get()).ifPresent(cmd -> {
+                StringBuilder js = new StringBuilder();
+                
+                if (deferredRendering) {
+                    js.append("setTimeout(function() {");
+                }
+                
+                if (enableInBrowserProfiling) {
+                    js.append("Util.profileEnable(true);");
+                    js.append("Util.profileClear();");
+                }
+                
+                js.append(cmd);
+                
+                if (enableInBrowserProfiling) {
+                    js.append("Util.profileReport();");
+                }
+                
+                if (deferredRendering) {
+                    js.append("}, 0);");
+                }
+                aTarget.appendJavaScript(js);
+            });
         }
         catch (IOException e) {
             LOG.error("Unable to load data", e);
