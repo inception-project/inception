@@ -4062,7 +4062,7 @@ Util.profileStart('before render');
               span.comment && span.comment.type,
               span.normalizations]);
 // BEGIN WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations//
-          dispatcher.post('displaySpanButtons', [evt, target]);
+          dispatcher.post('displaySpanButtons', [evt, target, span.id]);
 // END WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
           var spanDesc = spanTypes[span.type];
           var bgColor = ((spanDesc && spanDesc.bgColor) ||

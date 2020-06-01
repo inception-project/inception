@@ -543,6 +543,7 @@ var VisualizerUI = (function($, window, undefined) {
                         commentDisplayed = false;
 // END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
                     }
+					clearTimeout(displayButtonsTimer);
                 };
 
             var onMouseMove = function(evt) {
@@ -556,8 +557,8 @@ var VisualizerUI = (function($, window, undefined) {
 // BEGIN WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
             var displayButtonsTimer = null;
             var buttonsShown = false;
-            var displaySpanButtons = function (evt, target) {
-                if(target.attr('data-span-id')) {
+            var displaySpanButtons = function (evt, target, spanId) {
+                if(target.attr('data-span-id') && spanId.startsWith("recommendationEditorExtension")) {
                     var spanPosition = target.position();
                     var spanWidth = target.width();
                     var spanHeight = target.height();
