@@ -59,6 +59,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,6 +73,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.TagCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.TagDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.TagUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -93,21 +97,28 @@ public class AnnotationSchemaServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
     
+    private final ApplicationEventPublisher applicationEventPublisher;
     private final LayerSupportRegistry layerSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
     
     @Autowired
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
-            FeatureSupportRegistry aFeatureSupportRegistry)
+            FeatureSupportRegistry aFeatureSupportRegistry,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         layerSupportRegistry = aLayerSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;
+        applicationEventPublisher = aApplicationEventPublisher;
+    }
+    
+    public AnnotationSchemaServiceImpl() {
+        this(null, null, (EntityManager) null);
     }
 
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry, EntityManager aEntityManager)
     {
-        this(aLayerSupportRegistry, aFeatureSupportRegistry);
+        this(aLayerSupportRegistry, aFeatureSupportRegistry, (ApplicationEventPublisher) null);
         entityManager = aEntityManager;
     }
 
@@ -117,9 +128,17 @@ public class AnnotationSchemaServiceImpl
     {
         if (isNull(aTag.getId())) {
             entityManager.persist(aTag);
+            
+            if (applicationEventPublisher != null) {
+                applicationEventPublisher.publishEvent(new TagCreatedEvent(this, aTag));
+            }
         }
         else {
             entityManager.merge(aTag);
+            
+            if (applicationEventPublisher != null) {
+                applicationEventPublisher.publishEvent(new TagUpdatedEvent(this, aTag));
+            }
         }
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
@@ -631,15 +650,21 @@ public class AnnotationSchemaServiceImpl
     public void removeTag(Tag aTag)
     {
         entityManager.remove(entityManager.contains(aTag) ? aTag : entityManager.merge(aTag));
+        
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(new TagDeletedEvent(this, aTag));
+        }
     }
 
     @Override
     @Transactional
     public void removeTagSet(TagSet aTagSet)
     {
+        // FIXME: Optimally, this should be cascade-on-delete in the DB
         for (Tag tag : listTags(aTagSet)) {
             entityManager.remove(tag);
         }
+        
         entityManager
                 .remove(entityManager.contains(aTagSet) ? aTagSet : entityManager.merge(aTagSet));
     }

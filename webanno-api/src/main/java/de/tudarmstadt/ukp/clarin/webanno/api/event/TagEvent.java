@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,15 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.metrics;
+package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
-public interface BratMetrics
+import org.springframework.context.ApplicationEvent;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
+
+public class TagEvent
+    extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
-    public static enum RenderType {
-        FULL,
-        DIFFERENTIAL,
-        SKIP;
+    private static final long serialVersionUID = 8243752811013952530L;
+    
+    private final Tag tag;
+
+    public TagEvent(Object aSource, Tag aTag)
+    {
+        super(aSource);
+        tag = aTag;
     }
 
-    void renderComplete(RenderType aType, long aTime, String aFull, String aDiff);
+    public Tag getTag()
+    {
+        return tag;
+    }
 }

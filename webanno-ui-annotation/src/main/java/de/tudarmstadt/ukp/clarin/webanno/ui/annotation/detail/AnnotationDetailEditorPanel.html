@@ -78,37 +78,10 @@
          -->
         <input wicket:id=forwardAnno tabindex="-1"></input>
       </form>
-      <div wicket:id="annotationFeatureForm" id="annotationFeatureForm" 
-          class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
-        <div wicket:id=deleteAnnotationDialog></div>
-        <div wicket:id=replaceAnnotationDialog></div>
-        <div wicket:id="layerContainer" class="card">
-          <!-- pb-1 compensates for the bottom padding of the form-group -->
-          <div class="card-body pb-1">
-            <div class="form-group form-row">
-              <label wicket:for="defaultAnnotationLayer" class="col-sm-3 col-form-label">
-                <wicket:label key="layer"/>
-              </label>
-              <div class="col-sm-9">
-                <select wicket:id="defaultAnnotationLayer" class="form-control" 
-                    data-container="body"></select>
-              </div>
-              <div class="col-sm-12 text-muted">
-                <small wicket:id="relationHint"></small>
-              </div>
-            </div>
-            <div class="form-group form-row" wicket:id="forwardAnnotationGroup">
-              <div class="col-sm-12">
-                <div class="form-check">
-                  <input wicket:id="forwardAnnotation" class="form-check-input" type="checkbox"/>
-                  <label wicket:for="forwardAnnotation" class="form-check-label">
-                    Forward annotation
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div id="annotationFeatureForm" class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
+        <div wicket:id=deleteAnnotationDialog/>
+        <div wicket:id=replaceAnnotationDialog/>
+        <div wicket:id="layerContainer" class="card"/>
         <div class="flex-content panel card">
           <div class="card-header">
             Annotation
@@ -128,47 +101,8 @@
             </div>
           </div>
           <div class="scrolling card-body flex-v-container">
-            <div wicket:id="noAnnotationWarning" class="flex-content flex-h-container no-data-notice">
-              <div>No annotation selected</div>
-            </div>
-            <div wicket:id="infoContainer">
-              <div wicket:id="selectedAnnotationInfoContainer">
-                <div class="form-group form-row d-flex" wicket:enclosure="selectedAnnotationType">
-                  <div class="flex-fill form-control scrolling" style="height: unset; max-height: 4.5rem; word-wrap: break-word;" readonly>
-                    <div class="small" wicket:id="selectedAnnotationType"/>
-                  </div>
-                </div>
-                <div class="feature-editors-sidebar">
-                  <div class="form-group form-row" wicket:enclosure="selectedAnnotationLayer">
-                    <label class="feature-editor-label col-form-label">Layer</label>
-                    <div class="feature-editor-value">
-                      <span class="form-control" readonly><wicket:container wicket:id="selectedAnnotationLayer"/></span>
-                    </div>
-                  </div>
-                  <div class="form-group form-row">
-                    <label class="feature-editor-label col-form-label">
-                      <wicket:message key="text"/> 
-                      <a wicket:id="jumpToAnnotation" class="float-right"><i class="fas fa-crosshairs"></i></a>
-                    </label>
-                    
-                    <div class="feature-editor-value form-control scrolling" style="height: unset; max-height: 4.5rem; word-wrap: break-word;" readonly>
-                      <wicket:container wicket:id="selectedText"/>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div wicket:id="noFeaturesWarning" class="flex-content flex-h-container no-data-notice mt-2 border-top">
-              <div>No features on this layer</div>
-            </div>
-            <div class="flex-content feature-editors-sidebar" wicket:id="featureEditorContainer">
-              <wicket:container wicket:id="featureEditors">
-                <div wicket:id="editor"></div>
-              </wicket:container>
-              <div style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">
-                <input wicket:id="focusResetHelper" tabindex="-1"></input>
-              </div>
-            </div>
+            <div wicket:id="infoContainer"/>
+            <div wicket:id="featureEditorContainer"/>
           </div>
         </div>
       </div>
