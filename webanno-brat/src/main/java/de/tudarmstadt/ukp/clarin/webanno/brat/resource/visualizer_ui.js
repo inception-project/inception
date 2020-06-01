@@ -415,7 +415,7 @@ var VisualizerUI = (function($, window, undefined) {
                             }
                             
                             comment += ```
-                                  <span class="norm_info_value">${Util.escapeHTML(value)}</span>
+                                  <span class="norm_info_value">${Util.escapeHTML(value).replace(/\n/g, "<br/>")}</span>
                                   <br/>
                                   ```;
                         } else {
@@ -497,7 +497,7 @@ var VisualizerUI = (function($, window, undefined) {
                                                 value = value.substr(0, 300) + ' ...';
                                             }
 
-                                            norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ':' + Util.escapeHTML(value) + '</span>' + '<br/>');
+                                            norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ':' + Util.escapeHTML(value).replace(/\n/g, "<br/>") + '</span>' + '<br/>');
                                         }
                                     }
                                 }

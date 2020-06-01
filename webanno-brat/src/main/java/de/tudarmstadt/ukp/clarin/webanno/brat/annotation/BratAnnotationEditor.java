@@ -355,16 +355,29 @@ public class BratAnnotationEditor
             return response;
         }
 
+        
+        String database = databaseParam.toString();
         long layerId = decodeTypeName(layerParam.toString());
         AnnotatorState state = getModelObject();
         AnnotationLayer layer = annotationService.getLayer(state.getProject(), layerId)
                 .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
                         + "] does not exist in project [" + state.getProject().getName() + "]("
                         + state.getProject().getId() + ")"));
-        AnnotationFeature feature = annotationService.getFeature(databaseParam.toString(),
-                layer);
+        AnnotationFeature feature = annotationService.getFeature(database, layer);
+        
+        // Check where the query needs to be routed: to an editor extension or to a feature support
+        if (paramId.isSynthetic()) {
+            String extensionId = paramId.getExtensionId();
+            response.setResults(extensionRegistry.getExtension(extensionId)
+                    .renderLazyDetails(state.getDocument(), state.getUser(), paramId, feature,
+                            keyParam.toString()).stream()
+                    .map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
+                    .collect(Collectors.toList()));
+            return response;
+        }
+        
         try {
-            response.setResults(featureSupportRegistry.getFeatureSupport(feature)
+            response.setResults(featureSupportRegistry.findExtension(feature)
                     .renderLazyDetails(feature, keyParam.toString()).stream()
                     .map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
                     .collect(Collectors.toList()));

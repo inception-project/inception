@@ -607,13 +607,16 @@ var Visualizer = (function($, window, undefined) {
               new Span(entity[0], entity[1], entity[2], 'entity');
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually + #587 Customize mouse hover text
           if (entity[3]) {
-        	  span.labelText = entity[3];
-          }
-          if (entity[4]) {
-        	  span.color = entity[4];
-          }
-          if (entity[5]){
-        	  span.hovertext = entity[5];
+            var attributes = entity[3];
+            if (attributes.hasOwnProperty('l')) {
+              span.labelText = attributes.l;
+            }
+            if (attributes.hasOwnProperty('c')) {
+              span.color = attributes.c;
+            }
+            if (attributes.hasOwnProperty('h')) {
+              span.hovertext = attributes.h;
+            }
           }
 // WEBANNO EXTENSION END
           span.splitMultilineOffsets(data.text);

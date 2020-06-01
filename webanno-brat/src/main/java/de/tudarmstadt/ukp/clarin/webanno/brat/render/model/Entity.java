@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -35,16 +36,14 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
  *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "vid", "type", "offsets", "labelText", "color", "hovertext" })
+@JsonPropertyOrder(value = { "vid", "type", "offsets", "attributes" })
 public class Entity
 {
     private VID vid;
     private String type;
     private List<Offsets> offsets = new ArrayList<>();
     // WEBANNO EXTENSION BEGIN
-    private String labelText;
-    private String color;
-    private String hovertext;
+    private EntityAttributes attributes = new EntityAttributes();
     // WEBANNO EXTENSION END
 
     public Entity()
@@ -76,9 +75,9 @@ public class Entity
         vid = aVid;
         type = aType;
         offsets = aOffsets;
-        labelText = aLabelText;
-        color = aColor;
-        hovertext = aHovertext;
+        attributes.setLabelText(aLabelText);
+        attributes.setColor(aColor);
+        attributes.setHoverText(aHovertext);
     }
 
     @Deprecated
@@ -122,34 +121,71 @@ public class Entity
     {
         offsets = aOffsets;
     }
-
-    public void setLabelText(String aLabelText)
+    
+    public EntityAttributes getAttributes()
     {
-        labelText = aLabelText;
-    }
-
-    public String getLabelText()
-    {
-        return labelText;
-    }
-
-    public String getColor()
-    {
-        return color;
-    }
-
-    public void setColor(String aColor)
-    {
-        color = aColor;
+        return attributes;
     }
     
-    public void setHovertext(String aHovertext)
+    public void setAttributes(EntityAttributes aAttributes)
     {
-        hovertext = aHovertext;
+        attributes = aAttributes;
     }
 
+    /**
+     * @deprecated Use {@code getAttributes().setLabelText(...)}.
+     */
+    @JsonIgnore
+    @Deprecated
+    public void setLabelText(String aLabelText)
+    {
+        attributes.setLabelText(aLabelText);
+    }
+
+    /**
+     * @deprecated Use {@code getAttributes().getLabelText()}.
+     */
+    @Deprecated
+    public String getLabelText()
+    {
+        return attributes.getLabelText();
+    }
+
+    /**
+     * @deprecated Use {@code getAttributes().getColor()}.
+     */
+    @Deprecated
+    public String getColor()
+    {
+        return attributes.getColor();
+    }
+
+    /**
+     * @deprecated Use {@code getAttributes().setColor(...)}.
+     */
+    @JsonIgnore
+    @Deprecated
+    public void setColor(String aColor)
+    {
+        attributes.setColor(aColor);
+    }
+    
+    /**
+     * @deprecated Use {@code getAttributes().setHoverText(...)}.
+     */
+    @JsonIgnore
+    @Deprecated
+    public void setHovertext(String aHovertext)
+    {
+        attributes.setHoverText(aHovertext);
+    }
+
+    /**
+     * @deprecated Use {@code getAttributes().getHoverText(...)}.
+     */
+    @Deprecated
     public String getHovertext()
     {
-        return hovertext;
+        return attributes.getHoverText();
     }
 }
