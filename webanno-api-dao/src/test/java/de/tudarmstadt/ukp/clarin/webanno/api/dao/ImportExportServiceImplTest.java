@@ -77,7 +77,7 @@ public class ImportExportServiceImplTest
         initMocks(this);
         
         //schemaService = mock(AnnotationSchemaServiceImpl.class);
-        schemaService = Mockito.spy(new AnnotationSchemaServiceImpl(null, null));
+        schemaService = Mockito.spy(new AnnotationSchemaServiceImpl());
         
         backupProperties = new BackupProperties();
 

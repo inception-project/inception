@@ -214,7 +214,7 @@ public class CasStorageServiceImpl
                 // It is possible that the CAS is not set in the exclusive access, in that case we
                 // use the exclusive access just to reserve access to the username/docID pair. This
                 // could e.g. happen when saving an unmanaged CAS under a new username/docId pair.
-                if (access.isCasSet() || access.getCas() != aCas) {
+                if (access.isCasSet() && access.getCas() != aCas) {
                     access.setCas(aCas);
                 }
             }
