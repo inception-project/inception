@@ -1,0 +1,112 @@
+package de.tudarmstadt.ukp.inception.externalsearch.solr.traits;
+
+import java.io.Serializable;
+
+/**
+ *  Paramètre requête
+ */
+public class SolrSearchProviderTraits
+    implements Serializable
+{
+    // TODO : need to select usefull var in the code.
+
+    private static final int ARBITRARY_FIXED_SEED = 5;
+
+    private String remoteUrl = "http://localhost:8983";
+
+    private String indexName = "boorman";
+
+    private String defaultField = "id";
+
+    private String textField = "text";
+
+    private String searchPath = "/select";
+
+    /**
+     *  Number of results retrieved from the server
+     */
+    private int resultSize = 1000;
+
+    private boolean randomOrder = false;
+
+    private int seed = ARBITRARY_FIXED_SEED;
+
+    /**
+     *  Getter and Setter
+     */
+    public String getRemoteUrl()
+    {
+        return remoteUrl;
+    }
+
+    public void setRemoteUrl(String aRemoteUrl)
+    {
+        remoteUrl = aRemoteUrl;
+    }
+
+    public String getIndexName()
+    {
+        return indexName;
+    }
+
+    public void setIndexName(String aIndexName)
+    {
+        indexName = aIndexName;
+    }
+
+    public String getSearchPath()
+    {
+        return searchPath;
+    }
+
+    public void setSearchPath(String aSearchPath)
+    {
+        searchPath = aSearchPath;
+    }
+
+    public String getDefaultField()
+    {
+        return defaultField;
+    }
+
+    public void setDefaultField(String aDefaultField)
+    {
+        defaultField = aDefaultField;
+    }
+
+    public String getTextField() { return textField; }
+
+    public void setTextField(String textField) { this.textField = textField; }
+
+    public int getResultSize()
+    {
+        return resultSize;
+    }
+
+    public void setResultSize(int aResultSize)
+    {
+        resultSize = aResultSize;
+    }
+
+    public boolean isRandomOrder()
+    {
+        return randomOrder;
+    }
+
+    public void setRandomOrder(boolean aRandomOrder)
+    {
+        randomOrder = aRandomOrder;
+    }
+
+    public int getSeed()
+    {
+        return seed;
+    }
+
+    public void setSeed(int seed)
+    {
+        this.seed = seed;
+    }
+
+
+}
