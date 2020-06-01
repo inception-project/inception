@@ -27,7 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils.readSerializedCas;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
@@ -233,35 +232,28 @@ public class ImportExportServiceImpl
             bulkOperationContext = new HashMap<>();
         }
         
-        File annotationFolder = casStorageService.getAnnotationFolder(aDocument);
-        String serializedCasFileName;
+        String username;
         // for Correction, it will export the corrected document (of the logged in user)
         // (CORRECTION_USER.ser is the automated result displayed for the user to correct it, not
         // the final result) for automation, it will export either the corrected document
         // (Annotated) or the automated document
         if (aMode.equals(ANNOTATION) || aMode.equals(AUTOMATION) || aMode.equals(CORRECTION)) {
-            serializedCasFileName = aUser + ".ser";
+            username = aUser;
         }
         // The merge result will be exported
         else {
-            serializedCasFileName = CURATION_USER + ".ser";
+            username = CURATION_USER;
         }
 
         // Read file
-        File serializedCasFile = new File(annotationFolder, serializedCasFileName);
-        if (!serializedCasFile.exists()) {
-            throw new FileNotFoundException("CAS file [" + serializedCasFileName
-                    + "] not found in [" + annotationFolder + "]");
+        File exportFile;
+        try (CasStorageSession session = CasStorageSession.openNested()) {
+            CAS cas = casStorageService.readCas(aDocument, username);
+            exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension,
+                    aBulkOperationContext);
         }
 
-        CAS cas = WebAnnoCasUtil.createCas();
-        readSerializedCas(cas, serializedCasFile);
-
-        File exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension,
-                aBulkOperationContext);
-
         Project project = aDocument.getProject();
-        
         try (MDC.MDCCloseable closable = MDC.putCloseable(KEY_PROJECT_ID,
                 String.valueOf(project.getId()))) {
             log.info("Exported annotations [{}]({}) for user [{}] from project [{}]({}) "
