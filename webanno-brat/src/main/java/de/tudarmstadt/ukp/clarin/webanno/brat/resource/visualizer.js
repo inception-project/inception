@@ -1550,16 +1550,6 @@ var Visualizer = (function($, window, undefined) {
             labels = [data.eventDescs[arc.eventDescId].labelText];
           }
 // WEBANNO EXTENSION END - #820 - Allow setting label/color individually
-// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
-          else {
-            // Make sure we have measurements for the bracketed labels that we use later.
-            var plainLabels = labels;
-            labels = [];
-            for (var i = 0; i < plainLabels.length; i++) {
-              labels[i] = '(' + plainLabels[i] + ')';
-            }
-          }
-// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
           $.each(labels, function(labelNo, label) {
             arcTexts[label] = true;
           });
@@ -2662,7 +2652,7 @@ Util.profileStart('arcs');
           var noNumArcType;
           var splitArcType;
           if (arc.type) {
-            splitArcType = arc.type.match(/^(.*?)(\d*)$/);
+            splitArcType = arc.type.match(/^(.*)(\d*)$/);
             noNumArcType = splitArcType[1];
           }
 
@@ -2870,24 +2860,21 @@ Util.profileStart('arcs');
                 }
               }
               
-// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
-              labelText = "(" + labelText + ")";
-// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
-
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
               if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
                 if (data.eventDescs[arc.eventDescId].labelText) {
               	  labelText = data.eventDescs[arc.eventDescId].labelText;
                 }
               }
-// WEBANNO EXTENSION END
+// WEBANNO EXTENSION END - #820 - Allow setting label/color individually
 
               var shadowGroup;
               if (arc.shadowClass || arc.marked) {
                 shadowGroup = svg.group(arcGroup);
               }
               var options = {
-                'fill': color,
+                //'fill': color,
+                'fill': '#000000',
                 'data-arc-role': arc.type,
                 'data-arc-origin': arc.origin,
                 'data-arc-target': arc.target,
@@ -3786,6 +3773,24 @@ Util.profileStart('resize SVG');
 /*
         if (width > canvasWidth) canvasWidth = width;
 */ 
+        // Loops over the rows to check if the width calculated so far is still not enough. This
+        // currently happens sometimes if there is a single annotation on many words preventing
+        // wrapping within the annotation (aka oversizing).
+        $(textGroup).children(".text-row").each(function (rowIndex, textRow) {
+          var rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+          var rowFinalSpacing = $($(textRow).children('.row-final')[0]);
+          var lastChunkWidth = sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
+          var lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
+          if (rtlmode) {
+            // Not sure what to calculate here
+          }
+          else {
+            if (lastChunkOffset + lastChunkWidth > width) {
+              width = lastChunkOffset + lastChunkWidth;
+            }
+          }
+        });
+        
         var oversized = Math.max(width - canvasWidth, 0);
         if (oversized > 0) {
           $svgDiv.width(baseCanvasWidth);
@@ -3868,7 +3873,7 @@ Util.profileStart('row-spacing-adjust');
             rowInitialSpacing.attr('textLength', initialSpacingWidth);
             
             var finalSpacingX = lastChunkOffset + 1;
-            var finalSpacingWidth = finalSpacingX;
+            var finalSpacingWidth = lastChunkWidth;
             rowFinalSpacing.attr('x', finalSpacingX);
             rowFinalSpacing.attr('textLength', finalSpacingWidth);
           }
