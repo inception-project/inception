@@ -244,18 +244,6 @@ public class AnnotationPage
             private static final long serialVersionUID = 2857345299480098279L;
 
             @Override
-            protected void onChange(AjaxRequestTarget aTarget)
-            {
-//                actionRefreshDocument(aTarget);
-            }
-
-            @Override
-            protected void onAutoForward(AjaxRequestTarget aTarget)
-            {
-//                actionRefreshDocument(aTarget);
-            }
-            
-            @Override
             public CAS getEditorCas() throws IOException
             {
                 return AnnotationPage.this.getEditorCas();
@@ -264,13 +252,15 @@ public class AnnotationPage
     }
 
     /**
-     * Re-render the document when the selection has changed.
+     * Re-render the document when the selection has changed. This is necessary in order to update
+     * the selection highlight in the annotation editor.
      */
     @OnEvent
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
         actionRefreshDocument(aEvent.getRequestHandler());
     }
+    
     /**
      * Re-render the document when an annotation has been created or deleted (assuming that this
      * might have triggered a change in some feature that might be shown on screen.

@@ -127,6 +127,22 @@ public class BratAnnotationEditor
 
     private static final String ACTION_CONTEXT_MENU = "contextMenu";
 
+    // Controls whether rendering should happen within the AJAX request or after the AJAX
+    // request. Doing it within the request has the benefit of the browser only having to
+    // recalculate the layout once at the end of the AJAX request (at least theoretically)
+    // while deferring the rendering causes the AJAX request to complete faster, but then
+    // the browser needs to recalculate its layout twice - once of any Wicket components
+    // being re-rendered and once for the brat view to re-render.
+    private static final boolean DEFERRED_RENDERING = false;
+    
+    // Whether the profiling built into the the brat visualization JS should be enabled. If
+    // this is enabled, profiling data is collected and a report is printed to the browser's
+    // JS console after every rendering action
+    private static final boolean ENABLE_IN_BROWSER_PROFILING = false;
+
+    // Log messages in the browser as part of JS commands
+    private static final boolean ENABLE_IN_BROWSER_TRACE = false;
+
     private final ContextMenu contextMenu;
     
     private @SpringBean PreRenderer preRenderer;
@@ -150,7 +166,9 @@ public class BratAnnotationEditor
         
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
-        autoAdd(vis, null);
+        add(vis);
+        
+        LOG.trace("[{}][{}] BratAnnotationEditor", getMarkupId(), vis.getMarkupId());
 
         contextMenu = new ContextMenu("contextMenu");
         add(contextMenu);
@@ -176,7 +194,7 @@ public class BratAnnotationEditor
                 
                 // Get action from the request
                 String action = request.getParameterValue(PARAM_ACTION).toString();
-                LOG.debug("AJAX-RPC CALLED: [{}]", action);
+                LOG.trace("AJAX-RPC CALLED: [{}]", action);
                 
                 // Parse annotation ID if present in request
                 final VID paramId;
@@ -291,7 +309,7 @@ public class BratAnnotationEditor
 
                 // Serialize updated document to JSON
                 if (result == null) {
-                    LOG.debug("AJAX-RPC: Action [{}] produced no result!", action);
+                    LOG.trace("AJAX-RPC: Action [{}] produced no result!", action);
                 }
                 else {
                     String json;
@@ -309,7 +327,7 @@ public class BratAnnotationEditor
                             + json + ";");
                 }
                 
-                LOG.debug("AJAX-RPC DONE: [{}] completed in {}ms", action,
+                LOG.trace("AJAX-RPC DONE: [{}] completed in {}ms", action,
                         (System.currentTimeMillis() - timerStart));
             }
         };
@@ -319,7 +337,7 @@ public class BratAnnotationEditor
 
     private Object actionLookupNormData(AjaxRequestTarget aTarget, IRequestParameters request,
             VID paramId)
-        throws IOException
+        throws AnnotationException, IOException
     {
         NormDataResponse response = new NormDataResponse();
 
@@ -338,11 +356,14 @@ public class BratAnnotationEditor
         }
 
         long layerId = decodeTypeName(layerParam.toString());
+        AnnotatorState state = getModelObject();
+        AnnotationLayer layer = annotationService.getLayer(state.getProject(), layerId)
+                .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
+                        + "] does not exist in project [" + state.getProject().getName() + "]("
+                        + state.getProject().getId() + ")"));
+        AnnotationFeature feature = annotationService.getFeature(databaseParam.toString(),
+                layer);
         try {
-            AnnotationLayer layer = annotationService.getLayer(layerId);
-            AnnotationFeature feature = annotationService.getFeature(databaseParam.toString(),
-                    layer);
-            
             response.setResults(featureSupportRegistry.getFeatureSupport(feature)
                     .renderLazyDetails(feature, keyParam.toString()).stream()
                     .map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
@@ -376,13 +397,17 @@ public class BratAnnotationEditor
 
     private Object actionDoAction(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas,
             VID paramId)
-        throws IOException
+        throws AnnotationException, IOException
     {
         StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
         
         if (!layerParam.isEmpty()) {
             long layerId = decodeTypeName(layerParam.toString());
-            AnnotationLayer layer = annotationService.getLayer(layerId);
+            AnnotatorState state = getModelObject();
+            AnnotationLayer layer = annotationService.getLayer(state.getProject(), layerId)
+                    .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
+                            + "] does not exist in project [" + state.getProject().getName() + "]("
+                            + state.getProject().getId() + ")"));
             if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
                 // parse the action
                 List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
@@ -601,59 +626,25 @@ public class BratAnnotationEditor
         // aResponse.render(
         //     JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
         
-        // If the page is reloaded in the browser and a document was already open, we need
-        // to render it. We use the "later" commands here to avoid polluting the Javascript
-        // header items with document data and because loading times are not that critical
-        // on a reload.
-        // We only do this if we are *not* in a partial page reload. The case of a partial
-        // page reload is covered in onAfterRender()
+        // When the page is re-loaded or when the component is added to the page, we need to 
+        // initialize the brat stuff.
+        StringBuilder js = new StringBuilder();
+        js.append(bratInitCommand());
+        js.append(bratLoadCollectionCommand());
         Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
         if (!target.isPresent() && getModelObject().getProject() != null) {
-            bratInitRenderLater(aResponse);
+            // If a document is already open, we also need to render the document. To avoid carrying
+            // the data JSON around in the document header, we trigger brat to load the JSON in a
+            // separate request
+            js.append(bratRenderLaterCommand());
         }
-    }
-    
-    @Override
-    protected void onAfterRender()
-    {
-        super.onAfterRender();
-        
-        // If we are in a partial page request, then trigger re-initialization of the brat 
-        // rendering engine here. If we are in a full page reload, this is handled already
-        // by renderHead()
-        //
-        // Mind that using AnnotationEditorBase#requestRender() is a better alternative to
-        // adding the editor to the AJAX request because it creates less initialization 
-        // overhead (e.g. it doesn't have to send the collection info again and doesn't require
-        // a delay).
-        RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
-            try {
-                String script = "setTimeout(function() { " +
-                        bratInitCommand() +
-                        bratLoadCollectionCommand() +
-                        // Even with a timeout, brat will try to grab too much space if the view
-                        // contains a *very* long annotation which explodes the view (cf. 
-                        // https://github.com/webanno/webanno/issues/500) - so as a last resort,
-                        // we schedule a delayed rendering. Since this only happens on a document
-                        // switch and after closing the preferences dialog, it is kind of
-                        // acceptable, although actually a faster document switch would be
-                        // desirable.
-                        // bratRenderCommand(getCasProvider().get()) +
-                        bratRenderLaterCommand() +
-                        "}, 0);";
-                target.appendJavaScript(script);
-                LOG.debug("Delayed rendering in partial page update...");
-            }
-            catch (Exception e) {
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                target.addChildren(getPage(), IFeedback.class);
-            }
-        });
+        aResponse.render(OnDomReadyHeaderItem.forScript(js));
     }
 
     private Optional<String> bratRenderCommand(CAS aCas)
     {
+        LOG.trace("[{}][{}] bratRenderCommand", getMarkupId(), vis.getMarkupId());
+        
         StopWatch timer = new StopWatch();
         timer.start();
         
@@ -742,50 +733,54 @@ public class BratAnnotationEditor
     
     private String bratInitCommand()
     {
+        LOG.trace("[{}][{}] bratInitCommand", getMarkupId(), vis.getMarkupId());
+        
         // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
         // variable. If I put a "var" here, then communication fails with messages such as
         // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
         // console.
-        String script = "(function() {" +
-            "var dispatcher = new Dispatcher();" +
-            // Each visualizer talks to its own Wicket component instance
-            "dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; " +
-            // We attach the JSON send back from the server to this HTML element
-            // because we cannot directly pass it from Wicket to the caller in ajax.js.
-            "dispatcher.wicketId = '" + vis.getMarkupId() + "'; " +
-            "var ajax = new Ajax(dispatcher);" +
-            "var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');" +
-            "var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);" +
-            "var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);" +
-            //script.append("var logger = new AnnotationLog(dispatcher);");
-            "dispatcher.post('init');" +
-            "Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;" +
-            "Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;" +
-            "})();";
-        return script;
+        StringBuilder js = new StringBuilder();
+        
+        js.append("(function() {");
+        if (ENABLE_IN_BROWSER_TRACE) {
+            js.append("  console.log('Initializing (" + vis.getMarkupId() + ")...');");
+        }
+        js.append("  var dispatcher = new Dispatcher();");
+        // Each visualizer talks to its own Wicket component instance
+        js.append("  dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; ");
+        // We attach the JSON send back from the server to this HTML element
+        // because we cannot directly pass it from Wicket to the caller in ajax.js.
+        js.append("  dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
+        js.append("  var ajax = new Ajax(dispatcher);");
+        js.append("  var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');");
+        js.append("  var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);");
+        js.append("  var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);");
+        //js.append(("var logger = new AnnotationLog(dispatcher);");
+        js.append("  dispatcher.post('init');");
+        js.append("  Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;");
+        js.append("  Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;");
+        js.append("})();");
+        
+        return js.toString();
     }
     
     private String bratLoadCollectionCommand()
     {
+        LOG.trace("[{}][{}] bratLoadCollectionCommand", getMarkupId(), vis.getMarkupId());
+        
         GetCollectionInformationResponse response = actionGetCollectionInformation();
         response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject().getProject(),
                 getModelObject().getAnnotationLayers(), annotationService));
         String json = toJson(response);
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', [" + json
-                + "]);";
+        
+        StringBuilder js = new StringBuilder();
+        if (ENABLE_IN_BROWSER_TRACE) {
+            js.append("console.log('Loading collection (" + vis.getMarkupId() + ")...');");
+        }
+        js.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', ["
+                + json + "]);");
+        return js.toString();
     }
-    
-//    /**
-//     * This triggers the loading of the metadata (colors, types, etc.)
-//     *
-//     * @return the init script.
-//     */
-//    private String bratLoadCollectionLaterCommand()
-//    {
-//        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('ajax', "
-//                + "[{action: 'getCollectionInformation',collection: '" + getCollection()
-//                + "'}, 'collectionLoaded', {collection: '" + getCollection() + "',keep: true}]);";
-//    }
 
     /**
      * This one triggers the loading of the actual document data
@@ -794,70 +789,42 @@ public class BratAnnotationEditor
      */
     private String bratRenderLaterCommand()
     {
+        LOG.trace("[{}][{}] bratRenderLaterCommand", getMarkupId(), vis.getMarkupId());
+        
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', " + "["
                 + toJson(getCollection()) + ", '1234', {}, true]);";
-    }
-
-    /**
-     * Reload {@link BratAnnotationEditor} when the Correction/Curation page is opened
-     *
-     * @param aResponse
-     *            the response.
-     */
-    private void bratInitRenderLater(IHeaderResponse aResponse)
-    {
-        // Must be OnDomReader so that this is rendered before all other Javascript that is
-        // appended to the same AJAX request which turns the annotator visible after a document
-        // has been chosen.
-//        aResponse.render(OnDomReadyHeaderItem.forScript(bratInitCommand()));
-//        aResponse.render(OnLoadHeaderItem.forScript(bratLoadCollectionLaterCommand()));
-//        aResponse.render(OnLoadHeaderItem.forScript(bratRenderLaterCommand()));
-        String script = "setTimeout(function() { " +
-                bratInitCommand() +
-                bratLoadCollectionCommand() +
-                bratRenderLaterCommand() +
-                "}, 0);";
-        aResponse.render(OnDomReadyHeaderItem.forScript(script));
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        // Controls whether rendering should happen within the AJAX request or after the AJAX
-        // request. Doing it within the request has the benefit of the browser only having to
-        // recalculate the layout once at the end of the AJAX request (at least theoretically)
-        // while deferring the rendering causes the AJAX request to complete faster, but then
-        // the browser needs to recalculate its layout twice - once of any Wicket components
-        // being re-rendered and once for the brat view to re-render.
-        final boolean deferredRendering = false;
-        
-        // Whether the profiling built into the the brat visualization JS should be enabled. If
-        // this is enabled, profiling data is collected and a report is printed to the browser's
-        // JS console after every rendering action
-        final boolean enableInBrowserProfiling = false;
-        
         try {
             bratRenderCommand(getCasProvider().get()).ifPresent(cmd -> {
                 StringBuilder js = new StringBuilder();
                 
-                if (deferredRendering) {
+                if (DEFERRED_RENDERING) {
                     js.append("setTimeout(function() {");
                 }
                 
-                if (enableInBrowserProfiling) {
+                if (ENABLE_IN_BROWSER_PROFILING) {
                     js.append("Util.profileEnable(true);");
                     js.append("Util.profileClear();");
                 }
                 
+                if (ENABLE_IN_BROWSER_TRACE) {
+                    js.append("console.log('Rendering (" + vis.getMarkupId() + ")...');");
+                }
+                
                 js.append(cmd);
                 
-                if (enableInBrowserProfiling) {
+                if (ENABLE_IN_BROWSER_PROFILING) {
                     js.append("Util.profileReport();");
                 }
                 
-                if (deferredRendering) {
+                if (DEFERRED_RENDERING) {
                     js.append("}, 0);");
                 }
+                
                 aTarget.appendJavaScript(js);
             });
         }

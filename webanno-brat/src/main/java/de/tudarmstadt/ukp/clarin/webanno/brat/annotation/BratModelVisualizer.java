@@ -72,7 +72,7 @@ public class BratModelVisualizer
     }
 
     @Override
-    protected String getDocumentData()
+    public String getDocumentData()
     {
         if (!dirty) {
             return docData;

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
 import static java.lang.Long.parseLong;
-import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 import java.util.List;
 import java.util.Map;
@@ -229,7 +228,7 @@ public final class TypeUtil
      */
     public static long getLayerId(String aUiTypeName)
     {
-        return parseLong(substringBefore(aUiTypeName, "_"));
+        return parseLong(aUiTypeName);
     }
 
 
@@ -238,6 +237,6 @@ public final class TypeUtil
      */
     public static String getUiTypeName(AnnotationLayer aLayer)
     {
-        return aLayer.getId() + "_" + aLayer.getUiName();
+        return aLayer.getId().toString();
     }
 }

@@ -86,6 +86,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
@@ -95,6 +97,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
@@ -1334,6 +1338,11 @@ public abstract class AnnotationDetailEditorPanel
         setEnabled(editorPage.isEditable());
     }
 
+    /**
+     * @deprecated Use event listeners for {@link SelectionChangedEvent}, {@link AnnotationEvent},
+     * {@link FeatureValueUpdatedEvent} and/or {@link AnnotatorViewportChangedEvent} instead.
+     */
+    @Deprecated
     protected void onChange(AjaxRequestTarget aTarget)
     {
         // Overriden in CurationPanel

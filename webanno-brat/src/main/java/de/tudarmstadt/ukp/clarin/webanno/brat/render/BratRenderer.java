@@ -48,7 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
@@ -431,7 +430,7 @@ public class BratRenderer
             }
             
             if (hasLinkFeatures) {
-                String bratTypeName = getBratTypeName(layer);
+                String bratTypeName = TypeUtil.getUiTypeName(layer);
                 arcs.add(new RelationType(layer.getName(), layer.getUiName(), bratTypeName,
                         bratTypeName, null, "triangle,5", "3,3"));
             }
@@ -482,7 +481,7 @@ public class BratRenderer
 
     private static EntityType configureEntityType(AnnotationLayer aLayer)
     {
-        String bratTypeName = getBratTypeName(aLayer);
+        String bratTypeName = TypeUtil.getUiTypeName(aLayer);
         return new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
     }
 
@@ -490,13 +489,14 @@ public class BratRenderer
             AnnotationLayer aAttachingLayer)
     {
         String attachingLayerBratTypeName = TypeUtil.getUiTypeName(aAttachingLayer);
-        // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
-        // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
-        // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
-        // "Link" types is local to the ChainAdapter and not known outside it!
-        if (aLayer.getType().equals(CHAIN_TYPE)) {
-            attachingLayerBratTypeName += ChainAdapter.LINK;
-        }
+        
+//        // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
+//        // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
+//        // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
+//        // "Link" types is local to the ChainAdapter and not known outside it!
+//        if (aLayer.getType().equals(CHAIN_TYPE)) {
+//            attachingLayerBratTypeName += ChainAdapter.LINK;
+//        }
 
         // Handle arrow-head styles depending on linkedListBehavior
         String arrowHead;
@@ -517,23 +517,9 @@ public class BratRenderer
             break;
         }
 
-        String bratTypeName = getBratTypeName(aLayer);
+        String bratTypeName = TypeUtil.getUiTypeName(aLayer);
         return new RelationType(aAttachingLayer.getName(), aAttachingLayer.getUiName(),
                 attachingLayerBratTypeName, bratTypeName, null, arrowHead, dashArray);
-    }
-
-    private static String getBratTypeName(AnnotationLayer aLayer)
-    {
-        String bratTypeName = TypeUtil.getUiTypeName(aLayer);
-
-        // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
-        // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
-        // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
-        // "Link" types is local to the ChainAdapter and not known outside it!
-        if (aLayer.getType().equals(CHAIN_TYPE)) {
-            bratTypeName += ChainAdapter.LINK;
-        }
-        return bratTypeName;
     }
     
     public static String abbreviate(String aName)
