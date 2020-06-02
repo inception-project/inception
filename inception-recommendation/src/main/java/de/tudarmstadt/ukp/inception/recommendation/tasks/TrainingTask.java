@@ -35,6 +35,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -51,8 +52,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderState;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 
 /**
  * This consumer trains a new classifier model, if a classification tool was selected before.
@@ -66,6 +70,7 @@ public class TrainingTask
     private @Autowired DocumentService documentService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired SchedulingService schedulingService;
+    private @Autowired ApplicationEventPublisher appEventPublisher;
 
     private final SourceDocument currentDocument;
 
@@ -115,7 +120,9 @@ public class TrainingTask
                 continue;
             }
             
+            int recommenderCount = 0;
             for (EvaluatedRecommender r : recommenders) {
+                recommenderCount++;
                 // Make sure we have the latest recommender config from the DB - the one from the
                 // active recommenders list may be outdated
                 Recommender recommender;
@@ -207,6 +214,8 @@ public class TrainingTask
                     
                     ctx.close();
                     recommendationService.putContext(user, recommender, ctx);
+
+                    publishTrainingEvents(user, recommenderCount, recommender, recommenders.size());
                 }
                 // Catching Throwable is intentional here as we want to continue the execution
                 // even if a particular recommender fails.
@@ -226,6 +235,16 @@ public class TrainingTask
         
         schedulingService.enqueue(new PredictionTask(user, getProject(),
                 String.format("TrainingTask %s complete", getId()), currentDocument));
+    }
+
+    private void publishTrainingEvents(User aUser, int aRecommenderCount,
+            Recommender aRecommender, int aRecommenderSize)
+    {
+        double progress = (double) aRecommenderCount / aRecommenderSize;
+        RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ?
+                RecommenderState.TRAINING_STARTED : RecommenderState.TRAINING_FINISHED;
+        appEventPublisher.publishEvent(new RecommenderTaskEvent(this, aUser.getUsername(), 
+                TaskState.RUNNING, progress, aRecommender, true, recommenderState));
     }
 
     private List<TrainingDocument> readCasses(Project aProject, User aUser)

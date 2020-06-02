@@ -160,5 +160,9 @@
       <artifactId>spring-boot-starter-data-jpa</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-native-websocket-core</artifactId>
+    </dependency>
   </dependencies>
 </project>

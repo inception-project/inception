@@ -125,6 +125,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderState;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
@@ -132,6 +134,7 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 
 /**
  * The implementation of the RecommendationService.
@@ -159,6 +162,8 @@ public class RecommendationServiceImpl
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
     
+    private @Autowired ApplicationEventPublisher appEventPublisher;
+   
     private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
     
@@ -1016,8 +1021,9 @@ public class RecommendationServiceImpl
                     continue;
                 }
 
+                int recommenderCount = 0;
                 nextRecommender: for (EvaluatedRecommender r : recommenders) {
-                    
+                    recommenderCount++;
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
                     Recommender recommender;
@@ -1126,7 +1132,6 @@ public class RecommendationServiceImpl
                         cloneAndMonkeyPatchCAS(aProject, originalCas.get(), predictionCas);
 
                         List<AnnotationSuggestion> suggestions;
-                        
                         // If the recommender is not trainable and not sensitive to annotations, 
                         // we can actually re-use the predictions.
                         if (
@@ -1146,7 +1151,6 @@ public class RecommendationServiceImpl
                             predictions.log(LogMessage.info(r.getRecommender().getName(),
                                     "Generated [%d] predictions", suggestions.size()));
                         }
-                        
                         // Calculate the visibility of the suggestions. This happens via the
                         // original CAS which contains only the manually created annotations
                         // and *not* the suggestions.
@@ -1155,6 +1159,9 @@ public class RecommendationServiceImpl
                                 groups, 0, originalCas.get().getDocumentText().length());
                         
                         predictions.putPredictions(suggestions);
+                        
+                        publishPredictionUpdateEvent(username, recommenderCount, 
+                                recommenders.size(), recommender);
                     }
                     // Catching Throwable is intentional here as we want to continue the execution
                     // even if a particular recommender fails.
@@ -1217,6 +1224,16 @@ public class RecommendationServiceImpl
         suggestions.forEach(s -> s.show(FLAG_ALL));
         
         return suggestions;
+    }
+
+    private void publishPredictionUpdateEvent(String aUserName, int aRecommenderCount, 
+            int aRecommenderSize, Recommender aRecommender)
+    {
+        double progress = (double) aRecommenderCount / aRecommenderSize;
+        RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ? 
+                RecommenderState.PREDICTION_STARTED : RecommenderState.PREDICTION_FINISHED;
+        appEventPublisher.publishEvent(new RecommenderTaskEvent(this, aUserName, 
+                TaskState.RUNNING, progress, aRecommender, true, recommenderState));
     }
 
     /**

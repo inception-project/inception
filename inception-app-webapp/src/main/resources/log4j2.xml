@@ -47,6 +47,8 @@
     <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
     <!-- Avoid warning on cookies with an invalid expiration date - cf. issue #739 -->
     <Logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
+    <!-- Avoid error when user leaves websocket-enabled page -->
+    <Logger name="org.apache.wicket.protocol.ws.javax.WicketEndpoint" level="FATAL"/>
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
       <AppenderRef ref="ProjectAppender" />

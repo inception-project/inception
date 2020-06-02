@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +38,14 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.protocol.ws.api.WebSocketBehavior;
+import org.apache.wicket.protocol.ws.api.WebSocketRequestHandler;
+import org.apache.wicket.protocol.ws.api.message.ConnectedMessage;
+import org.apache.wicket.protocol.ws.api.message.IWebSocketPushMessage;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -57,6 +66,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommende
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 
 public class RecommenderInfoPanel
     extends Panel
@@ -68,63 +78,151 @@ public class RecommenderInfoPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    private WebMarkupContainer resultsContainer;
+    private ListView<EvaluatedRecommender> recommenderGroups; 
+    
+    // map recommender id to most recent evaluation result and recommender info
+    private IModel<HashMap<Long,EvaluatedRecommender>> recommenderEvals;
+    
     public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
-        
         setOutputMarkupId(true);
         
-        WebMarkupContainer recommenderContainer = new WebMarkupContainer("recommenderContainer");
-        add(recommenderContainer);
+        WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
+        mainContainer.setOutputMarkupId(true);
+        add(mainContainer);
         
-        ListView<Recommender> searchResultGroups = new ListView<Recommender>("recommender")
+        recommenderEvals = new Model<HashMap<Long,EvaluatedRecommender>>(initRecommenderEvals());
+        
+        
+        recommenderGroups = new ListView<EvaluatedRecommender>("recommender")
         {
             private static final long serialVersionUID = -631500052426449048L;
 
             @Override
-            protected void populateItem(ListItem<Recommender> item)
+            protected void populateItem(ListItem<EvaluatedRecommender> item)
             {
-                User user = userService.getCurrentUser();
-                Recommender recommender = item.getModelObject();
-                List<EvaluatedRecommender> activeRecommenders = recommendationService
-                        .getActiveRecommenders(user, recommender.getLayer());
-                Optional<EvaluationResult> evalResult = activeRecommenders.stream()
-                        .filter(r -> r.getRecommender().equals(recommender))
-                        .map(EvaluatedRecommender::getEvaluationResult)
-                        .findAny();
+                EvaluatedRecommender evalRecommender = item.getModelObject();
+                Optional<EvaluationResult> evalResult = evalRecommender.getEvaluationResult();
+                Recommender recommender = evalRecommender.getRecommender();
                 item.add(new Label("name", recommender.getName()));
                 item.add(new Label("state", evalResult.isPresent() ? "active" : "off"));
+                // TODO: show info if recommender is always active 
+                // or non-evaluable ("skipped" result)
 
                 item.add(new LambdaAjaxLink("acceptAll", _target -> 
                         actionAcceptAll(_target, recommender)));
                 
-                WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
-                // Show results only if the evaluation was not skipped (and of course only if the
-                // result is actually present).
-                resultsContainer.setVisible(evalResult.map(r -> !r.isEvaluationSkipped())
-                        .orElse(evalResult.isPresent()));
-                resultsContainer.add(new Label("f1Score",
-                        evalResult.map(EvaluationResult::computeF1Score).orElse(0.0d)));
-                resultsContainer.add(new Label("accuracy",
-                        evalResult.map(EvaluationResult::computeAccuracyScore).orElse(0.0d)));
-                resultsContainer.add(new Label("precision",
-                        evalResult.map(EvaluationResult::computePrecisionScore).orElse(0.0d)));
-                resultsContainer.add(new Label("recall",
-                        evalResult.map(EvaluationResult::computeRecallScore).orElse(0.0d)));
+                resultsContainer = createResultsContainer(evalResult);
                 item.add(resultsContainer);
             }
         };
-        IModel<List<Recommender>> recommenders = LoadableDetachableModel.of(() -> 
-                recommendationService.listEnabledRecommenders(aModel.getObject().getProject()));
-        searchResultGroups.setModel(recommenders);
         
-        recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
-        recommenderContainer.add(searchResultGroups);
-
+        IModel<List<EvaluatedRecommender>> recommenders = LoadableDetachableModel
+                .of(this::getEvaluationResults);
+        recommenderGroups.setDefaultModel(recommenders);
+        recommenderGroups.setOutputMarkupId(true);
+        mainContainer.add(recommenderGroups);
+        mainContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
+        
         WebMarkupContainer noRecommendersWarning = new WebMarkupContainer("noRecommendersWarning");
         noRecommendersWarning.setOutputMarkupPlaceholderTag(true);
         noRecommendersWarning.add(visibleWhen(() -> recommenders.getObject().isEmpty()));
         add(noRecommendersWarning);
+        
+        add(new WebSocketBehavior() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onConnect(ConnectedMessage aMessage)
+            {
+                super.onConnect(aMessage);
+                log.debug("User with sessionID {} connected.",
+                        aMessage.getSessionId());
+            }
+
+            @Override
+            protected void onPush(WebSocketRequestHandler aHandler, IWebSocketPushMessage aMessage)
+            {
+                if (aMessage instanceof RecommenderEvaluationResultEvent) {
+                    log.debug("Received event: {}", aMessage.toString());
+                    RecommenderEvaluationResultEvent resultEvent = 
+                            (RecommenderEvaluationResultEvent) aMessage;
+                    Recommender recommender = resultEvent.getRecommender();
+                    // update list of evaluated recommenders with their results and re-render
+                    recommenderEvals.getObject().put(recommender.getId(),
+                            resultEvent.getEvaluatedRecommender());
+                    aHandler.add(mainContainer);
+                }
+            }
+        });
+    }
+    
+    @Override
+    protected void onDetach()
+    {
+        super.onDetach();
+        if (recommenderEvals != null) {
+            recommenderEvals.detach();
+        }
+    }
+
+    private List<EvaluatedRecommender> getEvaluationResults()
+    {
+        return new ArrayList<EvaluatedRecommender>(recommenderEvals.getObject().values());
+    }
+    
+    /**
+     * Initialize a map with previously evaluated recommenders of the current user and project 
+     * and their results.
+     */
+    private HashMap<Long, EvaluatedRecommender> initRecommenderEvals()
+    {
+        HashMap<Long, EvaluatedRecommender> evals = new HashMap<>();
+        for (Recommender recommender : recommendationService
+                .listEnabledRecommenders(getModelObject().getProject())) {
+            
+            List<EvaluatedRecommender> activeRecommenders = recommendationService
+                    .getActiveRecommenders(getModelObject().getUser(), recommender.getLayer());
+
+            boolean foundEval = false;
+            for (EvaluatedRecommender evalRecommender : activeRecommenders) {
+                if (evalRecommender.getRecommender().equals(recommender)) { // this recommender has
+                                                                            // a valid result
+                    evals.put(recommender.getId(), evalRecommender);
+                    foundEval = true;
+                }
+            }
+            if (foundEval) {
+                continue;
+            }
+            evals.put(recommender.getId(), new EvaluatedRecommender(recommender));
+        }
+        return evals;
+    }
+
+    private WebMarkupContainer createResultsContainer(Optional<EvaluationResult> evalResult)
+    {
+        WebMarkupContainer container = new WebMarkupContainer("resultsContainer");
+        
+        // Show results only if the evaluation was not skipped (and of course only if the
+        // result is actually present).
+        container.setVisible(evalResult.map(r -> !r.isEvaluationSkipped())
+                .orElse(evalResult.isPresent()));
+        container.add(new Label("f1Score",
+                evalResult.map(EvaluationResult::computeF1Score).orElse(0.0d)));
+        container.add(new Label("accuracy",
+                evalResult.map(EvaluationResult::computeAccuracyScore).orElse(0.0d)));
+        container.add(new Label("precision",
+                evalResult.map(EvaluationResult::computePrecisionScore).orElse(0.0d)));
+        container.add(new Label("recall",
+                evalResult.map(EvaluationResult::computeRecallScore).orElse(0.0d)));
+        
+        return container;
     }
     
     public AnnotatorState getModelObject()
@@ -141,14 +239,12 @@ public class RecommenderInfoPanel
     private void actionAcceptAll(AjaxRequestTarget aTarget, Recommender aRecommender)
         throws AnnotationException, IOException
     {
-        User user = userService.getCurrentUser();
         AnnotatorState state = getModelObject();
+        User user = state.getUser();
         
         AnnotationPageBase page = findParent(AnnotationPageBase.class);
         
         CAS cas = page.getEditorCas();
-        
-        //SourceDocument document = state.getDocument();
         Predictions predictions = recommendationService.getPredictions(user, state.getProject());
 
         // TODO #176 use the document Id once it it available in the CAS
@@ -171,26 +267,13 @@ public class RecommenderInfoPanel
                 AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
                 AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
                         layer);
-                int address = recommendationService.upsertFeature(annotationService,
+                recommendationService.upsertFeature(annotationService,
                         state.getDocument(), state.getUser().getUsername(), cas, layer, feature,
                         suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
         
                 // Hide the suggestion. This is faster than having to recalculate the visibility
                 // status for the entire document or even for the part visible on screen.
                 suggestion.hide(FLAG_TRANSIENT_ACCEPTED);
-            
-//               // Log the action to the learning record
-//               learningRecordService.logRecord(document, aState.getUser().getUsername(),
-//                       suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
-//            
-//               // Send an application event that the suggestion has been accepted
-//               AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, address);
-//               applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
-//                   document, aState.getUser().getUsername(), fs, feature, suggestion.getLabel()));
-//            
-//               // Send a UI event that the suggestion has been accepted
-//               aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-//                       new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));    }
                 accepted++;
             }
             catch (AnnotationException e) {

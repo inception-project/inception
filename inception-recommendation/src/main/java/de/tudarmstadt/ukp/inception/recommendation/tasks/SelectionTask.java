@@ -46,8 +46,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderState;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
+import de.tudarmstadt.ukp.inception.scheduling.TaskUpdateEvent;
 
 /**
  * This task evaluates all available classification tools for all annotation layers of the current
@@ -110,7 +113,9 @@ public class SelectionTask
     
             List<EvaluatedRecommender> activeRecommenders = new ArrayList<>();
             
+            int recommenderCount = 0;
             for (Recommender r : recommenders) {
+                recommenderCount++;
                 // Make sure we have the latest recommender config from the DB - the one from
                 // the active recommenders list may be outdated
                 Recommender recommender;
@@ -119,7 +124,7 @@ public class SelectionTask
                 }
                 catch (NoResultException e) {
                     log.info("[{}][{}]: Recommender no longer available... skipping",
-                            user.getUsername(), r.getName());
+                            userName, r.getName());
                     continue;
                 }
 
@@ -137,29 +142,27 @@ public class SelectionTask
                     
                     if (factory == null) {
                         log.error("[{}][{}]: No recommender factory available for [{}]",
-                                user.getUsername(), r.getName(), r.getTool());
+                                userName, r.getName(), r.getTool());
                         continue;
                     }
                     
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                         log.info("[{}][{}]: Recommender configured with invalid layer or feature "
-                                + "- skipping recommender", user.getUsername(), r.getName());
+                                + "- skipping recommender", userName, r.getName());
                         continue;
                     }
                     
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
                     if (recommender.isAlwaysSelected()) {
-                        log.debug("[{}][{}]: Activating [{}] without evaluating - always selected",
-                                userName, recommenderName, recommenderName);
-                        activeRecommenders.add(
-                                new EvaluatedRecommender(recommender, EvaluationResult.skipped()));
-                        continue;
-                    } else if (!factory.isEvaluable()) {
-                        log.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable",
-                                userName, recommenderName, recommenderName);
-                        activeRecommenders.add(
-                                new EvaluatedRecommender(recommender, EvaluationResult.skipped()));
+                        handleEvaluationSkipped(userName, recommenders.size(), recommenderCount,
+                                activeRecommenders, recommender, recommenderName,
+                                "Activated always selected recommender.", start);
+                    }
+                    else if (!factory.isEvaluable()) {
+                        handleEvaluationSkipped(userName, recommenders.size(), recommenderCount,
+                                activeRecommenders, recommender, recommenderName,
+                                "Activated non-evaluable recommender.", start);
                         continue;
                     }
     
@@ -181,30 +184,31 @@ public class SelectionTask
                     boolean activated;
                     if (score >= threshold) {
                         activated = true;
-                        activeRecommenders.add(new EvaluatedRecommender(recommender, result));
+                        activeRecommenders.add(new EvaluatedRecommender(recommender, result, true));
                         log.info("[{}][{}]: Activated ({} is above threshold {})",
-                                user.getUsername(), recommenderName, score,
+                                userName, recommenderName, score,
                                 threshold);
                     }
                     else {
                         activated = false;
                         log.info("[{}][{}]: Not activated ({} is not above threshold {})",
-                                user.getUsername(), recommenderName, score,
+                                userName, recommenderName, score,
                                 threshold);
                     }
-
-                    appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
-                            recommender, user.getUsername(), result,
-                            System.currentTimeMillis() - start, activated));
+                    publishEvalEvent(userName, recommenders.size(), recommenderCount, recommender,
+                            start, result, activated);
+                    
                 }
                
                 // Catching Throwable is intentional here as we want to continue the execution
                 // even if a particular recommender fails.
                 catch (Throwable e) {
-                    log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
+                    log.error("[{}][{}]: Failed", userName, recommenderName, e);
+                    appEventPublisher
+                            .publishEvent(new TaskUpdateEvent(this, userName, TaskState.DONE, 1,
+                                    String.format("Recommender %s failed.", recommender)));
                 }
             }
-    
             recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
         }
         
@@ -221,6 +225,35 @@ public class SelectionTask
         schedulingService.enqueue(new TrainingTask(user, getProject(),
                 "SelectionTask after activating recommenders", currentDocument));
         
+    }
+
+    private void handleEvaluationSkipped(String userName, int aRecommenderSize,
+            int aRecommenderCount, List<EvaluatedRecommender> aActiveRecommenders,
+            Recommender aRecommender, String aRecommenderName, String aMessage, long start)
+    {
+        log.debug("[{}][{}]: {}", userName, aRecommenderName, aMessage);
+        EvaluationResult skipped = EvaluationResult.skipped();
+        aActiveRecommenders.add(new EvaluatedRecommender(aRecommender,
+                skipped, true));
+        //publish
+        publishEvalEvent(userName, aRecommenderSize, aRecommenderCount, aRecommender,
+                start, skipped, true);
+    }
+
+    private void publishEvalEvent(String user, int aRecommenderSize, int aRecommenderCount,
+            Recommender aRecommender, long aStart, EvaluationResult aResult, boolean aActivated)
+    {
+        RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ? 
+                RecommenderState.EVALUATION_STARTED : 
+                    RecommenderState.EVALUATION_FINISHED;
+        double progress = (double) aRecommenderCount / aRecommenderSize;
+        long duration = System.currentTimeMillis() - aStart;
+        RecommenderEvaluationResultEvent event = new RecommenderEvaluationResultEvent(this, 
+                user, TaskState.RUNNING, 
+                progress, aRecommender, aActivated, 
+                recommenderState, aResult, duration); 
+        appEventPublisher.publishEvent(event);
+        log.debug("Published event: {}", event.toString());
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)

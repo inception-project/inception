@@ -27,10 +27,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class ConfusionMatrix implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = -5181354025073954428L;
+    
     /**
      * Stores number of predicted labels for each gold label
      */
@@ -126,10 +124,8 @@ public class ConfusionMatrix implements Serializable
      */
     protected class ConfMatrixKey implements Serializable
     {
-        /**
-         * 
-         */
         private static final long serialVersionUID = 7241471544567740440L;
+        
         private String predictedLabel;
         private String goldLabel;
         

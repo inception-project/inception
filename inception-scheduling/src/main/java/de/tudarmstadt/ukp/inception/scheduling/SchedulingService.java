@@ -22,12 +22,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.apache.wicket.Application;
+import org.apache.wicket.protocol.ws.WebSocketSettings;
+import org.apache.wicket.protocol.ws.api.IWebSocketConnection;
+import org.apache.wicket.protocol.ws.api.registry.IWebSocketConnectionRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
@@ -40,6 +47,8 @@ public class SchedulingService
 
     private final ApplicationContext applicationContext;
     private final ThreadPoolExecutor executor;
+    private @Autowired SessionRegistry sessionRegistry;
+    private @Autowired Application application;
 
     private final List<Task> runningTasks;
 
@@ -55,12 +64,18 @@ public class SchedulingService
 
     private void beforeExecute(Thread aThread, Runnable aRunnable)
     {
-        runningTasks.add((Task) aRunnable);
+        Task task = (Task) aRunnable;
+        runningTasks.add(task);
+        applicationContext.publishEvent(
+                new TaskUpdateEvent(task, task.getUser().getUsername(), TaskState.RUNNING, 0.0));
     }
 
     private void afterExecute(Runnable aRunnable, Throwable aThrowable)
     {
-        runningTasks.remove(aRunnable);
+        Task task = (Task) aRunnable;
+        runningTasks.remove(task);
+        applicationContext.publishEvent(
+                new TaskUpdateEvent(task, task.getUser().getUsername(), TaskState.DONE, 1.0));
     }
 
     public List<Task> getScheduledTasks()
@@ -93,7 +108,9 @@ public class SchedulingService
         }
 
         log.debug("Enqueuing task [{}]", aTask);
-
+        applicationContext.publishEvent(new TaskUpdateEvent(aTask, aTask.getUser().getUsername(),
+                TaskState.SCHEDULED, 0.0));
+        
         // This autowires the task fields manually.
         AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
         factory.autowireBean(aTask);
@@ -122,5 +139,34 @@ public class SchedulingService
         executor.shutdownNow();
     }
 
+    @EventListener
+    public void distributeWebSocketMessage(TaskUpdateEvent aTaskUpdateEvent)
+    {
+        if (application == null) {
+            return;
+        }
 
+        WebSocketSettings webSocketSettings = WebSocketSettings.Holder.get(application);
+        IWebSocketConnectionRegistry webSocketConnectionRegistry = webSocketSettings
+                .getConnectionRegistry();
+        // get all connections for the user
+        List<IWebSocketConnection> userConnections = new ArrayList<>();
+        List<String> ids = new ArrayList<>();
+        for (SessionInformation sessionInfo : sessionRegistry
+                .getAllSessions(aTaskUpdateEvent.getUser(), false)) {
+            userConnections.addAll(webSocketConnectionRegistry.getConnections(application,
+                    sessionInfo.getSessionId()));
+            ids.add(sessionInfo.getSessionId());
+        }
+        // send message to all connections
+        for (IWebSocketConnection connection : userConnections) {
+            
+            if (!connection.isOpen()) {
+                continue;
+            }
+            connection.sendMessage(aTaskUpdateEvent);
+            log.debug("Send wicket event: {}", aTaskUpdateEvent.toString());
+        }
+
+    }
 }

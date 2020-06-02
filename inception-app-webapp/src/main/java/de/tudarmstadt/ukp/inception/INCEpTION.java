@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception;
 
+import static com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
 import java.util.HashMap;
@@ -27,6 +28,7 @@ import javax.swing.JWindow;
 import javax.validation.Validator;
 
 import org.apache.catalina.connector.Connector;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.impl.CASImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
@@ -49,8 +51,6 @@ import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
-
-import com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration;
 
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
@@ -170,10 +170,23 @@ public class INCEpTION
     {
         SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
         builder.properties("running.from.commandline=false");
-        // add this property in the case of .war deployment
-        builder.properties( 
-                WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED 
-                + "=false" );
+        
+        // Unless we are running in Eclipse and "serve modules without publishing" is enabled, we 
+        // need to instruct Wicket to not register the WebSocket endpoint because Tomcat is already
+        // registering it.
+        String wtpDeploy = System.getProperty("wtp.deploy", "");
+        // If this system property is set, we are probably running in Eclipse WTP
+        boolean runningInEclipseWtp = StringUtils.isNotEmpty(wtpDeploy);
+        // When serving *with* publishing, then WTP publishes to its plugin folder under the 
+        // Eclispe workspace .metadata folder. So if we don't see the name of the plugin folder,
+        // then we assume that modules are served without publishing
+        boolean servingModulesWithoutPublishing = !wtpDeploy.contains("org.eclipse.wst.server.core");
+        if (!(runningInEclipseWtp && servingModulesWithoutPublishing)) {
+            // Avoid error caused by Wicket tryig to register a WS endpoint while Tomcat has 
+            // already registered one.
+            builder.properties(REGISTER_SERVER_ENDPOINT_ENABLED + "=false");
+        }
+        
         init(builder);
         return builder;
     }

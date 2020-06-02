@@ -36,10 +36,8 @@ import java.util.stream.Collector;
  */
 public class EvaluationResult implements Serializable
 {
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 5842125748342833451L;
+    private static final long serialVersionUID = 3313116452111828494L;
+   
     private final int trainingSetSize;
     private final int testSetSize;
     
@@ -249,6 +247,31 @@ public class EvaluationResult implements Serializable
         return skippedEvaluation;
     }
     
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("EvaluationResult [");
+        builder.append("skipped=");
+        builder.append(skippedEvaluation);
+        builder.append(", ");
+        if (confusionMatrix != null) {
+            builder.append("acc=");
+            builder.append(computeAccuracyScore());
+            builder.append(", ");
+            builder.append("prec=");
+            builder.append(computePrecisionScore());
+            builder.append(", ");
+            builder.append("rec=");
+            builder.append(computeRecallScore());
+            builder.append(", ");
+            builder.append("f1=");
+            builder.append(computeF1Score());
+        }
+        builder.append("]");
+        return builder.toString();
+    }
+
     public Optional<String> getErrorMsg()
     {
         return Optional.ofNullable(errorMsg);
