@@ -17,7 +17,8 @@
 = Limiting the amount of active users
 
 It is possible to limit the number of users that can be active i.e. logged into the {product-name}
-instance at a time. This can be done by setting the `max.users` in the `settings.properties` file to the number of users you want to allow. 
+instance at a time. This can be done by setting the `login.max-concurrent-sessions` 
+in the `settings.properties` file to the number of users you want to allow. 
 
 If this property is set and the maximum number of users is already reached, users who 
 want to log in will not be able to and receive a message to try again at a later time.

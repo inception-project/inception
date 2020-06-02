@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
+
 public class SettingsUtil
 {
     private static String propApplicationHome = "webanno.home";
@@ -43,8 +44,6 @@ public class SettingsUtil
     public static final String PROP_VERSION = "version";
     
     private static final String PROP_USER_HOME = "user.home";
-    
-    public static final String PROP_MAX_USERS = "max.users";
     
     private static final String SETTINGS_FILE = "settings.properties";
     
@@ -151,6 +150,13 @@ public class SettingsUtil
         }
     }
     
+    /**
+     * 
+     * @deprecated To access setting properties, use Spring Boot 
+     * {@link org.springframework.boot.context.properties.ConfigurationProperties} classes 
+     * implementing a corresponding interface instead 
+     * (e.g. @see de.tudarmstadt.ukp.clarin.webanno.ui.core.users.RemoteApiProperties).
+     */
     public static Properties getSettings()
     {
         if (settings == null) {
