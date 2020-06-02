@@ -59,7 +59,7 @@ public class RecommenderTestHelper
                 TYPE_NAME_STRING);
         typeDescription.addFeature(FEATURE_NAME_IS_PREDICTION, "Is prediction", TYPE_NAME_BOOLEAN);
 
-        AnnotationSchemaService schemaService = new AnnotationSchemaServiceImpl(null, null);
+        AnnotationSchemaService schemaService = new AnnotationSchemaServiceImpl();
         schemaService.upgradeCas(aCas, tsd);
     }
 
