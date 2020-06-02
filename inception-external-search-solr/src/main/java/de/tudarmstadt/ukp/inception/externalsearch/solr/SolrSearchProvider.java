@@ -1,3 +1,21 @@
+/*
+ * Copyright 2020
+ * ENP-China, Aix-Marseille University
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.inception.externalsearch.solr;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -13,8 +31,8 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.BaseHttpSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
@@ -50,19 +68,17 @@ public class SolrSearchProvider
      */
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
                                                    SolrSearchProviderTraits aTraits, String aQuery)
-        throws SolrException
+        throws IOException
     {
         List<ExternalSearchResult> results = new ArrayList<>();
         //build client
-        try
-        {
+        try {
             HttpSolrClient solrClient = makeClient(aTraits);
 
 
             if (aQuery.isEmpty() | aQuery.equals("*:*"))
                 aQuery = "*:*";
-            else
-            {
+            else {
                 aQuery = aTraits.getDefaultField() + ":" + aQuery;
             }
 
@@ -86,47 +102,52 @@ public class SolrSearchProvider
             query.setParam("qt", aTraits.getSearchPath());
 
             //RESPONSE
+            QueryResponse response = new QueryResponse();
+            try {
+                response = solrClient.query(query);
+                SolrDocumentList documents = response.getResults();
 
-            QueryResponse response = solrClient.query(query, SolrRequest.METHOD.GET);
-            SolrDocumentList documents = response.getResults();
+                for (SolrDocument document : documents) {
+                    ExternalSearchResult result = new ExternalSearchResult(aRepository,
+                            aTraits.getIndexName(), (String) document.getFirstValue("id"));
 
-            for (SolrDocument document : documents)
-            {
-                ExternalSearchResult result = new ExternalSearchResult(aRepository,
-                    aTraits.getIndexName(), (String) document.getFirstValue("id"));
-
-                if (!aTraits.isRandomOrder()) {
-                    double d = (float) document.getFirstValue("score");
-                    result.setScore(d);
-                }
-
-                fillResultWithMetadata(result, document, aTraits);
-
-                if (response.getHighlighting().size() != 0) {
-                    List<ExternalSearchHighlight> highlights = new ArrayList<>();
-                    Map<String,Map<String, List<String>>> idHighlight =
-                            response.getHighlighting();
-
-                    if (idHighlight.get(document.getFirstValue("id"))
-                            .get(aTraits.getDefaultField()) != null )
-                    {
-                        for (String chaine : idHighlight.get(document.getFirstValue("id"))
-                                .get(aTraits.getDefaultField()))
-                        {
-                            highlights.add(new ExternalSearchHighlight(chaine));
-                        }
+                    if (!aTraits.isRandomOrder()) {
+                        double d = (float) document.getFirstValue("score");
+                        result.setScore(d);
                     }
 
-                    result.setHighlights(highlights);
-                }
-                results.add(result);
-            }
-            System.out.println("Found " + documents.getNumFound() + " documents");
+                    fillResultWithMetadata(result, document, aTraits);
 
-        } catch (SolrServerException | IOException e) {
+                    if (response.getHighlighting().size() != 0) {
+                        List<ExternalSearchHighlight> highlights = new ArrayList<>();
+                        Map<String, Map<String, List<String>>> idHighlight =
+                                response.getHighlighting();
+
+                        if (idHighlight.get(document.getFirstValue("id"))
+                                .get(aTraits.getDefaultField()) != null) {
+                            for (String chaine : idHighlight.get(document.getFirstValue("id"))
+                                    .get(aTraits.getDefaultField())) {
+                                highlights.add(new ExternalSearchHighlight(chaine));
+                            }
+                        }
+
+                        result.setHighlights(highlights);
+                    }
+                    results.add(result);
+                }
+                System.out.println("Found " + documents.getNumFound() + " documents");
+            } catch (SolrServerException e) {
+                e.printStackTrace();
+            }
+        } catch (BaseHttpSolrClient.RemoteSolrException e) {
+            throw new IllegalArgumentException("Requested collection or search path does not match");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SolrException e) {
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
             e.printStackTrace();
         }
-
         return results;
     }
 
@@ -138,6 +159,7 @@ public class SolrSearchProvider
      */
     private void fillResultWithMetadata(ExternalSearchResult result, SolrDocument document,
                                         SolrSearchProviderTraits aTraits)
+            throws IOException, SolrException
     {
         if (isNotBlank((String) document.getFirstValue(DOC_NAME_KEY)))
         {
@@ -230,7 +252,7 @@ public class SolrSearchProvider
     public String getDocumentText(DocumentRepository aRepository,
                                   SolrSearchProviderTraits aTraits,
                                   String aCollectionId, String aDocumentId)
-        throws SolrException
+        throws IOException
     {
         if (!aCollectionId.equals(aTraits.getIndexName()))
         {
@@ -244,14 +266,16 @@ public class SolrSearchProvider
         HttpSolrClient client = makeClient(aTraits);
 
         QueryResponse response = new QueryResponse();
+        SolrDocumentList documents = new SolrDocumentList();
+        SolrDocument document = new SolrDocument();
+
         try {
             response = client.query(aTraits.getIndexName(), getQuery);
-        } catch (SolrServerException | IOException e) {
+            documents = response.getResults();
+            document = documents.get(0);
+        } catch (SolrException | SolrServerException e) {
             e.printStackTrace();
         }
-        SolrDocumentList documents = response.getResults();
-        SolrDocument document = documents.get(0);
-
         return (String) document.getFirstValue(aTraits.getTextField());
 
     }
@@ -261,7 +285,7 @@ public class SolrSearchProvider
     public InputStream getDocumentAsStream(DocumentRepository aRepository,
                                            SolrSearchProviderTraits aTraits,
                                            String aCollectionId, String aDocumentId)
-    {
+            throws IOException {
         return IOUtils.toInputStream(
             getDocumentText(aRepository, aTraits, aCollectionId, aDocumentId), UTF_8);
     }
