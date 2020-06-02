@@ -315,6 +315,15 @@
       <artifactId>wicket-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-htmlcompressor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mozilla</groupId>
+      <artifactId>rhino-runtime</artifactId>
+      <version>1.7.12</version>
+    </dependency>
+    <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
     </dependency>
@@ -762,6 +771,9 @@
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
+              <!-- Wicket plugins -->
+              <usedDependency>org.wicketstuff:wicketstuff-htmlcompressor</usedDependency>
+              <usedDependency>org.mozilla:rhino-runtime</usedDependency>
               <!-- JavaMelody - used via web.xml -->
               <!--
               <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>

@@ -249,7 +249,7 @@ public class PdfAnnotationEditor
                 else {
                     state.getSelection().selectSpan(paramId, aCas, offset.getBegin(),
                             offset.getEnd());
-                    getActionHandler().actionSelect(aTarget, aCas);
+                    getActionHandler().actionSelect(aTarget);
                 }
             }
             else {
@@ -325,11 +325,11 @@ public class PdfAnnotationEditor
                 selection.selectArc(paramId, originFs, targetFs);
 
                 if (selection.getAnnotation().isSet()) {
-                    getActionHandler().actionSelect(aTarget, aCas);
+                    getActionHandler().actionSelect(aTarget);
                 }
             }
         }
-        catch (AnnotationException e) {
+        catch (Exception e) {
             handleError("Unable to select relation annotation", e, aTarget);
         }
     }
