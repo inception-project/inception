@@ -33,11 +33,10 @@ import de.tudarmstadt.ukp.inception.active.learning.sidebar.ActiveLearningSideba
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.sidebar.RecommendationSidebarFactory;
 
 @Configuration
 @AutoConfigureAfter(RecommenderServiceAutoConfiguration.class)
-@ConditionalOnBean(RecommendationSidebarFactory.class)
+@ConditionalOnBean(RecommendationService.class)
 @ConditionalOnProperty(
     prefix = "recommender.active-learning", 
     name = "enabled", 
