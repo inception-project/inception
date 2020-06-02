@@ -329,7 +329,7 @@ public class PdfAnnotationEditor
                 }
             }
         }
-        catch (AnnotationException | IOException e) {
+        catch (Exception e) {
             handleError("Unable to select relation annotation", e, aTarget);
         }
     }

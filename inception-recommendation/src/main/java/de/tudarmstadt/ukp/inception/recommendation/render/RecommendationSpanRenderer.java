@@ -107,7 +107,7 @@ public class RecommendationSpanRenderer
         }
 
         String color = "#cccccc";
-        String bratTypeName = typeAdapter.getAnnotationTypeName();
+        String bratTypeName = typeAdapter.getEncodedTypeName();
         
         recommendationService.calculateVisibility(aCas, aState.getUser().getUsername(), layer,
                 groups, aWindowBeginOffset, aWindowEndOffset);

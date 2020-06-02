@@ -189,6 +189,7 @@ public class RecommendationEditorExtension
         // panel
         aState.getSelection().selectSpan(new VID(address), aCas, suggestion.getBegin(),
                 suggestion.getEnd());
+
         aActionHandler.actionSelect(aTarget);
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
@@ -217,7 +218,9 @@ public class RecommendationEditorExtension
      */
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
-        throws AnnotationException, IOException {
+
+        throws AnnotationException, IOException
+    {
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         
