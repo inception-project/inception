@@ -146,7 +146,12 @@ var Util = (function(window, undefined) {
       if (!arcDesc) {
         arcDesc = $.extend({}, relationTypesHash[arcType] || relationTypesHash[noNumArcType]);
       }
+// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
+/*
       return arcDesc && arcDesc.labels || [];
+*/
+      return arcDesc && $.map(arcDesc.labels, label => '('+label+')') || [];
+// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
     }
 
     var arcDisplayForm = function(spanTypes, spanType, arcType, relationTypesHash) {
