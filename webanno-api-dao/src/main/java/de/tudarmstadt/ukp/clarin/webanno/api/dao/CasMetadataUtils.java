@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -74,8 +75,8 @@ public class CasMetadataUtils
             long lastChangedOnDisk = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
             if (aCasFile.lastModified() != lastChangedOnDisk) {
                 throw new IOException(
-                        "Detected concurrent modification to file on disk (expected timestamp: "
-                                + lastChangedOnDisk + "; actual timestamp "
+                        "Detected concurrent modification to file in storage (expected timestamp: "
+                                + lastChangedOnDisk + "; actual timestamp in storage "
                                 + aCasFile.lastModified() + ") - "
                                 + "please try reloading before saving again.");
             }
@@ -105,6 +106,16 @@ public class CasMetadataUtils
         }
 
         cmds.forEach(aCas::removeFsFromIndexes);
+    }
+    
+    public static long getLastChanged(CAS aCas)
+    {
+        Type casMetadataType = getType(aCas, CASMetadata.class);
+        Feature feature = casMetadataType.getFeatureByBaseName("lastChangedOnDisk");
+        return aCas.select(casMetadataType)
+                .map(cmd -> cmd.getLongValue(feature))
+                .findFirst()
+                .orElse(-1l);
     }
     
     public static void addOrUpdateCasMetadata(CAS aCas, File aCasFile, SourceDocument aDocument,
@@ -157,6 +168,8 @@ public class CasMetadataUtils
 
         if (cmd.getType().getFeatureByBaseName("lastChangedOnDisk") != null) {
             FSUtil.setFeature(cmd, "lastChangedOnDisk", aCasFile.lastModified());
+            LOG.trace("CAS [{}] for [{}]@[{}]({}): set lastChangedOnDisk: {}", aCas.hashCode(),
+                    aUsername, aDocument.getName(), aDocument.getId(), aCasFile.lastModified());
         }
         
         aCas.addFsToIndexes(cmd);

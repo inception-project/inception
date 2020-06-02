@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
@@ -383,7 +384,8 @@ public class CorrectionPage
             // annotations
             CAS editorCas;
             if (documentService.existsCas(state.getDocument(), user.getUsername())) {
-                editorCas = documentService.readAnnotationCas(annotationDocument);
+                editorCas = documentService.readAnnotationCas(annotationDocument,
+                        EXCLUSIVE_WRITE_ACCESS);
             }
             else {
                 editorCas = documentService.createOrReadInitialCas(state.getDocument());
