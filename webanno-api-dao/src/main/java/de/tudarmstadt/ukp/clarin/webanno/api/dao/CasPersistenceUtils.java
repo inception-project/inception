@@ -57,26 +57,30 @@ public final class CasPersistenceUtils
         
         CASCompleteSerializer serializer = null;
         
-        try {
-            serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
-
-            // BEGIN SAFEGUARD --------------
-            // Safeguard that we do NOT write a CAS which can afterwards not be read and thus would
-            // render the document broken within the project
-            // Reason we do this: https://issues.apache.org/jira/browse/UIMA-6162
-            CAS dummy = WebAnnoCasUtil.createCas();
-            deserializeCASComplete(serializer, (CASImpl) getRealCas(dummy));
-            // END SAFEGUARD --------------
-        }
-        catch (Exception e) {
-            if (LOG.isDebugEnabled()) {
-                preserveForDebugging(aFile, aCas, serializer);
+        CAS realCas = getRealCas(aCas);
+        // UIMA-6162 Workaround: synchronize CAS during de/serialization
+        synchronized (((CASImpl) realCas).getBaseCAS()) {
+            try {
+                serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+    
+                // BEGIN SAFEGUARD --------------
+                // Safeguard that we do NOT write a CAS which can afterwards not be read and thus
+                // would render the document broken within the project
+                // Reason we do this: https://issues.apache.org/jira/browse/UIMA-6162
+                CAS dummy = WebAnnoCasUtil.createCas();
+                deserializeCASComplete(serializer, (CASImpl) getRealCas(dummy));
+                // END SAFEGUARD --------------
             }
-            throw new IOException(e);
-        }
-
-        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
-            os.writeObject(serializer);
+            catch (Exception e) {
+                if (LOG.isDebugEnabled()) {
+                    preserveForDebugging(aFile, aCas, serializer);
+                }
+                throw new IOException(e);
+            }
+    
+            try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
+                os.writeObject(serializer);
+            }
         }
     }
         
@@ -113,22 +117,27 @@ public final class CasPersistenceUtils
     public static void readSerializedCas(CAS aCas, File aFile)
         throws IOException
     {
-        try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
-            CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
-            deserializeCASComplete(serializer, (CASImpl) getRealCas(aCas));
-            
-            // Workaround for UIMA adding back deleted DocumentAnnotations
-            // https://issues.apache.org/jira/browse/UIMA-6199
-            // If there is a DocumentMetaData annotation, then we can drop any of the default
-            // UIMA DocumentAnnotation instances (excluding the DocumentMetaData of course)
-            if (!aCas.select(DocumentMetaData.class.getName()).isEmpty()) {
-                aCas.select(CAS.TYPE_NAME_DOCUMENT_ANNOTATION)
-                    .filter(fs -> !DocumentMetaData.class.getName().equals(fs.getType().getName()))
-                    .forEach(aCas::removeFsFromIndexes);
+        CAS realCas = getRealCas(aCas);
+        // UIMA-6162 Workaround: synchronize CAS during de/serialization
+        synchronized (((CASImpl) realCas).getBaseCAS()) {
+            try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
+                CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
+                deserializeCASComplete(serializer, (CASImpl) realCas);
+                
+                // Workaround for UIMA adding back deleted DocumentAnnotations
+                // https://issues.apache.org/jira/browse/UIMA-6199
+                // If there is a DocumentMetaData annotation, then we can drop any of the default
+                // UIMA DocumentAnnotation instances (excluding the DocumentMetaData of course)
+                if (!aCas.select(DocumentMetaData.class.getName()).isEmpty()) {
+                    aCas.select(CAS.TYPE_NAME_DOCUMENT_ANNOTATION)
+                        .filter(fs -> !DocumentMetaData.class.getName().equals(
+                                fs.getType().getName()))
+                        .forEach(aCas::removeFsFromIndexes);
+                }
             }
-        }
-        catch (ClassNotFoundException e) {
-            throw new IOException(e);
+            catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            }
         }
     }
 }

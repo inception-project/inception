@@ -550,7 +550,7 @@ public interface AnnotationSchemaService
      * resulting CAS should be <b>only</b> used for export and never be persisted within the
      * repository.
      */
-    CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument,
+    void prepareCasForExport(CAS aSourceCas, CAS aTargetCas, SourceDocument aSourceDocument,
             TypeSystemDescription aFullProjectTypeSystem)
         throws ResourceInitializationException, UIMAException, IOException;
 
