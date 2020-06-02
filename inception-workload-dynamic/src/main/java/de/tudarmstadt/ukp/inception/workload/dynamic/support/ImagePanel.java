@@ -16,41 +16,26 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
+package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
-import java.io.Serializable;
+import org.apache.wicket.markup.html.image.Image;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.request.resource.ResourceReference;
 
-//Helper class for the Filter
-public class Filter implements Serializable
+
+
+public class ImagePanel extends Panel
 {
 
-    private static final long serialVersionUID = 256259364194000084L;
+    private static final long serialVersionUID = -1523791110624911889L;
 
-    //Type of the Dropdown
-    private String type;
-    //Input field value
-    private String input;
-
-
-    //Default constructor
-    public Filter()
+    public ImagePanel(String aID, ResourceReference aImageReference)
     {
+        super(aID);
+        add(new Image("image", aImageReference) {
 
+            private static final long serialVersionUID = 8399717826846571064L;
+        });
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getInput() {
-        return input;
-    }
-
-    public void setInput(String input) {
-        this.input = input;
-    }
 }

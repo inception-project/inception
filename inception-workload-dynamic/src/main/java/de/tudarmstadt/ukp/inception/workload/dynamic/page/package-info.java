@@ -16,4 +16,4 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.app.ui.monitoring.page;
+package de.tudarmstadt.ukp.inception.workload.dynamic.page;

@@ -17,7 +17,7 @@
  */
 
 
-package de.tudarmstadt.ukp.inception.app.ui.monitoring.page;
+package de.tudarmstadt.ukp.inception.workload.dynamic.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 
@@ -71,10 +71,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DataProvider;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.DocumentSupport;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ImagePanel;
-import de.tudarmstadt.ukp.inception.app.ui.monitoring.support.ModalPanel;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.DataProvider;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.DocumentSupport;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.ImagePanel;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.ModalPanel;
+
 
 @MountPath("/workload.html")
 public class MonitoringPage extends ApplicationPageBase implements Serializable

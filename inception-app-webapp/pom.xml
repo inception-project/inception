@@ -47,10 +47,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-image</artifactId>
     </dependency>
-      <dependency>
-      <groupId>org.jsoup</groupId>
-      <artifactId>jsoup</artifactId>
-    </dependency>
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
     <dependency>
@@ -295,7 +291,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-ui-workload-management-and-monitoring</artifactId>
+      <artifactId>inception-workload-dynamic</artifactId>
     </dependency>
 
     <!-- UIMA DEPENDENCIES -->
@@ -718,7 +714,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-workload-management-and-monitoring</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>

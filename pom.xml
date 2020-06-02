@@ -96,7 +96,7 @@
     <module>inception-testing</module>
     <module>inception-ui-core</module>
     <module>inception-app-webapp</module>
-    <module>inception-ui-workload-management-and-monitoring</module>
+    <module>inception-workload-dynamic</module>
 
     <!-- Internal search -->
     <module>inception-ui-search</module>
@@ -145,7 +145,7 @@
         <checksumPolicy>warn</checksumPolicy>
       </releases>
       <snapshots>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
       </snapshots>
     </repository>
     <!-- For SNAPSHOTs of WebAnno / DKPro Core -->
@@ -153,7 +153,7 @@
       <id>ukp-oss-snapshots</id>
       <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
       <releases>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
       </releases>
       <snapshots>
         <enabled>true</enabled>
@@ -171,7 +171,7 @@
       <name>jcenter</name>
       <url>https://jcenter.bintray.com</url>
       <snapshots>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
@@ -422,7 +422,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-ui-workload-management-and-monitoring</artifactId>
+        <artifactId>inception-workload-dynamic</artifactId>
         <version>0.17.0-SNAPSHOT</version>
       </dependency>
 

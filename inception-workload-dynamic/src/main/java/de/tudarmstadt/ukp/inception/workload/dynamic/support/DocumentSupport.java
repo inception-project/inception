@@ -17,7 +17,7 @@
  */
 
 
-package de.tudarmstadt.ukp.inception.app.ui.monitoring.support;
+package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import java.io.Serializable;
 import java.util.ArrayList;
