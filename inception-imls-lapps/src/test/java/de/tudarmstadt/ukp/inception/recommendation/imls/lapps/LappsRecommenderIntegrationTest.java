@@ -72,7 +72,7 @@ public class LappsRecommenderIntegrationTest
         String url = server.url("/").toString();
         traits.setUrl(url);
 
-        sut = new LappsGridRecommender(buildRecommender(), null);
+        sut = new LappsGridRecommender(buildRecommender(), traits);
     }
 
     @After
