@@ -1648,4 +1648,16 @@ public class RecommendationServiceImpl
             }
         };
     }
+
+    @Override
+    public long countEnabledRecommenders()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM Recommender WHERE",
+                "enabled = :enabled");
+
+        return entityManager.createQuery(query, Long.class).setParameter("enabled", true)
+                .getSingleResult();
+    }
 }
