@@ -177,7 +177,7 @@ public abstract class BratSuggestionVisualizer
     }
 
     @Override
-    protected String getDocumentData()
+    public String getDocumentData()
     {
         return getModelObject().getDocumentResponse() == null ? "{}"
                 : getModelObject().getDocumentResponse();

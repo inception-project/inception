@@ -64,12 +64,12 @@ public class UserPreferencesServiceImpl
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    private final BratProperties defaultPreferences;
+    private final AnnotationEditorProperties defaultPreferences;
     private final AnnotationSchemaService annotationService;
     private final RepositoryProperties repositoryProperties;
     private final ColoringService coloringService;
     
-    public UserPreferencesServiceImpl(BratProperties aDefaultPreferences,
+    public UserPreferencesServiceImpl(AnnotationEditorProperties aDefaultPreferences,
             AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
             ColoringService aColoringService)
     {

@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
-public interface BratProperties
+public interface AnnotationEditorProperties
 {
-
     boolean isSingleClickSelection();
 
     int getPageSize();

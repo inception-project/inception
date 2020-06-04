@@ -38,7 +38,12 @@ public class EntityTest
                 new Offsets(1, 2), "label", "color", "somehoverspantext"));
 
         assertEquals(
-                "[ \"1.2\", \"type\", [ [ 1, 2 ] ], \"label\", \"color\", \"somehoverspantext\" ]",
+                String.join("\n",
+                        "[ \"1.2\", \"type\", [ [ 1, 2 ] ], {",
+                        "  \"l\" : \"label\",",
+                        "  \"c\" : \"color\",",
+                        "  \"h\" : \"somehoverspantext\"",
+                        "} ]"),
                 json);
     }
 }

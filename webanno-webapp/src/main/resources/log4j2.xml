@@ -45,6 +45,8 @@
     <Logger name="ch.rasc.piwik.tracking.PiwikTracker" level="FATAL"/>
     <Logger name="uima" level="ERROR"/>
     <Logger name="liquibase" level="ERROR"/>
+    <!-- Avoid warning when components is not rerendered because it has been removed from page -->
+    <Logger name="org.apache.wicket.page.PartialPageUpdate" level="ERROR"/>
     
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />

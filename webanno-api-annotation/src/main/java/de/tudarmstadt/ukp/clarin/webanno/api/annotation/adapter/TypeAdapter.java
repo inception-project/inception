@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static java.lang.Long.parseLong;
-import static org.apache.commons.lang3.StringUtils.substringBefore;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +31,7 @@ import org.apache.uima.fit.util.CasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -206,7 +204,7 @@ public interface TypeAdapter
      */
     default String getEncodedTypeName()
     {
-        return getTypeId() + "_" + getLayer().getUiName();
+        return TypeUtil.getUiTypeName(getLayer());
     }
 
     /**
@@ -217,7 +215,7 @@ public interface TypeAdapter
      */
     static long decodeTypeName(String aType)
     {
-        return parseLong(substringBefore(aType, "_"));
+        return TypeUtil.getLayerId(aType);
     }
     
     <T> Optional<T> getTraits(Class<T> aInterface);
