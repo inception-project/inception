@@ -200,7 +200,7 @@ public class RecommendationEditorExtension
         // panel
         aState.getSelection().selectSpan(new VID(address), aCas, suggestion.getBegin(),
                 suggestion.getEnd());
-        aActionHandler.actionSelect(aTarget, aCas);            
+        aActionHandler.actionSelect(aTarget);            
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
@@ -228,7 +228,7 @@ public class RecommendationEditorExtension
      */
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
-        throws AnnotationException
+        throws AnnotationException, IOException
     {
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
@@ -260,7 +260,7 @@ public class RecommendationEditorExtension
                 suggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
         // Trigger a re-rendering of the document
-        aActionHandler.actionSelect(aTarget, aCas);
+        aActionHandler.actionSelect(aTarget);
         
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, document,

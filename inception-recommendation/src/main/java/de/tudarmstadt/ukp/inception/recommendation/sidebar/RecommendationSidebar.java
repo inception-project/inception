@@ -180,6 +180,13 @@ public class RecommendationSidebar
                     .listEnabledRecommenders(layer)) {
                 RecommendationEngineFactory<?> factory = recommendationService
                         .getRecommenderFactory(recommender);
+                
+                // E.g. if the module providing a configured recommender has been disabled but the
+                // recommender is still configured.
+                if (factory == null) {
+                    continue;
+                }
+                
                 if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                     mismatchedRecommenderNames.add(recommender.getName());
                 }

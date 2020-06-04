@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
@@ -43,12 +44,15 @@ import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -67,12 +71,26 @@ import nl.ru.test.category.SlowTests;
 @RunWith(JUnitParamsRunner.class)
 public class LappsGridRecommenderConformityTest
 {
+    private CasStorageSession casStorageSession;
+    
+    @Before
+    public void setup() throws Exception
+    {
+        casStorageSession = CasStorageSession.open();
+    }
+    
+    @After
+    public void tearDown()
+    {
+        CasStorageSession.get().close();
+    }
+    
     @Test
     @Parameters(method = "getNerServices")
     public void testNerConformity(LappsGridService aService) throws Exception
     {
         CAS cas = loadData();
-
+        
         predict(aService.getUrl(), cas);
 
         SoftAssertions softly = new SoftAssertions();
@@ -91,7 +109,7 @@ public class LappsGridRecommenderConformityTest
     public void testPosConformity(LappsGridService aService) throws Exception
     {
         CAS cas = loadData();
-
+        
         predict(aService.getUrl(), cas);
 
         SoftAssertions softly = new SoftAssertions();
@@ -118,6 +136,7 @@ public class LappsGridRecommenderConformityTest
     private CAS loadData() throws IOException, UIMAException {
         Path path = Paths.get("src", "test", "resources", "testdata", "tnf.xmi");
         CAS cas = loadData(path.toFile());
+        casStorageSession.add("test", EXCLUSIVE_WRITE_ACCESS, cas);
 
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 

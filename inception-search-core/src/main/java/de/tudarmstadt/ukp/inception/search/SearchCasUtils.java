@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.util.CasIOUtils;
 
 public class SearchCasUtils
@@ -30,11 +31,14 @@ public class SearchCasUtils
     public static byte[] casToByteArray(CAS aCas) throws IOException
     {
         // Index annotation document
-        byte[] binaryCas;
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            //XmiCasSerializer.serialize(aCas, null, bos, true, null);
-            CasIOUtils.save(getRealCas(aCas), bos, SERIALIZED_TSI);
-            return bos.toByteArray();
+        CAS realCas = getRealCas(aCas);
+        // UIMA-6162 Workaround: synchronize CAS during de/serialization
+        synchronized (((CASImpl) realCas).getBaseCAS()) {
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                //XmiCasSerializer.serialize(aCas, null, bos, true, null);
+                CasIOUtils.save(realCas, bos, SERIALIZED_TSI);
+                return bos.toByteArray();
+            }
         }
     }
 }
