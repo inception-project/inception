@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
@@ -38,7 +39,9 @@ public class IndexAnnotationDocumentTask
     @Override
     public void run()
     {
-        searchService.indexDocument(super.getAnnotationDocument(), super.getBinaryCas());
+        try (CasStorageSession session = CasStorageSession.open()) {
+            searchService.indexDocument(super.getAnnotationDocument(), super.getBinaryCas());
+        }
     }
     
     @Override

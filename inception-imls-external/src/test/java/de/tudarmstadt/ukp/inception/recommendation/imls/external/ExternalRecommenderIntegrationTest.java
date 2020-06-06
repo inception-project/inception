@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.InceptionAssertions.assertThat;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
@@ -53,6 +54,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -84,10 +86,12 @@ public class ExternalRecommenderIntegrationTest
     private RemoteStringMatchingNerRecommender remoteRecommender;
     private MockWebServer server;
     private List<String> requestBodies;
+    private CasStorageSession casStorageSession;
 
     @Before
     public void setUp() throws Exception
     {
+        casStorageSession = CasStorageSession.open();
         recommender = buildRecommender();
         context = new RecommenderContext();
 
@@ -109,6 +113,7 @@ public class ExternalRecommenderIntegrationTest
     @After
     public void tearDown() throws Exception
     {
+        casStorageSession.close();
         server.shutdown();
     }
 
@@ -198,6 +203,7 @@ public class ExternalRecommenderIntegrationTest
             for (int i = 0; i < data.size(); i++) {
                 CAS cas = data.get(i);
                 addCasMetadata(cas.getJCas(), i);
+                casStorageSession.add("testDataCas" + i, EXCLUSIVE_WRITE_ACCESS, cas);
             }
             return data;
         }
