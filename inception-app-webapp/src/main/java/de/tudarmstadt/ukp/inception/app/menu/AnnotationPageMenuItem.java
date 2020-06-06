@@ -57,7 +57,7 @@ public class AnnotationPageMenuItem implements MenuItem
     @Override
     public String getLabel()
     {
-        return "AnnotationPage";
+        return "Annotation";
     }
     
     /**

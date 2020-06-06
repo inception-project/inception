@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.MonitoringPageManager;
+
+
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.MonitoringPageManager;
 
 @Component
 @Order(300)
