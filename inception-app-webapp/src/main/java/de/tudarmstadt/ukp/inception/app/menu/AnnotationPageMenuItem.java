@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
+//import de.tudarmstadt.ukp.inception.workload.dynamic.page.annotation.AnnotationPage;
+
+
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +57,7 @@ public class AnnotationPageMenuItem implements MenuItem
     @Override
     public String getLabel()
     {
-        return "Annotation";
+        return "AnnotationPage";
     }
     
     /**

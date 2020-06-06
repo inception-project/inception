@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.workload.dynamic.page.MonitoringPage;
+import de.tudarmstadt.ukp.inception.workload.dynamic.page.monitoring.MonitoringPage;
 
 
 @Component

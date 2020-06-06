@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.MonitoringPageManager;
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,10 +40,13 @@ public class MonitoringPageMenuItem implements MenuItem
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
 
+    private String manager;
+    private MonitoringPageManager monitoringPageManager;
+
     @Override
     public String getPath()
     {
-        return "/monitoring";
+        return "/" + manager;
     }
     
     @Override
@@ -82,6 +86,19 @@ public class MonitoringPageMenuItem implements MenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return MonitoringPage.class;
+
+        //Not initialised
+        if (this.monitoringPageManager == null)
+        {
+            manager = "default";
+        }
+        if (this.manager.equals("default"))
+        {
+            return MonitoringPage.class;
+
+        } else {
+            return de.tudarmstadt.ukp.inception.
+                workload.dynamic.page.monitoring.MonitoringPage.class;
+        }
     }
 }

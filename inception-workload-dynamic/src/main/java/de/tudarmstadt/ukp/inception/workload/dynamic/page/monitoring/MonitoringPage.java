@@ -17,7 +17,7 @@
  */
 
 
-package de.tudarmstadt.ukp.inception.workload.dynamic.page;
+package de.tudarmstadt.ukp.inception.workload.dynamic.page.monitoring;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 
