@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,6 +39,7 @@ import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -89,7 +91,10 @@ public class OpenNlpPosRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, POS.class, "PosValue");
+        try (CasStorageSession session = CasStorageSession.open()) {
+            session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
+            RecommenderTestHelper.addScoreFeature(cas, POS.class, "PosValue");
+        }
 
         sut.train(context, asList(cas));
 

@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public class AnnotationSuggestion
     implements Serializable
 {
-    public static final String EXTENSION_ID = "recommendationEditorExtension";
+    public static final String EXTENSION_ID = "rec";
     
     private static final long serialVersionUID = -1904645143661843249L;
 

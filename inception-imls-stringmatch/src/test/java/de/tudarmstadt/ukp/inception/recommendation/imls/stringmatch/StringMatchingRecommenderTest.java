@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
@@ -47,9 +48,11 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.testing.DkproTestContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -72,12 +75,19 @@ public class StringMatchingRecommenderTest
     private RecommenderContext context;
     private Recommender recommender;
     private StringMatchingRecommenderTraits traits;
+    private CasStorageSession casStorageSession;
 
     @Before
     public void setUp() {
+        casStorageSession = CasStorageSession.open();
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new StringMatchingRecommenderTraits();
+    }
+    
+    @After
+    public void tearDown() {
+        casStorageSession.close();
     }
 
     @Test
@@ -150,6 +160,7 @@ public class StringMatchingRecommenderTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith. Peter Johnheim .");
         CAS cas = jcas.getCas();
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
         
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
@@ -178,6 +189,7 @@ public class StringMatchingRecommenderTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "John Smith .\nPeter Johnheim .");
         CAS cas = jcas.getCas();
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
         
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
@@ -403,11 +415,14 @@ public class StringMatchingRecommenderTest
             Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
+        int n = 1;
         while (reader.hasNext()) {
             JCas cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
+            casStorageSession.add("testDataCas" + n, EXCLUSIVE_WRITE_ACCESS, cas.getCas());
         }
+        
         return casList;
     }
 
