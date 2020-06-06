@@ -31,6 +31,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -350,31 +351,26 @@ public interface DocumentService
     CAS readAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
 
+    /**
+     * Gets the CAS for the given annotation document. Converts it form the source document if
+     * necessary. The converted CAS is analyzed using CAS doctor and saved. If the CAS already
+     * existed on disk, its type system is <b>NOT</b> upgraded.
+     *
+     * @param annotationDocument
+     *            the annotation document.
+     * @param aMode
+     *            CAS access mode.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    CAS readAnnotationCas(AnnotationDocument annotationDocument, CasAccessMode aMode)
+        throws IOException;
+
     CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasUpgradeMode aUpgradeMode)
             throws IOException;
     
     void deleteAnnotationCas(AnnotationDocument annotationDocument)
-        throws IOException;
-    
-    /**
-     * Gets the CAS for the given source document. Converts it form the source document if
-     * necessary. If necessary, no annotation document exists, one is created. The source document
-     * is set into state {@link SourceDocumentState#ANNOTATION_IN_PROGRESS}.
-     *
-     * @param document
-     *            the source document.
-     * @param user
-     *            the user.
-     * @return the CAS.
-     * @throws IOException
-     *             if there was an I/O error.
-     * @deprecated use {@link #createOrGetAnnotationDocument(SourceDocument, User)} and
-     *             {@link #readAnnotationCas(AnnotationDocument)} instead and manually set source
-     *             document status manually if desired or use
-     *             {@link #readAnnotationCas(SourceDocument, String)}
-     */
-    @Deprecated
-    CAS readAnnotationCas(SourceDocument document, User user)
         throws IOException;
 
     /**
@@ -392,7 +388,28 @@ public interface DocumentService
     CAS readAnnotationCas(SourceDocument document, String userName)
         throws IOException;
 
+    /**
+     * Gets the CAS for the given source document. Converts it form the source document if
+     * necessary. The state of the source document is not changed.
+     *
+     * @param document
+     *            the source document.
+     * @param userName
+     *            the username.
+     * @param aMode
+     *            the access mode.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    CAS readAnnotationCas(SourceDocument document, String userName, CasAccessMode aMode)
+        throws IOException;
+
     CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode)
+        throws IOException;
+
+    CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aMode)
         throws IOException;
 
     /**
@@ -422,6 +439,23 @@ public interface DocumentService
     CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode)
         throws IOException;
 
+    /**
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created.
+     * 
+     * @param aDocument
+     *            the source document.
+     * @param aUpgradeMode
+     *            whether to upgrade the type system in the CAS.
+     * @param aAccessMode
+     *            CAS access mode.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading the CAS.
+     */
+    CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode)
+        throws IOException;
+    
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.
      * This method is good for bulk-importing because it accepts the project type system as a
@@ -622,4 +656,14 @@ public interface DocumentService
         throws IOException;
 
     boolean existsInitialCas(SourceDocument aDocument) throws IOException;
+    
+    /**
+     * Retrieve overall number of source documents
+     */
+    long countSourceDocuments();
+    
+    /**
+     * Retrieve overall number of annotation documents
+     */
+    long countAnnotationDocuments();
 }

@@ -68,6 +68,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.annotation.mount.MountPath;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -76,17 +77,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script.ScriptDirectionActionBarItem;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.PreferencesActionBarItem;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
@@ -131,7 +130,7 @@ public class CurationPage
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean BratProperties defaultPreferences;
+    private @SpringBean AnnotationEditorProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
@@ -212,26 +211,10 @@ public class CurationPage
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
         add(centerArea);
         
-        actionBar = new WebMarkupContainer("actionBar");
-        actionBar.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects(),
-                this::listDocuments) {
-            private static final long serialVersionUID = 4342862409722750114L;
-
-            @Override
-            public void onDocumentSelected(AjaxRequestTarget aTarget)
-            {
-                CurationPage.this.onDocumentSelected(aTarget);
-            }
-        });
-        actionBar.add(new GuidelinesActionBarItem("guidelinesDialog", this));
-        actionBar.add(new PreferencesActionBarItem("preferencesDialog", this));
-        actionBar.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
-        actionBar.add(new CuratorWorkflowActionBarItemGroup("workflowActions", this));
+        actionBar = new ActionBar("actionBar");
         centerArea.add(actionBar);
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
-        actionBar.add(
-                getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
         centerArea.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
@@ -381,7 +364,17 @@ public class CurationPage
         
     }
     
-    protected List<DecoratedObject<SourceDocument>> listDocuments(Project aProject, User aUser)
+    /**
+     * Re-render the document when the selection has changed.
+     */
+    @OnEvent
+    public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
+    {
+        actionRefreshDocument(aEvent.getRequestHandler());
+    }
+
+    
+    public List<DecoratedObject<SourceDocument>> listDocuments(Project aProject, User aUser)
     {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
         List<SourceDocument> sdocs = curationDocumentService
@@ -422,7 +415,8 @@ public class CurationPage
         }
     }
     
-    private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
+    @Override
+    public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
         return new LoadableDetachableModel<List<DecoratedObject<Project>>>()
         {
@@ -595,9 +589,6 @@ public class CurationPage
             editor.reset(aTarget);
             init(aTarget, curationContainer);
             
-            // Populate the layer dropdown box
-            editor.loadFeatureEditorModels(aTarget);
-
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
                 WicketUtil.refreshPage(aTarget, getPage());

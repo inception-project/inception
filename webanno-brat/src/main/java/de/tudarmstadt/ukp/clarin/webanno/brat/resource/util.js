@@ -123,7 +123,16 @@ var Util = (function(window, undefined) {
 
     var spanDisplayForm = function(spanTypes, spanType) {
       var labels = getSpanLabels(spanTypes, spanType);
-      return labels[0] || spanType;
+      if (labels[0]) {
+        return labels[0];
+      }
+      
+      var sep = spanType.indexOf('_');
+      if (sep >= 0) {
+        return spanType.substring(sep+1)
+      }
+      
+      return spanType;
     }
 
     var getArcLabels = function(spanTypes, spanType, arcType, relationTypesHash) {
@@ -146,7 +155,12 @@ var Util = (function(window, undefined) {
       if (!arcDesc) {
         arcDesc = $.extend({}, relationTypesHash[arcType] || relationTypesHash[noNumArcType]);
       }
+// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
+/*
       return arcDesc && arcDesc.labels || [];
+*/
+      return arcDesc && $.map(arcDesc.labels, label => '('+label+')') || [];
+// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
     }
 
     var arcDisplayForm = function(spanTypes, spanType, arcType, relationTypesHash) {

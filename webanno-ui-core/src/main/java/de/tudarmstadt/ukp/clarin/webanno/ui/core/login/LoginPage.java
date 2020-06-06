@@ -31,7 +31,9 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.HiddenField;
 import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.markup.html.form.RequiredTextField;
@@ -55,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 /**
@@ -73,8 +76,12 @@ public class LoginPage
 
     private @SpringBean UserDao userRepository;
     private @SpringBean(required = false) SessionRegistry sessionRegistry;
+    private @SpringBean LoginProperties loginProperties;
 
     private LoginForm form;
+    private final WebMarkupContainer tooManyUsersLabel;
+    private final Button signInBtn;
+    
     
     public LoginPage()
     {
@@ -82,6 +89,13 @@ public class LoginPage
         setVersioned(false);
         
         add(form = new LoginForm("loginForm"));
+        signInBtn = new Button("signInBtn");
+        signInBtn.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
+        tooManyUsersLabel = new WebMarkupContainer("usersLabel");
+        tooManyUsersLabel.add(LambdaBehavior.visibleWhen(this::isTooManyUsers));
+        form.add(signInBtn);
+        form.add(tooManyUsersLabel);
+        form.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
         
         redirectIfAlreadyLoggedIn();
 
@@ -100,6 +114,16 @@ public class LoginPage
             // messages are set to auto-close after a short time.
             warn(msg);
         }
+    }
+
+    /**
+     * Check if settings property is set and there will be more users logged in (with current one) 
+     * than max users allowed.
+     */
+    private boolean isTooManyUsers()
+    {
+        long maxUsers = loginProperties.getMaxConcurrentSessions();
+        return maxUsers > 0 && sessionRegistry.getAllPrincipals().size() >= maxUsers;
     }
     
     @Override

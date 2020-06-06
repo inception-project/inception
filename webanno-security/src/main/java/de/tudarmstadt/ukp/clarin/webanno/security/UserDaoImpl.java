@@ -205,9 +205,14 @@ public class UserDaoImpl
     @Transactional
     public Set<String> getRoles(User aUser)
     {
+        if (aUser == null || aUser.getUsername() == null) {
+            System.out.println(aUser);
+        }            
+        
         // When looking up roles for the user who is currently logged in, then we look in the
         // security context - otherwise we ask the database.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
         Set<String> roles = new HashSet<>();
         if (authentication != null && aUser.getUsername().equals(authentication.getName())) {
             for (GrantedAuthority ga : SecurityContextHolder.getContext().getAuthentication()
@@ -221,5 +226,18 @@ public class UserDaoImpl
             }
         }
         return roles;
+    }
+
+    @Override
+    public long countEnabledUsers()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM " +  User.class.getName(),
+                "WHERE enabled = :enabled");
+        
+        return entityManager.createQuery(query, Long.class)
+                .setParameter("enabled", true)
+                .getSingleResult();
     }
 }

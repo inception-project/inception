@@ -26,12 +26,13 @@ import org.apache.wicket.model.IModel;
 import org.danekja.java.util.function.serializable.SerializableBiFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 
-public abstract class OpenDocumentDialog
+public class OpenDocumentDialog
     extends ModalWindow
 {
     private static final long serialVersionUID = 2767538203924633288L;
@@ -125,5 +126,8 @@ public abstract class OpenDocumentDialog
                 + panel.getFocusComponent().getMarkupId() + "').focus(); }, 100);");
     }
     
-    public abstract void onDocumentSelected(AjaxRequestTarget aTarget);
+    private void onDocumentSelected(AjaxRequestTarget aTarget)
+    {
+        ((AnnotationPageBase) getPage()).actionLoadDocument(aTarget);
+    }
 }

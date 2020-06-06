@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
@@ -24,7 +27,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CO
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
+import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
 import static java.lang.Math.ceil;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
@@ -32,21 +37,25 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.io.FileUtils.copyFileToDirectory;
-import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.commons.io.FileUtils.forceMkdir;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
@@ -57,9 +66,10 @@ import org.springframework.stereotype.Component;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -87,19 +97,18 @@ public class AnnotationDocumentExporter
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     private final DocumentService documentService;
-    private final AnnotationSchemaService schemaService;
     private final UserDao userRepository;
     private final ImportExportService importExportService;
+    private final RepositoryProperties repositoryProperties;
     
     @Autowired
-    public AnnotationDocumentExporter(DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService, UserDao aUserRepository,
-            ImportExportService aImportExportService)
+    public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
+            ImportExportService aImportExportService, RepositoryProperties aRepositoryProperties)
     {
         documentService = aDocumentService;
-        schemaService = aSchemaService;
         userRepository = aUserRepository;
         importExportService = aImportExportService;
+        repositoryProperties = aRepositoryProperties;
     }
 
     @Override
@@ -170,119 +179,121 @@ public class AnnotationDocumentExporter
                 .build(key -> userRepository.get(key));
 
         for (SourceDocument srcDoc : documents) {
-            //
-            // Export initial CASes
-            //
-            
-            // The initial CAS must always be exported to ensure that the converted source document
-            // will *always* have the state it had at the time of the initial import. We we do have
-            // a reliably initial CAS and instead lazily convert whenever an annotator starts
-            // annotating, then we could end up with two annotators having two different versions of
-            // their CAS e.g. if there was a code change in the reader component that affects its
-            // output.
-
-            // If the initial CAS does not exist yet, it must be created before export.
-            if (!documentService.existsInitialCas(srcDoc)) {
-                documentService.createOrReadInitialCas(srcDoc);
-            }
-            
-            File targetDir = new File(aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName());
-            forceMkdir(targetDir);
-            
-            File initialCasFile = documentService.getCasFile(srcDoc, INITIAL_CAS_PSEUDO_USER);
-            
-            copyFileToDirectory(initialCasFile, targetDir);
-            
-            log.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
-                    + "] for source document [" + srcDoc.getId() + "] in project ["
-                    + project.getName() + "] with id [" + project.getId() + "]");
-
-            //
-            // Export per-user annotation document
-            // 
-            
-            // Determine which format to use for export
-            String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? srcDoc.getFormat()
-                    : aRequest.getFormat();
-            
-            FormatSupport format = importExportService.getWritableFormatById(formatId)
-                    .orElseGet(() -> {
-                        FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
-                        aMonitor.addMessage(LogMessage.error(this,"Annotation: [%s] No writer "
-                                + "found for original format [%s] - exporting as [%s] "
-                                + "instead.",
-                                srcDoc.getName(), formatId, fallbackFormat.getName()));
-                        return fallbackFormat;
-                    });
-
-            // Export annotations from regular users
-            for (AnnotationDocument annDoc : 
-                srcToAnnIdx.computeIfAbsent(srcDoc, key -> emptyList())) {
+            try (CasStorageSession session = CasStorageSession.openNested()) {
+                //
+                // Export initial CASes
+                //
                 
-                // copy annotation document only for existing users and the state of the 
-                // annotation document is not NEW/IGNORE
-                if (
-                        usersCache.get(annDoc.getUser()) != null && 
-                        !annDoc.getState().equals(AnnotationDocumentState.NEW) && 
-                        !annDoc.getState().equals(AnnotationDocumentState.IGNORE)
-                ) {
-                    File annSerDir = new File(
-                            aStage.getAbsolutePath() + ANNOTATION_CAS_FOLDER
-                                    + srcDoc.getName());
-                    File annDocDir = new File(aStage.getAbsolutePath()
-                            + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-
-                    forceMkdir(annSerDir);
-                    forceMkdir(annDocDir);
-
-                    File annSerFile = documentService.getCasFile(srcDoc, annDoc.getUser());
-
-                    File annFile = null;
-                    if (annSerFile.exists()) {
-                        annFile = importExportService.exportAnnotationDocument(srcDoc,
-                                annDoc.getUser(), format, annDoc.getUser(), ANNOTATION, false,
-                                bulkOperationContext);
-                    }
-                    
-                    if (annSerFile.exists()) {
-                        copyFileToDirectory(annSerFile, annSerDir);
-                        copyFileToDirectory(annFile, annDocDir);
-                        forceDelete(annFile);
-                    }
-                    
-                    log.info("Exported annotation document content for user ["
-                            + annDoc.getUser() + "] for source document ["
-                            + srcDoc.getId() + "] in project [" + project.getName() + "] with id ["
-                            + project.getId() + "]");
+                // The initial CAS must always be exported to ensure that the converted source
+                // document will *always* have the state it had at the time of the initial import.
+                // We we do have a reliably initial CAS and instead lazily convert whenever an
+                // annotator starts annotating, then we could end up with two annotators having two
+                // different versions of their CAS e.g. if there was a code change in the reader
+                // component that affects its output.
+    
+                // If the initial CAS does not exist yet, it must be created before export.
+                if (!documentService.existsInitialCas(srcDoc)) {
+                    documentService.createOrReadInitialCas(srcDoc);
                 }
-            }
-            
-            // Special handling for the virtual CORRECTION_USER data used in automation and
-            // correction type projects.
-            if (
-                    PROJECT_TYPE_AUTOMATION.equals(project.getMode()) || 
-                    PROJECT_TYPE_CORRECTION.equals(project.getMode())
-            ) {
-                File corrSerFile = documentService.getCasFile(srcDoc, CORRECTION_USER);
-                if (corrSerFile.exists()) {
-                    // Copy CAS - this is used when importing the project again
-                    // Util WebAnno 3.4.x, the CORRECTION_USER CAS was exported to 'curation' and
-                    // 'curation_ser'.
-                    // Since WebAnno 3.5.x, the CORRECTION_USER CAS is exported to 'annotation' and
-                    // 'annotation_ser'.
-                    File curationSerDir = new File(
-                            aStage + ANNOTATION_AS_SERIALISED_CAS + srcDoc.getName());
-                    forceMkdir(curationSerDir);
-                    copyFileToDirectory(corrSerFile, curationSerDir);
-
-                    // Copy secondary export format for convenience - not used during import
-                    File curationDir = new File(
-                            aStage + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-                    forceMkdir(curationDir);
-                    File corrFile = importExportService.exportAnnotationDocument(srcDoc,
-                            CORRECTION_USER, format, CORRECTION_USER, CORRECTION);
-                    copyFileToDirectory(corrFile, curationDir);
-                    forceDelete(corrFile);
+                
+                File targetDir = new File(aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName());
+                forceMkdir(targetDir);
+                
+                File initialCasFile = documentService.getCasFile(srcDoc, INITIAL_CAS_PSEUDO_USER);
+                
+                copyFileToDirectory(initialCasFile, targetDir);
+                
+                log.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
+                        + "] for source document [" + srcDoc.getId() + "] in project ["
+                        + project.getName() + "] with id [" + project.getId() + "]");
+    
+                //
+                // Export per-user annotation document
+                // 
+                
+                // Determine which format to use for export
+                String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? srcDoc.getFormat()
+                        : aRequest.getFormat();
+                
+                FormatSupport format = importExportService.getWritableFormatById(formatId)
+                        .orElseGet(() -> {
+                            FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
+                            aMonitor.addMessage(LogMessage.error(this,"Annotation: [%s] No writer "
+                                    + "found for original format [%s] - exporting as [%s] "
+                                    + "instead.",
+                                    srcDoc.getName(), formatId, fallbackFormat.getName()));
+                            return fallbackFormat;
+                        });
+    
+                // Export annotations from regular users
+                for (AnnotationDocument annDoc : 
+                    srcToAnnIdx.computeIfAbsent(srcDoc, key -> emptyList())) {
+                    
+                    // copy annotation document only for existing users and the state of the 
+                    // annotation document is not NEW/IGNORE
+                    if (
+                            usersCache.get(annDoc.getUser()) != null && 
+                            !annDoc.getState().equals(AnnotationDocumentState.NEW) && 
+                            !annDoc.getState().equals(AnnotationDocumentState.IGNORE)
+                    ) {
+                        File annSerDir = new File(
+                                aStage.getAbsolutePath() + ANNOTATION_CAS_FOLDER
+                                        + srcDoc.getName());
+                        File annDocDir = new File(aStage.getAbsolutePath()
+                                + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
+    
+                        forceMkdir(annSerDir);
+                        forceMkdir(annDocDir);
+    
+                        File annSerFile = documentService.getCasFile(srcDoc, annDoc.getUser());
+    
+                        File annFile = null;
+                        if (annSerFile.exists()) {
+                            annFile = importExportService.exportAnnotationDocument(srcDoc,
+                                    annDoc.getUser(), format, annDoc.getUser(), ANNOTATION, false,
+                                    bulkOperationContext);
+                        }
+                        
+                        if (annSerFile.exists()) {
+                            copyFileToDirectory(annSerFile, annSerDir);
+                            copyFileToDirectory(annFile, annDocDir);
+                            forceDelete(annFile);
+                        }
+                        
+                        log.info("Exported annotation document content for user ["
+                                + annDoc.getUser() + "] for source document [" + srcDoc.getId()
+                                + "] in project [" + project.getName() + "] with id ["
+                                + project.getId() + "]");
+                    }
+                }
+                
+                // Special handling for the virtual CORRECTION_USER data used in automation and
+                // correction type projects.
+                if (
+                        PROJECT_TYPE_AUTOMATION.equals(project.getMode()) || 
+                        PROJECT_TYPE_CORRECTION.equals(project.getMode())
+                ) {
+                    File corrSerFile = documentService.getCasFile(srcDoc, CORRECTION_USER);
+                    if (corrSerFile.exists()) {
+                        // Copy CAS - this is used when importing the project again
+                        // Util WebAnno 3.4.x, the CORRECTION_USER CAS was exported to 'curation'
+                        // and 'curation_ser'.
+                        // Since WebAnno 3.5.x, the CORRECTION_USER CAS is exported to 'annotation'
+                        // and 'annotation_ser'.
+                        File curationSerDir = new File(
+                                aStage + ANNOTATION_AS_SERIALISED_CAS + srcDoc.getName());
+                        forceMkdir(curationSerDir);
+                        copyFileToDirectory(corrSerFile, curationSerDir);
+    
+                        // Copy secondary export format for convenience - not used during import
+                        File curationDir = new File(
+                                aStage + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
+                        forceMkdir(curationDir);
+                        File corrFile = importExportService.exportAnnotationDocument(srcDoc,
+                                CORRECTION_USER, format, CORRECTION_USER, CORRECTION);
+                        copyFileToDirectory(corrFile, curationDir);
+                        forceDelete(corrFile);
+                    }
                 }
             }
             
@@ -296,12 +307,18 @@ public class AnnotationDocumentExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
+        long start = currentTimeMillis();
+        
         Map<String, SourceDocument> nameToDoc = documentService
                 .listSourceDocuments(aProject).stream()
                 .collect(toMap(SourceDocument::getName, identity()));
         
         importAnnotationDocuments(aExProject, aProject, nameToDoc);
         importAnnotationDocumentContents(aZip, aProject, nameToDoc);
+
+        log.info("Imported [{}] annotation documents for project [{}] ({})",
+                aExProject.getSourceDocuments().size(), aExProject.getName(),
+                DurationFormatUtils.formatDurationWords(currentTimeMillis() - start, true, true));
     }
     
     /**
@@ -350,6 +367,14 @@ public class AnnotationDocumentExporter
             Map<String, SourceDocument> aNameToDoc)
         throws IOException
     {
+        int n = 0;
+        
+        // NOTE: we resort to internal knowledge about the CasStorageService here, but
+        // it makes the import quite a bit faster than using DocumentService.getCasFile(...)
+        Path docRoot = repositoryProperties.getPath().toPath().resolve(
+                PROJECT_FOLDER).resolve(aProject.getId().toString()).resolve(DOCUMENT_FOLDER);
+        
+        Set<SourceDocument> annotationFolderInitialized = new HashSet<>();
         
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
@@ -374,13 +399,24 @@ public class AnnotationDocumentExporter
             // name of the annotation document
             fileName = fileName.replace(FilenameUtils.getName(fileName), "").replace("/", "");
             SourceDocument sourceDocument = aNameToDoc.get(fileName);
-            File annotationFilePath = documentService.getCasFile(sourceDocument, username);
 
-            copyInputStreamToFile(zip.getInputStream(entry), annotationFilePath);
+            Path annFolder = docRoot.resolve(sourceDocument.getId().toString())
+                    .resolve(ANNOTATION_FOLDER);
+            
+            // Check if the annotation folder for the given source document has already been
+            // created. Using the set to check here is faster than querying the file system.
+            if (!annotationFolderInitialized.contains(sourceDocument)) {
+                Files.createDirectories(annFolder);
+                annotationFolderInitialized.add(sourceDocument);
+            }
+            
+            copy(zip.getInputStream(entry), annFolder.resolve(username + ".ser").toFile());
 
-            log.info("Imported annotation document content for user [" + username
-                    + "] for source document [" + sourceDocument.getId() + "] in project ["
-                    + aProject.getName() + "] with id [" + aProject.getId() + "]");
+            n++;
+            log.info(
+                    "Imported content for annotation document {}: user [{}] for [{}]({}) in project [{}]({})",
+                    n, username, sourceDocument.getName(), sourceDocument.getId(),
+                    aProject.getName(), aProject.getId());
         }
     }
 }

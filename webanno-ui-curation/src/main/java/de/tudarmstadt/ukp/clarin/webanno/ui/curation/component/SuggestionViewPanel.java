@@ -33,6 +33,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Anno
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.DISAGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.DO_NOT_USE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.USE;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
@@ -81,6 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -105,6 +107,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
@@ -606,6 +609,12 @@ public class SuggestionViewPanel
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         AnnotatorState state = aCurationContainer.getState();
+        
+        if (state.getDocument() == null) {
+            return;
+        }
+
+        
         SourceDocument sourceDocument = state.getDocument();
         Map<String, CAS> casses = new HashMap<>();
 
@@ -676,7 +685,7 @@ public class SuggestionViewPanel
                 LOG.error("Unable to render", e);
             }
 
-            vis.requestRender(aTarget);
+            requestRender(aTarget, vis);
         });
     }
 
@@ -826,5 +835,22 @@ public class SuggestionViewPanel
             }
         }
         return annotatorCas;
+    }
+    
+    /**
+     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be called
+     * multiple times, even for the same annotation editor, but only resulting in a single rendering
+     * call.
+     */
+    private final void requestRender(AjaxRequestTarget aTarget, BratVisualizer aVis)
+    {
+        aTarget.registerRespondListener(new AjaxComponentRespondListener(aVis, _target -> {
+            // Is a document loaded?
+            if (isBlank(aVis.getDocumentData())) {
+                return;
+            }
+
+            aVis.render(_target);
+        }));
     }
 }

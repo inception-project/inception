@@ -607,13 +607,16 @@ var Visualizer = (function($, window, undefined) {
               new Span(entity[0], entity[1], entity[2], 'entity');
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually + #587 Customize mouse hover text
           if (entity[3]) {
-        	  span.labelText = entity[3];
-          }
-          if (entity[4]) {
-        	  span.color = entity[4];
-          }
-          if (entity[5]){
-        	  span.hovertext = entity[5];
+            var attributes = entity[3];
+            if (attributes.hasOwnProperty('l')) {
+              span.labelText = attributes.l;
+            }
+            if (attributes.hasOwnProperty('c')) {
+              span.color = attributes.c;
+            }
+            if (attributes.hasOwnProperty('h')) {
+              span.hovertext = attributes.h;
+            }
           }
 // WEBANNO EXTENSION END
           span.splitMultilineOffsets(data.text);
@@ -1550,16 +1553,6 @@ var Visualizer = (function($, window, undefined) {
             labels = [data.eventDescs[arc.eventDescId].labelText];
           }
 // WEBANNO EXTENSION END - #820 - Allow setting label/color individually
-// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
-          else {
-            // Make sure we have measurements for the bracketed labels that we use later.
-            var plainLabels = labels;
-            labels = [];
-            for (var i = 0; i < plainLabels.length; i++) {
-              labels[i] = '(' + plainLabels[i] + ')';
-            }
-          }
-// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
           $.each(labels, function(labelNo, label) {
             arcTexts[label] = true;
           });
@@ -2662,7 +2655,7 @@ Util.profileStart('arcs');
           var noNumArcType;
           var splitArcType;
           if (arc.type) {
-            splitArcType = arc.type.match(/^(.*?)(\d*)$/);
+            splitArcType = arc.type.match(/^(.*)(\d*)$/);
             noNumArcType = splitArcType[1];
           }
 
@@ -2870,24 +2863,21 @@ Util.profileStart('arcs');
                 }
               }
               
-// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
-              labelText = "(" + labelText + ")";
-// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
-
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
               if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
                 if (data.eventDescs[arc.eventDescId].labelText) {
               	  labelText = data.eventDescs[arc.eventDescId].labelText;
                 }
               }
-// WEBANNO EXTENSION END
+// WEBANNO EXTENSION END - #820 - Allow setting label/color individually
 
               var shadowGroup;
               if (arc.shadowClass || arc.marked) {
                 shadowGroup = svg.group(arcGroup);
               }
               var options = {
-                'fill': color,
+                //'fill': color,
+                'fill': '#000000',
                 'data-arc-role': arc.type,
                 'data-arc-origin': arc.origin,
                 'data-arc-target': arc.target,
@@ -3766,6 +3756,7 @@ Util.profileStart('finish');
           move(sentNumMargin, 0).
           line(sentNumMargin, y));
 */
+Util.profileStart('adjust margin');
         if (rtlmode) {
           svg.path(sentNumGroup, svg.createPath().
             move(canvasWidth - sentNumMargin, 0).
@@ -3776,7 +3767,8 @@ Util.profileStart('finish');
             line(sentNumMargin, y));
         }
 // WEBANNO EXTENSION END        
-
+Util.profileEnd('adjust margin');
+Util.profileStart('resize SVG');
         // resize the SVG
         var width = maxTextWidth + sentNumMargin + 2 * Configuration.visual.margin.x + 1;
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
@@ -3784,6 +3776,24 @@ Util.profileStart('finish');
 /*
         if (width > canvasWidth) canvasWidth = width;
 */ 
+        // Loops over the rows to check if the width calculated so far is still not enough. This
+        // currently happens sometimes if there is a single annotation on many words preventing
+        // wrapping within the annotation (aka oversizing).
+        $(textGroup).children(".text-row").each(function (rowIndex, textRow) {
+          var rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+          var rowFinalSpacing = $($(textRow).children('.row-final')[0]);
+          var lastChunkWidth = sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
+          var lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
+          if (rtlmode) {
+            // Not sure what to calculate here
+          }
+          else {
+            if (lastChunkOffset + lastChunkWidth > width) {
+              width = lastChunkOffset + lastChunkWidth;
+            }
+          }
+        });
+        
         var oversized = Math.max(width - canvasWidth, 0);
         if (oversized > 0) {
           $svgDiv.width(baseCanvasWidth);
@@ -3795,16 +3805,21 @@ Util.profileStart('finish');
 // WEBANNO EXTENSION END        
         
         $svg.width(canvasWidth);
+Util.profileStart('height');
         $svg.height(y);
+Util.profileEnd('height');
         $svg.attr("viewBox", "0 0 " + canvasWidth + " " + y);
 
-        // WEBANNO BEGIN #331 - Interface jumps to the top
+// WEBANNO EXTENSION BEGIN #331 - Interface jumps to the top
         // Originally, this code was within the oversized > 0 block above, but we moved it here
         // to prevent erratic jumping
         $svgDiv.height(y + 4); // Need to take the hairline border into account here
-        // WEBANNO END #331 - Interface jumps to the top
-        
-        // WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
+// WEBANNO EXTENSION END #331 - Interface jumps to the top
+
+Util.profileEnd('resize SVG');
+Util.profileStart('set up RTL');
+
+// WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
         if (rtlmode) {
           $svg.attr("direction", "rtl");
 // WEBANNO EXTENSION BEGIN - #300 - RTL, line breaks and Scrollbars          
@@ -3824,6 +3839,8 @@ Util.profileStart('finish');
 // WEBANNO EXTENSION END - #300 - RTL, line breaks and Scrollbars          
         }
 // WEBANNO EXTENSION END        
+Util.profileEnd('set up RTL');
+Util.profileStart('adjust backgrounds');
 // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
 // Allow some extra space for arcs
         if (oversized > 0) {
@@ -3842,68 +3859,71 @@ Util.profileStart('finish');
             });
         }
 // WEBANNO EXTENSION END        
-
-// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
-        var svgRect = $svg[0].getBoundingClientRect();
-        
+Util.profileEnd('adjust backgrounds');
+Util.profileStart('row-spacing-adjust');
         // Go through each row and adjust the row-initial and row-final spacing
         $(textGroup).children(".text-row").each(function (rowIndex, textRow) {
           var rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
           var rowFinalSpacing = $($(textRow).children('.row-final')[0]);
-          var firstChunkRect = rowInitialSpacing.next()[0].getBoundingClientRect();
-          var lastChunkRect = rowFinalSpacing.prev()[0].getBoundingClientRect();
+          var firstChunkWidth = sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
+          var lastChunkWidth = sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
+          var lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
 
           if (rtlmode) {
             var initialSpacingX = canvasWidth - sentNumMargin;
-            var initialSpacingWidth = initialSpacingX - (firstChunkRect.x - svgRect.x + firstChunkRect.width);
+            var initialSpacingWidth = initialSpacingX - (Configuration.visual.margin.x + rowPadding + 1 + firstChunkWidth);
             rowInitialSpacing.attr('x', initialSpacingX);
             rowInitialSpacing.attr('textLength', initialSpacingWidth);
             
-            var finalSpacingX = lastChunkRect.x - svgRect.x;
-            var finalSpacingWidth = finalSpacingX;
+            var finalSpacingX = lastChunkOffset + 1;
+            var finalSpacingWidth = lastChunkWidth;
             rowFinalSpacing.attr('x', finalSpacingX);
             rowFinalSpacing.attr('textLength', finalSpacingWidth);
           }
           else {
             var initialSpacingX = sentNumMargin;
-            var initialSpacingWidth = (firstChunkRect.x - svgRect.x) - initialSpacingX;
+            var initialSpacingWidth = Configuration.visual.margin.x + rowPadding + 1;
             rowInitialSpacing.attr('x', initialSpacingX);
             rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
-            var finalSpacingX = lastChunkRect.x + lastChunkRect.width - svgRect.x;
+            var finalSpacingX = lastChunkOffset + lastChunkWidth + 1;
             var finalSpacingWidth = canvasWidth - finalSpacingX;
-            rowFinalSpacing.attr('x', lastChunkRect.x + lastChunkRect.width - svgRect.x);
+            rowFinalSpacing.attr('x', finalSpacingX);
             rowFinalSpacing.attr('textLength', finalSpacingWidth);
            }
         });
-
+Util.profileEnd('row-spacing-adjust');
+// BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
+Util.profileStart('inter-row space');
         // Go through each row and add an unselectable spacer between this row and the next row
         // While the space is unselectable, it will still help in guiding the browser into which
         // direction the selection should in principle go and thus avoids jumpyness.
-        var prevRowRect = { y: svgRect.y, width: 0, height: 0 };
+        var prevRowRect = { y: 0, height: 0 };
         
         var textRows = $(textGroup).children(".text-row");
         textRows.each(function (rowIndex, textRow) {
-          var rowRect = textRow.getBoundingClientRect();
-          var spaceHeight = rowRect.y - (prevRowRect.y + prevRowRect.height);
+          var rowRect = { 
+            y: parseFloat($(textRow).children()[0].getAttribute('y')) + 2, height: sizes.texts.height };
+          var spaceHeight = rowRect.y - (prevRowRect.y + rowRect.height) + 2;
 
           // Adding a spacer between the rows. We make is a *little* bit larger than necessary
           // to avoid exposing areas where the background shines through and which would again
           // cause jumpyness during selection.
-          textRow.before(vertialSpacer( 
-            Math.floor((prevRowRect.y - svgRect.y) + prevRowRect.height), 
-            Math.ceil(spaceHeight) + 1));
+          textRow.before(verticalSpacer( 
+            Math.floor(prevRowRect.y),
+            Math.ceil(spaceHeight)));
           
           prevRowRect = rowRect;
           
           // Add a spacer below the final row until the end of the canvas
           if (rowIndex == textRows.length - 1) {
-            var lastSpacerY = Math.floor((rowRect.y - svgRect.y) + rowRect.height);
-            textRow.after(vertialSpacer( 
-              Math.floor((rowRect.y - svgRect.y) + rowRect.height), 
+            var lastSpacerY = Math.floor(rowRect.y + rowRect.height);
+            textRow.after(verticalSpacer(
+              Math.floor(rowRect.y + rowRect.height), 
               Math.ceil(y - lastSpacerY) + 1));
           }
         });
+Util.profileEnd('inter-row space');
 // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
         
 Util.profileEnd('finish');
@@ -3968,7 +3988,7 @@ Util.profileReport();
       var rerender = function() {
         dispatcher.post('startedRendering', [coll, doc, args]);
         dispatcher.post('spin');
-        setTimeout(function() {
+        //setTimeout(function() {
             try {
               renderDataReal(sourceData);
             } catch (e) {
@@ -3979,7 +3999,7 @@ Util.profileReport();
               dispatcher.post('renderError: Fatal', [sourceData, e]);
             }
             dispatcher.post('unspin');
-        }, 0);
+        //}, 0);
       }
 // END WEBANNO EXTENSION - #1519 - Optimize re-rendering of brat view when window is resizes
       
@@ -4399,7 +4419,7 @@ Util.profileStart('before render');
       };
       
 // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      var vertialSpacer = function(y, height) {
+      var verticalSpacer = function(y, height) {
         if (height > 0) {
           var foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject' );
           var spacer = document.createElement('span');
@@ -4408,7 +4428,7 @@ Util.profileStart('before render');
             .css('display', 'inline-block')
             .css('width', '100%')
             .css('height', '100%')
-            //.css('background-color', 'yellow')
+            // .css('background-color', 'yellow')
             .text('\u00a0');
           $(foreignObject)
             .attr("x", rtlmode ? 0 : sentNumMargin)

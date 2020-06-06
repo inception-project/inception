@@ -1,5 +1,5 @@
 /*
- * Copyright 2019
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
+package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
-public interface BratProperties
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+
+public class TagDeletedEvent
+    extends TagEvent
 {
+    private static final long serialVersionUID = -403388869161637755L;
 
-    boolean isSingleClickSelection();
-
-    int getPageSize();
-
-    boolean isAutoScroll();
-
-    boolean isRememberLayer();
-
+    public TagDeletedEvent(Object aSource, Tag aTag)
+    {
+        super(aSource, aTag);
+    }
 }

@@ -28,6 +28,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.SerializableString;
 import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.core.io.SerializedString;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JSONUtil
@@ -73,7 +75,8 @@ public class JSONUtil
 
         JsonGenerator jsonGenerator = aMapper.getFactory().createGenerator(out);
         if (aPretty) {
-            jsonGenerator.useDefaultPrettyPrinter();
+            jsonGenerator.setPrettyPrinter(new DefaultPrettyPrinter()
+                    .withObjectIndenter(new DefaultIndenter().withLinefeed("\n")));
         }
 
         jsonGenerator.writeObject(aObject);

@@ -23,10 +23,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
@@ -60,6 +61,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
@@ -72,11 +74,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -87,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(DocumentService.SERVICE_NAME)
@@ -490,7 +495,7 @@ public class DocumentServiceImpl
         if (new File(path).exists()) {
             FileUtils.forceDelete(new File(path));
         }
-
+        
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aDocument.getProject().getId()))) {
             Project project = aDocument.getProject();
@@ -498,7 +503,7 @@ public class DocumentServiceImpl
                     aDocument.getId(), project.getName(), project.getId());
         }
     }
-
+    
     @Override
     @Transactional
     public void removeAnnotationDocument(AnnotationDocument aAnnotationDocument)
@@ -573,12 +578,28 @@ public class DocumentServiceImpl
     public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode)
             throws IOException
     {
-        return createOrReadInitialCas(aDocument, aUpgradeMode, null);
+        return createOrReadInitialCas(aDocument, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS, null);
     }
-    
+
+    @Override
+    public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode)
+        throws IOException
+    {
+        return createOrReadInitialCas(aDocument, aUpgradeMode, aAccessMode, null);
+    }
+
     @Override
     public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
             TypeSystemDescription aFullProjectTypeSystem)
+        throws IOException
+    {
+        return createOrReadInitialCas(aDocument, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS,
+                aFullProjectTypeSystem);
+    }
+    
+    private CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode, TypeSystemDescription aFullProjectTypeSystem)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -587,7 +608,7 @@ public class DocumentServiceImpl
                 aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
-        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, true, 
+        return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, 
                 aUpgradeMode, () -> {
                 // Normally, the initial CAS should be created on document import, but after
                 // adding this feature, the existing projects do not yet have initial CASes, so
@@ -600,7 +621,7 @@ public class DocumentServiceImpl
                 catch (UIMAException e) {
                     throw new IOException("Unable to create CAS: " + e.getMessage(), e);
                 }
-            });
+            }, aAccessMode);
     }
     
     @Override
@@ -613,42 +634,47 @@ public class DocumentServiceImpl
     
     @Override
     @Transactional
-    @Deprecated
-    public CAS readAnnotationCas(SourceDocument aDocument, User aUser)
-        throws IOException
-    {
-        // Check if there is an annotation document entry in the database. If there is none,
-        // create one.
-        AnnotationDocument annotationDocument = createOrGetAnnotationDocument(aDocument, aUser);
-
-        // Change the state of the source document to in progress
-        transitionSourceDocumentState(aDocument, NEW_TO_ANNOTATION_IN_PROGRESS);
-        transitionAnnotationDocumentState(annotationDocument,
-                AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
-
-        return readAnnotationCas(annotationDocument);
-    }
-
-    @Override
-    @Transactional
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName)
             throws IOException
     {
-        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE);
+        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
+    }
+    
+    @Override
+    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasAccessMode aMode)
+        throws IOException
+    {
+        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, aMode);
     }
 
+    @Override
+    public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasAccessMode aMode)
+        throws IOException
+    {
+        return readAnnotationCas(aAnnotationDocument.getDocument(), aAnnotationDocument.getUser(),
+                NO_CAS_UPGRADE, aMode);
+    }
+    
     @Override
     @Transactional
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
             CasUpgradeMode aUpgradeMode)
             throws IOException
     {
+        return readAnnotationCas(aDocument, aUserName, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS);
+    }
+
+    @Override
+    @Transactional
+    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
+            CasUpgradeMode aUpgradeMode, CasAccessMode aMode)
+            throws IOException
+    {
         // If there is no CAS yet for the source document, create one.
-        CAS cas = casStorageService.readOrCreateCas(aDocument, aUserName, true, aUpgradeMode,
-            () -> {
-                // Convert the source file into an annotation CAS
-                return createOrReadInitialCas(aDocument);
-            });
+        CAS cas = casStorageService.readOrCreateCas(aDocument, aUserName, aUpgradeMode,
+            // Convert the source file into an annotation CAS
+            () -> createOrReadInitialCas(aDocument, NO_CAS_UPGRADE, UNMANAGED_ACCESS, null),
+            aMode);
 
         // We intentionally do not upgrade the CAS here because in general the IDs
         // must remain stable. If an upgrade is required the caller should do it
@@ -732,12 +758,17 @@ public class DocumentServiceImpl
         throws UIMAException, IOException
     {
         AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
-        CAS cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE);
+        
+        // We read the initial CAS and then use it to override the CAS for the given document/user.
+        // In order to do that, we must read the initial CAS unmanaged.
+        CAS cas = createOrReadInitialCas(aDocument, FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
+        
         // Add/update the CAS metadata
         File casFile = getCasFile(aDocument, aUser.getUsername());
         if (casFile.exists()) {
             addOrUpdateCasMetadata(cas, casFile, aDocument, aUser.getUsername());
         }
+        
         writeAnnotationCas(cas, aDocument, aUser, false);
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, cas));
     }
@@ -906,7 +937,6 @@ public class DocumentServiceImpl
     @Override
     public int numberOfExpectedAnnotationDocuments(Project aProject)
     {
-
         // Get all annotators in the project
         List<String> users = getAllAnnotators(aProject);
         // Bail out already. HQL doesn't seem to like queries with an empty
@@ -1011,5 +1041,72 @@ public class DocumentServiceImpl
     public void onBeforeDocumentRemovedEvent(BeforeDocumentRemovedEvent aEvent)
     {
         projectService.recalculateProjectState(aEvent.getDocument().getProject());
+    }
+    
+    @EventListener
+    @Transactional
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
+        throws IOException
+    {
+        Project project = aEvent.getProject();
+        
+        Validate.notNull(project, "Project must be specified");
+
+        // Since the project is being deleted anyway, we don't bother sending around
+        // BeforeDocumentRemovedEvent anymore. If we did, we would likely trigger a
+        // a lot of CPU usage and DB bashing (e.g. for re-calculating the project state
+        // (ProjectServiceImpl.recalculateProjectState).
+        // List<SourceDocument> sourceDocuments = listSourceDocuments(project);
+        // for (SourceDocument doc : sourceDocuments) {
+        // applicationEventPublisher.publishEvent(new BeforeDocumentRemovedEvent(this, doc));
+        // }
+
+        // There should be a cascade-on-delete for annotation documents when the respective
+        // source document is deleted, but that is not there at the moment...
+        String deleteAnnotationDocumentsQuery = String.join("\n",
+                "DELETE FROM AnnotationDocument",
+                "WHERE project = :project");
+        entityManager.createQuery(deleteAnnotationDocumentsQuery)
+                .setParameter("project", project)
+                .executeUpdate();
+
+        // Delete all the source documents for the given project
+        String deleteSourceDocumentsQuery = String.join("\n",
+                "DELETE FROM SourceDocument",
+                "WHERE project = :project");
+        entityManager.createQuery(deleteSourceDocumentsQuery)
+                .setParameter("project", project)
+                .executeUpdate();
+        
+        // Delete all the source documents files for the given project
+        File docFolder = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/");
+        if (docFolder.exists()) {
+            FastIOUtils.delete(docFolder);
+        }
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(project.getId()))) {
+            log.info("Removed all documents from project [{}]({}) being deleted", project.getName(),
+                    project.getId());
+        }
+    }
+
+    @Override
+    public long countSourceDocuments()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM SourceDocument");
+        return entityManager.createQuery(query, Long.class).getSingleResult();
+    }
+
+    @Override
+    public long countAnnotationDocuments()
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM AnnotationDocument");
+        return entityManager.createQuery(query, Long.class).getSingleResult();
     }
 }

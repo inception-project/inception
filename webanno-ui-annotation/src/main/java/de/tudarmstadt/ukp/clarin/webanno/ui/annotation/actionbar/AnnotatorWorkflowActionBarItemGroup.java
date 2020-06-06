@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
@@ -82,6 +82,11 @@ public class AnnotatorWorkflowActionBarItemGroup
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
                 resetDocumentDialog::show));
         resetDocumentLink.add(enabledWhen(() -> page.isEditable()));
+    }
+    
+    protected AnnotationPageBase getAnnotationPage()
+    {
+        return page;
     }
     
     public String getStateClass()
