@@ -62,8 +62,8 @@
     <mockito.version>3.3.3</mockito.version>
     <assertj.version>3.15.0</assertj.version>
     <spring.version>5.2.6.RELEASE</spring.version>
-    <spring.boot.version>2.2.6.RELEASE</spring.boot.version>
-    <spring.security.version>5.2.3.RELEASE</spring.security.version>
+    <spring.boot.version>2.3.0.RELEASE</spring.boot.version>
+    <spring.security.version>5.3.3.RELEASE</spring.security.version>
     <wicket.version>8.8.0</wicket.version>
     <wicketstuff.version>8.8.0</wicketstuff.version>
     <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
