@@ -30,10 +30,12 @@ public class EntityAttributes
     public static final String ATTR_LABEL = "l";
     public static final String ATTR_COLOR = "c";
     public static final String ATTR_HOVER_TEXT = "h";
+    public static final String ATTR_ACTION_BUTTONS = "a";
     
     private @JsonProperty(ATTR_LABEL) String labelText;
     private @JsonProperty(ATTR_COLOR) String color;
     private @JsonProperty(ATTR_HOVER_TEXT) String hoverText;
+    private @JsonProperty(ATTR_ACTION_BUTTONS) Boolean actionButtons;
     
     public void setLabelText(String aLabelText)
     {
@@ -63,5 +65,15 @@ public class EntityAttributes
     public String getHoverText()
     {
         return hoverText;
+    }
+    
+    public Boolean isActionButtons()
+    {
+        return actionButtons;
+    }
+    
+    public void setActionButtons(Boolean aActionButtons)
+    {
+        actionButtons = aActionButtons;
     }
 }

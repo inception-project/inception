@@ -178,7 +178,7 @@ public class BratRenderer
                 }
                 
                 aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets,
-                        labelText, color, hoverText));
+                        labelText, color, hoverText, vspan.isActionButtons()));
                 
                 vspan.getLazyDetails().stream()
                         .map(d ->  new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))
@@ -294,7 +294,7 @@ public class BratRenderer
                             aResponse.addEntity(new Entity(new VID(fs), "Token",
                                     new Offsets(range.getBegin(), range.getEnd()),
                                     fs.getCoveredText(), "#d9d9d9",
-                                    "[" + fs.getBegin() + "-" + fs.getEnd() + "]"));
+                                    "[" + fs.getBegin() + "-" + fs.getEnd() + "]", null));
                         }
                     });
         }

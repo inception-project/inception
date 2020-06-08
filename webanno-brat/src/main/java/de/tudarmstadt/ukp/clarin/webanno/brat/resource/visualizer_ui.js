@@ -558,7 +558,7 @@ var VisualizerUI = (function($, window, undefined) {
             var displayButtonsTimer = null;
             var buttonsShown = false;
             var displaySpanButtons = function (evt, target, spanId) {
-                if(target.attr('data-span-id') && spanId.startsWith("recommendationEditorExtension")) {
+                if(target.attr('data-span-id')) {
                     var spanPosition = target.position();
                     var spanWidth = target.width();
                     var spanHeight = target.height();

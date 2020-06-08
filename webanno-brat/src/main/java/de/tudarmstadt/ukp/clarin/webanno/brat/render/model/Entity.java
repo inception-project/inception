@@ -52,25 +52,25 @@ public class Entity
     }
 
     public Entity(int aId, String aType, Offsets aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext)
+            String aHoverSpantext, Boolean aActionButtons)
     {
-        this(aId, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext);
+        this(aId, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext, aActionButtons);
     }
 
     public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext)
+            String aHoverSpantext, Boolean aActionButtons)
     {
-        this(new VID(aId), aType, aOffsets, aLabelText, aColor, aHoverSpantext);
+        this(new VID(aId), aType, aOffsets, aLabelText, aColor, aHoverSpantext, aActionButtons);
     }
 
     public Entity(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext)
+            String aHoverSpantext, Boolean aActionButtons)
     {
-        this(aVid, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext);
+        this(aVid, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext, aActionButtons);
     }
 
     public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
-            String aHovertext)
+            String aHovertext, Boolean aActionButtons)
     {
         vid = aVid;
         type = aType;
@@ -78,6 +78,7 @@ public class Entity
         attributes.setLabelText(aLabelText);
         attributes.setColor(aColor);
         attributes.setHoverText(aHovertext);
+        attributes.setActionButtons(aActionButtons);
     }
 
     @Deprecated
