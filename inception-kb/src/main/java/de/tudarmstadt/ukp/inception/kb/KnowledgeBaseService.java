@@ -87,6 +87,7 @@ public interface KnowledgeBaseService
     boolean knowledgeBaseExists(Project project, String kbName);
 
     Optional<KnowledgeBase> getKnowledgeBaseById(Project project, String aId);
+    Optional<KnowledgeBase> getKnowledgeBaseByName(Project project, String aId);
 
     /**
      * Update the configuration of a knowledge base.
