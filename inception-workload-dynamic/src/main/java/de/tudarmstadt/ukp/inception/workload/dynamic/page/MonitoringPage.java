@@ -72,7 +72,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPane
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DataProvider;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.DocumentSupport;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.ImagePanel;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.ModalPanel;
 
@@ -87,8 +86,6 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
     //Dataprovider for table
     private DataProvider dataProvider;
 
-    //Support class for documents
-    private DocumentSupport documentSupport;
 
 
     //Feedbackpanel
@@ -213,12 +210,8 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
         documentList = documentService.
             listSourceDocuments(currentProject);
 
-        //Get access to advanced methods for documents
-        documentSupport = new DocumentSupport(currentProject, documentList);
-
 
         //Initialize list for all Finished documents
-        annotatedDocuments = documentSupport.getAnnotatedDocuments();
 
 
         //Headers of the table
@@ -230,13 +223,19 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
 
         //Data Provider for the table
         dataProvider = new DataProvider(documentList,
-            headers, currentProject);
+            headers, currentProject, documentService.listAnnotationDocuments(currentProject));
+
 
         //Filter Dropdown and Textfield
         filterDropDown = new DropDownChoice(getString("filterDropDown")
             , PropertyModel.of(dataProvider,"filterState.type"), this::getFilter);
+
         filterTextfield = new TextField("filterTextfield",
             PropertyModel.of(dataProvider, "filterState.input"), String.class);
+
+
+        //Remove the "Choose one" default option
+        filterDropDown.setNullValid(true);
 
 
         //Init defaultDocumentsNumberTextField
@@ -288,11 +287,11 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
         columns.add(new LambdaColumn<>(new ResourceModel(getString("Document"))
             , getString("Document"), SourceDocument::getName));
         columns.add(new LambdaColumn(new ResourceModel(getString("Finished"))
-            , getString("Finished"), aDocument -> documentSupport.getFinishedAmountForDocument
+            , getString("Finished"), aDocument -> dataProvider.getFinishedAmountForDocument
             ((SourceDocument)aDocument)));
         columns.add(new LambdaColumn<>(new ResourceModel(getString("InProgress"))
-            , getString("InProgress"), aDocument -> documentSupport.getInProgressAmountForDocument
-            ((SourceDocument)aDocument)));
+            , getString("InProgress"), aDocument -> dataProvider.
+            getInProgressAmountForDocument((SourceDocument)aDocument)));
 
         //Own column type, contains only a clickable image (AJAX event),
         //creates a small panel dialog containing metadata
@@ -361,6 +360,9 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
 
     }
 
+
+    //--------------------------------------- Helper methods -------------------------------------//
+
     //Return current project, required for several purposes
     private Optional<Project> getProjectFromParameters(StringValue projectParam)
     {
@@ -383,7 +385,6 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
     public List<String> getFilter()
     {
         List<String> filterList = new ArrayList<>();
-        filterList.add("None");
         filterList.add("Document creation time:");
         filterList.add("User:");
         filterList.add("Unused documents:");

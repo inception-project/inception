@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
@@ -33,11 +34,10 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class DataProvider extends SortableDataProvider
     <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
@@ -48,29 +48,26 @@ public class DataProvider extends SortableDataProvider
     private final List<String> headers;
     private final List<SourceDocument> data;
     private final IModel<List<SourceDocument>> model;
+    private final List<AnnotationDocument> allAnnotationDocuments;
     private Filter filter;
 
-    private final DocumentSupport documentSupport;
+    private int defaultAnnotations;
+
     private String input;
     private String type;
     private Project project;
 
-    private UserDao userRepository;
-    private DocumentService documentService;
-
-
     public DataProvider(
-        List<SourceDocument> aContents,
-        List<String> headers, Project project)
+        List<SourceDocument> aData,
+        List<String> headers, Project project, List<AnnotationDocument> aAllAnnotationDocuments)
     {
         this.project = project;
-        this.data = aContents;
+        this.data = aData;
         this.headers = headers;
-        this.documentSupport = new DocumentSupport(this.project,data);
-
-        //Initialise beans with helper methods and class
-        userRepository = documentSupport.getUserRepository();
-        documentService = documentSupport.getDocumentService();
+        this.project = project;
+        this.allAnnotationDocuments = aAllAnnotationDocuments;
+        //TODO default value must be saved permanently, create new issue and PR
+        this.defaultAnnotations = 6;
 
         //Init filter
         filter = new Filter();
@@ -84,7 +81,7 @@ public class DataProvider extends SortableDataProvider
 
             @Override
             protected List<SourceDocument> load() {
-                return aContents;
+                return data;
             }
         };
 
@@ -117,14 +114,14 @@ public class DataProvider extends SortableDataProvider
 
             } else if (getSort().getProperty().equals(headers.get(1)))
             {
-                return dir * Integer.compare(documentSupport.
-                    getFinishedAmountForDocument(o1), documentSupport.
+                return dir * Integer.compare(
+                    getFinishedAmountForDocument(o1),
                     getFinishedAmountForDocument(o2));
 
             } else if (getSort().getProperty().equals(headers.get(2)))
             {
-                return dir * Integer.compare(documentSupport.
-                    getInProgressAmountForDocument(o1), documentSupport.
+                return dir * Integer.compare(
+                    getInProgressAmountForDocument(o1),
                     getInProgressAmountForDocument(o2));
 
 
@@ -170,13 +167,6 @@ public class DataProvider extends SortableDataProvider
     {
         List<SourceDocument> resultList = new ArrayList<>();
 
-        //No filter selected
-        if (this.type.equals("None"))
-        {
-            return data;
-        }
-
-
         for (SourceDocument doc: data)
         {
             //Creation time filter
@@ -185,11 +175,15 @@ public class DataProvider extends SortableDataProvider
                 try {
                     //TODO Rework of try catch and add Error (or regex for field input)
                     Date date = new SimpleDateFormat("dd/MM/yyyy").parse(input);
-                    if (doc.getCreated().compareTo(date) >= 0)
-                    {
-                        resultList.add(doc);
-                        continue;
+                    if (doc.getCreated() == null) {
+                    } else {
+                        if (doc.getCreated().compareTo(date) >= 0)
+                        {
+                            resultList.add(doc);
+                            continue;
+                        }
                     }
+
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
@@ -198,6 +192,7 @@ public class DataProvider extends SortableDataProvider
             //User filter
             } else if (this.type.equals("User:"))
             {
+                /*
                 //Get the current user
                 User user = userRepository.get(this.input);
 
@@ -215,12 +210,13 @@ public class DataProvider extends SortableDataProvider
                     }
                 }
 
+                 */
+
             //Unused Document filter used
             } else if (this.type.equals("Unused documents:"))
             {
-                System.out.println("Checking");
-                if ((documentSupport.getInProgressAmountForDocument(doc) == 0)
-                    && (documentSupport.getFinishedAmountForDocument(doc) == 0))
+                if ((getInProgressAmountForDocument(doc) == 0)
+                    && (getFinishedAmountForDocument(doc) == 0))
                 {
                     resultList.add(doc);
                 }
@@ -232,5 +228,75 @@ public class DataProvider extends SortableDataProvider
         }
         return resultList;
     }
+
+
+    //Helper method, returns for a document how often it is "finished" within the project
+    public int getFinishedAmountForDocument(
+        SourceDocument aDocument)
+    {
+        int amount = 0;
+        for (AnnotationDocument doc : allAnnotationDocuments)
+        {
+            if (aDocument.getName().equals(doc.getName()) &&
+                doc.getState().equals(AnnotationDocumentState.FINISHED) )
+            {
+                amount++;
+            }
+        }
+        return amount;
+    }
+
+    //Helper methods, returns for a document how often it is
+    //currently "in progress" within the project
+    public int getInProgressAmountForDocument(
+        SourceDocument aDocument)
+    {
+
+        int amount = 0;
+        for (AnnotationDocument doc : allAnnotationDocuments)
+        {
+            if (aDocument.getName().equals(doc.getName()) &&
+                doc.getState().equals(AnnotationDocumentState.IN_PROGRESS))
+            {
+                amount++;
+            }
+
+        }
+
+        return amount;
+    }
+
+
+    //Returns a random document out of all documents in the project.
+    //Only a document is chosen which is not yet given to annotators more than the default number
+    //per document number
+
+    public SourceDocument getRandomDocument()
+    {
+        //Create an empty document
+        SourceDocument document = null;
+        Random r = new Random();
+
+        while (document == null)
+        {
+            int i = r.nextInt(data.size() - 1);
+            //If the random chosen document wont surpass the amount of default number combining
+            // "inProgress" for the document + "finished" amount for the document + 1
+            if ((getInProgressAmountForDocument(data.
+                get(i)) +
+                getFinishedAmountForDocument(data.
+                    get(i)))
+                + 1 <= defaultAnnotations)
+            {
+                //If that was not the case, assign this document
+                document = data.get(r.nextInt(data.size() - 1));
+            }
+        }
+        //Return the document
+        //REMINDER: Document MIGHT BE NULL if there is not a single document left!
+        // Annotator should then get the message: "No more documents to annotate"
+        return document;
+    }
+
 }
 
