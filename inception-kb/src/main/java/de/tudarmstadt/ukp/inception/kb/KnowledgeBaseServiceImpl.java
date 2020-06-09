@@ -44,6 +44,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
@@ -302,6 +303,22 @@ public class KnowledgeBaseServiceImpl
     public Optional<KnowledgeBase> getKnowledgeBaseById(Project aProject, String aId)
     {
         return Optional.ofNullable(entityManager.find(KnowledgeBase.class, aId));
+    }
+
+    @Transactional
+    @Override
+    public Optional<KnowledgeBase> getKnowledgeBaseByName(Project aProject, String aName)
+    {
+        TypedQuery<KnowledgeBase> query = entityManager.createNamedQuery("KnowledgeBase.getByName",
+            KnowledgeBase.class);
+        query.setParameter("project", aProject);
+        query.setParameter("name", aName);
+
+        try {
+            return Optional.of(query.getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
     @Transactional
