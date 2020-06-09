@@ -104,7 +104,7 @@ public class RecommendationSidebar
                 .setMaximum(10)
                 .setStep(1));
 
-        form.add(new CheckBox("showAllPredictions"));
+        form.add(new CheckBox("showAllPredictions").setOutputMarkupId(true));
 
         form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
                 aAnnotationPage.actionRefreshDocument(_target)));
@@ -180,6 +180,13 @@ public class RecommendationSidebar
                     .listEnabledRecommenders(layer)) {
                 RecommendationEngineFactory<?> factory = recommendationService
                         .getRecommenderFactory(recommender);
+                
+                // E.g. if the module providing a configured recommender has been disabled but the
+                // recommender is still configured.
+                if (factory == null) {
+                    continue;
+                }
+                
                 if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                     mismatchedRecommenderNames.add(recommender.getName());
                 }

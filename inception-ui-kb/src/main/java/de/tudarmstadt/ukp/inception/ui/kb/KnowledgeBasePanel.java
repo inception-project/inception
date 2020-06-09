@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePage.PAGE_PARAM_KB_NAME;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +39,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
@@ -119,10 +123,16 @@ public class KnowledgeBasePanel
                         .of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())));
         
         ddc.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            details = details.replaceWith(new EmptyPanel(DETAILS_MARKUP_ID));
-            t.add(KnowledgeBasePanel.this);
-            t.addChildren(getPage(), IFeedback.class);
+            long projectId = aProjectModel.getObject().getId();
+            String kbName = aKbModel.getObject().getName();
+
+            PageParameters params = new PageParameters()
+                .set(PAGE_PARAM_PROJECT_ID, projectId)
+                .set(PAGE_PARAM_KB_NAME, kbName);
+
+            setResponsePage(KnowledgeBasePage.class, params);
         }));
+
         ddc.setModel(aKbModel);
         ddc.setChoiceRenderer(new ChoiceRenderer<>("name"));
         add(ddc);

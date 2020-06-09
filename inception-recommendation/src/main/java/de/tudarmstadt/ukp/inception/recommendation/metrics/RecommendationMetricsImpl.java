@@ -18,16 +18,18 @@
 package de.tudarmstadt.ukp.inception.recommendation.metrics;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.stereotype.Service;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 
 @ManagedResource
-@Service
-@ConditionalOnProperty(prefix = "monitoring.metrics", name = "enabled", havingValue = "true")
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationMetricsImpl}.
+ * </p>
+ */
 public class RecommendationMetricsImpl
     implements RecommendationMetrics
 {

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -46,11 +47,13 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.testing.DkproTestContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -74,11 +77,18 @@ public class NamedEntityLinkerTest
 
     private RecommenderContext context;
     private Recommender recommender;
+    private CasStorageSession casStorageSession;
 
     @Before
     public void setUp() {
+        casStorageSession = CasStorageSession.open();
         context = new RecommenderContext();
         recommender = buildRecommender();
+    }
+    
+    @After
+    public void tearDown() {
+        CasStorageSession.get().close();
     }
 
     @Test
@@ -130,6 +140,7 @@ public class NamedEntityLinkerTest
 
         List<CAS> casList = loadDevelopmentData();
         CAS cas = casList.get(0);
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
         
         sut.train(context, Collections.singletonList(cas));
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
