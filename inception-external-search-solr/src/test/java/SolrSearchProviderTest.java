@@ -42,16 +42,17 @@ public class SolrSearchProviderTest {
         repo = new DocumentRepository("test", null);
 
         traits = new SolrSearchProviderTraits();
+        traits.setRemoteUrl("http://localhost:8983");
         traits.setIndexName("boorman");
         traits.setSearchPath("/select");
-        traits.setDefaultField("id");
+        traits.setDefaultField("text");
         traits.setTextField("text");
     }
 
     @Test
     public void thatQueryWorks() throws Exception
     {
-        String query = "";
+        String query = "*";
 
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
 

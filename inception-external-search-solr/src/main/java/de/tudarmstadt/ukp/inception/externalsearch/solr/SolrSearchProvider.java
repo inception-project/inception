@@ -1,6 +1,5 @@
 /*
  * Copyright 2020
- * ENP-China, Aix-Marseille University
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -30,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.conn.HttpHostConnectException;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.BaseHttpSolrClient;
@@ -46,8 +46,9 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProviderTraits;
 
+
 public class SolrSearchProvider
-    implements ExternalSearchProvider<SolrSearchProviderTraits>
+        implements ExternalSearchProvider<SolrSearchProviderTraits>
 {
 
     private static final String DOC_ID_KEY = "id";
@@ -66,91 +67,100 @@ public class SolrSearchProvider
      * @return A list of results that Inception can read and display
      * @throws SolrException Connection exception and request exception
      */
+
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
                                                    SolrSearchProviderTraits aTraits, String aQuery)
-        throws IOException
+            throws IOException
     {
         List<ExternalSearchResult> results = new ArrayList<>();
         //build client
+
+        HttpSolrClient solrClient = makeClient(aTraits);
         try {
-            HttpSolrClient solrClient = makeClient(aTraits);
 
-
-            if (aQuery.isEmpty() | aQuery.equals("*:*"))
-                aQuery = "*:*";
-            else {
-                aQuery = aTraits.getDefaultField() + ":" + aQuery;
-            }
-
-            SolrQuery query = new SolrQuery(aQuery);
-
-            //RANDOM ORDER
-            if (aTraits.isRandomOrder()) {
-                query.setSort("random_" + aTraits.getSeed(), SolrQuery.ORDER.asc);
-            }
-
-            query.addField("*");
-            query.addField("score");
-
-
-            query.setHighlight(true);
-            query.addHighlightField(aTraits.getDefaultField());
-
-
-            query.setRows(aTraits.getResultSize());
-            query.setParam("collection", aTraits.getIndexName());
-            query.setParam("qt", aTraits.getSearchPath());
-
-            //RESPONSE
-            QueryResponse response = new QueryResponse();
+            SolrQuery query = new SolrQuery();
+            solrClient.query(aTraits.getIndexName(), query);
             try {
-                response = solrClient.query(query);
-                SolrDocumentList documents = response.getResults();
+                query = new SolrQuery();
+                query.setParam("qt", aTraits.getSearchPath());
+                solrClient.query(aTraits.getIndexName(), query);
 
-                for (SolrDocument document : documents) {
-                    ExternalSearchResult result = new ExternalSearchResult(aRepository,
-                            aTraits.getIndexName(), (String) document.getFirstValue("id"));
+                if (aQuery.isEmpty() | aQuery.equals("*:*"))
+                    aQuery = "*:*";
+                else {
+                    aQuery = aTraits.getDefaultField() + ":" + aQuery;
+                }
 
-                    if (!aTraits.isRandomOrder()) {
-                        double d = (float) document.getFirstValue("score");
-                        result.setScore(d);
-                    }
+                query.setQuery(aQuery);
 
-                    fillResultWithMetadata(result, document, aTraits);
+                //RANDOM ORDER
+                if (aTraits.isRandomOrder()) {
+                    query.setSort("random_" + aTraits.getSeed(), SolrQuery.ORDER.asc);
+                }
 
-                    if (response.getHighlighting().size() != 0) {
-                        List<ExternalSearchHighlight> highlights = new ArrayList<>();
-                        Map<String, Map<String, List<String>>> idHighlight =
-                                response.getHighlighting();
+                query.addField("*");
+                query.addField("score");
 
-                        if (idHighlight.get(document.getFirstValue("id"))
-                                .get(aTraits.getDefaultField()) != null) {
-                            for (String chaine : idHighlight.get(document.getFirstValue("id"))
-                                    .get(aTraits.getDefaultField())) {
-                                highlights.add(new ExternalSearchHighlight(chaine));
-                            }
+                query.setHighlight(true);
+                query.addHighlightField(aTraits.getDefaultField());
+
+                query.setRows(aTraits.getResultSize());
+                query.setParam("collection", aTraits.getIndexName());
+
+
+                //RESPONSE
+                QueryResponse response = new QueryResponse();
+                try {
+                    response = solrClient.query(query);
+                    SolrDocumentList documents = response.getResults();
+
+                    for (SolrDocument document : documents) {
+                        ExternalSearchResult result = new ExternalSearchResult(aRepository,
+                                aTraits.getIndexName(), (String) document.getFirstValue("id"));
+
+                        if (!aTraits.isRandomOrder()) {
+                            double d = (float) document.getFirstValue("score");
+                            result.setScore(d);
                         }
 
-                        result.setHighlights(highlights);
+                        fillResultWithMetadata(result, document, aTraits);
+
+                        if (response.getHighlighting().size() != 0) {
+                            List<ExternalSearchHighlight> highlights = new ArrayList<>();
+                            Map<String, Map<String, List<String>>> idHighlight =
+                                    response.getHighlighting();
+
+                            if (idHighlight.get(document.getFirstValue("id"))
+                                    .get(aTraits.getDefaultField()) != null) {
+                                for (String chaine : idHighlight.get(document.getFirstValue("id"))
+                                        .get(aTraits.getDefaultField())) {
+                                    highlights.add(new ExternalSearchHighlight(chaine));
+                                }
+                            }
+
+                            result.setHighlights(highlights);
+                        }
+                        results.add(result);
                     }
-                    results.add(result);
+                    System.out.println("Found " + documents.getNumFound() + " documents");
                 }
-                System.out.println("Found " + documents.getNumFound() + " documents");
-            } catch (SolrServerException e) {
-                e.printStackTrace();
+                catch (BaseHttpSolrClient.RemoteSolrException e) {
+                    throw new IOException(e.getMessage());
+                }
+            } catch (BaseHttpSolrClient.RemoteSolrException e) {
+                throw new IOException("Error : The search path does not exist");
             }
+
         } catch (BaseHttpSolrClient.RemoteSolrException e) {
-            throw new IllegalArgumentException("Requested collection or search path does not match");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (SolrException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+            throw new IOException("Error : The name of the collection does not exist");
         }
+        catch (SolrServerException | HttpHostConnectException e)
+        {
+            throw new IOException(e.getMessage());
+        }
+
         return results;
     }
-
     /**
      * Convert data from SolrDocument to ExternalSearchResult
      * @param result result has just the id complete before the methode
@@ -191,7 +201,7 @@ public class SolrSearchProvider
             result.setTimestamp(dtf.format(now));
         }
 
-        // Field with all the entire text
+        // Field with the entire text
         result.setOriginalSource((String) document.getFirstValue(aTraits.getTextField()));
 
     }
@@ -211,17 +221,17 @@ public class SolrSearchProvider
                                                   SolrSearchProviderTraits aTraits,
                                                   String aCollectionId,
                                                   String aDocumentId)
-        throws IOException, SolrException {
+            throws IOException, SolrException {
         if (!aCollectionId.equals(aTraits.getIndexName())) {
             throw new IllegalArgumentException(
-                "Requested collection name does not match connection collection name");
+                    "Requested collection name does not match connection collection name");
         }
 
         SolrQuery getQuery = new SolrQuery(DOC_ID_KEY + ":" + aDocumentId);
 
         try (HttpSolrClient client = makeClient(aTraits)) {
             ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
-                aDocumentId);
+                    aDocumentId);
 
 
 
@@ -252,12 +262,12 @@ public class SolrSearchProvider
     public String getDocumentText(DocumentRepository aRepository,
                                   SolrSearchProviderTraits aTraits,
                                   String aCollectionId, String aDocumentId)
-        throws IOException
+            throws IOException
     {
         if (!aCollectionId.equals(aTraits.getIndexName()))
         {
             throw new IllegalArgumentException(
-                "Requested collection name does not match connection collection name");
+                    "Requested collection name does not match connection collection name");
         }
 
         SolrQuery getQuery = new SolrQuery(DOC_ID_KEY + ":" + aDocumentId);
@@ -269,8 +279,12 @@ public class SolrSearchProvider
         SolrDocumentList documents = new SolrDocumentList();
         SolrDocument document = new SolrDocument();
 
+        getQuery.setRows(1);
+        getQuery.setParam("collection", aTraits.getIndexName());
+        getQuery.setParam("qt", aTraits.getSearchPath());
+
         try {
-            response = client.query(aTraits.getIndexName(), getQuery);
+            response = client.query(getQuery);
             documents = response.getResults();
             document = documents.get(0);
         } catch (SolrException | SolrServerException e) {
@@ -287,7 +301,7 @@ public class SolrSearchProvider
                                            String aCollectionId, String aDocumentId)
             throws IOException {
         return IOUtils.toInputStream(
-            getDocumentText(aRepository, aTraits, aCollectionId, aDocumentId), UTF_8);
+                getDocumentText(aRepository, aTraits, aCollectionId, aDocumentId), UTF_8);
     }
 
     @Override
@@ -304,10 +318,13 @@ public class SolrSearchProvider
      * @return HttpSolrClient object use synchrone methode
      */
     private HttpSolrClient makeClient(SolrSearchProviderTraits aTraits)
+            throws HttpHostConnectException
     {
+
         return new HttpSolrClient.Builder(aTraits.getRemoteUrl() + "/solr")
-            .withConnectionTimeout(10000)
-            .withSocketTimeout(60000)
-            .build();
+                .withConnectionTimeout(10000)
+                .withSocketTimeout(60000)
+                .build();
+
     }
 }

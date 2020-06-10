@@ -1,6 +1,5 @@
 /*
  * Copyright 2020
- * ENP-China, Aix-Marseille University
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
