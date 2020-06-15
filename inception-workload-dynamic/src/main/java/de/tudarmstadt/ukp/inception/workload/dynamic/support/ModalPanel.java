@@ -18,15 +18,13 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
+import java.util.List;
 
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class ModalPanel extends Panel
 {
