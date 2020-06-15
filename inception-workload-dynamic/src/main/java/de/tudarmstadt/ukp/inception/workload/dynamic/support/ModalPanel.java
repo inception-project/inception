@@ -24,36 +24,40 @@ import org.apache.wicket.markup.html.panel.Panel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 public class ModalPanel extends Panel
 {
 
     private static final long serialVersionUID = 2797336810690526392L;
 
-    public ModalPanel(String aID, SourceDocument aDocument)
+    public ModalPanel(String aID, SourceDocument aDocument,
+                      List<String> finshedUsers, List<String> inProgressUser)
     {
         super(aID);
 
+        if (finshedUsers.size() == 0)
+        {
+            finshedUsers.add("-");
+        }
 
+        if (inProgressUser.size() == 0)
+        {
+            inProgressUser.add("-");
+        }
+
+
+        //TODO more content
         Label documentName = new Label("documentName", "Document name: "
             + aDocument.getName());
-        Label size = new Label("size", "Document size: "
-            + "");
-        Label createdDate = new Label("createdDate", "Created Date: "
-            +  aDocument.getCreated());
-        //TODO List all users in Progress and Finished for the document
-        Label source = new Label("source", "Source of the Document: "
-            + aDocument.getId());
-
-
         Label userInProgress = new Label("userInProgress", "Users working on the Document: "
-            + "");
+            + inProgressUser);
         Label userFinished = new Label("userFinished", "Users finished the document: "
-            + "");
+            + finshedUsers);
 
         add(documentName);
-        add(size);
-        add(createdDate);
-        add(source);
         add(userInProgress);
         add(userFinished);
 

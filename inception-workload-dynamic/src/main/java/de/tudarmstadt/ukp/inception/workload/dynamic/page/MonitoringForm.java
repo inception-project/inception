@@ -17,3 +17,22 @@
  */
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.page;
+
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.model.CompoundPropertyModel;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.EntityModel;
+
+public class MonitoringForm extends Form<Project>
+{
+    private static final long serialVersionUID = -1L;
+
+    public MonitoringForm(String id)
+    {
+        super(id, new CompoundPropertyModel<>(new EntityModel<>(new Project())));
+
+        add(new Label("name"));
+    }
+}

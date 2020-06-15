@@ -30,6 +30,8 @@ public class Filter implements Serializable
     private String type;
     //Input field value
     private String input;
+    //Checkbox
+    private String selected;
 
 
     //Default constructor
@@ -52,5 +54,13 @@ public class Filter implements Serializable
 
     public void setInput(String input) {
         this.input = input;
+    }
+
+    public String getSelected() {
+        return selected;
+    }
+
+    public void setSelected(String selected) {
+        this.selected = selected;
     }
 }

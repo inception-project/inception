@@ -17,39 +17,71 @@
  - limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org" xmlns="http://www.w3.org/1999/html" lang="">
+<head>
+  <wicket:head>
+    <style type="text/css">
+      .page-content {
+        overflow: auto;
+      }
+    </style>
+  </wicket:head>
+</head>
 <body>
   <wicket:extend>
-    <div>
-      <div class="form-group form-row" wicket:enclosure="defaultDocumentsNumberTextField">
-        <label class="col-sm-8.5 col-form-label" >
-          <wicket:message key="defaultDocumentsLabel"/>
-        </label>
-        <div class="col-sm-1.5">
-          <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control"/>
-        </div>
+    <div class="flex-content flex-v-container flex-gutter">
+      <div class="page-header">
+        <h1><wicket:container wicket:id="name"/></h1>
       </div>
-      <div>
-        <div>
-          <form wicket:id="filter">
-            <label class="col-sm-8.5 col-form-label" >
-              <wicket:message key="filterLabel"/>
-            </label>
-            <div class="form-group form-row" wicket:enclosure="filterTextfield">
-              <select wicket:id="filterDropDown"/>
-              <div class="col-sm-1.5">
-              <input wicket:id="filterTextfield" type="text" class="form-control"/>
+      <form wicket:id="workload" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+        <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter row" style="margin-top: 0px; flex: 0.5; min-height: 500px">
+          <div class="flex-content card col-sm-3">
+            <div class="card-header">
+              <wicket:message key="settings"/>
+            </div>
+            <div class="form-group form-row" style="flex: 0.4;" wicket:enclosure="defaultDocumentsNumberTextField">
+              <label class="col-sm-9 col-form-label">
+                <wicket:message key="defaultDocumentsLabel"/>
+              </label>
+            <div class="col-sm-2">
+              <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control"/>
+            </div>
+          </div>
+        </div>
+        <div class="flex-content card fit-child-snug col-sm-9">
+          <form wicket:id="filter" class="flex-content flex-h-container flex-gutter flex-only-internal-gutter row" style="flex: 0.4;">
+            <div class="flex-content card col-sm-7">
+              <div class="fit-child-snug">
+                <table class="table table-sm table-hover" wicket:id="dataTable" align="center" style="overflow-x:auto;"></table>
               </div>
             </div>
-              <div class="flex-content scrolling">
-                <div class="col-sm-12">
-                  <table class="table table-sm" wicket:id="dataTable"></table>
+            <div class="panel card col-sm-5 row" style="flex: 0.5;">
+              <div class="card-header">
+                <wicket:message key="filterHeader"/>
+              </div>
+              <div class="form-group form-row" style="flex: 0.4;" wicket:enclosure="filterTextfield">
+                <div class="col-sm-5" style="flex: 0.4;">
+                  <label class="col-form-label">
+                    <select wicket:id="filterDropDown"/>
+                  </label>
+                  <label class="col-form-label">
+                    <wicket:message key="unused"/>
+                  </label>
+                  <label class="col-form-label">
+                    <input wicket:id="Search" type="submit"/>
+                  </label>
+                </div>
+                <div class="col-sm-7">
+                  <input wicket:id="filterTextfield" type="text" class="form-control"/>
+                  <input wicket:id="unused" type="checkbox" style="vertical-align: bottom;"/>
                 </div>
               </div>
+            </div>
           </form>
         </div>
+        <div wicket:id="modalWindow"></div>
       </div>
-      <div wicket:id="modalWindow"></div>
-    </div>
-  </wicket:extend>
+    </form>
+  </div>
+</wicket:extend>
 </body>
 </html>

@@ -21,7 +21,6 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,8 +31,10 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.ColGroup;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.HeadersToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
@@ -42,11 +43,12 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigationTo
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.FilterForm;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.FilterToolbar;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -58,70 +60,62 @@ import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DataProvider;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.Filter;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.ImagePanel;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.ModalPanel;
 
 
 @MountPath("/workload.html")
-public class MonitoringPage extends ApplicationPageBase implements Serializable
+public class MonitoringPage extends ApplicationPageBase
 {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MonitoringPage.class);
     private static final long serialVersionUID = 1180618893870240262L;
+
+    //Top Form
+    MonitoringForm workload;
 
     //Dataprovider for table
     private DataProvider dataProvider;
 
-
-
-    //Feedbackpanel
-    BootstrapFeedbackPanel feedbackPanel;
-
     //Layout Panel
-    private Panel table;
+    private DataTable table;
 
     //Modal Window (popup panel on clicking the image in the metadata column)
     private ModalWindow modalWindow;
 
     //Default annotations textbox
-    private NumberTextField DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD;
+    private NumberTextField<Integer> DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD;
 
     //FilterTextField and input
-    private TextField filterTextfield;
-    private String filterTextFieldInput;
-    private DropDownChoice filterDropDown;
+    private TextField<String> filterTextfield;
+    private DropDownChoice<String> filterDropDown;
 
     //The Icons
     private static final ResourceReference META =
         new PackageResourceReference(MonitoringPage.class, "book_open.png");
 
     //Current Project
-    private Project currentProject;
+    private IModel<Project> currentProject = new Model<>();
 
     //List containing all documents
-    private List<SourceDocument> documentList;
-
-    //List containing all documents finished in their
-    // progress of annotation by any user in the project
-    private List<String> annotatedDocuments;
+    private IModel<List<SourceDocument>> documentList = new Model();
 
 
     //Default annotations
-    public int defaultAnnotations;
+    public IModel<Integer> defaultAnnotations = new Model<>();
 
 
     //SpringBeans
@@ -136,8 +130,9 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
     public MonitoringPage() {
         super();
 
-        feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
-        feedbackPanel.setOutputMarkupId(true);
+        //top form initialize
+        workload = new MonitoringForm("workload");
+        workload.setOutputMarkupId(true);
 
         //Required due to wicket
         add(new ModalWindow("modalWindow"));
@@ -145,22 +140,27 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
         add(new EmptyPanel("dataTable"));
 
         //Error, user is returned to home page, nothing else to do
-        //TODO show errors properly
-        feedbackPanel.error("No Project selected, please enter the monitoring page only with a valid project reference");
+        error("No Project selected, please enter the monitoring page only with a valid project reference");
         setResponsePage(getApplication().getHomePage());
 
     }
+
 
 
     //Constructor with a project
     public MonitoringPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
+
+        //top form initialize
+        workload = new MonitoringForm("workload");
+        workload.setOutputMarkupId(true);
+
         //Get current Project
         StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
         if (getProjectFromParameters(projectParameter).isPresent())
         {
-            currentProject = getProjectFromParameters(projectParameter).get();
+            currentProject.setObject(getProjectFromParameters(projectParameter).get());
         } else {
             currentProject = null;
         }
@@ -172,19 +172,19 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
         if (currentProject != null)
         {
 
-            feedbackPanel = new BootstrapFeedbackPanel("feedbackPanel");
-            feedbackPanel.setOutputMarkupId(true);
+
 
 
             //Check if user is allowed to see the monitoring page of this project
-            if (currentProject != null && !(projectService.isCurator(currentProject, user)
-                || projectService.isManager(currentProject, user)))
+            if (currentProject != null &&
+                !(projectService.isCurator(currentProject.getObject(), user)
+                || projectService.isManager(currentProject.getObject(), user)))
             {
                 //Required even in case of error due to wicket
                 add(new ModalWindow("modalWindow"));
                 add(new NumberTextField("defaultDocumentsNumberTextField"));
                 add(new EmptyPanel("dataTable"));
-                feedbackPanel.error("You have no permission to access project [" + currentProject.getId() + "]");
+                error("You have no permission to access project [" + currentProject.getObject().getId() + "]");
                 setResponsePage(getApplication().getHomePage());
 
             } else {
@@ -206,37 +206,26 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
 
     public void initialize()
     {
+
+        //Header of the page
+        Label name = new Label("name",currentProject.getObject().getName());
+        add(name);
+
         //get Documents for current project
-        documentList = documentService.
-            listSourceDocuments(currentProject);
-
-
-        //Initialize list for all Finished documents
-
+        documentList.setObject(documentService.
+            listSourceDocuments(currentProject.getObject()));
 
         //Headers of the table
         List<String> headers = new ArrayList<>();
         headers.add(getString("Document"));
         headers.add(getString("Finished"));
-        headers.add(getString("InProgress"));
+        headers.add(getString("Processed"));
         headers.add(getString("Metadata"));
 
         //Data Provider for the table
-        dataProvider = new DataProvider(documentList,
-            headers, currentProject, documentService.listAnnotationDocuments(currentProject));
-
-
-        //Filter Dropdown and Textfield
-        filterDropDown = new DropDownChoice(getString("filterDropDown")
-            , PropertyModel.of(dataProvider,"filterState.type"), this::getFilter);
-
-        filterTextfield = new TextField("filterTextfield",
-            PropertyModel.of(dataProvider, "filterState.input"), String.class);
-
-
-        //Remove the "Choose one" default option
-        filterDropDown.setNullValid(true);
-
+        dataProvider = new DataProvider(documentList.getObject(),
+            headers, documentService.
+            listAnnotationDocuments(currentProject.getObject()));
 
         //Init defaultDocumentsNumberTextField
         DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD = new NumberTextField
@@ -263,39 +252,50 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
             {
-                defaultAnnotations = Integer.parseInt
-                    (DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.getInput());
+                defaultAnnotations.setObject(Integer.parseInt
+                    (DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD.getInput()));
             }
         });
 
         //Create the modalWindow
         modalWindow = new ModalWindow("modalWindow");
         modalWindow.setTitle("Metadata:");
-        add(modalWindow);
+        workload.add(modalWindow);
 
         //Columns of the table
         List<IColumn> columns = new ArrayList<>();
 
         //Filter properties
-        FilterForm<SourceDocument> filter = new FilterForm(getString("filter"),
-            dataProvider);
+        FilterForm<Filter> filter = new FilterForm<>(getString("filter"), dataProvider);
+        filter.setOutputMarkupId(true);
+
+        //Filter Dropdown and Textfield
+        filterDropDown = new DropDownChoice(getString("filterDropDown")
+            , PropertyModel.of(dataProvider,"filter.type"), this::getFilter);
+
+        filterTextfield = new TextField("filterTextfield",
+            PropertyModel.of(dataProvider, "filter.input"), String.class);
+
+
+        //Remove the "Choose one" default option
+        filterDropDown.setNullValid(true);
+
         filter.add(filterDropDown);
-
-
+        filter.add(filterTextfield);
 
         //Each column creates TableMetaData
         columns.add(new LambdaColumn<>(new ResourceModel(getString("Document"))
             , getString("Document"), SourceDocument::getName));
-        columns.add(new LambdaColumn(new ResourceModel(getString("Finished"))
+        columns.add(new LambdaColumn<>(new ResourceModel(getString("Finished"))
             , getString("Finished"), aDocument -> dataProvider.getFinishedAmountForDocument
             ((SourceDocument)aDocument)));
-        columns.add(new LambdaColumn<>(new ResourceModel(getString("InProgress"))
-            , getString("InProgress"), aDocument -> dataProvider.
+        columns.add(new LambdaColumn<>(new ResourceModel(getString("Processed"))
+            , getString("Processed"), aDocument -> dataProvider.
             getInProgressAmountForDocument((SourceDocument)aDocument)));
 
         //Own column type, contains only a clickable image (AJAX event),
         //creates a small panel dialog containing metadata
-        columns.add(new PropertyColumn(new Model(getString("Metadata")),
+        columns.add(new PropertyColumn<SourceDocument,String>(new Model(getString("Metadata")),
             getString("Metadata"))
         {
             private static final long serialVersionUID = 1L;
@@ -306,6 +306,7 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
                 //Add the Icon
                 ImagePanel icon = new ImagePanel(aID, META);
                 icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
+                icon.add(new AttributeModifier("align","center"));
                 aItem.add(icon);
                 aItem.add(AttributeModifier.append("class", "centering"));
 
@@ -319,12 +320,17 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
                     {
 
                         //Get the current selected Row
-                        Item rowItem = aItem.findParent( Item.class );
+                        Item rowItem = aItem.findParent(Item.class);
                         int rowIndex = rowItem.getIndex();
+
+                        SourceDocument doc = dataProvider.getShownDocuments().
+                            get((int)(table.getCurrentPage() * table.getItemsPerPage()) + rowIndex);
+
 
                         //Set contents of the modalWindow
                         modalWindow.setContent(new ModalPanel(modalWindow.
-                            getContentId(), documentList.get(rowIndex)));
+                            getContentId(), doc, listUsersFinishedForDocument(doc),
+                            listUsersInProgressForDocument(doc)));
 
                         //Open the dialog
                         modalWindow.show(aTarget);
@@ -334,34 +340,60 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
         });
 
         //The DefaultDataTable
-        table = new DataTable("dataTable", columns, dataProvider, 20);
+        table = new DataTable("dataTable", columns, dataProvider, 12);
         table.setOutputMarkupId(true);
 
-
         //FilterToolbar
-        FilterToolbar filterToolbar = new FilterToolbar((DataTable)table, filter);
-        ((DataTable) table).addTopToolbar(filterToolbar);
-        ((DataTable) table).addTopToolbar(new NavigationToolbar((DataTable)table));
-        ((DataTable) table).addTopToolbar(new HeadersToolbar((DataTable)table, dataProvider));
+        FilterToolbar filterToolbar = new FilterToolbar(table, filter);
+        table.addTopToolbar(filterToolbar);
+        table.addTopToolbar(new NavigationToolbar(table));
+        table.addTopToolbar(new HeadersToolbar(table, dataProvider));
 
-        //Add the table to the filter form, as well as the input textfield
-        filter.add(filterTextfield);
+        //Add the table to the filter form
         filter.add(table);
+
+        //Checkbox for showing only unused source documents
+        AjaxCheckBox unused = new AjaxCheckBox("unused",
+            PropertyModel.of(dataProvider,"filter.selected")) {
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
+                ajaxRequestTarget.add(table);
+            }
+        };
+
+        unused.setOutputMarkupId(true);
+
+        filter.add(unused);
+
+        //Submit button
+        Button submit = new Button(getString("Search"), Model.of("Search"));
+        submit.add(new AjaxEventBehavior("click") {
+            @Override
+            protected void onEvent(AjaxRequestTarget ajaxRequestTarget) {
+                ajaxRequestTarget.add(table);
+            }
+        });
+
+        filter.add(submit);
+
 
 
         //Add to page according to the following structure
 
         //Then default annotations texfield
-        add(DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD);
-
+        workload.add(DEFAULT_DOCUMENTS_NUMBER_TEXT_FIELD);
 
         //Filter components with the table
-        add(filter);
+        workload.add(filter);
+
+        add(workload);
 
     }
 
 
     //--------------------------------------- Helper methods -------------------------------------//
+
 
     //Return current project, required for several purposes
     private Optional<Project> getProjectFromParameters(StringValue projectParam)
@@ -378,18 +410,46 @@ public class MonitoringPage extends ApplicationPageBase implements Serializable
         }
     }
 
-
-
-
     //Helper methods, Additional filters
     public List<String> getFilter()
     {
         List<String> filterList = new ArrayList<>();
         filterList.add("Document creation time:");
         filterList.add("User:");
-        filterList.add("Unused documents:");
 
         return filterList;
+    }
+
+    //
+    public List<String> listUsersFinishedForDocument(SourceDocument aDocument)
+    {
+        List<String> result = new ArrayList<>();
+        for (AnnotationDocument anno: documentService.
+            listAnnotationDocuments(currentProject.getObject()))
+        {
+            if (anno.getState().equals(AnnotationDocumentState.FINISHED)
+                && anno.getName().equals(aDocument.getName()))
+            {
+                result.add(anno.getUser());
+            }
+        }
+        return result;
+    }
+
+    //
+    public List<String> listUsersInProgressForDocument(SourceDocument aDocument)
+    {
+        List<String> result = new ArrayList<>();
+        for (AnnotationDocument anno: documentService.
+            listAnnotationDocuments(currentProject.getObject()))
+        {
+            if (anno.getState().equals(AnnotationDocumentState.IN_PROGRESS)
+                && anno.getName().equals(aDocument.getName()))
+            {
+                result.add(anno.getUser());
+            }
+        }
+        return result;
     }
 
 }

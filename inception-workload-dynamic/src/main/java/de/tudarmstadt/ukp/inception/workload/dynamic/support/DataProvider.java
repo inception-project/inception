@@ -36,7 +36,6 @@ import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class DataProvider extends SortableDataProvider
@@ -49,22 +48,21 @@ public class DataProvider extends SortableDataProvider
     private final List<SourceDocument> data;
     private final IModel<List<SourceDocument>> model;
     private final List<AnnotationDocument> allAnnotationDocuments;
+    private List<SourceDocument> shownDocuments;
     private Filter filter;
 
     private int defaultAnnotations;
 
     private String input;
     private String type;
-    private Project project;
+    private String selected;
 
     public DataProvider(
         List<SourceDocument> aData,
-        List<String> headers, Project project, List<AnnotationDocument> aAllAnnotationDocuments)
+        List<String> headers, List<AnnotationDocument> aAllAnnotationDocuments)
     {
-        this.project = project;
         this.data = aData;
         this.headers = headers;
-        this.project = project;
         this.allAnnotationDocuments = aAllAnnotationDocuments;
         //TODO default value must be saved permanently, create new issue and PR
         this.defaultAnnotations = 6;
@@ -90,24 +88,24 @@ public class DataProvider extends SortableDataProvider
     @Override
     public Iterator<SourceDocument> iterator(long first, long count)
     {
-        List<SourceDocument> newList = data;
 
         input = filter.getInput();
         type = filter.getType();
+        selected = filter.getSelected();
+
+        //init
+        if (selected == null) {
+            selected = "false";
+        }
 
         //Apply Filter
-        //Filter only if initialised
-        if (input != null && type != null)
-        {
-            newList = filterTable(data);
-        }
+        List<SourceDocument> newList = filterTable(data);
 
 
         //Apply sorting
         newList.sort((o1, o2) ->
         {
             int dir = getSort().isAscending() ? 1 : -1;
-
             if (getSort().getProperty().equals(headers.get(0)))
             {
                 return dir * (o1.getName().compareTo(o2.getName()));
@@ -130,7 +128,17 @@ public class DataProvider extends SortableDataProvider
             }
         });
 
-        return newList.subList(0, newList.size()).iterator();
+
+        //Reset
+        this.shownDocuments = new ArrayList<>();
+        shownDocuments.addAll(newList);
+
+        if ((int)first + (int)count > newList.size())
+        {
+            count = newList.size() - first;
+        }
+
+        return newList.subList((int)first, ((int)first + (int)count)).iterator();
     }
 
     @Override
@@ -153,79 +161,74 @@ public class DataProvider extends SortableDataProvider
 
     }
 
-    @Override
-    public Filter getFilterState() {
-        return filter;
-    }
-
-    @Override
-    public void setFilterState(Filter filter) {
-        this.filter = filter;
-    }
 
     public List<SourceDocument> filterTable(List<SourceDocument> data)
     {
+
+        //TODO optimization definitely possible
         List<SourceDocument> resultList = new ArrayList<>();
 
         for (SourceDocument doc: data)
         {
-            //Creation time filter
-            if (this.type.equals("Document creation time:"))
-            {
-                try {
-                    //TODO Rework of try catch and add Error (or regex for field input)
-                    Date date = new SimpleDateFormat("dd/MM/yyyy").parse(input);
-                    if (doc.getCreated() == null) {
-                    } else {
-                        if (doc.getCreated().compareTo(date) >= 0)
-                        {
-                            resultList.add(doc);
-                            continue;
-                        }
-                    }
-
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-
-
-            //User filter
-            } else if (this.type.equals("User:"))
-            {
-                /*
-                //Get the current user
-                User user = userRepository.get(this.input);
-
-                //The entered username is not available, simply return the full list
-                if (user == null)
-                {
-                    resultList = data;
-                    break;
-
-                } else {
-                    //If the user is working / has finished that document, add it to the list
-                    if (documentService.existsAnnotationDocument(doc, user))
-                    {
-                        resultList.add(doc);
-                    }
-                }
-
-                 */
-
-            //Unused Document filter used
-            } else if (this.type.equals("Unused documents:"))
-            {
+            //Check for unused documents only and initalized
+            if (this.selected.equals("true")) {
                 if ((getInProgressAmountForDocument(doc) == 0)
-                    && (getFinishedAmountForDocument(doc) == 0))
-                {
+                    && (getFinishedAmountForDocument(doc) == 0)) {
                     resultList.add(doc);
+                    continue;
                 }
             } else {
-                //Default case to avoid unexpected errors, simply return the list
-                resultList = data;
-                break;
+                if (this.type != null)
+                {
+                    if (this.type.equals("Document creation time:"))
+                    {
+                        try {
+                            //Creation time filter
+                            if (input != null) {
+                                //TODO Rework of try catch and add Error (or regex for field input)
+                                Date date = new SimpleDateFormat("dd/MM/yyyy").parse(input);
+                                if (doc.getCreated() == null) {
+                                } else {
+                                    if (doc.getCreated().compareTo(date) >= 0)
+                                    {
+                                        resultList.add(doc);
+                                        continue;
+
+                                    }
+                                }
+                            }
+
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+
+
+                        //User filter
+                    } else if (this.type.equals("User:"))
+                    {
+                        for (AnnotationDocument annotationDocument: allAnnotationDocuments)
+                        {
+
+                            if (annotationDocument.getUser().equals(this.input)
+                                && annotationDocument.getName().equals(doc.getName()) &&
+                                !annotationDocument.getState().equals
+                                    (AnnotationDocumentState.NEW))
+                            {
+                                resultList.add(doc);
+                                break;
+                            }
+                        }
+
+                    }
+
+                } else {
+                    resultList = data;
+                    break;
+                }
             }
+
         }
+
         return resultList;
     }
 
@@ -296,6 +299,21 @@ public class DataProvider extends SortableDataProvider
         //REMINDER: Document MIGHT BE NULL if there is not a single document left!
         // Annotator should then get the message: "No more documents to annotate"
         return document;
+    }
+
+    @Override
+    public Filter getFilterState() {
+        return filter;
+    }
+
+    @Override
+    public void setFilterState(Filter filter) {
+        this.filter = filter;
+
+    }
+
+    public List<SourceDocument> getShownDocuments() {
+        return shownDocuments;
     }
 
 }
