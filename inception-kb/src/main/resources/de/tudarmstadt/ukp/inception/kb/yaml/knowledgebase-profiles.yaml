@@ -127,6 +127,7 @@ wikidata:
     - http://www.wikidata.org/entity/Q35120
 
 yago:
+  # Disabled, see #1708 for more info
   name: YAGO v4
   disabled: true
   type: REMOTE
