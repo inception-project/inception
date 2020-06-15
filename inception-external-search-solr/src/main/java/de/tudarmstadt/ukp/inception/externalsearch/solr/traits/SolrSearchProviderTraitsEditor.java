@@ -40,10 +40,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 public class SolrSearchProviderTraitsEditor
     extends Panel
 {
-
-
     private static final String MID_FORM = "form";
-
     private @SpringBean ExternalSearchProviderFactory<SolrSearchProviderTraits>
         externalSearchProviderFactory;
     private final DocumentRepository documentRepository;
@@ -59,7 +56,7 @@ public class SolrSearchProviderTraitsEditor
         Form<SolrSearchProviderTraits> form = new Form<SolrSearchProviderTraits>(
             MID_FORM, CompoundPropertyModel.of(Model.of(properties)))
         {
-            private static final long serialVersionUID = -3109239608742291123L; // delete ?
+            private static final long serialVersionUID = -3109239608742291123L;
 
             @Override
             protected void onSubmit()
@@ -99,6 +96,7 @@ public class SolrSearchProviderTraitsEditor
 
         NumberTextField<Integer> seed = new NumberTextField<Integer>("seed", Integer.class);
         seed.setMinimum(0);
+        seed.setMaximum(10000);
         seed.setMaximum(Integer.MAX_VALUE);
         seed.add(visibleWhen(() -> properties.isRandomOrder()));
         seed.add(new AttributeModifier("title", new ResourceModel("seedTooltip")));

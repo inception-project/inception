@@ -46,14 +46,15 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProviderTraits;
 
-
 public class SolrSearchProvider
         implements ExternalSearchProvider<SolrSearchProviderTraits>
 {
 
+
     private static final String DOC_ID_KEY = "id";
     private static final String DOC_NAME_KEY = "name";
     private static final String DOC_TITLE_KEY = "title";
+    private static final String DOC_SCORE_KEY = "score";
 
     private static final String DOC_URI_KEY = "uri";
     private static final String DOC_LANGUAGE_KEY = "language";
@@ -67,7 +68,6 @@ public class SolrSearchProvider
      * @return A list of results that Inception can read and display
      * @throws SolrException Connection exception and request exception
      */
-
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
                                                    SolrSearchProviderTraits aTraits, String aQuery)
             throws IOException
@@ -116,10 +116,10 @@ public class SolrSearchProvider
 
                     for (SolrDocument document : documents) {
                         ExternalSearchResult result = new ExternalSearchResult(aRepository,
-                                aTraits.getIndexName(), (String) document.getFirstValue("id"));
+                                aTraits.getIndexName(), (String) document.getFirstValue(DOC_ID_KEY));
 
                         if (!aTraits.isRandomOrder()) {
-                            double d = (float) document.getFirstValue("score");
+                            final double d = (float) document.getFirstValue(DOC_SCORE_KEY);
                             result.setScore(d);
                         }
 
@@ -130,11 +130,11 @@ public class SolrSearchProvider
                             Map<String, Map<String, List<String>>> idHighlight =
                                     response.getHighlighting();
 
-                            if (idHighlight.get(document.getFirstValue("id"))
+                            if (idHighlight.get(document.getFirstValue(DOC_ID_KEY))
                                     .get(aTraits.getDefaultField()) != null) {
-                                for (String chaine : idHighlight.get(document.getFirstValue("id"))
+                                for (String highlight : idHighlight.get(document.getFirstValue(DOC_ID_KEY))
                                         .get(aTraits.getDefaultField())) {
-                                    highlights.add(new ExternalSearchHighlight(chaine));
+                                    highlights.add(new ExternalSearchHighlight(highlight));
                                 }
                             }
 
@@ -142,21 +142,22 @@ public class SolrSearchProvider
                         }
                         results.add(result);
                     }
-                    System.out.println("Found " + documents.getNumFound() + " documents");
                 }
                 catch (BaseHttpSolrClient.RemoteSolrException e) {
-                    throw new IOException(e.getMessage());
+                    throw new IOException("Unable to get result : " + e.getMessage(), e);
                 }
             } catch (BaseHttpSolrClient.RemoteSolrException e) {
-                throw new IOException("Error : The search path does not exist");
+                throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + "/solr/" +
+                        aTraits.getIndexName() + aTraits.getSearchPath() + " : Search path does not exist. \n"
+                        + e.getMessage(), e);
             }
 
-        } catch (BaseHttpSolrClient.RemoteSolrException e) {
-            throw new IOException("Error : The name of the collection does not exist");
-        }
-        catch (SolrServerException | HttpHostConnectException e)
+        } catch (SolrServerException e)
         {
-            throw new IOException(e.getMessage());
+            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : " + e.getMessage(), e);
+        }
+        catch (BaseHttpSolrClient.RemoteSolrException e) {
+            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : " + e.getMessage(), e);
         }
 
         return results;
@@ -171,39 +172,35 @@ public class SolrSearchProvider
                                         SolrSearchProviderTraits aTraits)
             throws IOException, SolrException
     {
-        if (isNotBlank((String) document.getFirstValue(DOC_NAME_KEY)))
-        {
+        if (isNotBlank((String) document.getFirstValue(DOC_NAME_KEY))) {
             result.setDocumentTitle((String) document.getFirstValue(DOC_NAME_KEY));
         }
-        else if (isNotBlank((String) document.getFirstValue(DOC_TITLE_KEY)))
-        {
+        else if (isNotBlank((String) document.getFirstValue(DOC_TITLE_KEY))) {
             result.setDocumentTitle((String) document.getFirstValue(DOC_TITLE_KEY));
         }
-        else
+        else {
             result.setDocumentTitle((String) document.getFirstValue(DOC_ID_KEY));
-
-        if (isNotBlank((String) document.getFirstValue(DOC_LANGUAGE_KEY)))
+        }
+        if (isNotBlank((String) document.getFirstValue(DOC_LANGUAGE_KEY))) {
             result.setLanguage((String) document.getFirstValue(DOC_LANGUAGE_KEY));
-
-
-        if (isNotBlank((String) document.getFirstValue(DOC_URI_KEY)))
+        }
+        if (isNotBlank((String) document.getFirstValue(DOC_URI_KEY))) {
             result.setOriginalUri((String) document.getFirstValue(DOC_URI_KEY));
-        else
+        }
+        else {
             result.setOriginalUri(aTraits.getIndexName());
-
-        // If there is no timestamp then we use the computer timestamp
-        if (isNotBlank((String) document.getFirstValue(DOC_TIMESTAMP_KEY)))
+        }
+        // If there is no timestamp then we use the system timestamp
+        if (isNotBlank((String) document.getFirstValue(DOC_TIMESTAMP_KEY))) {
             result.setTimestamp((String) document.getFirstValue(DOC_TIMESTAMP_KEY));
-        else
-        {
+        }
+        else {
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
             LocalDateTime now = LocalDateTime.now();
             result.setTimestamp(dtf.format(now));
         }
-
         // Field with the entire text
         result.setOriginalSource((String) document.getFirstValue(aTraits.getTextField()));
-
     }
 
 
@@ -221,7 +218,7 @@ public class SolrSearchProvider
                                                   SolrSearchProviderTraits aTraits,
                                                   String aCollectionId,
                                                   String aDocumentId)
-            throws IOException, SolrException {
+            throws IOException {
         if (!aCollectionId.equals(aTraits.getIndexName())) {
             throw new IllegalArgumentException(
                     "Requested collection name does not match connection collection name");
@@ -233,8 +230,6 @@ public class SolrSearchProvider
             ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
                     aDocumentId);
 
-
-
             // Send get query
             try {
                 QueryResponse response = client.query(aTraits.getIndexName(), getQuery);
@@ -242,10 +237,12 @@ public class SolrSearchProvider
                 SolrDocument document = documents.get(0);
                 fillResultWithMetadata(result, document, aTraits);
             } catch (SolrServerException e) {
-                e.printStackTrace();
+                throw new IOException("Unable to retrieve the document : " + e.getMessage(), e);
             }
-
             return result;
+        }
+        catch (HttpHostConnectException e) {
+            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + ": " + e.getMessage(), e);
         }
     }
 
@@ -288,7 +285,7 @@ public class SolrSearchProvider
             documents = response.getResults();
             document = documents.get(0);
         } catch (SolrException | SolrServerException e) {
-            e.printStackTrace();
+            throw new IOException("Unable to retrieve document : " + e.getMessage(),e);
         }
         return (String) document.getFirstValue(aTraits.getTextField());
 
@@ -320,8 +317,7 @@ public class SolrSearchProvider
     private HttpSolrClient makeClient(SolrSearchProviderTraits aTraits)
             throws HttpHostConnectException
     {
-
-        return new HttpSolrClient.Builder(aTraits.getRemoteUrl() + "/solr")
+        return new HttpSolrClient.Builder(aTraits.getRemoteUrl())
                 .withConnectionTimeout(10000)
                 .withSocketTimeout(60000)
                 .build();

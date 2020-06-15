@@ -29,7 +29,7 @@ public class SolrSearchProviderTraits
 
     private static final int ARBITRARY_FIXED_SEED = 5;
 
-    private String remoteUrl = "http://localhost:8983";
+    private String remoteUrl = "http://localhost:8983/solr";
 
     private String indexName = "collection";
 
