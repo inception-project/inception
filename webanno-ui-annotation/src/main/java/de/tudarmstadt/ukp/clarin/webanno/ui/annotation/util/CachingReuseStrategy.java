@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.util;
 
 import java.util.Iterator;
 import java.util.Map;

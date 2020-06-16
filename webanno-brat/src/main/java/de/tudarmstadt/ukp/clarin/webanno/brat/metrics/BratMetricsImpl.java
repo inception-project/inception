@@ -34,6 +34,8 @@ public class BratMetricsImpl implements BratMetrics
     private long diffRenderCount = 0;
     private long diffRenderedSize = 0;
     
+    private long skipRenderCount = 0;
+    
     private long savedRenderedSize = 0;
    
     private long sentRenderedSize = 0;
@@ -122,6 +124,10 @@ public class BratMetricsImpl implements BratMetrics
             String aDiff)
     {
         switch (aType) {
+        case SKIP:
+            skipRenderCount++;
+            savedRenderedSize += aFull.length();
+            break;
         case DIFFERENTIAL:
             diffRenderCount++;
             diffRenderedSize += aDiff.length();

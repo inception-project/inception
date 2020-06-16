@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -30,6 +31,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface AnnotationEditorExtension
 {
@@ -56,9 +61,15 @@ public interface AnnotationEditorExtension
     {
         // Do nothing by default
     }
-    
+
     default void generateContextMenuItems(List<IMenuItem> aItems)
     {
         // Do nothing by default
+    }
+
+    default List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser,
+            VID aVid, AnnotationFeature aFeature, String aQuery)
+    {
+        return Collections.emptyList();
     }
 }

@@ -99,6 +99,21 @@ public class WebAnnoCasUtil
         return (CAS) handler.getTarget();
     }
     
+    public static void transferCasOwnershipToCurrentThread(CAS aCas)
+    {
+        if (!ENFORCE_CAS_THREAD_LOCK) {
+            return;
+        }
+        
+        if (!Proxy.isProxyClass(aCas.getClass())) {
+            return;
+        }
+
+        ThreadLockingInvocationHandler handler = (ThreadLockingInvocationHandler) Proxy
+                .getInvocationHandler(aCas);
+        handler.transferOwnershipToCurrentThread();
+    }
+    
     /**
      * Return true if these two annotations agree on every non slot features
      */

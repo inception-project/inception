@@ -22,6 +22,9 @@ function applyTooltip(aElement) {
         position: { my: 'center bottom', at: 'center top', of: '.page-footer' },
         show: false,
         hide: false,
+        classes: {
+          "ui-tooltip": "rounded shadow-lg"
+        },
         create: function( event, ui ) {
           // The elements to which the tooltips are bound may be dynamically discarded and reloaded
           // and may not receive the events then which usually cause the tooltip to disappear. To

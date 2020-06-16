@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
@@ -60,7 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
@@ -111,7 +112,7 @@ public class CorrectionPage
     private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean BratProperties defaultPreferences;
+    private @SpringBean AnnotationEditorProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
@@ -383,7 +384,8 @@ public class CorrectionPage
             // annotations
             CAS editorCas;
             if (documentService.existsCas(state.getDocument(), user.getUsername())) {
-                editorCas = documentService.readAnnotationCas(annotationDocument);
+                editorCas = documentService.readAnnotationCas(annotationDocument,
+                        EXCLUSIVE_WRITE_ACCESS);
             }
             else {
                 editorCas = documentService.createOrReadInitialCas(state.getDocument());
@@ -393,8 +395,7 @@ public class CorrectionPage
 
             // Update the CASes
             annotationService.upgradeCas(editorCas, annotationDocument);
-            correctionDocumentService.upgradeCorrectionCas(correctionCas,
-                    state.getDocument());
+            correctionDocumentService.upgradeCorrectionCas(correctionCas, state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas,
@@ -447,8 +448,6 @@ public class CorrectionPage
 
             // Reset the editor
             detailEditor.reset(aTarget);
-            // Populate the layer dropdown box
-            detailEditor.loadFeatureEditorModels(editorCas, aTarget);
         }
         catch (Exception e) {
             handleException(aTarget, e);

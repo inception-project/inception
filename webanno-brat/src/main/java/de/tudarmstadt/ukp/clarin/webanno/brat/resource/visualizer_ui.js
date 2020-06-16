@@ -415,7 +415,7 @@ var VisualizerUI = (function($, window, undefined) {
                             }
                             
                             comment += ```
-                                  <span class="norm_info_value">${Util.escapeHTML(value)}</span>
+                                  <span class="norm_info_value">${Util.escapeHTML(value).replace(/\n/g, "<br/>")}</span>
                                   <br/>
                                   ```;
                         } else {
@@ -497,7 +497,7 @@ var VisualizerUI = (function($, window, undefined) {
                                                 value = value.substr(0, 300) + ' ...';
                                             }
 
-                                            norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ':' + Util.escapeHTML(value) + '</span>' + '<br/>');
+                                            norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ':' + Util.escapeHTML(value).replace(/\n/g, "<br/>") + '</span>' + '<br/>');
                                         }
                                     }
                                 }
@@ -692,11 +692,11 @@ var VisualizerUI = (function($, window, undefined) {
 
             var onDoneRendering = function(coll, doc, args) {
                     if (args && !args.edited) {
-                        var svgtop = $('svg').offset().top;
                         var $inFocus = $('#svg animate[data-type="focus"]:first').parent();
                         if ($inFocus.length) {
+                            var svgtop = $('svg').offset().top;
                             $('html,body').
-                				animate({ scrollTop: $inFocus.offset().top - svgtop - window.innerHeight / 2 }, { duration: 'slow', easing: 'swing'});
+                            animate({ scrollTop: $inFocus.offset().top - svgtop - window.innerHeight / 2 }, { duration: 'slow', easing: 'swing'});
                         }
                     }
                     dispatcher.post('allowReloadByURL');

@@ -31,6 +31,7 @@ import org.apache.uima.fit.util.CasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -197,9 +198,24 @@ public interface TypeAdapter
      */
     void silenceEvents();
     
-    default String getUiTypeName()
+    /**
+     * @return the encoded type name sent to the browser.
+     * @see #decodeTypeName(String)
+     */
+    default String getEncodedTypeName()
     {
-        return getTypeId() + "_" + getAnnotationTypeName();
+        return TypeUtil.getUiTypeName(getLayer());
+    }
+
+    /**
+     * @param aType
+     *            a encoded type name from {@link #getEncodedTypeName()}
+     * @return the layer ID.
+     * @see #getEncodedTypeName()
+     */
+    static long decodeTypeName(String aType)
+    {
+        return TypeUtil.getLayerId(aType);
     }
     
     <T> Optional<T> getTraits(Class<T> aInterface);

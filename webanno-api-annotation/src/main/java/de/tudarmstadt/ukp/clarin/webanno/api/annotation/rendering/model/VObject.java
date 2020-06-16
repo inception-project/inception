@@ -110,6 +110,11 @@ public abstract class VObject
         lazyDetails = aLazyDetails;
     }
 
+    public void addLazyDetails(List<VLazyDetailQuery> aDetails)
+    {
+        lazyDetails.addAll(aDetails);
+    }
+
     public void addLazyDetail(VLazyDetailQuery aDetail)
     {
         lazyDetails.add(aDetail);

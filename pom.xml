@@ -61,12 +61,12 @@
   
     <mockito.version>3.3.3</mockito.version>
     <assertj.version>3.15.0</assertj.version>
-    <spring.version>5.2.6.RELEASE</spring.version>
-    <spring.boot.version>2.2.6.RELEASE</spring.boot.version>
-    <spring.security.version>5.2.3.RELEASE</spring.security.version>
+    <spring.version>5.2.7.RELEASE</spring.version>
+    <spring.boot.version>2.3.1.RELEASE</spring.boot.version>
+    <spring.security.version>5.3.3.RELEASE</spring.security.version>
     <wicket.version>8.8.0</wicket.version>
     <wicketstuff.version>8.8.0</wicketstuff.version>
-    <wicket-jquery-ui.version>8.6.0</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>8.8.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>3.0.0-M15</wicket-bootstrap.version>
     <!-- 2.x is for Wicket 8; 3.x is for Wicket 9 -->
     <wicket-jquery-selectors.version>2.0.9</wicket-jquery-selectors.version>
@@ -76,7 +76,7 @@
     <bootstrap.version>4.4.1-1</bootstrap.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
-    <uimafit.version>3.0.0</uimafit.version>
+    <uimafit.version>3.1.0</uimafit.version>
     <slf4j.version>1.7.30</slf4j.version>
     <log4j.version>2.13.2</log4j.version>
     <jboss.logging.version>3.4.1.Final</jboss.logging.version>
@@ -87,7 +87,7 @@
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.11.0</jackson.version>
-    <tomcat.version>9.0.34</tomcat.version>
+    <tomcat.version>9.0.35</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
   </properties>
   <repositories>
@@ -636,7 +636,7 @@
       <dependency>
         <groupId>org.dom4j</groupId>
         <artifactId>dom4j</artifactId>
-        <version>2.1.1</version>
+        <version>2.1.3</version>
         <!--  
         <exclusions>
           <exclusion>

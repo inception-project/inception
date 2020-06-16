@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
 
 /**
  * Response for the {@code loadConf} command.
@@ -32,7 +32,7 @@ public class LoadConfResponse
 
     private BratConfig config = new BratConfig();
 
-    public LoadConfResponse(BratProperties aBratProperties)
+    public LoadConfResponse(AnnotationEditorProperties aBratProperties)
     {
         super(COMMAND);
         

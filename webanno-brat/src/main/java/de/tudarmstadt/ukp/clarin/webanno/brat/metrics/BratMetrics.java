@@ -21,7 +21,8 @@ public interface BratMetrics
 {
     public static enum RenderType {
         FULL,
-        DIFFERENTIAL;
+        DIFFERENTIAL,
+        SKIP;
     }
 
     void renderComplete(RenderType aType, long aTime, String aFull, String aDiff);

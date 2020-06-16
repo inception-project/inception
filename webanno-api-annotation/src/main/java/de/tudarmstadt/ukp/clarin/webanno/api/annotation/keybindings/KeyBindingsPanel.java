@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -57,6 +59,7 @@ public class KeyBindingsPanel
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     
     private boolean keyBindingsVisible = false;
+    private IModel<List<KeyBinding>> keyBindings;
 
     public KeyBindingsPanel(String aId, IModel<List<KeyBinding>> aKeyBindings,
             IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
@@ -64,6 +67,9 @@ public class KeyBindingsPanel
         super(aId, aModel);
         
         actionHandler = aHandler;
+        keyBindings = aKeyBindings;
+       
+        add(visibleWhen(() -> keyBindings.map(List::isEmpty).getObject()));
         
         WebMarkupContainer keyBindingsContainer = new WebMarkupContainer("keyBindingsContainer");
         keyBindingsContainer.setOutputMarkupId(true);

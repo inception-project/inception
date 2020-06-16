@@ -86,16 +86,25 @@ public class RelationRenderer
     public void render(final CAS aCas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
+        RelationAdapter typeAdapter = getTypeAdapter();
+        Type type;
+        Type spanType;
+        try {
+            type = getType(aCas, typeAdapter.getAnnotationTypeName());
+            spanType = getType(aCas, typeAdapter.getAttachTypeName());
+        }
+        catch (IllegalArgumentException e) {
+            // If the types are not defined, then we do not need to try and render them because the
+            // CAS does not contain any instances of them
+            return;
+        }
+        
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
                 .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
-        
-        RelationAdapter typeAdapter = getTypeAdapter();
-        Type type = getType(aCas, typeAdapter.getAnnotationTypeName());
         
         Feature dependentFeature = type.getFeatureByBaseName(typeAdapter.getTargetFeatureName());
         Feature governorFeature = type.getFeatureByBaseName(typeAdapter.getSourceFeatureName());
 
-        Type spanType = getType(aCas, typeAdapter.getAttachTypeName());
         Feature arcSpanFeature = spanType.getFeatureByBaseName(typeAdapter.getAttachFeatureName());
 
         FeatureStructure dependentFs;
@@ -120,7 +129,7 @@ public class RelationRenderer
                 governorFs = fs.getFeatureValue(governorFeature);
             }
 
-            String bratTypeName = typeAdapter.getUiTypeName();
+            String bratTypeName = typeAdapter.getEncodedTypeName();
             Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs,
                     visibleFeatures);
             
@@ -147,7 +156,7 @@ public class RelationRenderer
 
             VArc arc = new VArc(typeAdapter.getLayer(), fs, bratTypeName, governorFs,
                     dependentFs, features);
-
+            arc.addLazyDetails(getLazyDetails(typeAdapter, fs, aFeatures));
             annoToArcIdx.put(fs, arc);
 
             aResponse.add(arc);

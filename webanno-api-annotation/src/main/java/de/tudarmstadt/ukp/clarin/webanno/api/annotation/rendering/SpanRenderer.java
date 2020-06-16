@@ -76,9 +76,6 @@ public class SpanRenderer
     {
         SpanAdapter typeAdapter = getTypeAdapter();
         
-        // Index mapping annotations to the corresponding rendered spans
-        Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
-        
         // Iterate over the span annotations of the current type and render each of them
         Type type;
         try {
@@ -88,10 +85,13 @@ public class SpanRenderer
             // If the type does not exist in the given CAS, then there is nothing to render
             return;
         }
-        
+
+        // Index mapping annotations to the corresponding rendered spans
+        Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
+
         List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (AnnotationFS fs : annotations) {
-            String uiTypeName = typeAdapter.getUiTypeName();
+            String uiTypeName = typeAdapter.getEncodedTypeName();
             Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs, aFeatures);
             Map<String, String> hoverFeatures = renderHoverFeatureValues(typeAdapter, fs,
                     aFeatures);
@@ -99,7 +99,7 @@ public class SpanRenderer
             VRange range = new VRange(fs.getBegin() - aWindowBegin, fs.getEnd() - aWindowBegin);
             VSpan span = new VSpan(typeAdapter.getLayer(), fs, uiTypeName, range, features,
                     hoverFeatures);
-            span.setLazyDetails(getLazyDetails(typeAdapter, fs, aFeatures));
+            span.addLazyDetails(getLazyDetails(typeAdapter, fs, aFeatures));
             
             annoToSpanIdx.put(fs, span);
             
