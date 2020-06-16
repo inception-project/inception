@@ -220,6 +220,12 @@ public class CurationEditorExtension
         }
 
         for (User user : selectedUsers.get()) {
+            
+            // check if user has finished the document 
+            if (!documentService.isAnnotationFinished(aState.getDocument(), user)) {
+                continue;
+            }
+            
             try {
                 CAS userCas = documentService.readAnnotationCas(aState.getDocument(),
                         user.getUsername());
