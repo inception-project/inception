@@ -413,8 +413,10 @@ public class MonitoringPage extends ApplicationPageBase
     public List<String> getFilter()
     {
         List<String> filterList = new ArrayList<>();
-        filterList.add("Document creation time:");
         filterList.add("User:");
+        filterList.add("Document name:");
+        filterList.add("Document creation time:");
+
 
         return filterList;
     }

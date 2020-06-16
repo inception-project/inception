@@ -133,6 +133,7 @@ public class DataProvider extends SortableDataProvider
         this.shownDocuments = new ArrayList<>();
         shownDocuments.addAll(newList);
 
+
         if ((int)first + (int)count > newList.size())
         {
             count = newList.size() - first;
@@ -178,10 +179,8 @@ public class DataProvider extends SortableDataProvider
                     continue;
                 }
             } else {
-                if (this.type != null)
-                {
-                    if (this.type.equals("Document creation time:"))
-                    {
+                if (this.type != null) {
+                    if (this.type.equals("Document creation time:")) {
                         try {
                             //Creation time filter
                             if (input != null) {
@@ -189,8 +188,7 @@ public class DataProvider extends SortableDataProvider
                                 Date date = new SimpleDateFormat("dd/MM/yyyy").parse(input);
                                 if (doc.getCreated() == null) {
                                 } else {
-                                    if (doc.getCreated().compareTo(date) >= 0)
-                                    {
+                                    if (doc.getCreated().compareTo(date) >= 0) {
                                         resultList.add(doc);
                                         continue;
 
@@ -204,23 +202,24 @@ public class DataProvider extends SortableDataProvider
 
 
                         //User filter
-                    } else if (this.type.equals("User:"))
-                    {
-                        for (AnnotationDocument annotationDocument: allAnnotationDocuments)
-                        {
+                    } else if (this.type.equals("User:")) {
+                        for (AnnotationDocument annotationDocument : allAnnotationDocuments) {
 
                             if (annotationDocument.getUser().equals(this.input)
                                 && annotationDocument.getName().equals(doc.getName()) &&
                                 !annotationDocument.getState().equals
-                                    (AnnotationDocumentState.NEW))
-                            {
+                                    (AnnotationDocumentState.NEW)) {
                                 resultList.add(doc);
                                 break;
                             }
                         }
 
+                    } else if (this.type.equals("Document name:")) {
+                        if (doc.getName().equals(this.input)) {
+                            resultList.add(doc);
+                            break;
+                        }
                     }
-
                 } else {
                     resultList = data;
                     break;
