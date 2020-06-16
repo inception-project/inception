@@ -131,16 +131,17 @@ yago:
   name: YAGO v4
   disabled: true
   type: REMOTE
-  default-language: eng
+  # Languages not supported by SPARQL endpoint - causes exception
+  # default-language: eng
   reification: NONE
   access:
     access-url: https://yago-knowledge.org/sparql/query
     full-text-search: bif:contains
   mapping:
-    class: http://www.w3.org/2000/01/rdf-schema#Class
+    class: http://www.w3.org/2002/07/owl#Class
     subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
     instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2004/02/skos/core#prefLabel
+    label: http://www.w3.org/2000/01/rdf-schema#label
     property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
     description: http://www.w3.org/2000/01/rdf-schema#comment
     property-label: http://www.w3.org/2000/01/rdf-schema#label
@@ -152,7 +153,7 @@ yago:
     author-name: Max-Planck-Institute Saarbrücken, DIG group at Télécom ParisTech University.
     website-url: https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/
   root-concepts:
-    - http://www.w3.org/2002/07/owl#Thing
+    - http://schema.org/Thing
 
 zbw-stw-economics:
   name: STW Thesaurus for Economics
