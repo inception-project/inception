@@ -21,6 +21,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.solr.SolrSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.solr.SolrSearchProviderFactory;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProviderTraits;
 
@@ -28,7 +29,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
+@Ignore("Server not publicly accessible")
 public class SolrSearchProviderTest {
     private SolrSearchProvider sut;
     private DocumentRepository repo;
@@ -43,16 +44,16 @@ public class SolrSearchProviderTest {
 
         traits = new SolrSearchProviderTraits();
         traits.setRemoteUrl("http://localhost:8983/solr");
-        traits.setIndexName("boorman");
+        traits.setIndexName("techproducts");
         traits.setSearchPath("/select");
-        traits.setDefaultField("text");
-        traits.setTextField("text");
+        traits.setDefaultField("id");
+        traits.setTextField("features");
     }
 
     @Test
     public void thatQueryWorks() throws Exception
     {
-        String query = "b";
+        String query = "0*";
 
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
 
@@ -65,10 +66,9 @@ public class SolrSearchProviderTest {
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
         String documentText = sut.getDocumentText(repo, traits,
-            "boorman", "B003");
+            traits.getIndexName(), "SP2514N");
         //System.out.println(documentText);
         assertThat(documentText).isNotNull();
-
     }
 
     @Test
@@ -94,7 +94,7 @@ public class SolrSearchProviderTest {
     public void highlightingWork() throws Exception
     {
         String query = "the";
-        traits.setDefaultField("text");
+        traits.setDefaultField(traits.getTextField());
         traits.setResultSize(5);
 
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
@@ -102,5 +102,4 @@ public class SolrSearchProviderTest {
 
         assertThat(results.get(0).getHighlights().get(0).getHighlight()).isNotNull();
     }
-
 }

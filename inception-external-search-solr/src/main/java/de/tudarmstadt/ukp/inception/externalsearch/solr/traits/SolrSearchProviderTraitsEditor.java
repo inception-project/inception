@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 public class SolrSearchProviderTraitsEditor
     extends Panel
 {
+    private static final long serialVersionUID = 1677442652521110324L;
     private static final String MID_FORM = "form";
     private @SpringBean ExternalSearchProviderFactory<SolrSearchProviderTraits>
         externalSearchProviderFactory;

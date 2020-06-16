@@ -116,7 +116,8 @@ public class SolrSearchProvider
 
                     for (SolrDocument document : documents) {
                         ExternalSearchResult result = new ExternalSearchResult(aRepository,
-                                aTraits.getIndexName(), (String) document.getFirstValue(DOC_ID_KEY));
+                                aTraits.getIndexName(), (String) document
+                                .getFirstValue(DOC_ID_KEY));
 
                         if (!aTraits.isRandomOrder()) {
                             final double d = (float) document.getFirstValue(DOC_SCORE_KEY);
@@ -132,7 +133,8 @@ public class SolrSearchProvider
 
                             if (idHighlight.get(document.getFirstValue(DOC_ID_KEY))
                                     .get(aTraits.getDefaultField()) != null) {
-                                for (String highlight : idHighlight.get(document.getFirstValue(DOC_ID_KEY))
+                                for (String highlight : idHighlight
+                                        .get(document.getFirstValue(DOC_ID_KEY))
                                         .get(aTraits.getDefaultField())) {
                                     highlights.add(new ExternalSearchHighlight(highlight));
                                 }
@@ -148,16 +150,19 @@ public class SolrSearchProvider
                 }
             } catch (BaseHttpSolrClient.RemoteSolrException e) {
                 throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + "/solr/" +
-                        aTraits.getIndexName() + aTraits.getSearchPath() + " : Search path does not exist. \n"
+                        aTraits.getIndexName() + aTraits.getSearchPath()
+                        + " : Search path does not exist. \n"
                         + e.getMessage(), e);
             }
 
         } catch (SolrServerException e)
         {
-            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : " + e.getMessage(), e);
+            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : "
+                    + e.getMessage(), e);
         }
         catch (BaseHttpSolrClient.RemoteSolrException e) {
-            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : " + e.getMessage(), e);
+            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : "
+                    + e.getMessage(), e);
         }
 
         return results;
@@ -223,8 +228,10 @@ public class SolrSearchProvider
             throw new IllegalArgumentException(
                     "Requested collection name does not match connection collection name");
         }
+        aDocumentId = escapeSolrSpecialCharacters(aDocumentId);
 
         SolrQuery getQuery = new SolrQuery(DOC_ID_KEY + ":" + aDocumentId);
+
 
         try (HttpSolrClient client = makeClient(aTraits)) {
             ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
@@ -242,7 +249,8 @@ public class SolrSearchProvider
             return result;
         }
         catch (HttpHostConnectException e) {
-            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + ": " + e.getMessage(), e);
+            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + ": "
+                    + e.getMessage(), e);
         }
     }
 
@@ -267,6 +275,7 @@ public class SolrSearchProvider
                     "Requested collection name does not match connection collection name");
         }
 
+        aDocumentId = escapeSolrSpecialCharacters(aDocumentId);
         SolrQuery getQuery = new SolrQuery(DOC_ID_KEY + ":" + aDocumentId);
         getQuery.setRows(1);
 
@@ -288,7 +297,6 @@ public class SolrSearchProvider
             throw new IOException("Unable to retrieve document : " + e.getMessage(),e);
         }
         return (String) document.getFirstValue(aTraits.getTextField());
-
     }
 
 
@@ -322,5 +330,60 @@ public class SolrSearchProvider
                 .withSocketTimeout(60000)
                 .build();
 
+    }
+
+    /**
+     * Escape special characters for standard query parser. Usefull when retrieving document with
+     * an id that contain such of those characters
+     * @param query : String with special characters
+     * @return String query without special character
+     */
+    private String escapeSolrSpecialCharacters(String query)
+    {
+        char[] queryCharArray = new char[query.length() * 2];
+        char c;
+        int length = query.length();
+        int currentIndex = 0;
+        for (int i = 0; i < length; i++)
+        {
+            c = query.charAt(i);
+            switch (c) {
+            case ':':
+            case '\\':
+            case '/':
+            case '?':
+            case '+':
+            case '-':
+            case '!':
+            case '(':
+            case ')':
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case '^':
+            case '"':
+            case '~':
+            case '*':
+                queryCharArray[currentIndex++] = '\\';
+                queryCharArray[currentIndex++] = c;
+                break;
+
+            case '&':
+            case '|':
+                if (i + 1 < length && query.charAt(i + 1) == c)
+                {
+                    queryCharArray[currentIndex++] = '\\';
+                    queryCharArray[currentIndex++] = c;
+                    queryCharArray[currentIndex++] = c;
+                    i++;
+                }
+                break;
+
+            default:
+                queryCharArray[currentIndex++] = c;
+            }
+        }
+        return new String(queryCharArray,0,currentIndex);
     }
 }
