@@ -34,6 +34,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.BaseHttpSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.request.SolrPing;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -49,8 +50,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProvide
 public class SolrSearchProvider
         implements ExternalSearchProvider<SolrSearchProviderTraits>
 {
-
-
     private static final String DOC_ID_KEY = "id";
     private static final String DOC_NAME_KEY = "name";
     private static final String DOC_TITLE_KEY = "title";
@@ -74,13 +73,11 @@ public class SolrSearchProvider
     {
         List<ExternalSearchResult> results = new ArrayList<>();
         //build client
-
         HttpSolrClient solrClient = makeClient(aTraits);
         try {
-
-            SolrQuery query = new SolrQuery();
-            solrClient.query(aTraits.getIndexName(), query);
+            pingClient(solrClient, aTraits);
             try {
+                SolrQuery query = new SolrQuery();
                 query = new SolrQuery();
                 query.setParam("qt", aTraits.getSearchPath());
                 solrClient.query(aTraits.getIndexName(), query);
@@ -146,25 +143,32 @@ public class SolrSearchProvider
                     }
                 }
                 catch (BaseHttpSolrClient.RemoteSolrException e) {
-                    throw new IOException("Unable to get result : " + e.getMessage(), e);
+                    throw new IOException("Unable to get result : " + e.getMessage());
                 }
             } catch (BaseHttpSolrClient.RemoteSolrException e) {
-                throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + "/solr/" +
+                throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() +
                         aTraits.getIndexName() + aTraits.getSearchPath()
                         + " : Search path does not exist. \n"
-                        + e.getMessage(), e);
+                        + e.getMessage());
             }
-
-        } catch (SolrServerException e)
+        }
+        catch (BaseHttpSolrClient.RemoteSolrException e)
+        {
+            throw new IOException("HTTP ERROR 404 Not Found, incorrect URL : "
+                    + aTraits.getRemoteUrl()
+                    + " : Are you sure both the host and collection name are correct ? \n"
+                    + e.getMessage());
+        }
+        catch (HttpHostConnectException e)
         {
             throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : "
+                    + " : The server is not responding \n"
                     + e.getMessage(), e);
         }
-        catch (BaseHttpSolrClient.RemoteSolrException e) {
+        catch (SolrServerException e) {
             throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : "
                     + e.getMessage(), e);
         }
-
         return results;
     }
     /**
@@ -323,14 +327,23 @@ public class SolrSearchProvider
      * @return HttpSolrClient object use synchrone methode
      */
     private HttpSolrClient makeClient(SolrSearchProviderTraits aTraits)
-            throws HttpHostConnectException
     {
         return new HttpSolrClient.Builder(aTraits.getRemoteUrl())
                 .withConnectionTimeout(10000)
                 .withSocketTimeout(60000)
                 .build();
-
     }
+
+    private void pingClient(HttpSolrClient client, SolrSearchProviderTraits aTraits)
+            throws IOException, SolrServerException
+    {
+        SolrPing ping = new SolrPing();
+        ping.getParams().add("distrib", "true");
+        ping.process(client, aTraits.getIndexName());
+    }
+
+
+
 
     /**
      * Escape special characters for standard query parser. Usefull when retrieving document with
