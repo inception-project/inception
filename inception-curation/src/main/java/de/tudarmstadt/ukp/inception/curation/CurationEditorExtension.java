@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -212,20 +211,15 @@ public class CurationEditorExtension
             return;
         }
             
-        Optional<List<User>> selectedUsers = curationService
-                .listUsersSelectedForCuration(userRepository.getCurrentUser().getUsername(), 
-                        projectId);
-        if (!selectedUsers.isPresent()) {
+        List<User> selectedUsers = curationService
+                .listUsersReadyForCuration(userRepository.getCurrentUser().getUsername(), 
+                        aState.getProject(), aState.getDocument());
+        if (selectedUsers.isEmpty()) {
             return;
         }
 
-        for (User user : selectedUsers.get()) {
-            
-            // check if user has finished the document 
-            if (!documentService.isAnnotationFinished(aState.getDocument(), user)) {
-                continue;
-            }
-            
+        for (User user : selectedUsers) {
+                        
             try {
                 CAS userCas = documentService.readAnnotationCas(aState.getDocument(),
                         user.getUsername());
