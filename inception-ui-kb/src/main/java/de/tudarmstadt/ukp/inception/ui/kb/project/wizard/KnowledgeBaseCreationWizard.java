@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
@@ -104,7 +105,10 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     {
         Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
         try {
-            profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
+            profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles()
+                        .entrySet().stream()
+                        .filter(e -> !e.getValue().isDisabled())
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
         catch (IOException e) {
             error("Unable to read knowledge base profiles " + e.getMessage());
