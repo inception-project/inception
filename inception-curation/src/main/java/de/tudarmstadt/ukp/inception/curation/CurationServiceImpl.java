@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -84,6 +86,12 @@ public class CurationServiceImpl
         curationStates = new ConcurrentHashMap<>();
     }
     
+    public CurationServiceImpl(EntityManager aEntityManager)
+    {
+        this();
+        entityManager = aEntityManager;
+    }
+
     /**
      * Key to identify curation session for a specific user and project
      */
@@ -227,6 +235,38 @@ public class CurationServiceImpl
     public Optional<List<User>> listUsersSelectedForCuration(String aCurrentUser, long aProjectId)
     {
         return Optional.ofNullable(getCurationState(aCurrentUser, aProjectId).getSelectedUsers());
+    }
+    
+    @Override
+    public List<User> listUsersReadyForCuration(String aUsername, Project aProject,
+            SourceDocument aDocument)
+    {
+        List<User> selectedUsers = getCurationState(aUsername, aProject.getId()).getSelectedUsers();
+        return queryDBForFinishedUsers(selectedUsers, aProject, aDocument);
+    }
+    
+    private List<User> queryDBForFinishedUsers(List<User> aUsers, Project aProject, 
+            SourceDocument aDocument)
+    {
+        Validate.notNull(aUsers, "Users must be specified");
+        Validate.notNull(aProject, "project must be specified");
+        
+        String query = String.join("\n",
+                "SELECT u FROM User u, AnnotationDocument d",
+                "WHERE u.username = d.user",
+                "  AND d.project = :project",
+                "  AND d.document = :document",
+                "  AND d.state    = :state");
+        
+        Set<User> finishedUsers = new HashSet<>(entityManager
+                .createQuery(query, User.class)
+                .setParameter("project", aProject)
+                .setParameter("document", aDocument)
+                .setParameter("state", AnnotationDocumentState.FINISHED)
+                .getResultList());
+
+        return aUsers.stream().filter(user -> finishedUsers.contains(user))
+                .collect(Collectors.toList());
     }
 
     @Override

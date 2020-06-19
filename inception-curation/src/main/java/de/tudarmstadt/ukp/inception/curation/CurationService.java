@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
@@ -95,4 +96,11 @@ public interface CurationService
      * Returns the user corresponding to the CAS used as curation (target) CAS
      */
     public User retrieveCurationUser(String aUser, long aProjectId);
+
+    /**
+     * List users that were selected to be shown for curation by the given user and have finished 
+     * the given document.
+     */
+    public List<User> listUsersReadyForCuration(String aUsername, Project aProject,
+            SourceDocument aDocument);
 }
