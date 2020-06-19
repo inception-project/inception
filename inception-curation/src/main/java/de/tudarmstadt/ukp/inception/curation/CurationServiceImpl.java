@@ -248,8 +248,12 @@ public class CurationServiceImpl
     private List<User> queryDBForFinishedUsers(List<User> aUsers, Project aProject, 
             SourceDocument aDocument)
     {
-        Validate.notNull(aUsers, "Users must be specified");
+        Validate.notNull(aDocument, "Document must be specified");
         Validate.notNull(aProject, "project must be specified");
+        
+        if (aUsers == null || aUsers.isEmpty()) {
+            return new ArrayList<>();
+        }
         
         String query = String.join("\n",
                 "SELECT u FROM User u, AnnotationDocument d",
