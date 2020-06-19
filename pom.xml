@@ -59,6 +59,7 @@
     <maven.compiler.source>8</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
+    <excludedTestCategories>nl.ru.test.category.SlowTests</excludedTestCategories>
 
     <mockito.version>3.3.3</mockito.version>
     <assertj.version>3.15.0</assertj.version>
@@ -1388,7 +1389,7 @@
             <systemPropertyVariables>
               <dkpro.core.testCachePath>${dkpro.core.testCachePath}</dkpro.core.testCachePath>
             </systemPropertyVariables>
-            <excludedGroups>nl.ru.test.category.SlowTests</excludedGroups>
+            <excludedGroups>${excludedTestCategories}</excludedGroups>
           </configuration>
         </plugin>
         <plugin>
@@ -1664,6 +1665,12 @@
         <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
         <maven.war.skip>true</maven.war.skip>
         <remoteresources.skip>true</remoteresources.skip>
+      </properties>
+    </profile>
+    <profile>
+      <id>full-tests</id>
+      <properties>
+        <excludedTestCategories></excludedTestCategories>
       </properties>
     </profile>
   </profiles>
