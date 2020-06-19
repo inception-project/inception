@@ -48,6 +48,9 @@ public class KnowledgeBaseProfile implements Serializable
     @JsonProperty("name")
     private String name;
 
+    @JsonProperty("disabled")
+    private boolean disabled;
+
     @JsonProperty("type")
     private RepositoryType type;
     
@@ -77,6 +80,7 @@ public class KnowledgeBaseProfile implements Serializable
     }
     
     public KnowledgeBaseProfile(@JsonProperty("name") String aName,
+            @JsonProperty("disabled") boolean aDisabled,
             @JsonProperty("type") RepositoryType aType,
             @JsonProperty("access") KnowledgeBaseAccess aAccess,
             @JsonProperty("mapping") KnowledgeBaseMapping aMapping,
@@ -87,6 +91,7 @@ public class KnowledgeBaseProfile implements Serializable
             @JsonProperty("default-dataset") String aDefaultDataset)
     {
         name = aName;
+        disabled = aDisabled;
         type = aType;
         access = aAccess;
         mapping = aMapping;
@@ -109,6 +114,16 @@ public class KnowledgeBaseProfile implements Serializable
     public void setName(String aName)
     {
         name = aName;
+    }
+
+    public boolean isDisabled()
+    {
+        return disabled;
+    }
+
+    public void setDisabled(boolean aDisabled)
+    {
+        disabled = aDisabled;
     }
 
     public RepositoryType getType()
@@ -212,8 +227,11 @@ public class KnowledgeBaseProfile implements Serializable
             return false;
         }
         KnowledgeBaseProfile that = (KnowledgeBaseProfile) o;
-        return Objects.equals(name, that.name) && Objects.equals(access, that.access)
-                && Objects.equals(mapping, that.mapping) && Objects.equals(type, that.type)
+        return Objects.equals(name, that.name)
+                && Objects.equals(disabled, that.disabled)
+                && Objects.equals(access, that.access)
+                && Objects.equals(mapping, that.mapping)
+                && Objects.equals(type, that.type)
                 && Objects.equals(rootConcepts, that.rootConcepts)
                 && Objects.equals(info, that.info)
                 && Objects.equals(reification, that.reification)
@@ -223,7 +241,7 @@ public class KnowledgeBaseProfile implements Serializable
 
     @Override public int hashCode()
     {
-        return Objects.hash(name, type, access, mapping, rootConcepts, info, reification,
+        return Objects.hash(name, disabled, type, access, mapping, rootConcepts, info, reification,
                 defaultLanguage, defaultDataset);
     }
 }
