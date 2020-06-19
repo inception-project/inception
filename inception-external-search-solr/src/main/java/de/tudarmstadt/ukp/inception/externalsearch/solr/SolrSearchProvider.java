@@ -65,7 +65,7 @@ public class SolrSearchProvider
      * @param aTraits Param for client connection
      * @param aQuery The query that we retrieve from the search bar
      * @return A list of results that Inception can read and display
-     * @throws SolrException Connection exception and request exception
+     * @throws IOException Connection timeout, wrong URL and query exception
      */
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
                                                    SolrSearchProviderTraits aTraits, String aQuery)
@@ -179,7 +179,6 @@ public class SolrSearchProvider
      */
     private void fillResultWithMetadata(ExternalSearchResult result, SolrDocument document,
                                         SolrSearchProviderTraits aTraits)
-            throws IOException, SolrException
     {
         if (isNotBlank((String) document.getFirstValue(DOC_NAME_KEY))) {
             result.setDocumentTitle((String) document.getFirstValue(DOC_NAME_KEY));
@@ -220,7 +219,8 @@ public class SolrSearchProvider
      * @param aCollectionId the name of the collection
      * @param aDocumentId the id of the document
      * @return is used by the module external search core in order to get a preview of the document
-     * @throws SolrException Connection exception and request exception
+     * @throws SolrServerException Connection timeout, exception and request exception
+     * @throws IllegalArgumentException 
      */
     @Override
     public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
@@ -235,27 +235,20 @@ public class SolrSearchProvider
         aDocumentId = escapeSolrSpecialCharacters(aDocumentId);
 
         SolrQuery getQuery = new SolrQuery(DOC_ID_KEY + ":" + aDocumentId);
+        HttpSolrClient client = makeClient(aTraits);
+        ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
+                aDocumentId);
 
-
-        try (HttpSolrClient client = makeClient(aTraits)) {
-            ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
-                    aDocumentId);
-
-            // Send get query
-            try {
-                QueryResponse response = client.query(aTraits.getIndexName(), getQuery);
-                SolrDocumentList documents = response.getResults();
-                SolrDocument document = documents.get(0);
-                fillResultWithMetadata(result, document, aTraits);
-            } catch (SolrServerException e) {
-                throw new IOException("Unable to retrieve the document : " + e.getMessage(), e);
-            }
-            return result;
+        // Send get query
+        try {
+            QueryResponse response = client.query(aTraits.getIndexName(), getQuery);
+            SolrDocumentList documents = response.getResults();
+            SolrDocument document = documents.get(0);
+            fillResultWithMetadata(result, document, aTraits);
+        } catch (SolrServerException e) {
+            throw new IOException("Unable to get the document result : " + e.getMessage(), e);
         }
-        catch (HttpHostConnectException e) {
-            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + ": "
-                    + e.getMessage(), e);
-        }
+        return result;
     }
 
     /**
@@ -322,9 +315,9 @@ public class SolrSearchProvider
     }
 
     /**
-     * Create à client and connect it to the server
-     * @param aTraits parameters of the connection
-     * @return HttpSolrClient object use synchrone methode
+     * Create a Solr client
+     * @param aTraits parameters for the client
+     * @return client object
      */
     private HttpSolrClient makeClient(SolrSearchProviderTraits aTraits)
     {
@@ -334,6 +327,13 @@ public class SolrSearchProvider
                 .build();
     }
 
+    /**
+     * Ping the Solr server
+     * @param client
+     * @param aTraits
+     * @throws IOException
+     * @throws SolrServerException Wrong URL or collection
+     */
     private void pingClient(HttpSolrClient client, SolrSearchProviderTraits aTraits)
             throws IOException, SolrServerException
     {
@@ -341,9 +341,6 @@ public class SolrSearchProvider
         ping.getParams().add("distrib", "true");
         ping.process(client, aTraits.getIndexName());
     }
-
-
-
 
     /**
      * Escape special characters for standard query parser. Usefull when retrieving document with
@@ -362,7 +359,6 @@ public class SolrSearchProvider
             c = query.charAt(i);
             switch (c) {
             case ':':
-            case '\\':
             case '/':
             case '?':
             case '+':
@@ -392,7 +388,6 @@ public class SolrSearchProvider
                     i++;
                 }
                 break;
-
             default:
                 queryCharArray[currentIndex++] = c;
             }
