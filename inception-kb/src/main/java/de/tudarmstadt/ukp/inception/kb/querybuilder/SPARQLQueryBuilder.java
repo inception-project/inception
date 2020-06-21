@@ -1398,17 +1398,21 @@ public class SPARQLQueryBuilder
                     function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
+            
+            // Match without language
+            expressions.add(and(
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
+                            .parenthesize());
         }
-        
-        // Match without language
-        expressions.add(and(
-                function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
-                        .parenthesize());
+        else {
+            // Match ignoring language
+            expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
+        }
         
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
-
+    
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
     {
         String language = kb.getDefaultLanguage();
@@ -1438,18 +1442,25 @@ public class SPARQLQueryBuilder
                     "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
         }
         
-        // Match with default language
         if (language != null) {
+            // Match with default language
             expressions.add(and(
                     function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
+            
+            // Match without language
+            expressions.add(and(
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
+                            .parenthesize());
+        }
+        else {
+            // Match ignoring language
+            expressions.add(
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
         }
 
-        expressions.add(and(
-                function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
-                        .parenthesize());
 
         // Match with any language (the reduce code doesn't handle this properly atm)
         // expressions.add(function(aFunction, variable, literalOf(value)));
@@ -1610,15 +1621,19 @@ public class SPARQLQueryBuilder
         // Match with any language (the reduce code doesn't handle this properly atm)
         // labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
         
-        // Find all labels without any language
-        labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), EMPTY_STRING)));
-
         // Find all labels corresponding to the KB language
         if (language != null) {
+            // Find all labels without any language
+            labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE).filter(
+                    function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), EMPTY_STRING)));
+            
             labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), 
                             literalOf(language))));
+        }
+        else {
+            // Find all labels ignoring any language
+            labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
         }
 
         addPattern(SECONDARY, bindLabelProperties(VAR_LABEL_PROPERTY));
@@ -1643,19 +1658,24 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> descriptionPatterns = new ArrayList<>();
 
-        // Find all descriptions corresponding to the KB language
         if (language != null) {
+            // Find all descriptions corresponding to the KB language
             descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)
                     .filter(function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), 
                             literalOf(language))));
+            
+            // Find all descriptions without any language
+            descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE).filter(
+                    function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), EMPTY_STRING)));
+        }
+        else {
+            // Find all descriptions ignoring language
+            descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
         }
 
         // Match with any language (the reduce code doesn't handle this properly atm)
         // descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
         
-        // Find all descriptions without any language
-        descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)
-                .filter(function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), EMPTY_STRING)));
 
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would 
         // normally match to be removed from the results set. Using a UNION seems to address this
@@ -1896,7 +1916,8 @@ public class SPARQLQueryBuilder
             }
             // Found an exact language match -> use that one instead
             // Note that having a language implies that there is a label!
-            else if (kb.getDefaultLanguage().equals(handle.getLanguage())) {
+            else if (kb.getDefaultLanguage() != null
+                    && kb.getDefaultLanguage().equals(handle.getLanguage())) {
                 cMap.put(handle.getIdentifier(), handle);
             }
         }
