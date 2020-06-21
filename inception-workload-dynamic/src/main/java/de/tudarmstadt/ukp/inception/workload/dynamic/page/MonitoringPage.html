@@ -20,9 +20,67 @@
 <head>
   <wicket:head>
     <style type="text/css">
-      .page-content {
-        overflow: auto;
+
+       .page-content {
+           overflow: auto;
+       }
+
+      .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
+          background-color: lightgray;
       }
+
+      .table tr {
+          text-align: center;
+      }
+
+       .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+           background-color: burlywood;
+       }
+
+       input[type="radio"], label {
+           vertical-align: middle;
+           padding: 4px;
+           margin: 4px;
+       }
+
+       table {
+           width: 100%;
+       }
+
+       table, td {
+           border-collapse: collapse;
+       }
+
+       thead {
+           display: table;
+           width: calc(100% - 17px);
+       }
+
+       tbody {
+           display: block;
+           max-height: 280px;
+           overflow-y: scroll;
+       }
+
+       th, td {
+           width: 25%;
+           padding: 5px;
+           word-break: break-all;
+       }
+
+       tr {
+           display: table;
+           width: 100%;
+           box-sizing: border-box;
+       }
+
+       td {
+           text-align: center;
+           border-bottom: none;
+           border-left: none;
+       }
+
+
     </style>
   </wicket:head>
 </head>
@@ -33,55 +91,93 @@
         <h1><wicket:container wicket:id="name"/></h1>
       </div>
       <form wicket:id="workload" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-        <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter row" style="margin-top: 0px; flex: 0.5; min-height: 500px">
-          <div class="flex-content card col-sm-3">
-            <div class="card-header">
-              <wicket:message key="settings"/>
-            </div>
-            <div class="form-group form-row" style="flex: 0.4;" wicket:enclosure="defaultDocumentsNumberTextField">
-              <label class="col-sm-9 col-form-label">
-                <wicket:message key="defaultDocumentsLabel"/>
-              </label>
-            <div class="col-sm-2">
-              <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control"/>
+        <div>
+          <div class="row row-cols-2">
+          <div class="col-sm-3"></div>
+            <div class="card col-sm-4 card border-dark mb-3">
+              <div class="card-header">
+                <wicket:message key="settings"/>
+              </div>
+              <div class="card-body">
+                <div>
+                  <label class="col-form-label">
+                    <wicket:message key="defaultDocumentsLabel"/>
+                  </label>
+                  <label class="col-sm-2">
+                    <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control" style="text-align: right;"/>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="flex-content card fit-child-snug col-sm-9">
-          <form wicket:id="filter" class="flex-content flex-h-container flex-gutter flex-only-internal-gutter row" style="flex: 0.4;">
-            <div class="flex-content card col-sm-7">
-              <div class="fit-child-snug">
-                <table class="table table-sm table-hover" wicket:id="dataTable" align="center" style="overflow-x:auto;"></table>
-              </div>
-            </div>
-            <div class="panel card col-sm-5 row" style="flex: 0.5;">
-              <div class="card-header">
-                <wicket:message key="filterHeader"/>
-              </div>
-              <div class="form-group form-row" style="flex: 0.4;" wicket:enclosure="filterTextfield">
-                <div class="col-sm-5" style="flex: 0.4;">
-                  <label class="col-form-label">
-                    <select wicket:id="filterDropDown"/>
-                  </label>
-                  <label class="col-form-label">
-                    <wicket:message key="unused"/>
-                  </label>
-                  <label class="col-form-label">
-                    <input wicket:id="Search" type="submit"/>
-                  </label>
+          <div>
+            <div class="row row-cols-2">
+              <div class="col-sm-3"></div>
+                <div class="card col-sm-6 card border-dark mb-3">
+                  <div class="card-header">
+                    <wicket:message key="filterHeader"/>
+                  </div>
+                  <div class="card-body">
+                    <div>
+                      <label class="col-form-label col-sm-5">
+                        <wicket:message key="userFilterText"/>
+                      </label>
+                      <label class="col-sm-6">
+                        <input wicket:id="userFilter" type="text" class="form-control"/>
+                      </label>
+                    </div>
+                    <div>
+                      <label class="col-form-label col-sm-5">
+                        <wicket:message key="documentFilterText"/>
+                      </label>
+                      <label class="col-sm-6 ">
+                        <input wicket:id="documentFilter" type="text" class="form-control"/>
+                      </label>
+                    </div>
+                    <div>
+                      <label class="col-form-label col-sm-5">
+                        <wicket:message key="dateFilterText"/>
+                      </label>
+                      <span class="col-sm-6" wicket:id="date"></span>
+                    </div>
+                    <div>
+                      <label class="col-form-label col-sm-5"></label>
+                      <label class="col-form-label col-sm-6">
+                        <input wicket:id="from" type="date"/>
+                        <input wicket:id="to" type="date"/>
+                      </label>
+                    </div>
+                    <div>
+                      <label class="col-form-label col-sm-5">
+                        <wicket:message key="unused"/>
+                      </label>
+                      <label class="col-form-label col-sm-1">
+                        <input wicket:id="unused" type="checkbox"/>
+                      </label>
+                    </div>
+                    <div>
+                      <input class="btn btn-primary" wicket:id="Search"  type="submit"/>
+                      <input class="btn btn-primary" wicket:id="Reset"  type="submit"/>
+                    </div>
+                  </div>
                 </div>
-                <div class="col-sm-7">
-                  <input wicket:id="filterTextfield" type="text" class="form-control"/>
-                  <input wicket:id="unused" type="checkbox" style="vertical-align: bottom;"/>
-                </div>
               </div>
-            </div>
-          </form>
+            <div wicket:id="modalWindow"></div>
+            <div class="col-2"></div>
         </div>
-        <div wicket:id="modalWindow"></div>
-      </div>
-    </form>
-   </div>
+        <form wicket:id="filter" class="flex-content flex-h-container flex-gutter">
+          <div class="flex-content card">
+            <div class="card-header">
+              <wicket:message key="documentStatus"/>
+            </div>
+            <div class="card-body flex-content scrolling fit-child-snug">
+              <table class="table table-sm table-hover table-striped" cellspacing="0" wicket:id="dataTable" align="center" style="overflow-x:auto;"></table>
+            </div>
+          </div>
+        </form>
+      </form>
+    </div>
   </wicket:extend>
 </body>
 </html>

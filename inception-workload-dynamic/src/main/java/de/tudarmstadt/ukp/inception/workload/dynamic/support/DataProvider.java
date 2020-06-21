@@ -19,10 +19,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import java.io.Serializable;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -53,9 +50,6 @@ public class DataProvider extends SortableDataProvider
 
     private int defaultAnnotations;
 
-    private String input;
-    private String type;
-    private String selected;
 
     public DataProvider(
         List<SourceDocument> aData,
@@ -88,15 +82,6 @@ public class DataProvider extends SortableDataProvider
     @Override
     public Iterator<SourceDocument> iterator(long first, long count)
     {
-
-        input = filter.getInput();
-        type = filter.getType();
-        selected = filter.getSelected();
-
-        //init
-        if (selected == null) {
-            selected = "false";
-        }
 
         //Apply Filter
         List<SourceDocument> newList = filterTable(data);
@@ -145,7 +130,7 @@ public class DataProvider extends SortableDataProvider
     @Override
     public long size()
     {
-        return data.size();
+        return filterTable(data).size();
     }
 
     @Override
@@ -155,77 +140,122 @@ public class DataProvider extends SortableDataProvider
     }
 
     @Override
-    public void detach()
-    {
+    public void detach() {
         super.detach();
         model.detach();
-
     }
-
 
     public List<SourceDocument> filterTable(List<SourceDocument> data)
     {
-
-        //TODO optimization definitely possible
         List<SourceDocument> resultList = new ArrayList<>();
+        List<SourceDocument> userNameList = new ArrayList<>();
+        List<SourceDocument> dateList = new ArrayList<>();
 
         for (SourceDocument doc: data)
         {
-            //Check for unused documents only and initalized
-            if (this.selected.equals("true")) {
+
+            //1. Checkbox is selected
+            if (filter.getSelected().equals("true")) {
                 if ((getInProgressAmountForDocument(doc) == 0)
                     && (getFinishedAmountForDocument(doc) == 0)) {
                     resultList.add(doc);
                     continue;
                 }
             } else {
-                if (this.type != null) {
-                    if (this.type.equals("Document creation time:")) {
-                        try {
-                            //Creation time filter
-                            if (input != null) {
-                                //TODO Rework of try catch and add Error (or regex for field input)
-                                Date date = new SimpleDateFormat("dd/MM/yyyy").parse(input);
-                                if (doc.getCreated() == null) {
-                                } else {
-                                    if (doc.getCreated().compareTo(date) >= 0) {
-                                        resultList.add(doc);
-                                        continue;
+                //2. Checkbox not selected
 
-                                    }
-                                }
-                            }
+                //Check if Document Name was selected
+                if (filter.getDocumentName() != null)
+                {
+                    //If document found break immediately,
+                    // because there can only be one document with that name
+                    if (doc.getName().equals(filter.getDocumentName())) {
+                        resultList.add(doc);
+                        break;
+                    }
 
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
+                } else {
 
-
-                        //User filter
-                    } else if (this.type.equals("User:")) {
+                    //Check if Username filter was entered
+                    if (filter.getUsername() != null)
+                    {
+                        //Get all documents with the given user
                         for (AnnotationDocument annotationDocument : allAnnotationDocuments) {
 
-                            if (annotationDocument.getUser().equals(this.input)
+                            if (annotationDocument.getUser().equals(filter.getUsername())
                                 && annotationDocument.getName().equals(doc.getName()) &&
                                 !annotationDocument.getState().equals
                                     (AnnotationDocumentState.NEW)) {
-                                resultList.add(doc);
+                                userNameList.add(doc);
                                 break;
                             }
                         }
+                    }
 
-                    } else if (this.type.equals("Document name:")) {
-                        if (doc.getName().equals(this.input)) {
-                            resultList.add(doc);
-                            break;
+                    //Check if one of the date fields are selected and the document
+                    // has a created value
+                    if ((filter.getFrom() != null || filter.getTo() != null)
+                        && doc.getCreated() != null)
+                    {
+                        //between selected
+                        if (filter.getFrom() != null && filter.getTo() != null)
+                        {
+                            if (filter.getFrom().compareTo(filter.getTo()) >= 0) {
+                                if (doc.getCreated().compareTo(filter.getTo()) > 0 &&
+                                    doc.getCreated().compareTo(filter.getFrom()) <= 0)
+                                {
+                                    dateList.add(doc);
+                                }
+                            }
+                            if (doc.getCreated().compareTo(filter.getFrom()) > 0 &&
+                                doc.getCreated().compareTo(filter.getTo()) <= 0)
+                            {
+                                dateList.add(doc);
+                            }
+                            //From selected
+                        } else if (filter.getFrom() != null) {
+                            if (doc.getCreated().compareTo(filter.getFrom()) >= 0)
+                            {
+                                dateList.add(doc);
+                            }
+                        } else {
+                            //Until
+                            if (doc.getCreated().compareTo(filter.getTo()) <= 0)
+                            {
+                                dateList.add(doc);
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+
+        //Only if Document name was not entered and the checkbox is not selected
+        if (filter.getSelected().equals("false") && filter.getDocumentName() == null)
+        {
+            //Merge of the Lists
+            if (userNameList.size() > 0 || filter.getUsername() != null)
+            {
+                if (dateList.size() > 0)
+                {
+                    for (SourceDocument aDoc: userNameList)
+                    {
+                        if (dateList.contains(aDoc))
+                        {
+                            resultList.add(aDoc);
                         }
                     }
                 } else {
-                    resultList = data;
-                    break;
+                    resultList = userNameList;
                 }
-            }
 
+            } else if (dateList.size() > 0 || filter.getFrom() != null || filter.getTo() != null)
+            {
+                resultList = dateList;
+            } else {
+                resultList = data;
+            }
         }
 
         return resultList;
