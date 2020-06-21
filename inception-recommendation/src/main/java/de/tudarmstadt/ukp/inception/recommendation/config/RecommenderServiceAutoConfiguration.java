@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationAcceptedEve
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter;
+import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
@@ -154,5 +155,13 @@ public class RecommenderServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<RecommendationEngineFactory> aExtensions)
     {
         return new RecommenderFactoryRegistryImpl(aExtensions);
+    }
+    
+    @Bean
+    @Autowired
+    @ConditionalOnProperty(prefix = "monitoring.metrics", name = "enabled", havingValue = "true")
+    public RecommendationMetricsImpl recommendationMetricsImpl(RecommendationService aRecService) {
+        return new RecommendationMetricsImpl(aRecService);
+        
     }
 }
