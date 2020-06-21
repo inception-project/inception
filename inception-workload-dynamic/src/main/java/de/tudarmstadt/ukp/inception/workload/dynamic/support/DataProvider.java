@@ -154,6 +154,11 @@ public class DataProvider extends SortableDataProvider
         for (SourceDocument doc: data)
         {
 
+            //Avoid error in one specific case
+            if (filter.getSelected() == null) {
+                filter.setSelected("false");
+            }
+
             //1. Checkbox is selected
             if (filter.getSelected().equals("true")) {
                 if ((getInProgressAmountForDocument(doc) == 0)

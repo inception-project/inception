@@ -33,10 +33,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-support</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-model</artifactId>
       </dependency>
       <dependency>
@@ -62,6 +58,14 @@
         <artifactId>wicket-spring</artifactId>
       </dependency>
       <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+      </dependency>
+      <dependency>
         <groupId>org.apache.wicket</groupId>
         <artifactId>wicket-request</artifactId>
       </dependency>
@@ -76,6 +80,10 @@
       <dependency>
         <groupId>org.apache.wicket</groupId>
         <artifactId>wicket-util</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>com.googlecode.wicket-jquery-ui</groupId>
+        <artifactId>wicket-kendo-ui</artifactId>
       </dependency>
       <dependency>
         <groupId>org.danekja</groupId>

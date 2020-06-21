@@ -79,6 +79,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.support.DataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.Filter;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.ImagePanel;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.ModalPanel;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadProperties;
 
 
 @MountPath("/workload.html")
@@ -108,6 +109,8 @@ public class MonitoringPage extends ApplicationPageBase
     private @SpringBean ProjectService projectService;
     private @SpringBean MenuItemRegistry menuItemService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean WorkloadProperties workloadProperties;
+
 
 
     //Default constructor, no project selected (only when workload.html
@@ -327,13 +330,12 @@ public class MonitoringPage extends ApplicationPageBase
         table = new DataTable("dataTable", columns, dataProvider, 20);
         table.setOutputMarkupId(true);
 
-        //FilterToolbar
+
         table.addTopToolbar(new NavigationToolbar(table));
         table.addTopToolbar(new HeadersToolbar(table, dataProvider));
 
         //Add the table to the filter form
         filter.add(table);
-
 
 
         //Checkbox for showing only unused source documents, disables other textfields
@@ -437,14 +439,17 @@ public class MonitoringPage extends ApplicationPageBase
         Button reset = new AjaxButton(getString("Reset"), Model.of("Reset")) {
             @Override
             public void onSubmit(AjaxRequestTarget target) {
+                dateFrom.setEnabled(true);
+                dateTo.setEnabled(true);
+                dateTo.setModelObject(null);
+                unused.setModelObject(null);
+                userFilterTextField.setEnabled(true);
+                documentFilterTextField.setEnabled(true);
                 userFilterTextField.setModelObject(null);
                 documentFilterTextField.setModelObject(null);
                 dateFrom.setModelObject(null);
-                dateTo.setModelObject(null);
-                unused.setModelObject(null);
                 dateChoices.setModel(new Model<>(getString("between")));
-                dateFrom.setEnabled(true);
-                dateTo.setEnabled(true);
+
 
                 target.add(userFilterTextField);
                 target.add(documentFilterTextField);
@@ -452,8 +457,6 @@ public class MonitoringPage extends ApplicationPageBase
                 target.add(dateTo);
                 target.add(unused);
                 target.add(dateChoices);
-                target.add(dateFrom);
-                target.add(dateTo);
             }
         };
 
