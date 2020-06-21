@@ -34,6 +34,7 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.BaseHttpSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.request.SolrPing;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -49,8 +50,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProvide
 public class SolrSearchProvider
         implements ExternalSearchProvider<SolrSearchProviderTraits>
 {
-
-
     private static final String DOC_ID_KEY = "id";
     private static final String DOC_NAME_KEY = "name";
     private static final String DOC_TITLE_KEY = "title";
@@ -66,7 +65,7 @@ public class SolrSearchProvider
      * @param aTraits Param for client connection
      * @param aQuery The query that we retrieve from the search bar
      * @return A list of results that Inception can read and display
-     * @throws SolrException Connection exception and request exception
+     * @throws IOException Connection timeout, wrong URL and query exception
      */
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
                                                    SolrSearchProviderTraits aTraits, String aQuery)
@@ -74,13 +73,11 @@ public class SolrSearchProvider
     {
         List<ExternalSearchResult> results = new ArrayList<>();
         //build client
-
         HttpSolrClient solrClient = makeClient(aTraits);
         try {
-
-            SolrQuery query = new SolrQuery();
-            solrClient.query(aTraits.getIndexName(), query);
+            pingClient(solrClient, aTraits);
             try {
+                SolrQuery query = new SolrQuery();
                 query = new SolrQuery();
                 query.setParam("qt", aTraits.getSearchPath());
                 solrClient.query(aTraits.getIndexName(), query);
@@ -146,25 +143,32 @@ public class SolrSearchProvider
                     }
                 }
                 catch (BaseHttpSolrClient.RemoteSolrException e) {
-                    throw new IOException("Unable to get result : " + e.getMessage(), e);
+                    throw new IOException("Unable to get result : " + e.getMessage());
                 }
             } catch (BaseHttpSolrClient.RemoteSolrException e) {
-                throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + "/solr/" +
+                throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() +
                         aTraits.getIndexName() + aTraits.getSearchPath()
                         + " : Search path does not exist. \n"
-                        + e.getMessage(), e);
+                        + e.getMessage());
             }
-
-        } catch (SolrServerException e)
+        }
+        catch (BaseHttpSolrClient.RemoteSolrException e)
+        {
+            throw new IOException("HTTP ERROR 404 Not Found, incorrect URL : "
+                    + aTraits.getRemoteUrl()
+                    + " : Are you sure both the host and collection name are correct ? \n"
+                    + e.getMessage());
+        }
+        catch (HttpHostConnectException e)
         {
             throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : "
+                    + " : The server is not responding \n"
                     + e.getMessage(), e);
         }
-        catch (BaseHttpSolrClient.RemoteSolrException e) {
+        catch (SolrServerException e) {
             throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : "
                     + e.getMessage(), e);
         }
-
         return results;
     }
     /**
@@ -175,7 +179,6 @@ public class SolrSearchProvider
      */
     private void fillResultWithMetadata(ExternalSearchResult result, SolrDocument document,
                                         SolrSearchProviderTraits aTraits)
-            throws IOException, SolrException
     {
         if (isNotBlank((String) document.getFirstValue(DOC_NAME_KEY))) {
             result.setDocumentTitle((String) document.getFirstValue(DOC_NAME_KEY));
@@ -216,7 +219,8 @@ public class SolrSearchProvider
      * @param aCollectionId the name of the collection
      * @param aDocumentId the id of the document
      * @return is used by the module external search core in order to get a preview of the document
-     * @throws SolrException Connection exception and request exception
+     * @throws SolrServerException Connection timeout, exception and request exception
+     * @throws IllegalArgumentException 
      */
     @Override
     public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
@@ -231,27 +235,20 @@ public class SolrSearchProvider
         aDocumentId = escapeSolrSpecialCharacters(aDocumentId);
 
         SolrQuery getQuery = new SolrQuery(DOC_ID_KEY + ":" + aDocumentId);
+        HttpSolrClient client = makeClient(aTraits);
+        ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
+                aDocumentId);
 
-
-        try (HttpSolrClient client = makeClient(aTraits)) {
-            ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
-                    aDocumentId);
-
-            // Send get query
-            try {
-                QueryResponse response = client.query(aTraits.getIndexName(), getQuery);
-                SolrDocumentList documents = response.getResults();
-                SolrDocument document = documents.get(0);
-                fillResultWithMetadata(result, document, aTraits);
-            } catch (SolrServerException e) {
-                throw new IOException("Unable to retrieve the document : " + e.getMessage(), e);
-            }
-            return result;
+        // Send get query
+        try {
+            QueryResponse response = client.query(aTraits.getIndexName(), getQuery);
+            SolrDocumentList documents = response.getResults();
+            SolrDocument document = documents.get(0);
+            fillResultWithMetadata(result, document, aTraits);
+        } catch (SolrServerException e) {
+            throw new IOException("Unable to get the document result : " + e.getMessage(), e);
         }
-        catch (HttpHostConnectException e) {
-            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + ": "
-                    + e.getMessage(), e);
-        }
+        return result;
     }
 
     /**
@@ -318,18 +315,31 @@ public class SolrSearchProvider
     }
 
     /**
-     * Create à client and connect it to the server
-     * @param aTraits parameters of the connection
-     * @return HttpSolrClient object use synchrone methode
+     * Create a Solr client
+     * @param aTraits parameters for the client
+     * @return client object
      */
     private HttpSolrClient makeClient(SolrSearchProviderTraits aTraits)
-            throws HttpHostConnectException
     {
         return new HttpSolrClient.Builder(aTraits.getRemoteUrl())
                 .withConnectionTimeout(10000)
                 .withSocketTimeout(60000)
                 .build();
+    }
 
+    /**
+     * Ping the Solr server
+     * @param client
+     * @param aTraits
+     * @throws IOException
+     * @throws SolrServerException Wrong URL or collection
+     */
+    private void pingClient(HttpSolrClient client, SolrSearchProviderTraits aTraits)
+            throws IOException, SolrServerException
+    {
+        SolrPing ping = new SolrPing();
+        ping.getParams().add("distrib", "true");
+        ping.process(client, aTraits.getIndexName());
     }
 
     /**
@@ -349,7 +359,6 @@ public class SolrSearchProvider
             c = query.charAt(i);
             switch (c) {
             case ':':
-            case '\\':
             case '/':
             case '?':
             case '+':
@@ -379,7 +388,6 @@ public class SolrSearchProvider
                     i++;
                 }
                 break;
-
             default:
                 queryCharArray[currentIndex++] = c;
             }
