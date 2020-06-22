@@ -20,13 +20,9 @@ package de.tudarmstadt.ukp.inception.externalsearch.solr.traits;
 
 import java.io.Serializable;
 
-/**
- *  Paramètre requête
- */
 public class SolrSearchProviderTraits
     implements Serializable
 {
-
     private static final int ARBITRARY_FIXED_SEED = 5;
 
     private String remoteUrl = "http://localhost:8983/solr";
@@ -51,79 +47,35 @@ public class SolrSearchProviderTraits
     /**
      *  Getter and Setter
      */
-    public String getRemoteUrl()
-    {
-        return remoteUrl;
-    }
+    public String getRemoteUrl() { return remoteUrl; }
 
-    public void setRemoteUrl(String aRemoteUrl)
-    {
-        remoteUrl = aRemoteUrl;
-    }
+    public void setRemoteUrl(String aRemoteUrl) { remoteUrl = aRemoteUrl; }
 
-    public String getIndexName()
-    {
-        return indexName;
-    }
+    public String getIndexName() { return indexName; }
 
-    public void setIndexName(String aIndexName)
-    {
-        indexName = aIndexName;
-    }
+    public void setIndexName(String aIndexName) { indexName = aIndexName; }
 
-    public String getSearchPath()
-    {
-        return searchPath;
-    }
+    public String getSearchPath() { return searchPath; }
 
-    public void setSearchPath(String aSearchPath)
-    {
-        searchPath = aSearchPath;
-    }
+    public void setSearchPath(String aSearchPath) { searchPath = aSearchPath; }
 
-    public String getDefaultField()
-    {
-        return defaultField;
-    }
+    public String getDefaultField() { return defaultField; }
 
-    public void setDefaultField(String aDefaultField)
-    {
-        defaultField = aDefaultField;
-    }
+    public void setDefaultField(String aDefaultField) { defaultField = aDefaultField; }
 
     public String getTextField() { return textField; }
 
     public void setTextField(String textField) { this.textField = textField; }
 
-    public int getResultSize()
-    {
-        return resultSize;
-    }
+    public int getResultSize() { return resultSize; }
 
-    public void setResultSize(int aResultSize)
-    {
-        resultSize = aResultSize;
-    }
+    public void setResultSize(int aResultSize) { resultSize = aResultSize; }
 
-    public boolean isRandomOrder()
-    {
-        return randomOrder;
-    }
+    public boolean isRandomOrder() { return randomOrder; }
 
-    public void setRandomOrder(boolean aRandomOrder)
-    {
-        randomOrder = aRandomOrder;
-    }
+    public void setRandomOrder(boolean aRandomOrder) { randomOrder = aRandomOrder; }
 
-    public int getSeed()
-    {
-        return seed;
-    }
+    public int getSeed() { return seed; }
 
-    public void setSeed(int seed)
-    {
-        this.seed = seed;
-    }
-
-
+    public void setSeed(int seed) { this.seed = seed; }
 }
