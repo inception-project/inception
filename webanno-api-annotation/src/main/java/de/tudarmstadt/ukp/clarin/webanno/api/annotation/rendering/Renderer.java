@@ -19,9 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isRequiredFeatureMissing;
-import static java.util.stream.Collectors.toList;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
@@ -45,6 +48,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
  */
 public interface Renderer
 {
+    static final String QUERY_LAYER_LEVEL_DETAILS = "#";
+    
+    TypeAdapter getTypeAdapter();
+
     /**
      * Render annotations.
      *
@@ -77,7 +84,7 @@ public interface Renderer
             }
             
             String label = defaultString(
-                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs));
+                    fsr.findExtension(feature).renderFeatureValue(feature, aFs));
             
             features.put(feature.getName(), label);
         }
@@ -85,40 +92,32 @@ public interface Renderer
         return features;
     }
     
-    default List<VLazyDetailQuery> getLazyDetails(TypeAdapter aAdapter, AnnotationFS aFs,
+    default List<VLazyDetailQuery> getLazyDetails(AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
-        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
-        
-        return aFeatures.stream()
-                .filter(AnnotationFeature::isEnabled)
-                .flatMap(f -> fsr.getFeatureSupport(f).getLazyDetails(f, aFs).stream())
-                .collect(toList());
-    }
-    
-    default Map<String, String> renderHoverFeatureValues(TypeAdapter aAdapter, AnnotationFS aFs,
-            List<AnnotationFeature> aFeatures)
-    {
-        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
-        Map<String, String> hoverfeatures = new LinkedHashMap<>();
+        List<VLazyDetailQuery> details = new ArrayList<>();
 
-        if (aAdapter.getLayer().isShowTextInHover()) {
-            hoverfeatures.put("__spantext__", aFs.getCoveredText());
-        }
+        boolean tiggerLayerLevelLazyDetails = false;
+
+        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
 
         for (AnnotationFeature feature : aFeatures) {
-            if (!feature.isEnabled() || !feature.isIncludeInHover()
-                    || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
+            if (!feature.isEnabled()) {
                 continue;
             }
             
-            String text = defaultString(
-                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs));
+            if (feature.isIncludeInHover() && NONE.equals(feature.getMultiValueMode())) {
+                tiggerLayerLevelLazyDetails = true;
+            }
             
-            hoverfeatures.put(feature.getName(), text);
+            details.addAll(fsr.findExtension(feature).getLazyDetails(feature, aFs));
         }
         
-        return hoverfeatures;
+        if (tiggerLayerLevelLazyDetails) {
+            details.add(new VLazyDetailQuery(QUERY_LAYER_LEVEL_DETAILS, ""));
+        }
+        
+        return details;
     }
     
     default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,
@@ -134,5 +133,29 @@ public interface Renderer
                         "Required feature [" + f.getName() + "] not set."));
             }
         }
+    }
+
+    default List<VLazyDetailResult> renderLazyDetails(CAS aCas, VID aVid)
+    {
+        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
+        
+        List<VLazyDetailResult> details = new ArrayList<>();
+        
+        AnnotationFS aFs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+
+        for (AnnotationFeature feature : getTypeAdapter().listFeatures()) {
+            if (!feature.isEnabled() || !feature.isIncludeInHover()
+                    || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
+                continue;
+            }
+            
+            String text = defaultString(
+                    fsr.findExtension(feature).renderFeatureValue(feature, aFs));
+
+            details.add(new VLazyDetailResult(feature.getName(), text));
+        }
+        
+        
+        return details;
     }
 }

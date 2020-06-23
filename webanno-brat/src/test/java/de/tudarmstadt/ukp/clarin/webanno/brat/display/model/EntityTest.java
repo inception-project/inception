@@ -1,5 +1,5 @@
 /*
- * Copyright 2015
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -35,14 +35,13 @@ public class EntityTest
         throws IOException
     {
         String json = JSONUtil.toPrettyJsonString(new Entity(new VID(1, 2), "type",
-                new Offsets(1, 2), "label", "color", "somehoverspantext"));
+                new Offsets(1, 2), "label", "color"));
 
         assertEquals(
                 String.join("\n",
                         "[ \"1.2\", \"type\", [ [ 1, 2 ] ], {",
                         "  \"l\" : \"label\",",
                         "  \"c\" : \"color\",",
-                        "  \"h\" : \"somehoverspantext\"",
                         "} ]"),
                 json);
     }

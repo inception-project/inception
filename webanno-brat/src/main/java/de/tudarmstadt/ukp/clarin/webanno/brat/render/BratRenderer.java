@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiHoverText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
@@ -169,16 +168,21 @@ public class BratRenderer
                         .collect(toList());
                 
                 String labelText = getUiLabelText(typeAdapter, vspan);
-                String hoverText = getUiHoverText(typeAdapter, vspan.getHoverFeatures());
                 
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
-                
-                if (DEBUG) {
-                    hoverText = vspan.getOffsets() + "\n" + hoverText;
+                                
+                Entity entity = new Entity(vspan.getVid(), vspan.getType(), offsets, labelText,
+                        color);
+                if (!layer.isShowTextInHover()) {
+                    // If the layer is configured not to display the span text in the popup, then
+                    // we simply set the popup to the empty string here. 
+                    // FIXME: This is obviously not  optimal because it is a layer-level setting and
+                    // we send it at the annotation level here. It would be better to send this
+                    // along with the layer configuration (would save 4-5 characters in the server 
+                    // response for *every annotation on this layer*!)
+                    entity.getAttributes().setHoverText("");
                 }
-                
-                aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets,
-                        labelText, color, hoverText));
+                aResponse.addEntity(entity);
                 
                 vspan.getLazyDetails().stream()
                         .map(d ->  new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))
@@ -189,8 +193,9 @@ public class BratRenderer
                 String bratLabelText = getUiLabelText(typeAdapter, varc);
                 String color = coloringStrategy.getColor(varc, bratLabelText, coloringRules);
 
-                aResponse.addRelation(new Relation(varc.getVid(), varc.getType(),
-                        getArgument(varc.getSource(), varc.getTarget()), bratLabelText, color));
+                Relation arc = new Relation(varc.getVid(), varc.getType(),
+                        getArgument(varc.getSource(), varc.getTarget()), bratLabelText, color);
+                aResponse.addRelation(arc);
                 
                 varc.getLazyDetails().stream()
                         .map(d ->  new Normalization(varc.getVid(), d.getFeature(), d.getQuery()))
@@ -293,8 +298,7 @@ public class BratRenderer
                         if (DEBUG) {
                             aResponse.addEntity(new Entity(new VID(fs), "Token",
                                     new Offsets(range.getBegin(), range.getEnd()),
-                                    fs.getCoveredText(), "#d9d9d9",
-                                    "[" + fs.getBegin() + "-" + fs.getEnd() + "]"));
+                                    fs.getCoveredText(), "#d9d9d9"));
                         }
                     });
         }

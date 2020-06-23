@@ -141,14 +141,12 @@ public class ChainRenderer
                 {
                     String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
-                    String bratHoverText = TypeUtil.getUiHoverText(typeAdapter, linkFs,
-                            (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
                     VRange offsets = new VRange(linkFs.getBegin() - aPageBegin,
                             linkFs.getEnd() - aPageBegin);
 
                     VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                            colorIndex, singletonMap("label", bratLabelText), 
-                            singletonMap("label", bratHoverText));
+                            colorIndex, singletonMap("label", bratLabelText));
+                    span.addLazyDetails(getLazyDetails(linkFs, aFeatures));
                     
                     annoToSpanIdx.put(linkFs, span);
                     

@@ -355,7 +355,7 @@ var VisualizerUI = (function($, window, undefined) {
                     comment += '</div>';
                     
 // WEBANNO EXTENSION BEGIN - #587 Customize mouse hover text
-                    if (hoverText) {
+                    if (hoverText != null) {
                         comment += ('<div class="comment_text">' + Util.escapeHTML(hoverText) + '</div>');
                     } else if (spanText) {
                         comment += ('<div class="comment_text">"' + Util.escapeHTML(spanText) + '"</div>');
@@ -424,8 +424,13 @@ var VisualizerUI = (function($, window, undefined) {
                             var dbName = norm[0],
                                 dbKey = norm[1];
                             commentPopupNormInfoSeqId++;
-                            comment += ('<hr/>' + '<span class="comment_id">' + Util.escapeHTML(dbName) + ':' + Util.escapeHTML(dbKey) + '</span>');
-                            comment += ('<br/><div id="norm_info_drop_point_' + commentPopupNormInfoSeqId + '"/>');
+                            if (dbKey) {
+                              comment += ('<hr/>' + '<span class="comment_id">' + Util.escapeHTML(dbName) + ': ' + Util.escapeHTML(dbKey) + '</span><br/>');
+                            }
+                            else {
+                              comment += '<hr/>';
+                            }
+                            comment += ('<div id="norm_info_drop_point_' + commentPopupNormInfoSeqId + '"/>');
                             normsToQuery.push([dbName, dbKey, commentPopupNormInfoSeqId]);
                         }
 // WEBANNO EXTENSION END - #1293 Display information via the brat "normalization" mechanism
@@ -497,7 +502,7 @@ var VisualizerUI = (function($, window, undefined) {
                                                 value = value.substr(0, 300) + ' ...';
                                             }
 
-                                            norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ':' + Util.escapeHTML(value).replace(/\n/g, "<br/>") + '</span>' + '<br/>');
+                                            norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ': ' + Util.escapeHTML(value).replace(/\n/g, "<br/>") + '</span>' + '<br/>');
                                         }
                                     }
                                 }

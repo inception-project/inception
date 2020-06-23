@@ -93,13 +93,10 @@ public class SpanRenderer
         for (AnnotationFS fs : annotations) {
             String uiTypeName = typeAdapter.getEncodedTypeName();
             Map<String, String> features = renderLabelFeatureValues(typeAdapter, fs, aFeatures);
-            Map<String, String> hoverFeatures = renderHoverFeatureValues(typeAdapter, fs,
-                    aFeatures);
             
             VRange range = new VRange(fs.getBegin() - aWindowBegin, fs.getEnd() - aWindowBegin);
-            VSpan span = new VSpan(typeAdapter.getLayer(), fs, uiTypeName, range, features,
-                    hoverFeatures);
-            span.addLazyDetails(getLazyDetails(typeAdapter, fs, aFeatures));
+            VSpan span = new VSpan(typeAdapter.getLayer(), fs, uiTypeName, range, features);
+            span.addLazyDetails(getLazyDetails(fs, aFeatures));
             
             annoToSpanIdx.put(fs, span);
             

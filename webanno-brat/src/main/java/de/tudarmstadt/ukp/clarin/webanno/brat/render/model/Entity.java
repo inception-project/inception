@@ -51,33 +51,28 @@ public class Entity
         // Nothing to do
     }
 
-    public Entity(int aId, String aType, Offsets aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext)
+    public Entity(int aId, String aType, Offsets aOffsets, String aLabelText, String aColor)
     {
-        this(aId, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext);
+        this(aId, aType, asList(aOffsets), aLabelText, aColor);
     }
 
-    public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext)
+    public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor)
     {
-        this(new VID(aId), aType, aOffsets, aLabelText, aColor, aHoverSpantext);
+        this(new VID(aId), aType, aOffsets, aLabelText, aColor);
     }
 
-    public Entity(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext)
+    public Entity(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor)
     {
-        this(aVid, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext);
+        this(aVid, aType, asList(aOffsets), aLabelText, aColor);
     }
 
-    public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
-            String aHovertext)
+    public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor)
     {
         vid = aVid;
         type = aType;
         offsets = aOffsets;
         attributes.setLabelText(aLabelText);
         attributes.setColor(aColor);
-        attributes.setHoverText(aHovertext);
     }
 
     @Deprecated
@@ -168,24 +163,5 @@ public class Entity
     public void setColor(String aColor)
     {
         attributes.setColor(aColor);
-    }
-    
-    /**
-     * @deprecated Use {@code getAttributes().setHoverText(...)}.
-     */
-    @JsonIgnore
-    @Deprecated
-    public void setHovertext(String aHovertext)
-    {
-        attributes.setHoverText(aHovertext);
-    }
-
-    /**
-     * @deprecated Use {@code getAttributes().getHoverText(...)}.
-     */
-    @Deprecated
-    public String getHovertext()
-    {
-        return attributes.getHoverText();
     }
 }

@@ -156,7 +156,7 @@ public class RelationRenderer
 
             VArc arc = new VArc(typeAdapter.getLayer(), fs, bratTypeName, governorFs,
                     dependentFs, features);
-            arc.addLazyDetails(getLazyDetails(typeAdapter, fs, aFeatures));
+            arc.addLazyDetails(getLazyDetails(fs, aFeatures));
             annoToArcIdx.put(fs, arc);
 
             aResponse.add(arc);
