@@ -29,6 +29,12 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * The test class SolrSearchProviderTest is used to test functionalities. By default this class use
+ * the collection given in the first Solr tutorial : techproducts
+ * In order to test your own collection, setup the name of the collection, names of the fields
+ * and provide an existing id for the method 'thatDocumentTextCanBeRetrieved()'
+ */
 @Ignore("Server not publicly accessible")
 public class SolrSearchProviderTest {
     private SolrSearchProvider sut;
