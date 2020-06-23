@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
 import static java.util.Comparator.comparingInt;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -204,7 +203,7 @@ public class RecommendationSpanRenderer
                 VSpan v = new VSpan(layer, vid, bratTypeName,
                         new VRange(ao.getBegin() - aWindowBeginOffset,
                                 ao.getEnd() - aWindowBeginOffset),
-                        featureAnnotation, Collections.emptyMap(), color);
+                        featureAnnotation, color);
                 v.addLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
                 v.addLazyDetail(new VLazyDetailQuery(feature.getName(), ao.getLabel()));
                 vdoc.add(v);
