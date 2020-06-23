@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
@@ -49,6 +50,7 @@ import org.dkpro.core.tokit.BreakIteratorSegmenter;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -101,7 +103,10 @@ public class OpenNlpDoccatRecommenderTest
         List<CAS> casList = loadArxivData();
         
         CAS cas = casList.get(0);
-        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        try (CasStorageSession session = CasStorageSession.open()) {
+            session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
+            RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        }
 
         sut.train(context, asList(cas));
 

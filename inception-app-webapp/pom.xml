@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.16.2-SNAPSHOT</version>
+    <version>0.17.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -309,6 +309,15 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-htmlcompressor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mozilla</groupId>
+      <artifactId>rhino-runtime</artifactId>
+      <version>1.7.12</version>
     </dependency>
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
@@ -758,6 +767,9 @@
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
+              <!-- Wicket plugins -->
+              <usedDependency>org.wicketstuff:wicketstuff-htmlcompressor</usedDependency>
+              <usedDependency>org.mozilla:rhino-runtime</usedDependency>
               <!-- JavaMelody - used via web.xml -->
               <!--
               <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>

@@ -136,11 +136,15 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
             Component generalSettings = new GeneralSettingsPanel("generalSettings", projectModel,
                 aKbModel);
             add(generalSettings);
-            generalSettings.get("enabled").setVisible(false);
+            generalSettings.get("enabled")
+                    .setOutputMarkupId(true)
+                    .setVisible(false);
 
             Component accessSettings = new AccessSettingsPanel("accessSettings", aKbModel);
             add(accessSettings);
-            accessSettings.get("writeprotection").setVisible(false);
+            accessSettings.get("writeprotection")
+                    .setOutputMarkupId(true)
+                    .setVisible(false);
 
         }
         @Override
