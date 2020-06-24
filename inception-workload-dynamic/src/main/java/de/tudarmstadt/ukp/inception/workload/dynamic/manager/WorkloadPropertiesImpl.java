@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.workload.dynamic.support;
+package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -35,5 +35,14 @@ public class WorkloadPropertiesImpl implements WorkloadProperties
     @Override
     public void setActive(Boolean active) {
         this.isActive = active;
+    }
+
+    @Override
+    public String getProperty() {
+        if (isActive) {
+            return "Workload monitoring page";
+        } else {
+            return "Default monitoring page";
+        }
     }
 }

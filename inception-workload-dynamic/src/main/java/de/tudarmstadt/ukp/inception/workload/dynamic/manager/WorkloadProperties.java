@@ -16,9 +16,11 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.workload.dynamic.support;
+package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
-public interface WorkloadProperties {
-    public boolean isWorkloadManagerActive();
-    public void setActive(Boolean active);
+public interface WorkloadProperties
+{
+    boolean isWorkloadManagerActive();
+    void setActive(Boolean active);
+    String getProperty();
 }

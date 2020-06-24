@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
+
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +28,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.workload.dynamic.page.settings.ProjectSettingsPage;
 
 @Component
 public class ProjectSettingsPageMenuItem implements MenuItem
@@ -77,7 +78,7 @@ public class ProjectSettingsPageMenuItem implements MenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return ProjectPage.class;
+        return ProjectSettingsPage.class;
     }
     
     @Override

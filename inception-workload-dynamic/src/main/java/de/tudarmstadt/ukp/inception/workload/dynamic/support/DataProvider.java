@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -49,7 +50,6 @@ public class DataProvider extends SortableDataProvider
     private Filter filter;
 
     private int defaultAnnotations;
-
 
     public DataProvider(
         List<SourceDocument> aData,
@@ -108,6 +108,19 @@ public class DataProvider extends SortableDataProvider
                     getInProgressAmountForDocument(o2));
 
 
+            } else if (getSort().getProperty().equals(headers.get(3))) {
+                return dir * (Integer.compare(getUsersWorkingOnTheDocument(o1).length(),
+                    getUsersWorkingOnTheDocument(o2).length()));
+
+            } else if (getSort().getProperty().equals(headers.get(4))) {
+                if (o1.getUpdated() == null) {
+                    return dir;
+                } else if (o2.getUpdated() == null) {
+                    return dir * -1;
+                } else {
+                    return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
+                }
+
             } else {
                 return 0;
             }
@@ -149,118 +162,112 @@ public class DataProvider extends SortableDataProvider
     {
         List<SourceDocument> resultList = new ArrayList<>();
         List<SourceDocument> userNameList = new ArrayList<>();
+        List<SourceDocument> docNameList = new ArrayList<>();
         List<SourceDocument> dateList = new ArrayList<>();
+        List<SourceDocument> unusedList = new ArrayList<>();
+
+        //Avoid error in one specific case
+        if (filter.getSelected() == null) {
+            filter.setSelected("false");
+        }
 
         for (SourceDocument doc: data)
         {
-
-            //Avoid error in one specific case
-            if (filter.getSelected() == null) {
-                filter.setSelected("false");
-            }
-
-            //1. Checkbox is selected
+            // Unused documents selected
             if (filter.getSelected().equals("true")) {
                 if ((getInProgressAmountForDocument(doc) == 0)
                     && (getFinishedAmountForDocument(doc) == 0)) {
-                    resultList.add(doc);
-                    continue;
+                    unusedList.add(doc);
                 }
-            } else {
-                //2. Checkbox not selected
+            }
 
-                //Check if Document Name was selected
-                if (filter.getDocumentName() != null)
-                {
-                    //If document found break immediately,
-                    // because there can only be one document with that name
-                    if (doc.getName().equals(filter.getDocumentName())) {
-                        resultList.add(doc);
-                        break;
+
+            //Check if DocumentName was entered
+            if (filter.getDocumentName() != null) {
+                if (doc.getName().contains(filter.getDocumentName())) {
+                    docNameList.add(doc);
+                }
+            }
+
+
+            //Check if Username filter was entered
+            if (filter.getUsername() != null) {
+                //Get all entered usernames
+
+                String [] usernames = filter.getUsername().split(",");
+                //Get all documents with the given user
+                for (String user: usernames) {
+                    for (AnnotationDocument annotationDocument : allAnnotationDocuments) {
+                        if (annotationDocument.getUser().equals(user)
+                            && annotationDocument.getName().equals(doc.getName()) &&
+                            !annotationDocument.getState().equals
+                                (AnnotationDocumentState.NEW)) {
+                            userNameList.add(doc);
+                            break;
+                        }
                     }
+                }
 
+            }
+
+            //Check if one of the date fields are selected and the document
+            // has a created value
+
+            if ((filter.getFrom() != null || filter.getTo() != null)
+                && doc.getUpdated() != null) {
+
+                //between selected
+                if (filter.getFrom() != null && filter.getTo() != null) {
+                    if (filter.getFrom().compareTo(filter.getTo()) >= 0) {
+                        if (doc.getUpdated().compareTo(filter.getTo()) > 0 &&
+                            doc.getUpdated().compareTo(filter.getFrom()) <= 0) {
+                            dateList.add(doc);
+                        }
+                    }
+                    if (doc.getUpdated().compareTo(filter.getFrom()) > 0 &&
+                        doc.getUpdated().compareTo(filter.getTo()) <= 0) {
+                        dateList.add(doc);
+                    }
+                    //From selected
+                } else if (filter.getFrom() != null) {
+                    if (doc.getUpdated().compareTo(filter.getFrom()) >= 0) {
+                        dateList.add(doc);
+                    }
                 } else {
-
-                    //Check if Username filter was entered
-                    if (filter.getUsername() != null)
-                    {
-                        //Get all documents with the given user
-                        for (AnnotationDocument annotationDocument : allAnnotationDocuments) {
-
-                            if (annotationDocument.getUser().equals(filter.getUsername())
-                                && annotationDocument.getName().equals(doc.getName()) &&
-                                !annotationDocument.getState().equals
-                                    (AnnotationDocumentState.NEW)) {
-                                userNameList.add(doc);
-                                break;
-                            }
-                        }
-                    }
-
-                    //Check if one of the date fields are selected and the document
-                    // has a created value
-                    if ((filter.getFrom() != null || filter.getTo() != null)
-                        && doc.getCreated() != null)
-                    {
-                        //between selected
-                        if (filter.getFrom() != null && filter.getTo() != null)
-                        {
-                            if (filter.getFrom().compareTo(filter.getTo()) >= 0) {
-                                if (doc.getCreated().compareTo(filter.getTo()) > 0 &&
-                                    doc.getCreated().compareTo(filter.getFrom()) <= 0)
-                                {
-                                    dateList.add(doc);
-                                }
-                            }
-                            if (doc.getCreated().compareTo(filter.getFrom()) > 0 &&
-                                doc.getCreated().compareTo(filter.getTo()) <= 0)
-                            {
-                                dateList.add(doc);
-                            }
-                            //From selected
-                        } else if (filter.getFrom() != null) {
-                            if (doc.getCreated().compareTo(filter.getFrom()) >= 0)
-                            {
-                                dateList.add(doc);
-                            }
-                        } else {
-                            //Until
-                            if (doc.getCreated().compareTo(filter.getTo()) <= 0)
-                            {
-                                dateList.add(doc);
-                            }
-                        }
+                    //Until
+                    if (doc.getUpdated().compareTo(filter.getTo()) <= 0) {
+                        dateList.add(doc);
                     }
                 }
-
             }
         }
 
-        //Only if Document name was not entered and the checkbox is not selected
-        if (filter.getSelected().equals("false") && filter.getDocumentName() == null)
-        {
-            //Merge of the Lists
-            if (userNameList.size() > 0 || filter.getUsername() != null)
-            {
-                if (dateList.size() > 0)
-                {
-                    for (SourceDocument aDoc: userNameList)
-                    {
-                        if (dateList.contains(aDoc))
-                        {
-                            resultList.add(aDoc);
-                        }
-                    }
-                } else {
-                    resultList = userNameList;
-                }
+        //Schnittmenge of the lists
+        List<List<SourceDocument>> finalList = new ArrayList<>();
+        if (dateList.size() > 0 || filter.getFrom() != null || filter.getTo() != null) {
+            finalList.add(dateList);
+        }
 
-            } else if (dateList.size() > 0 || filter.getFrom() != null || filter.getTo() != null)
-            {
-                resultList = dateList;
-            } else {
-                resultList = data;
-            }
+        if (docNameList.size() > 0 || filter.getDocumentName() != null) {
+            finalList.add(docNameList);
+        }
+
+        if (userNameList.size() > 0 || filter.getUsername() != null) {
+            finalList.add(userNameList);
+        }
+
+        if (unusedList.size() > 0 || filter.getSelected() == "true") {
+            finalList.add(unusedList);
+        }
+
+        for (int i = 0; i < finalList.size() - 1; i++) {
+            finalList.get(0).retainAll(finalList.get(i + 1));
+        }
+
+        if (finalList.size() == 0) {
+            resultList = data;
+        } else {
+            resultList = finalList.get(0);
         }
 
         return resultList;
@@ -348,6 +355,26 @@ public class DataProvider extends SortableDataProvider
 
     public List<SourceDocument> getShownDocuments() {
         return shownDocuments;
+    }
+
+    public String getUsersWorkingOnTheDocument(SourceDocument document)
+    {
+        List<String> users = new ArrayList<>();
+        for (AnnotationDocument doc: allAnnotationDocuments)
+        {
+            if (doc.getName().equals(document.getName())
+                && !doc.getState().equals(AnnotationDocumentState.NEW))
+            {
+                users.add(doc.getUser());
+            }
+        }
+        return String.join(",", users);
+    }
+
+
+    public Date lastAccessTimeForDocuement(SourceDocument doc)
+    {
+        return doc.getUpdated();
     }
 
 }

@@ -17,7 +17,7 @@
  */
 
 
-package de.tudarmstadt.ukp.inception.workload.dynamic.page;
+package de.tudarmstadt.ukp.inception.workload.dynamic.page.workload;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 
@@ -30,8 +30,6 @@ import javax.persistence.NoResultException;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
-import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -49,7 +47,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -72,31 +69,27 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.DefaultAnnotationsProperties;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.Filter;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.ImagePanel;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.ModalPanel;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadProperties;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
+
 
 
 @MountPath("/workload.html")
-public class MonitoringPage extends ApplicationPageBase
+public class DynamicWorkloadManagementPage extends ApplicationPageBase
 {
 
     private static final long serialVersionUID = 1180618893870240262L;
 
     //The Icons
     private static final ResourceReference META =
-        new PackageResourceReference(MonitoringPage.class, "book_open.png");
-
-    //Top Form
-    Form workload;
-
-    //Default Annotations value
-    private IModel<Integer> defaultAnnotations = new Model<>();
+        new PackageResourceReference(DynamicWorkloadManagementPage.class, "book_open.png");
 
     //Current Project
     private IModel<Project> currentProject = new Model<>();
@@ -110,12 +103,12 @@ public class MonitoringPage extends ApplicationPageBase
     private @SpringBean MenuItemRegistry menuItemService;
     private @SpringBean DocumentService documentService;
     private @SpringBean WorkloadProperties workloadProperties;
-
+    private @SpringBean DefaultAnnotationsProperties defaultAnnotations;
 
 
     //Default constructor, no project selected (only when workload.html
     // put directly in the browser without any parameters)
-    public MonitoringPage() {
+    public DynamicWorkloadManagementPage() {
         super();
         //Error, user is returned to home page, nothing else to do
         error("No Project selected, please enter the monitoring page only with a valid project reference");
@@ -123,63 +116,18 @@ public class MonitoringPage extends ApplicationPageBase
 
     }
 
-
-
     //Constructor with a project
-    public MonitoringPage(final PageParameters aPageParameters)
+    public DynamicWorkloadManagementPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
 
         //top form initialize
-        workload = new Form("workload");
+        Form<String> workload = new Form("workload");
         workload.setOutputMarkupId(true);
 
         //Get current Project
-        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
-        if (getProjectFromParameters(projectParameter).isPresent())
-        {
-            currentProject.setObject(getProjectFromParameters(projectParameter).get());
-        } else {
-            currentProject = null;
-        }
-
-
-        //Get the current user
-        User user = userRepository.getCurrentUser();
-        //Check if Project exists
-        if (currentProject != null)
-        {
-
-
-
-
-            //Check if user is allowed to see the monitoring page of this project
-            if (currentProject != null &&
-                !(projectService.isCurator(currentProject.getObject(), user)
-                || projectService.isManager(currentProject.getObject(), user)))
-            {
-                //Required even in case of error due to wicket
-                workload.add(new ModalWindow("modalWindow"));
-                workload.add(new NumberTextField("defaultDocumentsNumberTextField"));
-                workload.add(new EmptyPanel("dataTable"));
-                error("You have no permission to access project [" + currentProject.getObject().getId() + "]");
-                setResponsePage(getApplication().getHomePage());
-
-            } else {
-                initialize();
-            }
-
-        } else {
-            //Project does not exists, returning to homepage
-            error("Project [" + projectParameter + "] does not exist");
-            setResponsePage(getApplication().getHomePage());
-
-        }
-
-    }
-
-    public void initialize()
-    {
+        currentProject.setObject(getProjectFromParameters(aPageParameters.get
+            (PAGE_PARAM_PROJECT_ID)).get());
 
         //Header of the page
         Label name = new Label("name",currentProject.getObject().getName());
@@ -191,7 +139,11 @@ public class MonitoringPage extends ApplicationPageBase
         headers.add(getString("Document"));
         headers.add(getString("Finished"));
         headers.add(getString("Processed"));
+        headers.add(getString("Users"));
+        headers.add(getString("Updated"));
         headers.add(getString("Metadata"));
+
+        //13/05/2020 15:16:57 // Christoph
 
         //Data Provider for the table
         DataProvider dataProvider = new DataProvider(documentService.
@@ -199,40 +151,25 @@ public class MonitoringPage extends ApplicationPageBase
             headers, documentService.listAnnotationDocuments
             (currentProject.getObject()));
 
+
+
+
+
         //Init defaultDocumentsNumberTextField
         NumberTextField defaultNumberDocumentsTextField =
-            new NumberTextField("defaultDocumentsNumberTextField", Integer.class);
+            new NumberTextField("defaultDocumentsNumberTextField",
+                new Model<Integer>(), Integer.class);
 
         //Set minimum value for input
+        defaultNumberDocumentsTextField.setDefaultModel(new CompoundPropertyModel<>(6));
         defaultNumberDocumentsTextField.setMinimum(1);
-        //After upstream change
         defaultNumberDocumentsTextField.setRequired(true);
+        defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
+
+        workload.add(defaultNumberDocumentsTextField);
 
         ModalWindow modalWindow = new ModalWindow("modalWindow");
         workload.add(modalWindow);
-
-
-
-
-        //Get value for the project and set it accordingly
-        //TODO get correct value after upstream change
-        defaultNumberDocumentsTextField.setDefaultModel(new CompoundPropertyModel<Integer>(6));
-        defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
-
-        //add AJAX event handler on changing input value
-        defaultNumberDocumentsTextField.add(new OnChangeAjaxBehavior()
-        {
-            private static final long serialVersionUID = 2607214157084529408L;
-
-            @Override
-            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
-            {
-                defaultAnnotations.setObject(Integer.parseInt
-                    (defaultNumberDocumentsTextField.getInput()));
-            }
-        });
-
-        workload.add(defaultNumberDocumentsTextField);
 
         //Columns of the table
         List<IColumn> columns = new ArrayList<>();
@@ -240,33 +177,6 @@ public class MonitoringPage extends ApplicationPageBase
         //Filter properties
         FilterForm<Filter> filter = new FilterForm<>(getString("filter"), dataProvider);
         filter.setOutputMarkupId(true);
-
-        //Filter Textfields and their AJAX events
-        TextField<String> userFilterTextField = new TextField("userFilter",
-            PropertyModel.of(dataProvider, "filter.username"), String.class);
-
-        userFilterTextField.add(new AjaxFormComponentUpdatingBehavior("onchange") {
-            @Override
-            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
-                ajaxRequestTarget.add(workload);
-            }
-        });
-
-        TextField<String> documentFilterTextField = new TextField("documentFilter",
-                PropertyModel.of(dataProvider, "filter.documentName"), String.class);
-
-        documentFilterTextField.add(new AjaxFormComponentUpdatingBehavior("onchange") {
-                @Override
-                protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
-                    ajaxRequestTarget.add(workload);
-                }
-            });
-
-
-        workload.add(userFilterTextField);
-        workload.add(documentFilterTextField);
-
-
 
 
         //Each column creates TableMetaData
@@ -278,6 +188,13 @@ public class MonitoringPage extends ApplicationPageBase
         columns.add(new LambdaColumn<>(new ResourceModel(getString("Processed"))
             , getString("Processed"), aDocument -> dataProvider.
             getInProgressAmountForDocument((SourceDocument)aDocument)));
+        columns.add(new LambdaColumn<>(new ResourceModel(getString("Users"))
+            , getString("Users"), aDocument -> dataProvider.
+            getUsersWorkingOnTheDocument((SourceDocument)aDocument)));
+        columns.add(new LambdaColumn<>(new ResourceModel(getString("Updated"))
+            , getString("Updated"), aDocument -> dataProvider.
+            lastAccessTimeForDocuement((SourceDocument)aDocument)));
+
 
         //Own column type, contains only a clickable image (AJAX event),
         //creates a small panel dialog containing metadata
@@ -315,7 +232,7 @@ public class MonitoringPage extends ApplicationPageBase
 
 
                         //Set contents of the modalWindow
-                        modalWindow.setContent(new ModalPanel(modalWindow.
+                        modalWindow.setContent(new WorkloadMetadataDialog(modalWindow.
                             getContentId(), doc, listUsersFinishedForDocument(doc),
                             listUsersInProgressForDocument(doc)));
 
@@ -338,141 +255,21 @@ public class MonitoringPage extends ApplicationPageBase
         filter.add(table);
 
 
-        //Checkbox for showing only unused source documents, disables other textfields
-        AjaxCheckBox unused = new AjaxCheckBox("unused",
-            PropertyModel.of(dataProvider,"filter.selected")) {
 
-            @Override
-            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
-
-                if (getDefaultModelObjectAsString().equals("false"))
-                {
-                    userFilterTextField.setEnabled(true);
-                    documentFilterTextField.setEnabled(true);
-                } else {
-                    userFilterTextField.setModelObject(null);
-                    documentFilterTextField.setModelObject(null);
-                    userFilterTextField.setEnabled(false);
-                    documentFilterTextField.setEnabled(false);
-                }
-                ajaxRequestTarget.add(userFilterTextField);
-                ajaxRequestTarget.add(documentFilterTextField);
-
-            }
-        };
-
-
-        unused.setOutputMarkupId(true);
-        workload.add(unused);
-
-
-        //Input dates
-        AjaxDatePicker dateFrom = new AjaxDatePicker("from",
-            PropertyModel.of(dataProvider,"filter.from"), "dd/MM/yyyy");
-        AjaxDatePicker dateTo = new AjaxDatePicker("to",
-            PropertyModel.of(dataProvider,"filter.to"),"dd/MM/yyyy");
-
-        dateFrom.setOutputMarkupId(true);
-        dateTo.setOutputMarkupId(true);
-
-        workload.add(dateFrom);
-        workload.add(dateTo);
-
-
-        //Date choices
-        List<String> dateChoice = new ArrayList<>();
-        dateChoice.add(getString("from"));
-        dateChoice.add(getString("until"));
-        dateChoice.add(getString("between"));
-
-        //Craete the radio button group
-        RadioChoice<String> dateChoices =
-            new RadioChoice<>("date"
-                , new Model<>(), dateChoice);
-        //Set default value for the group
-        dateChoices.setModel(new Model<>(getString("between")));
-
-        dateChoices.setOutputMarkupId(true);
-
-        //Update Behaviour on click, disable according date inputs and reset their values
-        dateChoices.add(new AjaxFormChoiceComponentUpdatingBehavior() {
-            @Override
-            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
-                if (getComponent().getDefaultModelObjectAsString().equals("from"))
-                {
-                    dateTo.setModelObject(null);
-                    dateTo.setEnabled(false);
-                    dateFrom.setEnabled(true);
-
-
-                } else if (getComponent().getDefaultModelObjectAsString().equals("until"))
-                {
-                    dateFrom.setModelObject(null);
-                    dateFrom.setEnabled(false);
-                    dateTo.setEnabled(true);
-
-                } else {
-                    dateTo.setEnabled(true);
-                    dateFrom.setEnabled(true);
-                }
-                ajaxRequestTarget.add(dateFrom);
-                ajaxRequestTarget.add(dateTo);
-            }
-        });
-
-        //add them to the form
-        workload.add(dateChoices);
-
-        //Submit button
-        Button submit = new AjaxButton(getString("Search"), Model.of("Search")) {
-            private static final long serialVersionUID = 3521172967850377971L;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget target) {
-                target.add(filter);
-            }
-        };
-
-        workload.add(submit);
-
-        //Reset button
-        Button reset = new AjaxButton(getString("Reset"), Model.of("Reset")) {
-            @Override
-            public void onSubmit(AjaxRequestTarget target) {
-                dateFrom.setEnabled(true);
-                dateTo.setEnabled(true);
-                dateTo.setModelObject(null);
-                unused.setModelObject(null);
-                userFilterTextField.setEnabled(true);
-                documentFilterTextField.setEnabled(true);
-                userFilterTextField.setModelObject(null);
-                documentFilterTextField.setModelObject(null);
-                dateFrom.setModelObject(null);
-                dateChoices.setModel(new Model<>(getString("between")));
-
-
-                target.add(userFilterTextField);
-                target.add(documentFilterTextField);
-                target.add(dateFrom);
-                target.add(dateTo);
-                target.add(unused);
-                target.add(dateChoices);
-            }
-        };
-
-        workload.add(reset);
 
         //Filter components with the table
         workload.add(filter);
 
+        Form<String> searchForm = createSearchForm(dataProvider);
+        searchForm.setOutputMarkupId(true);
+
+        workload.add(searchForm);
         //Add to the page
         add(workload);
 
     }
 
-
     //--------------------------------------- Helper methods -------------------------------------//
-
 
     //Return current project, required for several purposes
     private Optional<Project> getProjectFromParameters(StringValue projectParam)
@@ -521,4 +318,164 @@ public class MonitoringPage extends ApplicationPageBase
         return result;
     }
 
+    public Form<String> createSearchForm(DataProvider prov)
+    {
+        Form searchForm = new Form("searchForm");
+
+
+        //Filter Textfields and their AJAX events
+        TextField<String> userFilterTextField = new TextField("userFilter",
+            PropertyModel.of(prov, "filter.username"), String.class);
+
+        userFilterTextField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+
+        TextField<String> documentFilterTextField = new TextField("documentFilter",
+            PropertyModel.of(prov, "filter.documentName"), String.class);
+
+        documentFilterTextField.add(new LambdaAjaxFormComponentUpdatingBehavior("test"));
+
+
+        searchForm.add(userFilterTextField);
+        searchForm.add(documentFilterTextField);
+
+
+
+
+        //Input dates
+        AjaxDatePicker dateFrom = new AjaxDatePicker("from",
+            PropertyModel.of(prov,"filter.from"), "MM/dd/yyyy");
+        AjaxDatePicker dateTo = new AjaxDatePicker("to",
+            PropertyModel.of(prov,"filter.to"),"MM/dd/yyyy");
+
+        dateFrom.setOutputMarkupId(true);
+        dateTo.setOutputMarkupId(true);
+
+        searchForm.add(dateFrom);
+        searchForm.add(dateTo);
+
+
+        //Date choices
+        List<String> dateChoice = new ArrayList<>();
+        dateChoice.add(getString("from"));
+        dateChoice.add(getString("until"));
+        dateChoice.add(getString("between"));
+
+        //Craete the radio button group
+        RadioChoice<String> dateChoices =
+            new RadioChoice<>("date"
+                , new Model<>(), dateChoice);
+        //Set default value for the group
+        dateChoices.setModel(new Model<>(getString("between")));
+
+        dateChoices.setOutputMarkupId(true);
+
+        //Update Behaviour on click, disable according date inputs and reset their values
+        dateChoices.add(new AjaxFormChoiceComponentUpdatingBehavior() {
+            @Override
+            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
+                if (getComponent().getDefaultModelObjectAsString().equals("from"))
+                {
+                    dateTo.setModelObject(null);
+                    dateTo.setEnabled(false);
+                    dateFrom.setEnabled(true);
+
+
+                } else if (getComponent().getDefaultModelObjectAsString().equals("until"))
+                {
+                    dateFrom.setModelObject(null);
+                    dateFrom.setEnabled(false);
+                    dateTo.setEnabled(true);
+
+                } else {
+                    dateTo.setEnabled(true);
+                    dateFrom.setEnabled(true);
+                }
+                ajaxRequestTarget.add(dateFrom);
+                ajaxRequestTarget.add(dateTo);
+            }
+        });
+
+        //add them to the form
+        searchForm.add(dateChoices);
+
+        //Submit button
+        Button submit = new AjaxButton(getString("Search"), Model.of("Search")) {
+            private static final long serialVersionUID = 3521172967850377971L;
+
+            @Override
+            protected void onSubmit(AjaxRequestTarget target) {
+                target.add(table);
+            }
+        };
+
+        searchForm.add(submit);
+
+        //Checkbox for showing only unused source documents, disables other textfields
+        AjaxCheckBox unused = new AjaxCheckBox("unused",
+            PropertyModel.of(prov,"filter.selected")) {
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
+
+                if (getDefaultModelObjectAsString().equals("false"))
+                {
+                    userFilterTextField.setEnabled(true);
+                    documentFilterTextField.setEnabled(true);
+                    dateFrom.setEnabled(true);
+                    dateTo.setEnabled(true);
+                    dateChoices.setEnabled(true);
+
+                } else {
+                    userFilterTextField.setModelObject(null);
+                    userFilterTextField.setEnabled(false);
+                    dateFrom.setModelObject(null);
+                    dateFrom.setEnabled(false);
+                    dateTo.setModelObject(null);
+                    dateTo.setEnabled(false);
+                    dateChoices.setEnabled(false);
+                }
+                ajaxRequestTarget.add(dateFrom);
+                ajaxRequestTarget.add(dateTo);
+                ajaxRequestTarget.add(dateChoices);
+                ajaxRequestTarget.add(userFilterTextField);
+                ajaxRequestTarget.add(documentFilterTextField);
+
+            }
+        };
+
+
+        unused.setOutputMarkupId(true);
+        searchForm.add(unused);
+
+        //Reset button
+        Button reset = new AjaxButton(getString("Reset"), Model.of("Reset")) {
+            @Override
+            public void onSubmit(AjaxRequestTarget target) {
+                dateFrom.setEnabled(true);
+                dateTo.setEnabled(true);
+                dateTo.setModelObject(null);
+                unused.setModelObject(null);
+                userFilterTextField.setEnabled(true);
+                documentFilterTextField.setEnabled(true);
+                userFilterTextField.setModelObject(null);
+                documentFilterTextField.setModelObject(null);
+                dateFrom.setModelObject(null);
+                dateChoices.setModel(new Model<>(getString("between")));
+
+
+                target.add(userFilterTextField);
+                target.add(documentFilterTextField);
+                target.add(dateFrom);
+                target.add(dateTo);
+                target.add(unused);
+                target.add(dateChoices);
+            }
+        };
+
+        searchForm.add(reset);
+
+        return searchForm;
+    }
 }
+
+

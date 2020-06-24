@@ -26,13 +26,13 @@ import org.apache.wicket.markup.html.panel.Panel;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 
-public class ModalPanel extends Panel
+public class WorkloadMetadataDialog extends Panel
 {
 
     private static final long serialVersionUID = 2797336810690526392L;
 
-    public ModalPanel(String aID, SourceDocument aDocument,
-                      List<String> finshedUsers, List<String> inProgressUser)
+    public WorkloadMetadataDialog(String aID, SourceDocument aDocument,
+                                  List<String> finshedUsers, List<String> inProgressUser)
     {
         super(aID);
 

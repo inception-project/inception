@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
+
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 
 @Component
 @Order(300)
@@ -38,6 +40,7 @@ public class MonitoringPageMenuItem implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
+    private @Autowired WorkloadProperties workloadProperties;
 
     @Override
     public String getPath()
@@ -76,7 +79,8 @@ public class MonitoringPageMenuItem implements MenuItem
         User user = userRepo.getCurrentUser();
         return (projectService.isCurator(project, user)
                 || projectService.isProjectAdmin(project, user))
-                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode());
+                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())
+                && !workloadProperties.isWorkloadManagerActive();
     }
     
     @Override

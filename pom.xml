@@ -172,7 +172,7 @@
       <name>jcenter</name>
       <url>https://jcenter.bintray.com</url>
       <snapshots>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
