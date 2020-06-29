@@ -18,9 +18,16 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
+/**
+ * @deprecated This needs to be replaced by a proper extension point for workload management
+ *             strategies as soon as possible.
+ */
+@Deprecated
 public interface WorkflowProperties
 {
     boolean isWorkflowManagerActive();
+
     void setActive(Boolean active);
+
     String getProperty();
 }

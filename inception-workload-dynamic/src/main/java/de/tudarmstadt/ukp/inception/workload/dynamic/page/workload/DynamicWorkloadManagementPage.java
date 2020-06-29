@@ -15,8 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.workload;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
@@ -27,26 +25,24 @@ import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
-import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
-import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.HeaderlessColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.HeadersToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigationToolbar;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.FilterForm;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
-import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -54,14 +50,13 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -70,13 +65,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.DefaultAnnotationsProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DataProvider;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.Filter;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.ImagePanel;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
 
 
@@ -84,27 +78,20 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDia
 @MountPath("/workload.html")
 public class DynamicWorkloadManagementPage extends ApplicationPageBase
 {
-
     private static final long serialVersionUID = 1180618893870240262L;
 
-    //The Icons
-    private static final ResourceReference META =
-        new PackageResourceReference(DynamicWorkloadManagementPage.class, "book_open.png");
-
-    //Current Project
     private IModel<Project> currentProject = new Model<>();
 
-    //Datatable
-    private DataTable table;
-
-    //SpringBeans
+    private DataTable<SourceDocument, String> table;
+    private ModalWindow infoDialog;
+    
+    // SpringBeans
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
     private @SpringBean MenuItemRegistry menuItemService;
     private @SpringBean DocumentService documentService;
     private @SpringBean WorkloadProperties workloadProperties;
     private @SpringBean DefaultAnnotationsProperties defaultAnnotations;
-
 
     //Default constructor, no project selected (only when workload.html
     // put directly in the browser without any parameters)
@@ -113,7 +100,6 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         //Error, user is returned to home page, nothing else to do
         error("No Project selected, please enter the monitoring page only with a valid project reference");
         setResponsePage(getApplication().getHomePage());
-
     }
 
     //Constructor with a project
@@ -121,18 +107,13 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
     {
         super(aPageParameters);
 
-        //top form initialize
-        Form<String> workload = new Form("workload");
-        workload.setOutputMarkupId(true);
-
         //Get current Project
         currentProject.setObject(getProjectFromParameters(aPageParameters.get
             (PAGE_PARAM_PROJECT_ID)).get());
 
         //Header of the page
-        Label name = new Label("name",currentProject.getObject().getName());
+        Label name = new Label("name", currentProject.getObject().getName());
         add(name);
-
 
         //Headers of the table
         List<String> headers = new ArrayList<>();
@@ -141,7 +122,7 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         headers.add(getString("Processed"));
         headers.add(getString("Users"));
         headers.add(getString("Updated"));
-        headers.add(getString("Metadata"));
+        headers.add(getString("actions"));
 
         //13/05/2020 15:16:57 // Christoph
 
@@ -151,13 +132,9 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
             headers, documentService.listAnnotationDocuments
             (currentProject.getObject()));
 
-
-
-
-
         //Init defaultDocumentsNumberTextField
-        NumberTextField defaultNumberDocumentsTextField =
-            new NumberTextField("defaultDocumentsNumberTextField",
+        NumberTextField<Integer> defaultNumberDocumentsTextField =
+            new NumberTextField<>("defaultDocumentsNumberTextField",
                 new Model<Integer>(), Integer.class);
 
         //Set minimum value for input
@@ -165,108 +142,69 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         defaultNumberDocumentsTextField.setMinimum(1);
         defaultNumberDocumentsTextField.setRequired(true);
         defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
+        add(defaultNumberDocumentsTextField);
 
-        workload.add(defaultNumberDocumentsTextField);
-
-        ModalWindow modalWindow = new ModalWindow("modalWindow");
-        workload.add(modalWindow);
+        infoDialog = new ModalWindow("infoDialog");
+        add(infoDialog);
 
         //Columns of the table
-        List<IColumn> columns = new ArrayList<>();
-
-        //Filter properties
-        FilterForm<Filter> filter = new FilterForm<>(getString("filter"), dataProvider);
-        filter.setOutputMarkupId(true);
-
-
         //Each column creates TableMetaData
-        columns.add(new LambdaColumn<>(new ResourceModel(getString("Document"))
-            , getString("Document"), SourceDocument::getName));
-        columns.add(new LambdaColumn<>(new ResourceModel(getString("Finished"))
-            , getString("Finished"), aDocument -> dataProvider.getFinishedAmountForDocument
-            ((SourceDocument)aDocument)));
-        columns.add(new LambdaColumn<>(new ResourceModel(getString("Processed"))
-            , getString("Processed"), aDocument -> dataProvider.
-            getInProgressAmountForDocument((SourceDocument)aDocument)));
-        columns.add(new LambdaColumn<>(new ResourceModel(getString("Users"))
-            , getString("Users"), aDocument -> dataProvider.
-            getUsersWorkingOnTheDocument((SourceDocument)aDocument)));
-        columns.add(new LambdaColumn<>(new ResourceModel(getString("Updated"))
-            , getString("Updated"), aDocument -> dataProvider.
-            lastAccessTimeForDocuement((SourceDocument)aDocument)));
-
+        List<IColumn<SourceDocument, String>> columns = new ArrayList<>();
+        columns.add(new LambdaColumn<>(new ResourceModel("Document"), SourceDocument::getName));
+        columns.add(new LambdaColumn<>(new ResourceModel("Finished"), _doc -> dataProvider
+                .getFinishedAmountForDocument((SourceDocument) _doc)));
+        columns.add(new LambdaColumn<>(new ResourceModel("Processed"), _doc -> dataProvider
+                .getInProgressAmountForDocument((SourceDocument) _doc)));
+        columns.add(new LambdaColumn<>(new ResourceModel("Users"), _doc -> dataProvider
+                .getUsersWorkingOnTheDocument((SourceDocument) _doc)));
+        columns.add(new LambdaColumn<>(new ResourceModel("Updated"), _doc -> 
+                dataProvider.lastAccessTimeForDocuement((SourceDocument) _doc)));
 
         //Own column type, contains only a clickable image (AJAX event),
         //creates a small panel dialog containing metadata
-        columns.add(new PropertyColumn<SourceDocument,String>(new Model(getString("Metadata")),
-            getString("Metadata"))
+        columns.add(new HeaderlessColumn<SourceDocument, String>()
         {
             private static final long serialVersionUID = 1L;
+            
             @Override
-            public void populateItem(Item aItem, String aID, IModel aModel)
+            public void populateItem(
+                    Item<ICellPopulator<SourceDocument>> aItem,
+                    String componentId, IModel<SourceDocument> rowModel)
             {
-
-                //Add the Icon
-                ImagePanel icon = new ImagePanel(aID, META);
-                icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
-                aItem.add(icon);
-
-                //Click event in the metadata column
-                aItem.add(new AjaxEventBehavior("click")
-                {
-                    private static final long serialVersionUID = 7624208971279187266L;
-
-                    @Override
-                    protected void onEvent(AjaxRequestTarget aTarget)
-                    {
-
-
-                        //Get the current selected Row
-                        Item rowItem = aItem.findParent(Item.class);
-                        int rowIndex = rowItem.getIndex();
-                        SourceDocument doc = dataProvider.getShownDocuments().
-                            get((int)(table.getCurrentPage() * table.getItemsPerPage()) + rowIndex);
-
-                        //Create the modalWindow
-                        modalWindow.setTitle("Metadata of document: " + doc.getName());
-
-
-                        //Set contents of the modalWindow
-                        modalWindow.setContent(new WorkloadMetadataDialog(modalWindow.
-                            getContentId(), doc, listUsersFinishedForDocument(doc),
-                            listUsersInProgressForDocument(doc)));
-
-                        //Open the dialog
-                        modalWindow.show(aTarget);
-                    }
-                });
-            }
+                Fragment fragment = new Fragment(componentId, "infoColumn",
+                        DynamicWorkloadManagementPage.this);
+                fragment.add(new LambdaAjaxLink("showInfoDialog", _target -> 
+                        actionShowInfoDialog(_target, rowModel)));
+                aItem.add(fragment);
+            };
         });
 
-        //The DataTable
-        table = new DataTable("dataTable", columns, dataProvider, 20);
+        table = new DataTable<>("dataTable", columns, dataProvider, 20);
         table.setOutputMarkupId(true);
-
-
         table.addTopToolbar(new NavigationToolbar(table));
-        table.addTopToolbar(new HeadersToolbar(table, dataProvider));
+        table.addTopToolbar(new HeadersToolbar<>(table, dataProvider));
 
-        //Add the table to the filter form
-        filter.add(table);
+        add(table);
 
+        add(createSearchForm(dataProvider));
+        
+    }
+    
+    private void actionShowInfoDialog(AjaxRequestTarget aTarget, IModel<SourceDocument> aDoc)
+    {
+        //Get the current selected Row
+        SourceDocument doc = aDoc.getObject();
 
+        //Create the modalWindow
+        infoDialog.setTitle("Metadata of document: " + doc.getName());
 
+        //Set contents of the modalWindow
+        infoDialog.setContent(new WorkloadMetadataDialog(infoDialog.
+            getContentId(), doc, listUsersFinishedForDocument(doc),
+            listUsersInProgressForDocument(doc)));
 
-        //Filter components with the table
-        workload.add(filter);
-
-        Form<String> searchForm = createSearchForm(dataProvider);
-        searchForm.setOutputMarkupId(true);
-
-        workload.add(searchForm);
-        //Add to the page
-        add(workload);
-
+        //Open the dialog
+        infoDialog.show(aTarget);
     }
 
     //--------------------------------------- Helper methods -------------------------------------//
@@ -318,34 +256,29 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         return result;
     }
 
-    public Form<String> createSearchForm(DataProvider prov)
+    public Form<Void> createSearchForm(DataProvider prov)
     {
-        Form searchForm = new Form("searchForm");
-
+        Form<Void> searchForm = new Form<>("searchForm");
+        
+        searchForm.setOutputMarkupId(true);
 
         //Filter Textfields and their AJAX events
-        TextField<String> userFilterTextField = new TextField("userFilter",
+        TextField<String> userFilterTextField = new TextField<>("userFilter",
             PropertyModel.of(prov, "filter.username"), String.class);
 
         userFilterTextField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
-        TextField<String> documentFilterTextField = new TextField("documentFilter",
+        TextField<String> documentFilterTextField = new TextField<>("documentFilter",
             PropertyModel.of(prov, "filter.documentName"), String.class);
-
-        documentFilterTextField.add(new LambdaAjaxFormComponentUpdatingBehavior("test"));
-
 
         searchForm.add(userFilterTextField);
         searchForm.add(documentFilterTextField);
 
-
-
-
         //Input dates
-        AjaxDatePicker dateFrom = new AjaxDatePicker("from",
-            PropertyModel.of(prov,"filter.from"), "MM/dd/yyyy");
-        AjaxDatePicker dateTo = new AjaxDatePicker("to",
-            PropertyModel.of(prov,"filter.to"),"MM/dd/yyyy");
+        AjaxDatePicker dateFrom = new AjaxDatePicker("from", PropertyModel.of(prov, "filter.from"),
+                "MM/dd/yyyy");
+        AjaxDatePicker dateTo = new AjaxDatePicker("to", PropertyModel.of(prov, "filter.to"),
+                "MM/dd/yyyy");
 
         dateFrom.setOutputMarkupId(true);
         dateTo.setOutputMarkupId(true);
@@ -353,40 +286,35 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         searchForm.add(dateFrom);
         searchForm.add(dateTo);
 
-
-        //Date choices
+        // Date choices
+        // FIXME: This should use an Enum value as model - and I18N should be used to map the 
+        // enum's values to the display values
         List<String> dateChoice = new ArrayList<>();
         dateChoice.add(getString("from"));
         dateChoice.add(getString("until"));
         dateChoice.add(getString("between"));
 
-        //Craete the radio button group
-        RadioChoice<String> dateChoices =
-            new RadioChoice<>("date"
-                , new Model<>(), dateChoice);
-        //Set default value for the group
-        dateChoices.setModel(new Model<>(getString("between")));
-
+        //Create the radio button group
+        BootstrapRadioChoice<String> dateChoices = new BootstrapRadioChoice<>("date",
+                new Model<>(getString("between")), dateChoice);
+        dateChoices.setInline(true);
         dateChoices.setOutputMarkupId(true);
 
         //Update Behaviour on click, disable according date inputs and reset their values
         dateChoices.add(new AjaxFormChoiceComponentUpdatingBehavior() {
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
-                if (getComponent().getDefaultModelObjectAsString().equals("from"))
-                {
+                if (getComponent().getDefaultModelObjectAsString().equals("from")) {
                     dateTo.setModelObject(null);
                     dateTo.setEnabled(false);
                     dateFrom.setEnabled(true);
-
-
-                } else if (getComponent().getDefaultModelObjectAsString().equals("until"))
-                {
+                }
+                else if (getComponent().getDefaultModelObjectAsString().equals("until")) {
                     dateFrom.setModelObject(null);
                     dateFrom.setEnabled(false);
                     dateTo.setEnabled(true);
-
-                } else {
+                }
+                else {
                     dateTo.setEnabled(true);
                     dateFrom.setEnabled(true);
                 }
@@ -424,7 +352,6 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
                     dateFrom.setEnabled(true);
                     dateTo.setEnabled(true);
                     dateChoices.setEnabled(true);
-
                 } else {
                     userFilterTextField.setModelObject(null);
                     userFilterTextField.setEnabled(false);
@@ -439,10 +366,8 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
                 ajaxRequestTarget.add(dateChoices);
                 ajaxRequestTarget.add(userFilterTextField);
                 ajaxRequestTarget.add(documentFilterTextField);
-
             }
         };
-
 
         unused.setOutputMarkupId(true);
         searchForm.add(unused);
@@ -477,5 +402,3 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         return searchForm;
     }
 }
-
-

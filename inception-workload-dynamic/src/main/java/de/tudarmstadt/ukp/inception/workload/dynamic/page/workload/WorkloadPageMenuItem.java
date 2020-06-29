@@ -15,15 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.menu;
-
-
+package de.tudarmstadt.ukp.inception.workload.dynamic.page.workload;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -32,21 +29,35 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.DefaultAnnotationsProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
-import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.DynamicWorkloadManagementPage;
 
-
-@Component
+/**
+ * Menu item to access the dynamic workload management page.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DynamicWorkloadManagerAutoConfiguration#workloadPageMenuItem}.
+ * </p>
+ */
 @Order(500)
 public class WorkloadPageMenuItem implements MenuItem
 {
+    private final UserDao userRepo;
+    private final ProjectService projectService;
+    private final WorkloadProperties workloadProperties;
+    private final DefaultAnnotationsProperties defaultAnnotations;
 
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired WorkloadProperties workloadProperties;
-    private @Autowired DefaultAnnotationsProperties defaultAnnotations;
-
+    @Autowired
+    public WorkloadPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+            WorkloadProperties aWorkloadProperties,
+            DefaultAnnotationsProperties aDefaultAnnotations)
+    {
+        userRepo = aUserRepo;
+        projectService = aProjectService;
+        workloadProperties = aWorkloadProperties;
+        defaultAnnotations = aDefaultAnnotations;
+    }
 
     @Override
     public String getPath()

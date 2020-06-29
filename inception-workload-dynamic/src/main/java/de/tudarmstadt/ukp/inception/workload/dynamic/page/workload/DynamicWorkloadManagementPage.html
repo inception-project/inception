@@ -18,149 +18,133 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org" xmlns="http://www.w3.org/1999/html" lang="">
 <head>
-  <wicket:head>
-    <style type="text/css">
+<wicket:head>
+  <style type="text/css">
+.page-content {
+ overflow: auto;
+}
 
-       .page-content {
-           overflow: auto;
-       }
+.table-striped>tbody>tr:nth-child(2n+1)>td, .table-striped>tbody>tr:nth-child(2n+1)>th
+ {
+ background-color: lightgray;
+}
 
-      .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
-          background-color: lightgray;
-      }
-
-       .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
-           background-color: burlywood;
-       }
-
-       input[type="radio"], label {
-           vertical-align: middle;
-           padding: 4px;
-           margin: 4px;
-       }
-
-
-
-    </style>
-  </wicket:head>
+.table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
+ background-color: burlywood;
+}
+</style>
+</wicket:head>
 </head>
 <body>
   <wicket:extend>
     <div class="flex-content flex-v-container flex-gutter">
       <div class="page-header">
-        <h1><wicket:container wicket:id="name"/></h1>
+        <h1>
+          <wicket:container wicket:id="name" />
+        </h1>
       </div>
-      <form wicket:id="workload" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-          <div class="row row-cols-2">
-            <div class="col-sm-4"></div>
-            <div class="col-sm-4">
-                <div class="card flex-gutter m-2" style="padding: 10px">
+      <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+        <div class="flex-content card m-2 ">
+          <div class="card-header">
+            <wicket:message key="documentStatus" />
+            <div class="actions">
+              <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
+                  type="button" data-toggle="dropdown">
+                  <i class="fas fa-filter"></i>&nbsp;
+                  <wicket:message key="Filter" />
+                </button>
+                <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 800px;">
+                  <form wicket:id="searchForm">
                     <div class="card-header">
-                        <wicket:message key="settings"/>
+                      <wicket:message key="filterHeader" />
                     </div>
                     <div class="card-body">
-                        <label class="col-form-label col-sm-8">
-                            <wicket:message key="defaultDocumentsLabel"/>
-                        </label>
-                        <label class="col-sm-2">
-                            <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control" style="text-align: right;"/>
-                        </label>
+                      <div class="form-group form-row">
+                        <label class="col-form-label col-sm-4"> 
+                          <wicket:message key="userFilterText" />
+                        </label> 
+                        <div class="col-sm-8">
+                          <input wicket:id="userFilter" type="text" class="form-control" />
+                        </div>
+                      </div>
+                      <div class="form-group form-row">
+                        <label class="col-form-label col-sm-4">
+                          <wicket:message key="documentFilterText" />
+                        </label> 
+                        <div class="col-sm-8">
+                          <input wicket:id="documentFilter" type="text" class="form-control" />
+                        </div>
+                      </div>
+                      <div class="form-group form-row">
+                        <label class="col-form-label col-sm-4">
+                          <wicket:message key="dateFilterText" />
+                        </label> 
+                        <div class="col-sm-8">
+                          <span wicket:id="date"></span>
+                        </div>
+                      </div>
+                      <div class="form-group form-row">
+                        <div class="offset-sm-4 col-sm-8">
+                          <input class="bootstrap-datetimepicker-widget" wicket:id="from" type="date" />
+                          <input class="bootstrap-datetimepicker-widget" wicket:id="to" type="date" />
+                        </div>
+                      </div>
+                      <div class="form-group form-row">
+                        <div class="offset-sm-4 col-sm-8">
+                          <div class="form-check">
+                            <input wicket:id="unused" class="form-check-input" type="checkbox"> 
+                            <label wicket:for="unused" class="form-check-label" >
+                              <wicket:label key="unused"/>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                    <div class="card-footer">
+                      <input class="btn btn-primary" wicket:id="Search" type="submit" /> 
+                      <input class="btn btn-primary" wicket:id="Reset" type="submit" />
+                    </div>
+                  </form>
                 </div>
-                <div class="card m-2 flex-gutter" style="padding: 10px">
+              </span>
+              <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button" data-toggle="dropdown">
+                  <i class="fas fa-cog"></i>&nbsp;<wicket:message key="settings" />
+                </button>
+                <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 800px;">
                   <div class="card-header">
-                    <wicket:message key="filterHeader"/>
+                    <wicket:message key="filterHeader" />
                   </div>
                   <div class="card-body">
-                    <div class="actions">
-                      <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button" data-toggle="dropdown">
-                           <i class="fas fa-plus-square"></i>&nbsp;
-                           <wicket:message key="Filter"/>
-                        </button>
-                        <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 800px;">
-                          <form wicket:id="searchForm">
-                            <div class="card-header">
-                              <wicket:message key="filterHeader"/>
-                            </div>
-                            <div class="card-body">
-                              <div>
-                                <label class="col-form-label col-sm-4">
-                                  <wicket:message key="userFilterText"/>
-                                </label>
-                                <label>
-                                  <input wicket:id="userFilter" type="text" class="form-control"/>
-                                </label>
-                              </div>
-                              <div>
-                                <label class="col-form-label col-sm-4">
-                                  <wicket:message key="documentFilterText"/>
-                                </label>
-                                <label>
-                                  <input wicket:id="documentFilter" type="text" class="form-control"/>
-                                </label>
-                                  </div>
-                                <div>
-                                  <label class="col-form-label col-sm-4">
-                                <wicket:message key="dateFilterText"/>
-                                  </label>
-                                <span wicket:id="date"></span>
-                              </div>
-                                <div>
-                                  <label class="col-form-label col-sm-4"></label>
-                                  <label class="col-form-label">
-                                    <input class="bootstrap-datetimepicker-widget" wicket:id="from" type="date"/>
-                                    <input class="bootstrap-datetimepicker-widget" wicket:id="to" type="date"/>
-                                  </label>
-                                </div>
-                                <div>
-                                  <label class="col-form-label col-sm-4">
-                                    <wicket:message key="unused"/>
-                                  </label>
-                                  <label class="col-form-label col-sm-1">
-                                    <input wicket:id="unused" type="checkbox"/>
-                                  </label>
-                                </div>
-                                <div class="dropdown-divider"></div>
-                                  <input class="btn btn-primary" wicket:id="Search"  type="submit"/>
-                                  <input class="btn btn-primary" wicket:id="Reset"  type="submit"/>
-                              </div>
-                            </form>
-                           </div>
-                         </span>
-                       </div>
-                     </div>
+                    <div class="form-group form-row">
+                      <label class="col-form-label col-sm-4">
+                        <wicket:message key="defaultDocumentsLabel" />
+                      </label> 
+                      <div class="col-sm-8">
+                        <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control"/>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <form wicket:id="filter" class="flex-content flex-h-container flex-gutter">
-                <div class="flex-content card m-2 ">
-                  <div class="card-header">
-                    <wicket:message key="documentStatus"/>
-                  </div>
-                  <div class="card-body flex-content fit-child-snug">
-                      <table class="table table-sm table-hover table-striped" cellspacing="0" wicket:id="dataTable" align="center" style="text-align: center; overflow-x:auto;"></table>
-                  </div>
-              </div>
-          </form>
-          <div wicket:id="modalWindow"></div>
-      </form>
-    </div>
-  </wicket:extend>
-</body>
-</html>
-
-<!--
-
+              </span>
             </div>
           </div>
+          <div class="card-body flex-content fit-child-snug">
+            <table class="table table-sm table-hover table-striped" cellspacing="0"
+              wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">
+            </table>
+          </div>
         </div>
-          <div>
-
-
-      </form>
+        <div wicket:id="infoDialog"></div>
+      </div>
     </div>
+    <wicket:fragment wicket:id="infoColumn">
+      <button wicket:id="showInfoDialog" class="btn btn-sm btn-link" wicket:message="title:showInfo">
+        <i class="fas fa-info-circle"/>
+        <span class="d-none d-xl-inline"/>
+      </button>
+    </wicket:fragment>
   </wicket:extend>
 </body>
 </html>
--->

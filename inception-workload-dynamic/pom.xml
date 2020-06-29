@@ -47,6 +47,10 @@
         <groupId>javax.persistence</groupId>
         <artifactId>javax.persistence-api</artifactId>
       </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-core</artifactId>
+      </dependency>
 
       <!-- WICKET DEPENDENCIES -->
       <dependency>

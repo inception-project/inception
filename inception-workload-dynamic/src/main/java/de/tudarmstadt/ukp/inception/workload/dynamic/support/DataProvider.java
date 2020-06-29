@@ -18,12 +18,18 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
@@ -39,13 +45,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public class DataProvider extends SortableDataProvider
     <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
 {
-
-
     private static final long serialVersionUID = 4125678936105494485L;
+    
     private final List<String> headers;
     private final List<SourceDocument> data;
     private final IModel<List<SourceDocument>> model;
     private final List<AnnotationDocument> allAnnotationDocuments;
+   
     private List<SourceDocument> shownDocuments;
     private Filter filter;
 
@@ -76,52 +82,46 @@ public class DataProvider extends SortableDataProvider
                 return data;
             }
         };
-
-
     }
+    
     @Override
     public Iterator<SourceDocument> iterator(long first, long count)
     {
-
         //Apply Filter
         List<SourceDocument> newList = filterTable(data);
-
 
         //Apply sorting
         newList.sort((o1, o2) ->
         {
             int dir = getSort().isAscending() ? 1 : -1;
-            if (getSort().getProperty().equals(headers.get(0)))
-            {
+            if (getSort().getProperty().equals(headers.get(0))) {
                 return dir * (o1.getName().compareTo(o2.getName()));
-
-            } else if (getSort().getProperty().equals(headers.get(1)))
-            {
-                return dir * Integer.compare(
-                    getFinishedAmountForDocument(o1),
-                    getFinishedAmountForDocument(o2));
-
-            } else if (getSort().getProperty().equals(headers.get(2)))
-            {
-                return dir * Integer.compare(
-                    getInProgressAmountForDocument(o1),
-                    getInProgressAmountForDocument(o2));
-
-
-            } else if (getSort().getProperty().equals(headers.get(3))) {
+            }
+            else if (getSort().getProperty().equals(headers.get(1))) {
+                return dir * Long.compare(getFinishedAmountForDocument(o1),
+                        getFinishedAmountForDocument(o2));
+            }
+            else if (getSort().getProperty().equals(headers.get(2))) {
+                return dir * Long.compare(getInProgressAmountForDocument(o1),
+                        getInProgressAmountForDocument(o2));
+            }
+            else if (getSort().getProperty().equals(headers.get(3))) {
                 return dir * (Integer.compare(getUsersWorkingOnTheDocument(o1).length(),
-                    getUsersWorkingOnTheDocument(o2).length()));
+                        getUsersWorkingOnTheDocument(o2).length()));
 
-            } else if (getSort().getProperty().equals(headers.get(4))) {
+            }
+            else if (getSort().getProperty().equals(headers.get(4))) {
                 if (o1.getUpdated() == null) {
                     return dir;
-                } else if (o2.getUpdated() == null) {
+                }
+                else if (o2.getUpdated() == null) {
                     return dir * -1;
-                } else {
+                }
+                else {
                     return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
                 }
-
-            } else {
+            }
+            else {
                 return 0;
             }
         });
@@ -158,7 +158,7 @@ public class DataProvider extends SortableDataProvider
         model.detach();
     }
 
-    public List<SourceDocument> filterTable(List<SourceDocument> data)
+    public List<SourceDocument> filterTable(List<SourceDocument> aData)
     {
         List<SourceDocument> resultList = new ArrayList<>();
         List<SourceDocument> userNameList = new ArrayList<>();
@@ -171,7 +171,7 @@ public class DataProvider extends SortableDataProvider
             filter.setSelected("false");
         }
 
-        for (SourceDocument doc: data)
+        for (SourceDocument doc: aData)
         {
             // Unused documents selected
             if (filter.getSelected().equals("true")) {
@@ -265,7 +265,7 @@ public class DataProvider extends SortableDataProvider
         }
 
         if (finalList.size() == 0) {
-            resultList = data;
+            resultList = aData;
         } else {
             resultList = finalList.get(0);
         }
@@ -274,47 +274,33 @@ public class DataProvider extends SortableDataProvider
     }
 
 
-    //Helper method, returns for a document how often it is "finished" within the project
-    public int getFinishedAmountForDocument(
+    /**
+     * Helper method, returns for a document how often it is "finished" within the project
+     */
+    public long getFinishedAmountForDocument(
         SourceDocument aDocument)
     {
-        int amount = 0;
-        for (AnnotationDocument doc : allAnnotationDocuments)
-        {
-            if (aDocument.getName().equals(doc.getName()) &&
-                doc.getState().equals(AnnotationDocumentState.FINISHED) )
-            {
-                amount++;
-            }
-        }
-        return amount;
+        return allAnnotationDocuments.stream()
+                .filter(d -> d.getDocument().equals(aDocument) && d.getState().equals(FINISHED))
+                .count();
     }
 
-    //Helper methods, returns for a document how often it is
-    //currently "in progress" within the project
-    public int getInProgressAmountForDocument(
+    /**
+     * Helper methods, returns for a document how often it is currently "in progress" within the
+     * project.
+     */
+    public long getInProgressAmountForDocument(
         SourceDocument aDocument)
     {
-
-        int amount = 0;
-        for (AnnotationDocument doc : allAnnotationDocuments)
-        {
-            if (aDocument.getName().equals(doc.getName()) &&
-                doc.getState().equals(AnnotationDocumentState.IN_PROGRESS))
-            {
-                amount++;
-            }
-
-        }
-
-        return amount;
+        return allAnnotationDocuments.stream()
+            .filter(d -> d.getDocument().equals(aDocument) && d.getState().equals(IN_PROGRESS))
+            .count();
     }
 
 
     //Returns a random document out of all documents in the project.
     //Only a document is chosen which is not yet given to annotators more than the default number
     //per document number
-
     public SourceDocument getRandomDocument()
     {
         //Create an empty document
@@ -353,22 +339,15 @@ public class DataProvider extends SortableDataProvider
 
     }
 
-    public List<SourceDocument> getShownDocuments() {
-        return shownDocuments;
-    }
-
     public String getUsersWorkingOnTheDocument(SourceDocument document)
     {
-        List<String> users = new ArrayList<>();
-        for (AnnotationDocument doc: allAnnotationDocuments)
-        {
-            if (doc.getName().equals(document.getName())
-                && !doc.getState().equals(AnnotationDocumentState.NEW))
-            {
-                users.add(doc.getUser());
-            }
-        }
-        return String.join(",", users);
+        return allAnnotationDocuments.stream()
+            .filter(d -> d.getDocument().equals(document) && 
+                    !d.getState().equals(NEW) && 
+                    !!d.getState().equals(IGNORE))
+            .map(AnnotationDocument::getUser)
+            .sorted()
+            .collect(Collectors.joining(", "));
     }
 
 
@@ -376,6 +355,5 @@ public class DataProvider extends SortableDataProvider
     {
         return doc.getUpdated();
     }
-
 }
 

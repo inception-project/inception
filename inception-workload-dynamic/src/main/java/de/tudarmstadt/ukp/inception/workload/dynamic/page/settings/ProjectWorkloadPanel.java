@@ -29,6 +29,8 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 //Overall new Panel
 public class ProjectWorkloadPanel extends Panel
 {
+    private static final long serialVersionUID = -782553321089863385L;
+    
     private @Autowired WorkloadProperties workloadProperties;
     private @Autowired WorkflowProperties workflowProperties;
 

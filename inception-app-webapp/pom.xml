@@ -286,6 +286,7 @@
       <artifactId>webanno-doc</artifactId>
     </dependency>
     <dependency>
+      <!-- FIXME This module must not have a dependency on the workload-dynamic module! -->
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-workload-dynamic</artifactId>
     </dependency>
