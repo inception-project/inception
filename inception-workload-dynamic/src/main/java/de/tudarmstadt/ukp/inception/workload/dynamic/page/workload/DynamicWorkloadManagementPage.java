@@ -70,7 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.DefaultAnnotationsProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.DataProvider;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.TableContentProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
 
 
@@ -127,7 +127,7 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         //13/05/2020 15:16:57 // Christoph
 
         //Data Provider for the table
-        DataProvider dataProvider = new DataProvider(documentService.
+        TableContentProvider dataProvider = new TableContentProvider(documentService.
             listSourceDocuments(currentProject.getObject()),
             headers, documentService.listAnnotationDocuments
             (currentProject.getObject()));
@@ -150,12 +150,20 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         //Columns of the table
         //Each column creates TableMetaData
         List<IColumn<SourceDocument, String>> columns = new ArrayList<>();
-        columns.add(new LambdaColumn<>(new ResourceModel("Document"), getString("Document"), SourceDocument::getName));
-        columns.add(new LambdaColumn<>(new ResourceModel("Finished"), getString("Finished"), _doc -> dataProvider
+        columns.add(new LambdaColumn<>(new ResourceModel(
+            "Document"), getString("Document"),
+            SourceDocument::getName));
+        columns.add(new LambdaColumn<>(new ResourceModel(
+            "Finished"), getString("Finished"),
+            _doc -> dataProvider
                 .getFinishedAmountForDocument((SourceDocument) _doc)));
-        columns.add(new LambdaColumn<>(new ResourceModel("Processed"), getString("Processed"), _doc -> dataProvider
+        columns.add(new LambdaColumn<>(new ResourceModel(
+            "Processed"), getString("Processed"),
+            _doc -> dataProvider
                 .getInProgressAmountForDocument((SourceDocument) _doc)));
-        columns.add(new LambdaColumn<>(new ResourceModel("Users"), getString("Users"), _doc -> dataProvider
+        columns.add(new LambdaColumn<>(new ResourceModel(
+            "Users"), getString("Users"),
+            _doc -> dataProvider
                 .getUsersWorkingOnTheDocument((SourceDocument) _doc)));
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"), _doc -> 
                 dataProvider.lastAccessTimeForDocuement((SourceDocument) _doc)));
@@ -256,7 +264,7 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         return result;
     }
 
-    public Form<Void> createSearchForm(DataProvider prov)
+    public Form<Void> createSearchForm(TableContentProvider prov)
     {
         Form<Void> searchForm = new Form<>("searchForm");
         

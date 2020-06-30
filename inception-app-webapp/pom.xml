@@ -159,6 +159,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-io-text</artifactId>
     </dependency>
     <dependency>
@@ -284,11 +288,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-doc</artifactId>
-    </dependency>
-    <dependency>
-      <!-- FIXME This module must not have a dependency on the workload-dynamic module! -->
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-workload-dynamic</artifactId>
     </dependency>
 
     <!-- UIMA DEPENDENCIES -->
@@ -510,6 +509,10 @@
 	    <groupId>org.webjars.bower</groupId>
 	    <artifactId>jquery.scrollTo</artifactId>
 	</dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-workload-dynamic</artifactId>
+      </dependency>
   </dependencies>
   <build>
     <plugins>

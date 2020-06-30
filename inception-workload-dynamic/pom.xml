@@ -94,6 +94,10 @@
         <artifactId>spring-beans</artifactId>
       </dependency>
       <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+      </dependency>
+      <dependency>
         <groupId>org.danekja</groupId>
         <artifactId>jdk-serializable-functional</artifactId>
       </dependency>
@@ -102,8 +106,10 @@
         <artifactId>webanno-support</artifactId>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-ui-project</artifactId>
+        <groupId>de.agilecoders.wicket</groupId>
+        <artifactId>wicket-bootstrap-core</artifactId>
       </dependency>
+
+
     </dependencies>
 </project>

@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class DataProvider extends SortableDataProvider
+public class TableContentProvider extends SortableDataProvider
     <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
 {
     private static final long serialVersionUID = 4125678936105494485L;
@@ -57,7 +57,7 @@ public class DataProvider extends SortableDataProvider
 
     private int defaultAnnotations;
 
-    public DataProvider(
+    public TableContentProvider(
         List<SourceDocument> aData,
         List<String> headers, List<AnnotationDocument> aAllAnnotationDocuments)
     {
