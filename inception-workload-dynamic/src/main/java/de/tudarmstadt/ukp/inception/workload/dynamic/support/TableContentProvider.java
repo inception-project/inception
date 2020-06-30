@@ -351,7 +351,7 @@ public class TableContentProvider extends SortableDataProvider
     }
 
 
-    public Date lastAccessTimeForDocuement(SourceDocument doc)
+    public Date lastAccessTimeForDocument(SourceDocument doc)
     {
         return doc.getUpdated();
     }

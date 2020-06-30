@@ -166,7 +166,7 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
             _doc -> dataProvider
                 .getUsersWorkingOnTheDocument((SourceDocument) _doc)));
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"), _doc -> 
-                dataProvider.lastAccessTimeForDocuement((SourceDocument) _doc)));
+                dataProvider.lastAccessTimeForDocument((SourceDocument) _doc)));
 
         //Own column type, contains only a clickable image (AJAX event),
         //creates a small panel dialog containing metadata
