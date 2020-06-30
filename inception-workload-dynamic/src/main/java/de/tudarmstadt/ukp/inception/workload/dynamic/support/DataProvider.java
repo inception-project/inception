@@ -344,7 +344,7 @@ public class DataProvider extends SortableDataProvider
         return allAnnotationDocuments.stream()
             .filter(d -> d.getDocument().equals(document) && 
                     !d.getState().equals(NEW) && 
-                    !!d.getState().equals(IGNORE))
+                    !d.getState().equals(IGNORE))
             .map(AnnotationDocument::getUser)
             .sorted()
             .collect(Collectors.joining(", "));

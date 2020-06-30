@@ -150,12 +150,12 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         //Columns of the table
         //Each column creates TableMetaData
         List<IColumn<SourceDocument, String>> columns = new ArrayList<>();
-        columns.add(new LambdaColumn<>(new ResourceModel("Document"), SourceDocument::getName));
-        columns.add(new LambdaColumn<>(new ResourceModel("Finished"), _doc -> dataProvider
+        columns.add(new LambdaColumn<>(new ResourceModel("Document"), getString("Document"), SourceDocument::getName));
+        columns.add(new LambdaColumn<>(new ResourceModel("Finished"), getString("Finished"), _doc -> dataProvider
                 .getFinishedAmountForDocument((SourceDocument) _doc)));
-        columns.add(new LambdaColumn<>(new ResourceModel("Processed"), _doc -> dataProvider
+        columns.add(new LambdaColumn<>(new ResourceModel("Processed"), getString("Processed"), _doc -> dataProvider
                 .getInProgressAmountForDocument((SourceDocument) _doc)));
-        columns.add(new LambdaColumn<>(new ResourceModel("Users"), _doc -> dataProvider
+        columns.add(new LambdaColumn<>(new ResourceModel("Users"), getString("Users"), _doc -> dataProvider
                 .getUsersWorkingOnTheDocument((SourceDocument) _doc)));
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"), _doc -> 
                 dataProvider.lastAccessTimeForDocuement((SourceDocument) _doc)));
@@ -270,6 +270,8 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
 
         TextField<String> documentFilterTextField = new TextField<>("documentFilter",
             PropertyModel.of(prov, "filter.documentName"), String.class);
+
+        documentFilterTextField.setOutputMarkupId(true);
 
         searchForm.add(userFilterTextField);
         searchForm.add(documentFilterTextField);
