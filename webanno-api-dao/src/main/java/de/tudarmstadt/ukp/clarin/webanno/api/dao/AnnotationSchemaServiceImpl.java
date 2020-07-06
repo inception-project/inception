@@ -961,9 +961,9 @@ public class AnnotationSchemaServiceImpl
         // Check if the current CAS already contains the required type system
         boolean upgradePerformed = false;
         for (CAS cas : aCasIter) {
-            CasStorageSession.get().assertWritingPermitted(cas);
             
             if (cas != null && isUpgradeRequired(cas, ts)) {
+                CasStorageSession.get().assertWritingPermitted(cas);
                 upgradeCas(cas, ts);
                 upgradePerformed = true;
             }
