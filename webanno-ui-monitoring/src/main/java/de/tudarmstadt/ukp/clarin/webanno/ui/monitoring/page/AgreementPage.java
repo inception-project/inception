@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
@@ -442,7 +443,8 @@ public class AgreementPage
                             continue nextDocument;
                         }
                         
-                        cas = documentService.readAnnotationCas(annotationDocument,
+                        cas = documentService.readAnnotationCas(annotationDocument.getDocument(), 
+                                annotationDocument.getUser(), AUTO_CAS_UPGRADE,
                                 SHARED_READ_ONLY_ACCESS);
                     }
                     else if (!traits.isLimitToFinishedDocuments()) {
