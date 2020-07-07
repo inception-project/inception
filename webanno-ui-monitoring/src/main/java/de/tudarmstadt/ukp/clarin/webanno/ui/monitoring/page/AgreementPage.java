@@ -42,6 +42,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -257,12 +258,19 @@ public class AgreementPage
                     (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS)
                             .getDefaultModelObject());
             
-            Serializable result = measure.getAgreement(getCasMap());
+            Map<String, List<CAS>> casMap = getCasMap();
             
-            resultsContainer.addOrReplace(ams.createResultsPanel(MID_RESULTS, Model.of(result),
-                    AgreementPage.this::getCasMap));
-            
-            aTarget.add(resultsContainer);
+            if (casMap.values().stream().allMatch(list -> list == null || list.isEmpty())) {
+                error("No documents with annotations were found.");
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
+            else {
+                Serializable result = measure.getAgreement(casMap);
+                resultsContainer.addOrReplace(ams.createResultsPanel(MID_RESULTS, Model.of(result),
+                        AgreementPage.this::getCasMap));
+                aTarget.add(resultsContainer);
+            }
+                        
         }
         
         List<Pair<String, String>> listMeasures()
