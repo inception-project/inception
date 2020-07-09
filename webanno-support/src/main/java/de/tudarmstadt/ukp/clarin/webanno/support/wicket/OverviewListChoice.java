@@ -21,6 +21,8 @@ import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
 import java.util.List;
 
+import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.model.IModel;
@@ -30,6 +32,7 @@ public class OverviewListChoice<T>
     extends ListChoice<T>
 {
     private static final long serialVersionUID = 1L;
+    private boolean emptyChoice;
 
     public OverviewListChoice(String aId, IModel<? extends List<? extends T>> aChoices,
             IChoiceRenderer<? super T> aRenderer)
@@ -104,6 +107,28 @@ public class OverviewListChoice<T>
     protected CharSequence getDefaultChoice(String aSelectedValue)
     {
         return "";
+    }
+
+    @Override
+    public void onComponentTagBody(MarkupStream aMarkupStream, ComponentTag aOpenTag)
+    {
+        if (emptyChoice && this.getChoices().isEmpty()) {
+            replaceComponentTagBody(aMarkupStream, aOpenTag,
+                    "<option style=\"color:red;\" title=\"" + getString("emptyChoiceExplanation")
+                            + "\">" + getString("emptyChoiceMsg") + "</option>");
+        }
+        else {
+            super.onComponentTagBody(aMarkupStream, aOpenTag);
+        }
+    }
+    
+    /***
+     * If this flag is set, an empty choice-list will display a message given in 
+     * property key <b>emptyChoiceMsg</> with mouse over explanation <b>emptyChoiceExplanation</b>
+     */
+    public void setHasEmptyChoice(boolean aHasEmpty)
+    {
+        this.emptyChoice = aHasEmpty;
     }
 
     @Override
