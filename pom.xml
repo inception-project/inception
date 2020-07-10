@@ -1524,6 +1524,7 @@
                   <consoleOutput>true</consoleOutput>
                   <excludes>
                     <exclude>.mvn/jvm.config</exclude>
+                    <exclude>.oracle_jre_usage/**/*</exclude>
                     <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
@@ -1600,7 +1601,7 @@
                   </sources>
                 </configuration>
               </execution>
-            </executions>
+            </executions><<
           </plugin>
         </plugins>
       </build>
