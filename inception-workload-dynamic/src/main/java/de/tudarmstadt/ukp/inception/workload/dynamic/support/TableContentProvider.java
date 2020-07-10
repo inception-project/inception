@@ -59,13 +59,13 @@ public class TableContentProvider extends SortableDataProvider
 
     public TableContentProvider(
         List<SourceDocument> aData,
-        List<String> headers, List<AnnotationDocument> aAllAnnotationDocuments)
+        List<String> aHeaders, List<AnnotationDocument> aAllAnnotationDocuments)
     {
         this.data = aData;
-        this.headers = headers;
+        this.headers = aHeaders;
         this.allAnnotationDocuments = aAllAnnotationDocuments;
-        //TODO default value must be saved permanently, create new issue and PR
         this.defaultAnnotations = 6;
+        this.shownDocuments = new ArrayList<>();
 
         //Init filter
         filter = new Filter();
@@ -85,7 +85,7 @@ public class TableContentProvider extends SortableDataProvider
     }
     
     @Override
-    public Iterator<SourceDocument> iterator(long first, long count)
+    public Iterator<SourceDocument> iterator(long aFirst, long aCount)
     {
         //Apply Filter
         List<SourceDocument> newList = filterTable(data);
@@ -128,16 +128,16 @@ public class TableContentProvider extends SortableDataProvider
 
 
         //Reset
-        this.shownDocuments = new ArrayList<>();
+        this.shownDocuments.clear();
         shownDocuments.addAll(newList);
 
 
-        if ((int)first + (int)count > newList.size())
+        if ((int)aFirst + (int)aCount > newList.size())
         {
-            count = newList.size() - first;
+            aCount = newList.size() - aFirst;
         }
 
-        return newList.subList((int)first, ((int)first + (int)count)).iterator();
+        return newList.subList((int)aFirst, ((int)aFirst + (int)aCount)).iterator();
     }
 
     @Override
@@ -147,9 +147,9 @@ public class TableContentProvider extends SortableDataProvider
     }
 
     @Override
-    public IModel<SourceDocument> model(SourceDocument sourceDocument)
+    public IModel<SourceDocument> model(SourceDocument aSourceDocument)
     {
-        return Model.of(sourceDocument);
+        return Model.of(aSourceDocument);
     }
 
     @Override
@@ -339,10 +339,10 @@ public class TableContentProvider extends SortableDataProvider
 
     }
 
-    public String getUsersWorkingOnTheDocument(SourceDocument document)
+    public String getUsersWorkingOnTheDocument(SourceDocument aDocument)
     {
         return allAnnotationDocuments.stream()
-            .filter(d -> d.getDocument().equals(document) && 
+            .filter(d -> d.getDocument().equals(aDocument) &&
                     !d.getState().equals(NEW) && 
                     !d.getState().equals(IGNORE))
             .map(AnnotationDocument::getUser)
@@ -351,9 +351,9 @@ public class TableContentProvider extends SortableDataProvider
     }
 
 
-    public Date lastAccessTimeForDocument(SourceDocument doc)
+    public Date lastAccessTimeForDocument(SourceDocument aDoc)
     {
-        return doc.getUpdated();
+        return aDoc.getUpdated();
     }
 }
 

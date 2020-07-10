@@ -33,8 +33,8 @@ public class WorkflowPropertiesImpl implements WorkflowProperties
     }
 
     @Override
-    public void setActive(Boolean active) {
-        this.isActive = active;
+    public void setActive(Boolean aActive) {
+        this.isActive = aActive;
     }
 
     @Override

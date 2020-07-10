@@ -33,8 +33,8 @@ public class WorkloadPropertiesImpl implements WorkloadProperties
     }
 
     @Override
-    public void setActive(Boolean active) {
-        this.isActive = active;
+    public void setActive(boolean aActive) {
+        this.isActive = aActive;
     }
 
     @Override

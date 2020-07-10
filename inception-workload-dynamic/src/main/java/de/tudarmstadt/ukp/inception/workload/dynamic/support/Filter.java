@@ -63,23 +63,23 @@ public class Filter implements Serializable
         return to;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setUsername(String aUsername) {
+        this.username = aUsername;
     }
 
-    public void setDocumentName(String documentName) {
-        this.documentName = documentName;
+    public void setDocumentName(String aDocumentName) {
+        this.documentName = aDocumentName;
     }
 
-    public void setSelected(String selected) {
-        this.selected = selected;
+    public void setSelected(String aSelected) {
+        this.selected = aSelected;
     }
 
-    public void setFrom(Date from) {
-        this.from = from;
+    public void setFrom(Date aFrom) {
+        this.from = aFrom;
     }
 
-    public void setTo(Date to) {
-        this.to = to;
+    public void setTo(Date aTo) {
+        this.to = aTo;
     }
 }

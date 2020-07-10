@@ -26,5 +26,5 @@ public interface DefaultAnnotationsProperties
 {
     int getNumberOfDefaultAnnotations();
 
-    void setNumberOfDefaultAnnotations(int annotations);
+    void setNumberOfDefaultAnnotations(int aAnnotations);
 }

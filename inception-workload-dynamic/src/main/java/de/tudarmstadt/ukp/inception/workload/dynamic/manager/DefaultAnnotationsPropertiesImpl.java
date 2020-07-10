@@ -32,7 +32,7 @@ public class DefaultAnnotationsPropertiesImpl implements DefaultAnnotationsPrope
     }
 
     @Override
-    public void setNumberOfDefaultAnnotations(int annotations) {
-        numberOfDefaultAnnotations = annotations;
+    public void setNumberOfDefaultAnnotations(int aAnnotations) {
+        numberOfDefaultAnnotations = aAnnotations;
     }
 }

@@ -27,7 +27,7 @@ public interface WorkloadProperties
 {
     boolean isWorkloadManagerActive();
 
-    void setActive(Boolean active);
+    void setActive(boolean aActive);
 
     String getProperty();
 }

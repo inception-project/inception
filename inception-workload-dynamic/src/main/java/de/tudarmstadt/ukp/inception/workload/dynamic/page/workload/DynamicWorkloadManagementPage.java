@@ -218,14 +218,14 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
     //--------------------------------------- Helper methods -------------------------------------//
 
     //Return current project, required for several purposes
-    private Optional<Project> getProjectFromParameters(StringValue projectParam)
+    private Optional<Project> getProjectFromParameters(StringValue aProjectParam)
     {
-        if (projectParam == null || projectParam.isEmpty()) {
+        if (aProjectParam == null || aProjectParam.isEmpty()) {
             return Optional.empty();
         }
 
         try {
-            return Optional.of(projectService.getProject(projectParam.toLong()));
+            return Optional.of(projectService.getProject(aProjectParam.toLong()));
         }
         catch (NoResultException e) {
             return Optional.empty();
@@ -264,7 +264,7 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         return result;
     }
 
-    public Form<Void> createSearchForm(TableContentProvider prov)
+    public Form<Void> createSearchForm(TableContentProvider aProv)
     {
         Form<Void> searchForm = new Form<>("searchForm");
         
@@ -272,12 +272,12 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
 
         //Filter Textfields and their AJAX events
         TextField<String> userFilterTextField = new TextField<>("userFilter",
-            PropertyModel.of(prov, "filter.username"), String.class);
+            PropertyModel.of(aProv, "filter.username"), String.class);
 
         userFilterTextField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
         TextField<String> documentFilterTextField = new TextField<>("documentFilter",
-            PropertyModel.of(prov, "filter.documentName"), String.class);
+            PropertyModel.of(aProv, "filter.documentName"), String.class);
 
         documentFilterTextField.setOutputMarkupId(true);
 
@@ -285,9 +285,9 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         searchForm.add(documentFilterTextField);
 
         //Input dates
-        AjaxDatePicker dateFrom = new AjaxDatePicker("from", PropertyModel.of(prov, "filter.from"),
+        AjaxDatePicker dateFrom = new AjaxDatePicker("from", PropertyModel.of(aProv, "filter.from"),
                 "MM/dd/yyyy");
-        AjaxDatePicker dateTo = new AjaxDatePicker("to", PropertyModel.of(prov, "filter.to"),
+        AjaxDatePicker dateTo = new AjaxDatePicker("to", PropertyModel.of(aProv, "filter.to"),
                 "MM/dd/yyyy");
 
         dateFrom.setOutputMarkupId(true);
@@ -350,7 +350,7 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
 
         //Checkbox for showing only unused source documents, disables other textfields
         AjaxCheckBox unused = new AjaxCheckBox("unused",
-            PropertyModel.of(prov,"filter.selected")) {
+            PropertyModel.of(aProv,"filter.selected")) {
 
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
@@ -386,16 +386,18 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         Button reset = new AjaxButton(getString("Reset"), Model.of("Reset")) {
             @Override
             public void onSubmit(AjaxRequestTarget target) {
+
                 dateFrom.setEnabled(true);
+                dateFrom.setModelObject(null);
                 dateTo.setEnabled(true);
                 dateTo.setModelObject(null);
+                dateChoices.setEnabled(true);
                 unused.setModelObject(null);
                 userFilterTextField.setEnabled(true);
                 documentFilterTextField.setEnabled(true);
                 userFilterTextField.setModelObject(null);
                 documentFilterTextField.setModelObject(null);
-                dateFrom.setModelObject(null);
-                dateChoices.setModel(new Model<>(getString("between")));
+
 
 
                 target.add(userFilterTextField);

@@ -27,7 +27,7 @@ public interface WorkflowProperties
 {
     boolean isWorkflowManagerActive();
 
-    void setActive(Boolean active);
+    void setActive(Boolean aActive);
 
     String getProperty();
 }
