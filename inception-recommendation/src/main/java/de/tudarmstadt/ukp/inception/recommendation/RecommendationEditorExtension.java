@@ -200,7 +200,8 @@ public class RecommendationEditorExtension
         // panel
         aState.getSelection().selectSpan(new VID(address), aCas, suggestion.getBegin(),
                 suggestion.getEnd());
-        aActionHandler.actionSelect(aTarget);            
+
+        aActionHandler.actionSelect(aTarget);
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
@@ -228,6 +229,7 @@ public class RecommendationEditorExtension
      */
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
+
         throws AnnotationException, IOException
     {
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
