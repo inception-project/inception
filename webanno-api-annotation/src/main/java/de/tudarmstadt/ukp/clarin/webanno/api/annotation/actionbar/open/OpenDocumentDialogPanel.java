@@ -154,7 +154,7 @@ public class OpenDocumentDialogPanel
             docListChoice.setModelObject(docListChoice.getChoices().get(0));
         }
         
-        docListChoice.setHasEmptyChoice(true);
+        docListChoice.setDisplayMessageOnEmptyChoice(true);
         return docListChoice;
     }
 

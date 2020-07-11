@@ -112,7 +112,7 @@ public class OverviewListChoice<T>
     @Override
     public void onComponentTagBody(MarkupStream aMarkupStream, ComponentTag aOpenTag)
     {
-        if (emptyChoice && this.getChoices().isEmpty()) {
+        if (emptyChoice && getChoices().isEmpty()) {
             replaceComponentTagBody(aMarkupStream, aOpenTag,
                     "<option style=\"color:red;\" title=\"" + getString("emptyChoiceExplanation")
                             + "\">" + getString("emptyChoiceMsg") + "</option>");
@@ -122,13 +122,13 @@ public class OverviewListChoice<T>
         }
     }
     
-    /***
-     * If this flag is set, an empty choice-list will display a message given in 
-     * property key <b>emptyChoiceMsg</> with mouse over explanation <b>emptyChoiceExplanation</b>
+    /**
+     * If this flag is set, an empty choice-list will display a message given in property key
+     * {@code emptyChoiceMsg} with mouse over explanation {@code emptyChoiceExplanation}
      */
-    public void setHasEmptyChoice(boolean aHasEmpty)
+    public void setDisplayMessageOnEmptyChoice(boolean aHasEmpty)
     {
-        this.emptyChoice = aHasEmpty;
+        emptyChoice = aHasEmpty;
     }
 
     @Override
