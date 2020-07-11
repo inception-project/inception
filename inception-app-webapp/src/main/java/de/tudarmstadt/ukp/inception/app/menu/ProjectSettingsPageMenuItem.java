@@ -28,8 +28,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.workload.dynamic.page.settings.workload.ProjectSettingsPage;
 
 @Component
 public class ProjectSettingsPageMenuItem implements MenuItem
@@ -78,7 +78,7 @@ public class ProjectSettingsPageMenuItem implements MenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return ProjectSettingsPage.class;
+        return ProjectPage.class;
     }
     
     @Override

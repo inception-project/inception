@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoCon
  * </p>
  */
 public class ActiveLearningSidebarFactory extends AnnotationSidebarFactory_ImplBase {
+
     private static final ResourceReference ICON =
         new PackageResourceReference(ActiveLearningSidebarFactory.class, "active_learning.png");
 
@@ -54,6 +55,7 @@ public class ActiveLearningSidebarFactory extends AnnotationSidebarFactory_ImplB
                                              AnnotationActionHandler aActionHandler, CasProvider
                                                      aCasProvider,
                                              AnnotationPage aAnnotationPage) {
+
         return new ActiveLearningSidebar(aId, aModel, aActionHandler, aCasProvider,
                 aAnnotationPage);
     }

@@ -172,7 +172,7 @@
       <name>jcenter</name>
       <url>https://jcenter.bintray.com</url>
       <snapshots>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
@@ -1524,6 +1524,7 @@
                   <consoleOutput>true</consoleOutput>
                   <excludes>
                     <exclude>.mvn/jvm.config</exclude>
+                    <exclude>.oracle_jre_usage/*.timestamp</exclude>
                     <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>

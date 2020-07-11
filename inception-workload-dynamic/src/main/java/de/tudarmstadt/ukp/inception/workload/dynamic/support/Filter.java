@@ -19,6 +19,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import java.io.Serializable;
+import java.util.Date;
 
 //Helper class for the Filter
 public class Filter implements Serializable
@@ -26,31 +27,59 @@ public class Filter implements Serializable
 
     private static final long serialVersionUID = 256259364194000084L;
 
-    //Type of the Dropdown
-    private String type;
-    //Input field value
-    private String input;
+    //Input fields appended value
+    private String username;
+    private String documentName;
 
+    //Checkbox
+    private String selected;
+
+    //dates
+    private Date from;
+    private Date to;
 
     //Default constructor
-    public Filter()
-    {
-
+    public Filter() {
+        this.selected = "false";
     }
 
-    public String getType() {
-        return type;
+    public String getUsername() {
+        return username;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public String getDocumentName() {
+        return documentName;
     }
 
-    public String getInput() {
-        return input;
+    public String getSelected() {
+        return selected;
     }
 
-    public void setInput(String input) {
-        this.input = input;
+    public Date getFrom() {
+        return from;
+    }
+
+    public Date getTo() {
+        return to;
+    }
+
+    public void setUsername(String aUsername) {
+        this.username = aUsername;
+    }
+
+    public void setDocumentName(String aDocumentName) {
+        this.documentName = aDocumentName;
+    }
+
+    public void setSelected(String aSelected) {
+        this.selected = aSelected;
+    }
+
+    public void setFrom(Date aFrom) {
+        this.from = aFrom;
+    }
+
+    public void setTo(Date aTo) {
+        this.to = aTo;
     }
 }
