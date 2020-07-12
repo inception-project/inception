@@ -89,6 +89,7 @@
     <jackson.version>2.11.0</jackson.version>
     <tomcat.version>9.0.35</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
+    <mysql-driver.version>8.0.20</mysql-driver.version>
   </properties>
   <repositories>
     <!--
@@ -788,6 +789,12 @@
         <groupId>com.github.openjson</groupId>
         <artifactId>openjson</artifactId>
         <version>1.0.10</version>
+      </dependency>
+
+      <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>${mysql-driver.version}</version>
       </dependency>
 
       <dependency>
