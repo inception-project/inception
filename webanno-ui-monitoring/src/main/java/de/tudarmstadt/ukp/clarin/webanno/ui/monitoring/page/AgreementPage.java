@@ -418,7 +418,7 @@ public class AgreementPage
         for (User user : users) {
             List<CAS> cases = new ArrayList<>();
 
-            // Bulk-fetch all source documents for which there is already an annoation document for
+            // Bulk-fetch all source documents for which there is already an annotation document for
             // the user which is faster then checking for their existence individually
             List<SourceDocument> docsForUser = documentService
                     .listAnnotationDocuments(project, user).stream()
@@ -436,26 +436,22 @@ public class AgreementPage
                         
                         if (traits.isLimitToFinishedDocuments()
                                 && !annotationDocument.getState().equals(FINISHED)) {
-                            // Add a skip marker for the current CAS to the CAS list - this is 
-                            // necessary because we expect the CAS lists for all users to have the
-                            // same size
+                            // Add a skip marker (null) for the current CAS to the CAS list - this 
+                            // is necessary because we expect the CAS lists for all users to have
+                            // the same size
                             cases.add(null);
                             continue nextDocument;
                         }
+                    }
                         
-                        cas = documentService.readAnnotationCas(annotationDocument.getDocument(), 
-                                annotationDocument.getUser(), AUTO_CAS_UPGRADE,
-                                SHARED_READ_ONLY_ACCESS);
-                    }
-                    else if (!traits.isLimitToFinishedDocuments()) {
-                        // ... if we are not limited to finished documents and if there is no
-                        // annotation document, then we use the initial CAS for that user.
-                        cas = documentService.createOrReadInitialCas(document);
-                    }
+                    // Reads the user's annotation document or the initial source document -
+                    // depending on what is available
+                    cas = documentService.readAnnotationCas(document, user.getUsername(),
+                            AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
                 }
                 catch (Exception e) {
-                    LOG.error("Unable to load data", e);
                     error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                    LOG.error("Unable to load data", e);
                 }
                 
                 if (cas != null) {
