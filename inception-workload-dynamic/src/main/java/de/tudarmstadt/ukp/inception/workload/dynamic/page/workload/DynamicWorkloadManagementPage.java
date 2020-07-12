@@ -73,7 +73,6 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
 
-
 @MountPath("/workload.html")
 public class DynamicWorkloadManagementPage extends ApplicationPageBase
 {

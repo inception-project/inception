@@ -18,15 +18,14 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.settings;
 
 
-
 import java.util.ArrayList;
 import java.util.List;
-
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -36,8 +35,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoic
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
-
-
 
 //Custom panel inside the page
 public class WorkflowAndMonitoringPanel extends Panel
@@ -65,7 +62,6 @@ public class WorkflowAndMonitoringPanel extends Panel
             new Model<>(getString("defaultWorkflow")), workflow);
         workflowChoices.setInline(true);
         workflowChoices.setOutputMarkupId(true);
-
         //Set default for the group
         workflowChoices.setModel(new Model<>(workflowProperties.getProperty()));
 

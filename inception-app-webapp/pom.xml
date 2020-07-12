@@ -160,6 +160,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-io-text</artifactId>
     </dependency>
     <dependency>
@@ -514,6 +518,10 @@
 	    <groupId>org.webjars.bower</groupId>
 	    <artifactId>jquery.scrollTo</artifactId>
 	</dependency>
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-workload-dynamic</artifactId>
+      </dependency>
   </dependencies>
   <build>
     <plugins>
