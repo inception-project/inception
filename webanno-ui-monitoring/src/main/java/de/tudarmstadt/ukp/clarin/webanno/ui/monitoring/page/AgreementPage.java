@@ -471,20 +471,7 @@ public class AgreementPage
                 // source document yet.
                 cases.add(cas);
             }
-            
-            // Bulk-upgrade CASes - this is faster than upgrading them individually since the
-            // bulk upgrade only loads the project type system once.
-            try {
-                annotationService.upgradeCasIfRequired(cases, project);
-                // REC: I think there is no need to write the CASes here. We would not
-                // want to interfere with currently active annotator users
-            }
-            catch (Exception e) {
-                LOG.error("Unable to upgrade CAS", e);
-                error("Unable to upgrade CAS: " + ExceptionUtils.getRootCauseMessage(e));
-                continue;
-            }
-                
+                            
             cachedCASes.put(user.getUsername(), cases);
         }
 
