@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementReportExportF
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 
 import java.io.ByteArrayInputStream;
@@ -212,6 +213,8 @@ public class PairwiseCodingAgreementTable
                         : "even"));
             }
         };
+        this.add(visibleWhen(
+            () -> (getModelObject() != null && !getModelObject().getRaters().isEmpty())));
         add(rows);
     }
     
