@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
@@ -433,7 +434,9 @@ public class CasStorageServiceImpl
     public CAS readCas(SourceDocument aDocument, String aUsername, CasAccessMode aAccessMode)
         throws IOException, CasSessionException
     {
-        return readOrCreateCas(aDocument, aUsername, NO_CAS_UPGRADE, null, aAccessMode);
+        return readOrCreateCas(aDocument, aUsername,
+                SHARED_READ_ONLY_ACCESS.equals(aAccessMode) ? AUTO_CAS_UPGRADE : NO_CAS_UPGRADE,
+                null, aAccessMode);
     }
     
     @Override
@@ -517,9 +520,9 @@ public class CasStorageServiceImpl
         }
         // else if shared read access is requested, then we try fetching it from the shared cache
         else if (SHARED_READ_ONLY_ACCESS.equals(aAccessMode)) {
-            if (NO_CAS_UPGRADE.equals(aUpgradeMode)) {
-                throw new IllegalArgumentException("Cannot request simltaneously request "
-                        + aAccessMode + " and " + aUpgradeMode);
+            if (!AUTO_CAS_UPGRADE.equals(aUpgradeMode)) {
+                throw new IllegalArgumentException("When requsting a shared read-only CAS, the "
+                        + "access mode must be " + AUTO_CAS_UPGRADE);
             }
             
             // Since we promise to only read the CAS, we don't have to worry about it being

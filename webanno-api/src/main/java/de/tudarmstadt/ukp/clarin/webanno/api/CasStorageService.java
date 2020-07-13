@@ -51,7 +51,8 @@ public interface CasStorageService
     
     /**
      * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. By default
-     * applies the CAS doctor.
+     * applies the CAS doctor. This uses {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS} and
+     * {@link CasUpgradeMode#NO_CAS_UPGRADE}.
      *
      * @param aDocument
      *            the document.
@@ -66,7 +67,10 @@ public interface CasStorageService
     CAS readCas(SourceDocument aDocument, String aUsername) throws IOException, CasSessionException;
 
     /**
-     * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}.
+     * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. If
+     * {@link CasAccessMode#SHARED_READ_ONLY_ACCESS} is used, then
+     * {@link CasUpgradeMode#AUTO_CAS_UPGRADE} is used, otherwise
+     * {@link CasUpgradeMode#NO_CAS_UPGRADE} is used.
      *
      * @param aDocument
      *            the document.
