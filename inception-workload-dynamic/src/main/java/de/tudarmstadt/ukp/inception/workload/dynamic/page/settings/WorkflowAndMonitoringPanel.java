@@ -104,6 +104,9 @@ public class WorkflowAndMonitoringPanel extends Panel
                 } else {
                     workflowProperties.setActive(true);
                 }
+
+                info("Workflow and workload settings changed");
+
             }
         };
 

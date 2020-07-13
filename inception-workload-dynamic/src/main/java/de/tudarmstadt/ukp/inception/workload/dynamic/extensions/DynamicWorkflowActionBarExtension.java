@@ -23,7 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
@@ -36,7 +37,10 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 public class DynamicWorkflowActionBarExtension implements ActionBarExtension
 {
 
+    private @Autowired DocumentService documentService;
+    private @Autowired ProjectService projectService;
     private @Autowired WorkflowProperties workflowProperties;
+
 
     @Override
     public String getRole()
@@ -61,6 +65,7 @@ public class DynamicWorkflowActionBarExtension implements ActionBarExtension
     @Override
     public Panel createActionBarItem(String aID, AnnotationPageBase aAnnotationPageBase)
     {
-        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID,aAnnotationPageBase);
+        return new DynamicAnnotatorWorkflowActionBarItemGroup(
+            aID,aAnnotationPageBase, documentService, projectService);
     }
 }

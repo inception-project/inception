@@ -19,7 +19,7 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowPropertiesImpl;
+
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowPropertiesImpl;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 
 
@@ -87,10 +88,11 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
             new AnnotationQueueOverviewDataProvider(
                 documentService.listAnnotationDocuments
             (aPage.getModelObject().getProject()), documentService.
-                listSourceDocuments(aPage.getModelObject().getProject()));
+                listSourceDocuments(aPage.getModelObject().getProject()), documentService);
         SourceDocument doc = prov.getRandomDocument(aPage, new AnnotationDocument());
         if (doc == null)
         {
+            aPage.info("No more documents available");
             aPage.setResponsePage(aPage.getApplication().getHomePage());
 
         } else {
@@ -102,10 +104,12 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
             aPage.getModelObject().setDocument(doc, documentService.
                 listSourceDocuments(aPage.getModelObject().getProject()));
 
-            aPage.add(new AbstractAjaxTimerBehavior(Duration.milliseconds(1)) {
+            aPage.add(new AbstractAjaxTimerBehavior(Duration.milliseconds(1))
+            {
                 private static final long serialVersionUID = -2222252999587974771L;
                 @Override
-                protected void onTimer(AjaxRequestTarget aAjaxRequestTarget) {
+                protected void onTimer(AjaxRequestTarget aAjaxRequestTarget)
+                {
                     aPage.actionLoadDocument(aAjaxRequestTarget);
                     stop(aAjaxRequestTarget);
                 }
