@@ -19,6 +19,7 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowPropertiesImpl;
 import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -37,22 +38,31 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 
 
-@Order(0)
+@Order(1000)
 @Component
 public class DynamicWorkflowDocumentNavigationActionBarExtension implements ActionBarExtension
 {
 
-    private @Autowired WorkflowProperties workflowProperties;
-    private @Autowired DocumentService documentService;
-    private AnnotationPageBase annotationPageBase;
+    private final WorkflowProperties workflowProperties;
+    private final DocumentService documentService;
+
+    @Autowired
+    public DynamicWorkflowDocumentNavigationActionBarExtension(
+        WorkflowPropertiesImpl aWorkflowProperties, DocumentService aDocumentService)
+    {
+        workflowProperties = aWorkflowProperties;
+        documentService = aDocumentService;
+    }
 
     @Override
-    public String getRole() {
+    public String getRole()
+    {
         return DefaultDocumentNavigatorActionBarExtension.class.getName();
     }
 
     @Override
-    public int getPriority() {
+    public int getPriority()
+    {
         if (workflowProperties.isWorkflowManagerActive())
         {
             return 1;
@@ -62,7 +72,8 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     }
 
     @Override
-    public Panel createActionBarItem(String aId, AnnotationPageBase aPage) {
+    public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
+    {
         return new DynamicDocumentNavigator(aId);
     }
 
@@ -72,8 +83,6 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     @Override
     public void onInitialize(AnnotationPageBase aPage)
     {
-
-        this.annotationPageBase = aPage;
         AnnotationQueueOverviewDataProvider prov =
             new AnnotationQueueOverviewDataProvider(
                 documentService.listAnnotationDocuments

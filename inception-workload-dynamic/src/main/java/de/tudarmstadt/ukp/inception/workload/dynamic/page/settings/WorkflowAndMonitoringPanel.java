@@ -86,7 +86,8 @@ public class WorkflowAndMonitoringPanel extends Panel
 
         //Finally, add the confirm button at the end
 
-        Button confirm = new AjaxButton(getString("confirm"),Model.of("Confirm")) {
+        Button confirm = new AjaxButton(getString("confirm"),Model.of("Confirm"))
+        {
             @Override
             public void onSubmit(AjaxRequestTarget target)
             {
@@ -103,8 +104,6 @@ public class WorkflowAndMonitoringPanel extends Panel
                 } else {
                     workflowProperties.setActive(true);
                 }
-
-                setResponsePage(getApplication().getHomePage());
             }
         };
 

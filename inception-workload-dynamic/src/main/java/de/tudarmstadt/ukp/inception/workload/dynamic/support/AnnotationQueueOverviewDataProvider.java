@@ -183,16 +183,19 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         for (SourceDocument doc: aData)
         {
             // Unused documents selected
-            if (filter.getSelected().equals("true")) {
+            if (filter.getSelected().equals("true"))
+            {
                 if ((getInProgressAmountForDocument(doc) == 0)
-                    && (getFinishedAmountForDocument(doc) == 0)) {
+                    && (getFinishedAmountForDocument(doc) == 0))
+                {
                     unusedList.add(doc);
                 }
             }
 
 
             //Check if DocumentName was entered
-            if (filter.getDocumentName() != null) {
+            if (filter.getDocumentName() != null)
+            {
                 if (doc.getName().contains(filter.getDocumentName())) {
                     docNameList.add(doc);
                 }
@@ -200,7 +203,8 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
 
 
             //Check if Username filter was entered
-            if (filter.getUsername() != null) {
+            if (filter.getUsername() != null)
+            {
                 //Get all entered usernames
 
                 String [] usernames = filter.getUsername().split(",");
@@ -226,25 +230,32 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
                 && doc.getUpdated() != null) {
 
                 //between selected
-                if (filter.getFrom() != null && filter.getTo() != null) {
-                    if (filter.getFrom().compareTo(filter.getTo()) >= 0) {
+                if (filter.getFrom() != null && filter.getTo() != null)
+                {
+                    if (filter.getFrom().compareTo(filter.getTo()) >= 0)
+                    {
                         if (doc.getUpdated().compareTo(filter.getTo()) > 0 &&
-                            doc.getUpdated().compareTo(filter.getFrom()) <= 0) {
+                            doc.getUpdated().compareTo(filter.getFrom()) <= 0)
+                        {
                             dateList.add(doc);
                         }
                     }
                     if (doc.getUpdated().compareTo(filter.getFrom()) > 0 &&
-                        doc.getUpdated().compareTo(filter.getTo()) <= 0) {
+                        doc.getUpdated().compareTo(filter.getTo()) <= 0)
+                    {
                         dateList.add(doc);
                     }
                     //From selected
-                } else if (filter.getFrom() != null) {
-                    if (doc.getUpdated().compareTo(filter.getFrom()) >= 0) {
+                } else if (filter.getFrom() != null)
+                {
+                    if (doc.getUpdated().compareTo(filter.getFrom()) >= 0)
+                    {
                         dateList.add(doc);
                     }
                 } else {
                     //Until
-                    if (doc.getUpdated().compareTo(filter.getTo()) <= 0) {
+                    if (doc.getUpdated().compareTo(filter.getTo()) <= 0)
+                    {
                         dateList.add(doc);
                     }
                 }
@@ -253,19 +264,23 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
 
         //Schnittmenge of the lists
         List<List<SourceDocument>> finalList = new ArrayList<>();
-        if (dateList.size() > 0 || filter.getFrom() != null || filter.getTo() != null) {
+        if (dateList.size() > 0 || filter.getFrom() != null || filter.getTo() != null)
+        {
             finalList.add(dateList);
         }
 
-        if (docNameList.size() > 0 || filter.getDocumentName() != null) {
+        if (docNameList.size() > 0 || filter.getDocumentName() != null)
+        {
             finalList.add(docNameList);
         }
 
-        if (userNameList.size() > 0 || filter.getUsername() != null) {
+        if (userNameList.size() > 0 || filter.getUsername() != null)
+        {
             finalList.add(userNameList);
         }
 
-        if (unusedList.size() > 0 || filter.getSelected() == "true") {
+        if (unusedList.size() > 0 || filter.getSelected() == "true")
+        {
             finalList.add(unusedList);
         }
 
@@ -273,7 +288,8 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
             finalList.get(0).retainAll(finalList.get(i + 1));
         }
 
-        if (finalList.size() == 0) {
+        if (finalList.size() == 0)
+        {
             resultList = aData;
         } else {
             resultList = finalList.get(0);
@@ -327,7 +343,8 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
                 equals(aAnnotationPageBase.getModelObject().getUser().getUsername()))
             {
                 if (allAnnotationDocuments.get(i).getState().equals(IN_PROGRESS)
-                    && !allAnnotationDocuments.get(i).getName().equals(aCurrentAnno.getName())) {
+                    && !allAnnotationDocuments.get(i).getName().equals(aCurrentAnno.getName()))
+                {
                     anno = allAnnotationDocuments.get(i);
                     break;
                 } else {
@@ -381,12 +398,14 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     }
 
     @Override
-    public Filter getFilterState() {
+    public Filter getFilterState()
+    {
         return filter;
     }
 
     @Override
-    public void setFilterState(Filter filter) {
+    public void setFilterState(Filter filter)
+    {
         this.filter = filter;
 
     }

@@ -21,8 +21,6 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
-
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -63,8 +61,8 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
         super(aId);
 
         //Same as for the default
-        this.page = aPage;
-        this.provider = new AnnotationQueueOverviewDataProvider(
+        page = aPage;
+        provider = new AnnotationQueueOverviewDataProvider(
             documentService.listAnnotationDocuments(aPage.getModelObject().getProject()),
             documentService.listSourceDocuments(aPage.getModelObject().getProject()));
 
@@ -92,7 +90,8 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
 
     protected void actionFinishDocument(AjaxRequestTarget aTarget)
     {
-        finishDocumentDialog.setConfirmAction((_target) -> {
+        finishDocumentDialog.setConfirmAction((_target) ->
+        {
             page.actionValidateDocument(_target, page.getEditorCas());
 
             AnnotatorState state = page.getModelObject();

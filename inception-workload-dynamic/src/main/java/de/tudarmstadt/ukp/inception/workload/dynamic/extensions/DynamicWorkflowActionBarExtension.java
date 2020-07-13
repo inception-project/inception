@@ -38,16 +38,17 @@ public class DynamicWorkflowActionBarExtension implements ActionBarExtension
 
     private @Autowired WorkflowProperties workflowProperties;
 
-
-
     @Override
-    public String getRole() {
+    public String getRole()
+    {
         return DefaultWorkflowActionBarExtension.class.getName();
     }
 
     @Override
     public int getPriority()
     {
+        //New dynamic workflow only used when the new workflow manager selected in the settings.
+        //Otherwise use the default one and skip this
         if (workflowProperties.isWorkflowManagerActive())
         {
             return 1;
