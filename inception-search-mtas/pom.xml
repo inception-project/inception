@@ -239,7 +239,7 @@
       <artifactId>awaitility</artifactId>
       <scope>test</scope>
     </dependency>
-      <!-- Testing END -->
+    <!-- Testing END -->
   </dependencies>  
   <build>
     <pluginManagement>

@@ -42,7 +42,6 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
     name = "enabled", 
     havingValue = "true",
     matchIfMissing = true)
-
 public class ActiveLearningAutoConfiguration
 {
     @Bean

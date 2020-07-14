@@ -89,7 +89,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-lapps</artifactId>
     </dependency>
-
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-opennlp</artifactId>
