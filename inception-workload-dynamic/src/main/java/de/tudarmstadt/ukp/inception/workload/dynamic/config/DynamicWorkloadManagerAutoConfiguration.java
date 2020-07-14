@@ -34,13 +34,13 @@ public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean
     public WorkloadPageMenuItem workloadPageMenuItem(UserDao aUserRepo,
-        ProjectService aProjectService, WorkloadProperties aWorkloadProperties,
-        DefaultAnnotationsProperties aDefaultAnnotations)
+            ProjectService aProjectService, WorkloadProperties aWorkloadProperties,
+            DefaultAnnotationsProperties aDefaultAnnotations)
     {
         return new WorkloadPageMenuItem(aUserRepo, aProjectService, aWorkloadProperties,
                 aDefaultAnnotations);
     }
-    
+
     @Bean
     public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory()
     {
