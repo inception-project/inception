@@ -23,24 +23,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 
-
-
 @Order(1100)
 @Component
-public class DynamicWorkflowActionBarExtension implements ActionBarExtension
+public class DynamicWorkflowActionBarExtension
+    implements ActionBarExtension
 {
-
-    private @Autowired DocumentService documentService;
-    private @Autowired ProjectService projectService;
     private @Autowired WorkflowProperties workflowProperties;
-
 
     @Override
     public String getRole()
@@ -51,21 +44,19 @@ public class DynamicWorkflowActionBarExtension implements ActionBarExtension
     @Override
     public int getPriority()
     {
-        //New dynamic workflow only used when the new workflow manager selected in the settings.
-        //Otherwise use the default one and skip this
-        if (workflowProperties.isWorkflowManagerActive())
-        {
+        // New dynamic workflow only used when the new workflow manager selected in the settings.
+        // Otherwise use the default one and skip this
+        if (workflowProperties.isWorkflowManagerActive()) {
             return 1;
-        } else {
+        }
+        else {
             return -1;
         }
     }
 
-
     @Override
     public Panel createActionBarItem(String aID, AnnotationPageBase aAnnotationPageBase)
     {
-        return new DynamicAnnotatorWorkflowActionBarItemGroup(
-            aID,aAnnotationPageBase, documentService, projectService);
+        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase);
     }
 }
