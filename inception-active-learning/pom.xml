@@ -50,6 +50,7 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
+    
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation</artifactId>
@@ -61,10 +62,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-log</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
 
     <dependency>
@@ -105,6 +102,10 @@
     <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
 
     <!-- LOGGING DEPENDENCIES - SLF4J -->
