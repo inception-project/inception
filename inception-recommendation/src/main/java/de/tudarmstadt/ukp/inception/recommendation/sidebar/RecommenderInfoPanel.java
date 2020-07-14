@@ -120,11 +120,6 @@ public class RecommenderInfoPanel
         
         recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
         recommenderContainer.add(searchResultGroups);
-
-        WebMarkupContainer noRecommendersWarning = new WebMarkupContainer("noRecommendersWarning");
-        noRecommendersWarning.setOutputMarkupPlaceholderTag(true);
-        noRecommendersWarning.add(visibleWhen(() -> recommenders.getObject().isEmpty()));
-        add(noRecommendersWarning);
     }
     
     public AnnotatorState getModelObject()
