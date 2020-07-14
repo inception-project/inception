@@ -20,10 +20,11 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
 
-import org.apache.wicket.ajax.AbstractAjaxTimerBehavior;
+import java.util.Optional;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.util.time.Duration;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -96,24 +97,11 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
             aPage.setResponsePage(aPage.getApplication().getHomePage());
 
         } else {
-
-            //Workaround to generate ajax request target on
-            //page load for actionLoadDocument() method in webanno
-            //TODO better solution for this needed
-
             aPage.getModelObject().setDocument(doc, documentService.
                 listSourceDocuments(aPage.getModelObject().getProject()));
 
-            aPage.add(new AbstractAjaxTimerBehavior(Duration.milliseconds(1))
-            {
-                private static final long serialVersionUID = -2222252999587974771L;
-                @Override
-                protected void onTimer(AjaxRequestTarget aAjaxRequestTarget)
-                {
-                    aPage.actionLoadDocument(aAjaxRequestTarget);
-                    stop(aAjaxRequestTarget);
-                }
-            });
+            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+            aPage.actionLoadDocument(target.orElse(null));
         }
     }
 
