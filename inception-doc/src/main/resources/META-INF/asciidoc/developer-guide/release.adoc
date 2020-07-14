@@ -65,6 +65,7 @@ Do this when you want to do a feature release.
 
 == Running the release process
 
+. Check that the release branch depends on the right webanno release or update it in the most high-level `pom.xml` (properties -> `webanno.version`).
 . Run `mvn release:prepare`; this step will ask you for the release version (e.g. `0.9.0`) for the tag to be created (e.g. `inception-app-0.9.0`), and for the new development version (e.g. `0.10.0-SNAPSHOT`). After that, it will update the version (push), build the code, and create a tag (push).
 . Run `mvn release:perform`; this will check out the created tag into the folder `target/checkout` and build the release artifacts there.
 . Immediately after the release, again merge the released branch into the
