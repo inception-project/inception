@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -135,6 +137,7 @@ public class CurationSidebar
         
         // Add empty space message
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
+        noDocsLabel.add(visibleWhen(() -> users.getModelObject().isEmpty()));
         mainContainer.add(noDocsLabel);
         
         // if curation user changed we have to reload the document
@@ -151,6 +154,10 @@ public class CurationSidebar
         
         // user started curating, extension can show suggestions
         state.setMetaData(CurationMetadata.CURATION_USER_PROJECT, true);
+        
+        add(enabledWhen(() -> (state.getUser().equals(userRepository.getCurrentUser()) || 
+                state.getUser().getUsername().equals(CURATION_USER)) &&
+                !documentService.isAnnotationFinished(state.getDocument(), state.getUser())));
     }
     
     private Form<Void> createSettingsForm(String aId)
@@ -212,33 +219,8 @@ public class CurationSidebar
                 aTarget.add(mainContainer);
             }     
         });
+        usersForm.add(visibleWhen(() -> !users.getModelObject().isEmpty()));
         return settingsForm;
-    }
-
-    @Override
-    protected void onConfigure()
-    {
-        super.onConfigure();
-        AnnotatorState state = getModelObject();
-        // check that document is not already finished 
-        // and user is curating not just viewing doc as admin
-        User user = state.getUser();
-        setEnabled((user.equals(userRepository.getCurrentUser()) || 
-                user.getUsername().equals(CURATION_USER)) &&
-                !documentService.isAnnotationFinished(state.getDocument(), user));
-        configureVisibility();
-    }
-
-    protected void configureVisibility()
-    {
-        if (users.getModelObject().isEmpty()) {
-            usersForm.setVisible(false);
-            noDocsLabel.setVisible(true);
-        }
-        else {
-            usersForm.setVisible(true);
-            noDocsLabel.setVisible(false);
-        }
     }
 
     private void merge(AjaxRequestTarget aTarget, Form<Void> aForm)
