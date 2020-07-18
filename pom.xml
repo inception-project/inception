@@ -1156,6 +1156,12 @@
             <dependency>com.sun.xml.bind:jaxb-core</dependency>
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
+            <!-- 
+              - h2database and data-jpa, used via reflection in tests, 
+              - cannot be detected by Maven
+              -->
+            <dependency>com.h2database:h2</dependency>
+            <dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
           </ignoredDependencies>
         </configuration>
         <dependencies>

@@ -117,6 +117,12 @@ public class ProjectServiceImpl
         // Nothing to do
     }
     
+    public ProjectServiceImpl(EntityManager aEntityManager)
+    {
+        super();
+        entityManager = aEntityManager;
+    }
+
     @Override
     @Transactional
     public void createProject(Project aProject)
@@ -447,24 +453,16 @@ public class ProjectServiceImpl
 
     @Override
     public List<User> listProjectUsersWithPermissions(Project aProject)
-    {
+    {       
         String query = 
-                "SELECT DISTINCT perm.user " +
-                "FROM ProjectPermission AS perm " +
-                "WHERE perm.project = :project " +
-                "ORDER BY perm.user ASC";
-        List<String> usernames = entityManager
-                .createQuery(query, String.class)
+                "SELECT DISTINCT u FROM User u, ProjectPermission pp " +
+                "WHERE pp.user = u.username " +
+                "AND pp.project = :project " +
+                "ORDER BY u.username ASC";
+        List<User> users = entityManager
+                .createQuery(query, User.class)
                 .setParameter("project", aProject)
                 .getResultList();
-
-        List<User> users = new ArrayList<>();
-
-        for (String username : usernames) {
-            if (userRepository.exists(username)) {
-                users.add(userRepository.get(username));
-            }
-        }
         return users;
     }
 
@@ -473,21 +471,15 @@ public class ProjectServiceImpl
             PermissionLevel aPermissionLevel)
     {
         String query = 
-                "SELECT DISTINCT user " +
-                "FROM ProjectPermission " +
-                "WHERE project = :project AND level = :level " +
-                "ORDER BY user ASC";
-        List<String> usernames = entityManager
-                .createQuery(query, String.class)
+                "SELECT DISTINCT u FROM User u, ProjectPermission pp " +
+                "WHERE pp.user = u.username " +
+                "AND pp.project = :project AND pp.level = :level " +
+                "ORDER BY u.username ASC";
+        List<User> users = entityManager
+                .createQuery(query, User.class)
                 .setParameter("project", aProject)
                 .setParameter("level", aPermissionLevel)
                 .getResultList();
-        List<User> users = new ArrayList<>();
-        for (String username : usernames) {
-            if (userRepository.exists(username)) {
-                users.add(userRepository.get(username));
-            }
-        }
         return users;
     }
 
