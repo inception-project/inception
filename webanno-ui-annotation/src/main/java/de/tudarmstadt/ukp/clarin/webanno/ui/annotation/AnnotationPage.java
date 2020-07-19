@@ -319,6 +319,11 @@ public class AnnotationPage
     @OnEvent
     public void onViewStateChanged(AnnotatorViewportChangedEvent aEvent)
     {
+        // Partial page updates only need to be triggered if we are in a partial page update request
+        if (aEvent.getRequestHandler() == null) {
+            return;
+        }
+        
         aEvent.getRequestHandler().add(centerArea.get(MID_NUMBER_OF_PAGES));
         
         actionRefreshDocument(aEvent.getRequestHandler());
@@ -550,12 +555,16 @@ public class AnnotationPage
     @Override
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
+        // Partial page updates only need to be triggered if we are in a partial page update request
+        if (aTarget == null) {
+            return;
+        }
+        
         try {
             annotationEditor.requestRender(aTarget);
         }
         catch (Exception e) {
-            LOG.warn("Editor refresh requested at illegal time, forcing page refresh",
-                    new RuntimeException());
+            LOG.warn("Unable to refresh annotation editor, forcing page refresh", e);
             throw new RestartResponseException(getPage());
         }
         
@@ -569,7 +578,8 @@ public class AnnotationPage
         if (projectParam != null && !projectParam.isEmpty()) {
             long projectId = projectParam.toLong();
             project = projectService.getProject(projectId);
-        } else if (projectNameParam != null && !projectNameParam.isEmpty()) {
+        }
+        else if (projectNameParam != null && !projectNameParam.isEmpty()) {
             project = projectService.getProject(projectNameParam.toString());
         }
         return project;
@@ -582,7 +592,8 @@ public class AnnotationPage
         if (documentParam != null && !documentParam.isEmpty()) {
             long documentId = documentParam.toLong();
             document = documentService.getSourceDocument(aProject.getId(), documentId);
-        } else if (nameParam != null && !nameParam.isEmpty()) {
+        }
+        else if (nameParam != null && !nameParam.isEmpty()) {
             document = documentService.getSourceDocument(aProject, nameParam.toString());
         }
         return document;

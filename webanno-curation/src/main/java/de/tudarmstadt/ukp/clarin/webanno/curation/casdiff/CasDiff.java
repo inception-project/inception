@@ -25,7 +25,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
-import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
@@ -311,12 +310,19 @@ public class CasDiff
             }
         }
         
+        Type type = aCas.getTypeSystem().getType(aType);
+        if (type == null) {
+            LOG.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId
+                    + "] contains no annotations of type [" + aType + "]");
+            return;
+        }
+        
         Collection<AnnotationFS> annotations;
         if (begin == -1 && end == -1) {
-            annotations = select(aCas, getType(aCas, aType));
+            annotations = select(aCas, type);
         }
         else {
-            annotations = selectCovered(aCas, getType(aCas, aType), begin, end);
+            annotations = selectCovered(aCas, type, begin, end);
         }
         
         if (annotations.isEmpty()) {
@@ -324,10 +330,9 @@ public class CasDiff
                     + "] contains no annotations of type [" + aType + "]");
             return;
         }
-        else {
-            LOG.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId + "] contains ["
-                    + annotations.size() + "] annotations of type [" + aType + "]");
-        }
+        
+        LOG.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId + "] contains ["
+                + annotations.size() + "] annotations of type [" + aType + "]");
 
         int posBefore = configSets.keySet().size();
         LOG.debug("Positions before: [" + posBefore + "]");
@@ -396,10 +401,17 @@ public class CasDiff
             configuration.add(aCasGroupId, aFS);
         }
         else {
+            Feature feat = aFS.getType().getFeatureByBaseName(aSet.position.getFeature());
+
+            // If the CAS has not been upgraded yet to include the feature, then there are no
+            // configurations for it.
+            if (feat == null) {
+                return;
+            }
+            
             // For each slot at the given position in the FS-to-be-added, we need find a
             // corresponding configuration
-            ArrayFS links = (ArrayFS) aFS.getFeatureValue(aFS.getType().getFeatureByBaseName(
-                    aSet.position.getFeature()));
+            ArrayFS links = (ArrayFS) aFS.getFeatureValue(feat);
             for (int i = 0; i < links.size(); i++) {
                 FeatureStructure link = links.get(i);
                 DiffAdapter adapter = getAdapter(aFS.getType().getName());
@@ -639,55 +651,102 @@ public class CasDiff
             sortedFeatures.removeIf(f -> adapter.getLinkFeature(f) != null);
         }
         
-        for (String feature : sortedFeatures) {
+        nextFeature: for (String feature : sortedFeatures) {
             Feature f1 = type1.getFeatureByBaseName(feature);
             Feature f2 = type2.getFeatureByBaseName(feature);
+
+            Type range = (f1 != null) ? f1.getRange() : (f2 != null ? f2.getRange() : null);
+
+            // If both feature structures do not declare the feature, then they must have the same
+            // value (no value)
+            if (range == null) {
+                continue nextFeature;
+            }
             
-            switch (f1.getRange().getName()) {
-            case CAS.TYPE_NAME_BOOLEAN:
-                if (aFS1.getBooleanValue(f1) != aFS2.getBooleanValue(f2)) {
+            // If both features are declared but their range differs, then the comparison is false
+            if (f1 != null && f2 != null && !f1.getRange().equals(f2.getRange())) {
+                return false;
+            }
+            
+            // When we get here, f1 or f2 can still be null
+            
+            switch (range.getName()) {
+            case CAS.TYPE_NAME_BOOLEAN: {
+                boolean value1 = f1 != null ? aFS1.getBooleanValue(f1) : false;
+                boolean value2 = f2 != null ? aFS2.getBooleanValue(f2) : false;
+                
+                if (value1 != value2) {
                     return false;
                 }
                 break;
-            case CAS.TYPE_NAME_BYTE:
-                if (aFS1.getByteValue(f1) != aFS2.getByteValue(f2)) {
+            }
+            case CAS.TYPE_NAME_BYTE: {
+                byte value1 = f1 != null ? aFS1.getByteValue(f1) : 0;
+                byte value2 = f2 != null ? aFS2.getByteValue(f2) : 0;
+                
+                if (value1 != value2) {
                     return false;
                 }
                 break;
-            case CAS.TYPE_NAME_DOUBLE:
-                if (aFS1.getDoubleValue(f1) != aFS2.getDoubleValue(f2)) {
+            }
+            case CAS.TYPE_NAME_DOUBLE: {
+                double value1 = f1 != null ? aFS1.getDoubleValue(f1) : 0.0d;
+                double value2 = f2 != null ? aFS2.getDoubleValue(f2) : 0.0d;
+                
+                if (value1 != value2) {
                     return false;
                 }
                 break;
-            case CAS.TYPE_NAME_FLOAT:
-                if (aFS1.getFloatValue(f1) != aFS2.getFloatValue(f2)) {
+            }
+            case CAS.TYPE_NAME_FLOAT: {
+                float value1 = f1 != null ? aFS1.getFloatValue(f1) : 0.0f;
+                float value2 = f2 != null ? aFS2.getFloatValue(f2) : 0.0f;
+                
+                if (value1 != value2) {
                     return false;
                 }
                 break;
-            case CAS.TYPE_NAME_INTEGER:
-                if (aFS1.getIntValue(f1) != aFS2.getIntValue(f2)) {
+            }
+            case CAS.TYPE_NAME_INTEGER: {
+                int value1 = f1 != null ? aFS1.getIntValue(f1) : 0;
+                int value2 = f2 != null ? aFS2.getIntValue(f2) : 0;
+                
+                if (value1 != value2) {
                     return false;
                 }
                 break;
-            case CAS.TYPE_NAME_LONG:
-                if (aFS1.getLongValue(f1) != aFS2.getLongValue(f2)) {
+            }
+            case CAS.TYPE_NAME_LONG: {
+                long value1 = f1 != null ? aFS1.getLongValue(f1) : 0l;
+                long value2 = f2 != null ? aFS2.getLongValue(f2) : 0l;
+                
+                if (value1 != value2) {
                     return false;
                 }
                 break;
-            case CAS.TYPE_NAME_SHORT:
-                if (aFS1.getShortValue(f1) != aFS2.getShortValue(f2)) {
+            }
+            case CAS.TYPE_NAME_SHORT: {
+                short value1 = f1 != null ? aFS1.getShortValue(f1) : 0;
+                short value2 = f2 != null ? aFS2.getShortValue(f2) : 0;
+                
+                if (value1 != value2) {
                     return false;
                 }
                 break;
-            case CAS.TYPE_NAME_STRING:
-                if (!StringUtils.equals(aFS1.getStringValue(f1), aFS2.getStringValue(f2))) {
+            }
+            case CAS.TYPE_NAME_STRING: {
+                String value1 = f1 != null ? aFS1.getStringValue(f1) : null;
+                String value2 = f2 != null ? aFS2.getStringValue(f2) : null;
+                
+                if (!StringUtils.equals(value1, value2)) {
                     return false;
                 }
                 break;
+            }
             default: {
                 // Must be some kind of feature structure then
-                FeatureStructure valueFS1 = aFS1.getFeatureValue(f1);
-                FeatureStructure valueFS2 = aFS2.getFeatureValue(f2);
+                FeatureStructure valueFS1 = f1 != null ? aFS1.getFeatureValue(f1) : null;
+                FeatureStructure valueFS2 = f2 != null ? aFS2.getFeatureValue(f2) : null;
                 
                 // Ignore the SofaFS - we already checked that the CAS is the same.
                 if (valueFS1 instanceof SofaFS) {

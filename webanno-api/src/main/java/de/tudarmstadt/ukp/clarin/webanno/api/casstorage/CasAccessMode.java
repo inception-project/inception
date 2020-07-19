@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
+
 public enum CasAccessMode
 {
     /**
@@ -29,7 +31,8 @@ public enum CasAccessMode
     
     /**
      * The CAS may be shared between multiple callers. The callers must not make any kind of 
-     * modifications to the CAS and they cannot save the CAS.
+     * modifications to the CAS and they cannot save the CAS. When requesting a CAS in this mode,
+     * the CAS upgrade mode must be {@link CasUpgradeMode#AUTO_CAS_UPGRADE}.
      */
     SHARED_READ_ONLY_ACCESS,
     

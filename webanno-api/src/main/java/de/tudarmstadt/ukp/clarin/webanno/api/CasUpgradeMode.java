@@ -20,7 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 public enum CasUpgradeMode
 {
     /**
-     * Do not upgrade the CAS to the current project type system.
+     * Do not upgrade the CAS to the current project type system. Avoiding the CAS upgrade has two
+     * important effects:
+     * <ul>
+     * <li>The feature structure addresses in the CAS do not change. This is important because
+     * these addresses are used e.g. in UI layer to uniquely identify and access annotations.</li>
+     * <li>The access is faster because the upgrade is skipped.</li>
+     * </ul>
      */
     NO_CAS_UPGRADE,
     

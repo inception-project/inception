@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
@@ -425,7 +426,7 @@ public class AgreementPage
         for (User user : users) {
             List<CAS> cases = new ArrayList<>();
 
-            // Bulk-fetch all source documents for which there is already an annoation document for
+            // Bulk-fetch all source documents for which there is already an annotation document for
             // the user which is faster then checking for their existence individually
             List<SourceDocument> docsForUser = documentService
                     .listAnnotationDocuments(project, user).stream()
@@ -443,25 +444,22 @@ public class AgreementPage
                         
                         if (traits.isLimitToFinishedDocuments()
                                 && !annotationDocument.getState().equals(FINISHED)) {
-                            // Add a skip marker for the current CAS to the CAS list - this is 
-                            // necessary because we expect the CAS lists for all users to have the
-                            // same size
+                            // Add a skip marker (null) for the current CAS to the CAS list - this 
+                            // is necessary because we expect the CAS lists for all users to have
+                            // the same size
                             cases.add(null);
                             continue nextDocument;
                         }
+                    }
                         
-                        cas = documentService.readAnnotationCas(annotationDocument,
-                                SHARED_READ_ONLY_ACCESS);
-                    }
-                    else if (!traits.isLimitToFinishedDocuments()) {
-                        // ... if we are not limited to finished documents and if there is no
-                        // annotation document, then we use the initial CAS for that user.
-                        cas = documentService.createOrReadInitialCas(document);
-                    }
+                    // Reads the user's annotation document or the initial source document -
+                    // depending on what is available
+                    cas = documentService.readAnnotationCas(document, user.getUsername(),
+                            AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
                 }
                 catch (Exception e) {
-                    LOG.error("Unable to load data", e);
                     error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                    LOG.error("Unable to load data", e);
                 }
                 
                 if (cas != null) {
@@ -477,20 +475,7 @@ public class AgreementPage
                 // source document yet.
                 cases.add(cas);
             }
-            
-            // Bulk-upgrade CASes - this is faster than upgrading them individually since the
-            // bulk upgrade only loads the project type system once.
-            try {
-                annotationService.upgradeCasIfRequired(cases, project);
-                // REC: I think there is no need to write the CASes here. We would not
-                // want to interfere with currently active annotator users
-            }
-            catch (Exception e) {
-                LOG.error("Unable to upgrade CAS", e);
-                error("Unable to upgrade CAS: " + ExceptionUtils.getRootCauseMessage(e));
-                continue;
-            }
-                
+                            
             cachedCASes.put(user.getUsername(), cases);
         }
 

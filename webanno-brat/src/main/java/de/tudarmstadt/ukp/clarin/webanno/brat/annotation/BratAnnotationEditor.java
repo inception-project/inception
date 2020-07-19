@@ -25,9 +25,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderT
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +37,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.Component;
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
@@ -63,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRenderedMetaDataKey;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -644,11 +649,15 @@ public class BratAnnotationEditor
         StringBuilder js = new StringBuilder();
         js.append(bratInitCommand());
         js.append(bratLoadCollectionCommand());
-        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-        if (!target.isPresent() && getModelObject().getProject() != null) {
-            // If a document is already open, we also need to render the document. To avoid carrying
-            // the data JSON around in the document header, we trigger brat to load the JSON in a
-            // separate request
+        
+        // If a document is already open, we also need to render the document. This happens either
+        // when a page is freshly loaded or when e.g. the whole editor is added to the page or 
+        // when it is added to a partial page update (AJAX request).
+        // If the editor is part of a full or partial page update, then it needs to be 
+        // reinitialized. So we need to use deferred rendering. The render() method checks the
+        // partial page update to see if the editor is part of it and if so, it skips itself so
+        // no redundant rendering is performed.
+        if (getModelObject().getProject() != null) {
             js.append(bratRenderLaterCommand());
         }
         aResponse.render(OnDomReadyHeaderItem.forScript(js));
@@ -811,6 +820,42 @@ public class BratAnnotationEditor
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
+        // Check if this editor has already been rendered in the current request cycle and if this
+        // is the case, skip rendering.
+        RequestCycle requestCycle = RequestCycle.get();
+        Set<String> renderedEditors = requestCycle
+                .getMetaData(AnnotationEditorRenderedMetaDataKey.INSTANCE);
+        if (renderedEditors == null) {
+            renderedEditors = new HashSet<>();
+            requestCycle.setMetaData(AnnotationEditorRenderedMetaDataKey.INSTANCE, renderedEditors);
+        }
+        
+        if (renderedEditors.contains(getMarkupId())) {
+            LOG.trace("[{}][{}] render (AJAX) - was already rendered in this cycle - skipping",
+                    getMarkupId(), vis.getMarkupId());
+            return;
+        }
+
+        renderedEditors.add(getMarkupId());
+        
+        // Check if the editor or any of its parents has been added to a partial page update. If 
+        // this is the case, then deferred rendering in renderHead kicks in and we do not need to
+        // render here.
+        Set<Component> components = new HashSet<>(aTarget.getComponents());
+        boolean deferredRenderingRequired = components.contains(this)
+                || visitParents(MarkupContainer.class, (aParent, aVisit) -> {
+                    if (components.contains(aParent)) {
+                        aVisit.stop(aParent);
+                    }
+                }) != null;
+        if (deferredRenderingRequired) {
+            LOG.trace("[{}][{}] render (AJAX) - deferred rendering will trigger - skipping",
+                    getMarkupId(), vis.getMarkupId());
+            return;
+        }
+        
+        LOG.trace("[{}][{}] render (AJAX)", getMarkupId(), vis.getMarkupId());
+        
         try {
             bratRenderCommand(getCasProvider().get()).ifPresent(cmd -> {
                 StringBuilder js = new StringBuilder();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,22 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer.abbreviate;
-import static org.junit.Assert.assertEquals;
+import java.util.Set;
 
-import org.junit.Test;
+import org.apache.wicket.MetaDataKey;
 
-public class LayerNameAbbreviationTest
+public class AnnotationEditorRenderedMetaDataKey
+    extends MetaDataKey<Set<String>>
 {
-    @Test
-    public void test()
-    {
-        assertEquals("Dep...", abbreviate("Dependency"));
-        assertEquals("MorFea...", abbreviate("Morphological features"));
-        assertEquals("SemArg...", abbreviate("Semantic argument"));
-        assertEquals("OneTwoThr...", abbreviate("One two three"));
-        assertEquals("Foo of Lala", abbreviate("Foo of Lala"));
-    }
+    private static final long serialVersionUID = 102615176759478581L;
+    
+    public final static AnnotationEditorRenderedMetaDataKey INSTANCE = 
+            new AnnotationEditorRenderedMetaDataKey();
 }
