@@ -28,9 +28,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
@@ -38,8 +38,6 @@ import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvid
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.springframework.beans.factory.annotation.Autowired;
-
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -59,6 +57,8 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     private IModel<List<SourceDocument>> model;
     private List<AnnotationDocument> allAnnotationDocuments;
 
+    private EntityManager entityManager;
+
     private List<SourceDocument> shownDocuments;
     private Filter filter;
 
@@ -66,7 +66,6 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
 
     private int defaultAnnotations;
 
-    @Autowired
     public AnnotationQueueOverviewDataProvider(
         List<SourceDocument> aData,
         List<String> aHeaders, List<AnnotationDocument> aAllAnnotationDocuments)
@@ -94,17 +93,18 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         };
     }
 
-    @Autowired
     public AnnotationQueueOverviewDataProvider(
         List<AnnotationDocument> aAlAnnotationDocuments,
-        List<SourceDocument> aData, DocumentService aDocumentService)
+        List<SourceDocument> aData, DocumentService aDocumentService, EntityManager aEntityManager)
     {
+        entityManager = aEntityManager;
         allAnnotationDocuments = aAlAnnotationDocuments;
         data = aData;
         documentService = aDocumentService;
 
 
     }
+
 
     @Override
     public Iterator<SourceDocument> iterator(long first, long count)
@@ -358,12 +358,13 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         AnnotationPageBase aAnnotationPageBase, AnnotationDocument aCurrentAnno)
     {
 
+
         //First check for a documents that is in Progress for the user, and return this
         for (int i = 0; i < allAnnotationDocuments.size(); i++)
         {
-            if (allAnnotationDocuments.get(i).getUser().equals
-                (aAnnotationPageBase.getModelObject().getUser().getUsername())
-                && allAnnotationDocuments.get(i).getState().equals(IN_PROGRESS)
+            //NULL CHECK due to listAnnotableDocuments from webanno
+            if (allAnnotationDocuments.get(i) != null &&
+                allAnnotationDocuments.get(i).getState().equals(IN_PROGRESS)
                 && !allAnnotationDocuments.get(i).getName().equals(aCurrentAnno.getName()))
             {
                 //Found a document in progress
@@ -377,54 +378,56 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
             }
         }
 
-
-        Random r = new Random();
-        int attempts = 0;
-
         //Nothing in Progress, so now return a random document, or create a new annotation document
-        while (true)
+
+
+        //Get a random document
+        List<SourceDocument> srcList = entityManager.createQuery(
+            "FROM SourceDocument " +
+                "WHERE project = :pro " +
+               "ORDER BY rand()", SourceDocument.class)
+            .setParameter("pro", aAnnotationPageBase.getModelObject().getProject())
+            .getResultList();
+        for (SourceDocument src: srcList)
         {
-            SourceDocument src = data.get(r.nextInt(data.size()));
+            //Look if there is a corresponding Annotation document
+            //If not, create a new one
+            AnnotationDocument anno = entityManager.createQuery(
+                    "FROM AnnotationDocument " +
+                        "WHERE name = :sourceName " +
+                        "AND user = :currentUser ", AnnotationDocument.class)
+                    .setParameter("sourceName", src.getName())
+                    .setParameter("currentUser", aAnnotationPageBase.
+                        getModelObject().getUser().getUsername())
+                    .getResultList().stream().findFirst().orElse(null);
 
-            for (int i = 0; i < allAnnotationDocuments.size(); i++)
-            {
-                if (src.getName().equals(allAnnotationDocuments.get(i).getName()) &&
-                    allAnnotationDocuments.get(i).getUser().equals(
-                        aAnnotationPageBase.getModelObject().getUser().getUsername()))
-                {
-                    if (allAnnotationDocuments.get(i).getState().equals(NEW))
-                    {
-                        return src;
-                    } else {
-                        attempts++;
-                        //Try for 3 times the size of all documents, if still nothing new found
-                        //return null. This is catched and will send the user back to the
-                        //homepage.
-                        if (attempts == data.size() * 3)
-                        {
-                            return null;
-                        }
-                        break;
-                    }
-                }
+            if (anno == null) {
+                //No annotation document for this source document
+                //for the current user, create a new Annotation document for the user
+                AnnotationDocument annotationDocument = new AnnotationDocument();
+                annotationDocument.setDocument(src);
+                annotationDocument.setName(src.getName());
+                annotationDocument.setProject(aAnnotationPageBase.
+                    getModelObject().getProject());
+                annotationDocument.setUser(aAnnotationPageBase.
+                    getModelObject().getUser().getUsername());
+                annotationDocument.setState(NEW);
+                documentService.createAnnotationDocument(annotationDocument);
 
-                if (i == allAnnotationDocuments.size() - 1)
+            } else {
+                //Annotation document found, however its state was either
+                // inprogress / finished / locked
+                if (!anno.getState().equals(NEW))
                 {
-                    //No annotation document for this source document
-                    //for the current user, create a new Annotation document for the user
-                    AnnotationDocument annotationDocument = new AnnotationDocument();
-                    annotationDocument.setDocument(src);
-                    annotationDocument.setName(src.getName());
-                    annotationDocument.setProject(aAnnotationPageBase.
-                        getModelObject().getProject());
-                    annotationDocument.setUser(aAnnotationPageBase.
-                        getModelObject().getUser().getUsername());
-                    annotationDocument.setState(NEW);
-                    documentService.createAnnotationDocument(annotationDocument);
-                    return src;
+                    continue;
                 }
             }
+
+            return src;
         }
+
+        return null;
+
     }
 
     @Override
@@ -434,16 +437,16 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     }
 
     @Override
-    public void setFilterState(Filter filter)
+    public void setFilterState(Filter aFilter)
     {
-        this.filter = filter;
+        filter = aFilter;
 
     }
 
-    public String getUsersWorkingOnTheDocument(SourceDocument document)
+    public String getUsersWorkingOnTheDocument(SourceDocument aDocument)
     {
         return allAnnotationDocuments.stream()
-            .filter(d -> d.getDocument().equals(document) &&
+            .filter(d -> d.getDocument().equals(aDocument) &&
                     !d.getState().equals(NEW) &&
                     !d.getState().equals(IGNORE))
             .map(AnnotationDocument::getUser)
@@ -452,9 +455,9 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     }
 
 
-    public Date lastAccessTimeForDocument(SourceDocument doc)
+    public Date lastAccessTimeForDocument(SourceDocument aDoc)
     {
-        return doc.getUpdated();
+        return aDoc.getUpdated();
     }
 }
 

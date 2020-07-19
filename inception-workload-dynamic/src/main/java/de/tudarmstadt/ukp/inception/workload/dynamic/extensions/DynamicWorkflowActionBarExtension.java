@@ -15,8 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,12 +30,22 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 
+
+
 @Order(1100)
 @Component
 public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {
     private @Autowired WorkflowProperties workflowProperties;
+
+    @PersistenceContext
+    private final EntityManager entityManager;
+
+    @Autowired
+    public DynamicWorkflowActionBarExtension(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public String getRole()
@@ -44,19 +56,25 @@ public class DynamicWorkflowActionBarExtension
     @Override
     public int getPriority()
     {
+        return 1;
+    }
+
+    @Override
+    public boolean accepts(AnnotationPageBase aPage) {
         // New dynamic workflow only used when the new workflow manager selected in the settings.
         // Otherwise use the default one and skip this
         if (workflowProperties.isWorkflowManagerActive()) {
-            return 1;
+            return true;
         }
         else {
-            return -1;
+            return false;
         }
     }
 
     @Override
     public Panel createActionBarItem(String aID, AnnotationPageBase aAnnotationPageBase)
     {
-        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase);
+        return new DynamicAnnotatorWorkflowActionBarItemGroup(
+            aID, aAnnotationPageBase, entityManager);
     }
 }

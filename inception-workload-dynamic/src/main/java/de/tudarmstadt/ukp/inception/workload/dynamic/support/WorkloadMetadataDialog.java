@@ -32,18 +32,18 @@ public class WorkloadMetadataDialog extends Panel
     private static final long serialVersionUID = 2797336810690526392L;
 
     public WorkloadMetadataDialog(String aID, SourceDocument aDocument,
-                                  List<String> finshedUsers, List<String> inProgressUser)
+                                  List<String> finishedUsers, List<String> inProgressUsers)
     {
         super(aID);
 
-        if (finshedUsers.size() == 0)
+        if (finishedUsers.size() == 0)
         {
-            finshedUsers.add("-");
+            finishedUsers.add("-");
         }
 
-        if (inProgressUser.size() == 0)
+        if (inProgressUsers.size() == 0)
         {
-            inProgressUser.add("-");
+            inProgressUsers.add("-");
         }
 
 
@@ -51,9 +51,9 @@ public class WorkloadMetadataDialog extends Panel
         Label documentName = new Label("documentName", "Document name: "
             + aDocument.getName());
         Label userInProgress = new Label("userInProgress", "Users working on the Document: "
-            + inProgressUser);
+            + inProgressUsers);
         Label userFinished = new Label("userFinished", "Users finished the document: "
-            + finshedUsers);
+            + finishedUsers);
 
         add(documentName);
         add(userInProgress);

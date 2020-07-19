@@ -21,6 +21,11 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
+import java.util.ArrayList;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -42,6 +47,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOver
 
 
 
+
 public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
 {
 
@@ -50,22 +56,29 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
 
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
     private final AnnotationPageBase page;
     protected final ConfirmationDialog finishDocumentDialog;
     private final LambdaAjaxLink finishDocumentLink;
     private final AnnotationQueueOverviewDataProvider provider;
 
-    public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
+    public DynamicAnnotatorWorkflowActionBarItemGroup(
+        String aId, AnnotationPageBase aPage, EntityManager aEntityManager)
     {
         super(aId);
 
         //Same as for the default
         page = aPage;
+        entityManager = aEntityManager;
 
         provider = new AnnotationQueueOverviewDataProvider(
-            documentService.listAnnotationDocuments(aPage.getModelObject().getProject()),
+            new ArrayList<>(documentService.listAnnotatableDocuments(
+                aPage.getModelObject().getProject(), aPage.getModelObject().getUser()).values()),
             documentService.listSourceDocuments(
-                aPage.getModelObject().getProject()), documentService);
+                aPage.getModelObject().getProject()), documentService, entityManager);
 
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
             new StringResourceModel("FinishDocumentDialog.title", this, null),
@@ -106,13 +119,14 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
 
 
             //Get a new random document from the list and open it
+            System.out.println(entityManager.toString());
             SourceDocument doc = provider.getRandomDocument
                 (getAnnotationPage(), annotationDocument);
             if (doc == null)
             {
-                info("No more documents to annotate available. Please contact your project manager.");
                 getAnnotationPage().setResponsePage(getAnnotationPage().
                     getApplication().getHomePage());
+                getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");
             } else {
                 getAnnotationPage().getModelObject().setDocument(doc, documentService.
                     listSourceDocuments(getAnnotationPage().getModelObject().getProject()));

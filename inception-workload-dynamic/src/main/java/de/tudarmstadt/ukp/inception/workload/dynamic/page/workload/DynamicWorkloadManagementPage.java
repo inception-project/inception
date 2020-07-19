@@ -96,18 +96,23 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
     public DynamicWorkloadManagementPage() {
         super();
         //Error, user is returned to home page, nothing else to do
-        error("No Project selected, please enter the monitoring page only with a valid project reference");
         setResponsePage(getApplication().getHomePage());
+        getSession().error("No project selected.");
     }
 
     //Constructor with a project
-    public DynamicWorkloadManagementPage(final PageParameters aPageParameters)
-    {
+    public DynamicWorkloadManagementPage(final PageParameters aPageParameters) {
         super(aPageParameters);
 
         //Get current Project
         currentProject.setObject(getProjectFromParameters(aPageParameters.get
             (PAGE_PARAM_PROJECT_ID)).get());
+
+        init();
+    }
+
+    public void init()
+    {
 
         //Header of the page
         Label name = new Label("name", currentProject.getObject().getName());

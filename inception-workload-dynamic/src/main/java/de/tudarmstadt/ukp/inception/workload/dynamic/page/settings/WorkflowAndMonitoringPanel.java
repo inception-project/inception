@@ -23,17 +23,20 @@ import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
+
 
 //Custom panel inside the page
 public class WorkflowAndMonitoringPanel extends Panel
@@ -43,14 +46,18 @@ public class WorkflowAndMonitoringPanel extends Panel
     private @SpringBean WorkloadProperties workloadProperties;
     private @SpringBean WorkflowProperties workflowProperties;
 
+    private String ID;
 
-    public WorkflowAndMonitoringPanel(String aID, IModel<Project> aProject)
-    {
+    private static final long serialVersionUID = -6220828178550562376L;
+
+    public WorkflowAndMonitoringPanel(String aID, IModel<Project> aProject) {
         super(aID, aProject);
+
+        ID = aID;
 
         //Basic form
         Form<Void> form = new Form<>("form");
-        add(form);
+
 
         //Add two possibilities to select for the workflow manager
         List<String> workflow = new ArrayList<>();
@@ -89,8 +96,12 @@ public class WorkflowAndMonitoringPanel extends Panel
         Button confirm = new AjaxButton(getString("confirm"),Model.of("Confirm"))
         {
             @Override
-            public void onSubmit(AjaxRequestTarget target)
+            public void onSubmit(AjaxRequestTarget aTarget)
             {
+
+                aTarget.add(getParent());
+                aTarget.addChildren(getPage(), IFeedback.class);
+
                 if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0)))
                 {
                     workloadProperties.setActive(false);
@@ -105,11 +116,19 @@ public class WorkflowAndMonitoringPanel extends Panel
                     workflowProperties.setActive(true);
                 }
 
-                info("Workflow and workload settings changed");
-
+                success("Workflow and workload settings changed");
             }
         };
 
         form.add(confirm);
+
+        add(form);
+    }
+
+    @Override
+    protected void onInitialize() {
+        super.onInitialize();
+        IModel<String> resourceModel = new StringResourceModel(getString(ID), this, Model.of(ID));
+
     }
 }

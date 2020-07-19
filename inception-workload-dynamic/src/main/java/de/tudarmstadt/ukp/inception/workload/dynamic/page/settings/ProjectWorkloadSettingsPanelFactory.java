@@ -51,6 +51,6 @@ public class ProjectWorkloadSettingsPanelFactory
     @Override
     public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
     {
-        return new ProjectWorkloadPanel(aID, aProjectModel);
+        return new WorkflowAndMonitoringPanel(aID, aProjectModel);
     }
 }

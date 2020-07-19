@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
 
+import java.util.ArrayList;
 import java.util.Optional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -40,20 +42,25 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowPropertiesI
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 
 
+
 @Order(1000)
 @Component
 public class DynamicWorkflowDocumentNavigationActionBarExtension implements ActionBarExtension
 {
-
     private final WorkflowProperties workflowProperties;
     private final DocumentService documentService;
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(
-        WorkflowPropertiesImpl aWorkflowProperties, DocumentService aDocumentService)
+        WorkflowPropertiesImpl aWorkflowProperties,
+        DocumentService aDocumentService,
+        EntityManager aEntityManager)
     {
         workflowProperties = aWorkflowProperties;
         documentService = aDocumentService;
+        entityManager = aEntityManager;
     }
 
     @Override
@@ -65,11 +72,16 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     @Override
     public int getPriority()
     {
+        return 1;
+    }
+
+    @Override
+    public boolean accepts(AnnotationPageBase aPage) {
         if (workflowProperties.isWorkflowManagerActive())
         {
-            return 1;
+            return true;
         } else {
-            return -1;
+            return false;
         }
     }
 
@@ -87,14 +99,17 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     {
         AnnotationQueueOverviewDataProvider prov =
             new AnnotationQueueOverviewDataProvider(
-                documentService.listAnnotationDocuments
-            (aPage.getModelObject().getProject()), documentService.
-                listSourceDocuments(aPage.getModelObject().getProject()), documentService);
+                new ArrayList<>(documentService.listAnnotatableDocuments
+                    (aPage.getModelObject().getProject(),
+                        aPage.getModelObject().getUser()).values()),
+                documentService.listSourceDocuments(
+                    aPage.getModelObject().getProject()), documentService, entityManager);
         SourceDocument doc = prov.getRandomDocument(aPage, new AnnotationDocument());
         if (doc == null)
         {
-            aPage.info("No more documents available");
+
             aPage.setResponsePage(aPage.getApplication().getHomePage());
+            aPage.getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");
 
         } else {
             aPage.getModelObject().setDocument(doc, documentService.
