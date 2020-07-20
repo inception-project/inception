@@ -204,6 +204,12 @@ public class CurationEditorExtension
             return;
         }
         
+        // check if user already finished with this document
+        User currentUser = userRepository.getCurrentUser();
+        if (documentService.isAnnotationFinished(aState.getDocument(), currentUser)) {
+            return;
+        }
+        
         //check annotatorstate metadata if user is currently curating for this project
         long projectId = aState.getProject().getId();
         Boolean isCurating = aState.getMetaData(CurationMetadata.CURATION_USER_PROJECT);
@@ -212,7 +218,7 @@ public class CurationEditorExtension
         }
             
         List<User> selectedUsers = curationService
-                .listUsersReadyForCuration(userRepository.getCurrentUsername(), 
+                .listUsersReadyForCuration(currentUser.getUsername(), 
                         aState.getProject(), aState.getDocument());
         if (selectedUsers.isEmpty()) {
             return;

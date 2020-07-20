@@ -251,10 +251,9 @@ public class CurationServiceImpl
     }
     
     @Override
-    public List<User> listFinishedUsers(Project aProject, 
-            SourceDocument aDocument)
+    public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument)
     {
-        Validate.notNull(aDocument, "Document must be specified");
+        Validate.notNull(aSourceDocument, "Document must be specified");
         Validate.notNull(aProject, "project must be specified");
         
         String query = String.join("\n",
@@ -268,7 +267,7 @@ public class CurationServiceImpl
         List<User> finishedUsers = new ArrayList<>(entityManager
                 .createQuery(query, User.class)
                 .setParameter("project", aProject)
-                .setParameter("document", aDocument)
+                .setParameter("document", aSourceDocument)
                 .setParameter("state", AnnotationDocumentState.FINISHED)
                 .getResultList());
 
@@ -484,5 +483,4 @@ public class CurationServiceImpl
     {
         return getCurationState(aUsername, aProjectId).getMergeStrategy();
     }
-
 }
