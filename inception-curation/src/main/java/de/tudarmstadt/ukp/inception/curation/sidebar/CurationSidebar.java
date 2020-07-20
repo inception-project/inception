@@ -98,6 +98,7 @@ public class CurationSidebar
     private WebMarkupContainer mainContainer;
     private ListView<User> users;
     private Label noDocsLabel;
+    private Label finishedLabel;
     
     private AnnotationPage annoPage;
     private final MergeDialog mergeConfirm;
@@ -113,6 +114,17 @@ public class CurationSidebar
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
+        
+        // Add empty space message
+        AnnotatorState state = aModel.getObject();
+        noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
+        finishedLabel = new Label("finishedLabel", new ResourceModel("finished"));
+        mainContainer.add(finishedLabel);
+        finishedLabel.add(visibleWhen(
+            () -> documentService.isAnnotationFinished(state.getDocument(), state.getUser())));
+        noDocsLabel.add(visibleWhen(() -> !finishedLabel.isVisible() &&
+                users.getModelObject().isEmpty()));
+        mainContainer.add(noDocsLabel);
         
         // set up user-checklist
         usersForm = createUserSelection();
@@ -133,23 +145,12 @@ public class CurationSidebar
                 documentNameModel));
         mainContainer.add(mergeConfirm);
         
-        // Add empty space message
-        AnnotatorState state = aModel.getObject();
-        User currentUser = userRepository.getCurrentUser();
-        noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
-        Label finishedLabel = new Label("finishedLabel", new ResourceModel("finished"));
-        mainContainer.add(finishedLabel);
-        finishedLabel.add(visibleWhen(
-            () -> documentService.isAnnotationFinished(state.getDocument(), currentUser)));
-        noDocsLabel.add(visibleWhen(() -> !finishedLabel.isVisible() &&
-                users.getModelObject().isEmpty()));
-        mainContainer.add(noDocsLabel);
-        
         // if curation user changed we have to reload the document
         long projectid = state.getProject().getId();
-        User curationUser = curationService.retrieveCurationUser(currentUser.getUsername(), 
+        String currentUsername = userRepository.getCurrentUsername();
+        User curationUser = curationService.retrieveCurationUser(currentUsername, 
                 projectid);
-        if (currentUser != null && !currentUser.getUsername().equals(curationUser.getUsername())) {
+        if (currentUsername != null && !currentUsername.equals(curationUser.getUsername())) {
             state.setUser(curationUser);
             Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
             annoPage.actionLoadDocument(target.orElseGet(null));
@@ -158,8 +159,9 @@ public class CurationSidebar
         // user started curating, extension can show suggestions
         state.setMetaData(CurationMetadata.CURATION_USER_PROJECT, true);
         
-        add(enabledWhen(() -> (state.getUser().equals(currentUser) || 
-                state.getUser().getUsername().equals(CURATION_USER)) &&
+        String username = state.getUser().getUsername();
+        add(enabledWhen(() -> (username.equals(currentUsername) || 
+                username.equals(CURATION_USER)) &&
                 !documentService.isAnnotationFinished(state.getDocument(), state.getUser())));
     }
     
@@ -222,7 +224,6 @@ public class CurationSidebar
                 aTarget.add(mainContainer);
             }     
         });
-        usersForm.add(visibleWhen(() -> !users.getModelObject().isEmpty()));
         return settingsForm;
     }
 
@@ -314,6 +315,7 @@ public class CurationSidebar
         };
         selectedUsers.add(users);
         usersForm.add(selectedUsers);
+        usersForm.add(visibleWhen(() -> !noDocsLabel.isVisible() && !finishedLabel.isVisible()));
         return usersForm;
     }
     
