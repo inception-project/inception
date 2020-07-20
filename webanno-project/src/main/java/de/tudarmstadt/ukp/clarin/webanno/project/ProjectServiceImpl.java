@@ -111,10 +111,11 @@ public class ProjectServiceImpl
     private boolean running = false;
 
     private List<ProjectType> projectTypes;
-    
-    public ProjectServiceImpl(@Autowired UserDao aUserRepository, 
-            @Autowired ApplicationEventPublisher aApplicationEventPublisher, 
-            @Autowired RepositoryProperties aRepositoryProperties,
+            
+    @Autowired
+    public ProjectServiceImpl(UserDao aUserRepository, 
+            ApplicationEventPublisher aApplicationEventPublisher, 
+            RepositoryProperties aRepositoryProperties,
             @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
     {
         userRepository = aUserRepository;
