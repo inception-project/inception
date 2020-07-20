@@ -58,7 +58,7 @@ public class ProjectServiceImplTest
     @Before
     public void setUp() throws Exception
     {
-        sut = new ProjectServiceImpl(testEntityManager.getEntityManager());
+        sut = new ProjectServiceImpl(null, null, null, null, testEntityManager.getEntityManager());
         
         //create users
         beate = new User("beate", Role.ROLE_USER, Role.ROLE_ADMIN);
@@ -85,7 +85,7 @@ public class ProjectServiceImplTest
     @EnableAutoConfiguration 
     @EntityScan(
             basePackages = {
-                "de.tudarmstadt.ukp.inception.curation",
+                "de.tudarmstadt.ukp.clarin.webanno.project",
                 "de.tudarmstadt.ukp.clarin.webanno.model",
                 "de.tudarmstadt.ukp.clarin.webanno.security.model" 
     })
@@ -97,24 +97,21 @@ public class ProjectServiceImplTest
     public void listProjectUsersWithPermissions_ShouldReturnUsers() {
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject);
         
-        assertThat(foundUsers).hasSize(2);
-        assertThat(foundUsers).contains(beate, kevin);
+        assertThat(foundUsers).containsExactly(beate, kevin);
     }
     
     @Test
     public void listProjectUsersWithSpecificPermissions_ShouldReturnUsers() {
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
         
-        assertThat(foundUsers).hasSize(2);
-        assertThat(foundUsers).contains(beate, kevin);
+        assertThat(foundUsers).containsExactly(beate, kevin);
     }
     
     @Test
     public void listProjectUsersWithSpecificPermissions_ShouldReturnAUser() {
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, CURATOR);
         
-        assertThat(foundUsers).hasSize(1);
-        assertThat(foundUsers).contains(beate);
+        assertThat(foundUsers).containsExactly(beate);
     }
     
     @Test
@@ -122,5 +119,14 @@ public class ProjectServiceImplTest
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, MANAGER);
         
         assertThat(foundUsers).isEmpty();
+    }
+    
+    @Test
+    public void listProjectUsersWithPermissionButNoTableEntry_ShouldNotReturnThisUser() {
+        testEntityManager.persist(new ProjectPermission(testProject, "ghost", ANNOTATOR));
+        
+        List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
+        
+        assertThat(foundUsers).containsExactly(beate, kevin);
     }
 }

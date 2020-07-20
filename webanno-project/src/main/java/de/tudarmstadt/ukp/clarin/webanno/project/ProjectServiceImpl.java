@@ -102,24 +102,37 @@ public class ProjectServiceImpl
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
-    private @Autowired UserDao userRepository;
-    private @Autowired ApplicationEventPublisher applicationEventPublisher;
-    private @Autowired RepositoryProperties repositoryProperties;
-    private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
+    private final UserDao userRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final RepositoryProperties repositoryProperties;
+    private final List<ProjectInitializer> initializerProxy;
     private List<ProjectInitializer> initializers;
 
     private boolean running = false;
 
     private List<ProjectType> projectTypes;
     
-    public ProjectServiceImpl()
+    public ProjectServiceImpl(@Autowired UserDao aUserRepository, 
+            @Autowired ApplicationEventPublisher aApplicationEventPublisher, 
+            @Autowired RepositoryProperties aRepositoryProperties,
+            @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
     {
-        // Nothing to do
+        userRepository = aUserRepository;
+        applicationEventPublisher = aApplicationEventPublisher;
+        repositoryProperties = aRepositoryProperties;
+        initializerProxy = aInitializerProxy;
     }
-    
-    public ProjectServiceImpl(EntityManager aEntityManager)
+   
+    /**
+     * This constructor is used for testing to set specific test objects for fields
+     */
+    public ProjectServiceImpl(UserDao aUserRepository, 
+            ApplicationEventPublisher aApplicationEventPublisher, 
+            RepositoryProperties aRepositoryProperties,
+            List<ProjectInitializer> aInitializerProxy,
+            EntityManager aEntityManager)
     {
-        super();
+        this(aUserRepository, aApplicationEventPublisher, aRepositoryProperties, aInitializerProxy);
         entityManager = aEntityManager;
     }
 

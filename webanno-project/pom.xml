@@ -160,4 +160,31 @@
     	<scope>test</scope>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+	  <plugin>
+	    <groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-dependency-plugin</artifactId>
+		<executions>
+		  <execution>
+		    <id>default</id>
+			<phase>verify</phase>
+			<goals>
+			  <goal>analyze-only</goal>
+			</goals>
+		  </execution>
+		</executions>
+		<configuration>
+		  <failOnWarning>true</failOnWarning>
+		  <ignoredDependencies>
+			<!-- - h2database and data-jpa, used via reflection in tests, cannot 
+			     -be detected by Maven 
+			-->
+			<dependency>com.h2database:h2</dependency>
+			<dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
+		  </ignoredDependencies>
+		</configuration>
+	  </plugin>
+	</plugins>
+  </build>
 </project>
