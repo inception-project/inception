@@ -61,8 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -330,26 +328,11 @@ public class CurationSidebar
      */
     private List<User> listUsers()
     {
-        return projectService
-                .listProjectUsersWithPermissions(getModelObject().getProject(), 
-                        PermissionLevel.ANNOTATOR)
-                .stream().filter(user -> !user.equals(userRepository.getCurrentUser()) 
-                        && hasFinishedDoc(user))
+        User currentUser = userRepository.getCurrentUser();
+        return curationService.listFinishedUsers(getModelObject().getProject(), 
+                getModelObject().getDocument()).stream()
+                .filter(user -> !user.equals(currentUser))
                 .collect(Collectors.toList());
-    }
-
-    private boolean hasFinishedDoc(User aUser)
-    {
-        SourceDocument doc = getModelObject().getDocument();
-        String username = aUser.getUsername();
-        if (documentService.existsAnnotationDocument(doc, username) && 
-                documentService.getAnnotationDocument(doc, username).getState()
-                .equals(AnnotationDocumentState.FINISHED)) {
-            return true;
-        }
-        else {
-            return false;
-        }
     }
     
     private void selectAndShow(AjaxRequestTarget aTarget, Form<Void> aForm) {
