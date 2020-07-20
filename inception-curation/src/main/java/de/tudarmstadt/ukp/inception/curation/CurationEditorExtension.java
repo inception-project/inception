@@ -212,7 +212,7 @@ public class CurationEditorExtension
         }
             
         List<User> selectedUsers = curationService
-                .listUsersReadyForCuration(userRepository.getCurrentUser().getUsername(), 
+                .listUsersReadyForCuration(userRepository.getCurrentUsername(), 
                         aState.getProject(), aState.getDocument());
         if (selectedUsers.isEmpty()) {
             return;

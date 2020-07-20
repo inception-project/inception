@@ -142,7 +142,7 @@ public class CurationSidebar
         
         // if curation user changed we have to reload the document
         AnnotatorState state = aModel.getObject();
-        String currentUser = userRepository.getCurrentUser().getUsername();
+        String currentUser = userRepository.getCurrentUsername();
         long projectid = state.getProject().getId();
         User curationUser = curationService.retrieveCurationUser(currentUser, 
                 projectid);
@@ -169,7 +169,7 @@ public class CurationSidebar
         
         // set up curation target selection as radio button
         List<String> curationTargets = Arrays.asList(
-                new String[] { CURATION_USER, userRepository.getCurrentUser().getUsername() });
+                new String[] { CURATION_USER, userRepository.getCurrentUsername()});
         ChoiceRenderer<String> choiceRenderer = new ChoiceRenderer<String>()
         {
             private static final long serialVersionUID = -8165699251116827372L;
@@ -273,7 +273,7 @@ public class CurationSidebar
                     aState.getProject().getId(), doc);
             if (targetCas.isPresent()) {
                 MergeStrategy mergeStrat = curationService.retrieveMergeStrategy(
-                        userRepository.getCurrentUser().getUsername(), aState.getProject().getId());
+                        userRepository.getCurrentUsername(), aState.getProject().getId());
                 mergeStrat.merge(aState, targetCas.get(), userCases, aMergeIncomplete);
                 log.debug("{} merge done", mergeStrat.getUiName()); 
             }
@@ -317,7 +317,7 @@ public class CurationSidebar
     private List<User> listSelectedUsers()
     {
         Optional<List<User>> users = curationService.listUsersSelectedForCuration(
-                userRepository.getCurrentUser().getUsername(), getModelObject().getProject()
+                userRepository.getCurrentUsername(), getModelObject().getProject()
                 .getId());
         if (!users.isPresent()) {
             return new ArrayList<>();
@@ -355,7 +355,7 @@ public class CurationSidebar
     private void selectAndShow(AjaxRequestTarget aTarget, Form<Void> aForm) {
         // switch to manual merge
         AnnotatorState state = getModelObject();
-        curationService.updateMergeStrategy(userRepository.getCurrentUser().getUsername(), 
+        curationService.updateMergeStrategy(userRepository.getCurrentUsername(), 
                 state.getProject().getId(), manualMergeStrat);
         
         updateUsers(state);
@@ -381,7 +381,7 @@ public class CurationSidebar
     {
         Collection<User> users = selectedUsers.getModelObject();
         curationService.updateUsersSelectedForCuration(
-                userRepository.getCurrentUser().getUsername(), aState.getProject().getId(), users);
+                userRepository.getCurrentUsername(), aState.getProject().getId(), users);
     }
     
     private void clearUsers(AjaxRequestTarget aTarget, Form<Void> aForm) 
@@ -389,7 +389,7 @@ public class CurationSidebar
         AnnotatorState state = getModelObject();
         selectedUsers.setModelObject(new ArrayList<>());
         curationService.clearUsersSelectedForCuration(
-                userRepository.getCurrentUser().getUsername(), state.getProject().getId());
+                userRepository.getCurrentUsername(), state.getProject().getId());
         aTarget.add(usersForm);
         annoPage.actionRefreshDocument(aTarget);
     }
