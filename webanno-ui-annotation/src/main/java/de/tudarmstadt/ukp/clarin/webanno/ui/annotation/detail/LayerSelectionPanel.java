@@ -186,7 +186,7 @@ public class LayerSelectionPanel
         if (prevDefaultLayer != state.getPreferences().getDefaultLayer()) {
             try {
                 userPreferencesService.savePreferences(state.getProject(),
-                        userDao.getCurrentUser().getUsername(), state.getMode(),
+                        userDao.getCurrentUsername(), state.getMode(),
                         state.getPreferences());
             }
             catch (IOException e) {

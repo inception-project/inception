@@ -151,7 +151,10 @@ public class UserDaoImpl
     @Transactional
     public User getCurrentUser()
     {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        String username = getCurrentUsername();
+        if (username == null) {
+            return null;
+        }
         return get(username);
     }
     
@@ -239,5 +242,11 @@ public class UserDaoImpl
         return entityManager.createQuery(query, Long.class)
                 .setParameter("enabled", true)
                 .getSingleResult();
+    }
+
+    @Override
+    public String getCurrentUsername()
+    {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }
