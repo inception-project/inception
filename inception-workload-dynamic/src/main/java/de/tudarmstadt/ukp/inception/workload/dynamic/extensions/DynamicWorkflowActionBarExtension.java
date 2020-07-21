@@ -63,11 +63,7 @@ public class DynamicWorkflowActionBarExtension
     public boolean accepts(AnnotationPageBase aPage) {
         // New dynamic workflow only used when the new workflow manager selected in the settings.
         // Otherwise use the default one and skip this
-        if (workflowProperties.isWorkflowManagerActive()) {
-            return true;
-        } else {
-            return false;
-        }
+        return workflowProperties.isWorkflowManagerActive();
     }
 
     @Override

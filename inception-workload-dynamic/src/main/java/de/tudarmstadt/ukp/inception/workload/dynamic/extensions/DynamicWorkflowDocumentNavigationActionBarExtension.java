@@ -75,12 +75,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
 
     @Override
     public boolean accepts(AnnotationPageBase aPage) {
-        if (workflowProperties.isWorkflowManagerActive())
-        {
-            return true;
-        } else {
-            return false;
-        }
+        return workflowProperties.isWorkflowManagerActive();
     }
 
     @Override
