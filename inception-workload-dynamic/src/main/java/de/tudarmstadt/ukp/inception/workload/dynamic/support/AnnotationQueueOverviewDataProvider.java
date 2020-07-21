@@ -52,17 +52,17 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
 {
     private static final long serialVersionUID = 4125678936105494485L;
 
-    private List<String> headers;
-    private List<SourceDocument> data;
-    private IModel<List<SourceDocument>> model;
-    private List<AnnotationDocument> allAnnotationDocuments;
+    private final List<String> headers;
+    private final List<SourceDocument> data;
+    private final IModel<List<SourceDocument>> model;
+    private final List<AnnotationDocument> allAnnotationDocuments;
 
     private EntityManager entityManager;
 
     private List<SourceDocument> shownDocuments;
     private Filter filter;
 
-    private DocumentService documentService = null;
+    private DocumentService documentService;
 
     private int defaultAnnotations;
 
@@ -102,6 +102,17 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         allAnnotationDocuments = aAlAnnotationDocuments;
         data = aData;
         documentService = aDocumentService;
+        headers = new ArrayList<>();
+        model = new LoadableDetachableModel<List<SourceDocument>>() {
+            private static final long serialVersionUID = -8559508557211612770L;
+
+            @Override
+            protected List<SourceDocument> load()
+            {
+                return data;
+            }
+        };
+
     }
 
     @Override

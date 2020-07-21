@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
-
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -47,8 +46,8 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
 {
     private final WorkflowProperties workflowProperties;
     private final DocumentService documentService;
-    @PersistenceContext
-    private final EntityManager entityManager;
+
+    private final @PersistenceContext EntityManager entityManager;
 
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(
@@ -97,14 +96,11 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
                     aPage.getModelObject().getProject()), documentService, entityManager);
         SourceDocument doc = prov.getRandomDocument(aPage, new AnnotationDocument());
         if (doc == null) {
-
             aPage.setResponsePage(aPage.getApplication().getHomePage());
             aPage.getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");
-
         } else {
             aPage.getModelObject().setDocument(doc, documentService.
                 listSourceDocuments(aPage.getModelObject().getProject()));
-
             Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
             aPage.actionLoadDocument(target.orElse(null));
         }

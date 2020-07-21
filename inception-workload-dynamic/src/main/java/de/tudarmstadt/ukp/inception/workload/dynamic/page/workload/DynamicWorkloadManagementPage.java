@@ -110,10 +110,11 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         currentProject.setObject(getProjectFromParameters(aPageParameters.get
             (PAGE_PARAM_PROJECT_ID)).get());
 
-        init();
+        commonInit();
     }
 
-    public void init()
+
+    public void commonInit()
     {
 
         //Header of the page

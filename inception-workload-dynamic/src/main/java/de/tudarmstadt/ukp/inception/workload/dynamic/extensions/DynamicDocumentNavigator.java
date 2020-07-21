@@ -26,7 +26,6 @@ public class DynamicDocumentNavigator extends Panel
     public DynamicDocumentNavigator(String aID)
     {
         super(aID);
-        setOutputMarkupId(true);
-        setVisible(false);
+        setOutputMarkupPlaceholderTag(false);
     }
 }

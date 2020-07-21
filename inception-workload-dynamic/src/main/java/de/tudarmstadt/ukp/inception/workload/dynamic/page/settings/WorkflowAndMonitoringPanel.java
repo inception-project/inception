@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.Form;
@@ -34,6 +33,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 
@@ -47,23 +47,25 @@ public class WorkflowAndMonitoringPanel extends Panel
     private @SpringBean WorkloadProperties workloadProperties;
     private @SpringBean WorkflowProperties workflowProperties;
 
-    private final String id;
+    private List<String> workflow;
+    private BootstrapRadioChoice<String> workflowChoices;
+    private List<String> monitoring;
+    private BootstrapRadioChoice<String> monitoringChoices;
 
     public WorkflowAndMonitoringPanel(String aID, IModel<Project> aProject) {
         super(aID, aProject);
 
-        id = aID;
 
         //Basic form
         Form<Void> form = new Form<>("form");
 
 
         //Add two possibilities to select for the workflow manager
-        List<String> workflow = new ArrayList<>();
+        workflow = new ArrayList<>();
         workflow.add("Default workflow manager");
         workflow.add("Dynamic workflow manager");
 
-        BootstrapRadioChoice<String> workflowChoices = new BootstrapRadioChoice<>("workflowRadios",
+        workflowChoices = new BootstrapRadioChoice<>("workflowRadios",
             new Model<>(getString("defaultWorkflow")), workflow);
         workflowChoices.setInline(true);
         workflowChoices.setOutputMarkupId(true);
@@ -74,11 +76,11 @@ public class WorkflowAndMonitoringPanel extends Panel
         form.add(workflowChoices);
 
         //Add two possibilities to select from the monitoring manager
-        List<String> monitoring = new ArrayList<>();
+        monitoring = new ArrayList<>();
         monitoring.add("Default monitoring page");
         monitoring.add("Workload monitoring page");
 
-        BootstrapRadioChoice<String> monitoringChoices = new BootstrapRadioChoice<>("monitoringRadios",
+        monitoringChoices = new BootstrapRadioChoice<>("monitoringRadios",
             new Model<>(getString("defaultMonitoring")), monitoring);
         monitoringChoices.setInline(true);
         monitoringChoices.setOutputMarkupId(true);
@@ -92,29 +94,8 @@ public class WorkflowAndMonitoringPanel extends Panel
 
         //Finally, add the confirm button at the end
 
-        Button confirm = new AjaxButton(getString("confirm"),Model.of("Confirm")) {
-            @Override
-            public void onSubmit(AjaxRequestTarget aTarget)
-            {
-
-                aTarget.add(getParent());
-                aTarget.addChildren(getPage(), IFeedback.class);
-
-                if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {
-                    workloadProperties.setActive(false);
-                } else {
-                    workloadProperties.setActive(true);
-                }
-
-                if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
-                    workflowProperties.setActive(false);
-                } else {
-                    workflowProperties.setActive(true);
-                }
-
-                success("Workflow and workload settings changed");
-            }
-        };
+        Button confirm = new LambdaAjaxButton(getString("confirm"),
+            this::actionConfirm).triggerAfterSubmit();
 
         form.add(confirm);
 
@@ -125,7 +106,28 @@ public class WorkflowAndMonitoringPanel extends Panel
     protected void onInitialize()
     {
         super.onInitialize();
-        IModel<String> resourceModel = new StringResourceModel(getString(id), this, Model.of(id));
+        IModel<String> resourceModel = new StringResourceModel(
+            getString(getId()), this, Model.of(getId()));
 
+    }
+
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
+    {
+        aTarget.add(getParent());
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {
+            workloadProperties.setActive(false);
+        } else {
+            workloadProperties.setActive(true);
+        }
+
+        if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
+            workflowProperties.setActive(false);
+        } else {
+            workflowProperties.setActive(true);
+        }
+
+        success("Workflow and workload settings changed");
     }
 }
