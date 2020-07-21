@@ -101,8 +101,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
                 documentService.listSourceDocuments(
                     aPage.getModelObject().getProject()), documentService, entityManager);
         SourceDocument doc = prov.getRandomDocument(aPage, new AnnotationDocument());
-        if (doc == null)
-        {
+        if (doc == null) {
 
             aPage.setResponsePage(aPage.getApplication().getHomePage());
             aPage.getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");

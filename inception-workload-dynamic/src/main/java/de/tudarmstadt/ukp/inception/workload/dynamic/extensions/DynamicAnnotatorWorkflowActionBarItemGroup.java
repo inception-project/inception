@@ -114,13 +114,11 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
 
             documentService.createAnnotationDocument(annotationDocument);
 
-
             //Get a new random document from the list and open it
             System.out.println(entityManager.toString());
             SourceDocument doc = provider.getRandomDocument
                 (getAnnotationPage(), annotationDocument);
-            if (doc == null)
-            {
+            if (doc == null) {
                 getAnnotationPage().setResponsePage(getAnnotationPage().
                     getApplication().getHomePage());
                 getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");
@@ -130,7 +128,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
                 getAnnotationPage().actionLoadDocument(_target);
                 _target.add(page);
             }
-
         });
         finishDocumentDialog.show(aTarget);
 

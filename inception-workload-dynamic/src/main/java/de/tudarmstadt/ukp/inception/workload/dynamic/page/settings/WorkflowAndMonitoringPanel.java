@@ -41,19 +41,18 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 //Custom panel inside the page
 public class WorkflowAndMonitoringPanel extends Panel
 {
+    private static final long serialVersionUID = -6220828178550562376L;
 
     //SpringBeans
     private @SpringBean WorkloadProperties workloadProperties;
     private @SpringBean WorkflowProperties workflowProperties;
 
-    private final String ID;
-
-    private static final long serialVersionUID = -6220828178550562376L;
+    private final String id;
 
     public WorkflowAndMonitoringPanel(String aID, IModel<Project> aProject) {
         super(aID, aProject);
 
-        ID = aID;
+        id = aID;
 
         //Basic form
         Form<Void> form = new Form<>("form");
@@ -93,8 +92,7 @@ public class WorkflowAndMonitoringPanel extends Panel
 
         //Finally, add the confirm button at the end
 
-        Button confirm = new AjaxButton(getString("confirm"),Model.of("Confirm"))
-        {
+        Button confirm = new AjaxButton(getString("confirm"),Model.of("Confirm")) {
             @Override
             public void onSubmit(AjaxRequestTarget aTarget)
             {
@@ -102,15 +100,13 @@ public class WorkflowAndMonitoringPanel extends Panel
                 aTarget.add(getParent());
                 aTarget.addChildren(getPage(), IFeedback.class);
 
-                if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0)))
-                {
+                if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {
                     workloadProperties.setActive(false);
                 } else {
                     workloadProperties.setActive(true);
                 }
 
-                if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0)))
-                {
+                if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
                     workflowProperties.setActive(false);
                 } else {
                     workflowProperties.setActive(true);
@@ -126,9 +122,10 @@ public class WorkflowAndMonitoringPanel extends Panel
     }
 
     @Override
-    protected void onInitialize() {
+    protected void onInitialize()
+    {
         super.onInitialize();
-        IModel<String> resourceModel = new StringResourceModel(getString(ID), this, Model.of(ID));
+        IModel<String> resourceModel = new StringResourceModel(getString(id), this, Model.of(id));
 
     }
 }

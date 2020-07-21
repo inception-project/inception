@@ -36,24 +36,19 @@ public class WorkloadMetadataDialog extends Panel
     {
         super(aID);
 
-        if (finishedUsers.isEmpty())
-        {
+        if (finishedUsers.isEmpty()) {
             finishedUsers.add("-");
         }
 
-        if (inProgressUsers.isEmpty())
-        {
+        if (inProgressUsers.isEmpty()) {
             inProgressUsers.add("-");
         }
 
 
-        //TODO more content
-        Label documentName = new Label("documentName", "Document name: "
-            + aDocument.getName());
-        Label userInProgress = new Label("userInProgress", "Users working on the Document: "
-            + inProgressUsers);
-        Label userFinished = new Label("userFinished", "Users finished the document: "
-            + finishedUsers);
+        //TODO more content, e.g. created date
+        Label documentName = new Label("documentName", aDocument.getName());
+        Label userInProgress = new Label("userInProgress", inProgressUsers.toString());
+        Label userFinished = new Label("userFinished", finishedUsers.toString());
 
         add(documentName);
         add(userInProgress);

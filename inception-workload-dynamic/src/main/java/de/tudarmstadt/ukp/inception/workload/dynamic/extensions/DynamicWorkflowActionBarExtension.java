@@ -65,8 +65,7 @@ public class DynamicWorkflowActionBarExtension
         // Otherwise use the default one and skip this
         if (workflowProperties.isWorkflowManagerActive()) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }

@@ -93,7 +93,8 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
 
     //Default constructor, no project selected (only when workload.html
     // put directly in the browser without any parameters)
-    public DynamicWorkloadManagementPage() {
+    public DynamicWorkloadManagementPage()
+    {
         super();
         //Error, user is returned to home page, nothing else to do
         setResponsePage(getApplication().getHomePage());
@@ -101,7 +102,8 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
     }
 
     //Constructor with a project
-    public DynamicWorkloadManagementPage(final PageParameters aPageParameters) {
+    public DynamicWorkloadManagementPage(final PageParameters aPageParameters)
+    {
         super(aPageParameters);
 
         //Get current Project
@@ -240,11 +242,9 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
     {
         List<String> result = new ArrayList<>();
         for (AnnotationDocument anno: documentService.
-            listAnnotationDocuments(currentProject.getObject()))
-        {
+            listAnnotationDocuments(currentProject.getObject())) {
             if (anno.getState().equals(AnnotationDocumentState.FINISHED)
-                && anno.getName().equals(aDocument.getName()))
-            {
+                && anno.getName().equals(aDocument.getName())) {
                 result.add(anno.getUser());
             }
         }
@@ -256,11 +256,9 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
     {
         List<String> result = new ArrayList<>();
         for (AnnotationDocument anno: documentService.
-            listAnnotationDocuments(currentProject.getObject()))
-        {
+            listAnnotationDocuments(currentProject.getObject())) {
             if (anno.getState().equals(AnnotationDocumentState.IN_PROGRESS)
-                && anno.getName().equals(aDocument.getName()))
-            {
+                && anno.getName().equals(aDocument.getName())) {
                 result.add(anno.getUser());
             }
         }
@@ -321,13 +319,11 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
                     dateTo.setModelObject(null);
                     dateTo.setEnabled(false);
                     dateFrom.setEnabled(true);
-                }
-                else if (getComponent().getDefaultModelObjectAsString().equals("until")) {
+                } else if (getComponent().getDefaultModelObjectAsString().equals("until")) {
                     dateFrom.setModelObject(null);
                     dateFrom.setEnabled(false);
                     dateTo.setEnabled(true);
-                }
-                else {
+                } else {
                     dateTo.setEnabled(true);
                     dateFrom.setEnabled(true);
                 }
@@ -344,7 +340,8 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
             private static final long serialVersionUID = 3521172967850377971L;
 
             @Override
-            protected void onSubmit(AjaxRequestTarget target) {
+            protected void onSubmit(AjaxRequestTarget target)
+            {
                 target.add(table);
             }
         };
@@ -356,10 +353,10 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
             PropertyModel.of(aProv,"filter.selected")) {
 
             @Override
-            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
+            protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
+            {
 
-                if (getDefaultModelObjectAsString().equals("false"))
-                {
+                if (getDefaultModelObjectAsString().equals("false")) {
                     userFilterTextField.setEnabled(true);
                     documentFilterTextField.setEnabled(true);
                     dateFrom.setEnabled(true);
@@ -388,7 +385,8 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         //Reset button
         Button reset = new AjaxButton(getString("Reset"), Model.of("Reset")) {
             @Override
-            public void onSubmit(AjaxRequestTarget target) {
+            public void onSubmit(AjaxRequestTarget target)
+            {
 
                 dateFrom.setEnabled(true);
                 dateFrom.setModelObject(null);

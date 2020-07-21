@@ -28,11 +28,13 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.page.settings.ProjectWorkloadSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageMenuItem;
 
+//@AutoConfigureAfter(WorkloadServiceAutoConfiguration.class)
+
 @Configuration
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean
-    @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
     public WorkloadPageMenuItem workloadPageMenuItem(UserDao aUserRepo,
             ProjectService aProjectService, WorkloadProperties aWorkloadProperties,
             DefaultAnnotationsProperties aDefaultAnnotations)
@@ -42,7 +44,6 @@ public class DynamicWorkloadManagerAutoConfiguration
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
     public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory()
     {
         return new ProjectWorkloadSettingsPanelFactory();

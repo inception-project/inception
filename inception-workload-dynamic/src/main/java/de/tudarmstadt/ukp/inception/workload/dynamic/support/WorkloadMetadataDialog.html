@@ -21,9 +21,22 @@
 <wicket:panel>
   <form>
     <div>
-      <div wicket:id="documentName"></div>
-      <div wicket:id="userInProgress"></div>
-      <div wicket:id="userFinished"></div>
+      <label>
+        <wicket:message key="DocumentName" />
+      </label>
+      <label wicket:id="documentName"></label>
+    </div>
+    <div>
+      <label>
+        <wicket:message key="InProgressUsers" />
+      </label>
+        <label wicket:id="userInProgress"></label>
+    </div>
+    <div>
+      <label>
+        <wicket:message key="FinishedUsers" />
+      </label>
+      <label wicket:id="userFinished"></label>
     </div>
   </form>
 </wicket:panel>
