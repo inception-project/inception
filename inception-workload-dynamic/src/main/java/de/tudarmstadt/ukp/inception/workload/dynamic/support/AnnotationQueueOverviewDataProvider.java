@@ -107,7 +107,7 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
 
 
     @Override
-    public Iterator<SourceDocument> iterator(long first, long count)
+    public Iterator<SourceDocument> iterator(long aFirst, long aCount)
     {
         //Apply Filter
         List<SourceDocument> newList = filterTable(data);
@@ -163,12 +163,12 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         shownDocuments.addAll(newList);
 
 
-        if ((int)first + (int)count > newList.size())
+        if ((int)aFirst + (int)aCount > newList.size())
         {
-            count = newList.size() - first;
+            aCount = newList.size() - aFirst;
         }
 
-        return newList.subList((int)first, ((int)first + (int)count)).iterator();
+        return newList.subList((int)aFirst, ((int)aFirst + (int)aCount)).iterator();
     }
 
     @Override

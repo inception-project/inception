@@ -43,8 +43,8 @@ public class DynamicWorkflowActionBarExtension
     private final EntityManager entityManager;
 
     @Autowired
-    public DynamicWorkflowActionBarExtension(EntityManager entityManager) {
-        this.entityManager = entityManager;
+    public DynamicWorkflowActionBarExtension(EntityManager aEntityManager) {
+        entityManager = aEntityManager;
     }
 
     @Override

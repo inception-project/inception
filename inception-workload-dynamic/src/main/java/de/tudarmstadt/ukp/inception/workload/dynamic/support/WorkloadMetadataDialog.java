@@ -36,12 +36,12 @@ public class WorkloadMetadataDialog extends Panel
     {
         super(aID);
 
-        if (finishedUsers.size() == 0)
+        if (finishedUsers.isEmpty())
         {
             finishedUsers.add("-");
         }
 
-        if (inProgressUsers.size() == 0)
+        if (inProgressUsers.isEmpty())
         {
             inProgressUsers.add("-");
         }

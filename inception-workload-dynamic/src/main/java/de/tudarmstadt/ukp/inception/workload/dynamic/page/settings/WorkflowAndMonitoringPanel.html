@@ -32,46 +32,48 @@
 
 <body>
 <wicket:panel>
-  <form wicket:id="form" class="col-sm-5 flex-gutter">
+  <div class="scrolling flex-content flex-h-container flex-gutter">
+    <form wicket:id="form" class="col-sm-5 flex-gutter">
+      <div class="card m-2 ">
+        <div class="card-header">
+          <wicket:message key="Settings"/>
+        </div>
+        <div class="card-body">
           <div class="card m-2 ">
-              <div class="card-header">
-                  <wicket:message key="Settings"/>
-              </div>
-              <div class="card-body">
-                  <div class="card m-2 ">
-                    <div class="card-header">
-                      <wicket:message key="Workflow"/>
-                    </div>
-                    <div class="card-body">
-                      <label class="col-form-label" >
-                        <wicket:message key="workflow"/>
-                      </label>
-                      <br />
-                      <div>
-                        <span wicket:id="workflowRadios"></span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="card m-2 ">
-                    <div class="card-header">
-                      <wicket:message key="Monitoring"/>
-                    </div>
-                    <div class="card-body">
-                      <label class="col-form-label" >
-                        <wicket:message key="monitoring"/>
-                      </label>
-                      <br />
-                      <div>
-                        <span wicket:id="monitoringRadios"></span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                      <input class="btn btn-primary" wicket:id="confirm" type="submit"/>
-                  </div>
-              </div>
+            <div class="card-header">
+               <wicket:message key="Workflow"/>
+            </div>
+            <div class="card-body">
+              <label class="col-form-label" >
+                <wicket:message key="workflow"/>
+              </label>
+            <br />
+            <div>
+               <span wicket:id="workflowRadios"></span>
+            </div>
           </div>
+        </div>
+        <div class="card m-2 ">
+          <div class="card-header">
+            <wicket:message key="Monitoring"/>
+          </div>
+         <div class="card-body">
+           <label class="col-form-label" >
+             <wicket:message key="monitoring"/>
+           </label>
+         <br />
+         <div>
+           <span wicket:id="monitoringRadios"></span>
+         </div>
+       </div>
+     </div>
+     <div>
+       <input class="btn btn-primary" wicket:id="confirm" type="submit"/>
+     </div>
+    </div>
+   </div>
   </form>
+ </div>
 </wicket:panel>
 </body>
 </html>

@@ -41,8 +41,6 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowPropertiesImpl;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 
-
-
 @Order(1000)
 @Component
 public class DynamicWorkflowDocumentNavigationActionBarExtension implements ActionBarExtension
@@ -90,8 +88,6 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     {
         return new DynamicDocumentNavigator(aId);
     }
-
-
 
     //Init of the page, select a random document
     @Override

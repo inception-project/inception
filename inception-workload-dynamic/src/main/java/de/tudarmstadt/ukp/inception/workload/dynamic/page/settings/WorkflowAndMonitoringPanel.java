@@ -46,7 +46,7 @@ public class WorkflowAndMonitoringPanel extends Panel
     private @SpringBean WorkloadProperties workloadProperties;
     private @SpringBean WorkflowProperties workflowProperties;
 
-    private String ID;
+    private final String ID;
 
     private static final long serialVersionUID = -6220828178550562376L;
 
