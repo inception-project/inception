@@ -44,7 +44,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 /**
  * A wicket panel for logout.
@@ -74,8 +73,7 @@ public class LogoutPanel
             }
         });
         
-        String username = Optional.ofNullable(userRepository.getCurrentUser())
-                .map(User::getUsername).orElse("");
+        String username = Optional.ofNullable(userRepository.getCurrentUsername()).orElse("");
         BookmarkablePageLink<Void> profileLink = new BookmarkablePageLink<>("profile",
                 ManageUsersPage.class, new PageParameters().add(
                         ManageUsersPage.PARAM_USER, username));

@@ -209,7 +209,7 @@ public class ManageUsersPage
                 selectedUser.setObject(user);
             }
             else if (SecurityUtil.isProfileSelfServiceAllowed()
-                    && userRepository.getCurrentUser().getUsername().equals(user.getUsername())) {
+                    && userRepository.getCurrentUsername().equals(user.getUsername())) {
                 selectedUser.setObject(userRepository.getCurrentUser());
             }
             else {
