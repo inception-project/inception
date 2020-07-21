@@ -22,7 +22,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 
 public class DynamicDocumentNavigator extends Panel
 {
-
     public DynamicDocumentNavigator(String aID)
     {
         super(aID);

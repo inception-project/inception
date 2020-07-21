@@ -30,8 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 
-
-
 @Order(1100)
 @Component
 public class DynamicWorkflowActionBarExtension

@@ -45,8 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-
-
 public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
 {
@@ -56,14 +54,10 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     private final List<SourceDocument> data;
     private final IModel<List<SourceDocument>> model;
     private final List<AnnotationDocument> allAnnotationDocuments;
-
     private EntityManager entityManager;
-
     private List<SourceDocument> shownDocuments;
     private Filter filter;
-
     private DocumentService documentService;
-
     private int defaultAnnotations;
 
     public AnnotationQueueOverviewDataProvider(

@@ -47,20 +47,15 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOver
 
 public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
 {
-
     private static final long serialVersionUID = -292514874000914541L;
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
-
-
-    @PersistenceContext
-    private EntityManager entityManager;
-
+    private @PersistenceContext EntityManager entityManager;
     private final AnnotationPageBase page;
-    protected final ConfirmationDialog finishDocumentDialog;
     private final LambdaAjaxLink finishDocumentLink;
     private final AnnotationQueueOverviewDataProvider provider;
+    protected final ConfirmationDialog finishDocumentDialog;
 
     public DynamicAnnotatorWorkflowActionBarItemGroup(
         String aId, AnnotationPageBase aPage, EntityManager aEntityManager)
@@ -130,6 +125,5 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
             }
         });
         finishDocumentDialog.show(aTarget);
-
     }
 }
