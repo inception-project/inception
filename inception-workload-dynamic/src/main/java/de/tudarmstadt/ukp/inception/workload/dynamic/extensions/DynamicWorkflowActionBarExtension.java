@@ -39,8 +39,8 @@ public class DynamicWorkflowActionBarExtension
 {
     private @Autowired WorkflowProperties workflowProperties;
 
-    @PersistenceContext
-    private final EntityManager entityManager;
+
+    private final @PersistenceContext EntityManager entityManager;
 
     @Autowired
     public DynamicWorkflowActionBarExtension(EntityManager aEntityManager) {
