@@ -11,6 +11,9 @@
     <!-- Logger name="de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder" level="TRACE"/ -->
     <!-- Avoid warning on cookies with an invalid expiration date - cf. issue #739 -->
     <Logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
+    
+    <Logger name="de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder" level="WARN"/>
+    
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
     </Root>
