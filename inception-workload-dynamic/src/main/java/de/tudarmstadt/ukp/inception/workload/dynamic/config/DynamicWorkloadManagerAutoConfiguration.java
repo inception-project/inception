@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -33,6 +34,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageM
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean
+    @ConditionalOnProperty(prefix = "workload", name = "enabled", havingValue = "true")
     public WorkloadPageMenuItem workloadPageMenuItem(UserDao aUserRepo,
             ProjectService aProjectService, WorkloadProperties aWorkloadProperties,
             DefaultAnnotationsProperties aDefaultAnnotations)
@@ -42,6 +44,7 @@ public class DynamicWorkloadManagerAutoConfiguration
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "workloadAndWorkflowSettings", name = "enabled", havingValue = "true")
     public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory()
     {
         return new ProjectWorkloadSettingsPanelFactory();
