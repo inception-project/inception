@@ -17,9 +17,25 @@
 [[sect_monitoring_agreement]]
 = Agreement
 
-Agreement can be inspected on a per-feature basis and is calculated pair-wise between all 
-annotators across all documents.
+NOTE: This functionality is only available to *curators* and *managers*.
 
+This page allows you to calculate inter-annotator agreement between users. Agreement can be inspected on a per-feature basis and is calculated pair-wise between all 
+annotators across all documents. 
+
+The *Feature* dropdown allows the selection of layers and features for which an agreement shall be computed. 
+
+image::agreement_feature.png[align="center"]
+
+A measure for the inter-annotator-agreement can be selected by opening the *Measure* dropdown menu. A short description of available measures and their differences follows in the <<sect_agreement_measures, Measures>> section. 
+
+Selecting both *Feature* and *Measure* and clicking *Calculate..* will start the agreement calculation and the results will be shown in a <<sect_agreement_matrix,Pairwise agreement matrix>>:
+
+image::agreement_table.png[align="center"]
+
+Below this matrix, the results of *Coding* measures can be exported. An export format can be chosen. Currently, only link:https://en.wikipedia.org/wiki/Comma-separated_values[CSV] format is possible.
+
+
+[[sect_agreement_measures]]
 == Measures
 
 Several agreement measures are supported.
@@ -129,6 +145,7 @@ Multiple interpretations in the form of stacked annotations are not supported in
 calculation! This also includes relations for which source or targets spans are stacked.
 
 
+[[sect_agreement_matrix]]
 == Pairwise agreement matrix
 
 The lower part of the agreement matrix displays how many configuration sets were used to calculate
