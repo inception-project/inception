@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.settings;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +36,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 
-
 //Custom panel inside the page
 public class WorkflowAndMonitoringPanel extends Panel
 {
@@ -47,18 +45,16 @@ public class WorkflowAndMonitoringPanel extends Panel
     private @SpringBean WorkloadProperties workloadProperties;
     private @SpringBean WorkflowProperties workflowProperties;
 
-    private List<String> workflow;
-    private BootstrapRadioChoice<String> workflowChoices;
-    private List<String> monitoring;
-    private BootstrapRadioChoice<String> monitoringChoices;
+    private final List<String> workflow;
+    private final BootstrapRadioChoice<String> workflowChoices;
+    private final List<String> monitoring;
+    private final BootstrapRadioChoice<String> monitoringChoices;
 
     public WorkflowAndMonitoringPanel(String aID, IModel<Project> aProject) {
         super(aID, aProject);
 
-
         //Basic form
         Form<Void> form = new Form<>("form");
-
 
         //Add two possibilities to select for the workflow manager
         workflow = new ArrayList<>();
@@ -93,7 +89,6 @@ public class WorkflowAndMonitoringPanel extends Panel
         form.add(monitoringChoices);
 
         //Finally, add the confirm button at the end
-
         Button confirm = new LambdaAjaxButton(getString("confirm"),
             this::actionConfirm).triggerAfterSubmit();
 
@@ -108,12 +103,11 @@ public class WorkflowAndMonitoringPanel extends Panel
         super.onInitialize();
         IModel<String> resourceModel = new StringResourceModel(
             getString(getId()), this, Model.of(getId()));
-
     }
 
+    @Deprecated
     private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
     {
-        aTarget.add(getParent());
         aTarget.addChildren(getPage(), IFeedback.class);
 
         if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {

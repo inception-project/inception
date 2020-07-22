@@ -40,6 +40,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -52,7 +53,7 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
 
     private final List<String> headers;
     private final List<SourceDocument> data;
-    private final IModel<List<SourceDocument>> model;
+    private IModel<List<SourceDocument>> model;
     private final List<AnnotationDocument> allAnnotationDocuments;
     private EntityManager entityManager;
     private List<SourceDocument> shownDocuments;
@@ -97,16 +98,6 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         data = aData;
         documentService = aDocumentService;
         headers = new ArrayList<>();
-        model = new LoadableDetachableModel<List<SourceDocument>>() {
-            private static final long serialVersionUID = -8559508557211612770L;
-
-            @Override
-            protected List<SourceDocument> load()
-            {
-                return data;
-            }
-        };
-
     }
 
     @Override
@@ -148,11 +139,9 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
             }
         });
 
-
         //Reset
         this.shownDocuments = new ArrayList<>();
         shownDocuments.addAll(newList);
-
 
         if ((int)aFirst + (int)aCount > newList.size()) {
             aCount = newList.size() - aFirst;
@@ -202,14 +191,12 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
                 }
             }
 
-
             //Check if DocumentName was entered
             if (filter.getDocumentName() != null) {
                 if (doc.getName().contains(filter.getDocumentName())) {
                     docNameList.add(doc);
                 }
             }
-
 
             //Check if Username filter was entered
             if (filter.getUsername() != null) {
@@ -328,17 +315,20 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     public SourceDocument getRandomDocument(
         AnnotationPageBase aAnnotationPageBase, AnnotationDocument aCurrentAnno)
     {
-
+        AnnotatorState annotatorState = aAnnotationPageBase.getModelObject();
 
         //First check for a documents that is in Progress for the user, and return this
-        for (int i = 0; i < allAnnotationDocuments.size(); i++) {
+        for (AnnotationDocument annotationDocument: allAnnotationDocuments) {
             //NULL CHECK due to listAnnotableDocuments from webanno
-            if (allAnnotationDocuments.get(i) != null &&
-                allAnnotationDocuments.get(i).getState().equals(IN_PROGRESS)
-                && !allAnnotationDocuments.get(i).getName().equals(aCurrentAnno.getName())) {
+            if (annotationDocument != null && annotationDocument.getState().equals(IN_PROGRESS)
+                //check for NAME here required, as comparing the annotationDocument with the
+                //current document will result in false
+                //This check is simply needed, because the transition from INPROGRESS to FINISHED in
+                //the DB is too slow
+                && !annotationDocument.getDocument().getName().equals(aCurrentAnno.getName())) {
                 //Found a document in progress
                 for (SourceDocument doc: data) {
-                    if (doc.getName().equals(allAnnotationDocuments.get(i).getName())) {
+                    if (doc.getName().equals(annotationDocument.getName())) {
                         return doc;
                     }
                 }
@@ -347,14 +337,13 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
 
         //Nothing in Progress, so now return a random document, or create a new annotation document
 
-
         //Get a random document
         List<SourceDocument> srcList = entityManager.
             createQuery(
                 "FROM SourceDocument " +
                 "WHERE project = :project " +
                 "ORDER BY rand()", SourceDocument.class)
-            .setParameter("project", aAnnotationPageBase.getModelObject().getProject())
+            .setParameter("project", annotatorState.getProject())
             .getResultList();
         for (SourceDocument src: srcList) {
             //Look if there is a corresponding Annotation document
@@ -365,8 +354,7 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
                     "WHERE name = :sourceName " +
                     "AND user = :currentUser ", AnnotationDocument.class)
                 .setParameter("sourceName", src.getName())
-                .setParameter("currentUser", aAnnotationPageBase.
-                    getModelObject().getUser().getUsername())
+                .setParameter("currentUser", annotatorState.getUser().getUsername())
                 .getResultList().stream().findFirst().orElse(null);
 
             if (anno == null) {
@@ -407,7 +395,6 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     public void setFilterState(Filter aFilter)
     {
         filter = aFilter;
-
     }
 
     public String getUsersWorkingOnTheDocument(SourceDocument aDocument)

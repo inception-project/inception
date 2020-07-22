@@ -19,6 +19,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -36,23 +37,15 @@ public class WorkloadMetadataDialog extends Panel
     {
         super(aID);
 
-        if (finishedUsers.isEmpty()) {
-            finishedUsers.add("-");
-        }
-
-        if (inProgressUsers.isEmpty()) {
-            inProgressUsers.add("-");
-        }
-
-
         //TODO more content, e.g. created date
         Label documentName = new Label("documentName", aDocument.getName());
-        Label userInProgress = new Label("userInProgress", inProgressUsers.toString());
-        Label userFinished = new Label("userFinished", finishedUsers.toString());
+        Label userInProgress = new Label("userInProgress",
+            inProgressUsers.isEmpty() ? "-" : inProgressUsers.stream().collect(Collectors.joining(", ")));
+        Label userFinished = new Label("userFinished",
+            finishedUsers.isEmpty() ? "-" : finishedUsers.stream().collect(Collectors.joining(", ")));
 
         add(documentName);
         add(userInProgress);
         add(userFinished);
-
     }
 }
