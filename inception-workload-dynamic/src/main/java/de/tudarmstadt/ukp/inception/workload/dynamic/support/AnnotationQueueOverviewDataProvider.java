@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
@@ -38,6 +39,7 @@ import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvid
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -45,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
@@ -55,7 +58,7 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     private final List<SourceDocument> data;
     private IModel<List<SourceDocument>> model;
     private final List<AnnotationDocument> allAnnotationDocuments;
-    private EntityManager entityManager;
+    private @PersistenceContext EntityManager entityManager;
     private List<SourceDocument> shownDocuments;
     private Filter filter;
     private DocumentService documentService;
@@ -358,18 +361,7 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
                 .getResultList().stream().findFirst().orElse(null);
 
             if (anno == null) {
-                //No annotation document for this source document
-                //for the current user, create a new Annotation document for the user
-                AnnotationDocument annotationDocument = new AnnotationDocument();
-                annotationDocument.setDocument(src);
-                annotationDocument.setName(src.getName());
-                annotationDocument.setProject(aAnnotationPageBase.
-                    getModelObject().getProject());
-                annotationDocument.setUser(aAnnotationPageBase.
-                    getModelObject().getUser().getUsername());
-                annotationDocument.setState(NEW);
-                documentService.createAnnotationDocument(annotationDocument);
-
+                createAnnotationDocument(src, annotatorState.getUser());
             } else {
                 //Annotation document found, however its state was either
                 // inprogress / finished / locked
@@ -377,12 +369,22 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
                     continue;
                 }
             }
-
             return src;
         }
-
         return null;
+    }
 
+    @Transactional
+    public void createAnnotationDocument(SourceDocument aSourceDocument, User aUser)
+    {
+        entityManager.createNativeQuery(
+                "INSERT INTO AnnotationDocument " +
+                 "VALUES (null,:name,0,:state,null,null,:user,:document,:project) ")
+                .setParameter("name",aSourceDocument.getName())
+                .setParameter("state",NEW)
+                .setParameter("user",aUser)
+                .setParameter("document",aSourceDocument.getId())
+                .setParameter("project",aSourceDocument.getProject());
     }
 
     @Override
