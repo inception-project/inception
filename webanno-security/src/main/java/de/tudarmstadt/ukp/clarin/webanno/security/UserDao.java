@@ -31,6 +31,11 @@ public interface UserDao
     User getCurrentUser();
     
     /**
+     * Return the name of the current user
+     */
+    String getCurrentUsername();
+    
+    /**
      * Create a new {@link User}
      * 
      * @param aUser
