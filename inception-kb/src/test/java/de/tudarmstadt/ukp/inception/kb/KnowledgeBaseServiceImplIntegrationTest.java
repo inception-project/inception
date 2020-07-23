@@ -162,6 +162,24 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
+    public void getKnowledgeBaseByName_IfExists_ShouldReturnKnowledgeBase() {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        Optional<KnowledgeBase> result = sut.getKnowledgeBaseByName(project, kb.getName());
+
+        assertThat(result).isEqualTo(result);
+    }
+
+    @Test
+    public void getKnowledgeBaseByName_IfAbsent_ShouldReturnNone() {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        Optional<KnowledgeBase> result = sut.getKnowledgeBaseByName(project, "Absent KB");
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     public void getKnowledgeBases_WithOneStoredKnowledgeBase_ShouldReturnStoredKnowledgeBase() {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 

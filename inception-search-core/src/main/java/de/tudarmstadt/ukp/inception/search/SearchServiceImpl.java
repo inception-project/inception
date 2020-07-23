@@ -44,6 +44,7 @@ import com.github.benmanes.caffeine.cache.RemovalCause;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
@@ -463,13 +464,29 @@ public class SearchServiceImpl
                 List<AnnotationDocument> annotationDocumentsForUser = documentService
                         .listAnnotationDocuments(aProject, user);
                 for (AnnotationDocument doc : annotationDocumentsForUser) {
-                    indexDocument(doc, casToByteArray(documentService.readAnnotationCas(doc)));
+                    // Because serialization is a process which modifies internal data structures of
+                    // the CAS, we need exclusive access the CAS for the time being.
+                    // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
+                    // for https://issues.apache.org/jira/browse/UIMA-6162
+                    byte[] casAsByteArray;
+                    try (CasStorageSession session = CasStorageSession.openNested()) {
+                        casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
+                    }
+                    indexDocument(doc, casAsByteArray);
                 }
             }
 
             // Index all the source documents
             for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
-                indexDocument(doc, casToByteArray(documentService.createOrReadInitialCas(doc)));
+                // Because serialization is a process which modifies internal data structures of
+                // the CAS, we need exclusive access the CAS for the time being.
+                // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
+                // for https://issues.apache.org/jira/browse/UIMA-6162
+                byte[] casAsByteArray;
+                try (CasStorageSession session = CasStorageSession.openNested()) {
+                    casAsByteArray = casToByteArray(documentService.createOrReadInitialCas(doc));
+                }
+                indexDocument(doc, casAsByteArray);
             }            
             
             // After re-indexing, reset the invalid flag
