@@ -352,13 +352,9 @@ public class AgreementPage
 
             User user = userRepository.getCurrentUser();
 
-            List<Project> allProjects = projectService.listProjects();
-            for (Project project : allProjects) {
-                if (projectService.isManager(project, user)
-                        || projectService.isCurator(project, user)) {
-                    allowedProject.add(project);
-                }
-            }
+            List<Project> userProjects = projectService.listManageableCuratableProjects(user);
+            List<Project> allowedProjects = projectService.listProjectsForAgreement();
+            allowedProjects.retainAll(userProjects);
             return allowedProject;
         }
     }
