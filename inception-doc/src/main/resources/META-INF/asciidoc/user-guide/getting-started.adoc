@@ -17,7 +17,7 @@
 = Getting started
 
 In order to run {product-name}, you need to have Java installed on your system in version 8 or 
-higher. If you do not have Java installed yet, please the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java] or link:https://adoptopenjdk.net[OpenJDK].
+higher. If you do not have Java installed yet, please install the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java] or link:https://adoptopenjdk.net[OpenJDK].
 
 Download the stand-alone JAR from the link:https://inception-project.github.io/downloads/[{product-name} downloads page]. 
 
@@ -39,21 +39,28 @@ The first time you start the application, a default user with the name `admin` a
 `admin` is created. Use this username and password to log in to the application after opening it
 in your browser.
 
+[NOTE]
+====
+If double-clicking the JAR file does not start {product-name}, you might need to first make the file executable.
+====
+
 == Your first annotation
 
-After logging in, you will see the main menu. Click on *Projects* to go to the 
-*project management page* and there click on *create* to start a new project. Enter a name
-for your project, select the type *annotation project* and press *save*.
+After logging in, the first thing you see is the *Project overview*. Here, you can see all the projects to which you have access. 
+Click on *create* to start a new project. Enter a name
+for your project and press *save*.
 
 Next, switch to the *Documents* tab and press *choose files* to select a plain text file from
 your local harddisk (the file should be in UTF-8 encoding). As part of the import process, 
 {product-name} automatically processes the file to identify sentence and token boundaries.
 
-Use the *Home* link at the top of the screen to return to the main menu and select *Annotation*
-to open your text file in the annotation editor.
+Use the *Projects* link at the top of the screen to return to the project overview and select the project you just created.
 
-To create your first annotation, select *Named entity* from the *Layer* dropdown menu on the right
-side of the screen. Then, use the mouse to select a word in the *Annotation* area. When you release
+You will see the *Project dashboard* which links to the features that {product-name} provides. To get started with annotating,
+click on *Annotation*. You will be asked to open the document that you want to annotate.
+
+After opening the document, select *Named entity* from the *Layer* dropdown menu on the right
+side of the screen to create your first annotation. Then, use the mouse to select a word in the *Annotation* area. When you release
 the mouse button, the annotation is immediately created and you can edit its details in the right
 sidebar.
 

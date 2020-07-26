@@ -110,8 +110,25 @@ public class CurationServiceTest {
         List<User> finishedUsers = sut.listUsersReadyForCuration("current", testProject,
                 testDocument);
         
-        assertThat(finishedUsers).hasSize(2);
-        assertThat(finishedUsers).contains(beate, kevin);
+        assertThat(finishedUsers).containsExactly(beate, kevin);
+    }
+    
+    @Test
+    public void listFinishedUsers_ShouldReturnFinishedUsers() {
+        //create finished annotationdocuments
+        AnnotationDocument annoDoc1 = new AnnotationDocument("testDoc", testProject, "beate",
+                testDocument);
+        annoDoc1.setState(AnnotationDocumentState.FINISHED);
+        AnnotationDocument annoDoc2 = new AnnotationDocument("testDoc", testProject, "kevin",
+                testDocument);
+        annoDoc2.setState(AnnotationDocumentState.FINISHED);
+        testEntityManager.persist(annoDoc1);
+        testEntityManager.persist(annoDoc2);
+        
+        List<User> finishedUsers = sut.listFinishedUsers(testProject,
+                testDocument);
+        
+        assertThat(finishedUsers).containsExactly(beate, kevin);
     }
     
     @Test
