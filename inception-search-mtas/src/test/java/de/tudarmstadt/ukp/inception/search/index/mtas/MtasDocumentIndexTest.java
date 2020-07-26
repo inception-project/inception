@@ -88,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
@@ -490,9 +491,11 @@ public class MtasDocumentIndexTest
         @Rule TemporaryFolder folder;
         
         @Bean
-        public ProjectService projectService()
+        public ProjectService projectService(
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
-            return new ProjectServiceImpl(null,null,null,null);
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
+                    repositoryProperties(), aInitializerProxy);
         }
 
         @Bean
@@ -587,10 +590,11 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public DocumentService documentService()
+        public DocumentService documentService(
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
             return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), importExportService(), projectService(),
+                    casStorageService(), importExportService(), projectService(aInitializerProxy),
                     applicationEventPublisher, entityManager);
         }
 
