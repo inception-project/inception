@@ -16,18 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
-import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.externalsearch.solr.SolrSearchProvider;
-import de.tudarmstadt.ukp.inception.externalsearch.solr.SolrSearchProviderFactory;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProviderTraits;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.externalsearch.solr.SolrSearchProvider;
+import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProviderTraits;
 
 /**
  * The test class SolrSearchProviderTest is used to test functionalities. By default this class use
