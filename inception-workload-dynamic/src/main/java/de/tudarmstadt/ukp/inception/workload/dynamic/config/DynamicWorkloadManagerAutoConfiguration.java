@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,6 +31,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageM
 
 @AutoConfigureAfter(WorkloadServiceAutoConfiguration.class)
 @Configuration
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean

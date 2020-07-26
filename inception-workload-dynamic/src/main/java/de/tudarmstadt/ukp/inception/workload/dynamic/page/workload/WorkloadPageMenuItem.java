@@ -92,8 +92,6 @@ public class WorkloadPageMenuItem implements MenuItem
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
 
-        System.out.println("---------------WORKLOAD MENU ITEM----------");
-        System.out.println(workloadAndWorkflowService.getWorkloadManager(sessionProject));
         return (projectService.isCurator(project, user)
             || projectService.isProjectAdmin(project, user))
             && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())

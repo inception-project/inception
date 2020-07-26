@@ -73,15 +73,9 @@ public class MonitoringPageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
-
-
-        
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
-
-        System.out.println(".--------------IN MONITORING MENU ITEM--------");
-        System.out.println("TYPE " + workloadAndWorkflowService.getWorkloadManager(project));
 
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();

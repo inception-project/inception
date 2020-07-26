@@ -115,17 +115,13 @@ public class WorkflowAndMonitoringPanel extends Panel
         if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {
             workloadAndWorkflowService.setWorkloadManager("Default monitoring page", project);
         } else {
-            System.out.println("Setting now dynamic workflow");
             workloadAndWorkflowService.setWorkloadManager("Workload monitoring page", project);
-            System.out.println("Should be made");
         }
 
         if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
             workloadAndWorkflowService.setWorkflowManager("Default workflow manager", project);
         } else {
-            System.out.println("Setting now dynamic workload");
             workloadAndWorkflowService.setWorkflowManager("Dynamic workflow manager", project);
-            System.out.println("Should be made");
         }
         success("Workflow and workload settings changed");
     }

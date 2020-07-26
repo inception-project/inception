@@ -109,7 +109,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
             documentService.createAnnotationDocument(annotationDocument);
 
             //Get a new random document from the list and open it
-            System.out.println(entityManager.toString());
             SourceDocument doc = provider.getRandomDocument
                 (getAnnotationPage(), annotationDocument);
             if (doc == null) {

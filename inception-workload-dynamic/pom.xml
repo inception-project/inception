@@ -57,6 +57,30 @@
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
       </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-api-annotation</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>de.agilecoders.wicket</groupId>
+        <artifactId>wicket-bootstrap-extensions</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+      </dependency>
+      <dependency>
+        <groupId> org.springframework</groupId>
+        <artifactId>spring-tx</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-autoconfigure</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-ui-annotation</artifactId>
+      </dependency>
 
       <!-- WICKET DEPENDENCIES -->
       <dependency>
@@ -66,10 +90,6 @@
       <dependency>
         <groupId>org.apache.wicket</groupId>
         <artifactId>wicket-spring</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot</artifactId>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
@@ -115,15 +135,5 @@
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-core</artifactId>
       </dependency>
-        <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-orm</artifactId>
-        </dependency>
-
-
     </dependencies>
 </project>
