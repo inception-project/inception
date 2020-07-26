@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
-import org.apache.jena.base.Sys;
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,17 +31,15 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
 
 @Component
 @Order(300)
 public class MonitoringPageMenuItem implements MenuItem
 {
-    private @Autowired
-    UserDao userRepo;
-    private @Autowired
-    ProjectService projectService;
-    private @Autowired
-    WorkloadAndWorkflowService workloadAndWorkflowService;
+    private @Autowired UserDao userRepo;
+    private @Autowired ProjectService projectService;
+    private @Autowired WorkloadAndWorkflowService workloadAndWorkflowService;
 
     @Override
     public String getPath()

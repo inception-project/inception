@@ -46,7 +46,8 @@ public abstract class WorkloadAndWorkflowEngineFactoryImplBase<T>
 
         T traits = null;
         try {
-            traits = fromJsonString((Class<T>) createTraits().getClass(), aWorkloadAndWorkflow.getTraits());
+            traits = fromJsonString((Class<T>) createTraits().getClass(),
+                aWorkloadAndWorkflow.getTraits());
         }
         catch (IOException e) {
             log.error("Error while reading traits", e);

@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;

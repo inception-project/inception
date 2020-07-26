@@ -44,8 +44,8 @@ public class WorkloadServiceAutoConfiguration
 
     @Bean
     @Autowired
-    public WorkloadAndWorkflowServiceImplBase workloadAndWorkflowService
-        (ProjectService aProjectService)
+    public WorkloadAndWorkflowServiceImplBase workloadAndWorkflowService(
+        ProjectService aProjectService)
     {
         return new WorkloadAndWorkflowServiceImplBase(entityManager, aProjectService);
     }
