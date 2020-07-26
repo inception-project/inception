@@ -15,34 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+public interface WorkloadAndWorkflowEngineFactory<T> {
+    String getId();
 
-@Component
-@ConfigurationProperties("workload")
-public class WorkloadPropertiesImpl implements WorkloadProperties
-{
-    private boolean isActive;
+    String getName();
 
-    @Override
-    public boolean isWorkloadManagerActive() {
-        return isActive;
-    }
+    T createTraits();
 
-    @Override
-    public void setActive(boolean aActive) {
-        this.isActive = aActive;
-    }
+    T readTraits(WorkloadAndWorkflow aWorkloadAndWorkflow);
 
-    @Override
-    public String getProperty() {
-        if (isActive) {
-            return "Workload monitoring page";
-        } else {
-            return "Default monitoring page";
-        }
-    }
+    void writeTraits(WorkloadAndWorkflow aWorkloadAndWorkflow, T aTraits);
 }

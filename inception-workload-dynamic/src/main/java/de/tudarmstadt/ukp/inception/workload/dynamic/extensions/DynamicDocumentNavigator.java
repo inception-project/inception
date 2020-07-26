@@ -15,24 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
-@Component
-@ConfigurationProperties("defaultannotations")
-public class DefaultAnnotationsPropertiesImpl implements DefaultAnnotationsProperties {
+import org.apache.wicket.markup.html.panel.Panel;
 
-    private int numberOfDefaultAnnotations;
-
-    @Override
-    public int getNumberOfDefaultAnnotations() {
-        return numberOfDefaultAnnotations;
-    }
-
-    @Override
-    public void setNumberOfDefaultAnnotations(int aAnnotations) {
-        numberOfDefaultAnnotations = aAnnotations;
+public class DynamicDocumentNavigator extends Panel
+{
+    public DynamicDocumentNavigator(String aID)
+    {
+        super(aID);
     }
 }

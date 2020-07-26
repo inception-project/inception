@@ -17,28 +17,27 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.DefaultAnnotationsProperties;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.page.settings.ProjectWorkloadSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageMenuItem;
 
-//@AutoConfigureAfter(WorkloadServiceAutoConfiguration.class)
-//@ConditionalOnBean(WorkloadManagerRegistry.class)
+@AutoConfigureAfter(WorkloadServiceAutoConfiguration.class)
 @Configuration
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean
+    @Autowired
     public WorkloadPageMenuItem workloadPageMenuItem(UserDao aUserRepo,
-            ProjectService aProjectService, WorkloadProperties aWorkloadProperties,
-            DefaultAnnotationsProperties aDefaultAnnotations)
+            ProjectService aProjectService, WorkloadAndWorkflowService aWorkloadAndWorkflowService)
     {
-        return new WorkloadPageMenuItem(aUserRepo, aProjectService, aWorkloadProperties,
-                aDefaultAnnotations);
+        return new WorkloadPageMenuItem(aUserRepo, aProjectService, aWorkloadAndWorkflowService);
     }
     
     @Bean

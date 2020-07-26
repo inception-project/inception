@@ -17,14 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
-/**
- * @deprecated This needs to be replaced by a traits object for the dynamic workload manager as soon
- *             as possible.
- */
-@Deprecated
-public interface DefaultAnnotationsProperties
-{
-    int getNumberOfDefaultAnnotations();
+import java.util.List;
 
-    void setNumberOfDefaultAnnotations(int aAnnotations);
+public interface WorkloadAndWorkflowFactoryRegistry {
+    List<WorkloadAndWorkflowEngineFactory> getAllFactories();
+    WorkloadAndWorkflowEngineFactory getFactory(String aId);
 }

@@ -15,19 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
-/**
- * @deprecated This needs to be replaced by a proper extension point for workload management
- *             strategies as soon as possible.
- */
-@Deprecated
-public interface WorkloadProperties
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
+public interface WorkloadAndWorkflowService
 {
-    boolean isWorkloadManagerActive();
+    String SERVICE_NAME = "workloadAndWorkflow";
 
-    void setActive(boolean aActive);
+    String getWorkflowManager(Project aProject);
+    String getWorkloadManager(Project aProject);
+    String getWorkflowType(Project aProject);
+    Integer getDefaultAnnotations(Project aProject);
 
-    String getProperty();
+    void setWorkflowManager(String aType, Project aProject);
+    void setWorkloadManager(String aType, Project aProject);
+    void setWorkflowType(String aType, Project aProject);
+    void setDefaultAnnotations(int aDefaultAnnotationsNumber, Project aProject);
 }

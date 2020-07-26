@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.workload;
 
+
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.DefaultAnnotationsProperties;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
 
 /**
  * Menu item to access the dynamic workload management page.
@@ -45,18 +45,15 @@ public class WorkloadPageMenuItem implements MenuItem
 {
     private final UserDao userRepo;
     private final ProjectService projectService;
-    private final WorkloadProperties workloadProperties;
-    private final DefaultAnnotationsProperties defaultAnnotations;
+    private final WorkloadAndWorkflowService workloadAndWorkflowService;
 
     @Autowired
     public WorkloadPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
-            WorkloadProperties aWorkloadProperties,
-            DefaultAnnotationsProperties aDefaultAnnotations)
+                                WorkloadAndWorkflowService aWorkloadAndWorkflowService)
     {
         userRepo = aUserRepo;
         projectService = aProjectService;
-        workloadProperties = aWorkloadProperties;
-        defaultAnnotations = aDefaultAnnotations;
+        workloadAndWorkflowService = aWorkloadAndWorkflowService;
     }
 
     @Override
@@ -94,10 +91,13 @@ public class WorkloadPageMenuItem implements MenuItem
 
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
+
+        System.out.println("---------------WORKLOAD MENU ITEM----------");
+        System.out.println(workloadAndWorkflowService.getWorkloadManager(sessionProject));
         return (projectService.isCurator(project, user)
             || projectService.isProjectAdmin(project, user))
             && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())
-            && workloadProperties.isWorkloadManagerActive();
+            && !workloadAndWorkflowService.getWorkloadManager(project).equals("Default monitoring page");
     }
 
     @Override

@@ -492,7 +492,7 @@ public class MtasDocumentIndexTest
         @Bean
         public ProjectService projectService()
         {
-            return new ProjectServiceImpl();
+            return new ProjectServiceImpl(null,null,null,null);
         }
 
         @Bean

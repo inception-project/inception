@@ -28,8 +28,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
@@ -37,35 +39,40 @@ import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvid
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public class TableContentProvider extends SortableDataProvider
+public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
 {
     private static final long serialVersionUID = 4125678936105494485L;
-    
+
     private final List<String> headers;
     private final List<SourceDocument> data;
-    private final IModel<List<SourceDocument>> model;
+    private IModel<List<SourceDocument>> model;
     private final List<AnnotationDocument> allAnnotationDocuments;
-   
+    private @PersistenceContext EntityManager entityManager;
     private List<SourceDocument> shownDocuments;
     private Filter filter;
-
+    private DocumentService documentService;
     private int defaultAnnotations;
 
-    public TableContentProvider(
+    public AnnotationQueueOverviewDataProvider(
         List<SourceDocument> aData,
         List<String> aHeaders, List<AnnotationDocument> aAllAnnotationDocuments)
     {
-        this.data = aData;
-        this.headers = aHeaders;
-        this.allAnnotationDocuments = aAllAnnotationDocuments;
-        this.defaultAnnotations = 6;
-        this.shownDocuments = new ArrayList<>();
+        data = aData;
+        headers = aHeaders;
+        allAnnotationDocuments = aAllAnnotationDocuments;
+        //TODO default value must be saved permanently, create new issue and PR
+        defaultAnnotations = 6;
 
         //Init filter
         filter = new Filter();
@@ -78,12 +85,25 @@ public class TableContentProvider extends SortableDataProvider
             private static final long serialVersionUID = -3938543310389673460L;
 
             @Override
-            protected List<SourceDocument> load() {
+            protected List<SourceDocument> load()
+            {
                 return data;
             }
         };
     }
-    
+
+    public AnnotationQueueOverviewDataProvider(
+            List<AnnotationDocument> aAlAnnotationDocuments,
+            List<SourceDocument> aData, DocumentService aDocumentService,
+            EntityManager aEntityManager)
+    {
+        entityManager = aEntityManager;
+        allAnnotationDocuments = aAlAnnotationDocuments;
+        data = aData;
+        documentService = aDocumentService;
+        headers = new ArrayList<>();
+    }
+
     @Override
     public Iterator<SourceDocument> iterator(long aFirst, long aCount)
     {
@@ -113,27 +133,21 @@ public class TableContentProvider extends SortableDataProvider
             else if (getSort().getProperty().equals(headers.get(4))) {
                 if (o1.getUpdated() == null) {
                     return dir;
-                }
-                else if (o2.getUpdated() == null) {
+                } else if (o2.getUpdated() == null) {
                     return dir * -1;
-                }
-                else {
+                } else {
                     return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
                 }
-            }
-            else {
+            } else {
                 return 0;
             }
         });
 
-
         //Reset
-        this.shownDocuments.clear();
+        this.shownDocuments = new ArrayList<>();
         shownDocuments.addAll(newList);
 
-
-        if ((int)aFirst + (int)aCount > newList.size())
-        {
+        if ((int)aFirst + (int)aCount > newList.size()) {
             aCount = newList.size() - aFirst;
         }
 
@@ -153,7 +167,8 @@ public class TableContentProvider extends SortableDataProvider
     }
 
     @Override
-    public void detach() {
+    public void detach()
+    {
         super.detach();
         model.detach();
     }
@@ -171,8 +186,7 @@ public class TableContentProvider extends SortableDataProvider
             filter.setSelected("false");
         }
 
-        for (SourceDocument doc: aData)
-        {
+        for (SourceDocument doc: aData) {
             // Unused documents selected
             if (filter.getSelected().equals("true")) {
                 if ((getInProgressAmountForDocument(doc) == 0)
@@ -181,14 +195,12 @@ public class TableContentProvider extends SortableDataProvider
                 }
             }
 
-
             //Check if DocumentName was entered
             if (filter.getDocumentName() != null) {
                 if (doc.getName().contains(filter.getDocumentName())) {
                     docNameList.add(doc);
                 }
             }
-
 
             //Check if Username filter was entered
             if (filter.getUsername() != null) {
@@ -300,50 +312,99 @@ public class TableContentProvider extends SortableDataProvider
 
     //Returns a random document out of all documents in the project.
     //Only a document is chosen which is not yet given to annotators more than the default number
-    //per document number
-    public SourceDocument getRandomDocument()
-    {
-        //Create an empty document
-        SourceDocument document = null;
-        Random r = new Random();
+    //per document number (TODO),
+    //However, if there was already a document in progress,
+    // this will always be returned (can only be one)
 
-        while (document == null)
-        {
-            int i = r.nextInt(data.size() - 1);
-            //If the random chosen document wont surpass the amount of default number combining
-            // "inProgress" for the document + "finished" amount for the document + 1
-            if ((getInProgressAmountForDocument(data.
-                get(i)) +
-                getFinishedAmountForDocument(data.
-                    get(i)))
-                + 1 <= defaultAnnotations)
-            {
-                //If that was not the case, assign this document
-                document = data.get(r.nextInt(data.size() - 1));
+    public SourceDocument getRandomDocument(
+            AnnotationPageBase aAnnotationPageBase, AnnotationDocument aCurrentAnno)
+    {
+        AnnotatorState annotatorState = aAnnotationPageBase.getModelObject();
+
+        //First check for a documents that is in Progress for the user, and return this
+        for (AnnotationDocument annotationDocument: allAnnotationDocuments) {
+            //NULL CHECK due to listAnnotableDocuments from webanno
+            if (annotationDocument != null && annotationDocument.getState().equals(IN_PROGRESS)
+                //check for NAME here required, as comparing the annotationDocument with the
+                //current document will result in false
+                //This check is simply needed, because the transition from INPROGRESS to FINISHED in
+                //the DB is too slow
+                && !annotationDocument.getDocument().getName().equals(aCurrentAnno.getName())) {
+                //Found a document in progress
+                for (SourceDocument doc: data) {
+                    if (doc.getName().equals(annotationDocument.getName())) {
+                        return doc;
+                    }
+                }
             }
         }
-        //Return the document
-        //REMINDER: Document MIGHT BE NULL if there is not a single document left!
-        // Annotator should then get the message: "No more documents to annotate"
-        return document;
+
+        //Nothing in Progress, so now return a random document, or create a new annotation document
+
+        //Get a random document
+        List<SourceDocument> srcList = entityManager.
+            createQuery(
+                "FROM SourceDocument " +
+                "WHERE project = :project " +
+                "ORDER BY rand()", SourceDocument.class)
+            .setParameter("project", annotatorState.getProject())
+            .getResultList();
+        for (SourceDocument src: srcList) {
+            //Look if there is a corresponding Annotation document
+            //If not, create a new one
+            AnnotationDocument anno = entityManager.
+                createQuery(
+                    "FROM AnnotationDocument " +
+                    "WHERE name = :sourceName " +
+                    "AND user = :currentUser ", AnnotationDocument.class)
+                .setParameter("sourceName", src.getName())
+                .setParameter("currentUser", annotatorState.getUser().getUsername())
+                .getResultList().stream().findFirst().orElse(null);
+
+            if (anno == null) {
+                createAnnotationDocument(src, annotatorState.getUser());
+            } else {
+                //Annotation document found, however its state was either
+                // inprogress / finished / locked
+                if (!anno.getState().equals(NEW)) {
+                    continue;
+                }
+            }
+            return src;
+        }
+        return null;
+    }
+
+    @Transactional
+    public void createAnnotationDocument(SourceDocument aSourceDocument, User aUser)
+    {
+        entityManager.createNativeQuery(
+                "INSERT INTO AnnotationDocument " +
+                 "VALUES (null,:name,0,:state,null,null,:user,:document,:project) ")
+                .setParameter("name",aSourceDocument.getName())
+                .setParameter("state",NEW)
+                .setParameter("user",aUser)
+                .setParameter("document",aSourceDocument.getId())
+                .setParameter("project",aSourceDocument.getProject());
     }
 
     @Override
-    public Filter getFilterState() {
+    public Filter getFilterState()
+    {
         return filter;
     }
 
     @Override
-    public void setFilterState(Filter filter) {
-        this.filter = filter;
-
+    public void setFilterState(Filter aFilter)
+    {
+        filter = aFilter;
     }
 
     public String getUsersWorkingOnTheDocument(SourceDocument aDocument)
     {
         return allAnnotationDocuments.stream()
             .filter(d -> d.getDocument().equals(aDocument) &&
-                    !d.getState().equals(NEW) && 
+                    !d.getState().equals(NEW) &&
                     !d.getState().equals(IGNORE))
             .map(AnnotationDocument::getUser)
             .sorted()

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
+import org.apache.jena.base.Sys;
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,15 +33,17 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
 
 @Component
 @Order(300)
 public class MonitoringPageMenuItem implements MenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired WorkloadProperties workloadProperties;
+    private @Autowired
+    UserDao userRepo;
+    private @Autowired
+    ProjectService projectService;
+    private @Autowired
+    WorkloadAndWorkflowService workloadAndWorkflowService;
 
     @Override
     public String getPath()
@@ -69,17 +73,22 @@ public class MonitoringPageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
+
+
         
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
+
+        System.out.println(".--------------IN MONITORING MENU ITEM--------");
+        System.out.println("TYPE " + workloadAndWorkflowService.getWorkloadManager(project));
 
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
         return (projectService.isCurator(project, user)
                 || projectService.isProjectAdmin(project, user))
                 && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())
-                && !workloadProperties.isWorkloadManagerActive();
+                && workloadAndWorkflowService.getWorkloadManager(project).equals("Default monitoring page");
     }
     
     @Override
