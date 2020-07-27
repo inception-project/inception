@@ -103,4 +103,9 @@ public interface CurationService
      */
     public List<User> listUsersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument);
+
+    /**
+     * List users that have finished the given document
+     */
+    public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument);
 }

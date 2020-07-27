@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,8 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -98,6 +98,7 @@ public class CurationSidebar
     private WebMarkupContainer mainContainer;
     private ListView<User> users;
     private Label noDocsLabel;
+    private Label finishedLabel;
     
     private AnnotationPage annoPage;
     private final MergeDialog mergeConfirm;
@@ -113,6 +114,17 @@ public class CurationSidebar
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
+        
+        // Add empty space message
+        AnnotatorState state = aModel.getObject();
+        noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
+        finishedLabel = new Label("finishedLabel", new ResourceModel("finished"));
+        mainContainer.add(finishedLabel);
+        finishedLabel.add(visibleWhen(
+            () -> documentService.isAnnotationFinished(state.getDocument(), state.getUser())));
+        noDocsLabel.add(visibleWhen(() -> !finishedLabel.isVisible() &&
+                users.getModelObject().isEmpty()));
+        mainContainer.add(noDocsLabel);
         
         // set up user-checklist
         usersForm = createUserSelection();
@@ -133,17 +145,12 @@ public class CurationSidebar
                 documentNameModel));
         mainContainer.add(mergeConfirm);
         
-        // Add empty space message
-        noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
-        mainContainer.add(noDocsLabel);
-        
         // if curation user changed we have to reload the document
-        AnnotatorState state = aModel.getObject();
-        String currentUser = userRepository.getCurrentUser().getUsername();
         long projectid = state.getProject().getId();
-        User curationUser = curationService.retrieveCurationUser(currentUser, 
+        String currentUsername = userRepository.getCurrentUsername();
+        User curationUser = curationService.retrieveCurationUser(currentUsername, 
                 projectid);
-        if (currentUser != null && !currentUser.equals(curationUser.getUsername())) {
+        if (currentUsername != null && !currentUsername.equals(curationUser.getUsername())) {
             state.setUser(curationUser);
             Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
             annoPage.actionLoadDocument(target.orElseGet(null));
@@ -151,6 +158,11 @@ public class CurationSidebar
         
         // user started curating, extension can show suggestions
         state.setMetaData(CurationMetadata.CURATION_USER_PROJECT, true);
+        
+        String username = state.getUser().getUsername();
+        add(enabledWhen(() -> (username.equals(currentUsername) || 
+                username.equals(CURATION_USER)) &&
+                !documentService.isAnnotationFinished(state.getDocument(), state.getUser())));
     }
     
     private Form<Void> createSettingsForm(String aId)
@@ -162,7 +174,7 @@ public class CurationSidebar
         
         // set up curation target selection as radio button
         List<String> curationTargets = Arrays.asList(
-                new String[] { CURATION_USER, userRepository.getCurrentUser().getUsername() });
+                new String[] { CURATION_USER, userRepository.getCurrentUsername()});
         ChoiceRenderer<String> choiceRenderer = new ChoiceRenderer<String>()
         {
             private static final long serialVersionUID = -8165699251116827372L;
@@ -215,32 +227,6 @@ public class CurationSidebar
         return settingsForm;
     }
 
-    @Override
-    protected void onConfigure()
-    {
-        super.onConfigure();
-        AnnotatorState state = getModelObject();
-        // check that document is not already finished 
-        // and user is curating not just viewing doc as admin
-        User user = state.getUser();
-        setEnabled((user.equals(userRepository.getCurrentUser()) || 
-                user.getUsername().equals(CURATION_USER)) &&
-                !documentService.isAnnotationFinished(state.getDocument(), user));
-        configureVisibility();
-    }
-
-    protected void configureVisibility()
-    {
-        if (users.getModelObject().isEmpty()) {
-            usersForm.setVisible(false);
-            noDocsLabel.setVisible(true);
-        }
-        else {
-            usersForm.setVisible(true);
-            noDocsLabel.setVisible(false);
-        }
-    }
-
     private void merge(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         AnnotatorState state = getModelObject();
@@ -291,7 +277,7 @@ public class CurationSidebar
                     aState.getProject().getId(), doc);
             if (targetCas.isPresent()) {
                 MergeStrategy mergeStrat = curationService.retrieveMergeStrategy(
-                        userRepository.getCurrentUser().getUsername(), aState.getProject().getId());
+                        userRepository.getCurrentUsername(), aState.getProject().getId());
                 mergeStrat.merge(aState, targetCas.get(), userCases, aMergeIncomplete);
                 log.debug("{} merge done", mergeStrat.getUiName()); 
             }
@@ -329,13 +315,14 @@ public class CurationSidebar
         };
         selectedUsers.add(users);
         usersForm.add(selectedUsers);
+        usersForm.add(visibleWhen(() -> !noDocsLabel.isVisible() && !finishedLabel.isVisible()));
         return usersForm;
     }
     
     private List<User> listSelectedUsers()
     {
         Optional<List<User>> users = curationService.listUsersSelectedForCuration(
-                userRepository.getCurrentUser().getUsername(), getModelObject().getProject()
+                userRepository.getCurrentUsername(), getModelObject().getProject()
                 .getId());
         if (!users.isPresent()) {
             return new ArrayList<>();
@@ -348,32 +335,17 @@ public class CurationSidebar
      */
     private List<User> listUsers()
     {
-        return projectService
-                .listProjectUsersWithPermissions(getModelObject().getProject(), 
-                        PermissionLevel.ANNOTATOR)
-                .stream().filter(user -> !user.equals(userRepository.getCurrentUser()) 
-                        && hasFinishedDoc(user))
+        User currentUser = userRepository.getCurrentUser();
+        return curationService.listFinishedUsers(getModelObject().getProject(), 
+                getModelObject().getDocument()).stream()
+                .filter(user -> !user.equals(currentUser))
                 .collect(Collectors.toList());
-    }
-
-    private boolean hasFinishedDoc(User aUser)
-    {
-        SourceDocument doc = getModelObject().getDocument();
-        String username = aUser.getUsername();
-        if (documentService.existsAnnotationDocument(doc, username) && 
-                documentService.getAnnotationDocument(doc, username).getState()
-                .equals(AnnotationDocumentState.FINISHED)) {
-            return true;
-        }
-        else {
-            return false;
-        }
     }
     
     private void selectAndShow(AjaxRequestTarget aTarget, Form<Void> aForm) {
         // switch to manual merge
         AnnotatorState state = getModelObject();
-        curationService.updateMergeStrategy(userRepository.getCurrentUser().getUsername(), 
+        curationService.updateMergeStrategy(userRepository.getCurrentUsername(), 
                 state.getProject().getId(), manualMergeStrat);
         
         updateUsers(state);
@@ -399,7 +371,7 @@ public class CurationSidebar
     {
         Collection<User> users = selectedUsers.getModelObject();
         curationService.updateUsersSelectedForCuration(
-                userRepository.getCurrentUser().getUsername(), aState.getProject().getId(), users);
+                userRepository.getCurrentUsername(), aState.getProject().getId(), users);
     }
     
     private void clearUsers(AjaxRequestTarget aTarget, Form<Void> aForm) 
@@ -407,7 +379,7 @@ public class CurationSidebar
         AnnotatorState state = getModelObject();
         selectedUsers.setModelObject(new ArrayList<>());
         curationService.clearUsersSelectedForCuration(
-                userRepository.getCurrentUser().getUsername(), state.getProject().getId());
+                userRepository.getCurrentUsername(), state.getProject().getId());
         aTarget.add(usersForm);
         annoPage.actionRefreshDocument(aTarget);
     }
