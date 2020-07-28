@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.workload;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.DefaultAnnotationsProperties;
@@ -362,28 +362,28 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
 
         //Reset button
         Button reset = new LambdaAjaxButton(getString("Reset"),
-            this::actionReset).triggerAfterSubmit();
+            this::actionReset);
 
         searchForm.add(reset);
 
         //Submit button
         Button search = new LambdaAjaxButton(getString("Search"),
-            this::actionSubmit).triggerAfterSubmit();
+            this::actionSubmit);
 
         searchForm.add(search);
 
         //Condition for filter inputs to be enabled
-        dateTo.add(LambdaBehavior.enabledWhen(() ->
+        dateTo.add(enabledWhen(() ->
             !dateChoices.getValue().equals(dateChoice.get(0))
             && unused.getValue().equals("false")));
-        dateFrom.add(LambdaBehavior.enabledWhen(() ->
+        dateFrom.add(enabledWhen(() ->
             !dateChoices.getValue().equals(dateChoice.get(1))
             && unused.getValue().equals("false")));
-        dateChoices.add(LambdaBehavior.enabledWhen(() ->
+        dateChoices.add(enabledWhen(() ->
             unused.getValue().equals("false")));
-        userFilterTextField.add(LambdaBehavior.enabledWhen(() ->
+        userFilterTextField.add(enabledWhen(() ->
             unused.getValue().equals("false")));
-        documentFilterTextField.add(LambdaBehavior.enabledWhen(() ->
+        documentFilterTextField.add(enabledWhen(() ->
             unused.getValue().equals("false")));
 
         return searchForm;

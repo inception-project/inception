@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
-import java.util.ArrayList;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
@@ -35,10 +37,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExten
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav.DefaultDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowPropertiesImpl;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 
 @Order(1000)
 @Component
@@ -87,23 +90,49 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     @Override
     public void onInitialize(AnnotationPageBase aPage)
     {
-        AnnotationQueueOverviewDataProvider prov =
-            new AnnotationQueueOverviewDataProvider(
-                new ArrayList<>(documentService.listAnnotatableDocuments
-                    (aPage.getModelObject().getProject(),
-                        aPage.getModelObject().getUser()).values()),
-                documentService.listSourceDocuments(
-                    aPage.getModelObject().getProject()), documentService, entityManager);
-        SourceDocument doc = prov.getRandomDocument(aPage, new AnnotationDocument());
-        if (doc == null) {
+        User user = aPage.getModelObject().getUser();
+        Project project = aPage.getModelObject().getProject();
+        //Check if there is a document in progress and return this one
+        for (AnnotationDocument annotationDocument:
+            documentService.listAnnotationDocuments(project,user)) {
+            //There was one in progress, load it
+            if (annotationDocument.getState().equals(IN_PROGRESS)) {
+                aPage.getModelObject().setDocument(annotationDocument.getDocument(),
+                    documentService.listSourceDocuments(project));
+                Optional<AjaxRequestTarget> target = RequestCycle.get().
+                    find(AjaxRequestTarget.class);
+                aPage.actionLoadDocument(target.orElse(null));
+                break;
+            }
+        }
+        //Nothing in progress found, get a random document
+        if (aPage.getModelObject().getDocument() == null) {
+            //Go through all documents in a random order and check if there is a Annotation document
+            //with the state NEW
+            String query =  "FROM SourceDocument " +
+                            "WHERE project = :project " +
+                            "ORDER BY rand()";
+            for (SourceDocument doc: entityManager.createQuery(query,SourceDocument.class)
+                .setParameter("project", project).getResultList()) {
+                //Check if it exist or is NEW
+                if (documentService.listAnnotatableDocuments(project,user).get(doc) == null ||
+                    documentService.listAnnotatableDocuments(project,user).get(doc).
+                        getState().equals(NEW)) {
+                    //This document had the state NEW, load it
+                    aPage.getModelObject().setDocument(doc, documentService.
+                        listSourceDocuments(project));
+
+                    Optional<AjaxRequestTarget> target = RequestCycle.get().
+                        find(AjaxRequestTarget.class);
+                    aPage.actionLoadDocument(target.orElse(null));
+                    break;
+                }
+            }
+        }
+        //No documents left
+        if (aPage.getModelObject().getDocument() == null) {
             aPage.setResponsePage(aPage.getApplication().getHomePage());
             aPage.getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");
-        } else {
-            aPage.getModelObject().setDocument(doc, documentService.
-                listSourceDocuments(aPage.getModelObject().getProject()));
-            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-            aPage.actionLoadDocument(target.orElse(null));
         }
     }
-
 }

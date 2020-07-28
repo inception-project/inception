@@ -30,24 +30,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
@@ -58,8 +51,7 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     private final List<SourceDocument> data;
     private IModel<List<SourceDocument>> model;
     private final List<AnnotationDocument> allAnnotationDocuments;
-    private @PersistenceContext EntityManager entityManager;
-    private List<SourceDocument> shownDocuments;
+    private final List<SourceDocument> shownDocuments;
     private Filter filter;
     private DocumentService documentService;
     private int defaultAnnotations;
@@ -71,7 +63,8 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         data = aData;
         headers = aHeaders;
         allAnnotationDocuments = aAllAnnotationDocuments;
-        //TODO default value must be saved permanently, create new issue and PR
+        shownDocuments = new ArrayList<>();
+        //TODO default value must be saved permanently, Issue #1776
         defaultAnnotations = 6;
 
         //Init filter
@@ -90,17 +83,6 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
                 return data;
             }
         };
-    }
-
-    public AnnotationQueueOverviewDataProvider(
-        List<AnnotationDocument> aAlAnnotationDocuments,
-        List<SourceDocument> aData, DocumentService aDocumentService, EntityManager aEntityManager)
-    {
-        entityManager = aEntityManager;
-        allAnnotationDocuments = aAlAnnotationDocuments;
-        data = aData;
-        documentService = aDocumentService;
-        headers = new ArrayList<>();
     }
 
     @Override
@@ -143,7 +125,7 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         });
 
         //Reset
-        this.shownDocuments = new ArrayList<>();
+        shownDocuments.clear();
         shownDocuments.addAll(newList);
 
         if ((int)aFirst + (int)aCount > newList.size()) {
@@ -308,85 +290,6 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
             .count();
     }
 
-
-    //Returns a random document out of all documents in the project.
-    //Only a document is chosen which is not yet given to annotators more than the default number
-    //per document number (TODO),
-    //However, if there was already a document in progress,
-    // this will always be returned (can only be one)
-
-    public SourceDocument getRandomDocument(
-        AnnotationPageBase aAnnotationPageBase, AnnotationDocument aCurrentAnno)
-    {
-        AnnotatorState annotatorState = aAnnotationPageBase.getModelObject();
-
-        //First check for a documents that is in Progress for the user, and return this
-        for (AnnotationDocument annotationDocument: allAnnotationDocuments) {
-            //NULL CHECK due to listAnnotableDocuments from webanno
-            if (annotationDocument != null && annotationDocument.getState().equals(IN_PROGRESS)
-                //check for NAME here required, as comparing the annotationDocument with the
-                //current document will result in false
-                //This check is simply needed, because the transition from INPROGRESS to FINISHED in
-                //the DB is too slow
-                && !annotationDocument.getDocument().getName().equals(aCurrentAnno.getName())) {
-                //Found a document in progress
-                for (SourceDocument doc: data) {
-                    if (doc.getName().equals(annotationDocument.getName())) {
-                        return doc;
-                    }
-                }
-            }
-        }
-
-        //Nothing in Progress, so now return a random document, or create a new annotation document
-
-        //Get a random document
-        List<SourceDocument> srcList = entityManager.
-            createQuery(
-                "FROM SourceDocument " +
-                "WHERE project = :project " +
-                "ORDER BY rand()", SourceDocument.class)
-            .setParameter("project", annotatorState.getProject())
-            .getResultList();
-        for (SourceDocument src: srcList) {
-            //Look if there is a corresponding Annotation document
-            //If not, create a new one
-            AnnotationDocument anno = entityManager.
-                createQuery(
-                    "FROM AnnotationDocument " +
-                    "WHERE name = :sourceName " +
-                    "AND user = :currentUser ", AnnotationDocument.class)
-                .setParameter("sourceName", src.getName())
-                .setParameter("currentUser", annotatorState.getUser().getUsername())
-                .getResultList().stream().findFirst().orElse(null);
-
-            if (anno == null) {
-                createAnnotationDocument(src, annotatorState.getUser());
-            } else {
-                //Annotation document found, however its state was either
-                // inprogress / finished / locked
-                if (!anno.getState().equals(NEW)) {
-                    continue;
-                }
-            }
-            return src;
-        }
-        return null;
-    }
-
-    @Transactional
-    public void createAnnotationDocument(SourceDocument aSourceDocument, User aUser)
-    {
-        entityManager.createNativeQuery(
-                "INSERT INTO AnnotationDocument " +
-                 "VALUES (null,:name,0,:state,null,null,:user,:document,:project) ")
-                .setParameter("name",aSourceDocument.getName())
-                .setParameter("state",NEW)
-                .setParameter("user",aUser)
-                .setParameter("document",aSourceDocument.getId())
-                .setParameter("project",aSourceDocument.getProject());
-    }
-
     @Override
     public Filter getFilterState()
     {
@@ -409,7 +312,6 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
             .sorted()
             .collect(Collectors.joining(", "));
     }
-
 
     public Date lastAccessTimeForDocument(SourceDocument aDoc)
     {
