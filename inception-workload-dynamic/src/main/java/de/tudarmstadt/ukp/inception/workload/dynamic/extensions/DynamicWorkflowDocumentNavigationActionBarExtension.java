@@ -102,7 +102,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
                 Optional<AjaxRequestTarget> target = RequestCycle.get().
                     find(AjaxRequestTarget.class);
                 aPage.actionLoadDocument(target.orElse(null));
-                break;
+                return;
             }
         }
         //Nothing in progress found, get a random document
@@ -125,7 +125,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
                     Optional<AjaxRequestTarget> target = RequestCycle.get().
                         find(AjaxRequestTarget.class);
                     aPage.actionLoadDocument(target.orElse(null));
-                    break;
+                    return;
                 }
             }
         }

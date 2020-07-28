@@ -22,8 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
-import java.util.Optional;
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -32,7 +30,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
@@ -121,10 +118,9 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
                     getAnnotationPage().getModelObject().setDocument(doc, documentService.
                         listSourceDocuments(project));
                     //This document had the state NEW, load it
-                    Optional<AjaxRequestTarget> target = RequestCycle.get().
-                        find(AjaxRequestTarget.class);
-                    getAnnotationPage().actionLoadDocument(target.orElse(null));
-                    break;
+                    getAnnotationPage().actionLoadDocument(_target);
+                    _target.add(page);
+                    return;
                 }
             }
 
@@ -134,7 +130,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
                     getHomePage());
                 getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");
             }
-            _target.add(page);
         });
         finishDocumentDialog.show(aTarget);
     }

@@ -361,14 +361,12 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         searchForm.add(unused);
 
         //Reset button
-        Button reset = new LambdaAjaxButton(getString("Reset"),
-            this::actionReset);
+        Button reset = new LambdaAjaxButton("reset", this::actionReset);
 
         searchForm.add(reset);
 
         //Submit button
-        Button search = new LambdaAjaxButton(getString("Search"),
-            this::actionSubmit);
+        Button search = new LambdaAjaxButton("search", this::actionSubmit);
 
         searchForm.add(search);
 
