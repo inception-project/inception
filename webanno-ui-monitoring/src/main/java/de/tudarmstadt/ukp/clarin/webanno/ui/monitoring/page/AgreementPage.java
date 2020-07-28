@@ -230,15 +230,16 @@ public class AgreementPage
         {
             // If the currently selected measure is not compatible with the selected feature, then
             // we clear the measure selection.
+            AnnotationFeature selectedFeature = featureList.getModelObject();
             boolean measureCompatibleWithFeature = measureDropDown.getModel()
                     .map(k -> agreementRegistry.getAgreementMeasureSupport(k.getKey()))
-                    .map(s -> s.accepts(featureList.getModelObject()))
+                    .map(s -> selectedFeature != null && s.accepts(selectedFeature))
                     .orElse(false).getObject();
             if (!measureCompatibleWithFeature) {
                 measureDropDown.setModelObject(null);
             }
             
-            aTarget.add(measureDropDown, runCalculationsButton);
+            aTarget.add(measureDropDown, runCalculationsButton, traitsContainer);
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
