@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManag
  * {@link DynamicWorkloadManagerAutoConfiguration#projectWorkloadSettingsPanelFactory}.
  * </p>
  */
-@Order(300)
+@Order(600)
 public class ProjectWorkloadSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
