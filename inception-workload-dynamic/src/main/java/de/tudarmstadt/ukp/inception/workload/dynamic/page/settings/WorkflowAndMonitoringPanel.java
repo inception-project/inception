@@ -93,7 +93,7 @@ public class WorkflowAndMonitoringPanel extends Panel
 
         //Finally, add the confirm button at the end
         Button confirm = new LambdaAjaxButton(getString("confirm"),
-            this::actionConfirm).triggerAfterSubmit();
+            this::actionConfirm);
 
         form.add(confirm);
         add(form);
