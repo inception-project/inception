@@ -49,8 +49,7 @@ public class WorkflowAndMonitoringPanel extends Panel
     private final BootstrapRadioChoice<String> monitoringChoices;
     private final Project project;
 
-    public WorkflowAndMonitoringPanel(String aID, IModel<Project> aProject)
-    {
+    public WorkflowAndMonitoringPanel(String aID, IModel<Project> aProject) {
         super(aID, aProject);
 
         project = aProject.getObject();
@@ -92,10 +91,10 @@ public class WorkflowAndMonitoringPanel extends Panel
         form.add(monitoringChoices);
 
         //Finally, add the confirm button at the end
-        Button confirm = new LambdaAjaxButton(getString("confirm"),
-            this::actionConfirm).triggerAfterSubmit();
+        Button confirm = new LambdaAjaxButton("save", this::actionConfirm);
 
         form.add(confirm);
+
         add(form);
     }
 
