@@ -23,11 +23,13 @@
       <div class="flex-h-container flex-gutter">
         <div>
           <input wicket:id="newProject" type="button" class="btn btn-primary" wicket:message="value:newProject"/> 
-          <button wicket:id="importProjectBtn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-          </button>
-          <div class="dropdown-menu shadow-lg" role="menu">
-            <wicket:container wicket:id="importProjectPanel" />
-          </div>
+          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button wicket:id="importProjectBtn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" name="projectImport">
+            </button>
+            <div class="dropdown-menu shadow-lg" role="menu">
+              <wicket:container wicket:id="importProjectPanel" />
+            </div>
+          </span>
           <button wicket:id="startTutorial" class="btn btn-outline-primary">
             <i class="fa fa-lightbulb"></i>&nbsp;
             Start Tutorial
