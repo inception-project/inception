@@ -41,7 +41,7 @@ public class DynamicWorkloadManagerAutoConfiguration
     {
         return new WorkloadPageMenuItem(aUserRepo, aProjectService, aWorkloadAndWorkflowService);
     }
-    
+
     @Bean
     public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory()
     {
