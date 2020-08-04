@@ -1,13 +1,9 @@
 TODO:
-
-Für Links:
+ Für Links:
 https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/#links
-
 Best: Use safari, Chrome, …?
 
-**Ich bin eine kleine Änderung**
-
-Getting Started
+= Getting Started
 
 This Getting-Started-Guide helps new users to install, start and work
 with INCEpTION. It gives a quick overview (estimated time for reading
@@ -21,12 +17,12 @@ videos (Topics: Introduction, Overview, Recommender Basics, Entity
 Linking):
 https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-
 
- +
-*_Introduction_*
 
-What can INCEpTION be used for? (also see our introduction video for a
+== Introduction
+
+What can INCEpTION be used for? (also see our https://www.youtube.com/watch?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&time_continue=135&v=Ely8eBKqiSI&feature=emb_logo)[introduction video] for a
 first impression what INCEpTION is):
-https://www.youtube.com/watch?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&time_continue=135&v=Ely8eBKqiSI&feature=emb_logo)
+
 
 * **INCEpTION is a text-annotation enviroment **useful for various kinds
 of annotation projects. It is a web application in which several users
@@ -198,7 +194,7 @@ PosValue-dropdown to lable it as a verb).
 
 Congratulations! You have created your first annotation!
 
-* Let‘s examine the right panel:
+* Now, let‘s examine the right panel to understand what we have done:
 
 * {blank}
 ** You find the field „Layer“ on top and „Annotation“ below. In the
@@ -206,7 +202,7 @@ Congratulations! You have created your first annotation!
 we yust did. By the layer, you choose the kind of annotation you make.
 For example, we used the POS (Part of Speech) layer before to annotate
 what is a verb/noun/adjective/… On the
-** You find several default layers linke Part Of Speech or Named Entity
+** You find several default layers like Part Of Speech or Named Entity
 already. You can also adjust them and create own layers in the project
 settings (we will deal with the project settings later on). INCEpTION
 supports span layers (annotating a span in the text, e.g. from the 51th
@@ -268,31 +264,33 @@ kann
 aber es gibt "default" tagsets - die halt per default angelegt werden
 damit der benutzer einen startpunkt hat
 
-Anatomy of an annotation project
+=== Anatomy of an annotation project
 
-* If you may have different projects in INCEpTIOn at the same time. Each
+If you may have different projects in {product-name} at the same time. Each
 project consist of
-** One or more *documents* to annotate
-** *Users* to work on the project
-** *Layers* to annotate with
-** Optional: one or more *Knowledge Base/s*
-** Optional: *Recomenders* to automatically suggest annotations
-** Optional: *Guidelines* for your team
-+
+
+* One or more *documents* to annotate
+* *Users* to work on the project
+* *Layers* to annotate with
+* Optional: one or more *Knowledge Base/s*
+* Optional: *Recomenders* to automatically suggest annotations
+* Optional: *Guidelines* for your team
+
 You find all of these in the project *settings* which are explaned in
 the next part.
-+
-* In order to work with your own projects, you might want to understand
-the anatomy of an INCEpTION project. Let‘s see what the dashboard
+
+In order to work with your own projects, you might want to understand
+the anatomy of an {product-name} project. Let‘s see what the dashboard
 (clicking on the dashboard button on the top) provides: As a Project
 Manager of a project, you see all of the following sub pages (roles and
 rights will be presented later on in this guide). For details on each
 section, check the main documentation
 (https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
 , upper half→ User Guide).
-** *Annotation*: We were here before. Here, you can make your
-annotationsjust loke before.
-** *Curation*: If several annotators work on a project, you may want a
+
+* *Annotation*: We were here before. Here, you can make your
+annotations just like before.
+* *Curation*: If several annotators work on a project, you may want a
 curator to finally decide which annotations to accept. Everyone with
 curation rights (see below) within this project can curate. All others
 do not have access to nor see this page. Only documents marked as
@@ -300,40 +298,41 @@ finished by at least one annotator can be curated. For details on how to
 courate, see the main documentation
 (https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
 , upper half→ User Guide) or just try it out:
-*** Add another fake user (see below)
-*** Create some annotations in any document
-*** Mark the document as finished: Just click on the lock on top.
-*** Log out and log in again as the fake user.
-*** In the very same document, make some annotations exactly like before
+
+** Add another fake user (see below)
+** Create some annotations in any document
+** Mark the document as finished: Just click on the lock on top.
+** Log out and log in again as the fake user.
+** In the very same document, make some annotations exactly like before
 but also some which are different. Mark the document as finished.
-*** Log in as any user with couration rights (e.g. the „admin“ user we
+** Log in as any user with couration rights (e.g. the „admin“ user we
 used before), enter the couration page and explore how to courate: You
 see the automatic merge on top (what was equal from both users is being
 accepted already) and the annotations of each of the users below.
 Differences are highlightet. You can accept an annotation by clicking on
 it. You can also create new annotations.
-** *Knowledge Base*: On this sub page, you can manage and create your
+* *Knowledge Base*: On this sub page, you can manage and create your
 knowledge bases for this project. You can create new ones from the
 scratch, modify existing ones and integrate remote or local knowledge
 bases into your project.
-** **Monitoring: **Here you can check the overall progress of your
+* *Monitoring:* Here you can check the overall progress of your
 project; which user is working on or has finished which document; and
 for each user, you can toggle the status of each document between
 ***Done****/****In Progress ****or between **New / Locked**.***
-** Agreement: On this page, you can calculate the agreement of you
+* *Agreement*: On this page, you can calculate the agreement of you
 annotators‘ work. Four different measures for agreement are provided.
 _Note:_ Only documents marked as finished by annotators (clicking on the
 little lock on the annotation page) are taken into account.
-** *Evaluation*: The evaluation page shows a learning courve diagram of
+* *Evaluation*: The evaluation page shows a learning courve diagram of
 each recommender (we will explain recommenders later on on this guide).
-** *Settings*: This is the heart of your project. Here, you can
+* *Settings*: This is the heart of your project. Here, you can
 organize, manage and adjust all details of your project. We will look at
 the ones you need to get started for your own projects. For a quick
 overview on the settings, you might want to watch our tutorial video
 „Overview“:
 https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s.
 
-* Now, let‘s have a look at the *Settings *(again, for details on any
+* Now, let‘s have a look at the *Settings* (again, for details on any
 section/topic mentioned, please check the main documentation
 (https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
 , upper half→ User Guide).** **You find differenat tabs:
