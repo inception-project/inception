@@ -26,6 +26,8 @@ import java.lang.invoke.MethodHandles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAssignment;
+
 public abstract class WorkloadAndWorkflowEngineFactoryImplBase<T>
     implements WorkloadAndWorkflowEngineFactory<T>
 {
@@ -38,16 +40,16 @@ public abstract class WorkloadAndWorkflowEngineFactoryImplBase<T>
     }
 
     @Override
-    public T readTraits(WorkloadAndWorkflow aWorkloadAndWorkflow)
+    public T readTraits(WorkloadAssignment aWorkloadAssignment)
     {
-        if (aWorkloadAndWorkflow.getTraits() == null) {
+        if (aWorkloadAssignment.getTraits() == null) {
             return createTraits();
         }
 
         T traits = null;
         try {
             traits = fromJsonString((Class<T>) createTraits().getClass(),
-                aWorkloadAndWorkflow.getTraits());
+                aWorkloadAssignment.getTraits());
         }
         catch (IOException e) {
             log.error("Error while reading traits", e);
@@ -61,11 +63,11 @@ public abstract class WorkloadAndWorkflowEngineFactoryImplBase<T>
     }
 
     @Override
-    public void writeTraits(WorkloadAndWorkflow aWorkloadAndWorkflow, Object aTraits)
+    public void writeTraits(WorkloadAssignment aWorkloadAssignment, Object aTraits)
     {
         try {
             String json = toJsonString(aTraits);
-            aWorkloadAndWorkflow.setTraits(json);
+            aWorkloadAssignment.setTraits(json);
         }
         catch (IOException e) {
             log.error("Error while writing traits", e);

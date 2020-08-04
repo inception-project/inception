@@ -25,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.page.settings.ProjectWorkloadSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageMenuItem;
 

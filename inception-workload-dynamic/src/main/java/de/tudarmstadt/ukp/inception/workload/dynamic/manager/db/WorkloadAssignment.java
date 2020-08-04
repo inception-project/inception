@@ -15,7 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
+package de.tudarmstadt.ukp.inception.workload.dynamic.manager.db;
+
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowState.DEFAULT_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowType.DEFAULT_WORKFLOW_TYPE;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkloadState.DEFAULT_MONITORING;
 
 import java.io.Serializable;
 
@@ -29,17 +33,14 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 /**
  * A persistence object for the workflow and workload properties of each project.
  */
 @Entity
-@Table(name = "workloadandworkflow")
-public class WorkloadAndWorkflow implements Serializable
+@Table(name = "workload_assignment")
+public class WorkloadAssignment implements Serializable
 {
     private static final long serialVersionUID = -9087395004474377523L;
 
@@ -47,7 +48,6 @@ public class WorkloadAndWorkflow implements Serializable
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
     @JoinColumn(name = "project", nullable = false)
     private Project project;
@@ -56,31 +56,31 @@ public class WorkloadAndWorkflow implements Serializable
     @Column(length = 64000)
     private String traits;
 
-    private String workflowmanager;
+    private String workflowManagerType;
 
-    private String workloadmanager;
+    private String workloadManagerType;
 
     private String workflow;
 
-    private int defaultnumberofannotations;
+    private int numberOfAnnotations;
 
-    public WorkloadAndWorkflow()
+    public WorkloadAssignment()
     {
-        workflowmanager = "default";
-        workloadmanager = "default";
-        workflow = "default";
-        defaultnumberofannotations = 6;
+        workflowManagerType = DEFAULT_WORKFLOW.toString();
+        workloadManagerType = DEFAULT_MONITORING.toString();
+        workflow = DEFAULT_WORKFLOW_TYPE.toString();
+        numberOfAnnotations = 3;
     }
 
-    public WorkloadAndWorkflow(Project aProject, String aWorkflowManager,
-        String aWorkloadManager, String aWorkflow, int aDefaultNumberOfAnnotations)
+    public WorkloadAssignment(Project aProject, String aWorkflowManager,
+                              String aWorkloadManager, String aWorkflow,
+                              int aDefaultNumberOfAnnotations)
     {
-        super();
         project = aProject;
-        workflowmanager = aWorkflowManager;
-        workloadmanager = aWorkloadManager;
+        workflowManagerType = aWorkflowManager;
+        workloadManagerType = aWorkloadManager;
         workflow = aWorkflow;
-        defaultnumberofannotations = aDefaultNumberOfAnnotations;
+        numberOfAnnotations = aDefaultNumberOfAnnotations;
     }
 
     public Long getId()
@@ -105,32 +105,32 @@ public class WorkloadAndWorkflow implements Serializable
 
     public String getWorkflowmanager()
     {
-        return workflowmanager;
+        return workflowManagerType;
     }
 
     public void setWorkflowmanager(String aWorkflowmanager)
     {
-        workflowmanager = aWorkflowmanager;
+        workflowManagerType = aWorkflowmanager;
     }
 
     public String getWorkloadmanager()
     {
-        return workloadmanager;
+        return workloadManagerType;
     }
 
     public void setWorkloadmanager(String aWorkloadmanager)
     {
-        workloadmanager = aWorkloadmanager;
+        workloadManagerType = aWorkloadmanager;
     }
 
     public int getDefaultnumberofannotations()
     {
-        return defaultnumberofannotations;
+        return numberOfAnnotations;
     }
 
     public void setDefaultnumberofannotations(int aDefaultnumberofannotations)
     {
-        this.defaultnumberofannotations = aDefaultnumberofannotations;
+        numberOfAnnotations = aDefaultnumberofannotations;
     }
 
     public String getTraits()
@@ -145,21 +145,21 @@ public class WorkloadAndWorkflow implements Serializable
 
     public String getWorkflowManager()
     {
-        return workflowmanager;
+        return workflowManagerType;
     }
 
     public void setWorkflowManager(String aWorkflowManager)
     {
-        workflowmanager = aWorkflowManager;
+        workflowManagerType = aWorkflowManager;
     }
 
     public String getWorkloadManager()
     {
-        return workloadmanager;
+        return workloadManagerType;
     }
 
     public void setWorkloadManager(String aWorkloadManager) {
-        workloadmanager = aWorkloadManager;
+        workloadManagerType = aWorkloadManager;
     }
 
     public String getWorkflow()
@@ -174,11 +174,11 @@ public class WorkloadAndWorkflow implements Serializable
 
     public int getDefaultNumberOfAnnotations()
     {
-        return defaultnumberofannotations;
+        return numberOfAnnotations;
     }
 
     public void setDefaultNumberOfAnnotations(int aDefaultNumberOfAnnotations)
     {
-        defaultnumberofannotations = aDefaultNumberOfAnnotations;
+        numberOfAnnotations = aDefaultNumberOfAnnotations;
     }
 }

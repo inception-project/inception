@@ -15,18 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
+package de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAssignment;
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
-public interface WorkloadAndWorkflowEngineFactory<T> {
-    String getId();
+public enum WorkflowState implements PersistentEnum
+{
+    DYNAMIC_WORKFLOW("DYNAMIC_WORKFLOW"),
+    DEFAULT_WORKFLOW("DEFAULT_WORKFLOW");
 
-    String getName();
+    private final String id;
 
-    T createTraits();
+    WorkflowState(String aID)
+    {
+        id = aID;
+    }
 
-    T readTraits(WorkloadAssignment aWorkloadAssignment);
+    @Override
+    public String getId()
+    {
+        return null;
+    }
 
-    void writeTraits(WorkloadAssignment aWorkloadAssignment, T aTraits);
+    @Override
+    public String toString()
+    {
+        return getId();
+    }
 }

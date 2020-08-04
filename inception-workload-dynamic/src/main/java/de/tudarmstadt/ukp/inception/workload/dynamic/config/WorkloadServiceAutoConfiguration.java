@@ -32,19 +32,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowEngineFactory;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistry;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistryImplBase;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowServiceImplBase;
-
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowServiceImplBase;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class WorkloadServiceAutoConfiguration
 {
-    private @PersistenceContext
-        EntityManager entityManager;
+    private @PersistenceContext EntityManager entityManager;
 
     @Bean
     @Autowired
-    public WorkloadAndWorkflowServiceImplBase workloadAndWorkflowService(
+    public WorkloadAndWorkflowService workloadAndWorkflowService(
         ProjectService aProjectService)
     {
         return new WorkloadAndWorkflowServiceImplBase(entityManager, aProjectService);

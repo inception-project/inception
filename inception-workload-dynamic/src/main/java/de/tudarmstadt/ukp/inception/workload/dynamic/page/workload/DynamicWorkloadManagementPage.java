@@ -69,7 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentU
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
 
@@ -235,7 +235,6 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         if (aProjectParam == null || aProjectParam.isEmpty()) {
             return Optional.empty();
         }
-
         try {
             return Optional.of(projectService.getProject(aProjectParam.toLong()));
         } catch (NoResultException e) {

@@ -19,12 +19,12 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowState.DYNAMIC_WORKFLOW;
 
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -41,7 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowService;
 
 @Order(1000)
 @Component
@@ -78,7 +78,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     @Override
     public boolean accepts(AnnotationPageBase aPage) {
         if (!workloadAndWorkflowService.getWorkflowManager(
-            aPage.getModelObject().getProject()).equals("Default workflow manager")) {
+            aPage.getModelObject().getProject()).equals(DYNAMIC_WORKFLOW.toString())) {
             return true;
         } else {
             return false;

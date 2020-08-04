@@ -17,6 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.settings;
 
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowState.DEFAULT_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowState.DYNAMIC_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkloadState.DEFAULT_MONITORING;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkloadState.WORKLOAD_MONITORING;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +38,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowService;
 
 //Custom panel inside the page
 public class WorkflowAndMonitoringPanel extends Panel
@@ -59,8 +64,8 @@ public class WorkflowAndMonitoringPanel extends Panel
 
         //Add two possibilities to select for the workflow manager
         workflow = new ArrayList<>();
-        workflow.add("Default workflow manager");
-        workflow.add("Dynamic workflow manager");
+        workflow.add(DEFAULT_WORKFLOW.toString());
+        workflow.add(DYNAMIC_WORKFLOW.toString());
 
         workflowChoices = new BootstrapRadioChoice<>("workflowRadios",
             new Model<>(getString("defaultWorkflow")), workflow);
@@ -75,8 +80,8 @@ public class WorkflowAndMonitoringPanel extends Panel
 
         //Add two possibilities to select from the monitoring manager
         monitoring = new ArrayList<>();
-        monitoring.add("Default monitoring page");
-        monitoring.add("Workload monitoring page");
+        monitoring.add(DEFAULT_MONITORING.toString());
+        monitoring.add(WORKLOAD_MONITORING.toString());
 
         monitoringChoices = new BootstrapRadioChoice<>("monitoringRadios",
             new Model<>(getString("defaultMonitoring")), monitoring);
@@ -112,15 +117,15 @@ public class WorkflowAndMonitoringPanel extends Panel
         aTarget.addChildren(getPage(), IFeedback.class);
 
         if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {
-            workloadAndWorkflowService.setWorkloadManager("Default monitoring page", project);
+            workloadAndWorkflowService.setWorkloadManager(DEFAULT_MONITORING.toString(), project);
         } else {
-            workloadAndWorkflowService.setWorkloadManager("Workload monitoring page", project);
+            workloadAndWorkflowService.setWorkloadManager(WORKLOAD_MONITORING.toString(), project);
         }
 
         if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
-            workloadAndWorkflowService.setWorkflowManager("Default workflow manager", project);
+            workloadAndWorkflowService.setWorkflowManager(DEFAULT_WORKFLOW.toString(), project);
         } else {
-            workloadAndWorkflowService.setWorkflowManager("Dynamic workflow manager", project);
+            workloadAndWorkflowService.setWorkflowManager(DYNAMIC_WORKFLOW.toString(), project);
         }
         success("Workflow and workload settings changed");
     }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
+package de.tudarmstadt.ukp.inception.workload.dynamic.manager.db;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -26,10 +26,10 @@ public interface WorkloadAndWorkflowService
     String getWorkflowManager(Project aProject);
     String getWorkloadManager(Project aProject);
     String getWorkflowType(Project aProject);
-    Integer getDefaultAnnotations(Project aProject);
+    Integer getDefaultNumberOfAnnotations(Project aProject);
 
     void setWorkflowManager(String aType, Project aProject);
     void setWorkloadManager(String aType, Project aProject);
     void setWorkflowType(String aType, Project aProject);
-    void setDefaultAnnotations(int aDefaultAnnotationsNumber, Project aProject);
+    void setDefaultNumberOfAnnotations(int aDefaultAnnotationsNumber, Project aProject);
 }

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowState.DYNAMIC_WORKFLOW;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -28,7 +30,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowService;
 
 @Order(1100)
 @Component
@@ -64,7 +66,7 @@ public class DynamicWorkflowActionBarExtension
         // New dynamic workflow only used when the new workflow manager selected in the settings.
         // Otherwise use the default one and skip this
         if (!workloadAndWorkflowService.getWorkflowManager(aPage.getModelObject().
-            getProject()).equals("Default workflow manager")) {
+            getProject()).equals(DYNAMIC_WORKFLOW.toString())) {
             return true;
         } else {
             return false;

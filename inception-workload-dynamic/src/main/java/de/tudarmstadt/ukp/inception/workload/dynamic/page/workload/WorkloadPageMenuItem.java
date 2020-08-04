@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.workload;
 
+import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkloadState.WORKLOAD_MONITORING;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
@@ -31,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowService;
 
 /**
  * Menu item to access the dynamic workload management page.
@@ -95,7 +96,8 @@ public class WorkloadPageMenuItem implements MenuItem
         return (projectService.isCurator(project, user)
             || projectService.isProjectAdmin(project, user))
             && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())
-            && !workloadAndWorkflowService.getWorkloadManager(project).equals("Default monitoring page");
+            && !workloadAndWorkflowService.getWorkloadManager(project).equals(
+            WORKLOAD_MONITORING.toString());
     }
 
     @Override
