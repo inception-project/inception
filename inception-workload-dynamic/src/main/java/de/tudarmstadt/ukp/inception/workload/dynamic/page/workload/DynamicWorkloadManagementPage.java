@@ -17,63 +17,48 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.workload;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import javax.persistence.NoResultException;
-
+import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.*;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.HeaderlessColumn;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.HeadersToolbar;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigationToolbar;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.*;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.Button;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.NumberTextField;
-import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.form.*;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.model.*;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
+import javax.persistence.NoResultException;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.DefaultAnnotationsProperties;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.TableContentProvider;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
-
-
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.*;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DYNAMIC_WORKFLOW;
 
 @MountPath("/workload.html")
 public class DynamicWorkloadManagementPage extends ApplicationPageBase
@@ -84,22 +69,44 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
 
     private DataTable<SourceDocument, String> table;
     private ModalWindow infoDialog;
-    
+
+    private AjaxDatePicker dateFrom;
+    private AjaxDatePicker dateTo;
+    private AjaxCheckBox unused;
+    private TextField<String> userFilterTextField;
+    private TextField<String> documentFilterTextField;
+    private NumberTextField<Integer> defaultNumberDocumentsTextField;
+    private BootstrapRadioChoice<String> dateChoices;
+
+    private BootstrapRadioChoice<String> workflowChoices;
+
+    private List<String> workflow;
+
+    private Form<Void> searchForm;
+    private Form<Void> settingsForm;
+    private Form<Void> userForm;
+
     // SpringBeans
-    private @SpringBean UserDao userRepository;
-    private @SpringBean ProjectService projectService;
-    private @SpringBean MenuItemRegistry menuItemService;
-    private @SpringBean DocumentService documentService;
-    private @SpringBean WorkloadProperties workloadProperties;
-    private @SpringBean DefaultAnnotationsProperties defaultAnnotations;
+    private @SpringBean
+    UserDao userRepository;
+    private @SpringBean
+    ProjectService projectService;
+    private @SpringBean
+    MenuItemRegistry menuItemService;
+    private @SpringBean
+    DocumentService documentService;
+    private @SpringBean
+    WorkloadAndWorkflowService workloadAndWorkflowService;
 
     //Default constructor, no project selected (only when workload.html
     // put directly in the browser without any parameters)
-    public DynamicWorkloadManagementPage() {
+    public DynamicWorkloadManagementPage()
+    {
         super();
         //Error, user is returned to home page, nothing else to do
-        error("No Project selected, please enter the monitoring page only with a valid project reference");
+        //getSession required to show the message at the homepage
         setResponsePage(getApplication().getHomePage());
+        getSession().error("No project selected.");
     }
 
     //Constructor with a project
@@ -111,6 +118,11 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         currentProject.setObject(getProjectFromParameters(aPageParameters.get
             (PAGE_PARAM_PROJECT_ID)).get());
 
+        commonInit();
+    }
+
+    public void commonInit()
+    {
         //Header of the page
         Label name = new Label("name", currentProject.getObject().getName());
         add(name);
@@ -127,22 +139,10 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         //13/05/2020 15:16:57 // Christoph
 
         //Data Provider for the table
-        TableContentProvider dataProvider = new TableContentProvider(documentService.
-            listSourceDocuments(currentProject.getObject()),
-            headers, documentService.listAnnotationDocuments
-            (currentProject.getObject()));
-
-        //Init defaultDocumentsNumberTextField
-        NumberTextField<Integer> defaultNumberDocumentsTextField =
-            new NumberTextField<>("defaultDocumentsNumberTextField",
-                new Model<Integer>(), Integer.class);
-
-        //Set minimum value for input
-        defaultNumberDocumentsTextField.setDefaultModel(new CompoundPropertyModel<>(6));
-        defaultNumberDocumentsTextField.setMinimum(1);
-        defaultNumberDocumentsTextField.setRequired(true);
-        defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
-        add(defaultNumberDocumentsTextField);
+        AnnotationQueueOverviewDataProvider dataProvider =
+            new AnnotationQueueOverviewDataProvider(
+                documentService.listSourceDocuments(currentProject.getObject()),
+                headers, documentService.listAnnotationDocuments(currentProject.getObject()));
 
         infoDialog = new ModalWindow("infoDialog");
         add(infoDialog);
@@ -181,7 +181,7 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
             {
                 Fragment fragment = new Fragment(componentId, "infoColumn",
                         DynamicWorkloadManagementPage.this);
-                fragment.add(new LambdaAjaxLink("showInfoDialog", _target -> 
+                fragment.add(new LambdaAjaxLink("showInfoDialog", _target ->
                         actionShowInfoDialog(_target, rowModel)));
                 aItem.add(fragment);
             };
@@ -192,12 +192,11 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         table.addTopToolbar(new NavigationToolbar(table));
         table.addTopToolbar(new HeadersToolbar<>(table, dataProvider));
 
-        //Inital Commit
-
         add(table);
 
         add(createSearchForm(dataProvider));
-        
+        add(createSettingsForm(dataProvider));
+        add(createUserForm());
     }
     
     private void actionShowInfoDialog(AjaxRequestTarget aTarget, IModel<SourceDocument> aDoc)
@@ -225,11 +224,9 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         if (aProjectParam == null || aProjectParam.isEmpty()) {
             return Optional.empty();
         }
-
         try {
             return Optional.of(projectService.getProject(aProjectParam.toLong()));
-        }
-        catch (NoResultException e) {
+        } catch (NoResultException e) {
             return Optional.empty();
         }
     }
@@ -239,11 +236,9 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
     {
         List<String> result = new ArrayList<>();
         for (AnnotationDocument anno: documentService.
-            listAnnotationDocuments(currentProject.getObject()))
-        {
+            listAnnotationDocuments(currentProject.getObject())) {
             if (anno.getState().equals(AnnotationDocumentState.FINISHED)
-                && anno.getName().equals(aDocument.getName()))
-            {
+                && anno.getName().equals(aDocument.getName())) {
                 result.add(anno.getUser());
             }
         }
@@ -255,30 +250,28 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
     {
         List<String> result = new ArrayList<>();
         for (AnnotationDocument anno: documentService.
-            listAnnotationDocuments(currentProject.getObject()))
-        {
+            listAnnotationDocuments(currentProject.getObject())) {
             if (anno.getState().equals(AnnotationDocumentState.IN_PROGRESS)
-                && anno.getName().equals(aDocument.getName()))
-            {
+                && anno.getDocument().equals(aDocument)) {
                 result.add(anno.getUser());
             }
         }
         return result;
     }
 
-    public Form<Void> createSearchForm(TableContentProvider aProv)
+    public Form<Void> createSearchForm(AnnotationQueueOverviewDataProvider aProv)
     {
-        Form<Void> searchForm = new Form<>("searchForm");
+        searchForm = new Form<>("searchForm");
         
         searchForm.setOutputMarkupId(true);
 
         //Filter Textfields and their AJAX events
-        TextField<String> userFilterTextField = new TextField<>("userFilter",
+        userFilterTextField = new TextField<>("userFilter",
             PropertyModel.of(aProv, "filter.username"), String.class);
 
         userFilterTextField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
-        TextField<String> documentFilterTextField = new TextField<>("documentFilter",
+        documentFilterTextField = new TextField<>("documentFilter",
             PropertyModel.of(aProv, "filter.documentName"), String.class);
 
         documentFilterTextField.setOutputMarkupId(true);
@@ -287,9 +280,9 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         searchForm.add(documentFilterTextField);
 
         //Input dates
-        AjaxDatePicker dateFrom = new AjaxDatePicker("from", PropertyModel.of(aProv, "filter.from"),
+        dateFrom = new AjaxDatePicker("from", PropertyModel.of(aProv, "filter.from"),
                 "MM/dd/yyyy");
-        AjaxDatePicker dateTo = new AjaxDatePicker("to", PropertyModel.of(aProv, "filter.to"),
+        dateTo = new AjaxDatePicker("to", PropertyModel.of(aProv, "filter.to"),
                 "MM/dd/yyyy");
 
         dateFrom.setOutputMarkupId(true);
@@ -307,7 +300,7 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         dateChoice.add(getString("between"));
 
         //Create the radio button group
-        BootstrapRadioChoice<String> dateChoices = new BootstrapRadioChoice<>("date",
+        dateChoices = new BootstrapRadioChoice<>("date",
                 new Model<>(getString("between")), dateChoice);
         dateChoices.setInline(true);
         dateChoices.setOutputMarkupId(true);
@@ -316,20 +309,14 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         dateChoices.add(new AjaxFormChoiceComponentUpdatingBehavior() {
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
-                if (getComponent().getDefaultModelObjectAsString().equals("from")) {
+                if (getComponent().getDefaultModelObjectAsString().
+                    equals(dateChoice.get(0))) {
                     dateTo.setModelObject(null);
-                    dateTo.setEnabled(false);
-                    dateFrom.setEnabled(true);
-                }
-                else if (getComponent().getDefaultModelObjectAsString().equals("until")) {
+                } else if (getComponent().getDefaultModelObjectAsString().
+                    equals(dateChoice.get(1))) {
                     dateFrom.setModelObject(null);
-                    dateFrom.setEnabled(false);
-                    dateTo.setEnabled(true);
                 }
-                else {
-                    dateTo.setEnabled(true);
-                    dateFrom.setEnabled(true);
-                }
+
                 ajaxRequestTarget.add(dateFrom);
                 ajaxRequestTarget.add(dateTo);
             }
@@ -338,46 +325,18 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         //add them to the form
         searchForm.add(dateChoices);
 
-        //Submit button
-        Button submit = new AjaxButton(getString("Search"), Model.of("Search")) {
-            private static final long serialVersionUID = 3521172967850377971L;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget target) {
-                target.add(table);
-            }
-        };
-
-        searchForm.add(submit);
-
         //Checkbox for showing only unused source documents, disables other textfields
-        AjaxCheckBox unused = new AjaxCheckBox("unused",
+        unused = new AjaxCheckBox("unused",
             PropertyModel.of(aProv,"filter.selected")) {
 
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget) {
-
-                if (getDefaultModelObjectAsString().equals("false"))
-                {
-                    userFilterTextField.setEnabled(true);
-                    documentFilterTextField.setEnabled(true);
-                    dateFrom.setEnabled(true);
-                    dateTo.setEnabled(true);
-                    dateChoices.setEnabled(true);
-                } else {
+                if (getDefaultModelObjectAsString().equals("true")) {
                     userFilterTextField.setModelObject(null);
-                    userFilterTextField.setEnabled(false);
                     dateFrom.setModelObject(null);
-                    dateFrom.setEnabled(false);
                     dateTo.setModelObject(null);
-                    dateTo.setEnabled(false);
-                    dateChoices.setEnabled(false);
                 }
-                ajaxRequestTarget.add(dateFrom);
-                ajaxRequestTarget.add(dateTo);
-                ajaxRequestTarget.add(dateChoices);
-                ajaxRequestTarget.add(userFilterTextField);
-                ajaxRequestTarget.add(documentFilterTextField);
+                ajaxRequestTarget.add(searchForm);
             }
         };
 
@@ -385,34 +344,136 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         searchForm.add(unused);
 
         //Reset button
-        Button reset = new AjaxButton(getString("Reset"), Model.of("Reset")) {
-            @Override
-            public void onSubmit(AjaxRequestTarget target) {
-
-                dateFrom.setEnabled(true);
-                dateFrom.setModelObject(null);
-                dateTo.setEnabled(true);
-                dateTo.setModelObject(null);
-                dateChoices.setEnabled(true);
-                unused.setModelObject(null);
-                userFilterTextField.setEnabled(true);
-                documentFilterTextField.setEnabled(true);
-                userFilterTextField.setModelObject(null);
-                documentFilterTextField.setModelObject(null);
-
-
-
-                target.add(userFilterTextField);
-                target.add(documentFilterTextField);
-                target.add(dateFrom);
-                target.add(dateTo);
-                target.add(unused);
-                target.add(dateChoices);
-            }
-        };
+        Button reset = new LambdaAjaxButton("reset", this::actionReset);
 
         searchForm.add(reset);
 
+        //Submit button
+        Button search = new LambdaAjaxButton("search", this::actionSubmit);
+
+        searchForm.add(search);
+
+        //Condition for filter inputs to be enabled
+        dateTo.add(enabledWhen(() ->
+            !dateChoices.getValue().equals(dateChoice.get(0))
+            && unused.getValue().equals("false")));
+        dateFrom.add(enabledWhen(() ->
+            !dateChoices.getValue().equals(dateChoice.get(1))
+            && unused.getValue().equals("false")));
+        dateChoices.add(enabledWhen(() ->
+            unused.getValue().equals("false")));
+        userFilterTextField.add(enabledWhen(() ->
+            unused.getValue().equals("false")));
+        documentFilterTextField.add(enabledWhen(() ->
+            unused.getValue().equals("false")));
+
         return searchForm;
+    }
+
+    public Form<Void> createSettingsForm(AnnotationQueueOverviewDataProvider aProv)
+    {
+        settingsForm = new Form<>("settingsForm");
+        settingsForm.setOutputMarkupId(true);
+
+
+        //Init defaultDocumentsNumberTextField
+        defaultNumberDocumentsTextField =
+            new NumberTextField<>("defaultDocumentsNumberTextField",
+                new Model<Integer>(), Integer.class);
+
+        //Set value for input and additional features
+        defaultNumberDocumentsTextField.setDefaultModel(new CompoundPropertyModel<>(
+            workloadAndWorkflowService.getDefaultNumberOfAnnotations(currentProject.getObject())));
+        defaultNumberDocumentsTextField.setMinimum(1);
+        defaultNumberDocumentsTextField.setRequired(true);
+        defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
+
+        //Finally, add the confirm button at the end
+        Button save = new LambdaAjaxButton("save", this::actionConfirm);
+
+        settingsForm.add(defaultNumberDocumentsTextField);
+        settingsForm.add(save);
+
+
+        //Add two possibilities to select from for the workflow type
+        workflow = new ArrayList<>();
+        workflow.add(DEFAULT_WORKFLOW_TYPE);
+        workflow.add(RANDOMIZED_WORKFLOW_TYPE);
+
+        workflowChoices = new BootstrapRadioChoice<>("workflowRadios",
+            new Model<>(getString("workflowType")), workflow);
+        workflowChoices.setInline(true);
+        workflowChoices.setOutputMarkupId(true);
+
+        //Set default value for the group
+        workflowChoices.setModel(new Model(workloadAndWorkflowService.getWorkflowType(
+            currentProject.getObject())));
+
+        //add them to the form
+        settingsForm.add(workflowChoices);
+
+        return settingsForm;
+    }
+
+    public Form<Void> createUserForm()
+    {
+        userForm = new Form<>("userForm");
+        userForm.setOutputMarkupId(true);
+
+        //Show all available users
+        DropDownChoice<String> userSelection = new BootstrapSelect<>("userSelection");
+        userSelection.setChoices(Model.ofList(projectService.listProjectUsersWithPermissions(
+            currentProject.getObject()).stream().map(User::getUsername).sorted().collect(Collectors.toList())));
+        userForm.add(userSelection);
+
+        //Show ALL documents in the project (even those for which the user
+        //does not have an annotations document created yet (due to lazy creation)
+        DropDownChoice<String> assignDocument = new BootstrapSelect<>("assignDocument");
+        assignDocument.setChoices(Model.ofList(documentService.listSourceDocuments(
+            currentProject.getObject()).stream().map(SourceDocument::getName)
+            .sorted().collect(Collectors.toList())));
+        userForm.add(assignDocument);
+
+        //Shows all annotation documents for the user that exist in the DB
+        DropDownChoice<String> resetDocument = new BootstrapSelect<>("resetDocument");
+        resetDocument.setChoices(Model.ofList(documentService.listAnnotatableDocuments(
+            currentProject.getObject(), userRepository.getCurrentUser()).values().stream().filter(Objects::nonNull).map(AnnotationDocument::getName)
+            .sorted().collect(Collectors.toList())));
+        userForm.add(resetDocument);
+
+        return userForm;
+    }
+
+
+    private void actionSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+    {
+        aTarget.add(table);
+    }
+
+    private void actionReset(AjaxRequestTarget aTarget, Form<?> aForm)
+    {
+        dateFrom.setModelObject(null);
+        dateTo.setModelObject(null);
+        unused.setModelObject(false);
+        userFilterTextField.setModelObject(null);
+        documentFilterTextField.setModelObject(null);
+
+        aTarget.add(searchForm);
+    }
+
+    @Deprecated
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm) {
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        workloadAndWorkflowService.setDefaultNumberOfAnnotations(Integer.parseInt(
+            defaultNumberDocumentsTextField.getInput()),currentProject.getObject());
+
+        if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
+            workloadAndWorkflowService.setWorkflowType(DEFAULT_WORKFLOW_TYPE, currentProject.getObject());
+        } else {
+            workloadAndWorkflowService.setWorkflowType(RANDOMIZED_WORKFLOW_TYPE, currentProject.getObject());
+        }
+
+        success("Changes have been saved");
     }
 }

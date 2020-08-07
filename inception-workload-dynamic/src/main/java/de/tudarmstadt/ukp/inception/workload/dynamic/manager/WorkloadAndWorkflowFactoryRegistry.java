@@ -17,22 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import java.util.List;
 
-@Component
-@ConfigurationProperties("defaultannotations")
-public class DefaultAnnotationsPropertiesImpl implements DefaultAnnotationsProperties {
-
-    private int numberOfDefaultAnnotations;
-
-    @Override
-    public int getNumberOfDefaultAnnotations() {
-        return numberOfDefaultAnnotations;
-    }
-
-    @Override
-    public void setNumberOfDefaultAnnotations(int aAnnotations) {
-        numberOfDefaultAnnotations = aAnnotations;
-    }
+public interface WorkloadAndWorkflowFactoryRegistry {
+    List<WorkloadAndWorkflowEngineFactory> getAllFactories();
+    WorkloadAndWorkflowEngineFactory getFactory(String aId);
 }

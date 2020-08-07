@@ -16,18 +16,14 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
+package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
-/**
- * @deprecated This needs to be replaced by a proper extension point for workload management
- *             strategies as soon as possible.
- */
-@Deprecated
-public interface WorkloadProperties
+import org.apache.wicket.markup.html.panel.Panel;
+
+public class DynamicDocumentNavigator extends Panel
 {
-    boolean isWorkloadManagerActive();
-
-    void setActive(boolean aActive);
-
-    String getProperty();
+    public DynamicDocumentNavigator(String aID)
+    {
+        super(aID);
+    }
 }

@@ -17,12 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
-import org.apache.wicket.Page;
-import org.apache.wicket.Session;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -31,15 +25,25 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
+import org.apache.wicket.Page;
+import org.apache.wicket.Session;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_MONITORING;
 
 @Component
 @Order(300)
 public class MonitoringPageMenuItem implements MenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired WorkloadProperties workloadProperties;
+    private @Autowired
+    UserDao userRepo;
+    private @Autowired
+    ProjectService projectService;
+    private @Autowired
+    WorkloadAndWorkflowService workloadAndWorkflowService;
 
     @Override
     public String getPath()
@@ -69,7 +73,6 @@ public class MonitoringPageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
-        
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
@@ -79,7 +82,8 @@ public class MonitoringPageMenuItem implements MenuItem
         return (projectService.isCurator(project, user)
                 || projectService.isProjectAdmin(project, user))
                 && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())
-                && !workloadProperties.isWorkloadManagerActive();
+                && DEFAULT_MONITORING.equals(
+                    workloadAndWorkflowService.getWorkloadManager(project));
     }
     
     @Override

@@ -17,96 +17,115 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.settings;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
-import org.apache.wicket.markup.html.form.Button;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.RadioChoice;
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkflowProperties;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.*;
 
 //Custom panel inside the page
 public class WorkflowAndMonitoringPanel extends Panel
 {
+    private static final long serialVersionUID = -6220828178550562376L;
 
     //SpringBeans
-    private @SpringBean WorkloadProperties workloadProperties;
-    private @SpringBean WorkflowProperties workflowProperties;
+    private @SpringBean
+    WorkloadAndWorkflowService workloadAndWorkflowService;
 
+    private final List<String> workflow;
+    private final BootstrapRadioChoice<String> workflowChoices;
+    private final List<String> monitoring;
+    private final BootstrapRadioChoice<String> monitoringChoices;
+    private final Project project;
 
-    public WorkflowAndMonitoringPanel(String aID, IModel<Project> aProject)
-    {
+    public WorkflowAndMonitoringPanel(String aID, IModel<Project> aProject) {
         super(aID, aProject);
+
+        project = aProject.getObject();
 
         //Basic form
         Form<Void> form = new Form<>("form");
-        add(form);
 
         //Add two possibilities to select for the workflow manager
-        List<String> workflow = new ArrayList<>();
-        workflow.add("Default workflow manager");
-        workflow.add("Dynamic workflow manager");
+        workflow = new ArrayList<>();
+        workflow.add(DEFAULT_WORKFLOW);
+        workflow.add(DYNAMIC_WORKFLOW);
 
-        //Create the radio button group
-        RadioChoice<String> workflowChoices =
-            new RadioChoice<>("workflowRadios"
-                , new Model<>(getString("defaultWorkflow")), workflow);
-        //Set default for the group
-        workflowChoices.setModel(new Model<>(workflowProperties.getProperty()));
+        workflowChoices = new BootstrapRadioChoice<>("workflowRadios",
+            new Model<>(getString("defaultWorkflow")), workflow);
+        workflowChoices.setInline(true);
+        workflowChoices.setOutputMarkupId(true);
+
+        //Set default value for the group
+        workflowChoices.setModel(new Model(workloadAndWorkflowService.getWorkflowManager(
+            aProject.getObject())));
+
 
         //add them to the form
         form.add(workflowChoices);
 
         //Add two possibilities to select from the monitoring manager
-        List<String> monitoring = new ArrayList<>();
-        monitoring.add("Default monitoring page");
-        monitoring.add("Workload monitoring page");
+        monitoring = new ArrayList<>();
+        monitoring.add(DEFAULT_MONITORING);
+        monitoring.add(WORKLOAD_MONITORING);
 
-        //Craete the radio button group
-        RadioChoice<String> monitoringChoices =
-            new RadioChoice<>("monitoringRadios"
-                , new Model<>(getString("defaultMonitoring")), monitoring);
+        monitoringChoices = new BootstrapRadioChoice<>("monitoringRadios",
+            new Model<>(getString("defaultMonitoring")), monitoring);
+        monitoringChoices.setInline(true);
+        monitoringChoices.setOutputMarkupId(true);
+
         //Set default value for the group
-        monitoringChoices.setModel(new Model<>(workloadProperties.getProperty()));
-
+        monitoringChoices.setModel(new Model(workloadAndWorkflowService.getWorkloadManager(
+            aProject.getObject())));
 
         //add them to the form
         form.add(monitoringChoices);
 
         //Finally, add the confirm button at the end
-
-        Button confirm = new AjaxButton(getString("confirm"),Model.of("Confirm")) {
-            @Override
-            public void onSubmit(AjaxRequestTarget target)
-            {
-                if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0)))
-                {
-                    workloadProperties.setActive(false);
-                } else {
-                    workloadProperties.setActive(true);
-                }
-
-                if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0)))
-                {
-                    workflowProperties.setActive(false);
-                } else {
-                    workflowProperties.setActive(true);
-                }
-
-                setResponsePage(getApplication().getHomePage());
-            }
-        };
+        Button confirm = new LambdaAjaxButton("save", this::actionConfirm);
 
         form.add(confirm);
+
+        add(form);
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+        IModel<String> resourceModel = new StringResourceModel(
+            getString(getId()), this, Model.of(getId()));
+    }
+
+    @Deprecated
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
+    {
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {
+            workloadAndWorkflowService.setWorkloadManager(DEFAULT_MONITORING, project);
+        } else {
+            workloadAndWorkflowService.setWorkloadManager(WORKLOAD_MONITORING, project);
+        }
+
+        if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
+            workloadAndWorkflowService.setWorkflowManager(DEFAULT_WORKFLOW, project);
+        } else {
+            workloadAndWorkflowService.setWorkflowManager(DYNAMIC_WORKFLOW, project);
+        }
+        success("Workflow and workload settings changed");
     }
 }

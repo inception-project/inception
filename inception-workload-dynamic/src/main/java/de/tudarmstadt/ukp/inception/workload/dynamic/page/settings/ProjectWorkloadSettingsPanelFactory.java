@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.settings;
 
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
-import org.springframework.core.annotation.Order;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 /**
  * Menu item to access the dynamic workload management page.
@@ -32,7 +31,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManag
  * {@link DynamicWorkloadManagerAutoConfiguration#projectWorkloadSettingsPanelFactory}.
  * </p>
  */
-@Order(300)
+@Order(600)
 public class ProjectWorkloadSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
@@ -51,6 +50,6 @@ public class ProjectWorkloadSettingsPanelFactory
     @Override
     public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
     {
-        return new ProjectWorkloadPanel(aID, aProjectModel);
+        return new WorkflowAndMonitoringPanel(aID, aProjectModel);
     }
 }

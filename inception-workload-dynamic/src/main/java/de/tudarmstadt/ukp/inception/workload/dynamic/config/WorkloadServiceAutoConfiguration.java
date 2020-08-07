@@ -18,32 +18,39 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowEngineFactory;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistry;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistryImplBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
-import de.tudarmstadt.ukp.inception.workload.dynamic.page.settings.ProjectWorkloadSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageMenuItem;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowServiceImplBase;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
-@AutoConfigureAfter(WorkloadServiceAutoConfiguration.class)
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.util.List;
+
 @Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",matchIfMissing = true)
-public class DynamicWorkloadManagerAutoConfiguration
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
+public class WorkloadServiceAutoConfiguration
 {
+    private @PersistenceContext EntityManager entityManager;
+
     @Bean
     @Autowired
-    public WorkloadPageMenuItem workloadPageMenuItem(UserDao aUserRepo,
-                                                     ProjectService aProjectService, WorkloadAndWorkflowService aWorkloadAndWorkflowService)
+    public WorkloadAndWorkflowService workloadAndWorkflowService(
+        ProjectService aProjectService)
     {
-        return new WorkloadPageMenuItem(aUserRepo, aProjectService, aWorkloadAndWorkflowService);
+        return new WorkloadAndWorkflowServiceImplBase(entityManager, aProjectService);
     }
 
     @Bean
-    public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory()
+    public WorkloadAndWorkflowFactoryRegistry workloadAndWorkflowFactoryRegistry(
+        @Lazy @Autowired(required = false) List<WorkloadAndWorkflowEngineFactory> aExtensions)
     {
-        return new ProjectWorkloadSettingsPanelFactory();
+        return new WorkloadAndWorkflowFactoryRegistryImplBase(aExtensions);
     }
 }
