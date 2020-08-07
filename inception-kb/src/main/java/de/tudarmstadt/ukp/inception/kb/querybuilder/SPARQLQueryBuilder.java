@@ -932,8 +932,9 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
                 continue;
             }
             
@@ -944,8 +945,6 @@ public class SPARQLQueryBuilder
                 String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
                 sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
             }
-            
-            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
             valuePatterns.add(VAR_SUBJECT
                     .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(fuzzyQuery)))
