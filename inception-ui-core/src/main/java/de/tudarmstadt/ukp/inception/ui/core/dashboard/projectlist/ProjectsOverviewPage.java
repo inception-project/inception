@@ -24,29 +24,17 @@ import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.zip.ZipFile;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -55,7 +43,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.lang.Classes;
@@ -65,23 +52,19 @@ import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
@@ -97,13 +80,13 @@ public class ProjectsOverviewPage
     private static final String MID_ROLE_FILTER = "roleFilter";
     private static final String MID_PROJECTS = "projects";
     private static final String MID_PROJECT = "project";
-    private static final String MID_IMPORT_PROJECT_FORM = "importProjectForm";
+    private static final String MID_IMPORT_PROJECT_PANEL = "importProjectPanel";
     private static final String MID_NEW_PROJECT = "newProject";
-    private static final String MID_PROJECT_ARCHIVE_UPLOAD = "projectArchiveUpload";
     private static final String MID_LEAVE_PROJECT = "leaveProject";
     private static final String MID_CONFIRM_LEAVE = "confirmLeave";
     private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
     private static final String MID_START_TUTORIAL = "startTutorial";
+    private static final String MID_IMPORT_PROJECT_BUTTON = "importProjectBtn";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
@@ -113,7 +96,6 @@ public class ProjectsOverviewPage
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
 
-    private BootstrapFileInputField fileUpload;
     private WebMarkupContainer projectListContainer;
     private WebMarkupContainer roleFilters;
     private IModel<Set<PermissionLevel>> activeRoleFilters;
@@ -124,9 +106,23 @@ public class ProjectsOverviewPage
     public ProjectsOverviewPage()
     {
         add(projectListContainer = createProjectList());
+        
+        //add tutorial
         add(createNewProjectLink());
         add(createStartTutorialLink());
-        add(createImportProjectForm());
+        
+        //add project import
+        Label importProjectLabel = new Label(MID_IMPORT_PROJECT_BUTTON, 
+                new StringResourceModel("importProject"));
+        ProjectImportPanel projectImport = new ProjectImportPanel(MID_IMPORT_PROJECT_PANEL,
+                Model.of());
+        authorize(projectImport, RENDER,
+              join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
+        authorize(importProjectLabel, RENDER,
+                join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
+        add(projectImport);
+        add(importProjectLabel);
+        
         add(roleFilters = createRoleFilters());
         add(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
                 new StringResourceModel("leaveDialog.title", this),
@@ -169,36 +165,6 @@ public class ProjectsOverviewPage
     private void startTutorial(AjaxRequestTarget aTarget)
     {
         aTarget.appendJavaScript(" startTutorial(); ");
-    }
-    
-    private Form<Void> createImportProjectForm()
-    {
-        Form<Void> importProjectForm = new Form<>(MID_IMPORT_PROJECT_FORM);
-        
-        FileInputConfig config = new FileInputConfig();
-        config.initialCaption("Import project archives ...");
-        config.allowedFileExtensions(asList("zip"));
-        config.showPreview(false);
-        config.showUpload(true);
-        config.removeIcon("<i class=\"fa fa-remove\"></i>");
-        config.uploadIcon("<i class=\"fa fa-upload\"></i>");
-        config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
-        importProjectForm.add(fileUpload = new BootstrapFileInputField(MID_PROJECT_ARCHIVE_UPLOAD,
-                new ListModel<>(), config)
-        {
-            private static final long serialVersionUID = -6794141937368512300L;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget aTarget)
-            {
-                actionImport(aTarget, null);
-            }
-        });
-        
-        authorize(importProjectForm, RENDER,
-                join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
-    
-        return importProjectForm;
     }
     
     private WebMarkupContainer createProjectList()
@@ -370,50 +336,5 @@ public class ProjectsOverviewPage
         params.set(WebAnnoConst.PAGE_PARAM_PROJECT_ID, ProjectPage.NEW_PROJECT_ID);
         setResponsePage(ProjectPage.class, params);        
     }
-    
-    private void actionImport(AjaxRequestTarget aTarget, Form<Void> aForm)
-    {
-        aTarget.addChildren(getPage(), IFeedback.class);
-        
-        List<FileUpload> exportedProjects = fileUpload.getFileUploads();
-        for (FileUpload exportedProject : exportedProjects) {
-            try {
-                // Workaround for WICKET-6425
-                File tempFile = File.createTempFile("project-import", null);
-                try (
-                        InputStream is = new BufferedInputStream(exportedProject.getInputStream());
-                        OutputStream os = new FileOutputStream(tempFile);
-                ) {
-                    if (!ZipUtils.isZipStream(is)) {
-                        throw new IOException("Invalid ZIP file");
-                    }
-                    IOUtils.copyLarge(is, os);
-                    
-                    if (!ImportUtil.isZipValidWebanno(tempFile)) {
-                        throw new IOException("ZIP file is not a valid project archive");
-                    }
-                    
-                    ProjectImportRequest request = new ProjectImportRequest(false, false,
-                            Optional.of(userRepository.getCurrentUser()));
-                    Project importedProject = exportService.importProject(request,
-                            new ZipFile(tempFile));
-                    
-                    success("Imported project: " + importedProject.getName());
-                }
-                finally {
-                    tempFile.delete();
-                }
-            }
-            catch (Exception e) {
-                error("Error importing project: " + ExceptionUtils.getRootCauseMessage(e));
-                LOG.error("Error importing project", e);
-            }
-        }
-        
-        // After importing new projects, they should be visible in the overview, but we do not
-        // redirect to the imported project. Could do that... maybe could do that if only a single
-        // project was imported. Could also highlight the freshly imported projects somehow.
-        
-        aTarget.add(projectListContainer);
-    }
+
 }
