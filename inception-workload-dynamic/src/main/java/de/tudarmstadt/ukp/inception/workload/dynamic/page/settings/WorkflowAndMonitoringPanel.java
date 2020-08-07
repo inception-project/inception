@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.settings;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_MONITORING;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DYNAMIC_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.WORKLOAD_MONITORING;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Button;
@@ -31,10 +35,11 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import java.util.ArrayList;
-import java.util.List;
+import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
 
-import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.*;
 
 //Custom panel inside the page
 public class WorkflowAndMonitoringPanel extends Panel
@@ -42,8 +47,7 @@ public class WorkflowAndMonitoringPanel extends Panel
     private static final long serialVersionUID = -6220828178550562376L;
 
     //SpringBeans
-    private @SpringBean
-    WorkloadAndWorkflowService workloadAndWorkflowService;
+    private @SpringBean WorkloadAndWorkflowService workloadAndWorkflowService;
 
     private final List<String> workflow;
     private final BootstrapRadioChoice<String> workflowChoices;
@@ -72,7 +76,6 @@ public class WorkflowAndMonitoringPanel extends Panel
         //Set default value for the group
         workflowChoices.setModel(new Model(workloadAndWorkflowService.getWorkflowManager(
             aProject.getObject())));
-
 
         //add them to the form
         form.add(workflowChoices);
@@ -111,8 +114,7 @@ public class WorkflowAndMonitoringPanel extends Panel
     }
 
     @Deprecated
-    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
-    {
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm) {
         aTarget.addChildren(getPage(), IFeedback.class);
 
         if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {
@@ -125,7 +127,7 @@ public class WorkflowAndMonitoringPanel extends Panel
             workloadAndWorkflowService.setWorkflowManager(DEFAULT_WORKFLOW, project);
         } else {
             workloadAndWorkflowService.setWorkflowManager(DYNAMIC_WORKFLOW, project);
+            success("Workflow and workload settings changed");
         }
-        success("Workflow and workload settings changed");
     }
 }

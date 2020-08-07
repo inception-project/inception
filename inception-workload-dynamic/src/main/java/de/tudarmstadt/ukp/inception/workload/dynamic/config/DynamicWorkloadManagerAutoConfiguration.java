@@ -17,16 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
-import de.tudarmstadt.ukp.inception.workload.dynamic.page.settings.ProjectWorkloadSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageMenuItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.page.settings.ProjectWorkloadSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageMenuItem;
+
 
 @AutoConfigureAfter(WorkloadServiceAutoConfiguration.class)
 @Configuration
@@ -36,7 +38,7 @@ public class DynamicWorkloadManagerAutoConfiguration
     @Bean
     @Autowired
     public WorkloadPageMenuItem workloadPageMenuItem(UserDao aUserRepo,
-                                                     ProjectService aProjectService, WorkloadAndWorkflowService aWorkloadAndWorkflowService)
+        ProjectService aProjectService, WorkloadAndWorkflowService aWorkloadAndWorkflowService)
     {
         return new WorkloadPageMenuItem(aUserRepo, aProjectService, aWorkloadAndWorkflowService);
     }

@@ -17,19 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DYNAMIC_WORKFLOW;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
 
-import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DYNAMIC_WORKFLOW;
 
 @Order(1100)
 @Component

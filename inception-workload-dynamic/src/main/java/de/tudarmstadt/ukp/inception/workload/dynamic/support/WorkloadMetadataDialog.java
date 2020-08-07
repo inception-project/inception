@@ -18,13 +18,13 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.Panel;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Panel;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class WorkloadMetadataDialog extends Panel
 {

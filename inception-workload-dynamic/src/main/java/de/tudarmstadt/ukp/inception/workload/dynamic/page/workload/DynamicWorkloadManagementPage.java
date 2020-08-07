@@ -17,12 +17,59 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.workload;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_WORKFLOW_TYPE;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.RANDOMIZED_WORKFLOW_TYPE;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.persistence.NoResultException;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.HeaderlessColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.HeadersToolbar;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
+import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigationToolbar;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
+import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.ResourceModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValue;
+import org.wicketstuff.annotation.mount.MountPath;
+
 import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
+
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.*;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -33,32 +80,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
-import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.*;
-import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.*;
-import org.apache.wicket.markup.html.panel.Fragment;
-import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.model.*;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
-import org.wicketstuff.annotation.mount.MountPath;
-
-import javax.persistence.NoResultException;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.*;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DYNAMIC_WORKFLOW;
 
 @MountPath("/workload.html")
 public class DynamicWorkloadManagementPage extends ApplicationPageBase
@@ -87,16 +108,11 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
     private Form<Void> userForm;
 
     // SpringBeans
-    private @SpringBean
-    UserDao userRepository;
-    private @SpringBean
-    ProjectService projectService;
-    private @SpringBean
-    MenuItemRegistry menuItemService;
-    private @SpringBean
-    DocumentService documentService;
-    private @SpringBean
-    WorkloadAndWorkflowService workloadAndWorkflowService;
+    private @SpringBean UserDao userRepository;
+    private @SpringBean ProjectService projectService;
+    private @SpringBean MenuItemRegistry menuItemService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean WorkloadAndWorkflowService workloadAndWorkflowService;
 
     //Default constructor, no project selected (only when workload.html
     // put directly in the browser without any parameters)
@@ -423,7 +439,8 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         //Show all available users
         DropDownChoice<String> userSelection = new BootstrapSelect<>("userSelection");
         userSelection.setChoices(Model.ofList(projectService.listProjectUsersWithPermissions(
-            currentProject.getObject()).stream().map(User::getUsername).sorted().collect(Collectors.toList())));
+            currentProject.getObject()).stream().map(User::getUsername).
+            sorted().collect(Collectors.toList())));
         userForm.add(userSelection);
 
         //Show ALL documents in the project (even those for which the user
@@ -437,13 +454,13 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         //Shows all annotation documents for the user that exist in the DB
         DropDownChoice<String> resetDocument = new BootstrapSelect<>("resetDocument");
         resetDocument.setChoices(Model.ofList(documentService.listAnnotatableDocuments(
-            currentProject.getObject(), userRepository.getCurrentUser()).values().stream().filter(Objects::nonNull).map(AnnotationDocument::getName)
+            currentProject.getObject(), userRepository.getCurrentUser()).values().stream().
+            filter(Objects::nonNull).map(AnnotationDocument::getName)
             .sorted().collect(Collectors.toList())));
         userForm.add(resetDocument);
 
         return userForm;
     }
-
 
     private void actionSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
     {
@@ -460,18 +477,20 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
 
         aTarget.add(searchForm);
     }
-
     @Deprecated
-    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm) {
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
+    {
         aTarget.addChildren(getPage(), IFeedback.class);
 
         workloadAndWorkflowService.setDefaultNumberOfAnnotations(Integer.parseInt(
             defaultNumberDocumentsTextField.getInput()),currentProject.getObject());
 
         if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
-            workloadAndWorkflowService.setWorkflowType(DEFAULT_WORKFLOW_TYPE, currentProject.getObject());
+            workloadAndWorkflowService.setWorkflowType(
+                DEFAULT_WORKFLOW_TYPE, currentProject.getObject());
         } else {
-            workloadAndWorkflowService.setWorkflowType(RANDOMIZED_WORKFLOW_TYPE, currentProject.getObject());
+            workloadAndWorkflowService.setWorkflowType(
+                RANDOMIZED_WORKFLOW_TYPE, currentProject.getObject());
         }
 
         success("Changes have been saved");

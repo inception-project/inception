@@ -18,6 +18,20 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.LambdaModel;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -30,28 +44,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.LambdaModel;
-import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
 public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
 {
     private static final long serialVersionUID = -292514874000914541L;
 
-    private @SpringBean
-    DocumentService documentService;
-    private @SpringBean
-    ProjectService projectService;
+    private @SpringBean DocumentService documentService;
+    private @SpringBean ProjectService projectService;
     private @PersistenceContext EntityManager entityManager;
     private final AnnotationPageBase page;
     private final LambdaAjaxLink finishDocumentLink;

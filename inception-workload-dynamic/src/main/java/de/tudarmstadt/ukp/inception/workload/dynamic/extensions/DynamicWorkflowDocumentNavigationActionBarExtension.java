@@ -17,6 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.extensions;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DYNAMIC_WORKFLOW;
+
+import java.util.Optional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav.DefaultDocumentNavigatorActionBarExtension;
@@ -26,20 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.request.cycle.RequestCycle;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import java.util.Optional;
-
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DYNAMIC_WORKFLOW;
 
 @Order(1000)
 @Component
@@ -115,6 +118,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
             String query =  "FROM SourceDocument " +
                             "WHERE project = :project " +
                             "ORDER BY rand()";
+
             for (SourceDocument doc: entityManager.createQuery(query, SourceDocument.class)
                 .setParameter("project", project).getResultList()) {
                 //Check if it exist or is NEW
