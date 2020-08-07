@@ -17,6 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_MONITORING;
+
+import org.apache.wicket.Page;
+import org.apache.wicket.Session;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -26,24 +34,14 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
-import org.apache.wicket.Page;
-import org.apache.wicket.Session;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-
-import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_MONITORING;
 
 @Component
 @Order(300)
 public class MonitoringPageMenuItem implements MenuItem
 {
-    private @Autowired
-    UserDao userRepo;
-    private @Autowired
-    ProjectService projectService;
-    private @Autowired
-    WorkloadAndWorkflowService workloadAndWorkflowService;
+    private @Autowired UserDao userRepo;
+    private @Autowired ProjectService projectService;
+    private @Autowired WorkloadAndWorkflowService workloadAndWorkflowService;
 
     @Override
     public String getPath()

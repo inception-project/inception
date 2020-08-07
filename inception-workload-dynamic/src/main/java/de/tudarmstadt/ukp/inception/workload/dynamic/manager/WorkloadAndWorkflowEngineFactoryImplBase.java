@@ -17,15 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAssignment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAssignment;
 
 public abstract class WorkloadAndWorkflowEngineFactoryImplBase<T>
     implements WorkloadAndWorkflowEngineFactory<T>

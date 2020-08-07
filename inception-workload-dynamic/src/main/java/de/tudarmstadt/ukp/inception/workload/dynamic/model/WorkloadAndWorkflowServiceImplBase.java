@@ -17,16 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_MONITORING;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_WORKFLOW_TYPE;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
-import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component(WorkloadAndWorkflowService.SERVICE_NAME)
 public class WorkloadAndWorkflowServiceImplBase implements WorkloadAndWorkflowService

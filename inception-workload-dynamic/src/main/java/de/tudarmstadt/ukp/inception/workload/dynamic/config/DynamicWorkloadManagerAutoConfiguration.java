@@ -32,7 +32,8 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageM
 
 @AutoConfigureAfter(WorkloadServiceAutoConfiguration.class)
 @Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",matchIfMissing = true)
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled",
+    havingValue = "true",matchIfMissing = true)
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean

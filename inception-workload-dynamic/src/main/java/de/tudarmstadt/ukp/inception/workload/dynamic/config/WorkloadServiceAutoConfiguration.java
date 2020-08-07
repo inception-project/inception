@@ -17,21 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowEngineFactory;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistry;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistryImplBase;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowServiceImplBase;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import java.util.List;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowEngineFactory;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistry;
+import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistryImplBase;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowServiceImplBase;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")

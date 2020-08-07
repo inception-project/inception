@@ -17,16 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.config.WorkloadServiceAutoConfiguration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import de.tudarmstadt.ukp.inception.workload.dynamic.config.WorkloadServiceAutoConfiguration;
 
 /**
  * <p>

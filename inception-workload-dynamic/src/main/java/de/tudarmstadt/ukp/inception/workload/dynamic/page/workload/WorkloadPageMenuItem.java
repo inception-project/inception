@@ -17,6 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.workload;
 
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.WORKLOAD_MONITORING;
+
+import org.apache.wicket.Page;
+import org.apache.wicket.Session;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -26,12 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
-import org.apache.wicket.Page;
-import org.apache.wicket.Session;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
-
-import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.WORKLOAD_MONITORING;
 
 /**
  * Menu item to access the dynamic workload management page.

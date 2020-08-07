@@ -69,12 +69,12 @@
         <artifactId>wicket-spring</artifactId>
       </dependency>
       <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot</artifactId>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
-        <artifactId>spring-context</artifactId>
+        <artifactId>spring-tx</artifactId>
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
@@ -124,7 +124,9 @@
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-core</artifactId>
       </dependency>
-
-
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+      </dependency>
     </dependencies>
 </project>
