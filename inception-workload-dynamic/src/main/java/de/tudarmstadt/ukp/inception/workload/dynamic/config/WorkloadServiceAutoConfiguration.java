@@ -32,8 +32,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowEngineFactory;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistry;
 import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadAndWorkflowFactoryRegistryImplBase;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowService;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowServiceImplBase;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowServiceImplBase;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")

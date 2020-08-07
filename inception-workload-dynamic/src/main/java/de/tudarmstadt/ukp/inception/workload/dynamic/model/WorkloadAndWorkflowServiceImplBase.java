@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.manager.db;
+package de.tudarmstadt.ukp.inception.workload.dynamic.model;
 
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowState.DEFAULT_WORKFLOW;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowType.DEFAULT_WORKFLOW_TYPE;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkloadState.DEFAULT_MONITORING;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_MONITORING;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_WORKFLOW_TYPE;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -58,7 +58,7 @@ public class WorkloadAndWorkflowServiceImplBase implements WorkloadAndWorkflowSe
             return result;
         } catch (NoResultException e) {
             createDefaultEntry(aProject);
-            return DEFAULT_WORKFLOW.toString();
+            return DEFAULT_WORKFLOW;
         }
     }
 
@@ -75,7 +75,7 @@ public class WorkloadAndWorkflowServiceImplBase implements WorkloadAndWorkflowSe
             return result;
         } catch (NoResultException e) {
             createDefaultEntry(aProject);
-            return DEFAULT_MONITORING.toString();
+            return DEFAULT_MONITORING;
         }
     }
 
@@ -109,7 +109,7 @@ public class WorkloadAndWorkflowServiceImplBase implements WorkloadAndWorkflowSe
             return result;
         } catch (NoResultException e) {
             createDefaultEntry(aProject);
-            return DEFAULT_WORKFLOW_TYPE.toString();
+            return DEFAULT_WORKFLOW_TYPE;
         }
     }
 
@@ -165,7 +165,7 @@ public class WorkloadAndWorkflowServiceImplBase implements WorkloadAndWorkflowSe
     public void createDefaultEntry(Project aProject)
     {
         entityManager.persist(new WorkloadAssignment(
-            aProject,DEFAULT_WORKFLOW.toString(),DEFAULT_MONITORING.toString(),
-            DEFAULT_WORKFLOW_TYPE.toString(),3));
+            aProject,DEFAULT_WORKFLOW,DEFAULT_MONITORING,
+            DEFAULT_WORKFLOW_TYPE,3));
     }
 }

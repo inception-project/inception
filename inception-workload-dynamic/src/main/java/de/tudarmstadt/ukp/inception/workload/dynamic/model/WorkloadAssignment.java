@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.manager.db;
+package de.tudarmstadt.ukp.inception.workload.dynamic.model;
 
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowState.DEFAULT_WORKFLOW;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowType.DEFAULT_WORKFLOW_TYPE;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkloadState.DEFAULT_MONITORING;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_MONITORING;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_WORKFLOW_TYPE;
 
 import java.io.Serializable;
 
@@ -66,9 +66,9 @@ public class WorkloadAssignment implements Serializable
 
     public WorkloadAssignment()
     {
-        workflowManagerType = DEFAULT_WORKFLOW.toString();
-        workloadManagerType = DEFAULT_MONITORING.toString();
-        workflow = DEFAULT_WORKFLOW_TYPE.toString();
+        workflowManagerType = DEFAULT_WORKFLOW;
+        workloadManagerType = DEFAULT_MONITORING;
+        workflow = DEFAULT_WORKFLOW_TYPE;
         numberOfAnnotations = 3;
     }
 

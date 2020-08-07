@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.manager;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAssignment;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAssignment;
 
 public interface WorkloadAndWorkflowEngineFactory<T> {
     String getId();

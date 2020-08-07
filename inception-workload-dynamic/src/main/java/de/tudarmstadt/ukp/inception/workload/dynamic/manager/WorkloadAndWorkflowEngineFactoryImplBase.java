@@ -26,7 +26,7 @@ import java.lang.invoke.MethodHandles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAssignment;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAssignment;
 
 public abstract class WorkloadAndWorkflowEngineFactoryImplBase<T>
     implements WorkloadAndWorkflowEngineFactory<T>
@@ -70,7 +70,7 @@ public abstract class WorkloadAndWorkflowEngineFactoryImplBase<T>
             aWorkloadAssignment.setTraits(json);
         }
         catch (IOException e) {
-            log.error("Error while writing traits", e);
+            log.error("Error while writing traits workload_assignment", e);
         }
     }
 }

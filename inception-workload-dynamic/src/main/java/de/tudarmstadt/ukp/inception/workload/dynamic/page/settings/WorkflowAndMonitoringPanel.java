@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.page.settings;
 
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowState.DEFAULT_WORKFLOW;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkflowState.DYNAMIC_WORKFLOW;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkloadState.DEFAULT_MONITORING;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.manager.enums.WorkloadState.WORKLOAD_MONITORING;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_MONITORING;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DYNAMIC_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.WORKLOAD_MONITORING;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.db.WorkloadAndWorkflowService;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.WorkloadAndWorkflowService;
 
 //Custom panel inside the page
 public class WorkflowAndMonitoringPanel extends Panel
@@ -64,24 +64,26 @@ public class WorkflowAndMonitoringPanel extends Panel
 
         //Add two possibilities to select for the workflow manager
         workflow = new ArrayList<>();
-        workflow.add(DEFAULT_WORKFLOW.toString());
-        workflow.add(DYNAMIC_WORKFLOW.toString());
+        workflow.add(DEFAULT_WORKFLOW);
+        workflow.add(DYNAMIC_WORKFLOW);
 
         workflowChoices = new BootstrapRadioChoice<>("workflowRadios",
             new Model<>(getString("defaultWorkflow")), workflow);
         workflowChoices.setInline(true);
         workflowChoices.setOutputMarkupId(true);
-        //Set default for the group
-        workflowChoices.setModel(new Model(
-            workloadAndWorkflowService.getWorkflowManager(aProject.getObject())));
+
+        //Set default value for the group
+        workflowChoices.setModel(new Model(workloadAndWorkflowService.getWorkflowManager(
+            aProject.getObject())));
+
 
         //add them to the form
         form.add(workflowChoices);
 
         //Add two possibilities to select from the monitoring manager
         monitoring = new ArrayList<>();
-        monitoring.add(DEFAULT_MONITORING.toString());
-        monitoring.add(WORKLOAD_MONITORING.toString());
+        monitoring.add(DEFAULT_MONITORING);
+        monitoring.add(WORKLOAD_MONITORING);
 
         monitoringChoices = new BootstrapRadioChoice<>("monitoringRadios",
             new Model<>(getString("defaultMonitoring")), monitoring);
@@ -89,8 +91,8 @@ public class WorkflowAndMonitoringPanel extends Panel
         monitoringChoices.setOutputMarkupId(true);
 
         //Set default value for the group
-        monitoringChoices.setModel(new Model(
-            workloadAndWorkflowService.getWorkloadManager(aProject.getObject())));
+        monitoringChoices.setModel(new Model(workloadAndWorkflowService.getWorkloadManager(
+            aProject.getObject())));
 
         //add them to the form
         form.add(monitoringChoices);
@@ -117,15 +119,15 @@ public class WorkflowAndMonitoringPanel extends Panel
         aTarget.addChildren(getPage(), IFeedback.class);
 
         if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {
-            workloadAndWorkflowService.setWorkloadManager(DEFAULT_MONITORING.toString(), project);
+            workloadAndWorkflowService.setWorkloadManager(DEFAULT_MONITORING, project);
         } else {
-            workloadAndWorkflowService.setWorkloadManager(WORKLOAD_MONITORING.toString(), project);
+            workloadAndWorkflowService.setWorkloadManager(WORKLOAD_MONITORING, project);
         }
 
         if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
-            workloadAndWorkflowService.setWorkflowManager(DEFAULT_WORKFLOW.toString(), project);
+            workloadAndWorkflowService.setWorkflowManager(DEFAULT_WORKFLOW, project);
         } else {
-            workloadAndWorkflowService.setWorkflowManager(DYNAMIC_WORKFLOW.toString(), project);
+            workloadAndWorkflowService.setWorkflowManager(DYNAMIC_WORKFLOW, project);
         }
         success("Workflow and workload settings changed");
     }
