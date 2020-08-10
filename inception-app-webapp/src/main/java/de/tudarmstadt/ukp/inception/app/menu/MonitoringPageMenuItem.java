@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.app.menu;
 
 import static de.tudarmstadt.ukp.inception.workload.dynamic.api.WorkloadConst.DEFAULT_MONITORING;
 
-import org.apache.jena.base.Sys;
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;

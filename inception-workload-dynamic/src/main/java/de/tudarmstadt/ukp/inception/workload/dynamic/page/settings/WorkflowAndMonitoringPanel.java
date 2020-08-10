@@ -118,15 +118,17 @@ public class WorkflowAndMonitoringPanel extends Panel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        if (monitoringChoices.getDefaultModelObjectAsString().equals(monitoring.get(0))) {
+        switch (monitoringChoices.getDefaultModelObjectAsString()) {
+        case DEFAULT_MONITORING:
             workloadAndWorkflowService.setWorkloadManager(DEFAULT_MONITORING, project);
-        } else {
+        case WORKLOAD_MONITORING:
             workloadAndWorkflowService.setWorkloadManager(WORKLOAD_MONITORING, project);
         }
 
-        if (workflowChoices.getDefaultModelObjectAsString().equals(workflow.get(0))) {
+        switch (workflowChoices.getDefaultModelObjectAsString()) {
+        case DEFAULT_WORKFLOW:
             workloadAndWorkflowService.setWorkflowManager(DEFAULT_WORKFLOW, project);
-        } else {
+        case DYNAMIC_WORKFLOW:
             workloadAndWorkflowService.setWorkflowManager(DYNAMIC_WORKFLOW, project);
         }
         success("Workflow and workload settings changed");

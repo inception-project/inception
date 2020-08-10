@@ -50,62 +50,14 @@
         <artifactId>webanno-security</artifactId>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-api-annotation</artifactId>
+        <groupId>javax.persistence</groupId>
+        <artifactId>javax.persistence-api</artifactId>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-ui-annotation</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-support</artifactId>
-      </dependency>
-      <!-- SPRING DEPENDENCIES -->
-      <dependency>
-        <groupId> org.springframework</groupId>
-        <artifactId>spring-tx</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-autoconfigure</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-context</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-autoconfigure</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-beans</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-core</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-data-jpa</artifactId>
-      </dependency>
-        <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>javax.persistence-api</artifactId>
-        </dependency>
-        <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
       </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.danekja</groupId>
-        <artifactId>jdk-serializable-functional</artifactId>
-      </dependency>
+
 
       <!-- WICKET DEPENDENCIES -->
       <dependency>
@@ -117,8 +69,20 @@
         <artifactId>wicket-spring</artifactId>
       </dependency>
       <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-tx</artifactId>
+      </dependency>
+      <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-extensions</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-autoconfigure</artifactId>
       </dependency>
       <dependency>
         <groupId>org.apache.wicket</groupId>
@@ -133,10 +97,6 @@
         <artifactId>wicket-extensions</artifactId>
       </dependency>
       <dependency>
-        <groupId>de.agilecoders.wicket</groupId>
-        <artifactId>wicket-bootstrap-extensions</artifactId>
-      </dependency>
-      <dependency>
         <groupId>org.apache.wicket</groupId>
         <artifactId>wicket-util</artifactId>
       </dependency>
@@ -145,8 +105,28 @@
         <artifactId>wicket-kendo-ui</artifactId>
       </dependency>
       <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-beans</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.danekja</groupId>
+        <artifactId>jdk-serializable-functional</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-support</artifactId>
+      </dependency>
+      <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-core</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
       </dependency>
     </dependencies>
 </project>

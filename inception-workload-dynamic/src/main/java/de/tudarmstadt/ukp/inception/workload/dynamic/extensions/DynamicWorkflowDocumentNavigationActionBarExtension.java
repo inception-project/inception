@@ -76,13 +76,9 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aPage) {
-        if (DYNAMIC_WORKFLOW.equals(workloadAndWorkflowService.getWorkflowManager(
-            aPage.getModelObject().getProject()))) {
-            return true;
-        } else {
-            return false;
-        }
+    public boolean accepts (AnnotationPageBase aPage) {
+        return DYNAMIC_WORKFLOW.equals(workloadAndWorkflowService.getWorkflowManager(
+            aPage.getModelObject().getProject()));
     }
 
     @Override

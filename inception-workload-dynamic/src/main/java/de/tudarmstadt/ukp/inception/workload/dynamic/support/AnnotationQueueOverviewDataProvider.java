@@ -312,7 +312,6 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
             .sorted()
             .collect(Collectors.joining(", "));
     }
-    
     public Date lastAccessTimeForDocument(SourceDocument aDoc)
     {
         return aDoc.getUpdated();
