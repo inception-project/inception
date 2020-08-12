@@ -292,7 +292,7 @@ section, check the main documentation
 annotations just like before.
 * *Curation*: If several annotators work on a project, you may want a
 curator to finally decide which annotations to accept. Everyone with
-curation rights (see below) within this project can curate. All others
+curation rights (see below) within this project can curate. All other users
 do not have access to nor see this page. Only documents marked as
 finished by at least one annotator can be curated. For details on how to
 courate, see the main documentation
@@ -319,16 +319,12 @@ bases into your project.
 project; which user is working on or has finished which document; and
 for each user, you can toggle the status of each document between
 ***Done****/****In Progress ****or between **New / Locked**.***
-* *Agreement*: On this page, you can calculate the agreement of you
-annotators‘ work. Four different measures for agreement are provided.
+* *Agreement*: On this page, you can calculate the so called annotator agreement. That is, the agreement of you the work of your different annotators. Different measures for agreement are provided.
 _Note:_ Only documents marked as finished by annotators (clicking on the
 little lock on the annotation page) are taken into account.
 * *Evaluation*: The evaluation page shows a learning courve diagram of
 each recommender (we will explain recommenders later on on this guide).
-* *Settings*: This is the heart of your project. Here, you can
-organize, manage and adjust all details of your project. We will look at
-the ones you need to get started for your own projects. For a quick
-overview on the settings, you might want to watch our tutorial video
+* *Settings*: Here, you can organize, manage and adjust all details of your project. We will have a look now on those you need to get started for your own projects. For a quick overview on the settings, you might want to watch our tutorial video
 „Overview“:
 https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s.
 
@@ -346,8 +342,8 @@ the dropdown (left).
 ** In order to *add new users* so they can be chosen from this dropdown,
 click on „*administration*“- button in the very top right corner and
 select section *Users* on the left. For *user roles* (within the whole
-instance of INCEpTION) see
-https://zoidberg.ukp.informatik.tu-darmstadt.de/jenkins/job/INCEpTION%20(GitHub)%20(master)/de.tudarmstadt.ukp.inception.app$inception-app-webapp/doclinks/1/#sect_users
+instance of INCEpTION) see the
+https://inception-project.github.io/documentation/latest/developer-guide[developer guide].
 ** *Selecting a user from the dropdown* in the project settings section
 *Users*, you can check/unchek the *user‘s rights *(they are different
 from roles and count for this project only) on the right side. Any
@@ -389,9 +385,8 @@ documentation on layers
 (https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
 , upper half→ User Guide).
 * In the section **Knowledge Base, **you can change the settings for the
-knowledge bases used in your project and also import local and remote
-knowledgebases or create a new one. Herefore, just click the
-„create“-button and follow the wizzard.
+knowledge bases used in your project, you can import local and remote
+knowledgebases into your project and you can create an own empty knowledge base. The latter will be empty at first. It can be filled at the knowledge base page ( -> _Dashboard_, -> _Knowledge base_), not here in the settings. In order to do import or create a knowledge base, just click the „create“-button and follow the wizzard according to your demands.
 ** Note that you can have several knowledge bases in your INCEpTION
 instance but you can choose for every project which one(s) to use. Using
 many knowledge bases in one project will slow down the performance.
@@ -417,17 +412,16 @@ for a getting-started-guide, see our main documentation
 https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3
 .
 
-* In the *Guidelines* section, you may import guideline files for your
+* In the *Guidelines* section, you may import files with annotation guidelines files for your
 team to read and to check quickly while working. On the annotation page
-(→ _dashboard_ → _annotation_ → open any document), everyone can quickly
+(→ _dashboard_ → _annotation_ → open any document), annotators can quickly
 look them up by clicking on the guidelines button on the top (it looks
 like a book).
 
-* We have imported a whole project already (the example project) as well
-as single documents (in the **documents **section). In the **Export
+* In the **Export
 **section, you can export your project partially or wholly. Projects
 which have been exported can be imported again in INCEpTION the way we
-did before: at the start page with the *Import* button. We recommend
+did before with the example project: at the start page with the *Import* button. We recommend
 exporting projects on a regular basis in order to have a backup. For the
 different formats, their strengths and weaknesses, check our main
 documentation
@@ -442,7 +436,7 @@ gave you a general idea of hiw INCEpTION works. As mentioned before, our
 main documentation
 (https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
 , upper half→ User Guide) provides deep information on every issue.
-Don‘t hestitate to contact us if you struggle or have any questions. We
+Do not hestitate to contact us if you struggle or have any questions. We
 wish you success and fun with your projects. Let us know how you are
 doing!
 
