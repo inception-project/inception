@@ -121,15 +121,19 @@ public class WorkflowAndMonitoringPanel extends Panel
         switch (monitoringChoices.getDefaultModelObjectAsString()) {
         case DEFAULT_MONITORING:
             workloadAndWorkflowService.setWorkloadManager(DEFAULT_MONITORING, project);
+            break;
         case WORKLOAD_MONITORING:
             workloadAndWorkflowService.setWorkloadManager(WORKLOAD_MONITORING, project);
+            break;
         }
 
         switch (workflowChoices.getDefaultModelObjectAsString()) {
         case DEFAULT_WORKFLOW:
             workloadAndWorkflowService.setWorkflowManager(DEFAULT_WORKFLOW, project);
+            break;
         case DYNAMIC_WORKFLOW:
             workloadAndWorkflowService.setWorkflowManager(DYNAMIC_WORKFLOW, project);
+            break;
         }
         success("Workflow and workload settings changed");
     }
