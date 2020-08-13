@@ -135,8 +135,7 @@ public class CuratorWorkflowActionBarItemGroup
         AnnotatorState state = page.getModelObject();
         
         // Remove the current curation CAS
-        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
-                state.getUser().getUsername());
+        curationDocumentService.deleteCurationCas(state.getDocument());
 
         // Initialize a new one ...
         ((CurationPage) page)
