@@ -740,7 +740,7 @@ public class CasStorageServiceImpl
             sharedAccessCache.invalidate(key);
             
             try {
-                exclusiveAccessPool.clear(new CasKey(aDocument, aUsername));
+                exclusiveAccessPool.clear(key);
                 access.invalidateOnClose();
             }
             catch (Exception e) {
