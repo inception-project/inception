@@ -128,9 +128,9 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>com.helger.maven</groupId>
-        <artifactId>ph-javacc-maven-plugin</artifactId>
-        <version>4.1.4</version>
+        <groupId>org.javacc.plugin</groupId>
+        <artifactId>javacc-maven-plugin</artifactId>
+        <version>3.0.2</version>
         <executions>
           <execution>
             <id>default</id>
@@ -201,8 +201,8 @@
               <pluginExecutions>
                 <pluginExecution>
                   <pluginExecutionFilter>
-                    <groupId>com.helger.maven</groupId>
-                    <artifactId>ph-javacc-maven-plugin</artifactId>
+                    <groupId>org.javacc.plugin</groupId>
+                    <artifactId>javacc-maven-plugin</artifactId>
                     <versionRange>[2.8.0,)</versionRange>
                     <goals>
                       <goal>jtb-javacc</goal>
