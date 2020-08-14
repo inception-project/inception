@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,16 +36,14 @@ public class ScopeVisitorTest
     public void test()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/6.rules"));
-        Parse p = parser.Parse();
-
         List<Scope> scopes = new ArrayList<>();
-        p.accept(new ScopeVisitor(), scopes);
-
-        for (Scope scope : scopes) {
-            System.out.printf("%s %n", scope);
+        try (InputStream is = new FileInputStream("src/test/resources/rules/visitor-test.rules")) {
+            ConstraintsGrammar parser = new ConstraintsGrammar(is, "UTF-8");
+            Parse p = parser.Parse();
+            p.accept(new ScopeVisitor(), scopes);
         }
+        
+        assertThat(scopes).extracting(Scope::getScopeName)
+                .containsExactly("SemanticPredicate", "Verb");
     }
-
 }
