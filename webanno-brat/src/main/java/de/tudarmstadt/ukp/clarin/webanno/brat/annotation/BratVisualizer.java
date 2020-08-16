@@ -154,8 +154,12 @@ public abstract class BratVisualizer
     
     private String bratRenderCommand(String aJson)
     {
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + aJson
-                + "]);";
+        return "var visElem = Wicket.$('" + vis.getMarkupId() + "');" +
+                "if (!visElem){" + 
+                "  return;" + 
+                "}" +
+                "visElem.dispatcher.post('renderData', [" + aJson
+                 + "]);";
     }
 
     public void render(AjaxRequestTarget aTarget)
