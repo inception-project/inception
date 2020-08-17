@@ -23,7 +23,6 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -44,8 +43,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.conceptlinking.BasicConceptLinkingRanker;
-import de.tudarmstadt.ukp.inception.conceptlinking.ConceptLinkingRanker;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -90,13 +87,10 @@ public class ConceptLinkingServiceImplTest
         EntityManager entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
         kbService = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
-        ConceptLinkingRanker ranker = new BasicConceptLinkingRanker(new EntityLinkingPropertiesImpl(),
-                repoProps,
-                emptyList(),
-                new HashSet<>());
-
-        sut = new ConceptLinkingServiceImpl(kbService, ranker);
-
+        sut = new ConceptLinkingServiceImpl(kbService, new EntityLinkingPropertiesImpl(), repoProps,
+                emptyList());
+        sut.afterPropertiesSet();
+        sut.init();
         Project project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.NONE);
     }

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.config;
 
-import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +30,6 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.conceptlinking.BasicConceptLinkingRanker;
-import de.tudarmstadt.ukp.inception.conceptlinking.ConceptLinkingRanker;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.FrequencyFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.LevenshteinFeatureGenerator;
@@ -63,12 +60,8 @@ public class EntityLinkingServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> 
                     aFeatureGenerators)
     {
-        ConceptLinkingRanker ranker = new BasicConceptLinkingRanker(aProperties,
-                aRepoProperties,
-                aFeatureGenerators,
-                new HashSet<>());
-
-        return new ConceptLinkingServiceImpl(aKbService, ranker);
+        return new ConceptLinkingServiceImpl(aKbService, aProperties, aRepoProperties,
+                aFeatureGenerators);
     }
     
     @Bean
