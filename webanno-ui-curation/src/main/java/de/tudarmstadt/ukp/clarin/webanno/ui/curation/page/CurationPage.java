@@ -147,13 +147,11 @@ public class CurationPage
     private SuggestionViewPanel suggestionViewPanel;
 
     private WebMarkupContainer sentenceListContainer;
-    private WebMarkupContainer sentencesListView;
+    private WebMarkupContainer sentenceLinksListView;
 
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel editor;
 
-    private ListView<String> crossSentAnnoList;
-    
     public SourceListView curationView;
     private List<SourceListView> sourceListModel;
 
@@ -346,9 +344,9 @@ public class CurationPage
         add(sentenceListContainer);
 
         // add container for list of sentences panel
-        sentencesListView = new WebMarkupContainer("sentencesListView");
-        sentencesListView.setOutputMarkupPlaceholderTag(true);
-        sentencesListView.add(new ListView<SourceListView>("sentencesList",
+        sentenceLinksListView = new WebMarkupContainer("sentenceLinkListView");
+        sentenceLinksListView.setOutputMarkupPlaceholderTag(true);
+        sentenceLinksListView.add(new ListView<SourceListView>("sentenceLinkList",
                 LoadableDetachableModel.of(() -> curationContainer.getCurationViews()))
         {
             private static final long serialVersionUID = 8539162089561432091L;
@@ -360,7 +358,7 @@ public class CurationPage
             }
         });
         
-        sentenceListContainer.add(sentencesListView);
+        sentenceListContainer.add(sentenceLinksListView);
         
     }
     
@@ -907,7 +905,7 @@ public class CurationPage
                 curationView);
         
         // Render the sentence list sidebar
-        aTarget.add(sentencesListView);
+        aTarget.add(sentenceLinksListView);
     }
     
     private void commonUpdate() throws IOException

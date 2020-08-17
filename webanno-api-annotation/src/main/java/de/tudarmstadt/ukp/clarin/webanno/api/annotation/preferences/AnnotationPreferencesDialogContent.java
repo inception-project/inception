@@ -130,12 +130,18 @@ public class AnnotationPreferencesDialogContent
         form.add(createLayerContainer());
 
         // Add a check box to enable/disable automatic page navigations while annotating
-        form.add(new CheckBox("scrollPage"));
+        CheckBox scrollCheckBox = new CheckBox("scrollPage");
+        scrollCheckBox.setOutputMarkupId(true);
+        form.add(scrollCheckBox);
 
         // Add a check box to enable/disable arc collapsing
-        form.add(new CheckBox("collapseArcs"));
+        CheckBox collapseCheckBox = new CheckBox("collapseArcs");
+        collapseCheckBox.setOutputMarkupId(true);
+        form.add(collapseCheckBox);
 
-        form.add(new CheckBox("rememberLayer"));
+        CheckBox rememberCheckbox = new CheckBox("rememberLayer");
+        rememberCheckbox.setOutputMarkupId(true);
+        form.add(rememberCheckbox);
 
         // Add global read-only coloring strategy combo box
         DropDownChoice<ReadonlyColoringBehaviour> readOnlyColor = new BootstrapSelect<>(
