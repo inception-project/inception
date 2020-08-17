@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class ClassicKendoComboboxTextFeatureEditor
     extends TextFeatureEditorBase
@@ -110,9 +111,10 @@ public class ClassicKendoComboboxTextFeatureEditor
                         .find(AjaxRequestTarget.class);
                 if (target.isPresent()) {
                     LOG.trace("onInitialize() requesting datasource re-reading");
-                    target.get().appendJavaScript(
-                            String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
-                                    KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
+                    target.get()
+                            .appendJavaScript(WicketUtil.createJsCall(String.format(
+                                    "var $w = %s; if ($w) { $w.dataSource.read(); }",
+                                    KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
                 }
             }
         };

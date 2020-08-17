@@ -30,4 +30,15 @@ public class WicketUtil
             }
         });
     }
+    
+    /**
+     * Wraps calls to javascript in try-catch block and logs errors as warnings.
+     */
+    public static String createJsCall(String aJsCall) {
+        return "try{" + "\n" +
+                aJsCall + "\n" +
+                "}catch (e){" + "\n" +
+                "   console.warn('Call terminated due to: ' + e, e.stack);" +
+                "}";
+    }
 }

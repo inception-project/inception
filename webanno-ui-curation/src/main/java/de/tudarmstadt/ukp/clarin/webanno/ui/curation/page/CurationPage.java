@@ -813,7 +813,8 @@ public class CurationPage
             if (isEnabledInHierarchy()) {
                 RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(_target -> {
                     for (AjaxEventBehavior b : getBehaviors(AjaxEventBehavior.class)) {
-                        _target.appendJavaScript(b.getCallbackScript());
+                        _target.appendJavaScript(WicketUtil.createJsCall(
+                                b.getCallbackScript().toString()));
                     }
                 });
             }

@@ -90,6 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class LinkFeatureEditor
     extends FeatureEditor
@@ -278,9 +279,10 @@ public class LinkFeatureEditor
                             .find(AjaxRequestTarget.class);
                     if (target.isPresent()) {
                         LOG.trace("onInitialize() requesting datasource re-reading");
-                        target.get().appendJavaScript(
-                                String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
-                                        KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
+                        target.get()
+                                .appendJavaScript(WicketUtil.createJsCall(String.format(
+                                        "var $w = %s; if ($w) { $w.dataSource.read(); }",
+                                        KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
                     }
                 }
             };

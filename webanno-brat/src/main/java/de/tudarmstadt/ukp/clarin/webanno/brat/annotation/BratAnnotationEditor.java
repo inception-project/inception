@@ -112,6 +112,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 /**
  * Brat annotator component.
@@ -434,7 +435,8 @@ public class BratAnnotationEditor
                         getModelObject().getDocument(), anno);
                 // define anonymous function, fill the body and immediately execute
                 String js = String.format("(function ($PARAM){ %s })(%s)",
-                        layer.getOnClickJavascriptAction(), JSONUtil.toJsonString(functionParams));
+                        WicketUtil.createJsCall(layer.getOnClickJavascriptAction()), 
+                        JSONUtil.toJsonString(functionParams));
                 aTarget.appendJavaScript(js);
             }
         }
