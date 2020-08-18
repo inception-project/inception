@@ -555,12 +555,11 @@ public class CasStorageServiceImpl
         }
         
         CAS cas = casHolder.getCas();
-        
-        if (!UNMANAGED_ACCESS.equals(aAccessMode)
-                || UNMANAGED_NON_INITIALIZING_ACCESS.equals(aAccessMode)) {
+
+        if (aAccessMode.isSessionManaged()) {
             session.add(aDocument.getId(), aUsername, aAccessMode, cas).incrementReadCount();
         }
-            
+                    
         return cas;
     }
     
