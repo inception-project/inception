@@ -740,7 +740,24 @@ public class CasStorageServiceImpl
             
             try {
                 exclusiveAccessPool.clear(key);
-                access.invalidateOnClose();
+                
+                Long docId = aDocument.getId();
+                CasStorageSession session = CasStorageSession.get();
+                Optional<SessionManagedCas> managedCas = session.getManagedState(docId, aUsername);
+                if (!managedCas.isPresent()) {
+                    return success;
+                }
+
+                CasHolder holder = managedCas.get().getCasHolder();
+                if (holder == null) {
+                    return success;
+                }
+                
+                // remove from pool
+                exclusiveAccessPool.invalidateObject(key, holder);
+                access.setCas(null);                
+                // remove from session
+                session.remove(docId, aUsername);
             }
             catch (Exception e) {
                 throw new IOException(e);
@@ -914,7 +931,6 @@ public class CasStorageServiceImpl
         private String documentName;
         private long documentId;
         private String username;
-        private boolean invalidateOnClose;
         
         public WithExclusiveAccess(SourceDocument aDocument, String aUser)
             throws CasSessionException
@@ -937,11 +953,6 @@ public class CasStorageServiceImpl
             else {
                 holder = null;
             }
-        }
-
-        public void invalidateOnClose()
-        {
-            invalidateOnClose = true;
         }
 
         public CasKey getKey()
@@ -1006,17 +1017,9 @@ public class CasStorageServiceImpl
         {
             if (holder != null) {
                 try {
-                    if (invalidateOnClose) {
-                        log.trace("Invalidating CAS [{}]@[{}]({})", username,
-                                documentName, documentId);
-                        exclusiveAccessPool.invalidateObject(key, holder);
-                        exclusiveAccessHolders.remove(holder);
-                    }
-                    else {
-                        log.trace("Returning briefly borrowed CAS [{}]@[{}]({})", username,
-                                documentName, documentId);
-                        exclusiveAccessPool.returnObject(key, holder);
-                    }
+                    log.trace("Returning briefly borrowed CAS [{}]@[{}]({})", username,
+                            documentName, documentId);
+                    exclusiveAccessPool.returnObject(key, holder);
                 }
                 catch (Exception e) {
                     log.error("Unable to return CAS to exclusive access pool", e);

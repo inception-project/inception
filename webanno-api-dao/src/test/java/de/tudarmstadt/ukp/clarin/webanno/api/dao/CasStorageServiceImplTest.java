@@ -93,6 +93,9 @@ public class CasStorageServiceImplTest
         sut.deleteCas(doc, user);
         assertThat(sut.getCasFile(doc, user)).doesNotExist();
         assertThat(sut.existsCas(doc, user)).isFalse();
+        
+        // check that cas is no longer in the active session
+        assertThat(casStorageSession.contains(cas.getCas())).isFalse();
     }
     
     @Test
