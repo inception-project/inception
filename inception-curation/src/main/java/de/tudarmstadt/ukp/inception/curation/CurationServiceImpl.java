@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -240,37 +239,39 @@ public class CurationServiceImpl
     @Override
     public List<User> listUsersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument)
-    {
+    {        
         List<User> selectedUsers = getCurationState(aUsername, aProject.getId()).getSelectedUsers();
-        return queryDBForFinishedUsers(selectedUsers, aProject, aDocument);
-    }
-    
-    private List<User> queryDBForFinishedUsers(List<User> aUsers, Project aProject, 
-            SourceDocument aDocument)
-    {
-        Validate.notNull(aDocument, "Document must be specified");
-        Validate.notNull(aProject, "project must be specified");
         
-        if (aUsers == null || aUsers.isEmpty()) {
+        if (selectedUsers == null || selectedUsers.isEmpty()) {
             return new ArrayList<>();
         }
+        List<User> finishedUsers = listFinishedUsers(aProject, aDocument);
+        finishedUsers.retainAll(selectedUsers);
+        return finishedUsers;
+    }
+    
+    @Override
+    public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument)
+    {
+        Validate.notNull(aSourceDocument, "Document must be specified");
+        Validate.notNull(aProject, "project must be specified");
         
         String query = String.join("\n",
                 "SELECT u FROM User u, AnnotationDocument d",
                 "WHERE u.username = d.user",
                 "  AND d.project = :project",
                 "  AND d.document = :document",
-                "  AND d.state    = :state");
+                "  AND d.state    = :state",
+                "  ORDER BY u.username ASC");
         
-        Set<User> finishedUsers = new HashSet<>(entityManager
+        List<User> finishedUsers = new ArrayList<>(entityManager
                 .createQuery(query, User.class)
                 .setParameter("project", aProject)
-                .setParameter("document", aDocument)
+                .setParameter("document", aSourceDocument)
                 .setParameter("state", AnnotationDocumentState.FINISHED)
                 .getResultList());
 
-        return aUsers.stream().filter(user -> finishedUsers.contains(user))
-                .collect(Collectors.toList());
+        return finishedUsers;
     }
 
     @Override
@@ -482,5 +483,4 @@ public class CurationServiceImpl
     {
         return getCurationState(aUsername, aProjectId).getMergeStrategy();
     }
-
 }

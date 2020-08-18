@@ -18,32 +18,16 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<body>
 <wicket:panel>
-  <form>
-    <div>
-     <span>
-      <label>
-        <wicket:message key="DocumentName"/>
-      </label>
-      <wicket:message wicket:id="documentName"></wicket:message>
-     </span>
+    <div class="action-bar-group">
+        <div wicket:id="finishDocumentDialog"></div>
+        <div class="btn-group">
+            <button wicket:id="showFinishDocumentDialog" class="btn btn-light" type="button">
+                <i wicket:id="state"></i>
+            </button>
+        </div>
     </div>
-    <div>
-      <span>
-        <label>
-          <wicket:message key="InProgressUsers" />
-        </label>
-        <wicket:message wicket:id="userInProgress"></wicket:message>
-      </span>
-    </div>
-    <div>
-      <span>
-        <label>
-          <wicket:message key="FinishedUsers" />
-        </label>
-        <wicket:message wicket:id="userFinished"></wicket:message>
-      </span>
-    </div>
-  </form>
 </wicket:panel>
+</body>
 </html>

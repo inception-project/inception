@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
@@ -38,34 +37,35 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class TableContentProvider extends SortableDataProvider
+public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
 {
     private static final long serialVersionUID = 4125678936105494485L;
-    
+
     private final List<String> headers;
     private final List<SourceDocument> data;
-    private final IModel<List<SourceDocument>> model;
+    private IModel<List<SourceDocument>> model;
     private final List<AnnotationDocument> allAnnotationDocuments;
-   
-    private List<SourceDocument> shownDocuments;
+    private final List<SourceDocument> shownDocuments;
     private Filter filter;
-
+    private DocumentService documentService;
     private int defaultAnnotations;
 
-    public TableContentProvider(
+    public AnnotationQueueOverviewDataProvider(
         List<SourceDocument> aData,
         List<String> aHeaders, List<AnnotationDocument> aAllAnnotationDocuments)
     {
-        this.data = aData;
-        this.headers = aHeaders;
-        this.allAnnotationDocuments = aAllAnnotationDocuments;
-        this.defaultAnnotations = 6;
-        this.shownDocuments = new ArrayList<>();
+        data = aData;
+        headers = aHeaders;
+        allAnnotationDocuments = aAllAnnotationDocuments;
+        shownDocuments = new ArrayList<>();
+        //TODO default value must be saved permanently, Issue #1776
+        defaultAnnotations = 6;
 
         //Init filter
         filter = new Filter();
@@ -78,12 +78,13 @@ public class TableContentProvider extends SortableDataProvider
             private static final long serialVersionUID = -3938543310389673460L;
 
             @Override
-            protected List<SourceDocument> load() {
+            protected List<SourceDocument> load()
+            {
                 return data;
             }
         };
     }
-    
+
     @Override
     public Iterator<SourceDocument> iterator(long aFirst, long aCount)
     {
@@ -113,27 +114,21 @@ public class TableContentProvider extends SortableDataProvider
             else if (getSort().getProperty().equals(headers.get(4))) {
                 if (o1.getUpdated() == null) {
                     return dir;
-                }
-                else if (o2.getUpdated() == null) {
+                } else if (o2.getUpdated() == null) {
                     return dir * -1;
-                }
-                else {
+                } else {
                     return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
                 }
-            }
-            else {
+            } else {
                 return 0;
             }
         });
 
-
         //Reset
-        this.shownDocuments.clear();
+        shownDocuments.clear();
         shownDocuments.addAll(newList);
 
-
-        if ((int)aFirst + (int)aCount > newList.size())
-        {
+        if ((int)aFirst + (int)aCount > newList.size()) {
             aCount = newList.size() - aFirst;
         }
 
@@ -153,7 +148,8 @@ public class TableContentProvider extends SortableDataProvider
     }
 
     @Override
-    public void detach() {
+    public void detach()
+    {
         super.detach();
         model.detach();
     }
@@ -171,8 +167,7 @@ public class TableContentProvider extends SortableDataProvider
             filter.setSelected("false");
         }
 
-        for (SourceDocument doc: aData)
-        {
+        for (SourceDocument doc: aData) {
             // Unused documents selected
             if (filter.getSelected().equals("true")) {
                 if ((getInProgressAmountForDocument(doc) == 0)
@@ -181,14 +176,12 @@ public class TableContentProvider extends SortableDataProvider
                 }
             }
 
-
             //Check if DocumentName was entered
             if (filter.getDocumentName() != null) {
                 if (doc.getName().contains(filter.getDocumentName())) {
                     docNameList.add(doc);
                 }
             }
-
 
             //Check if Username filter was entered
             if (filter.getUsername() != null) {
@@ -297,59 +290,28 @@ public class TableContentProvider extends SortableDataProvider
             .count();
     }
 
-
-    //Returns a random document out of all documents in the project.
-    //Only a document is chosen which is not yet given to annotators more than the default number
-    //per document number
-    public SourceDocument getRandomDocument()
-    {
-        //Create an empty document
-        SourceDocument document = null;
-        Random r = new Random();
-
-        while (document == null)
-        {
-            int i = r.nextInt(data.size() - 1);
-            //If the random chosen document wont surpass the amount of default number combining
-            // "inProgress" for the document + "finished" amount for the document + 1
-            if ((getInProgressAmountForDocument(data.
-                get(i)) +
-                getFinishedAmountForDocument(data.
-                    get(i)))
-                + 1 <= defaultAnnotations)
-            {
-                //If that was not the case, assign this document
-                document = data.get(r.nextInt(data.size() - 1));
-            }
-        }
-        //Return the document
-        //REMINDER: Document MIGHT BE NULL if there is not a single document left!
-        // Annotator should then get the message: "No more documents to annotate"
-        return document;
-    }
-
     @Override
-    public Filter getFilterState() {
+    public Filter getFilterState()
+    {
         return filter;
     }
 
     @Override
-    public void setFilterState(Filter filter) {
-        this.filter = filter;
-
+    public void setFilterState(Filter aFilter)
+    {
+        filter = aFilter;
     }
 
     public String getUsersWorkingOnTheDocument(SourceDocument aDocument)
     {
         return allAnnotationDocuments.stream()
             .filter(d -> d.getDocument().equals(aDocument) &&
-                    !d.getState().equals(NEW) && 
+                    !d.getState().equals(NEW) &&
                     !d.getState().equals(IGNORE))
             .map(AnnotationDocument::getUser)
             .sorted()
             .collect(Collectors.joining(", "));
     }
-
 
     public Date lastAccessTimeForDocument(SourceDocument aDoc)
     {

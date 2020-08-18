@@ -1,208 +1,202 @@
-TODO:
- Für Links:
-https://asciidoctor.org/docs/asciidoc-syntax-quick-reference/#links
-Best: Use safari, Chrome, …?
-
 = Getting Started
+:toc:
 
 This Getting-Started-Guide helps new users to install, start and work
-with INCEpTION. It gives a quick overview (estimated time for reading
-only: approx. 15-20 minutes) on the key functionalities in order to get
+with {product-name}. It gives a quick overview (estimated time for reading
+only: approx. 20-30 minutes) on the key functionalities in order to get
 familiar with the tool. It excludes special cases and details due to
 simplicity and focus on the first steps. For further reading on any
-topic, see our main documentation:
-https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ User Guide. For quick overviews, also see our tutorial
-videos (Topics: Introduction, Overview, Recommender Basics, Entity
-Linking):
-https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-
+topic, you will find lots of information in our guides, called
+https://inception-project.github.io/documentation/[documentation] (upper half→ User Guide). 
+
+For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[four tutorial videos] covering an Introduction, an Overview, Recommender Basics and Entity Linking. This guide will also refer to them at the appropriate place.
+
 
 
 == Introduction
 
-What can INCEpTION be used for? (also see our https://www.youtube.com/watch?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&time_continue=135&v=Ely8eBKqiSI&feature=emb_logo)[introduction video] for a
-first impression what INCEpTION is):
+=== What can {product-name} be used for?
+
+Also see our https://www.youtube.com/watch?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&time_continue=135&v=Ely8eBKqiSI&feature=emb_logo)[introduction video] for a
+first impression on what {product-name} is.
 
 
-* **INCEpTION is a text-annotation enviroment **useful for various kinds
+* **{product-name} is a text-annotation enviroment **useful for various kinds
 of annotation projects. It is a web application in which several users
 can work on the same project and it can hold several annotation projects
-at a time. The core functionality is annotating any kind of written
+at a time. The core functionality is annotating written
 text. Annotations can be used both for linguistic and machine learning
-concerns.image:Pictures/10000201000002B300000214EA8A80D173D21C1E.png[image,width=567,height=436]
+concerns. image:Pictures/10000201000002B300000214EA8A80D173D21C1E.png[image,width=567,height=436]
 In the following picture, you see an example where so called entities
 have been annotated as person (PER), location (LOC), organization (ORG)
-or other (OTH). These aspects are annotated on the annotation layer
-Named Entity. We will go more into what layers are later on. TELL,
-WHERE!
-* *What‘s more on INCEpTION* is that it combines three key features in
-one plattform: Creating a corpus to be annotated (*Corpus Creation*);
-annotating it and merging annotations made by several annotators
-(*Annotation, Curation*); and managing the knowledge used for annotating
-(*Knowledge Bases*.) You may want to do one, two or all three steps with
-INCEpTION. Also, it is extendable and adoptable to individual
-requrements in all of these three areas. Here are some examples: You may
+or other (OTH). These aspects are annotated on the so called annotation layer
+Named Entity. We will go more into what layers are later on. INSERT LINK
+
+* *What‘s more on {product-name}* beyond annotating written text is that it combines three key features in
+one plattform: First, creating a corpus to be annotated (*Corpus Creation*);
+second, annotating the corpus and merging annotations made by several annotators
+(*Annotation, Curation*), and third, managing the knowledge used for annotating
+(*Knowledge Bases*). You may want to do one, two or all three steps with
+{product-name}. Also, it is extendable and adoptable to individual
+requrements in all of these three areas. For example: You may
 integrate a knowledgebase of your choice; create and modify your own
 knowledge base; create and modify own layers and tagsets for annotation;
-build own so called „recommenders“ to suggest annotations so you will
+build own so called „recommenders“ which automatically suggest annotations to you so you will
 work quicker and easier; .…
 +
 This guide focuses on enabeling you to annotate. For details on any
-other topic, see our main documentation
-https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ User Guide.
+other topic, see our https://inception-project.github.io/documentation/[main documentation] (upper half→ User Guide).
 
-Tell us what you would like to have
+=== Contact Us And Tell Us What You Need
 
-* INCEpTION is still in developement, so you are welcome to give us
+* {product-name} is still in developement, so you are welcome to give us
 feedback and tell us your wishes and requirements. For any questions,
-you are welcome to join our Google group „inception users“:
-https://groups.google.com/forum/#!forum/inception-users
+you are welcome to join our Google group https://groups.google.com/forum/#!forum/inception-users[„inception users“].
 * If you have questions, you can
-** reach us via the INCEpTION Users mailing list:
+** reach us via the {product-name} users mailing list:
 inception-users@googlegroups.com
-** or open an issue on Github:
-https://github.com/inception-project/inception/issues
+** or open an issue on https://github.com/inception-project/inception/issues[Github].
+** check our https://inception-project.github.io/documentation/[main documentation] (upper half→ User Guide).
 
-Know our documentation for further reading
+=== Know Our Documentation For Further Reading
+Our main documentation consists of three parts: 
 
-* You will find lots of information in our guides, called documentation
-(on our website, among the tabs on top: → _Documentation:_
-https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half. If you only use INCEpTION and do not develop, the User
-Guide is the one of your choice). If these do not answer your question,
-don‘t hesitate to contact our team (see above). We are glad to help you.
-* Whenever you find a blue questionmark-sign in INCEpTION, you may click
-on it to find further explanation in the main documentation.
-* For more installation details, see the admin guide. You find it on our
-website, among the tabs on top:→ _Documentation_,
-https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ Admin Guide.
-* If you develop, the Developer Guide might be interesting for you (
-https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ Developer Guide).
+* If you only use {product-name} and do not develop, this *User
+Guide* is the one of your choice. If it does not answer your questions, don't hesitate to contact us (see above). 
 
-Installing and starting INCEpTION
+NOTE:  Whenever you find a *blue questionmark*-sign in {product-name}, you may click on it to find further explanation in this User Guide.
 
-Installing Java
+* For more installation details, see the https://inception-project.github.io/documentation/[Admin Guide] (upper half→ *Admin Guide*).
+* If you also develop, the https://inception-project.github.io/documentation/[Developer Guide] (upper half→ *Developer Guide*) might be interesting for you.
 
-* In order to run INCEpTION, you need to have Java installed in version
-8 or higher. If you do not have it installed yet, you find instructions
-here:
-link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle
-Java] or here: link:https://adoptopenjdk.net[OpenJDK]
 
-Download and start INCEpTION
+== Installing and starting INCEpTION
 
-* Now, download the .jar-file from our website
-https://inception-project.github.io/downloads/ by clicking on
-https://github.com/inception-project/inception/releases/download/inception-app-0.16.1/inception-app-standalone-0.16.1.jar[INCEpTION
-0.16.1 (executable JAR)] . Wait a moment until it is fully downloaded.
-That is, until the name of the downlauded folder ends on „.jar“, not on
+=== Installing Java
+
+In order to run {product-name}, you need to have Java installed on your system in version 8 or 
+higher. If you do not have Java installed yet, please install the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java] or link:https://adoptopenjdk.net[OpenJDK].
+
+
+=== Download and start {product-name}
+
+* Download the .jar-file from our
+https://inception-project.github.io/downloads/[website] by clicking on
+https://github.com/inception-project/inception/releases/download/inception-app-0.16.1/inception-app-standalone-0.16.1.jar[{product-name}
+0.16.1 (executable JAR)]. Wait a moment until it has been fully downloaded.
+That is, until the name of the downloaded folder ends on „.jar“, not on
 „.jar.part“ anymore.
-+
-_Note_: We recommend working on the latest version always since we
+
+NOTE: We recommend *working on the latest version* always since we
 constantly add new features, improve usability and fix bugs. After
 downloading the latest Version, your previous work will not be lost: In
 the new version, you will find all your projects and documents like
 before. Check the website, subscribe to github notifications or the
 google group to to be notified when new versions are released.
 
-* Now, simply ***double-click ***on the downloaded .jar-file. After a
+NOTE: If double-clicking the JAR file does not start {product-name}, you might need to first *make the file executable*.
+
+
+* Now, simply *double-click* on the downloaded .jar-file. After a
 moment, a splash screen will display while the application is
 initializing.
-+
+
 image:Pictures/100002010000042B0000022048C4B1144148DA3D.png[image,width=575,height=290]
-+
+
 Once the initialization is complete, a dialog appears. Here, you can
 open the application in your default browser or shut it down again.
 
 image:Pictures/10000201000002490000008B40781F820877441E.png[image,width=580,height=135]
 
-* If you prefer the command line, you may enter this command there
-instead:
+* If you prefer the *command line*, you may enter this command there
+instead of the last point:
 +
 $ java -jar inception-app-standalone-0.10.0.jar
 +
 In this case, no splash screen will start. Just enter
 http://localhost:8080/[_http://localhost:8080_] in you browser.
 * The first time you start the application, a default user with the
-username „admin“ and the password „admin“ is created. Use this username
+*username „admin“* and the *password „admin“* is created. Use this username
 and password to log in to the application after opening it in your
-vrowser
-* In case you are interested in more installation details, see the Admin
-Guide. You find it on our website, among the tabs on top: →
-_Documentation_,
-https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ Admin Guide.
+browser.
+* In case you are interested in more installation details, see the 
+https://inception-project.github.io/documentation/[Admin
+Guide] (upper half→ Admin Guide).
 
-First Steps with INCEpTION
+
+==== First Annotations with INCEpTION
+
 
 In this section, we will make first annotations and therefore use an
-already existing annotation project (so called „example project“). We
-will not go into theory and background. In case you want to learn first
-how INCEpTION is built genereally, we recommend reading the section
-„Anatomy of an annotation project“ first.
+already existing annotation projec, a so called „example project“. We
+will not go into theory and background here but go straight ahead. In case you want to understand about the structure of a project first, we recommend reading the section <<Anatomy of an annotation project>> first.
+
+
 
 *Download an example project for your first annotations*
 
 We created some annotation projects as examples of how to annotate with
-INCEpTION. You find them in the section „Example Projects“ on our
-website. The tab on the very top leads you to the following page:
-https://inception-project.github.io/example-projects/ .
+{product-name}. You find them in the section https://inception-project.github.io/example-projects/[Example Projects] on our
+website.
 
 image:Pictures/10000201000002E0000000C72F4B75B5F9EAE8D0.png[image,width=636,height=128]
 
 * To follow this Guide, please *download* the _Interactive Concept
-Linking_ project. It constists of two documents about pets which contain
-already some annotations as an example. It has originally been created
-to show an example for concept linking (annotating if something is a
-Person (PER), Organization (ORG), Location (LOC) or something else
-(other: OTH)) but in every project, you can create any kinds of
-annotations.
+Linking_ project. It constists of two documents about pets. The first one contain
+some annotations as an example, the second one is meant to be your playground. It has originally been created to show an example for concept linking but in every project, you can create any kinds of annotations.
+ 
+NOTE: *Concept Linking* is the kind of annotation telling whether the annotated text part refers to a
+Person ( in {product-name}, this is per default done as PER), Organization (ORG), Location (LOC) or something else
+(other: OTH)
 
 image:Pictures/100002010000045200000212EF2BD2132E62C7BC.png[image,width=643,height=295]
 
 * In order to *import our example project*, after logging into
-INCEpTION, click on the blue folder on the top right (next to „Import
+{product-name}, click on the blue folder on the top right (next to „Import
 project archives“) and browse for the example project you have
-downloaded before. Finally, click the grey upload-Button right next to
-the blue folder to upload the selected project.
+downloaded before. Finally, click the grey upload button right next to
+the blue folder to upload the selected project. The project has now been added.
 
-Create your first annotations
+*Create your first annotations*
 
-You may want to watch our *tutorial video „Overview“* on how to create
-annotation:
-https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[https://www.youtube.com/watch?]https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s]
-. But this guide, too, will lead you step by step.
+You may want to watch our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[*tutorial video „Overview“*] on how to create
+annotations. But this guide, too, will lead you step by step.
 
-* The project has now been added. Choose it by clicking on its name and
-you will be on the dashboard of this project.
+* After logging in, the first thing you see is the *Project overview*. Here, you can see all the projects which you have access to. Right now, this will only be the example project. 
 
-* You will see several annotations already. If you import projects (or
-also, single documents, as we see in section „anatomy of a project“ →
+NOTE: In this guide, we will use our example project. If you want to *create an own project* later on, click on *create*, enter a name for your project and press *save*. Use the *Projects* link at the top of the screen to return to the project overview and select the project you just created to work with it.
+
+* Choose the example project by clicking on its name and you will be on the dashboard of this project.
+
+NOTE: In case of the example project, here on the dashboard you also find *instructions* how to use it. You may use it instead or in addition to the next steps of this guide.
+
+* In order to annotate, click on *Annotation* on the top left. You will be asked to open the document which you want to annotate. Choose _pets1.tsv_.
+
+NOTE: You will see several annotations already. If you import projects (or
+also, single documents, as we see in section <<Anatomy of an annotation project>> →
 documents) without any annotations, there will be none. But in the
 example projects, we have added some annotations already to show you
 some examples of annotations.
-* To create your first annotation, let‘s start with Part of Speech
-Tagging – since it is a simple kind of annotation and we can make any
-kind of annotation in any project. Select *POS* from the *Layer*
-dropdown on the top right. When you click on a word in the text (e.g.
-„does“, in line 4), an annotation is immediately created and you can
-edit its details in the panels at the right (e.g. choose „VERB“ in the
-PosValue-dropdown to lable it as a verb).
 
-Congratulations! You have created your first annotation!
+* After opening the document, select *Named entity* from the *Layer* dropdown menu on the right side of the screen to create your first annotation. Then, use the mouse to select a word in the *Annotation* area. When you release
+the mouse button, the annotation will immediately be created and you can edit its details in the right
+sidebar.
 
-* Now, let‘s examine the right panel to understand what we have done:
 
-* {blank}
-** You find the field „Layer“ on top and „Annotation“ below. In the
+*Congratulations! You have created your first annotation!*
+
+Now, let‘s examine the right panel to understand what we have done:
+
+
+* You find the field „Layer“ on top and „Annotation“ below. In the
 *Layer*-dropdown, you can choose the layer you want to annotate with as
 we yust did. By the layer, you choose the kind of annotation you make.
 For example, we used the POS (Part of Speech) layer before to annotate
 what is a verb/noun/adjective/… On the
-** You find several default layers like Part Of Speech or Named Entity
+
+NOTE: This is a Box explaining some layers
+
+* You find several default layers like Part Of Speech or Named Entity
 already. You can also adjust them and create own layers in the project
 settings (we will deal with the project settings later on). INCEpTION
 supports span layers (annotating a span in the text, e.g. from the 51th
@@ -241,8 +235,8 @@ their measures and learning behaviours. Note the *Search* (the magnifier
 glass): You can create or delete annotations on all or some of the
 search results.
 * To get familiar with INCEpTION, you may want to follow the
-instructions for your example-project which are on the website where you
-downloaded it or explore INCEpTION yourself, learning by doing.
+instructions for your example-project or explore INCEpTION yourself, learning by doing. You find the instructions on the website where you
+downloaded the project as well as on the dashboard in INCEpTION.
 +
 One way or the other: *Have fun exploring*!
 
@@ -442,75 +436,3 @@ doing!
 
 For advanced ...see [#anchor]####Advanced functionalities[#anchor-1]####
 Corpus building LINK EINFÜGEN
-
-------------------------------------------------------------------------------------------------------------------------
-
-Hier die Struktur, an der ich mich orientiert habe:
-
-X = nicht übernommen
-
-V (Häkchen) = übernommen
-
-? = was meint ihr damit?
-
-* ? Workflow
-* ? Annotation project phases
-
-* V Core functionality
-
-* X Annotation structure/Annotation schema
-** Also describe setup here
-** layer types
-** Write what layers are
-** Span
-** Relation
-** Chain
-* V Features types
-** Write what features are
-** Only core features here
-** For more complex features, write a short description (1-2 sentences)
-and link
-* X Behaviours
-* X Granularity
-
-* V Import/Export
-
-* V Annotation page
-
-* X Action bar
-* ? Open doc
-* ? Annotation detail editor
-* V(X) Sidebars
-** V Search sidebar
-** (V) Recommender sidebar
-
-* V Knowledge bases
-
-* V Curation
-
-* V Monitoring
-
-* X Workload management
-
-* V Quality assurance (Agreement)
-
-* V User management
-
-* X Advanced stuff
-
-* (X) Tagsets
-* X Constraints
-* V Recommenders
-* X Entity and fact linking
-* X Document repository (external search)
-* V Guidelines
-* X+? Cas doctor
-
-* ? Appendices
-
-* X Supported document formats
-* X WebAnno TSV 3.2 file format specification (ggf. in sep Dok
-auslagern)
-* X MTAS syntax
-* X Glossary
-* X Recommender types

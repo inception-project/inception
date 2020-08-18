@@ -111,8 +111,8 @@ function runRoutines() {
 						}
 					});
 					// disable the buttons that should not be clicked during the tutorial
-					if (document.querySelectorAll("[name^='projectArchiveUpload']").length > 0){
-						document.querySelectorAll("[name^='projectArchiveUpload']")[0].disabled = true;
+					if (document.querySelectorAll("[name^='projectImport']").length > 0){
+						document.querySelectorAll("[name^='projectImport']")[0].disabled = true;
 					}
 					document.querySelectorAll("[id^='roleFilterLink']")
 						.forEach(element => element.disabled = true);
@@ -370,7 +370,7 @@ function createFirstPageRoutinePart2() {
 	
 	var a = [
 			{
-				'next .file-input-new' : "Instead of creating a new project, existing projects can also be imported.", 'showSkip': false
+				'next [name=projectImport]' : "Instead of creating a new project, existing projects can also be imported.", 'showSkip': false
 			},
 			{
 				'next .input-group:last' : "You can filter the projects based on your role in them.",

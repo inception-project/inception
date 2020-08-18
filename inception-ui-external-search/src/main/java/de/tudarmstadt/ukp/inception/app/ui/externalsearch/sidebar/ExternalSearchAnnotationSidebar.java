@@ -366,7 +366,7 @@ public class ExternalSearchAnnotationSidebar
 
         applicationEventPublisher.get()
                 .publishEvent(new ExternalSearchQueryEvent(this, currentRepository.getProject(),
-                        userRepository.getCurrentUser().getUsername(), searchState.getQuery()));
+                        userRepository.getCurrentUsername(), searchState.getQuery()));
     }
 
     public class ResultRowView
