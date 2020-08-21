@@ -876,17 +876,9 @@ public class CasStorageServiceImpl
         // upgrade it, then add this info to a mini-session to ensure that write-access is known
         try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
             CAS cas = readUnmanagedCas(access.getKey(), aDocument);
-            Long lastChangedOnDisk = CasMetadataUtils.getLastChanged(cas);
-            Long lastFileChange = getlastFileChange(aDocument, aUser);
             try (CasStorageSession session = CasStorageSession.openNested(true)) {
-                lastChangedOnDisk = CasMetadataUtils.getLastChanged(cas);
-                lastFileChange = getlastFileChange(aDocument, aUser);
                 session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, cas);
-                lastFileChange = getlastFileChange(aDocument, aUser);
-                lastChangedOnDisk = CasMetadataUtils.getLastChanged(cas);
                 schemaService.upgradeCas(cas, aDocument, aUser);
-                lastChangedOnDisk = CasMetadataUtils.getLastChanged(cas);
-                lastFileChange = getlastFileChange(aDocument, aUser);
                 realWriteCas(aDocument, aUser, cas);
             }
         }
@@ -897,16 +889,6 @@ public class CasStorageServiceImpl
             throw new IOException(e);
         }
     }
-    
-    private Long getlastFileChange(SourceDocument aDocument, String aUserName) throws IOException {
-        File annotationFolder = getAnnotationFolder(aDocument);
-
-        final String username = aUserName;
-
-        File casFile = new File(annotationFolder, username + ".ser");
-        return casFile.lastModified();
-    }
-
 
     @Override
     public boolean existsCas(SourceDocument aDocument, String aUser)
