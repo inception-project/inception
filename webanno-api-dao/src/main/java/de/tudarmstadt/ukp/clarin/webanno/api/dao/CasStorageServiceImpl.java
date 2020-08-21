@@ -245,7 +245,6 @@ public class CasStorageServiceImpl
         // DebugUtils.smallStack();
 
         File annotationFolder = getAnnotationFolder(aDocument);
-        FileUtils.forceMkdir(annotationFolder);
 
         final String username = aUserName;
 
@@ -539,7 +538,7 @@ public class CasStorageServiceImpl
         // else if the special bypass mode is requested, then we fetch directly from disk
         else if (UNMANAGED_NON_INITIALIZING_ACCESS.equals(aAccessMode)) {
             casHolder = CasHolder.of(new CasKey(aDocument, aUsername), 
-                () -> readUnmanagedCas(new CasKey(aDocument, aUsername)));
+                () -> readUnmanagedCas(new CasKey(aDocument, aUsername), aDocument));
         }
         else {
             throw new IllegalArgumentException("Unknown CAS access mode [" + aAccessMode + "]");
@@ -623,7 +622,7 @@ public class CasStorageServiceImpl
                     aDocument.getName(), aDocument.getId(), aUsername,
                     aDocument.getProject().getName(), aDocument.getProject().getId());
             
-            cas = readUnmanagedCas(new CasKey(aDocument, aUsername));
+            cas = readUnmanagedCas(new CasKey(aDocument, aUsername), aDocument);
 
             // Opening an isolated mini-session here to permit repairing and upgrading without
             // affecting the actual session.
@@ -679,7 +678,7 @@ public class CasStorageServiceImpl
         return cas;
     }
     
-    private CAS readUnmanagedCas(CasKey aKey)
+    private CAS readUnmanagedCas(CasKey aKey, SourceDocument aDocument)
         throws IOException
     {
         File casFile = getCasFile(aKey.getProjectId(), aKey.getDocumentId(), aKey.getUserId());
@@ -715,6 +714,9 @@ public class CasStorageServiceImpl
         
         try {
             CasPersistenceUtils.readSerializedCas(cas, casFile);
+            // Add/update the CAS metadata
+            CasMetadataUtils.addOrUpdateCasMetadata(cas, casFile, aDocument, 
+                    aKey.getUserId());
         }
         catch (Exception e) {
             throw new IOException("Annotation document of user [" + aKey.getUserId()
@@ -871,11 +873,22 @@ public class CasStorageServiceImpl
         Validate.notBlank(aUser, "User must be specified");
         
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
-        // for its existence
+        // upgrade it, then add this info to a mini-session to ensure that write-access is known
         try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
-            CAS cas = readUnmanagedCas(access.getKey());
-            schemaService.upgradeCas(cas, aDocument, aUser);
-            realWriteCas(aDocument, aUser, cas);
+            CAS cas = readUnmanagedCas(access.getKey(), aDocument);
+            Long lastChangedOnDisk = CasMetadataUtils.getLastChanged(cas);
+            Long lastFileChange = getlastFileChange(aDocument, aUser);
+            try (CasStorageSession session = CasStorageSession.openNested(true)) {
+                lastChangedOnDisk = CasMetadataUtils.getLastChanged(cas);
+                lastFileChange = getlastFileChange(aDocument, aUser);
+                session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, cas);
+                lastFileChange = getlastFileChange(aDocument, aUser);
+                lastChangedOnDisk = CasMetadataUtils.getLastChanged(cas);
+                schemaService.upgradeCas(cas, aDocument, aUser);
+                lastChangedOnDisk = CasMetadataUtils.getLastChanged(cas);
+                lastFileChange = getlastFileChange(aDocument, aUser);
+                realWriteCas(aDocument, aUser, cas);
+            }
         }
         catch (IOException e) {
             throw e;
@@ -883,6 +896,15 @@ public class CasStorageServiceImpl
         catch (Exception e) {
             throw new IOException(e);
         }
+    }
+    
+    private Long getlastFileChange(SourceDocument aDocument, String aUserName) throws IOException {
+        File annotationFolder = getAnnotationFolder(aDocument);
+
+        final String username = aUserName;
+
+        File casFile = new File(annotationFolder, username + ".ser");
+        return casFile.lastModified();
     }
 
 
