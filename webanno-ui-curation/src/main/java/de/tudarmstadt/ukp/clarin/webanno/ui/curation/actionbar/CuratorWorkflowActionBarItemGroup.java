@@ -132,16 +132,9 @@ public class CuratorWorkflowActionBarItemGroup
     protected void actionResetDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)
         throws Exception
     {
-        AnnotatorState state = page.getModelObject();
-        
-        // Remove the current curation CAS
-        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
-                state.getUser().getUsername());
-
-        // Initialize a new one ...
         ((CurationPage) page)
-                .prepareMergeCas(aForm.getModelObject().isMergeIncompleteAnnotations());
-
+                .readOrCreateMergeCas(aForm.getModelObject().isMergeIncompleteAnnotations(), true);
+        
         // ... and load it
         page.actionLoadDocument(aTarget);
 
