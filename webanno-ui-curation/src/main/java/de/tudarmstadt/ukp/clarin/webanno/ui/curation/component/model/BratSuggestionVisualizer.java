@@ -58,8 +58,6 @@ public abstract class BratSuggestionVisualizer
 {
     private static final long serialVersionUID = 6653508018500736430L;
 
-    private static final String PARAM_ACTION = "action";
-
     private AbstractDefaultAjaxBehavior controller;
     
     private @SpringBean ProjectService projectService;

@@ -82,7 +82,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
@@ -135,7 +134,7 @@ public class SuggestionViewPanel
 
     private static final long serialVersionUID = 8736268179612831795L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(SuggestionViewPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(SuggestionViewPanel.class);
 
     private final ListView<UserAnnotationSegment> sentenceListView;
     private final ContextMenu contextMenu;
@@ -603,17 +602,17 @@ public class SuggestionViewPanel
      * @throws AnnotationException
      *             hum?
      */
-    public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCurationContainer,
+    private void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCurationContainer,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             SourceListView aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
+        log.trace("call update");
         AnnotatorState state = aCurationContainer.getState();
         
         if (state.getDocument() == null) {
             return;
         }
-
         
         SourceDocument sourceDocument = state.getDocument();
         Map<String, CAS> casses = new HashMap<>();
@@ -682,10 +681,14 @@ public class SuggestionViewPanel
             }
             catch (IOException e) {
                 error("Unable to render: " + e.getMessage());
-                LOG.error("Unable to render", e);
+                log.error("Unable to render", e);
             }
 
-            requestRender(aTarget, vis);
+            if (isBlank(vis.getDocumentData())) {
+                return;
+            }
+
+            vis.render(aTarget);
         });
     }
 
@@ -838,19 +841,18 @@ public class SuggestionViewPanel
     }
     
     /**
-     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be called
-     * multiple times, even for the same annotation editor, but only resulting in a single rendering
-     * call.
+     * Schedules a update call for this panel via at the end of the given AJAX cycle. 
+     * This method can be called multiple times, even for the same annotation editor, 
+     * but only resulting in a single update and rendering call.
      */
-    private final void requestRender(AjaxRequestTarget aTarget, BratVisualizer aVis)
+    public final void requestUpdate(AjaxRequestTarget aTarget, CurationContainer aCurationContainer,
+            Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
+            SourceListView aCurationSegment)
     {
-        aTarget.registerRespondListener(new AjaxComponentRespondListener(aVis, _target -> {
-            // Is a document loaded?
-            if (isBlank(aVis.getDocumentData())) {
-                return;
-            }
-
-            aVis.render(_target);
+        log.trace("request update");
+        aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
+            updatePanel(_target, aCurationContainer, aAnnotationSelectionByUsernameAndAddress,
+                    aCurationSegment);
         }));
     }
 }

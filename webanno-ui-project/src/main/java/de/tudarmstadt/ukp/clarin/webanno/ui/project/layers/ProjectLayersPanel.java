@@ -171,7 +171,7 @@ public class ProjectLayersPanel
                 
                 // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor
                 // does not actually appear in the input field. However, using JQuery here works.
-                _target.appendJavaScript(WicketUtil.createJsCall("$('#"
+                _target.appendJavaScript(WicketUtil.wrapInTryCatch("$('#"
                         + layerDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();"));
             }));
 
@@ -479,7 +479,7 @@ public class ProjectLayersPanel
             aTarget.add(featureDetailForm);
             // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor does
             // not actually appear in the input field. However, using JQuery here works.
-            aTarget.appendJavaScript(WicketUtil.createJsCall("$('#"
+            aTarget.appendJavaScript(WicketUtil.wrapInTryCatch("$('#"
                     + featureDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();"));
         }
 

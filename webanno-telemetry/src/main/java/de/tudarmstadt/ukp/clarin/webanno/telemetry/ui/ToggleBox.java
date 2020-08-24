@@ -76,7 +76,7 @@ public class ToggleBox
 
     private String coloringScript()
     {
-        return WicketUtil.createJsCall(String.join("\n",
+        return WicketUtil.wrapInTryCatch(String.join("\n",
                 "$('.checkboxx-toggle-button .fa-question').each((idx, item) => "
                 + "$(item).closest('.cbx-container').css('background-color', '#fff3cd'))",
                 "$('.checkboxx-toggle-button .fa-check').each((idx, item) => "

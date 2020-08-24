@@ -813,7 +813,7 @@ public class CurationPage
             if (isEnabledInHierarchy()) {
                 RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(_target -> {
                     for (AjaxEventBehavior b : getBehaviors(AjaxEventBehavior.class)) {
-                        _target.appendJavaScript(WicketUtil.createJsCall(
+                        _target.appendJavaScript(WicketUtil.wrapInTryCatch(
                                 b.getCallbackScript().toString()));
                     }
                 });
@@ -902,7 +902,7 @@ public class CurationPage
         annotationEditor.requestRender(aTarget);
         
         // Render the user annotation segments (lower part)
-        suggestionViewPanel.updatePanel(aTarget, aCC, annotationSelectionByUsernameAndAddress,
+        suggestionViewPanel.requestUpdate(aTarget, aCC, annotationSelectionByUsernameAndAddress,
                 curationView);
         
         // Render the sentence list sidebar

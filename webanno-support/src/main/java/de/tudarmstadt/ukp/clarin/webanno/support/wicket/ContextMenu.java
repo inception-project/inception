@@ -48,7 +48,7 @@ public class ContextMenu
         int clientY = request.getParameterValue("clientY").toInt();
 
         target.add(this);
-        target.appendJavaScript(WicketUtil.createJsCall(String.format(
+        target.appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
                 "jQuery('%s').show().css({position:'fixed', left:'%dpx', top:'%dpx'});",
                 JQueryWidget.getSelector(this), clientX, clientY)));
     }

@@ -435,7 +435,7 @@ public class BratAnnotationEditor
                         getModelObject().getDocument(), anno);
                 // define anonymous function, fill the body and immediately execute
                 String js = String.format("(function ($PARAM){ %s })(%s)",
-                        WicketUtil.createJsCall(layer.getOnClickJavascriptAction()), 
+                        WicketUtil.wrapInTryCatch(layer.getOnClickJavascriptAction()), 
                         JSONUtil.toJsonString(functionParams));
                 aTarget.appendJavaScript(js);
             }

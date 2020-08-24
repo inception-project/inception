@@ -280,7 +280,7 @@ public class LinkFeatureEditor
                     if (target.isPresent()) {
                         LOG.trace("onInitialize() requesting datasource re-reading");
                         target.get()
-                                .appendJavaScript(WicketUtil.createJsCall(String.format(
+                                .appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
                                         "var $w = %s; if ($w) { $w.dataSource.read(); }",
                                         KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
                     }

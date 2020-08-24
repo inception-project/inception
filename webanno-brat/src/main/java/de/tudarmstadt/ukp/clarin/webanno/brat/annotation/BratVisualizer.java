@@ -155,9 +155,10 @@ public abstract class BratVisualizer
     
     private String bratRenderCommand(String aJson)
     {
-        return WicketUtil.createJsCall(
+        String str = WicketUtil.wrapInTryCatch(
                 "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + 
                    aJson + "]);");
+        return str;
     }
 
     public void render(AjaxRequestTarget aTarget)

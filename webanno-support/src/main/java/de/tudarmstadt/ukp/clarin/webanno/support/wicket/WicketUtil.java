@@ -32,13 +32,9 @@ public class WicketUtil
     }
     
     /**
-     * Wraps calls to javascript in try-catch block and logs errors as warnings.
+     * Add call that wraps given script in try-catch block to script text
      */
-    public static String createJsCall(String aJsCall) {
-        return "try{" + "\n" +
-                aJsCall + "\n" +
-                "}catch (e){" + "\n" +
-                "   console.warn('Call terminated due to: ' + e, e.stack);" +
-                "}";
+    public static String wrapInTryCatch(String aJsCall) {
+        return " tryCatch('" + aJsCall.replace("'", "\\'") + "'); ";
     }
 }
