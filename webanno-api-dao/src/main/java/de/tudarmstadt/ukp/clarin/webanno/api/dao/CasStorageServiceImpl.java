@@ -538,7 +538,7 @@ public class CasStorageServiceImpl
         // else if the special bypass mode is requested, then we fetch directly from disk
         else if (UNMANAGED_NON_INITIALIZING_ACCESS.equals(aAccessMode)) {
             casHolder = CasHolder.of(new CasKey(aDocument, aUsername), 
-                () -> readUnmanagedCas(new CasKey(aDocument, aUsername), aDocument));
+                () -> readUnmanagedCas(aDocument, aUsername));
         }
         else {
             throw new IllegalArgumentException("Unknown CAS access mode [" + aAccessMode + "]");
@@ -622,7 +622,7 @@ public class CasStorageServiceImpl
                     aDocument.getName(), aDocument.getId(), aUsername,
                     aDocument.getProject().getName(), aDocument.getProject().getId());
             
-            cas = readUnmanagedCas(new CasKey(aDocument, aUsername), aDocument);
+            cas = readUnmanagedCas(aDocument, aUsername);
 
             // Opening an isolated mini-session here to permit repairing and upgrading without
             // affecting the actual session.
@@ -678,10 +678,10 @@ public class CasStorageServiceImpl
         return cas;
     }
     
-    private CAS readUnmanagedCas(CasKey aKey, SourceDocument aDocument)
+    private CAS readUnmanagedCas(SourceDocument aDocument, String aUser)
         throws IOException
     {
-        File casFile = getCasFile(aKey.getProjectId(), aKey.getDocumentId(), aKey.getUserId());
+        File casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
         File oldCasFile = new File(casFile.getPath() + ".old");
         
         String msgOldExists = "";
@@ -705,24 +705,24 @@ public class CasStorageServiceImpl
         }
         
         if (!casFile.exists()) {
-            throw new FileNotFoundException("Annotation document of user [" + aKey.getUserId()
-                    + "] for source document [" + aKey.getDocumentName() + "] ("
-                    + aKey.getDocumentId() + ") not found in project ["
-                    + aKey.getProjectName() + "] ("
-                    + aKey.getProjectId() + "). " + msgOldExists);
+            throw new FileNotFoundException("Annotation document of user [" + aUser
+                    + "] for source document [" + aDocument.getName() + "] ("
+                    + aDocument.getId() + ") not found in project ["
+                    + aDocument.getProject().getName() + "] ("
+                    + aDocument.getProject().getId() + "). " + msgOldExists);
         }
         
         try {
             CasPersistenceUtils.readSerializedCas(cas, casFile);
             // Add/update the CAS metadata
             CasMetadataUtils.addOrUpdateCasMetadata(cas, casFile, aDocument, 
-                    aKey.getUserId());
+                    aUser);
         }
         catch (Exception e) {
-            throw new IOException("Annotation document of user [" + aKey.getUserId()
-                    + "] for source document [" + aKey.getDocumentName() + "] ("
-                    + aKey.getDocumentId() + ") in project ["
-                    + aKey.getProjectName() + "] (" + aKey.getProjectId()
+            throw new IOException("Annotation document of user [" + aUser
+                    + "] for source document [" + aDocument.getName() + "] ("
+                    + aDocument.getId() + ") in project ["
+                    + aDocument.getProject().getName() + "] (" + aDocument.getProject().getId()
                     + ") cannot be read from file [" + casFile + "]. " + msgOldExists, e);
         }
         
@@ -875,7 +875,7 @@ public class CasStorageServiceImpl
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
         // upgrade it, then add this info to a mini-session to ensure that write-access is known
         try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
-            CAS cas = readUnmanagedCas(access.getKey(), aDocument);
+            CAS cas = readUnmanagedCas(aDocument, aUser);
             try (CasStorageSession session = CasStorageSession.openNested(true)) {
                 session.add(aDocument.getId(), aUser, EXCLUSIVE_WRITE_ACCESS, cas);
                 schemaService.upgradeCas(cas, aDocument, aUser);
