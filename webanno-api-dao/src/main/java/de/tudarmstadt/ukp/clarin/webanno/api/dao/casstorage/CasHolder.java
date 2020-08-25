@@ -31,6 +31,7 @@ public class CasHolder
     private CAS cas;
     private Exception exception;
     private boolean typeSystemOutdated;
+    private boolean deleted;
 
     public CasHolder(CasKey aKey)
     {
@@ -97,6 +98,16 @@ public class CasHolder
         typeSystemOutdated = aTypeSystemOutdated;
     }
 
+    public synchronized  void setDeleted(boolean aDeleted)
+    {
+        deleted = aDeleted;
+    }
+    
+    public synchronized  boolean isDeleted()
+    {
+        return deleted;
+    }
+    
     public static CasHolder of(CasKey aKey, SupplierThrowingException<CAS> aSupplier)
     {
         try {

@@ -577,6 +577,11 @@ public class CasStorageServiceImpl
         }
     }
     
+    /**
+     * Returns a borrowed CAS to the exclusive access pool. This method is not called directly
+     * when a CAS needs to be returned. Rather, it is registered as a "CAS owner" in CAS instances
+     * such that it is called when {@link CAS#release()} is called.
+     */
     private void returnBorrowedCas(AbstractCas cas, CasKey aKey, CasHolder aHolder)
     {
         try {
@@ -734,19 +739,33 @@ public class CasStorageServiceImpl
         throws IOException, CasSessionException
     {
         try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
-            boolean success = new File(getAnnotationFolder(aDocument), aUsername + ".ser").delete();
-            
-            // Drop the CAS from the shared CAS it doesn't ghost around
-            sharedAccessCache.invalidate(new CasKey(aDocument, aUsername));
-            
-            try {
-                exclusiveAccessPool.clear(new CasKey(aDocument, aUsername));
+            boolean fileWasDeleted = new File(getAnnotationFolder(aDocument), aUsername + ".ser")
+                    .delete();
+
+            // Drop the CAS from the shared CAS it doesn't ghost around. Also set the deleted flag
+            // in the holder in case anybody might still be holding on to the holder and needs to 
+            // know that CAS was deleted.
+            CasKey key = new CasKey(aDocument, aUsername);
+            CasHolder sharedCasHolder = sharedAccessCache.getIfPresent(key);
+            if (sharedCasHolder != null) {
+                sharedCasHolder.setDeleted(true);
             }
-            catch (Exception e) {
-                throw new IOException(e);
-            }
-                        
-            return success;
+            sharedAccessCache.invalidate(key);
+
+            // Drop the CAS from the exclusive access pool. This is done my marking it as deleted
+            // and then releasing it (returning it to the pool). Upon return, the deleted flag
+            // causes the CAS to be invalidated and dropped from the pool.
+            exclusiveAccessHolders.stream()
+                .filter(h -> Objects.equals(h.getKey(), key))
+                .forEach(h -> h.setDeleted(true));
+            access.release();
+
+            // Drop the CAS from the current session
+            // This must happen after the call to access.release() because access.release() tries
+            // to fetch the CAS from the session if WithExclusiveAccess did not borrow it itself
+            CasStorageSession.get().remove(aDocument.getId(), aUsername);
+
+            return fileWasDeleted;
         }
     }
     
@@ -939,7 +958,7 @@ public class CasStorageServiceImpl
                 holder = null;
             }
         }
-        
+
         public CasKey getKey()
         {
             return key;
@@ -997,18 +1016,34 @@ public class CasStorageServiceImpl
             return holder;
         }
         
+        /**
+         * Releases the CAS prior to closing the exclusive access context. This is used if the CAS
+         * must be released irrespective of whether it was borrowed by {@link WithExclusiveAccess}
+         * or exclusive access already existed before. Such is the case specifically when the CAS
+         * is deleted.
+         * <p>
+         * <b>NOTE:</b> If this is used, it should be the last action in the {@link 
+         * WithExclusiveAccess} context because as a side effect, it sets clears the internal CAS
+         * holder.
+         */
+        public void release()
+        {
+            if (holder != null) {
+                exclusiveAccessPool.returnObject(key, holder);
+                holder = null;
+            }
+            else {
+                getCas().release();
+            }
+        }
+        
         @Override
         public void close()
         {
             if (holder != null) {
-                try {
-                    log.trace("Returning briefly borrowed CAS [{}]@[{}]({})", username,
-                            documentName, documentId);
-                    exclusiveAccessPool.returnObject(key, holder);
-                }
-                catch (Exception e) {
-                    log.error("Unable to return CAS to exclusive access pool", e);
-                }
+                log.trace("Returning briefly borrowed CAS [{}]@[{}]({})", username,
+                        documentName, documentId);
+                exclusiveAccessPool.returnObject(key, holder);
             }
         }
     }
