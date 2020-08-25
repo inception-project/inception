@@ -11,7 +11,7 @@ https://inception-project.github.io/documentation/[documentation] (upper half→
 
 For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[four tutorial videos] covering an Introduction, an Overview, Recommender Basics and Entity Linking. This guide will also refer to them at the appropriate place.
 
-NOTE: The *Note-boxes* provide further background information necessary for understanding the instructions. They may be skipped for fast reading if background knowledge exists already.
+NOTE: *Note-boxes:* The Note-boxes provide additional information necessary or helpful for understanding the instructions. They may be skipped for fast reading if background knowledge exists already and/or for quick checkups on basic concepts.
 
 
 
@@ -23,7 +23,7 @@ Also see our https://www.youtube.com/watch?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIo
 first impression on what {product-name} is.
 
 
-* **{product-name} is a text-annotation enviroment **useful for various kinds
+* *{product-name} is a text-annotation enviroment *useful for various kinds
 of annotation projects. It is a web application in which several users
 can work on the same project and it can hold several annotation projects
 at a time. The core functionality is annotating written
@@ -34,17 +34,11 @@ have been annotated as person (PER), location (LOC), organization (ORG)
 or other (OTH). These aspects are annotated on the so called annotation layer
 Named Entity. We will go more into what layers are later on. INSERT LINK
 
-* *What‘s more on {product-name}* beyond annotating written text is that it combines three key features in
-one plattform: First, creating a corpus to be annotated (*Corpus Creation*);
-second, annotating the corpus and merging annotations made by several annotators
+* *What‘s more on {product-name}* beyond annotating written text is that it combines three key features in one plattform: First, creating a corpus to be annotated (*Corpus Creation*); second, annotating the corpus and merging annotations made by several annotators
 (*Annotation, Curation*), and third, managing the knowledge used for annotating
 (*Knowledge Bases*). You may want to do one, two or all three steps with
 {product-name}. Also, it is extendable and adoptable to individual
-requrements in all of these three areas. For example: You may
-integrate a knowledgebase of your choice; create and modify your own
-knowledge base; create and modify own layers and tagsets for annotation;
-build own so called „recommenders“ which automatically suggest annotations to you so you will
-work quicker and easier; .…
+requrements in all of these three areas. In most cases, {product-name} does not only provide predefined knowledge bases, tagsets and layers (these terms will be explained in this guide), but you can modify them or create your own from the scrach. For example: You may integrate a knowledgebase of your choice; create and modify your own knowledge base; create and modify own layers and tagsets for annotation; build own so called „recommenders“ which automatically suggest annotations to you so you will work quicker and easier; and much more.
 +
 This guide focuses on enabeling you to annotate. For details on any
 other topic, see our https://inception-project.github.io/documentation/[main documentation] (upper half→ User Guide).
@@ -66,7 +60,7 @@ Our main documentation consists of three parts:
 * If you only use {product-name} and do not develop, this *User
 Guide* is the one of your choice. If it does not answer your questions, don't hesitate to contact us (see above). 
 
-NOTE:  Whenever you find a *blue questionmark*-sign in {product-name}, you may click on it to find further explanation in this User Guide.
+NOTE: *User Guide-Shortcut:* Whenever you find a *blue questionmark*-sign in {product-name}, you may click on it to find further explanation in this User Guide.
 
 * For more installation details, see the https://inception-project.github.io/documentation/[Admin Guide] (upper half→ *Admin Guide*).
 * If you also develop, the https://inception-project.github.io/documentation/[Developer Guide] (upper half→ *Developer Guide*) might be interesting for you.
@@ -89,14 +83,13 @@ https://github.com/inception-project/inception/releases/download/inception-app-0
 That is, until the name of the downloaded folder ends on „.jar“, not on
 „.jar.part“ anymore.
 
-NOTE: We recommend *working on the latest version* always since we
-constantly add new features, improve usability and fix bugs. After
+NOTE: *Working on the Latest Version:* We recommend working on the latest version always since we constantly add new features, improve usability and fix bugs. After
 downloading the latest Version, your previous work will not be lost: In
 the new version, you will find all your projects and documents like
 before. Check the website, subscribe to github notifications or the
 google group to to be notified when new versions are released.
 
-NOTE: If double-clicking the JAR file does not start {product-name}, you might need to first *make the file executable*.
+NOTE: *If {product-name} Does Not Start:* If double-clicking the JAR file does not start {product-name}, you might need to first make the file executable. DO a right-click on the JAR file and navigate throught the settings and permissions.
 
 
 * Now, simply *double-click* on the downloaded .jar-file. After a
@@ -133,20 +126,9 @@ In this section, we will have a look on the structure of every {product-name} pr
 
 ==== Structure Of An Annotation Project
 In order to work with your own projects, you might want to understand
-the anatomy of an {product-name} project. You may have different projects in {product-name} at the same time. Here is what each project _has_: Each one consist of
+the anatomy of an {product-name} project. You may have different projects in {product-name} at the same time. First, let‘s see what you can _do_ in each project. Next, we will find out what parts each project _consits of_ and last, we examine the settings where you will find these parts.
 
-* one or more *documents* to annotate
-* one or (usually) more *Users* to work on the project
-* *Layers* to annotate with
-* Optional: one or more *Knowledge Base/s*
-* Optional: *Recomenders* to automatically suggest annotations
-* Optional: *Guidelines* for your team
-
-You find all of these in the *<<Project Settings>>* which will be explaned in
-the next part.
-
-
-Now let‘s see what you can _do_ in each project: Click on the dashboard button on the top. As a Project Manager (see <<User Rights:>>), you see all of the following sub pages. For details on each
+Click on the dashboard button on the top. As a Project Manager (see <<User Rights:>>), you see all of the following sub pages. For details on each
 section, check the main documentation
 (https://inception-project.github.io/documentation/[User Guide], upper half→ User Guide).
 
@@ -169,14 +151,14 @@ accepted already) and the annotations of each of the users below.
 Differences are highlighted. You can accept an annotation by clicking on
 it. You can also create new annotations.
 
-NOTE: If several annotators work on a project, their annotations usually do not match perfectly. The decision which annotations to finally keep is called *Curation*.
+NOTE: *Curation:* If several annotators work on a project, their annotations usually do not match perfectly. The process which annotations to finally keep is called *Curation*.
 
 * *Knowledge Base*: On this sub page, you can manage and create your
 knowledge bases for this project. You can create new ones from the
 scratch, modify existing ones and integrate remote or local knowledge
-bases into your project.
+bases into your project. Note that this knowledge base page is distinct from the tab of the same name in the project settings (see <<Project Settings>> -> Knowledge Base).
 
-NOTE: *Knowledge Bases* are a data bases for knowledge. A typical example for annotation tasks is, if "Paris" is annotated, there are many different Parises - persons, places and more - so a reference to the correct Paris-entry in the knowledge base will be set in order to annotate which Paris is meant.
+NOTE: *Knowledge Bases* are a data bases for knowledge. A typical example for annotation task is, if e.g. "Paris" is to be annotated, there are many different Parises - persons, places and more - so by annotating, a reference to the correct Paris-entry in the knowledge base will be set in order to tell which Paris is meant. +
 There are knowledge bases on the web which can be used with {prodct-name} like e.g. WikiData. One can also create own, new knowledge bases and use them in {product-name}.
 
 * *Monitoring:* Here you can check the overall progress of your
@@ -188,27 +170,41 @@ for each user, you can toggle the status of each document between
 *_Note:_* Only documents *marked as finished* by annotators (clicking on the
 little lock on the annotation page) are taken into account.
 
-NOTE: The annotations of different annotators usually do not match perfectly. This difference / similarity is called *Agreement*. Different measures for agreement like precision, recall and F1 are common and provided in {product-name}.
+NOTE: *Agreement:* The annotations of different annotators usually do not match perfectly. This aspect of difference / similarity is called *Agreement*. Different measures for agreement like precision, recall and F1 are common and provided in {product-name}.
 
 * *Evaluation*: The evaluation page shows a learning courve diagram of
 each recommender (see <<Project Settings>> -> Recommender).
 
-* *Settings*: Here, you can organize, manage and adjust all the details of your project. We will have a look not on all but those you need to get started for your own projects. For a quick overview on the settings, you might want to watch our tutorial video https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[Overview].
+* *Settings*: Here, you can organize, manage and adjust all the details of your project. We will have a look not on all but only on those you need to get started for your own projects. +
+
+This was the overview on what you can do in each project.
+Here is what each project _consists of_:
+
+* one or (usually) more *Documents* to annotate
+* one or (usually) more *Users* to work on the project
+* one or (usually) more *Layers* to annotate with
+* Optional: one or more *Knowledge Base/s*
+* Optional: *Recomenders* to automatically suggest annotations
+* Optional: *Guidelines* for your team
+
+You find all of these, and more, in the *<<Project Settings>>* which will be explaned right now.
 
 ==== Project Settings
+For a quick overview on the settings, you might want to watch our tutorial video https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[Overview].
 As for all topics of the Getting Started Guide, you will find more details on the *Settings* in the
 https://inception-project.github.io/documentation/[User Guide]
-, upper half→ User Guide. The Settings provide different tabs:
+, upper half→ User Guide. +
+The Settings provide different tabs:
 
 * In the section *Documents*, you may upload your files to be
 annotated. Make sure that the format selected (see the dropdown on the
 right) is the same as the file.
 
-NOTE: For details on the different formats, {product-name} provides for importing and exporting single documents as well as whole projects, you may check our 
+NOTE: *Formats:* For details on the different *formats*, {product-name} provides for importing and exporting single documents as well as whole projects, you may check our 
 (https://inception-project.github.io/documentation/[main documentation], upper half → User Guide.
 
 * In the section *Users*, you may add users to your project and change
-their rights in this project. You can only add users here from
+their rights within this project. You can only add users here from
 the dropdown (left) which exist already in your {product-name} instance.
 
 ** In order to *add new users* to your _{product-name} instance_ so they can be chosen from this dropdown _for a project_,
@@ -221,7 +217,7 @@ from roles and count for this project only) on the right side. Any
 combination is possible and the user will always have _all_ rights
 combined.
 
-NOTE: In some cases, we have to distinguish between the *{product-name} instance* we are working in and the *project(s)* it contains. Like here, a user may be added to the {product-name} instance but not to a certain project. Or she may have different rights in several projects.
+NOTE: *{product-name} Instance vs. Project:* In some cases, we have to distinguish between the *{product-name} instance* we are working in and the *project(s)* it contains. Like here, a user may be added to the {product-name} instance but not to a certain project. Or she may have different rights in several projects.
 
 ===== User Rights:
 
@@ -248,56 +244,71 @@ NOTE: In some cases, we have to distinguish between the *{product-name} instance
 - open documents like an other user sees it (read only) |- All pages
 |===
 
-* In the section **Layers, **you may modify existing layers to use for
-your annotation and create own layers. In case you do not want to work
-on default layers only but have your own idea on how and what to annotate, we highly recommend reading the
+* In the section *Layers*, you may modify existing layers to use for
+your annotations and also create own layers. In case you do not want to work
+on default layers only but wish to have layers designed for your individual task, we recommend reading the
 https://inception-project.github.io/documentation/[main documentation], upper half→ User Guide.
 
-NOTE: There are different "aspects" or "categories" you might want to annotate. For example, once, you might want to annotate all the places and persons in a text and link them to a knowledge base entry (Named Enity). In another case, you might want to annotate which words are verbs, nouns, adjectives, prepositions and so on (Part of Speech). These "aspects"/"categories" are realized in so called *layers* in {product-name} like in many other annotation tools. Each layer provides appropriate fields to enter as what to annotate the selected text part.
+NOTE: *Layers and Features:* There are different "aspects" or "categories" you might want to annotate. For example, once, you might want to annotate all the places and persons in a text and link them to a knowledge base entry (this way of annotation is called _Named Entity_). In another case, you might want to annotate which words are verbs, nouns, adjectives, prepositions and so on (called _Part of Speech_). What we called "aspects", "categories" or "ways to annotate" here, is referred to as *layers* in {product-name} as in many other annotation tools, too. + 
+Each layer provides appropriate fields, so called *features* to enter a lable as what to annotate the selected text part. For example, on the _Named Entity_ layer in product-name}, you find the feature-field _value_ to enter what kind of entity it is (LOCation, PERson, ORGanization, OTHer) and _identifier_ to enter, which exact entity (which must be in the knowledge base) it is.
 
-* In the section **Knowledge Base, **you can change the settings for the
+* Behind the tab *Tagsets*, you can modify and create the tagsets for your layers. Tagsets are always bound to a layer, or more precisely to a certain feature of a layer.
+** In order to *create a new tagset*, click on the blue create button on top. Enter a name for and - not technically necessary but highly recommended to make the work between different users of one project earsier - a speking descriprion for the tagset. Check or uncheck "Annotators may add new tags" as you prefer. Now, click on the blue save-button.
+** In order to *fill your tagset with tags*, first choose the set from the list on the left. Then, click on the blue create-button on top of the "Tags"-panel at the bottom. A new panel called "Tag Details" opens right beside. Enter a name and description ans click the save-button. The tag has now been added to your set.
+** In order to use the tagset, it is necessary to *link it to a layer and feature*. Herefore, click on the *Layers*-tab and select the layer of your choice from the list at the left. Two new panels open: "Layer Details" and "Features". We focus on the second one. Choose the feature your tagset is made for. The panel "Feature details" opens. In this panel, scroll down to "Tagsets" and chose your tagset from the dropdown.
+** For more details on Tagsets, see the https://inception-project.github.io/documentation/[main documentation], upper half→ User Guide.
+
+*Attention: Tagsets can be changed and deleted. But the annotations they have been used for will remain.*
+
+
+NOTE: *Tagsets:* In order the annotations all to have consistent labels, it is preferrable to use defined tags which can be given to the annotations. Users then are not tempted to enter the lable as free text which would lead to varying spelling. A set of those defindes tags is called a tagset. It is so to say a collection of lables which can be used for an annotation. {product-name} comes with predefined tagsets out of the box but as many times before, you can modify them and create your own as well.
+
+
+NOTE: *Saving:* Some steps, like annotations, are saved automatically in {product-name}. Others need to be saved manually. Whenever there is a blue *save*-button, it is necessary to click it to save the work.
+
+
+NOTE: *Feature Types:* The feature type defines what kind of information the feature can be, for example "Primitive: Integer" for whole numbers, "Primitive: Float" for decimals; "Primitive: Boolean" for a true/false lable only; the most common one "Primitive: String" for text lables or "KB: Concept/Instance/Property" if the feature shall be able to link to a knowledge base. There are more types for features but these are the most important ones. +
+Changing the type does only work for your own features, not for default features. In order to do so, scroll in the "Feature Details" panel until you see the field "Type" and select the type of your choice.
+If a tagset shall be linked to a feature, they must have the same type.
+For details, see the section on layers and features in the https://inception-project.github.io/documentation/[main documentation], upper half→ User Guide.
+
+
+* In the section *Knowledge Base*, you can change the settings for the
 knowledge bases used in your project, you can import local and remote
-knowledgebases into your project and you can create an own empty knowledge base. The latter will be empty at first. It can be filled at the knowledge base page ( -> _Dashboard_, -> _Knowledge base_), not here in the settings. In order to do import or create a knowledge base, just click the „create“-button and follow the wizzard according to your demands.
-** Note that you can have several knowledge bases in your INCEpTION
+knowledgebases into your project and you can create an own knowledge base. The latter will be empty at first. It can be filled at the knowledge base page ( -> _Dashboard_, -> _Knowledge base_, also see <<Structure Of An Annotation Project>> -> Knowledge Base), not here in the settings. In order to import or create a knowledge base, just click the „create“-button and follow the wizzard according to your demands.
+
+** *Note* that you can have several knowledge bases in your INCEpTION
 instance but you can choose for every project which one(s) to use. Using
 many knowledge bases in one project will slow down the performance.
-** Via the *Dashboard* (click the Dashboard-button at the top centre),
-you can get to the knowledge base page. This is a page different from
+** Via the Dashboard (click the Dashboard-button at the top centre),
+you can get to the *knowledge base page*. This is a page different from
 the one in the project settings where you can modify and work on your
 knowledge bases.
-** For details on knowledge bases, see our main documentation
-(https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ User Guide) or our tutorial video „Overview“ which also
-talks about knowledge bases quickly:
-https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s..
-If you like to explore a knowledge base learning by doing, you may
-download and import the example project _Interactive Concept Linking_:
-https://inception-project.github.io/example-projects/concept-linking/
-which contains a small knowledge base.
-* In the section **Recommenders, **you can create and modify your
-recommenders. They learn from your behaviour and give automatic
-suggestions for creating annotations. For details on this topic to broad
-for a getting-started-guide, see our main documentation
-(https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ User Guide) or our tutorial video „Recommender Basics“:
-https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3
-.
 
-* In the *Guidelines* section, you may import files with annotation guidelines files for your
-team to read and to check quickly while working. On the annotation page
+** *For details* on knowledge bases, see our
+https://inception-project.github.io/documentation/[main documentation], upper half→ User Guide or our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s../[tutorial video „Overview“] which also
+talks about knowledge bases quickly.
+If you like to explore a knowledge base learning by doing, you may
+download and import the example project
+https://inception-project.github.io/example-projects/concept-linking/[_Interactive Concept Linking_] which contains a small knowledge base and which we use in section <<First Annotations with {product-name}>>, too.
+
+* In the section *Recommenders*, you can create and modify your
+recommenders. They learn from what the user annotates and gives suggestions. For details on this topic to broad for a getting-started-guide, see our 
+https://inception-project.github.io/documentation/[ main documentation]
+, upper half→ User Guide or our https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3/[tutorial video „Recommender Basics“].
+
+* In the *Guidelines* section, you may import files with guideline files. There is no automatic correction or warning from {product-name} but it is a short way for every user in the project to read and check them while working. On the annotation page
 (→ _dashboard_ → _annotation_ → open any document), annotators can quickly
 look them up by clicking on the guidelines button on the top (it looks
 like a book).
 
-* In the **Export
-**section, you can export your project partially or wholly. Projects
+* In the *Export* section, you can export your project partially or wholly. Projects
 which have been exported can be imported again in INCEpTION the way we
-did before with the example project: at the start page with the *Import* button. We recommend
-exporting projects on a regular basis in order to have a backup. For the
+do with our example project in section <<First Annotations with {product-name}>>: at the start page with the *Import* button. We recommend exporting projects on a regular basis in order to have a backup. For the
 different formats, their strengths and weaknesses, check our 
-(https://inception-project.github.io/documentation/[main documentation], upper half → User Guide. We recommend using WebAnno TSV x.x (where
+https://inception-project.github.io/documentation/[main documentation], upper half → User Guide. We recommend using WebAnno TSV x.x (where
 x.x. is the highest number available, e.g. 3.2) whenever possible. Since
-it has been created specially for this application, it ill provide all
+it has been created specially for this application, it will provide all
 features required best. However, many other formats are provided.
 
 
@@ -306,7 +317,7 @@ features required best. However, many other formats are provided.
 
 In this section, we will make first annotations and therefore use an
 already existing annotation projec, a so called „example project“. We
-will not go into theory and background here but go straight ahead. In case you want to understand about the structure of a project, we recommend reading the section <<Structure Of An Annotation Project>> first.
+will not go into theory and background here but go straight ahead annotating. In case you want to understand about the structure of a project, we recommend reading the section <<Structure Of An Annotation Project>> first.
 
 
 
@@ -319,12 +330,12 @@ website.
 image:Pictures/10000201000002E0000000C72F4B75B5F9EAE8D0.png[image,width=636,height=128]
 
 * To follow this Guide, please *download* the _Interactive Concept
-Linking_ project. It constists of two documents about pets. The first one contain
-some annotations as an example, the second one is meant to be your playground. It has originally been created to show an example for concept linking but in every project, you can create any kinds of annotations.
+Linking_ project. It constists of two documents about pets. The first one contains some annotations as an example, the second one is meant to be your playground. It has originally been created for concept linking annotation but in every project, you can create any kinds of annotations.
  
-NOTE: *Concept Linking* is the kind of annotation telling whether the annotated text part refers to a
+NOTE: *Concept Linking:* This is the kind of annotation telling whether the annotated text part refers to a
 Person ( in {product-name}, this is per default done as PER), Organization (ORG), Location (LOC) or something else
-(other: OTH)
+(other: OTH). +
+The respective layer to annotate this aspect is the _Named Entity_ layer. If you are not sure what layers are, check the box on _Layers And Features_ in the section <<Project Settings>>.
 
 image:Pictures/100002010000045200000212EF2BD2132E62C7BC.png[image,width=643,height=295]
 
@@ -341,37 +352,33 @@ annotations. But this guide, too, will lead you step by step.
 
 * After logging in, the first thing you see is the *Project overview*. Here, you can see all the projects which you have access to. Right now, this will only be the example project. 
 
-NOTE: In this guide, we will use our example project. If you want to *create an own project* later on, click on *create*, enter a name for your project and press *save*. Use the *Projects* link at the top of the screen to return to the project overview and select the project you just created to work with it.
+NOTE: *Creating an Own Project:* In this guide, we will use our example project. If you would like to create an own project, click on *create*, enter a project name and click on *save*. Use the *Projects* link at the top of the screen to return to the project overview and select the project you just created to work with it.
 
 * Choose the example project by clicking on its name and you will be on the dashboard of this project.
 
-NOTE: In case of the example project, here on the dashboard you also find *instructions* how to use it. You may use it instead or in addition to the next steps of this guide.
+NOTE: *Instructions to Example Projects:* In case of the example project, here on the dashboard you also find instructions how to use it. This goes for our other example projects, too. You may use it instead or in addition to the next steps of this guide.
 
-* In order to annotate, click on *Annotation* on the top left. You will be asked to open the document which you want to annotate. Choose _pets1.tsv_.
+* In order to annotate, click on *Annotation* on the top left. You will be asked to open the document which you want to annotate. For this guide, choose _pets1.tsv_.
 
-NOTE: You will see several annotations already. If you import projects (or
-also, single documents, as we see in section <<Anatomy of an annotation project>> →
-documents) without any annotations, there will be none. But in the
-example projects, we have added some annotations already to show you
-some examples of annotations.
+NOTE: *Annotations in Newly Imported Projects:* In the example project, you will see several annotations already. If you import projects or
+also, single documents (see <<Project Settings>> →
+Documents) without any annotations, there will be none. But in the
+example projects, we have added some annotations already as examples. If you export a project (see  <<Project Settings>> →
+Export) and import it again (as we just did with the example project), there will be the same annotations as before.
 
 * After opening the document, select *Named entity* from the *Layer* dropdown menu on the right side of the screen to create your first annotation. Then, use the mouse to select a word in the *Annotation* area. When you release
-the mouse button, the annotation will immediately be created and you can edit its details in the right
-sidebar.
+the mouse button, the annotation will immediately be created and you can edit its details in the right sidebar. All annotations will be saved automatically without clicking on a extra save-button (which is why there is none).
 
 
 *Congratulations! You have created your first annotation!*
 
-Now, let‘s examine the right panel to understand what we have done:
 
+Now, let‘s examine the right panel to understand what we have done:
 
 * You find the field „Layer“ on top and „Annotation“ below. In the
 *Layer*-dropdown, you can choose the layer you want to annotate with as
-we yust did. By the layer, you choose the kind of annotation you make.
-For example, we used the POS (Part of Speech) layer before to annotate
-what is a verb/noun/adjective/… On the
-
-NOTE: This is a Box explaining some layers
+we just did. By the layer, you choose the kind of annotation you make.
+If you are not sure what layers are, check the box on _Layers And Features_ in the section <<Project Settings>>.
 
 * You find several default layers like Part Of Speech or Named Entity
 already. You can also adjust them and create own layers in the project
