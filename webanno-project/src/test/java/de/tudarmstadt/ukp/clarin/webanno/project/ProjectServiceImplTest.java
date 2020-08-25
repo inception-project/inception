@@ -52,6 +52,7 @@ public class ProjectServiceImplTest
     private TestEntityManager testEntityManager;
         
     private Project testProject;
+    private Project testProject2;
     private User beate;
     private User kevin;
     
@@ -74,6 +75,12 @@ public class ProjectServiceImplTest
         testEntityManager.persist(new ProjectPermission(testProject, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "kevin", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "beate", CURATOR));
+        
+        //create additional project and projectPermissions for users
+        testProject2 = new Project("testProject2");
+        testEntityManager.persist(testProject2);
+        testEntityManager.persist(new ProjectPermission(testProject2, "beate", ANNOTATOR));
+        testEntityManager.persist(new ProjectPermission(testProject2, "beate", CURATOR));
     }
     
     @After
@@ -94,39 +101,51 @@ public class ProjectServiceImplTest
     }
     
     @Test
+    public void listProjectsForAgreement_ShouldReturnOneProject()
+    {
+        List<Project> foundProjects = sut.listProjectsForAgreement();
+        
+        assertThat(foundProjects).containsExactly(testProject);
+    }
+    
+    @Test
     public void listProjectUsersWithPermissions_ShouldReturnUsers() {
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject);
         
         assertThat(foundUsers).containsExactly(beate, kevin);
     }
-    
+
     @Test
-    public void listProjectUsersWithSpecificPermissions_ShouldReturnUsers() {
+    public void listProjectUsersWithSpecificPermissions_ShouldReturnUsers()
+    {
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
-        
+
         assertThat(foundUsers).containsExactly(beate, kevin);
     }
-    
+
     @Test
-    public void listProjectUsersWithSpecificPermissions_ShouldReturnAUser() {
+    public void listProjectUsersWithSpecificPermissions_ShouldReturnAUser()
+    {
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, CURATOR);
-        
+
         assertThat(foundUsers).containsExactly(beate);
     }
-    
+
     @Test
-    public void listProjectUsersWithSpecificPermissions_ShouldReturnNoUsers() {
+    public void listProjectUsersWithSpecificPermissions_ShouldReturnNoUsers()
+    {
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, MANAGER);
-        
+
         assertThat(foundUsers).isEmpty();
     }
-    
+
     @Test
-    public void listProjectUsersWithPermissionButNoTableEntry_ShouldNotReturnThisUser() {
+    public void listProjectUsersWithPermissionButNoTableEntry_ShouldNotReturnThisUser()
+    {
         testEntityManager.persist(new ProjectPermission(testProject, "ghost", ANNOTATOR));
-        
+
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
-        
+
         assertThat(foundUsers).containsExactly(beate, kevin);
     }
 }
