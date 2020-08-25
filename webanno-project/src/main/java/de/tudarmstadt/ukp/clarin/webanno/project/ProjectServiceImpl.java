@@ -1013,4 +1013,37 @@ public class ProjectServiceImpl
             }
         }
     }
+
+    @Override
+    public List<Project> listProjectsForAgreement()
+    {
+        String query = 
+                "SELECT DISTINCT p FROM Project p, ProjectPermission pp " +
+                "WHERE pp.project = p.id " +
+                "AND pp.level = :annotator " + 
+                "GROUP BY p.id HAVING count(*) > 1 " +
+                "ORDER BY p.name ASC";
+        List<Project> projects = entityManager
+                .createQuery(query, Project.class)
+                .setParameter("annotator", PermissionLevel.ANNOTATOR)
+                .getResultList();
+        return projects;
+    }
+
+    @Override
+    public List<Project> listManageableCuratableProjects(User aUser)
+    {
+        String query = 
+                "SELECT DISTINCT p FROM Project p, ProjectPermission pp " +
+                "WHERE pp.project = p.id " +
+                "AND pp.user = :username AND (pp.level = :curator OR pp.level = :manager)" +
+                "ORDER BY p.name ASC";
+        List<Project> projects = entityManager
+                .createQuery(query, Project.class)
+                .setParameter("username", aUser.getUsername())
+                .setParameter("curator", PermissionLevel.CURATOR)
+                .setParameter("manager", PermissionLevel.MANAGER)
+                .getResultList();
+        return projects;
+    }
 }

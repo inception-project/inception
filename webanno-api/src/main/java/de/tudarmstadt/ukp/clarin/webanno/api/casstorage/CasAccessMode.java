@@ -56,6 +56,17 @@ public enum CasAccessMode
      */
     UNMANAGED_NON_INITIALIZING_ACCESS;
     
+    public boolean isSessionManaged()
+    {
+        switch (this) {
+        case UNMANAGED_ACCESS: // fall-through
+        case UNMANAGED_NON_INITIALIZING_ACCESS:
+            return false;
+        default:
+            return true;
+        }
+    }
+    
     public boolean alsoPermits(CasAccessMode aOtherMode)
     {
         switch (this) {
