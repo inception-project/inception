@@ -831,13 +831,10 @@ public class CurationPage
                 CAS cas = curationDocumentService.readCurationCas(state.getDocument());
                 updateCurationView(curationContainer, curationViewItem, aTarget,
                         cas);
-                updatePanel(aTarget, curationContainer);
+//                updatePanel(aTarget, curationContainer);
                 state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
             }
-            catch (UIMAException e) {
-                error("Error: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-            catch (ClassNotFoundException | AnnotationException | IOException e) {
+            catch (IOException e) {
                 error("Error: " + e.getMessage());
             }
         }

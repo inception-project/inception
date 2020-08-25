@@ -40,10 +40,10 @@ $(document)
     });
 
 //wrap given script in try-catch block
-function tryCatch(scriptStr){
+function tryCatch(jsCall){
 	try{
-		new Function('"use strict"; ' + scriptStr)();
+		jsCall();
 	}catch (e){
-		console.warn('Call terminated due to: ' + e, e.stack);
+		console.warn('Call terminated due to: ' + e + ' script was:\n' + jsCall + '\n', e.stack);
 	}
 }
