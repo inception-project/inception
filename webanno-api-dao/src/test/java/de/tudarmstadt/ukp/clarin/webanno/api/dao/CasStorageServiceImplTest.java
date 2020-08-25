@@ -126,10 +126,11 @@ public class CasStorageServiceImplTest
     @Test
     public void testReadOrCreateCas() throws Exception
     {
+        // Setup fixture
         SourceDocument doc = makeSourceDocument(2l, 2l);
         String user = "test";
         
-        JCas cas = sut.readOrCreateCas(doc, user, NO_CAS_UPGRADE, () -> {
+        JCas casTemplate = sut.readOrCreateCas(doc, user, NO_CAS_UPGRADE, () -> {
             try {
                 return JCasFactory.createText("This is a test").getCas();
             }
@@ -140,8 +141,9 @@ public class CasStorageServiceImplTest
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
         
-        JCas cas2 = sut.readCas(doc, user).getJCas();
-        assertThat(cas2.getDocumentText()).isEqualTo(cas.getDocumentText());
+        // Actual test
+        JCas cas = sut.readCas(doc, user).getJCas();
+        assertThat(cas.getDocumentText()).isEqualTo(casTemplate.getDocumentText());
         
         sut.deleteCas(doc, user);
         assertThat(sut.getCasFile(doc, user)).doesNotExist();
