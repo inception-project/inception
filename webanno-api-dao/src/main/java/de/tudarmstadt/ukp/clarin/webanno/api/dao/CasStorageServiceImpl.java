@@ -734,38 +734,37 @@ public class CasStorageServiceImpl
         throws IOException, CasSessionException
     {
         try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUsername)) {
-            boolean success = new File(getAnnotationFolder(aDocument), aUsername + ".ser").delete();
+            boolean fileWasDeleted = new File(getAnnotationFolder(aDocument), aUsername + ".ser")
+                    .delete();
             
             // Drop the CAS from the shared CAS it doesn't ghost around
             CasKey key = new CasKey(aDocument, aUsername);
             sharedAccessCache.invalidate(key);
             
             try {
-                exclusiveAccessPool.clear(key);
-                
                 Long docId = aDocument.getId();
                 CasStorageSession session = CasStorageSession.get();
                 Optional<SessionManagedCas> managedCas = session.getManagedState(docId, aUsername);
+                
                 if (!managedCas.isPresent()) {
-                    return success;
+                    return fileWasDeleted;
                 }
 
                 CasHolder holder = managedCas.get().getCasHolder();
-                if (holder == null) {
-                    return success;
+                if (holder != null) {
+                    holder.setDeleted(true);
+                    access.setCas(null);
                 }
-                
-                // remove from pool
-                exclusiveAccessPool.invalidateObject(key, holder);
-                access.setCas(null);                
-                // remove from session
+
+                managedCas.get().getCas().release();
+
                 session.remove(docId, aUsername);
             }
             catch (Exception e) {
                 throw new IOException(e);
             }
-                        
-            return success;
+
+            return fileWasDeleted;
         }
     }
     

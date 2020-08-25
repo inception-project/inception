@@ -78,24 +78,24 @@ public class CasStorageServiceImplTest
     @Test
     public void testWriteReadExistsDeleteCas() throws Exception
     {
+        // Setup fixture
         SourceDocument doc = makeSourceDocument(1l, 1l);
-        JCas cas = JCasFactory.createText("This is a test");
-        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas.getCas());
+        JCas templateCas = JCasFactory.createText("This is a test");
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, templateCas.getCas());
         String user = "test";
         
-        sut.writeCas(doc, cas.getCas(), user);
+        sut.writeCas(doc, templateCas.getCas(), user);
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
         
-        CAS cas2 = sut.readCas(doc, user);
-        assertThat(cas2.getDocumentText()).isEqualTo(cas.getDocumentText());
+        // Actual test
+        CAS cas = sut.readCas(doc, user);
+        assertThat(cas.getDocumentText()).isEqualTo(templateCas.getDocumentText());
         
         sut.deleteCas(doc, user);
         assertThat(sut.getCasFile(doc, user)).doesNotExist();
         assertThat(sut.existsCas(doc, user)).isFalse();
-        
-        // check that cas is no longer in the active session
-        assertThat(casStorageSession.contains(cas.getCas())).isFalse();
+        assertThat(casStorageSession.contains(cas)).isFalse();
     }
     
     @Test
