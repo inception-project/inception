@@ -286,7 +286,18 @@ public interface ProjectService
      * @return list of projects manageable by the user.
      */
     List<Project> listManageableProjects(User aUser);
-
+    
+    /**
+     * List projects in which the given user is curator or manager
+     *
+     * @return list of projects manageable by the user.
+     */
+    List<Project> listManageableCuratableProjects(User aUser);
+    
+    /**
+     * List projects that allow calculation of pairwise agreement
+     */
+    List<Project> listProjectsForAgreement();
 
     /**
      * Export the associated project log for this {@link Project} while copying a project

@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.storage;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -29,13 +28,9 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
@@ -43,19 +38,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(CurationDocumentService.SERVICE_NAME)
 public class CurationDocumentServiceImpl
     implements CurationDocumentService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private @Autowired CasStorageService casStorageService;
     private @Autowired AnnotationSchemaService annotationService;
 
@@ -65,25 +56,6 @@ public class CurationDocumentServiceImpl
     public CurationDocumentServiceImpl()
     {
         // Nothing to do
-    }
-
-    @Override
-    public void removeCurationDocumentContent(SourceDocument aSourceDocument, String aUsername)
-        throws IOException
-    {
-        if (new File(casStorageService.getAnnotationFolder(aSourceDocument),
-                WebAnnoConst.CURATION_USER + ".ser").exists()) {
-            FileUtils.forceDelete(new File(casStorageService.getAnnotationFolder(aSourceDocument),
-                    WebAnnoConst.CURATION_USER + ".ser"));
-
-            try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                    String.valueOf(aSourceDocument.getProject().getId()))) {
-                Project project = aSourceDocument.getProject();
-                log.info("Removed curation of source document [{}]({}) from project [{}]({})",
-                        aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
-                        project.getId());
-            }
-        }
     }
 
     @Override

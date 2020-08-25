@@ -67,19 +67,6 @@ public interface CurationDocumentService
 
     void deleteCurationCas(SourceDocument document)
             throws IOException;
-
-    /**
-     * Remove a curation annotation document from the file system, for this {@link SourceDocument}
-     *
-     * @param sourceDocument
-     *            the source document.
-     * @param username
-     *            the username.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void removeCurationDocumentContent(SourceDocument sourceDocument, String username)
-        throws IOException;
     
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 

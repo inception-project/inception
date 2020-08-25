@@ -565,7 +565,7 @@ public class CurationPage
                 currentprojectId = state.getProject().getId();
             }
             
-            CAS mergeCas = prepareMergeCas(false);
+            CAS mergeCas = readOrCreateMergeCas(false, false);
     
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
@@ -599,13 +599,14 @@ public class CurationPage
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }
     
-    public CAS prepareMergeCas(boolean aMergeIncompleteAnnotations)
+    public CAS readOrCreateMergeCas(boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         AnnotatorState state = getModelObject();
         
         List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
         
+        // FIXME: This is slow and should be done via a proper SQL query
         for (AnnotationDocument annotationDocument : documentService
                 .listAnnotationDocuments(state.getDocument())) {
             if (annotationDocument.getState().equals(FINISHED)) {
@@ -629,20 +630,14 @@ public class CurationPage
         }
 
         AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
-
-        // upgrade CASes for each user, what if new type is added once the user finished
-        // annotation
-        for (AnnotationDocument ad : finishedAnnotationDocuments) {
-            upgradeCasAndSave(ad.getDocument(), ad.getUser());
-        }
         
         SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
                 correctionDocumentService, curationDocumentService, annotationService,
                 userRepository);
         Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
-                randomAnnotationDocument, state.getMode());
+                state.getMode());
         CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses,
-                randomAnnotationDocument, true, aMergeIncompleteAnnotations);
+                randomAnnotationDocument, true, aMergeIncompleteAnnotations, aForceRecreateCas);
         return mergeCas;
     }
 
