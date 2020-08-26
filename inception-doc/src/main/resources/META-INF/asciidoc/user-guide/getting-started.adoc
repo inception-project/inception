@@ -11,7 +11,7 @@ https://inception-project.github.io/documentation/[documentation] (upper half→
 
 For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[four tutorial videos] covering an Introduction, an Overview, Recommender Basics and Entity Linking. This guide will also refer to them at the appropriate place.
 
-NOTE: *Note-boxes:* The Note-boxes provide additional information necessary or helpful for understanding the instructions. They may be skipped for fast reading if background knowledge exists already and/or for quick checkups on basic concepts.
+NOTE: *Note-boxes:* In this Getting-Started-Part, the Note-boxes provide additional information. They may be skipped for fast reading if background knowledge exists already and/or later on for quick checkups on basic concepts.
 
 
 
@@ -19,29 +19,25 @@ NOTE: *Note-boxes:* The Note-boxes provide additional information necessary or h
 
 === What can {product-name} be used for?
 
-Also see our https://www.youtube.com/watch?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&time_continue=135&v=Ely8eBKqiSI&feature=emb_logo)[introduction video] for a
-first impression on what {product-name} is.
+Also see our https://www.youtube.com/watch?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&time_continue=135&v=Ely8eBKqiSI&feature=emb_logo)[introduction video] for a first impression on what {product-name} is.
 
 
-* *{product-name} is a text-annotation enviroment *useful for various kinds
+{product-name} is a *text-annotation enviroment* useful for various kinds
 of annotation projects. It is a web application in which several users
 can work on the same project and it can hold several annotation projects
 at a time. The core functionality is annotating written
 text. Annotations can be used both for linguistic and machine learning
-concerns. image:Pictures/10000201000002B300000214EA8A80D173D21C1E.png[image,width=567,height=436]
-In the following picture, you see an example where so called entities
-have been annotated as person (PER), location (LOC), organization (ORG)
-or other (OTH). These aspects are annotated on the so called annotation layer
-Named Entity. We will go more into what layers are later on. INSERT LINK
+concerns.
+In the following picture, you see an example for some annotations. Here, so called entities have been annotated as whether they are a person (PER), location (LOC), organization (ORG) or other (OTH). These aspects are annotated on the so called annotation layer Named Entity. We will go more into what layers are in section <<Project Settings>>.image:getting_started_example_for_annotations.png[image,width=567,height=436]
 
-* *What‘s more on {product-name}* beyond annotating written text is that it combines three key features in one plattform: First, creating a corpus to be annotated (*Corpus Creation*); second, annotating the corpus and merging annotations made by several annotators
+What‘s more on {product-name} beyond annotating written text is that it combines three key features in one plattform: First, creating a corpus to be annotated (*Corpus Creation*); second, annotating the corpus and merging annotations made by several annotators
 (*Annotation, Curation*), and third, managing the knowledge used for annotating
 (*Knowledge Bases*). You may want to do one, two or all three steps with
 {product-name}. Also, it is extendable and adoptable to individual
-requrements in all of these three areas. In most cases, {product-name} does not only provide predefined knowledge bases, tagsets and layers (these terms will be explained in this guide), but you can modify them or create your own from the scrach. For example: You may integrate a knowledgebase of your choice; create and modify your own knowledge base; create and modify own layers and tagsets for annotation; build own so called „recommenders“ which automatically suggest annotations to you so you will work quicker and easier; and much more.
-+
+requrements in all of these three areas. Often, {product-name} provides predefined details (e.g. knowledge bases, layers  and tagsets; see the note-boxes in section <<Project Settings>>) to give you a starting point, but you can modify them or create your own from the scrach. For example: You may integrate a knowledgebase of your choice; create and modify your own knowledge base; create and modify own layers and tagsets to annotate your individual task; build own so called „recommenders“ which automatically suggest annotations to you so you will work quicker and easier; and much more.
+
 This guide focuses on enabeling you to annotate. For details on any
-other topic, see our https://inception-project.github.io/documentation/[main documentation] (upper half→ User Guide).
+other topic like Corpus Creation or the like, see our https://inception-project.github.io/documentation/[main documentation] (upper half→ User Guide).
 
 === Contact Us And Tell Us What You Need
 
@@ -96,12 +92,12 @@ NOTE: *If {product-name} Does Not Start:* If double-clicking the JAR file does n
 moment, a splash screen will display while the application is
 initializing.
 
-image:Pictures/100002010000042B0000022048C4B1144148DA3D.png[image,width=575,height=290]
+image:getting_started_starting_the_jar_I.png[image,width=575,height=290]
 
 Once the initialization is complete, a dialog appears. Here, you can
 open the application in your default browser or shut it down again.
 
-image:Pictures/10000201000002490000008B40781F820877441E.png[image,width=580,height=135]
+image:getting_started_starting_the_jar_II.png[image,width=580,height=135]
 
 * If you prefer the *command line*, you may enter this command there
 instead of the last point:
@@ -119,12 +115,12 @@ https://inception-project.github.io/documentation/[Admin
 Guide] (upper half→ Admin Guide).
 
 
+For more installation details, see the https://inception-project.github.io/documentation/[Admin Guide] (upper half→ *Admin Guide*).
 
-
-=== Structure Of An Annotation Project and Settings
+== Structure Of An Annotation Project and Settings
 In this section, we will have a look on the structure of every {product-name} project. If you prefer to annotate right away, you may skip this section for now and go on with <<First Annotations with {product-name}>>. This section here gives you a basic orientation in {product-name}.
 
-==== Structure Of An Annotation Project
+=== Structure Of An Annotation Project
 In order to work with your own projects, you might want to understand
 the anatomy of an {product-name} project. You may have different projects in {product-name} at the same time. First, let‘s see what you can _do_ in each project. Next, we will find out what parts each project _consits of_ and last, we examine the settings where you will find these parts.
 
@@ -189,7 +185,7 @@ Here is what each project _consists of_:
 
 You find all of these, and more, in the *<<Project Settings>>* which will be explaned right now.
 
-==== Project Settings
+=== Project Settings
 For a quick overview on the settings, you might want to watch our tutorial video https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[Overview].
 As for all topics of the Getting Started Guide, you will find more details on the *Settings* in the
 https://inception-project.github.io/documentation/[User Guide]
@@ -250,7 +246,12 @@ on default layers only but wish to have layers designed for your individual task
 https://inception-project.github.io/documentation/[main documentation], upper half→ User Guide.
 
 NOTE: *Layers and Features:* There are different "aspects" or "categories" you might want to annotate. For example, once, you might want to annotate all the places and persons in a text and link them to a knowledge base entry (this way of annotation is called _Named Entity_). In another case, you might want to annotate which words are verbs, nouns, adjectives, prepositions and so on (called _Part of Speech_). What we called "aspects", "categories" or "ways to annotate" here, is referred to as *layers* in {product-name} as in many other annotation tools, too. + 
-Each layer provides appropriate fields, so called *features* to enter a lable as what to annotate the selected text part. For example, on the _Named Entity_ layer in product-name}, you find the feature-field _value_ to enter what kind of entity it is (LOCation, PERson, ORGanization, OTHer) and _identifier_ to enter, which exact entity (which must be in the knowledge base) it is.
+{product-name} supports *span layers* in order to annotate a span from one character („letter“) in the text to another, *relation layers*
+in order to annotate the relation between two span annotations and *chain layers* which are normally used to annotate coreferences, that is, to show that different words or phrases refer to the same person or object. The annotation of a relation layer always anchors on both span annotations. A span layer annotation always anchors in one span only and chains anchor on all spans which are part of the chain. For span layers, the default is to always annotate one or more tokens („words“) but you can adjust to character level or sentence level. +
+Each layer provides appropriate fields, so called *features* to enter a lable as what to annotate the selected text part. For example, on the _Named Entity_ layer in product-name}, you find the feature-field _value_ to enter what kind of entity it is (LOCation, PERson, ORGanization, OTHer) and _identifier_ to enter, which exact entity (which must be in the knowledge base) it is. +
+{product-name} provides default layers and features to give you a starting point. Default layers cannot be deleted as selfmade layers can. However, new features can be added.
+See the https://inception-project.github.io/documentation/[main documentation], upper half→ User Guide for details on layers, features, the different types of layers and features and how to adjust them for your individual task.
+ +
 
 * Behind the tab *Tagsets*, you can modify and create the tagsets for your layers. Tagsets are always bound to a layer, or more precisely to a certain feature of a layer.
 ** In order to *create a new tagset*, click on the blue create button on top. Enter a name for and - not technically necessary but highly recommended to make the work between different users of one project earsier - a speking descriprion for the tagset. Check or uncheck "Annotators may add new tags" as you prefer. Now, click on the blue save-button.
@@ -261,7 +262,7 @@ Each layer provides appropriate fields, so called *features* to enter a lable as
 *Attention: Tagsets can be changed and deleted. But the annotations they have been used for will remain.*
 
 
-NOTE: *Tagsets:* In order the annotations all to have consistent labels, it is preferrable to use defined tags which can be given to the annotations. Users then are not tempted to enter the lable as free text which would lead to varying spelling. A set of those defindes tags is called a tagset. It is so to say a collection of lables which can be used for an annotation. {product-name} comes with predefined tagsets out of the box but as many times before, you can modify them and create your own as well.
+NOTE: *Tagsets:* In order the annotations all to have consistent labels, it is preferrable to use defined tags which can be given to the annotations. Users then are not tempted to enter the lable as free text which would lead to varying spelling. A set of those defindes tags is called a tagset. It is so to say a collection of lables which can be used for an annotation. {product-name} comes with predefined tagsets out of the box but as many times before. They serve a a suggestion and starting point and you can modify them or create your own as well. Other than the defalut layers, default taggsets can also be deleted.
 
 
 NOTE: *Saving:* Some steps, like annotations, are saved automatically in {product-name}. Others need to be saved manually. Whenever there is a blue *save*-button, it is necessary to click it to save the work.
@@ -312,7 +313,7 @@ it has been created specially for this application, it will provide all
 features required best. However, many other formats are provided.
 
 
-==== First Annotations with {product-name}
+== First Annotations with {product-name}
 
 
 In this section, we will make first annotations and therefore use an
@@ -327,7 +328,7 @@ We created some annotation projects as examples of how to annotate with
 {product-name}. You find them in the section https://inception-project.github.io/example-projects/[Example Projects] on our
 website.
 
-image:Pictures/10000201000002E0000000C72F4B75B5F9EAE8D0.png[image,width=636,height=128]
+image:getting_started_download_example_project.png[image,width=636,height=128]
 
 * To follow this Guide, please *download* the _Interactive Concept
 Linking_ project. It constists of two documents about pets. The first one contains some annotations as an example, the second one is meant to be your playground. It has originally been created for concept linking annotation but in every project, you can create any kinds of annotations.
@@ -336,8 +337,6 @@ NOTE: *Concept Linking:* This is the kind of annotation telling whether the anno
 Person ( in {product-name}, this is per default done as PER), Organization (ORG), Location (LOC) or something else
 (other: OTH). +
 The respective layer to annotate this aspect is the _Named Entity_ layer. If you are not sure what layers are, check the box on _Layers And Features_ in the section <<Project Settings>>.
-
-image:Pictures/100002010000045200000212EF2BD2132E62C7BC.png[image,width=643,height=295]
 
 * In order to *import our example project*, after logging into
 {product-name}, click on the blue folder on the top right (next to „Import
@@ -356,7 +355,10 @@ NOTE: *Creating an Own Project:* In this guide, we will use our example project.
 
 * Choose the example project by clicking on its name and you will be on the dashboard of this project.
 
-NOTE: *Instructions to Example Projects:* In case of the example project, here on the dashboard you also find instructions how to use it. This goes for our other example projects, too. You may use it instead or in addition to the next steps of this guide.
+image:getting_started_open_a_project.png[image,width=758,height=179]
+
+
+NOTE: *Instructions to Example Projects:* In case of the example project, on the dashboard you also find instructions how to use it. This goes for our other example projects, too. You may use it instead or in addition to the next steps of this guide.
 
 * In order to annotate, click on *Annotation* on the top left. You will be asked to open the document which you want to annotate. For this guide, choose _pets1.tsv_.
 
@@ -367,91 +369,45 @@ example projects, we have added some annotations already as examples. If you exp
 Export) and import it again (as we just did with the example project), there will be the same annotations as before.
 
 * After opening the document, select *Named entity* from the *Layer* dropdown menu on the right side of the screen to create your first annotation. Then, use the mouse to select a word in the *Annotation* area. When you release
-the mouse button, the annotation will immediately be created and you can edit its details in the right sidebar. All annotations will be saved automatically without clicking on a extra save-button (which is why there is none).
+the mouse button, the annotation will immediately be created and you can edit its details in the right sidebar (see next paragraph).
+
+* All annotations will be saved automatically without clicking on a extra save-button (which is why there is none).
 
 
 *Congratulations! You have created your first annotation!*
 
 
-Now, let‘s examine the right panel to understand what we have done:
+Now, let‘s examine the right panel to understand what we have done. You find the panel Layer on top and Annotation below.
 
-* You find the field „Layer“ on top and „Annotation“ below. In the
-*Layer*-dropdown, you can choose the layer you want to annotate with as
-we just did. By the layer, you choose the kind of annotation you make.
-If you are not sure what layers are, check the box on _Layers And Features_ in the section <<Project Settings>>.
+In the *Layer*-dropdown, you can choose the layer you want to annotate with as
+we just did. If you are not sure what layers are, check the box on _Layers And Features_ in the section <<Project Settings>>. In order to learn how to adjust and create them for your purpose, see the https://inception-project.github.io/documentation/[main documentation]
+, upper half→ User Guide.
 
-* You find several default layers like Part Of Speech or Named Entity
-already. You can also adjust them and create own layers in the project
-settings (we will deal with the project settings later on). INCEpTION
-supports span layers (annotating a span in the text, e.g. from the 51th
-character („letter“) in the text to the 55th) and relation layers
-(annotating two span annotations). For span layers, the default is to
-always annotate one or more tokens („words“) but you can adjust to
-character level or sentence level. For more details, see the main
-documentation (
-https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ User Guide).
-** In the field *Annotation* below, you see the details of a selected
-annotation. It shows the layer the annotation is made on (field „layer“)
-and what has been annotated (field „text“). Below, you can see and
-modify what has been entered for each of the so called *Features*. Each
-layer has different features. E.g. on the Part of Speech-layer, the
-PosValue-feature tells if the token is a noun/verb/adjective/… See the
-main documentation for the different feature types and how to adjust
-features for your individual task
-(https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ User Guide).
-+
+
+In the *Annotation* panel, you see the details of a selected
+annotation. It shows the layer the annotation is made in (field „layer“)
+and what part of the text has been annotated (field „text“). Below, you can see and modify what has been entered for each of the so called *Features*. If you are not sure what features are, check the box on _Layers And Features_ in the section <<Project Settings>>. +
 You may enter free text here or work with *Tagsets* to have a well
-defined set of values to enter. You can modify and create tagsets in the
-project settings (section „Tagsets“) which we will deal with later. See
-our main documentation on how to create and modify tagsets
-(https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ User Guide).
-* In the **Annotation Sidebar **at the left (it folds out when clicking
-on the little arrow on top) there are several features you might want to
-check the main documentation for
-(https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ User Guide). Especially the *Recommender* section (the
-black speech bubble) is worth a look if you use recommenders
-(recommenders will be explained later on in this guide). E.g. you find
+defined set of lables to enter so all of the users within one project will use the same lables. You can modify and create tagsets in the
+project settings. See section <<Project Settings>> -> Tagsets and the https://inception-project.github.io/documentation/[main documentation], upper half → User Guide.
+
+In the *Annotation Sidebar* at the left (it folds out when clicking
+on the little arrow on top) INSERT IMAGE there are several features you might want to
+check the https://inception-project.github.io/documentation/[main documentation] for, upper half→ User Guide. Especially the *Recommender* section (the black speech bubble) in the sidebar is worth a look if you use recommenders
+(see <<Project Settings>> -> Recommenders). E.g. you find
 their measures and learning behaviours. Note the *Search* (the magnifier
 glass): You can create or delete annotations on all or some of the
 search results.
-* To get familiar with INCEpTION, you may want to follow the
-instructions for your example-project or explore INCEpTION yourself, learning by doing. You find the instructions on the website where you
-downloaded the project as well as on the dashboard in INCEpTION.
-+
+
+To get familiar with {product-name}, you may want to follow the
+instructions for other example-projects, read the https://inception-project.github.io/documentation/[main documentation] or explore {product-name} yourself, learning by doing.
+
 One way or the other: *Have fun exploring*!
 
-ERGÄNZE Tagsets:
+== Thank You
+We hope this guide helped you with your first steps on {product-name} and it
+gave you a general idea of how it works. For further reading, we recommend the https://inception-project.github.io/documentation/[main documentation], upper half → User Guide with detailed information on every theme discussed here as well as for further reading.
 
-INCEpTION comes with many different built-in layers and annotation
-schemes. You can explore these in the Project settings under Layer and
-Tagset.
+Do not hestitate to contact us if you still struggle or have any questions. We
+wish you success and fun with your projects and you are welcome to let us know how you are working on! 
 
- +
-ich würd vorschlagen den leser drauf hinzuweisen dass er eigene tagsets
-anlegen kann und auch soll
-
-es gibt built-in layer - die kann man auch nicht löschen
-
-es gibt keine built-in tagsets in dem sinne dass man sie nicht löschen
-kann
-
-aber es gibt "default" tagsets - die halt per default angelegt werden
-damit der benutzer einen startpunkt hat
-
-
-
-We hope this guide helped you with your first steps on INCEpTION and it
-gave you a general idea of hiw INCEpTION works. As mentioned before, our
-main documentation
-(https://inception-project.github.io/documentation/[https://inception-]https://inception-project.github.io/documentation/[project.github.io/documentation/]
-, upper half→ User Guide) provides deep information on every issue.
-Do not hestitate to contact us if you struggle or have any questions. We
-wish you success and fun with your projects. Let us know how you are
-doing!
-
-For advanced ...see [#anchor]####Advanced functionalities[#anchor-1]####
-Corpus building LINK EINFÜGEN
