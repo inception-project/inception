@@ -35,7 +35,7 @@ public class SessionManagedCas
     private final CasAccessMode mode;
     private final CAS cas;
     private final CasHolder casHolder;
-    
+
     private int readCount;
     private int writeCount;
 
@@ -64,6 +64,11 @@ public class SessionManagedCas
         mode = aMode;
         cas = null;
         casHolder = aCasHolder;
+    }
+    
+    public CasHolder getCasHolder()
+    {
+        return casHolder;
     }
     
     public long getSourceDocumentId()
