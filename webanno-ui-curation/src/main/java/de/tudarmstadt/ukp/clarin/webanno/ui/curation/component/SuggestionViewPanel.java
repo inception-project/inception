@@ -134,7 +134,7 @@ public class SuggestionViewPanel
 
     private static final long serialVersionUID = 8736268179612831795L;
 
-    private static final Logger log = LoggerFactory.getLogger(SuggestionViewPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SuggestionViewPanel.class);
 
     private final ListView<UserAnnotationSegment> sentenceListView;
     private final ContextMenu contextMenu;
@@ -607,7 +607,7 @@ public class SuggestionViewPanel
             SourceListView aCurationSegment)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        log.trace("call update");
+        LOG.trace("call update");
         AnnotatorState state = aCurationContainer.getState();
         
         if (state.getDocument() == null) {
@@ -681,7 +681,7 @@ public class SuggestionViewPanel
             }
             catch (IOException e) {
                 error("Unable to render: " + e.getMessage());
-                log.error("Unable to render", e);
+                LOG.error("Unable to render", e);
             }
 
             if (isBlank(vis.getDocumentData())) {
@@ -849,7 +849,7 @@ public class SuggestionViewPanel
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             SourceListView aCurationSegment)
     {
-        log.trace("request update");
+        LOG.trace("request update");
         aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
             updatePanel(_target, aCurationContainer, aAnnotationSelectionByUsernameAndAddress,
                     aCurationSegment);
