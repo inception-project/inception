@@ -117,7 +117,7 @@ public interface CasStorageService
         throws IOException, CasSessionException;
 
     /**
-     * Delete a CAS from the storage.
+     * Delete a CAS from the storage and also remove it from the active session.
      * 
      * @param aDocument
      *            the document to delete the CAS for.

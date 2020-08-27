@@ -78,21 +78,24 @@ public class CasStorageServiceImplTest
     @Test
     public void testWriteReadExistsDeleteCas() throws Exception
     {
+        // Setup fixture
         SourceDocument doc = makeSourceDocument(1l, 1l);
-        JCas cas = JCasFactory.createText("This is a test");
-        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas.getCas());
+        JCas templateCas = JCasFactory.createText("This is a test");
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, templateCas.getCas());
         String user = "test";
         
-        sut.writeCas(doc, cas.getCas(), user);
+        sut.writeCas(doc, templateCas.getCas(), user);
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
         
-        CAS cas2 = sut.readCas(doc, user);
-        assertThat(cas2.getDocumentText()).isEqualTo(cas.getDocumentText());
+        // Actual test
+        CAS cas = sut.readCas(doc, user);
+        assertThat(cas.getDocumentText()).isEqualTo(templateCas.getDocumentText());
         
         sut.deleteCas(doc, user);
         assertThat(sut.getCasFile(doc, user)).doesNotExist();
         assertThat(sut.existsCas(doc, user)).isFalse();
+        assertThat(casStorageSession.contains(cas)).isFalse();
     }
     
     @Test
@@ -123,10 +126,11 @@ public class CasStorageServiceImplTest
     @Test
     public void testReadOrCreateCas() throws Exception
     {
+        // Setup fixture
         SourceDocument doc = makeSourceDocument(2l, 2l);
         String user = "test";
         
-        JCas cas = sut.readOrCreateCas(doc, user, NO_CAS_UPGRADE, () -> {
+        JCas casTemplate = sut.readOrCreateCas(doc, user, NO_CAS_UPGRADE, () -> {
             try {
                 return JCasFactory.createText("This is a test").getCas();
             }
@@ -137,8 +141,9 @@ public class CasStorageServiceImplTest
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
         
-        JCas cas2 = sut.readCas(doc, user).getJCas();
-        assertThat(cas2.getDocumentText()).isEqualTo(cas.getDocumentText());
+        // Actual test
+        JCas cas = sut.readCas(doc, user).getJCas();
+        assertThat(cas.getDocumentText()).isEqualTo(casTemplate.getDocumentText());
         
         sut.deleteCas(doc, user);
         assertThat(sut.getCasFile(doc, user)).doesNotExist();

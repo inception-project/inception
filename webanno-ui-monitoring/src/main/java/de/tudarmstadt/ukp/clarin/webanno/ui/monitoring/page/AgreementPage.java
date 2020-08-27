@@ -349,18 +349,12 @@ public class AgreementPage
         
         private List<Project> listAllowedProjects()
         {
-            List<Project> allowedProject = new ArrayList<>();
-
             User user = userRepository.getCurrentUser();
 
-            List<Project> allProjects = projectService.listProjects();
-            for (Project project : allProjects) {
-                if (projectService.isManager(project, user)
-                        || projectService.isCurator(project, user)) {
-                    allowedProject.add(project);
-                }
-            }
-            return allowedProject;
+            List<Project> userProjects = projectService.listManageableCuratableProjects(user);
+            List<Project> allowedProjects = projectService.listProjectsForAgreement();
+            allowedProjects.retainAll(userProjects);
+            return allowedProjects;
         }
     }
 

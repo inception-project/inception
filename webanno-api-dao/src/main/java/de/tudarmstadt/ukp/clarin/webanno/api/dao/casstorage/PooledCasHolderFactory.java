@@ -39,6 +39,6 @@ public class PooledCasHolderFactory
     @Override
     public boolean validateObject(CasKey aKey, PooledObject<CasHolder> aP)
     {
-        return !aP.getObject().isTypeSystemOutdated();
+        return !aP.getObject().isTypeSystemOutdated() && !aP.getObject().isDeleted();
     }
 }
