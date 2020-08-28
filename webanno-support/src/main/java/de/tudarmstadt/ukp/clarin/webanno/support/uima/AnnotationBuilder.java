@@ -16,6 +16,9 @@
  * limitations under the License.
  */package de.tudarmstadt.ukp.clarin.webanno.support.uima;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -35,7 +38,16 @@ public class AnnotationBuilder<T extends AnnotationFS> extends FeatureStructureB
         withFeature(CAS.FEATURE_BASE_NAME_END, aEnd);
         return this;
     }
-    
+
+    public AnnotationBuilder<T> on(String aPattern)
+    {
+        Matcher m = Pattern.compile(aPattern).matcher(getCas().getDocumentText());
+        if (m.matches()) {
+            at(m.start(), m.end());
+        }
+        return this;
+    }
+
     public static <X extends Annotation> AnnotationBuilder<X> buildAnnotation(CAS aCas,
             Class<X> aType)
     {

@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
 import static de.tudarmstadt.ukp.clarin.webanno.constraints.parser.ConstraintsParser.parseFile;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder.buildAnnotation;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.FeatureStructureBuilder.buildFS;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -50,6 +52,39 @@ public class ComplexTypeTest
 
         cas = CasCreationUtils.createCas(tsd, null, null);
         sut = new ValuesGenerator();
+    }
+    
+    @Test
+    public void thatSlotFeatureInConditionWorks()
+            throws Exception
+    {
+        cas.setDocumentText("ACME acquired Foobar.");
+        
+        AnnotationFS host = buildAnnotation(cas, "webanno.custom.ComplexLinkHost")
+            .on("acquired")
+            .withFeature("links", asList(
+                    buildFS(cas, "webanno.custom.ComplexLinkType")
+                        .withFeature("target", buildAnnotation(cas, "webanno.custom.Span")
+                                .on("ACME")
+                                .withFeature("value", "PER")
+                                .buildAndAddToIndexes())
+                        .buildWithoutAddingToIndexes(),
+                    buildFS(cas, "webanno.custom.ComplexLinkType")
+                        .withFeature("target", buildAnnotation(cas, "webanno.custom.Span")
+                                .on("Foobar")
+                                .withFeature("value", "LOC")
+                                .buildAndAddToIndexes())
+                        .buildWithoutAddingToIndexes()))
+            .buildAndAddToIndexes();
+        
+        ParsedConstraints constraints = parseFile(
+                "src/test/resources/rules/slot_feature_in_condition.rules");
+
+        List<PossibleValue> possibleValues = sut.generatePossibleValues(host, "value",
+                constraints);
+
+        assertThat(possibleValues)
+                .containsExactly(new PossibleValue("move", false));
     }
     
     @Test

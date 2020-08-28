@@ -125,4 +125,9 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
     {
         return new FeatureStructureBuilder<FeatureStructure>(aCas, CasUtil.getType(aCas, aType));
     }
+    
+    public CAS getCas()
+    {
+        return cas;
+    }
 }
