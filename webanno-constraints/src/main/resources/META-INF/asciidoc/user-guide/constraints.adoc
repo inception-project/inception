@@ -139,7 +139,7 @@ comments may span across multiple lines.
 === Example
 
 The following simple example of a constraints file re-orders POS tags depending on Lemma values.
-If the Lemma was annotated as *ask*, the POS tags *VERB* and *NOUN* are highlighted. If the Lemma value is
+If the Lemma was annotated as *can*, the POS tags *VERB* and *NOUN* are highlighted. If the Lemma value is
 *the*, the POS tag *DET* is suggested first.
 
 [source,text]
@@ -148,7 +148,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as Pos;
 
 Pos {
-  @Lemma.value = "ask" ->
+  @Lemma.value = "can" ->
     coarseValue = "VERB" |
     coarseValue = "NOUN";
 
