@@ -15,30 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.config;
+package de.tudarmstadt.ukp.inception.workload.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workload.WorkloadPageMenuItem;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImplBase;
+import de.tudarmstadt.ukp.inception.workload.settings.ProjectWorkloadSettingsPanelFactory;
 
 @Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",
-    matchIfMissing = true)
-public class DynamicWorkloadManagerAutoConfiguration
+public class WorkloadManagerAutoConfiguration
 {
+    private @PersistenceContext EntityManager entityManager;
+
     @Bean
-    public WorkloadPageMenuItem workloadPageMenuItem()
+    public WorkloadManagementService workloadManagementService()
     {
-        return new WorkloadPageMenuItem();
+        return new WorkloadManagementServiceImplBase(entityManager);
     }
 
     @Bean
-    public DynamicWorkloadExtension dynamicWorkloadExtension()
+    public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory()
     {
-        return new DynamicWorkloadExtension();
+        return new ProjectWorkloadSettingsPanelFactory();
     }
-
 }

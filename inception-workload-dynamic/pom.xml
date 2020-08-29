@@ -23,7 +23,7 @@
         <version>0.17.0-SNAPSHOT</version>
     </parent>
     <artifactId>inception-workload-dynamic</artifactId>
-    <name>INCEpTION - Workload-dynamic - UI</name>
+    <name>INCEpTION - Workload-dynamic</name>
     <dependencies>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -73,10 +73,6 @@
         <artifactId>spring-context</artifactId>
       </dependency>
       <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-tx</artifactId>
-      </dependency>
-      <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-extensions</artifactId>
       </dependency>
@@ -124,9 +120,11 @@
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-core</artifactId>
       </dependency>
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-api</artifactId>
-      </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-workload</artifactId>
+            <version>0.17.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>

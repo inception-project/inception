@@ -15,30 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.config;
+package de.tudarmstadt.ukp.inception.workload.monitoring.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workload.WorkloadPageMenuItem;
+import de.tudarmstadt.ukp.inception.workload.monitoring.extension.StaticWorkloadExtension;
 
 @Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",
+@ConditionalOnProperty(prefix = "workload.static", name = "enabled", havingValue = "true",
     matchIfMissing = true)
-public class DynamicWorkloadManagerAutoConfiguration
+public class StaticWorkloadManagerAutoConfiguration
 {
     @Bean
-    public WorkloadPageMenuItem workloadPageMenuItem()
+    public StaticWorkloadExtension staticWorkloadExtension()
     {
-        return new WorkloadPageMenuItem();
+        return new StaticWorkloadExtension();
     }
-
-    @Bean
-    public DynamicWorkloadExtension dynamicWorkloadExtension()
-    {
-        return new DynamicWorkloadExtension();
-    }
-
 }
