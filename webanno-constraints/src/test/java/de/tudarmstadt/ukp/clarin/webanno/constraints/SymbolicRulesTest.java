@@ -17,12 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
+import static de.tudarmstadt.ukp.clarin.webanno.constraints.parser.ConstraintsParser.parseFile;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.FileInputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.collection.CollectionReader;
@@ -34,10 +33,7 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 
@@ -47,11 +43,7 @@ public class SymbolicRulesTest
     public void testSimpleSymbolicRules()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/symbolic1.rules"));
-        Parse p = parser.Parse();
-
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
+        ParsedConstraints constraints = parseFile("src/test/resources/rules/symbolic1.rules");
 
         JCas jcas = JCasFactory.createJCas();
 
@@ -71,21 +63,14 @@ public class SymbolicRulesTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(lemma,
                 "value", constraints);
 
-        List<PossibleValue> expectedOutput = new ArrayList<>();
-        expectedOutput.add(new PossibleValue("good", true));
-
-        assertEquals(expectedOutput, possibleValues);
+        assertThat(possibleValues).containsExactly(new PossibleValue("good", true));
     }
 
     @Test
     public void testSimpleSymbolicRules2()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/symbolic2.rules"));
-        Parse p = parser.Parse();
-
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
+        ParsedConstraints constraints = parseFile("src/test/resources/rules/symbolic2.rules");
 
         JCas jcas = JCasFactory.createJCas();
 
@@ -105,9 +90,6 @@ public class SymbolicRulesTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(lemma,
                 "value", constraints);
 
-        List<PossibleValue> expectedOutput = new ArrayList<>();
-        expectedOutput.add(new PossibleValue("good", true));
-
-        assertEquals(expectedOutput, possibleValues);
+        assertThat(possibleValues).containsExactly(new PossibleValue("good", true));
     }
 }

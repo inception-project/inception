@@ -136,6 +136,30 @@ comments may span across multiple lines.
 */
 ----
 
+=== Example
+
+The following simple example of a constraints file re-orders POS tags depending on Lemma values.
+If the Lemma was annotated as *can*, the POS tags *VERB* and *NOUN* are highlighted. If the Lemma value is
+*the*, the POS tag *DET* is suggested first.
+
+[source,text]
+----
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS as Pos;
+
+Pos {
+  @Lemma.value = "can" ->
+    coarseValue = "VERB" |
+    coarseValue = "NOUN";
+
+  @Lemma.value = "the" ->
+    coarseValue = "DET";
+}
+----
+
+In the UI, the tags that were matched by the constraints are bold and come first in the list of tags:
+
+image::constraints.png[align="center"]
 
 === Conditional features
 
