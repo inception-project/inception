@@ -20,7 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 import static java.util.Arrays.asList;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTCondition;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTRestriction;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTRule;
 
 /**
  * Class representing object representation of a Rule, contains Condition(s) and Restriction(s)
@@ -33,6 +38,19 @@ public class Rule
     private final List<Condition> conditions;
     private final List<Restriction> restrictions;
 
+    public Rule(ASTRule aRule)
+    {
+        conditions = new ArrayList<>();
+        for (ASTCondition astCondition : aRule.getConditions().getConditions()) {
+            conditions.add(new Condition(astCondition));
+        }
+        
+        restrictions = new ArrayList<>();
+        for (ASTRestriction astRestriction : aRule.getRestrictions().getRestrictions()) {
+            restrictions.add(new Restriction(astRestriction));
+        }
+    }
+    
     public Rule(Condition aCondition, Restriction aRestriction)
     {
         conditions = asList(aCondition);

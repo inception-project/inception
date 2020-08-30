@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.parser.ConstraintsParser;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 
 @RunWith(value = Parameterized.class)
 public class ConstraintsParserTest

@@ -44,12 +44,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLParse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
@@ -214,9 +213,9 @@ public class ConstraintsServiceImpl
 
         for (ConstraintSet set : listConstraintSets(aProject)) {
             String script = readConstrainSet(set);
-            ConstraintsGrammar parser = new ConstraintsGrammar(new StringReader(script));
-            CLParse p = parser.CLParse();
-            ParsedConstraints constraints = p.accept(new ParserVisitor());
+            ConstraintsParser parser = new ConstraintsParser(new StringReader(script));
+            ASTConstraintsSet astConstraintsSet = parser.constraintsSet();
+            ParsedConstraints constraints = new ParsedConstraints(astConstraintsSet);
 
             if (merged == null) {
                 merged = constraints;
