@@ -92,6 +92,8 @@ public class WorkloadPanel extends Panel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
+        System.out.println(workloadRegistry.getExtensions().toString());
+
         if (monitoringChoices.getDefaultModelObjectAsString().equals(getString("workload"))) {
             workloadRegistry.setSelectedExtension(project,
                 workloadRegistry.getExtensions().get(0).getId());

@@ -19,15 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.model;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -36,9 +28,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
  */
 @Entity
 @Table(name = "workload_manager")
-public class WorkloadManagerTraits implements Serializable
+public class Workload_Manager implements Serializable
 {
-    private static final long serialVersionUID = -9087395004474377523L;
+    private static final long serialVersionUID = -3289504168531309833L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,19 +40,19 @@ public class WorkloadManagerTraits implements Serializable
     @JoinColumn(name = "project", nullable = false)
     private Project project;
 
+    @Column(columnDefinition = "VARCHAR(50)")
+    private String extensionPointID;
+
     @Lob
     @Column(length = 64000)
     private String traits;
 
-    @Column(columnDefinition = "VARCHAR(50)")
-    private String extensionPointID;
-
-    public WorkloadManagerTraits()
+    public Workload_Manager()
     {
 
     }
 
-    public WorkloadManagerTraits(Project aProject, String aExtensionPointID, String aTraits)
+    public Workload_Manager(Project aProject, String aExtensionPointID, String aTraits)
     {
         project = aProject;
         extensionPointID = aExtensionPointID;

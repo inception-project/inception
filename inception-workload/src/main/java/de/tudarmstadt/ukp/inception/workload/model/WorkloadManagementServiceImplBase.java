@@ -44,7 +44,7 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
         try {
             String result = entityManager.createQuery(
                 "SELECT extensionPointID " +
-                    "FROM WorkloadManagerTraits " +
+                    "FROM Workload_Manager " +
                     "WHERE project = :projectID", String.class)
                 .setParameter("projectID", aProject).getSingleResult();
             return result;
@@ -60,7 +60,7 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
         try {
             String result = entityManager.createQuery(
                 "SELECT extensionPointID " +
-                    "FROM WorkloadManagerTraits " +
+                    "FROM Workload_Manager " +
                     "WHERE project = :projectID", String.class)
                 .setParameter("projectID", aProject).getSingleResult();
             return result;
@@ -74,7 +74,7 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
     @Transactional
     public void setExtensionPoint(String aExtensionPointID, Project aProject) {
         entityManager.createQuery(
-            "UPDATE WorkloadManagerTraits " +
+            "UPDATE Workload_Manager " +
                 "SET extensionPointID = :extensionPointID " +
                 "WHERE project = :projectID")
             .setParameter("extensionPointID", aExtensionPointID)
@@ -85,7 +85,7 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
     @Transactional
     public void setTraits(String aTraits, Project aProject) {
         entityManager.createQuery(
-            "UPDATE WorkloadManagerTraits " +
+            "UPDATE Workload_Manager " +
                 "SET traits = :traits " +
                 "WHERE project = :projectID")
             .setParameter("traits", aTraits)
@@ -94,6 +94,6 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
 
     private void createDefaultEntry(Project aProject, String aExtensionPoint, String aTraits)
     {
-        entityManager.persist(new WorkloadManagerTraits(aProject,aExtensionPoint,aTraits));
+        entityManager.persist(new Workload_Manager(aProject,aExtensionPoint,aTraits));
     }
 }
