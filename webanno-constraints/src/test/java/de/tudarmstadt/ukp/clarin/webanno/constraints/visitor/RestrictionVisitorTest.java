@@ -27,7 +27,7 @@ import java.util.List;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLParse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Restriction;
 
 public class RestrictionVisitorTest
@@ -39,7 +39,7 @@ public class RestrictionVisitorTest
         List<Restriction> restrictions = new ArrayList<>();
         try (InputStream is = new FileInputStream("src/test/resources/rules/visitor-test.rules")) {
             ConstraintsGrammar parser = new ConstraintsGrammar(is, "UTF-8");
-            Parse p = parser.Parse();
+            CLParse p = parser.CLParse();
             p.accept(new RestrictionVisitor(), restrictions);
         }
         

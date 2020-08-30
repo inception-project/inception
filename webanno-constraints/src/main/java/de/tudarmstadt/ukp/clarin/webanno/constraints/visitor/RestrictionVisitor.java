@@ -19,66 +19,42 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.NodeOptional;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.NodeToken;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Path;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLFlagImportant;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLFlagList;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLRestriction;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.DepthFirstVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepthFirst;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Restriction;
+
 /**
  * Visitor for Restriction
- *
  */
 public class RestrictionVisitor
     extends GJVoidDepthFirst<List<Restriction>>
 {
-    private String path;
-    private String value;
     private boolean flagImportant;
 
     @Override
-    public void visit(
-            de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Restriction aN,
-            List<Restriction> aArgu)
+    public void visit(CLRestriction aRestrictionNode, List<Restriction> aRestrictions)
     {
-        path = null;
-        value = QuoteUtil.unquote(aN.f2.tokenImage);
         flagImportant = false;
 
-        super.visit(aN, aArgu);
+        StringBuilder path = new StringBuilder();
+        aRestrictionNode.f0.accept(new TokenNodesToStringVisitor(), path);
 
-        aArgu.add(new Restriction(path, value, flagImportant));
-    }
-
-    @Override
-    public void visit(final NodeOptional n, List<Restriction> argu)
-    {
-        super.visit(n, argu);
-
-        n.accept(new DepthFirstVisitor()
-        {
-            @Override
-            public void visit(NodeToken aN)
-            {
-                if (n.present()) { // If flag is there
+        String value = QuoteUtil.unquote(aRestrictionNode.f2.f0.tokenImage);
+        
+        if (aRestrictionNode.f3.present()) {
+            CLFlagList flagListNode = (CLFlagList) aRestrictionNode.f3.node;
+            flagListNode.f1.accept(new DepthFirstVisitor() {
+                @Override
+                public void visit(CLFlagImportant n)
+                {
                     flagImportant = true;
                 }
-            }
-        });
-    }
+            });
+        }
 
-    @Override
-    public void visit(Path aN, List<Restriction> aArgu)
-    {
-        super.visit(aN, aArgu);
-
-        aN.accept(new DepthFirstVisitor()
-        {
-            @Override
-            public void visit(NodeToken aN)
-            {
-                path = aN.tokenImage;
-            }
-        });
+        aRestrictions.add(new Restriction(path.toString(), value, flagImportant));
     }
 }

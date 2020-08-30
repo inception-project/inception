@@ -19,20 +19,23 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 
 import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.ImportDeclaration;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLImportDeclaration;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepthFirst;
-/**
- * Visitor for Import
- *
- */
+
 public class ImportVisitor
     extends GJVoidDepthFirst<Map<String, String>>
 {
     @Override
-    public void visit(ImportDeclaration aN, Map<String, String> aArgu)
+    public void visit(CLImportDeclaration aImportNode, Map<String, String> aAliasTable)
     {
-        super.visit(aN, aArgu);
+        super.visit(aImportNode, aAliasTable);
 
-        aArgu.put(aN.f3.tokenImage, aN.f1.tokenImage);
+        StringBuilder qualifiedTypeName = new StringBuilder();
+        aImportNode.f1.accept(new TokenNodesToStringVisitor(), qualifiedTypeName);
+
+        StringBuilder shortTypeName = new StringBuilder();
+        aImportNode.f3.accept(new TokenNodesToStringVisitor(), shortTypeName);
+
+        aAliasTable.put(shortTypeName.toString(), qualifiedTypeName.toString());
     }
 }

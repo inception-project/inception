@@ -34,6 +34,11 @@ public class Restriction
     private final String value;
     private final boolean flagImportant;
 
+    public Restriction(String aPath, String aValue)
+    {
+        this(aPath, aValue, false);
+    }
+
     public Restriction(String aPath, String aValue, boolean aFlagImportant)
     {
         path = aPath;

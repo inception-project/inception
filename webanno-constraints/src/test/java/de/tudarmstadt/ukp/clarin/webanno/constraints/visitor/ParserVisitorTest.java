@@ -23,7 +23,7 @@ import java.io.InputStream;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLParse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 
 public class ParserVisitorTest
@@ -35,7 +35,7 @@ public class ParserVisitorTest
         ParsedConstraints constraints;
         try (InputStream is = new FileInputStream("src/test/resources/rules/visitor-test.rules")) {
             ConstraintsGrammar parser = new ConstraintsGrammar(is, "UTF-8");
-            Parse p = parser.Parse();
+            CLParse p = parser.CLParse();
             constraints = p.accept(new ParserVisitor());
         }
         

@@ -16,14 +16,8 @@
  * limitations under the License.
  ******************************************************************************/
 
-
-/***
- *
- JavaCC template file for parsing conditions for web-anno project
- Grammar based on presentation by Dr. Richard Eckart de Castilho
- @author: aakash
- @version: 1.0
- 
+/*
+ * JavaCC template file for parsing the WebAnno constraints language
  */
 options
 {
@@ -70,127 +64,155 @@ TOKEN :
 | < SEMICOLON : ";" >
 | < IMPLIES : "->" >
 | < EQUALS : "=" >
-| < MODIFIER : "@" >
-| < FLAG : "!" >
+| < FLAG_IMPORTANT : "!" >
+| < RRB : ")" >
+| < LRB : "(" >
 | < RCB : "}" >
 | < LCB : "{" >
 | < RSB : "]" >
 | < LSB : "[" >
-| < IDENTIFIER :
-    < LETTER >
-    (
-      < LETTER >
-    | < DIGIT >
-    )* >
-| < PATH_LIKE : < IDENTIFIER > ("." < IDENTIFIER >)* >
-| < PATH :
-    (< MODIFIER >)? < IDENTIFIER > ( "()" )?
-    (
-      "." (< MODIFIER >)? < IDENTIFIER > ( "()" )?
-    )* >
+| < IDENTIFIER : <LETTER> (<LETTER> | <DIGIT>)* >
 | < #LETTER : [ "a"-"z", "A"-"Z", "_" ] >
 | < #DIGIT : [ "0"-"9" ] >
-| < QUOTED :
-    "\""
-    (
-      "\\" ~[ ]
-    | ~[ "\"", "\\" ]
-    )*
-    "\"" >
+| < STRING_LITERAL : "\"" ("\\" ~[ ] | ~["\"", "\\"])* "\"" >
 }
 
 /*
-ACTUAL GRAMMAR IMPLEMENTATION
-*/
-void Parse() :
+ * ACTUAL GRAMMAR IMPLEMENTATION
+ */
+void CLParse() :
 {}
 {
-  (
-    Imports()
-  )?
-  (
-    ScopedDeclarations()
-  )+
-  < EOF >
+  (CLImports())?
+  (CLScopedDeclarations())+
+  <EOF>
 }
 
-void ScopedDeclarations() :
+void CLScopedDeclarations() :
 {}
 {
-  < IDENTIFIER > "{"
-  (
-    Rules()
-  )*
-  "}"
+  CLShortTypeName() <LCB> 
+    (CLRules())* 
+  <RCB>
 }
 
-void Imports() :
+void CLImports() :
 {}
 {
-  (
-    ImportDeclaration()
-  )+
+  (CLImportDeclaration())+
 }
 
-void Rules() :
+void CLRules() :
 {}
 {
-  (
-    RuleDeclaration()
-  )+
+  (CLRuleDeclaration())+
 }
 
-void ImportDeclaration() :
+void CLImportDeclaration() :
 {}
 {
-  "import" < PATH_LIKE > "as" < IDENTIFIER > ";"
+  <IMPORT> CLQualifiedTypeName() <AS> CLShortTypeName() <SEMICOLON>
 }
 
-void RuleDeclaration() :
+void CLQualifiedTypeName() :
 {}
 {
-  Conditions() "->" Restrictions() ";"
+  <IDENTIFIER> ("." <IDENTIFIER>)*
 }
 
-void Conditions() :
+void CLShortTypeName() :
 {}
 {
-  Condition()
-  (
-    LOOKAHEAD(2)
-    "&" Condition()
-  )*
+  <IDENTIFIER>
 }
 
-void Condition() :
+void CLRuleDeclaration() :
 {}
 {
-  Path() "=" < QUOTED >
+  CLConditions() <IMPLIES> CLRestrictions() <SEMICOLON>
 }
 
-void Restrictions() :
+void CLConditions() :
 {}
 {
-  Restriction()
-  (
-    LOOKAHEAD(2)
-    "|" Restriction()
-  )*
+  CLCondition() (LOOKAHEAD(2) "&" CLCondition())*
 }
 
-void Restriction() :
+void CLCondition() :
 {}
 {
-  Path() "=" < QUOTED > ("(" < FLAG > ")")?
+  CLPath() <EQUALS> CLConditionValue()
 }
 
-void Path() :
+void CLConditionValue() :
+{}
 {
+  <STRING_LITERAL>
 }
+
+void CLRestrictions() :
+{}
 {
-  (
-    < PATH >
-  | < PATH_LIKE >
-  | < IDENTIFIER >
-  )
+  CLRestriction() (LOOKAHEAD(2) "|" CLRestriction())*
+}
+
+void CLRestriction() :
+{}
+{
+  CLPath() <EQUALS> CLRestrictionValue() (CLFlagList())?
+}
+
+void CLRestrictionValue() :
+{}
+{
+  <STRING_LITERAL>
+}
+
+
+void CLFlagList() :
+{}
+{
+  <LRB> CLFlagImportant() <RRB>
+}
+
+void CLFlagImportant() :
+{}
+{
+  <FLAG_IMPORTANT>
+}
+
+void CLPath() :
+{}
+{
+  CLPathElement() ("." CLPathElement())*
+}
+
+void CLPathElement() :
+{}
+{
+  (LOOKAHEAD(2) CLFunctionPathElement() | CLFeaturePathElement() | CLLayerPathElement())
+}
+
+void CLFeaturePathElement() :
+{}
+{
+  <IDENTIFIER>
+}
+
+void CLLayerPathElement() :
+{}
+{
+  "@" <IDENTIFIER>
+}
+
+void CLFunctionPathElement() :
+{}
+{
+  <IDENTIFIER> CLArgumentList()
+}
+
+void CLArgumentList() :
+{}
+{
+  <LRB><RRB>
 }

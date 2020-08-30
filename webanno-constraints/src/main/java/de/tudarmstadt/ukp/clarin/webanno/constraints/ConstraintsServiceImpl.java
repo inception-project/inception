@@ -46,7 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLParse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
@@ -215,7 +215,7 @@ public class ConstraintsServiceImpl
         for (ConstraintSet set : listConstraintSets(aProject)) {
             String script = readConstrainSet(set);
             ConstraintsGrammar parser = new ConstraintsGrammar(new StringReader(script));
-            Parse p = parser.Parse();
+            CLParse p = parser.CLParse();
             ParsedConstraints constraints = p.accept(new ParserVisitor());
 
             if (merged == null) {

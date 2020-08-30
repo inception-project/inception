@@ -1,5 +1,5 @@
 /*
- * Copyright 2015
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  * 
@@ -17,26 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 
-import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLCondition;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.NodeToken;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepthFirst;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Condition;
 
-/**
- * Visitor for Condition
- */
-public class ConditionVisitor
-    extends GJVoidDepthFirst<List<Condition>>
+public class TokenNodesToStringVisitor extends GJVoidDepthFirst<StringBuilder>
 {
     @Override
-    public void visit(CLCondition aConditionNode, List<Condition> aConditions)
+    public void visit(NodeToken aTokenNode, StringBuilder aBuffer)
     {
-        StringBuilder path = new StringBuilder();
-        aConditionNode.f0.accept(new TokenNodesToStringVisitor(), path);
-
-        String value = QuoteUtil.unquote(aConditionNode.f2.f0.tokenImage);
-
-        aConditions.add(new Condition(path.toString(), value));
+        aBuffer.append(aTokenNode.tokenImage);
     }
 }

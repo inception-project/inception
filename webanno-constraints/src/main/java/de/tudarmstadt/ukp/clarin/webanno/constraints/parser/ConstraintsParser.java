@@ -50,6 +50,6 @@ public class ConstraintsParser
         throws ParseException
     {
         ConstraintsGrammar parser = new ConstraintsGrammar(aInputStream, aEncoding);
-        return parser.Parse().accept(new ParserVisitor());
+        return parser.CLParse().accept(new ParserVisitor());
     }
 }

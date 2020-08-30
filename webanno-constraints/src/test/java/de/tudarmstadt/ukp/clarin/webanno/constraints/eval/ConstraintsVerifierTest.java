@@ -32,7 +32,7 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsVerifier;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Verifiable;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLParse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
@@ -46,7 +46,7 @@ public class ConstraintsVerifierTest
     {
         ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
                 "src/test/resources/rules/6.rules"));
-        Parse p = parser.Parse();
+        CLParse p = parser.CLParse();
         ParsedConstraints constraints = p.accept(new ParserVisitor());
 
         // Get imports

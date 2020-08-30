@@ -22,7 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLParse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJNoArguDepthFirst;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Scope;
@@ -37,7 +37,7 @@ public class ParserVisitor
     private List<Scope> scopes = new ArrayList<>();
 
     @Override
-    public ParsedConstraints visit(Parse n)
+    public ParsedConstraints visit(CLParse n)
     {
 
         n.accept(new ImportVisitor(), imports);

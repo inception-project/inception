@@ -28,7 +28,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLParse;
 
 public class ImportVisitorTest
 {
@@ -39,7 +39,7 @@ public class ImportVisitorTest
         Map<String, String> imports = new LinkedHashMap<>();
         try (InputStream is = new FileInputStream("src/test/resources/rules/visitor-test.rules")) {
             ConstraintsGrammar parser = new ConstraintsGrammar(is, "UTF-8");
-            Parse p = parser.Parse();
+            CLParse p = parser.CLParse();
             p.accept(new ImportVisitor(), imports);
         }
         

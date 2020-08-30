@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.RuleDeclaration;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLRuleDeclaration;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepthFirst;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Condition;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Restriction;
@@ -33,16 +33,16 @@ public class RuleVisitor
     extends GJVoidDepthFirst<List<Rule>>
 {
     @Override
-    public void visit(RuleDeclaration aN, List<Rule> aArgu)
+    public void visit(CLRuleDeclaration aRuleNode, List<Rule> aRules)
     {
         List<Condition> conditions = new ArrayList<>();
         List<Restriction> restrictions = new ArrayList<>();
 
         // super.visit(aN, aArgu);
 
-        aN.accept(new ConditionVisitor(), conditions);
-        aN.accept(new RestrictionVisitor(), restrictions);
+        aRuleNode.accept(new ConditionVisitor(), conditions);
+        aRuleNode.accept(new RestrictionVisitor(), restrictions);
 
-        aArgu.add(new Rule(conditions, restrictions));
+        aRules.add(new Rule(conditions, restrictions));
     }
 }
