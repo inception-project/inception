@@ -169,6 +169,7 @@
               <lookAhead>2</lookAhead>
               <isStatic>false</isStatic>
               <javadocFriendlyComments>true</javadocFriendlyComments>
+              <descriptiveFieldNames>true</descriptiveFieldNames>
             </configuration>
           </execution>
         </executions>

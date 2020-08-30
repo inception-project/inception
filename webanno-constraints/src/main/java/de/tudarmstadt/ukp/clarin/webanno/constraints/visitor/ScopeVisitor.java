@@ -34,7 +34,7 @@ public class ScopeVisitor
     @Override
     public void visit(CLScopedDeclarations n, List<Scope> argu)
     {
-        String scope = n.f0.f0.tokenImage;
+        String scope = n.cLShortTypeName.nodeToken.tokenImage;
 
         List<Rule> rules = new ArrayList<>();
         n.accept(new RuleVisitor(), rules);

@@ -33,9 +33,9 @@ public class ConditionVisitor
     public void visit(CLCondition aConditionNode, List<Condition> aConditions)
     {
         StringBuilder path = new StringBuilder();
-        aConditionNode.f0.accept(new TokenNodesToStringVisitor(), path);
+        aConditionNode.cLPath.accept(new TokenNodesToStringVisitor(), path);
 
-        String value = QuoteUtil.unquote(aConditionNode.f2.f0.tokenImage);
+        String value = QuoteUtil.unquote(aConditionNode.cLConditionValue.nodeToken.tokenImage);
 
         aConditions.add(new Condition(path.toString(), value));
     }

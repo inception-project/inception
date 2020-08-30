@@ -80,139 +80,94 @@ TOKEN :
 /*
  * ACTUAL GRAMMAR IMPLEMENTATION
  */
-void CLParse() :
-{}
-{
+void CLParse() : {} {
   (CLImports())?
   (CLScopedDeclarations())+
   <EOF>
 }
 
-void CLScopedDeclarations() :
-{}
-{
+void CLScopedDeclarations() : {} {
   CLShortTypeName() <LCB> 
     (CLRules())* 
   <RCB>
 }
 
-void CLImports() :
-{}
-{
+void CLImports() : {} {
   (CLImportDeclaration())+
 }
 
-void CLRules() :
-{}
-{
+void CLRules() : {} {
   (CLRuleDeclaration())+
 }
 
-void CLImportDeclaration() :
-{}
-{
+void CLImportDeclaration() : {} {
   <IMPORT> CLQualifiedTypeName() <AS> CLShortTypeName() <SEMICOLON>
 }
 
-void CLQualifiedTypeName() :
-{}
-{
+void CLQualifiedTypeName() : {} {
   <IDENTIFIER> ("." <IDENTIFIER>)*
 }
 
-void CLShortTypeName() :
-{}
-{
+void CLShortTypeName() : {} {
   <IDENTIFIER>
 }
 
-void CLRuleDeclaration() :
-{}
-{
+void CLRuleDeclaration() : {} {
   CLConditions() <IMPLIES> CLRestrictions() <SEMICOLON>
 }
 
-void CLConditions() :
-{}
-{
+void CLConditions() : {} {
   CLCondition() (LOOKAHEAD(2) "&" CLCondition())*
 }
 
-void CLCondition() :
-{}
-{
+void CLCondition() : {} {
   CLPath() <EQUALS> CLConditionValue()
 }
 
-void CLConditionValue() :
-{}
-{
+void CLConditionValue() : {} {
   <STRING_LITERAL>
 }
 
-void CLRestrictions() :
-{}
-{
+void CLRestrictions() : {} {
   CLRestriction() (LOOKAHEAD(2) "|" CLRestriction())*
 }
 
-void CLRestriction() :
-{}
-{
+void CLRestriction() : {} {
   CLPath() <EQUALS> CLRestrictionValue() (CLFlagList())?
 }
 
-void CLRestrictionValue() :
-{}
-{
+void CLRestrictionValue() : {} {
   <STRING_LITERAL>
 }
 
-
-void CLFlagList() :
-{}
-{
+void CLFlagList() : {} {
   <LRB> CLFlagImportant() <RRB>
 }
 
-void CLFlagImportant() :
-{}
-{
+void CLFlagImportant() : {} {
   <FLAG_IMPORTANT>
 }
 
-void CLPath() :
-{}
-{
+void CLPath() : {} {
   CLPathElement() ("." CLPathElement())*
 }
 
-void CLPathElement() :
-{}
-{
+void CLPathElement() : {} {
   (LOOKAHEAD(2) CLFunctionPathElement() | CLFeaturePathElement() | CLLayerPathElement())
 }
 
-void CLFeaturePathElement() :
-{}
-{
+void CLFeaturePathElement() : {} {
   <IDENTIFIER>
 }
 
-void CLLayerPathElement() :
-{}
-{
+void CLLayerPathElement() : {} {
   "@" <IDENTIFIER>
 }
 
-void CLFunctionPathElement() :
-{}
-{
+void CLFunctionPathElement() : {} {
   <IDENTIFIER> CLArgumentList()
 }
 
-void CLArgumentList() :
-{}
-{
+void CLArgumentList() : {} {
   <LRB><RRB>
 }

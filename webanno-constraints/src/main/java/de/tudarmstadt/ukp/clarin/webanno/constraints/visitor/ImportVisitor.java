@@ -31,10 +31,10 @@ public class ImportVisitor
         super.visit(aImportNode, aAliasTable);
 
         StringBuilder qualifiedTypeName = new StringBuilder();
-        aImportNode.f1.accept(new TokenNodesToStringVisitor(), qualifiedTypeName);
+        aImportNode.cLQualifiedTypeName.accept(new TokenNodesToStringVisitor(), qualifiedTypeName);
 
         StringBuilder shortTypeName = new StringBuilder();
-        aImportNode.f3.accept(new TokenNodesToStringVisitor(), shortTypeName);
+        aImportNode.cLShortTypeName.accept(new TokenNodesToStringVisitor(), shortTypeName);
 
         aAliasTable.put(shortTypeName.toString(), qualifiedTypeName.toString());
     }

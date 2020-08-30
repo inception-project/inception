@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLFlagImportant;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLFlagList;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.CLRestriction;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.DepthFirstVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.visitor.GJVoidDepthFirst;
@@ -40,13 +39,12 @@ public class RestrictionVisitor
         flagImportant = false;
 
         StringBuilder path = new StringBuilder();
-        aRestrictionNode.f0.accept(new TokenNodesToStringVisitor(), path);
+        aRestrictionNode.cLPath.accept(new TokenNodesToStringVisitor(), path);
 
-        String value = QuoteUtil.unquote(aRestrictionNode.f2.f0.tokenImage);
+        String value = QuoteUtil.unquote(aRestrictionNode.cLRestrictionValue.nodeToken.tokenImage);
         
-        if (aRestrictionNode.f3.present()) {
-            CLFlagList flagListNode = (CLFlagList) aRestrictionNode.f3.node;
-            flagListNode.f1.accept(new DepthFirstVisitor() {
+        if (aRestrictionNode.nodeOptional.present()) {
+            aRestrictionNode.nodeOptional.accept(new DepthFirstVisitor() {
                 @Override
                 public void visit(CLFlagImportant n)
                 {
