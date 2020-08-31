@@ -17,11 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.constraints;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.apache.commons.io.IOUtils.toInputStream;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.List;
 
 import org.apache.commons.io.input.BOMInputStream;
@@ -29,7 +34,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -52,9 +56,11 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.Boo
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.TokenMgrError;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
@@ -68,6 +74,7 @@ public class ProjectConstraintsPanel
     private static final Logger LOG = LoggerFactory.getLogger(ProjectConstraintsPanel.class);
 
     private @SpringBean ConstraintsService constraintsService;
+    private @SpringBean UserDao userService;
 
     private SelectionForm selectionForm;
     private DetailForm detailForm;
@@ -167,9 +174,10 @@ public class ProjectConstraintsPanel
                     }
                 }
             }));
+            script.setOutputMarkupId(true);
             // Script not editable - if we remove this flag, then the script area will not update
             // when switching set selection
-            script.setEnabled(false); 
+            // script.setEnabled(false); 
 
             final IModel<String> exportFilenameModel = new Model<>();
             final IModel<File> exportFileModel = new LoadableDetachableModel<File>()
@@ -217,7 +225,6 @@ public class ProjectConstraintsPanel
             // Add check to prevent accidental delete operation
             deleteButton.add(new AttributeModifier("onclick",
                     "if(!confirm('Do you really want to delete this Constraints rule?')) return false;"));
-
             add(deleteButton);
 
             add(new Button("save") {
@@ -226,8 +233,35 @@ public class ProjectConstraintsPanel
                 @Override
                 public void onSubmit()
                 {
-                    constraintsService
-                            .createOrUpdateConstraintSet(DetailForm.this.getModelObject());
+                    ConstraintSet constraintSet = DetailForm.this.getModelObject();
+                    
+                    try (Reader r = new StringReader(script.getModelObject())) {
+                        ConstraintsGrammar parser = new ConstraintsGrammar(r);
+                        parser.Parse();
+                    }
+                    catch (ParseException | IOException e) {
+                        error("Unable to parse constraints file [" + constraintSet.getName() + "]"
+                                + ExceptionUtils.getRootCauseMessage(e));
+                        return;
+                    }
+     
+                    constraintsService.createOrUpdateConstraintSet(constraintSet);
+                    
+                    // Persist rules
+                    try (InputStream rules = toInputStream(script.getModelObject(), UTF_8)) {
+                        constraintsService.writeConstraintSet(constraintSet, rules);
+ 
+                        selectionForm.setModelObject(constraintSet);
+                        detailForm.setModelObject(constraintSet);
+                        
+                        success("Successfully updated constraints file [" + constraintSet.getName()
+                                + "]");
+                    }
+                    catch (IOException e) {
+                        LOG.error("Unable to write the constraint rules file.", e);
+                        error("Unable to write the constraints file "
+                                + ExceptionUtils.getRootCauseMessage(e));
+                    }
                 }
 
                 @Override
@@ -243,6 +277,7 @@ public class ProjectConstraintsPanel
                     }
                 }
             });
+            
             add(new Button("cancel") {
                 private static final long serialVersionUID = 1L;
                 
@@ -280,45 +315,58 @@ public class ProjectConstraintsPanel
         {
             super(aId);
 
+            add(new LambdaAjaxLink("create", this::createAction));
+            
             add(uploads = new BootstrapFileInputField("uploads"));
             uploads.getConfig().showPreview(false);
             uploads.getConfig().showUpload(false);
             uploads.getConfig().showRemove(false);
             uploads.setRequired(true);
 
-            add(new AjaxButton("import")
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit(AjaxRequestTarget aTarget)
-                {
-                    try {
-                        importAction(aTarget);
-                    }
-                    catch (ParseException | TokenMgrError e) {
-                        LOG.error(
-                                "Exception while parsing the constraint rules file. Please check it.",
-                                e);
-                        error("Exception while parsing the constraint rules file. Please check it. "
-                                + ExceptionUtils.getRootCauseMessage(e));
-                        aTarget.addChildren(getPage(), IFeedback.class);
-                    }
-                    catch (IOException e) {
-                        LOG.error("Unable to read the constraint rules file.", e);
-                        error("Unable to read constraints file: "
-                                + ExceptionUtils.getRootCauseMessage(e));
-                        aTarget.addChildren(getPage(), IFeedback.class);
-                    }
-                }
-            });
+            add(new LambdaAjaxButton<Void>("import", this::importAction));
         }
         
-        private void importAction(AjaxRequestTarget aTarget) throws ParseException, IOException
+        private void createAction(AjaxRequestTarget aTarget)
+        {
+            String constraintFilename = "New constraints set";
+            String content = "/* Constraint rules set created by "
+                    + userService.getCurrentUsername() + " */";
+            
+            ConstraintSet constraintSet = createConstraintsSet(constraintFilename);
+
+            aTarget.addChildren(getPage(), IFeedback.class);
+            aTarget.add(selectionForm);
+            aTarget.add(detailForm);
+            aTarget.focusComponent(detailForm.script);
+            
+            // Persist rules
+            try (InputStream rules = toInputStream(content, UTF_8)) {
+                constraintsService.writeConstraintSet(constraintSet, rules);
+                
+                selectionForm.setModelObject(constraintSet);
+                detailForm.setModelObject(constraintSet);
+
+                success("Created new constraints set [" + constraintSet.getName() + "]");
+            }
+            catch (IOException e) {
+                LOG.error("Unable to write the constraint rules file.", e);
+                error("Unable to write the constraints file "
+                        + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+        
+        private void importAction(AjaxRequestTarget aTarget, Form<Void> aForm)
         {
             Project project = ProjectConstraintsPanel.this.getModelObject();
 
             List<FileUpload> uploadedFiles = uploads.getFileUploads();
+
+            selectionForm.setModelObject(null);
+            detailForm.setModelObject(null);
+            
+            aTarget.addChildren(getPage(), IFeedback.class);
+            aTarget.add(selectionForm);
+            aTarget.add(detailForm);
 
             if (isNull(project.getId())) {
                 error("Project not yet created, please save project Details!");
@@ -330,49 +378,62 @@ public class ProjectConstraintsPanel
                 return;
             }
 
-            for (FileUpload constraintRulesFile : uploadedFiles) {
-                // Checking if file is OK as per Constraints Grammar specification
-                boolean constraintRuleFileIsOK = false;
-                //Handling Windows BOM
-                BOMInputStream bomInputStream;
-
-                bomInputStream = new BOMInputStream(constraintRulesFile.getInputStream(), false);
-                ConstraintsGrammar parser = new ConstraintsGrammar(bomInputStream);
-                // utfInputStream = new
-                // InputStreamReader(constraintRulesFile.getInputStream(),"UTF-8");
-                // ConstraintsGrammar parser = new ConstraintsGrammar(utfInputStream);
-                parser.Parse();
-                constraintRuleFileIsOK = true;
-
-                aTarget.add(selectionForm);
-                aTarget.add(detailForm);
+            nextFile: for (FileUpload constraintRulesFile : uploadedFiles) {
+                String constraintFilename = constraintRulesFile.getClientFileName();
+                
+                // Handling Windows BOM
+                try (BOMInputStream bomInputStream = new BOMInputStream(
+                        constraintRulesFile.getInputStream(), false)) {
+                    ConstraintsGrammar parser = new ConstraintsGrammar(bomInputStream);
+                    parser.Parse();
+                }
+                catch (IOException e) {
+                    error("Unable to read the constraints file [" + constraintFilename + "]"
+                            + ExceptionUtils.getRootCauseMessage(e));
+                    continue nextFile;
+                }
+                catch (ParseException e) {
+                    error("Unable to parse constraints file [" + constraintFilename + "]"
+                            + ExceptionUtils.getRootCauseMessage(e));
+                    continue nextFile;
+                }
 
                 // Persist rules
-                if (constraintRuleFileIsOK) {
-                    try {
-                        ConstraintSet constraintSet = new ConstraintSet();
-                        constraintSet.setProject(ProjectConstraintsPanel.this.getModelObject());
-                        //Check if ConstraintSet already exists or not
-                        String constraintFilename = constraintRulesFile.getClientFileName();
-                        if (constraintsService.existConstraintSet(constraintFilename, project)) {
-                            constraintFilename = copyConstraintName(constraintsService,
-                                    constraintFilename);
-                        }
-                        constraintSet.setName(constraintFilename);
-                        constraintsService.createOrUpdateConstraintSet(constraintSet);
-                        constraintsService.writeConstraintSet(constraintSet,
-                                constraintRulesFile.getInputStream());
-                        selectionForm.setModelObject(constraintSet);
-                    }
-                    catch (IOException e) {
-                        detailForm.setModelObject(null);
-                        LOG.error("Unable to write the constraint rules file.", e);
-                        error("Unable to write the constraints file "
-                                + ExceptionUtils.getRootCauseMessage(e));
-                        aTarget.addChildren(getPage(), IFeedback.class);
-                    }
+                try (InputStream rules = new BOMInputStream(constraintRulesFile.getInputStream(),
+                        false)) {
+                    ConstraintSet constraintSet = createConstraintsSet(constraintFilename);
+                    
+                    constraintsService.writeConstraintSet(constraintSet, rules);
+                    
+                    selectionForm.setModelObject(constraintSet);
+                    detailForm.setModelObject(constraintSet);
+                    
+                    success("Successfully imported constraints file [" + constraintFilename + "]");
+                }
+                catch (IOException e) {
+                    LOG.error("Unable to write the constraint rules file.", e);
+                    error("Unable to write the constraints file "
+                            + ExceptionUtils.getRootCauseMessage(e));
                 }
             }
+        }
+        
+        private ConstraintSet createConstraintsSet(String constraintFilename)
+        {
+            Project project = ProjectConstraintsPanel.this.getModelObject();
+            
+            ConstraintSet constraintSet = new ConstraintSet();
+            constraintSet.setProject(ProjectConstraintsPanel.this.getModelObject());
+
+            //Check if ConstraintSet already exists or not
+            if (constraintsService.existConstraintSet(constraintFilename, project)) {
+                constraintFilename = copyConstraintName(constraintsService,
+                        constraintFilename);
+            }
+            constraintSet.setName(constraintFilename);
+            constraintsService.createOrUpdateConstraintSet(constraintSet);
+            
+            return constraintSet;
         }
         
         /**
