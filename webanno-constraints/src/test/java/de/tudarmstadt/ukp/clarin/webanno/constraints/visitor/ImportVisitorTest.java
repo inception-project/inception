@@ -17,12 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.junit.Test;
 
@@ -35,18 +36,16 @@ public class ImportVisitorTest
     public void test()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/6.rules"));
-        Parse p = parser.Parse();
-
         Map<String, String> imports = new LinkedHashMap<>();
-        p.accept(new ImportVisitor(), imports);
-
-        for (Entry<String, String> e : imports.entrySet()) {
-            System.out.printf("[%s] is short for [%s]%n", e.getKey(), e.getValue());
+        try (InputStream is = new FileInputStream("src/test/resources/rules/visitor-test.rules")) {
+            ConstraintsGrammar parser = new ConstraintsGrammar(is, "UTF-8");
+            Parse p = parser.Parse();
+            p.accept(new ImportVisitor(), imports);
         }
-
-        assertEquals("de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma",
-                imports.get("Lemma"));
+        
+        assertThat(imports).containsExactly(
+                entry("Lemma", "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma"),
+                entry("Frame", "de.tudarmstadt.ukp.dkpro.core.api.semantics.Predicate"),
+                entry("value", "pos.value"));
     }
 }

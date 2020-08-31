@@ -19,15 +19,17 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 /**
  * Class containing object representation of Restriction of a rule.
- * 
- *
  */
 public class Restriction
     implements Serializable
 {
     private static final long serialVersionUID = -6950610587083804950L;
+    
     private final String path;
     private final String value;
     private final boolean flagImportant;
@@ -41,9 +43,7 @@ public class Restriction
 
     public String getPath()
     {
-
         return path;
-
     }
 
     public String getValue()
@@ -60,5 +60,22 @@ public class Restriction
     public String toString()
     {
         return "Restriction [[" + path + "] = [" + value + "] important=" + flagImportant + "]";
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof Restriction)) {
+            return false;
+        }
+        Restriction castOther = (Restriction) other;
+        return new EqualsBuilder().append(path, castOther.path).append(value, castOther.value)
+                .append(flagImportant, castOther.flagImportant).isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder().append(path).append(value).append(flagImportant).toHashCode();
     }
 }

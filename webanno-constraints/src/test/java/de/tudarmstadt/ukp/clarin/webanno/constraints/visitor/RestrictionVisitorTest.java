@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,15 +36,18 @@ public class RestrictionVisitorTest
     public void test()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/6.rules"));
-        Parse p = parser.Parse();
-
         List<Restriction> restrictions = new ArrayList<>();
-        p.accept(new RestrictionVisitor(), restrictions);
-
-        for (Restriction res : restrictions) {
-            System.out.printf("%s %n", res);
+        try (InputStream is = new FileInputStream("src/test/resources/rules/visitor-test.rules")) {
+            ConstraintsGrammar parser = new ConstraintsGrammar(is, "UTF-8");
+            Parse p = parser.Parse();
+            p.accept(new RestrictionVisitor(), restrictions);
         }
+        
+        assertThat(restrictions).containsExactly(
+                new Restriction("frame", "Jumping", false),
+                new Restriction("arguments.role", "Arg1", true),
+                new Restriction("arguments.role", "Arg2", true),
+                new Restriction("showPath.withoutQuotes", "false", false),
+                new Restriction("useCaching", "false", true));
     }
 }

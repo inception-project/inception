@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 
 import java.io.FileInputStream;
+import java.io.InputStream;
 
 import org.junit.Test;
 
@@ -31,14 +32,13 @@ public class ParserVisitorTest
     public void test()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/6.rules"));
-        Parse p = parser.Parse();
-
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
-
+        ParsedConstraints constraints;
+        try (InputStream is = new FileInputStream("src/test/resources/rules/visitor-test.rules")) {
+            ConstraintsGrammar parser = new ConstraintsGrammar(is, "UTF-8");
+            Parse p = parser.Parse();
+            constraints = p.accept(new ParserVisitor());
+        }
+        
         System.out.printf("%s %n", constraints);
-
     }
-
 }
