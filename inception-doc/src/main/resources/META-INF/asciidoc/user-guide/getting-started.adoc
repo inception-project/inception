@@ -6,12 +6,11 @@ with {product-name}. It gives a quick overview (estimated time for reading
 only: approx. 20-30 minutes) on the key functionalities in order to get
 familiar with the tool. It excludes special cases and details due to
 simplicity and focus on the first steps. For further reading on any
-topic, you will find lots of information in our guides, called
-https://inception-project.github.io/documentation/[documentation] (upper half→ User Guide). 
+topic <<Know Our Documentation For Further Reading>>. You are already in the User Guide document. The main documentation of this User Guide starts right after the Getting Started which you are reading right now.
 
-For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[four tutorial videos] covering an Introduction, an Overview, Recommender Basics and Entity Linking. This guide will also refer to them at the appropriate place.
+For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[four tutorial videos] covering an Introduction, an Overview, Recommender Basics and Entity Linking. This Getting Started guide will refer to them wherever it might be helpful.
 
-NOTE: *Note-boxes:* In this Getting-Started-Part, the Note-boxes provide additional information. They may be skipped for fast reading if background knowledge exists already and/or later on for quick checkups on basic concepts.
+NOTE: *Note-boxes:* In this Getting Started guide, the note-boxes provide additional information. They may be skipped for fast reading if background knowledge exists already and/or later on for quick checkups on basic concepts.
 
 
 
@@ -24,37 +23,39 @@ Also see our https://www.youtube.com/watch?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIo
 
 {product-name} is a *text-annotation enviroment* useful for various kinds
 of annotation projects. It is a web application in which several users
-can work on the same project and it can hold several annotation projects
+can work on the same annotation project and it can hold several annotation projects
 at a time. The core functionality is annotating written
-text. Annotations can be used both for linguistic and machine learning
+text. Annotations are usually used for linguistic and/or machine learning
 concerns.
-In the following picture, you see an example for some annotations. Here, so called entities have been annotated as whether they are a person (PER), location (LOC), organization (ORG) or other (OTH). These aspects are annotated on the so called annotation layer Named Entity. We will go more into what layers are in section <<Project Settings>>.image:getting_started_example_for_annotations.png[image,width=567,height=436]
+In the following picture might give you a first impression on how annotated texts look like. In this example, text spans have been annotated as whether they refer to a person (PER), location (LOC), organization (ORG) or any other (OTH).
 
-What‘s more on {product-name} beyond annotating written text is that it combines three key features in one plattform: First, creating a corpus to be annotated (*Corpus Creation*); second, annotating the corpus and merging annotations made by several annotators
-(*Annotation, Curation*), and third, managing the knowledge used for annotating
-(*Knowledge Bases*). You may want to do one, two or all three steps with
-{product-name}. Also, it is extendable and adoptable to individual
-requrements in all of these three areas. Often, {product-name} provides predefined details (e.g. knowledge bases, layers  and tagsets; see the note-boxes in section <<Project Settings>>) to give you a starting point, but you can modify them or create your own from the scrach. For example: You may integrate a knowledgebase of your choice; create and modify your own knowledge base; create and modify own layers and tagsets to annotate your individual task; build own so called „recommenders“ which automatically suggest annotations to you so you will work quicker and easier; and much more.
+image:getting_started_example_for_annotations.png[image,width=567,height=436]
 
-This guide focuses on enabeling you to annotate. For details on any
-other topic like Corpus Creation or the like, see our https://inception-project.github.io/documentation/[main documentation] (upper half→ User Guide).
+What‘s more on {product-name} beyond annotating written text is that it combines three key features in one plattform: First, before you annotate, you need a corpus to be annotated (*Corpus Creation*). You might have one already or create it yourself. Both works for {product-name}. Second, you might want to annotate the corpus(*Annotation*) and/or merge the annotations which different annotators made (*Curation*). Third, you might want to manage the knowledge used for annotating
+(*Knowledge Bases*). You may want to do all three steps with
+{product-name} or skip some. Also, {product-name} is extendable and adoptable to individual
+requrements. Often, {product-name} provides predefined details, e.g. knowledge bases, layers and tagsets(see the note-boxes in section <<Project Settings>>) to give you a starting point. But you can also modify them or create your own from the scrach. You may for example integrate a knowledge base of your choice; create and modify your own knowledge base; create and modify own layers and tagsets to annotate your individual task; build own so called „recommenders“ which automatically suggest annotations to you so you will work quicker and easier; and much more.
 
-=== Contact Us And Tell Us What You Need
+Getting Started focuses on annotating. For details on any
+other topic like Corpus Creation or the like, see <<Corpus building>> in the main documentation part of this User Guide.
 
-* {product-name} is still in developement, so you are welcome to give us
+=== Do You Have Questions or Feedback?
+
+{product-name} is still in developement, so you are welcome to give us
 feedback and tell us your wishes and requirements. For any questions,
-you are welcome to join our Google group https://groups.google.com/forum/#!forum/inception-users[„inception users“].
-* If you have questions, you can
-** reach us via the {product-name} users mailing list:
+you are welcome to join our Google group https://groups.google.com/forum/#!forum/inception-users[„inception users“].+
+
+If you have questions, you can
+* reach us via the {product-name} users mailing list:
 inception-users@googlegroups.com
-** or open an issue on https://github.com/inception-project/inception/issues[Github].
-** check our https://inception-project.github.io/documentation/[main documentation] (upper half→ User Guide).
+* or open an issue on https://github.com/inception-project/inception/issues[Github].
+* check our https://inception-project.github.io/documentation/[main documentation] (upper half→ User Guide).
 
 === Know Our Documentation For Further Reading
 Our main documentation consists of three parts: 
 
-* If you only use {product-name} and do not develop, this *User
-Guide* is the one of your choice. If it does not answer your questions, don't hesitate to contact us (see above). 
+* If you only use {product-name} and do not develop, the *User
+Guide* beginning right after the Getting Started is the one of your choice. If it does not answer your questions, don't hesitate to contact us (see <<Do You Have Questions or Feedback?>>). 
 
 NOTE: *User Guide-Shortcut:* Whenever you find a *blue questionmark*-sign in {product-name}, you may click on it to find further explanation in this User Guide.
 
@@ -67,12 +68,12 @@ NOTE: *User Guide-Shortcut:* Whenever you find a *blue questionmark*-sign in {pr
 === Installing Java
 
 In order to run {product-name}, you need to have Java installed on your system in version 8 or 
-higher. If you do not have Java installed yet, please install the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java] or link:https://adoptopenjdk.net[OpenJDK].
+higher. If you do not have Java installed yet, please install the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java] or link:https://adoptopenjdk.net[OpenJDK]. Both work perfectly fine so you can choose one or the other.
 
 
 === Download And Start {product-name}
 
-* Download the .jar-file from our
+*Step 1*: Download the .jar-file from our
 https://inception-project.github.io/downloads/[website] by clicking on
 https://github.com/inception-project/inception/releases/download/inception-app-0.16.1/inception-app-standalone-0.16.1.jar[{product-name}
 0.16.1 (executable JAR)]. Wait a moment until it has been fully downloaded.
@@ -82,13 +83,13 @@ That is, until the name of the downloaded folder ends on „.jar“, not on
 NOTE: *Working on the Latest Version:* We recommend working on the latest version always since we constantly add new features, improve usability and fix bugs. After
 downloading the latest Version, your previous work will not be lost: In
 the new version, you will find all your projects and documents like
-before. Check the website, subscribe to github notifications or the
-google group to to be notified when new versions are released.
+before. You do not have to do anything for that. Check the website, subscribe to github notifications or the
+google group to to be notified when a new version has been released.
 
 NOTE: *If {product-name} Does Not Start:* If double-clicking the JAR file does not start {product-name}, you might need to first make the file executable. DO a right-click on the JAR file and navigate throught the settings and permissions.
 
 
-* Now, simply *double-click* on the downloaded .jar-file. After a
+*Step 2*: Now, simply *double-click* on the downloaded .jar-file. After a
 moment, a splash screen will display while the application is
 initializing.
 
@@ -113,6 +114,8 @@ browser.
 * In case you are interested in more installation details, see the 
 https://inception-project.github.io/documentation/[Admin
 Guide] (upper half→ Admin Guide).
+
+{product-name} is designed for the browsers Chrome, Safari and Firebird. It does work in other browsers as well but for these three, we can support you best.
 
 
 For more installation details, see the https://inception-project.github.io/documentation/[Admin Guide] (upper half→ *Admin Guide*).
@@ -248,7 +251,7 @@ https://inception-project.github.io/documentation/[main documentation], upper ha
 NOTE: *Layers and Features:* There are different "aspects" or "categories" you might want to annotate. For example, once, you might want to annotate all the places and persons in a text and link them to a knowledge base entry (this way of annotation is called _Named Entity_). In another case, you might want to annotate which words are verbs, nouns, adjectives, prepositions and so on (called _Part of Speech_). What we called "aspects", "categories" or "ways to annotate" here, is referred to as *layers* in {product-name} as in many other annotation tools, too. + 
 {product-name} supports *span layers* in order to annotate a span from one character („letter“) in the text to another, *relation layers*
 in order to annotate the relation between two span annotations and *chain layers* which are normally used to annotate coreferences, that is, to show that different words or phrases refer to the same person or object. The annotation of a relation layer always anchors on both span annotations. A span layer annotation always anchors in one span only and chains anchor on all spans which are part of the chain. For span layers, the default is to always annotate one or more tokens („words“) but you can adjust to character level or sentence level. +
-Each layer provides appropriate fields, so called *features* to enter a lable as what to annotate the selected text part. For example, on the _Named Entity_ layer in product-name}, you find the feature-field _value_ to enter what kind of entity it is (LOCation, PERson, ORGanization, OTHer) and _identifier_ to enter, which exact entity (which must be in the knowledge base) it is. +
+Each layer provides appropriate fields, so called *features* to enter a lable as what to annotate the selected text part. For example, on the _Named Entity_ layer in product-name}, you find the feature-field _value_ to enter what kind of entity it is ("LOC" for a location, PER for a person, ORG for an organization and OTH for other) and _identifier_ to enter, which exact entity (which must be in the knowledge base) it is. +
 {product-name} provides default layers and features to give you a starting point. Default layers cannot be deleted as selfmade layers can. However, new features can be added.
 See the https://inception-project.github.io/documentation/[main documentation], upper half→ User Guide for details on layers, features, the different types of layers and features and how to adjust them for your individual task.
  +
@@ -374,7 +377,7 @@ the mouse button, the annotation will immediately be created and you can edit it
 * All annotations will be saved automatically without clicking on a extra save-button (which is why there is none).
 
 
-*Congratulations! You have created your first annotation!*
+*Congratulations, you have created your first annotation!*
 
 
 Now, let‘s examine the right panel to understand what we have done. You find the panel Layer on top and Annotation below.
@@ -385,14 +388,23 @@ we just did. If you are not sure what layers are, check the box on _Layers And F
 
 
 In the *Annotation* panel, you see the details of a selected
-annotation. It shows the layer the annotation is made in (field „layer“)
-and what part of the text has been annotated (field „text“). Below, you can see and modify what has been entered for each of the so called *Features*. If you are not sure what features are, check the box on _Layers And Features_ in the section <<Project Settings>>. +
+annotation. 
+
+image:getting_started_annotation_panel.png[image,width=288,height=517]
+
+It shows the layer the annotation is made in (field „Layer"; here: _Named entity_)
+and what part of the text has been annotated (field „Text“; here _wetterhoun_). Below, you can see and modify what has been entered for each of the so called *Features*. If you are not sure what features are, check the box on _Layers And Features_ in the section <<Project Settings>>. (Here: The layer _Named entity_ has the features "identifier" and "value". The identifier tells, to which entity in the knowledge base the annotated text refers to. In this case, it is the concept "Dog". The value tells if it is a Location (LOC), Person (PER), Organization (ORG) or, like here, other (OTH).) +
 You may enter free text here or work with *Tagsets* to have a well
 defined set of lables to enter so all of the users within one project will use the same lables. You can modify and create tagsets in the
 project settings. See section <<Project Settings>> -> Tagsets and the https://inception-project.github.io/documentation/[main documentation], upper half → User Guide.
 
-In the *Annotation Sidebar* at the left (it folds out when clicking
-on the little arrow on top) INSERT IMAGE there are several features you might want to
+The *Annotation Sidebar* at the left folds out when clicking
+on the little arrow on top. 
+
+image:getting_started_Sidebar_closed.png[image,width=462,height=460]
+image:getting_started_Sidebar_open.png[image,width=479,height=542]
+
+There are several features you might want to
 check the https://inception-project.github.io/documentation/[main documentation] for, upper half→ User Guide. Especially the *Recommender* section (the black speech bubble) in the sidebar is worth a look if you use recommenders
 (see <<Project Settings>> -> Recommenders). E.g. you find
 their measures and learning behaviours. Note the *Search* (the magnifier
@@ -405,9 +417,9 @@ instructions for other example-projects, read the https://inception-project.gith
 One way or the other: *Have fun exploring*!
 
 == Thank You
-We hope this guide helped you with your first steps on {product-name} and it
-gave you a general idea of how it works. For further reading, we recommend the https://inception-project.github.io/documentation/[main documentation], upper half → User Guide with detailed information on every theme discussed here as well as for further reading.
+We hope this Getting-Started-Guide helped you with your first steps on {product-name} and it
+gave you a general idea of how it works. For further reading or more details, we recommend the main documentation] which starts right after this paragraph.
 
 Do not hestitate to contact us if you still struggle or have any questions. We
-wish you success and fun with your projects and you are welcome to let us know how you are working on! 
+wish you success with your projects and you are welcome to let us know what you are working on.
 
