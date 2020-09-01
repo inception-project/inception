@@ -19,19 +19,12 @@ package de.tudarmstadt.ukp.inception.workload.registry;
 
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadExtension;
 
 public interface WorkloadRegistry
 {
-    String SERVICE_NAME = "workloadType";
-
     List<WorkloadExtension> getExtensions();
 
     WorkloadExtension getExtension(String aExtension);
-
-    String getSelectedExtension(Project aProject);
-
-    void setSelectedExtension(Project aProject, String aExtension);
 
 }

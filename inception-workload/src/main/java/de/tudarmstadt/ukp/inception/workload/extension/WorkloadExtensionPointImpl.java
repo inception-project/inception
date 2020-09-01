@@ -23,25 +23,31 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WorkloadManagerAutoConfiguration#workloadExtensionPoint(List)}.
+ * </p>
+ */
 public class WorkloadExtensionPointImpl
-    extends ExtensionPoint_ImplBase<ApplicationPageBase, WorkloadExtension>
+    extends ExtensionPoint_ImplBase<Project, WorkloadExtension>
+    implements WorkloadExtensionPoint
 {
 
+    @Autowired
     public WorkloadExtensionPointImpl(
-        @Lazy @Autowired(required = false) List<WorkloadExtension> aExtensions)
+        List<WorkloadExtension> aExtensions)
     {
         super(aExtensions);
     }
 
     @Override
-    public List<WorkloadExtension> getExtensions(ApplicationPageBase aContext)
+    public List<WorkloadExtension> getExtensions(Project aContext)
     {
         Map<String, WorkloadExtension> byRole = new LinkedHashMap<>();
         for (WorkloadExtension extension : super.getExtensions(aContext)) {

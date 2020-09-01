@@ -21,11 +21,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface WorkloadManagementService
 {
-    String SERVICE_NAME = "workloadService";
+    WorkloadManager getOrCreateWorkloadManagerConfiguration(Project aProject);
 
-    String getOrCreateExtensionPoint(Project aProject);
-    String getOrCreateTraits(Project aProject);
-
-    void setExtensionPoint(String aExtensionPointID, Project aProject);
+    void setWorkloadManagerConfiguration(String workloadType, Project aProject);
     void setTraits(String aTraits, Project aProject);
 }

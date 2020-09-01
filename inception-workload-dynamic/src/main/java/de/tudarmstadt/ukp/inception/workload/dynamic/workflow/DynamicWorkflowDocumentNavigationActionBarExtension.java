@@ -29,7 +29,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -40,22 +39,25 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 
-@Order(1000)
 @Component
 public class DynamicWorkflowDocumentNavigationActionBarExtension implements ActionBarExtension
 {
     private final DocumentService documentService;
+    private final WorkloadRegistry workloadRegistry;
 
     private final @PersistenceContext EntityManager entityManager;
 
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(
         DocumentService aDocumentService,
-        EntityManager aEntityManager)
+        EntityManager aEntityManager,
+        WorkloadRegistry aWorkloadRegistry)
     {
         documentService = aDocumentService;
         entityManager = aEntityManager;
+        workloadRegistry = aWorkloadRegistry;
     }
 
     @Override
@@ -73,11 +75,6 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     @Override
     public boolean accepts (AnnotationPageBase aPage) {
         return false;
-        /*
-        return workloadManagementService.getOrCreateExtensionPoint(
-            aPage.getModelObject().getProject()).equals(1);
-
-         */
     }
 
     @Override

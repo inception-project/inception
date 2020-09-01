@@ -28,28 +28,25 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 
-//Custom panel inside the page
-public class WorkloadPanel extends Panel
+public class WorkloadSettingsPanel extends Panel
 {
     private static final long serialVersionUID = -6220828178550562376L;
 
-    private final List<String> monitoring;
-    private final BootstrapRadioChoice<String> monitoringChoices;
+    private final BootstrapSelect<String> workloadStrategy;
     private final Project project;
 
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean WorkloadRegistry workloadRegistry;
 
-    @Autowired
-    public WorkloadPanel(String aID, IModel<Project> aProject)
+    public WorkloadSettingsPanel(String aID, IModel<Project> aProject)
     {
         super(aID, aProject);
 
@@ -58,27 +55,22 @@ public class WorkloadPanel extends Panel
         //Basic form
         Form<Void> form = new Form<>("form");
 
-        //Add two possibilities to select from the monitoring manager
-        monitoring = new ArrayList<>();
-        monitoring.add(getString("defaultMonitoring"));
-        monitoring.add(getString("workload"));
+        workloadStrategy = new BootstrapSelect<String>("workloadStrategy");
 
-        monitoringChoices = new BootstrapRadioChoice<>("monitoringRadios",
-            new Model<>(getString("defaultMonitoring")), monitoring);
-        monitoringChoices.setInline(true);
-        monitoringChoices.setOutputMarkupId(true);
+        workloadStrategy.setModel(new Model<>());
 
-        //Set default value for the group
-        switch (workloadRegistry.getSelectedExtension(project)) {
-        case("StaticWorkloadExtension"):
-            monitoringChoices.setModel(new Model(getString("defaultMonitoring")));
-            break;
-        case("DynamicWorkloadExtension"):
-            monitoringChoices.setModel(new Model(getString("workload")));
+        workloadStrategy.setRequired(true);
+        workloadStrategy.setNullValid(false);
+
+        //Add all possibilities to select from all entries in the registry
+        List<String> strategies = new ArrayList<>();
+        for (WorkloadExtension extension: workloadRegistry.getExtensions()) {
+            strategies.add(extension.getId());
         }
+        workloadStrategy.setChoices(strategies);
 
         //add them to the form
-        form.add(monitoringChoices);
+        form.add(workloadStrategy);
 
         //Finally, add the confirm button at the end
         Button confirm = new LambdaAjaxButton("save", this::actionConfirm);
@@ -92,13 +84,8 @@ public class WorkloadPanel extends Panel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        if (monitoringChoices.getDefaultModelObjectAsString().equals(getString("workload"))) {
-            workloadRegistry.setSelectedExtension(project,
-                workloadRegistry.getExtensions().get(0).getId());
-        } else {
-            workloadRegistry.setSelectedExtension(project,
-                workloadRegistry.getExtensions().get(1).getId());
-        }
+        workloadManagementService.setWorkloadManagerConfiguration(
+            workloadStrategy.getModelObject(),project);
 
         success("Workflow and workload settings changed");
     }

@@ -23,8 +23,15 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfiguration;
 
-@Order(600)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WorkloadManagerAutoConfiguration#projectWorkloadSettingsPanelFactory()}.
+ * </p>
+ */
+@Order(300)
 public class ProjectWorkloadSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
@@ -43,6 +50,6 @@ public class ProjectWorkloadSettingsPanelFactory
     @Override
     public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
     {
-        return new WorkloadPanel(aID, aProjectModel);
+        return new WorkloadSettingsPanel(aID, aProjectModel);
     }
 }

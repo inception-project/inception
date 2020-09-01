@@ -17,21 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.workload.extension;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
-public interface WorkloadExtension extends Extension<ApplicationPageBase>
+public interface WorkloadExtension extends Extension<Project>
 {
     @Override
-    default String getId()
-    {
-        return getClass().getName();
-    }
-
-    @Override
-    default boolean accepts(ApplicationPageBase aPage)
+    default boolean accepts(Project project)
     {
         return true;
     }
-
 }

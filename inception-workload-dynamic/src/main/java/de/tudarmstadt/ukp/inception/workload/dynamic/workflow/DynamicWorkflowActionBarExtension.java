@@ -22,24 +22,26 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 
-@Order(1100)
 @Component
 public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {
+    private final WorkloadRegistry workloadRegistry;
     private final @PersistenceContext EntityManager entityManager;
 
     @Autowired
-    public DynamicWorkflowActionBarExtension(EntityManager aEntityManager)
+    public DynamicWorkflowActionBarExtension(EntityManager aEntityManager,
+        WorkloadRegistry aWorkloadRegistry)
     {
         entityManager = aEntityManager;
+        workloadRegistry = aWorkloadRegistry;
     }
 
     @Override
@@ -55,15 +57,9 @@ public class DynamicWorkflowActionBarExtension
     }
 
     @Override
-    public boolean accepts (AnnotationPageBase aPage)
+    public boolean accepts(AnnotationPageBase aPage)
     {
-        //TODO
         return false;
-        /*
-        return DYNAMIC_WORKFLOW.equals(workloadManagementService.getOrCreateWorkflowManager(
-        aPage.getModelObject().getProject()));
-
-         */
     }
 
     @Override

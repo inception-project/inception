@@ -17,21 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.workload.monitoring.extension;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.monitoring.config.StaticWorkloadManagerAutoConfiguration;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link StaticWorkloadManagerAutoConfiguration#staticWorkloadExtension()}
+ * </p>
+ */
 public class StaticWorkloadExtension implements WorkloadExtension
 {
+    public static final String EXTENSION_ID = "Static_Workload";
+
     @Override
     public String getId()
     {
-        return getClass().getName().substring(getClass().getName().lastIndexOf(".") + 1);
-    }
-
-    @Override
-    public boolean accepts(ApplicationPageBase aPage)
-    {
-        return true;
+        return EXTENSION_ID;
     }
 
 }

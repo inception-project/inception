@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.workload;
 
+import static de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension.EXTENSION_ID;
+
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -29,15 +32,24 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
-@Order(500)
+@Order(300)
+@Component
 public class WorkloadPageMenuItem implements MenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired WorkloadRegistry workloadRegistry;
+    private final UserDao userRepo;
+    private final ProjectService projectService;
+    private final WorkloadManagementService workloadManagementService;
+
+    @Autowired
+    public WorkloadPageMenuItem(UserDao aUserRepo,
+        ProjectService aProjectService, WorkloadManagementService aWorkloadManagementService)
+    {
+        userRepo = aUserRepo;
+        projectService = aProjectService;
+        workloadManagementService = aWorkloadManagementService;
+    }
 
     @Override
     public String getPath()
@@ -77,10 +89,8 @@ public class WorkloadPageMenuItem implements MenuItem
         return (projectService.isCurator(sessionProject, user)
             || projectService.isProjectAdmin(sessionProject, user))
             && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
-            && workloadRegistry.getSelectedExtension(sessionProject).
-            equals(DynamicWorkloadExtension.class.toString().
-                substring(DynamicWorkloadExtension.class.toString().lastIndexOf(".") + 1));
-
+            && workloadManagementService.getOrCreateWorkloadManagerConfiguration(sessionProject).
+            getExtensionPointID().equals(EXTENSION_ID);
     }
 
     @Override

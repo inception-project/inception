@@ -17,20 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.extension;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadExtension;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadExtension()}
+ * </p>
+ */
 public class DynamicWorkloadExtension implements WorkloadExtension
 {
+    public static final String EXTENSION_ID = "Dynamic_Workload";
+
     @Override
     public String getId()
     {
-        return getClass().getName().substring(getClass().getName().lastIndexOf(".") + 1);
-    }
-
-    @Override
-    public boolean accepts(ApplicationPageBase aPage) {
-        return true;
+        return EXTENSION_ID;
     }
 
 }

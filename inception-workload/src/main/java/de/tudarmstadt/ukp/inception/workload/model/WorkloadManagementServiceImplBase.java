@@ -21,61 +21,53 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 
-@Component(WorkloadManagementService.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WorkloadManagerAutoConfiguration#
+ * workloadManagementService(EntityManager, WorkloadRegistry)}.
+ * </p>
+ */
 public class WorkloadManagementServiceImplBase implements WorkloadManagementService
 {
     private final EntityManager entityManager;
+    private final WorkloadRegistry workloadRegistry;
 
     @Autowired
     public WorkloadManagementServiceImplBase(
-        EntityManager aEntityManager)
+        EntityManager aEntityManager, WorkloadRegistry aWorkloadRegistry)
     {
         entityManager = aEntityManager;
+        workloadRegistry = aWorkloadRegistry;
     }
 
     @Override
     @Transactional
-    public String getOrCreateExtensionPoint(Project aProject) {
+    public WorkloadManager getOrCreateWorkloadManagerConfiguration(Project aProject) {
         try {
-            String result = entityManager.createQuery(
-                "SELECT extensionPointID " +
-                    "FROM Workload_Manager " +
-                    "WHERE project = :projectID", String.class)
+            WorkloadManager result = entityManager.createQuery(
+                "SELECT wm " +
+                    "FROM WorkloadManager wm " +
+                    "WHERE wm.project = :projectID", WorkloadManager.class)
                 .setParameter("projectID", aProject).getSingleResult();
             return result;
         } catch (NoResultException e) {
-            createDefaultEntry(aProject,"StaticWorkloadExtension",null);
-            return "StaticWorkloadExtension";
+            return createDefaultEntry(aProject);
         }
     }
 
     @Override
     @Transactional
-    public String getOrCreateTraits(Project aProject) {
-        try {
-            String result = entityManager.createQuery(
-                "SELECT extensionPointID " +
-                    "FROM Workload_Manager " +
-                    "WHERE project = :projectID", String.class)
-                .setParameter("projectID", aProject).getSingleResult();
-            return result;
-        } catch (NoResultException e) {
-            createDefaultEntry(aProject,"StaticWorkloadExtension",null);
-            return null;
-        }
-    }
-
-    @Override
-    @Transactional
-    public void setExtensionPoint(String aExtensionPointID, Project aProject) {
+    public void setWorkloadManagerConfiguration(String aExtensionPointID, Project aProject) {
         entityManager.createQuery(
-            "UPDATE Workload_Manager " +
-                "SET extensionPointID = :extensionPointID " +
+            "UPDATE WorkloadManager " +
+                "SET workloadType = :extensionPointID " +
                 "WHERE project = :projectID")
             .setParameter("extensionPointID", aExtensionPointID)
             .setParameter("projectID", aProject).executeUpdate();
@@ -85,15 +77,22 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
     @Transactional
     public void setTraits(String aTraits, Project aProject) {
         entityManager.createQuery(
-            "UPDATE Workload_Manager " +
+            "UPDATE WorkloadManager " +
                 "SET traits = :traits " +
                 "WHERE project = :projectID")
             .setParameter("traits", aTraits)
             .setParameter("projectID", aProject).executeUpdate();
     }
 
-    private void createDefaultEntry(Project aProject, String aExtensionPoint, String aTraits)
+    private WorkloadManager createDefaultEntry(Project aProject)
     {
-        entityManager.persist(new Workload_Manager(aProject,aExtensionPoint,aTraits));
+        entityManager.persist(new WorkloadManager(
+            aProject,workloadRegistry.getExtensions().get(0).getId(),null));
+        WorkloadManager result = entityManager.createQuery(
+            "SELECT wm " +
+                "FROM WorkloadManager wm " +
+                "WHERE wm.project = :projectID", WorkloadManager.class)
+            .setParameter("projectID", aProject).getSingleResult();
+        return result;
     }
 }

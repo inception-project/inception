@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
+import static de.tudarmstadt.ukp.inception.workload.monitoring.extension.StaticWorkloadExtension.EXTENSION_ID;
+
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,16 +33,25 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.workload.monitoring.extension.StaticWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
-@Component
+
 @Order(300)
+@Component
 public class MonitoringPageMenuItem implements MenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired WorkloadRegistry workloadRegistry;
+    private final UserDao userRepo;
+    private final ProjectService projectService;
+    private final WorkloadManagementService workloadManagementService;
+
+    @Autowired
+    public MonitoringPageMenuItem(UserDao aUserRepo,
+        ProjectService aProjectService, WorkloadManagementService aWorkloadManagementService)
+    {
+        userRepo = aUserRepo;
+        projectService = aProjectService;
+        workloadManagementService = aWorkloadManagementService;
+    }
 
     @Override
     public String getPath()
@@ -75,12 +86,12 @@ public class MonitoringPageMenuItem implements MenuItem
 
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
+
         return (projectService.isCurator(sessionProject, user)
-                || projectService.isProjectAdmin(sessionProject, user))
-                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
-                && workloadRegistry.getSelectedExtension(sessionProject).
-                equals(StaticWorkloadExtension.class.toString().
-                substring(StaticWorkloadExtension.class.toString().lastIndexOf(".") + 1));
+            || projectService.isProjectAdmin(sessionProject, user))
+            && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
+            && workloadManagementService.getOrCreateWorkloadManagerConfiguration(sessionProject).
+            getExtensionPointID().equals(EXTENSION_ID);
     }
     
     @Override

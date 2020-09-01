@@ -17,10 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.workload.extension;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfiguration;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WorkloadManagerAutoConfiguration#workloadExtensionPoint}.
+ * </p
+ */
 public interface WorkloadExtensionPoint
-    extends ExtensionPoint<ApplicationPageBase, WorkloadExtension>
+    extends ExtensionPoint<Project, WorkloadExtension>
 {
 }

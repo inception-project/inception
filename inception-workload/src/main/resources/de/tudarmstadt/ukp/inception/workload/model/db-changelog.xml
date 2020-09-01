@@ -15,10 +15,10 @@
       <column name="project" type="BIGINT">
         <constraints nullable="false" />
       </column>
-        <column name="extensionPointID" type="VARCHAR(50)">
+        <column name="workloadType" type="VARCHAR(255)">
             <constraints nullable="false" />
         </column>
-        <column name="traits" type="CLOB(64000)"></column>
+        <column name="traits" type="LONGTEXT"></column>
     </createTable>
     <createIndex indexName="FK_project_id" tableName="workload_manager">
       <column name="project" />

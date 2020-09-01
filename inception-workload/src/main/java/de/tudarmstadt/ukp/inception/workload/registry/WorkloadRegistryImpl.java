@@ -20,24 +20,32 @@ package de.tudarmstadt.ukp.inception.workload.registry;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WorkloadManagerAutoConfiguration#workloadRegistry(List, ExtensionPoint)}.
+ * </p>
+ */
 public class WorkloadRegistryImpl
     implements WorkloadRegistry
 {
-    private List<WorkloadExtension> extensions;
-    private @Autowired WorkloadManagementService workloadManagementService;
+    private final List<WorkloadExtension> extensions;
+    private final ExtensionPoint<Project, WorkloadExtension> extensionPoint;
 
+
+    @Autowired
     public WorkloadRegistryImpl(
-        @Lazy @Autowired(required = false) List<WorkloadExtension> aExtensions)
+        List<WorkloadExtension> aExtensions,
+        ExtensionPoint<Project, WorkloadExtension> aExtensionPoint)
     {
         extensions = aExtensions;
+        extensionPoint = aExtensionPoint;
     }
 
     @Override
@@ -49,18 +57,8 @@ public class WorkloadRegistryImpl
     @Override
     public WorkloadExtension getExtension(String aExtension)
     {
-        return extensions.stream().filter(ext -> extensions.equals(ext.getId())).findFirst()
-                .orElse(null);
-    }
-
-    public String getSelectedExtension(Project aProject)
-    {
-        return workloadManagementService.getOrCreateExtensionPoint(aProject);
-    }
-
-    public void setSelectedExtension(Project aProject, String aExtension)
-    {
-        workloadManagementService.setExtensionPoint(aExtension,aProject);
+        return extensionPoint.getExtensions().stream().filter(ext -> ext.getId().equals(aExtension))
+            .findFirst().orElse(null);
     }
 }
 

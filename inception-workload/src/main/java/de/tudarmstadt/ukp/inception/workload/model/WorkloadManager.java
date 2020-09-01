@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,15 +29,22 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfiguration;
 
 /**
- * A persistence object for the workflow and workload properties of each project.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WorkloadManagerAutoConfiguration#workloadManager()}.
+ * A persistence object for the workflow and workload properties of each project
+ * </p>
  */
 @Entity
-@Table(name = "workload_manager")
-public class Workload_Manager implements Serializable
+@Table(name = "workload_manager", uniqueConstraints = { @UniqueConstraint(columnNames = {
+    "project", "workloadType" }) })
+public class WorkloadManager implements Serializable
 {
     private static final long serialVersionUID = -3289504168531309833L;
 
@@ -48,22 +56,22 @@ public class Workload_Manager implements Serializable
     @JoinColumn(name = "project", nullable = false)
     private Project project;
 
-    @Column(columnDefinition = "VARCHAR(50)")
-    private String extensionPointID;
+    @Column(columnDefinition = "VARCHAR(255)")
+    private String workloadType;
 
     @Lob
     @Column(length = 64000)
     private String traits;
 
-    public Workload_Manager()
+    public WorkloadManager()
     {
 
     }
 
-    public Workload_Manager(Project aProject, String aExtensionPointID, String aTraits)
+    public WorkloadManager(Project aProject, String aWorkloadType, String aTraits)
     {
         project = aProject;
-        extensionPointID = aExtensionPointID;
+        workloadType = aWorkloadType;
         traits = aTraits;
     }
 
@@ -88,11 +96,11 @@ public class Workload_Manager implements Serializable
     }
 
     public String getExtensionPointID() {
-        return extensionPointID;
+        return workloadType;
     }
 
-    public void setExtensionPointID(String aExtensionPointID) {
-        extensionPointID = aExtensionPointID;
+    public void setExtensionPointID(String aWorkloadType) {
+        workloadType = aWorkloadType;
     }
 
     public String getTraits()
@@ -103,6 +111,23 @@ public class Workload_Manager implements Serializable
     public void setTraits(String aTraits)
     {
         traits = aTraits;
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof WorkloadManager)) {
+            return false;
+        }
+        WorkloadManager castOther = (WorkloadManager) other;
+        return Objects.equals(project, castOther.project)
+            && Objects.equals(workloadType, castOther.workloadType);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(project, workloadType);
     }
 
 }

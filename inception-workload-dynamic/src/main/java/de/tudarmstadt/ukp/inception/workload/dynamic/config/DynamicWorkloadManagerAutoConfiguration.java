@@ -20,21 +20,16 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workload.WorkloadPageMenuItem;
 
 @Configuration
+@Order(300)
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",
     matchIfMissing = true)
 public class DynamicWorkloadManagerAutoConfiguration
 {
-    @Bean
-    public WorkloadPageMenuItem workloadPageMenuItem()
-    {
-        return new WorkloadPageMenuItem();
-    }
-
     @Bean
     public DynamicWorkloadExtension dynamicWorkloadExtension()
     {
