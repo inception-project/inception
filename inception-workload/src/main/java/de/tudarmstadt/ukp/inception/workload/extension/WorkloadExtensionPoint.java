@@ -25,7 +25,7 @@ import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfigura
  * <p>
  * This class is exposed as a Spring Component via
  * {@link WorkloadManagerAutoConfiguration#workloadExtensionPoint}.
- * </p
+ * </p>
  */
 public interface WorkloadExtensionPoint
     extends ExtensionPoint<Project, WorkloadExtension>

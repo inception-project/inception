@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.workload.monitoring.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -26,8 +25,6 @@ import de.tudarmstadt.ukp.inception.workload.monitoring.extension.StaticWorkload
 
 @Configuration
 @Order(500)
-@ConditionalOnProperty(prefix = "workload.static", name = "enabled", havingValue = "true",
-    matchIfMissing = true)
 public class StaticWorkloadManagerAutoConfiguration
 {
     @Bean

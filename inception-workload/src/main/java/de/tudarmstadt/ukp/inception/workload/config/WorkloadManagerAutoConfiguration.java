@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.inception.workload.settings.ProjectWorkloadSettingsPan
 @Order(300)
 public class WorkloadManagerAutoConfiguration
 {
-
     @Bean
     public WorkloadRegistry workloadRegistry(
         List<WorkloadExtension> aWorkloadExtensions,
