@@ -572,7 +572,7 @@ public class CasStorageServiceImpl
             // references, and because we use the set only to inform holders when they become
             // invalid we do never have to explicitly remove the holder from the set
             exclusiveAccessHolders.add(holder);
-            log.info("Added to exclusiveAccessHolders: {}", holder);
+            log.trace("Added to exclusiveAccessHolders: {}", holder);
             logExclusiveAccessHolders();
             return holder;
         }
