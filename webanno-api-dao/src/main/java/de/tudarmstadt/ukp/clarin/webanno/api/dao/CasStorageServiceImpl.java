@@ -32,8 +32,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.failOnConcurrentModification;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils.writeSerializedCas;
 import static java.util.Collections.newSetFromMap;
+import static java.util.Collections.synchronizedSet;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static org.springframework.util.ConcurrentReferenceHashMap.ReferenceType.WEAK;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -103,8 +104,8 @@ public class CasStorageServiceImpl
     private final BackupProperties backupProperties;
     
     private final GenericKeyedObjectPool<CasKey, CasHolder> exclusiveAccessPool;
-    private final Set<CasHolder> exclusiveAccessHolders = newSetFromMap(
-            new ConcurrentReferenceHashMap<>(16, WEAK));
+    private final Set<CasHolder> exclusiveAccessHolders = synchronizedSet(
+            newSetFromMap(new WeakHashMap<>()));
     private final Cache<CasKey, CasHolder> sharedAccessCache;
     
     /**
@@ -509,6 +510,7 @@ public class CasStorageServiceImpl
                             session.hashCode(), aUsername, aDocument.getName(), aDocument.getId());
                     try {
                         exclusiveAccessPool.returnObject(key, holder);
+                        logExclusiveAccessHolders();
                     }
                     catch (Exception e1) {
                         log.error("Unable to return CAS to exclusive access pool", e1);
@@ -570,6 +572,8 @@ public class CasStorageServiceImpl
             // references, and because we use the set only to inform holders when they become
             // invalid we do never have to explicitly remove the holder from the set
             exclusiveAccessHolders.add(holder);
+            log.info("Added to exclusiveAccessHolders: {}", holder);
+            logExclusiveAccessHolders();
             return holder;
         }
         catch (Exception e) {
@@ -588,6 +592,7 @@ public class CasStorageServiceImpl
             log.trace("Returning borrowed CAS [{}] for [{}]@[{}]({})", cas.hashCode(),
                     aKey.getUserId(), aKey.getDocumentName(), aKey.getDocumentId());
             exclusiveAccessPool.returnObject(aKey, aHolder);
+            logExclusiveAccessHolders();
         }
         catch (Exception e) {
             log.error("Unable to return CAS to exclusive access pool", e);
@@ -1031,6 +1036,7 @@ public class CasStorageServiceImpl
             if (holder != null) {
                 exclusiveAccessPool.returnObject(key, holder);
                 holder = null;
+                logExclusiveAccessHolders();
             }
             else {
                 getCas().release();
@@ -1044,6 +1050,7 @@ public class CasStorageServiceImpl
                 log.trace("Returning briefly borrowed CAS [{}]@[{}]({})", username,
                         documentName, documentId);
                 exclusiveAccessPool.returnObject(key, holder);
+                logExclusiveAccessHolders();
             }
         }
     }
@@ -1121,12 +1128,33 @@ public class CasStorageServiceImpl
         return new File(aTo.getPath());
     }
     
+    /**
+     * When using the Spring {@link ConcurrentReferenceHashMap} for the
+     * {@link #exclusiveAccessHolders}, we had some trouble that CASHolders disappeared from the set
+     * even though they had not yet been garbage collected (i.e. still referenced from the
+     * {@link #exclusiveAccessPool}. To fix this, we switch to a simple synchronized
+     * {@link WeakHashMap} turned into a set. We keep the debug/logging code around for a little
+     * more to facilitate debugging this again if need be.
+     */
+    private void logExclusiveAccessHolders()
+    {
+        if (log.isTraceEnabled()) {
+            if (exclusiveAccessHolders.isEmpty()) {
+                log.trace("exclusiveAccessHolders: empty!");
+            }
+            else {
+                log.trace("exclusiveAccessHolders: {}", exclusiveAccessHolders);
+            }
+        }
+    }
+    
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
         // Tell the known CAS holders for the given project that their type system is outdated
         // so they can be refreshed when next returned or borrowed
+        logExclusiveAccessHolders();
         exclusiveAccessHolders.stream()
                 .filter(h -> Objects.equals(h.getKey().getProjectId(), aEvent.getProject().getId()))
                 .forEach(h -> h.setTypeSystemOutdated(true));
