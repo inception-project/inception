@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,16 +36,17 @@ public class RuleVisitorTest
     public void test()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/6.rules"));
-        Parse p = parser.Parse();
-
         List<Rule> rules = new ArrayList<>();
-        p.accept(new RuleVisitor(), rules);
-
+        try (InputStream is = new FileInputStream("src/test/resources/rules/visitor-test.rules")) {
+            ConstraintsGrammar parser = new ConstraintsGrammar(is, "UTF-8");
+            Parse p = parser.Parse();
+            p.accept(new RuleVisitor(), rules);
+        }
+        
         for (Rule rule : rules) {
             System.out.printf("%s %n", rule);
         }
+        
+        assertThat(rules).hasSize(3);
     }
-
 }

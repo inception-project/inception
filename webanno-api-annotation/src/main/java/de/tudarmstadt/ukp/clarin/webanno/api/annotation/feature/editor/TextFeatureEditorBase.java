@@ -17,14 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.StyleAttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 
 public abstract class TextFeatureEditorBase
     extends FeatureEditor
@@ -63,38 +68,34 @@ public abstract class TextFeatureEditorBase
 
     private Component createConstraintsInUseIndicatorContainer()
     {
-        // Shows whether constraints are triggered or not
-        // also shows state of constraints use.
-        return new WebMarkupContainer("textIndicator")
+        // Shows whether constraints are triggered or not also shows state of constraints use.
+        Component indicator = new WebMarkupContainer("textIndicator");
+        indicator.add(LambdaBehavior.visibleWhen(() -> getModelObject().indicator.isAffected()));
+        indicator.add(new ClassAttributeModifier()
         {
-            private static final long serialVersionUID = 4346767114287766710L;
+            private static final long serialVersionUID = 4623544241209220039L;
 
             @Override
-            public boolean isVisible()
+            protected Set<String> update(Set<String> aOldClasses)
             {
-                return getModelObject().indicator.isAffected();
+                aOldClasses.add(getModelObject().indicator.getStatusSymbol());
+                return aOldClasses;
             }
-        }.add(new AttributeAppender("class", new Model<String>()
+        });
+        indicator.add(new StyleAttributeModifier()
         {
-            private static final long serialVersionUID = -7683195283137223296L;
+            private static final long serialVersionUID = 3627596292626670610L;
 
             @Override
-            public String getObject()
+            protected Map<String, String> update(Map<String, String> aStyles)
             {
-                // adds symbol to indicator
-                return getModelObject().indicator.getStatusSymbol();
+                aStyles.put("color", getModelObject().indicator.getStatusColor());
+                return aStyles;
             }
-        })).add(new AttributeAppender("style", new Model<String>()
-        {
-            private static final long serialVersionUID = -5255873539738210137L;
-
-            @Override
-            public String getObject()
-            {
-                // adds color to indicator
-                return "; color: " + getModelObject().indicator.getStatusColor();
-            }
-        }));
+        });
+        indicator.add(
+                new AttributeModifier("title", getModelObject().indicator.getStatusDescription()));
+        return indicator;
     }
 
     @Override

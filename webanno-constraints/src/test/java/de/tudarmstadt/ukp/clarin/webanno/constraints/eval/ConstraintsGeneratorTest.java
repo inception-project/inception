@@ -17,11 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.eval;
 
+import static de.tudarmstadt.ukp.clarin.webanno.constraints.parser.ConstraintsParser.parseFile;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,10 +43,7 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.ParserVisitor;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -60,11 +58,7 @@ public class ConstraintsGeneratorTest
     public void testSimpleFeature()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/9.rules"));
-        Parse p = parser.Parse();
-
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
+        ParsedConstraints constraints = parseFile("src/test/resources/rules/9.rules");
 
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("is");
@@ -78,22 +72,15 @@ public class ConstraintsGeneratorTest
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(lemma,
                 "value", constraints);
 
-        List<PossibleValue> expectedOutput = new LinkedList<>();
-        expectedOutput.add(new PossibleValue("be", true));
-
-        assertEquals(expectedOutput, possibleValues);
+        assertThat(possibleValues).containsExactly(new PossibleValue("be", true));
     }
 
     @Test
     public void testSimplePath()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/10.rules"));
-        Parse p = parser.Parse();
-
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
-
+        ParsedConstraints constraints = parseFile("src/test/resources/rules/10.rules");
+        
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("The sun.");
 
@@ -159,10 +146,7 @@ public class ConstraintsGeneratorTest
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
         
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/twoConditions.rules"));
-        Parse p = parser.Parse();
-        ParsedConstraints constraints = p.accept(new ParserVisitor());
+        ParsedConstraints constraints = parseFile("src/test/resources/rules/twoConditions.rules");
 
         Evaluator constraintsEvaluator = new ValuesGenerator();
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(

@@ -23,6 +23,11 @@
       <div class="flex-v-container border-right">
         <div class="flex-content flex-v-container">
           <form wicket:id="importForm" class="card-header flex-h-container flex-centered flex-gutter">
+            <button wicket:id="create" class="btn btn-primary">
+              <i class="fas fa-plus-square"></i>&nbsp;
+              <wicket:message key="create"/>
+            </button>
+            
             <label class="text-nowrap">
               <wicket:message key="filesToImport"/>
             </label>
@@ -45,10 +50,6 @@
           <div class="card-header flex-h-container flex-centered flex-gutter">
             <label wicket:for="name" class="col-form-label"><wicket:label key="name"/></label>
             <input wicket:id="name" class="form-control flex-content"/>
-            <button wicket:id="save" class="btn btn-primary">
-              <i class="fas fa-save"></i>&nbsp;
-              <wicket:message key="save"/>
-            </button>
           </div>
           <div class="card-body flex-h-container" style="padding: 0px;">
             <textarea wicket:id="script" class="flex-content form-control" style="border: none; resize: none;"></textarea>
@@ -61,6 +62,10 @@
             <button wicket:id="export" type="button" class="btn btn-primary">
               <i class="fas fa-download" aria-hidden="true"></i>&nbsp;
               <wicket:message key="export"/>
+            </button>
+            <button wicket:id="save" class="btn btn-primary">
+              <i class="fas fa-save"></i>&nbsp;
+              <wicket:message key="save"/>
             </button>
             <button wicket:id="cancel" class="btn btn-secondary">
               <i class="fas fa-times"></i>&nbsp;

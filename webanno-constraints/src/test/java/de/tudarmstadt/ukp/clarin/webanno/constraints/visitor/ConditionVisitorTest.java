@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.visitor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,15 +36,17 @@ public class ConditionVisitorTest
     public void test()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/6.rules"));
-        Parse p = parser.Parse();
-
         List<Condition> conditions = new ArrayList<>();
-        p.accept(new ConditionVisitor(), conditions);
-
-        for (Condition cond : conditions) {
-            System.out.printf("%s %n", cond);
+        try (InputStream is = new FileInputStream("src/test/resources/rules/visitor-test.rules")) {
+            ConstraintsGrammar parser = new ConstraintsGrammar(is, "UTF-8");
+            Parse p = parser.Parse();
+            p.accept(new ConditionVisitor(), conditions);
         }
+
+        assertThat(conditions).containsExactly(
+                new Condition("@Lemma.value", "jump"),
+                new Condition("frame", "Jumping"),
+                new Condition("@access", "open"),
+                new Condition("location", "parent"));
     }
 }

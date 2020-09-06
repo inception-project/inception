@@ -19,19 +19,19 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Class containing object representation for Condition in a rule.
- * 
- */
+ *  */
 public class Condition
     implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 5229065580264733470L;
+    
     private final String path;
     private final String value;
 
@@ -57,16 +57,25 @@ public class Condition
         return "Condition [[" + path + "] = [" + value + "]]";
     }
 
-    public boolean matches(ArrayList<String> listOfValues)
+    public boolean matches(List<String> listOfValues)
     {
-        boolean doesItMatch = false;
-        for (String input : listOfValues) {
-            if (value.equals(input)) {
-                doesItMatch = true;
-                break;
-            }
+        return listOfValues.contains(value);
+    }
 
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof Condition)) {
+            return false;
         }
-        return doesItMatch;
+        Condition castOther = (Condition) other;
+        return new EqualsBuilder().append(path, castOther.path).append(value, castOther.value)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder().append(path).append(value).toHashCode();
     }
 }
