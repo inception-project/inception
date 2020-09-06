@@ -147,14 +147,12 @@ public class CurationPage
     private SuggestionViewPanel suggestionViewPanel;
 
     private WebMarkupContainer sentenceListContainer;
-    private WebMarkupContainer sentencesListView;
+    private WebMarkupContainer sentenceLinksListView;
 
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel editor;
 
-    private ListView<String> crossSentAnnoList;
-    
-    public SourceListView curationView;
+    private SourceListView curationView;
     private List<SourceListView> sourceListModel;
 
     private int fSn = 0;
@@ -346,9 +344,9 @@ public class CurationPage
         add(sentenceListContainer);
 
         // add container for list of sentences panel
-        sentencesListView = new WebMarkupContainer("sentencesListView");
-        sentencesListView.setOutputMarkupPlaceholderTag(true);
-        sentencesListView.add(new ListView<SourceListView>("sentencesList",
+        sentenceLinksListView = new WebMarkupContainer("sentenceLinkListView");
+        sentenceLinksListView.setOutputMarkupPlaceholderTag(true);
+        sentenceLinksListView.add(new ListView<SourceListView>("sentenceLinkList",
                 LoadableDetachableModel.of(() -> curationContainer.getCurationViews()))
         {
             private static final long serialVersionUID = 8539162089561432091L;
@@ -360,7 +358,7 @@ public class CurationPage
             }
         });
         
-        sentenceListContainer.add(sentencesListView);
+        sentenceListContainer.add(sentenceLinksListView);
         
     }
     
@@ -810,7 +808,8 @@ public class CurationPage
             if (isEnabledInHierarchy()) {
                 RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(_target -> {
                     for (AjaxEventBehavior b : getBehaviors(AjaxEventBehavior.class)) {
-                        _target.appendJavaScript(b.getCallbackScript());
+                        _target.appendJavaScript(WicketUtil.wrapInTryCatch(
+                                b.getCallbackScript().toString()));
                     }
                 });
             }
@@ -825,15 +824,10 @@ public class CurationPage
             try {
                 AnnotatorState state = CurationPage.this.getModelObject();
                 CAS cas = curationDocumentService.readCurationCas(state.getDocument());
-                updateCurationView(curationContainer, curationViewItem, aTarget,
-                        cas);
-                updatePanel(aTarget, curationContainer);
+                updateCurationView(curationContainer, curationViewItem, aTarget, cas);
                 state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
             }
-            catch (UIMAException e) {
-                error("Error: " + ExceptionUtils.getRootCauseMessage(e));
-            }
-            catch (ClassNotFoundException | AnnotationException | IOException e) {
+            catch (IOException e) {
                 error("Error: " + e.getMessage());
             }
         }
@@ -844,12 +838,12 @@ public class CurationPage
         setDefaultModelObject(aModel);
     }
 
-    private void updateCurationView(final CurationContainer curationContainer,
+    private void updateCurationView(final CurationContainer aCurationContainer,
             final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = CurationPage.this.getModelObject();
         state.getPagingStrategy().moveToOffset(state, aCas, curationViewItem.getBegin(), CENTERED);
-        curationContainer.setState(state);
+        aCurationContainer.setState(state);
         onChange(aTarget);
     }
 
@@ -898,11 +892,11 @@ public class CurationPage
         annotationEditor.requestRender(aTarget);
         
         // Render the user annotation segments (lower part)
-        suggestionViewPanel.updatePanel(aTarget, aCC, annotationSelectionByUsernameAndAddress,
+        suggestionViewPanel.requestUpdate(aTarget, aCC, annotationSelectionByUsernameAndAddress,
                 curationView);
         
         // Render the sentence list sidebar
-        aTarget.add(sentencesListView);
+        aTarget.add(sentenceLinksListView);
     }
     
     private void commonUpdate() throws IOException
