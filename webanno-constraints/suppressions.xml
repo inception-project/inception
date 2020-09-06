@@ -5,6 +5,6 @@
 "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 
 <suppressions>
-    <suppress files=".*/target/.*" checks=".*"/>
-    <suppress files=".*AST.*\.java$" checks=".*"/>
+    <suppress files=".*[\\/]target[\\/].*" checks=".*"/>
+    <suppress files=".*AST.*[\\/].java$" checks=".*"/>
 </suppressions>

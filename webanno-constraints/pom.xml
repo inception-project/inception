@@ -157,31 +157,6 @@
           </dependency>
         </dependencies>
       </plugin>
-      <!--  
-      <plugin>
-          <groupId>com.helger.maven</groupId>
-          <artifactId>ph-javacc-maven-plugin</artifactId>
-          <version>4.1.4</version>
-          <executions>
-          <execution>
-            <id>default</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>jjtree-javacc</goal>
-            </goals>
-            <configuration>
-              <isStatic>false</isStatic>
-              <visitor>true</visitor>
-              <multi>true</multi>
-              <nodeDefaultVoid>false</nodeDefaultVoid>
-              <trackTokens>true</trackTokens>
-              <lookAhead>2</lookAhead>
-              <javadocFriendlyComments>true</javadocFriendlyComments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -215,24 +190,9 @@
               <pluginExecutions>
                 <pluginExecution>
                   <pluginExecutionFilter>
-                    <groupId>com.helger.maven</groupId>
-                    <artifactId>ph-javacc-maven-plugin</artifactId>
-                    <versionRange>[2.8.0,)</versionRange>
-                    <goals>
-                      <goal>jjtree-javacc</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute>
-                      <runOnConfiguration>true</runOnConfiguration>
-                      <runOnIncremental>true</runOnIncremental>
-                    </execute>
-                  </action>
-                </pluginExecution>                <pluginExecution>
-                  <pluginExecutionFilter>
                     <groupId>org.javacc.plugin</groupId>
                     <artifactId>javacc-maven-plugin</artifactId>
-                    <versionRange>[2.8.0,)</versionRange>
+                    <versionRange>[3.0.2,)</versionRange>
                     <goals>
                       <goal>jjtree-javacc</goal>
                     </goals>
