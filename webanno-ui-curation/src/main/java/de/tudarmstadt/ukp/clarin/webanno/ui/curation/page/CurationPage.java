@@ -152,7 +152,7 @@ public class CurationPage
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel editor;
 
-    public SourceListView curationView;
+    private SourceListView curationView;
     private List<SourceListView> sourceListModel;
 
     private int fSn = 0;
@@ -824,9 +824,7 @@ public class CurationPage
             try {
                 AnnotatorState state = CurationPage.this.getModelObject();
                 CAS cas = curationDocumentService.readCurationCas(state.getDocument());
-                updateCurationView(curationContainer, curationViewItem, aTarget,
-                        cas);
-//                updatePanel(aTarget, curationContainer);
+                updateCurationView(curationContainer, curationViewItem, aTarget, cas);
                 state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
             }
             catch (IOException e) {
@@ -840,12 +838,12 @@ public class CurationPage
         setDefaultModelObject(aModel);
     }
 
-    private void updateCurationView(final CurationContainer curationContainer,
+    private void updateCurationView(final CurationContainer aCurationContainer,
             final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = CurationPage.this.getModelObject();
         state.getPagingStrategy().moveToOffset(state, aCas, curationViewItem.getBegin(), CENTERED);
-        curationContainer.setState(state);
+        aCurationContainer.setState(state);
         onChange(aTarget);
     }
 
