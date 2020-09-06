@@ -26,6 +26,7 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.ValidationError;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkboxx.CheckBoxX;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class ToggleBox
     extends CheckBoxX
@@ -75,14 +76,14 @@ public class ToggleBox
 
     private String coloringScript()
     {
-        return String.join("\n",
+        return WicketUtil.wrapInTryCatch(String.join("\n",
                 "$('.checkboxx-toggle-button .fa-question').each((idx, item) => "
                 + "$(item).closest('.cbx-container').css('background-color', '#fff3cd'))",
                 "$('.checkboxx-toggle-button .fa-check').each((idx, item) => "
                 + "$(item).closest('.cbx-container').css('background-color', '#d4edda'))",
                 "$('.checkboxx-toggle-button .fa-ban').each((idx, item) => "
                 + "$(item).closest('.cbx-container').css('background-color', '#f8d7da'))"
-                );
+                ));
     }
 
     private class ChoiceRequiredValidator

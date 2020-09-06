@@ -25,7 +25,7 @@ $(document)
       function showBusysign() {
         document.getElementById('spinner').style.display = 'inline';
       }
-
+      
       hideBusysign();
       if (typeof Wicket != 'undefined') {
         Wicket.Event.subscribe('/ajax/call/beforeSend', function(
@@ -39,3 +39,11 @@ $(document)
       }
     });
 
+//wrap given script in try-catch block
+function tryCatch(jsCall) {
+	try {
+		jsCall();
+	} catch (e) {
+		console.warn('Call terminated due to: ' + e + ', script was:\n' + String(jsCall) + '\n', e.stack);
+	}
+}
