@@ -1550,16 +1550,6 @@ var Visualizer = (function($, window, undefined) {
             labels = [data.eventDescs[arc.eventDescId].labelText];
           }
 // WEBANNO EXTENSION END - #820 - Allow setting label/color individually
-// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
-          else {
-            // Make sure we have measurements for the bracketed labels that we use later.
-            var plainLabels = labels;
-            labels = [];
-            for (var i = 0; i < plainLabels.length; i++) {
-              labels[i] = '(' + plainLabels[i] + ')';
-            }
-          }
-// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
           $.each(labels, function(labelNo, label) {
             arcTexts[label] = true;
           });
@@ -2870,10 +2860,6 @@ Util.profileStart('arcs');
                 }
               }
               
-// WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
-              labelText = "(" + labelText + ")";
-// WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
-
 // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
               if (arc.eventDescId && data.eventDescs[arc.eventDescId]) {
                 if (data.eventDescs[arc.eventDescId].labelText) {
@@ -2887,7 +2873,8 @@ Util.profileStart('arcs');
                 shadowGroup = svg.group(arcGroup);
               }
               var options = {
-                'fill': color,
+                //'fill': color,
+                'fill': '#000000',
                 'data-arc-role': arc.type,
                 'data-arc-origin': arc.origin,
                 'data-arc-target': arc.target,

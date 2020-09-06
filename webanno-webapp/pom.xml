@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.6.4-SNAPSHOT</version>
+    <version>3.6.6-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-webapp</artifactId>
   <name>WebAnno - Application</name>
@@ -88,6 +88,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-security</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -201,7 +205,6 @@
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
-      <version>8.0.15</version>
     </dependency>
     <dependency>
       <groupId>org.hsqldb</groupId>
@@ -463,13 +466,6 @@
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
               <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
-              <!-- Spring AOP
-                <usedDependency>org.springframework:spring-aop</usedDependency>
-                <usedDependency>org.springframework:spring-aspects</usedDependency>
-                <usedDependency>org.aspectj:aspectjrt</usedDependency>
-              -->
-              <!-- Spring Security -->
-              <usedDependency>org.springframework.security:spring-security-config</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

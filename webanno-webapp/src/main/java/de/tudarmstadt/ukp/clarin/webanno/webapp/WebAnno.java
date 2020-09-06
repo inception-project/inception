@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.swing.JWindow;
@@ -37,6 +39,10 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
@@ -50,17 +56,24 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.config.WebAnnoBanner;
 @SpringBootApplication(scanBasePackages = "de.tudarmstadt.ukp.clarin.webanno")
 @EntityScan(basePackages = "de.tudarmstadt.ukp.clarin.webanno")
 @ImportResource({ 
-        "classpath:/META-INF/application-context.xml",
-        "classpath:/META-INF/rest-context.xml", 
-        "classpath:/META-INF/static-resources-context.xml" })
+        "classpath:/META-INF/application-context.xml" })
 @EnableAsync
 public class WebAnno
     extends SpringBootServletInitializer
 {
     private static final String PROTOCOL = "AJP/1.3";
     
-    @Value("${tomcat.ajp.port:-1}")
+    @Value("${server.ajp.port:-1}")
     private int ajpPort;
+
+    @Value("${server.ajp.secret-required:true}")
+    private String ajpSecretRequired;
+
+    @Value("${server.ajp.secret:}")
+    private String ajpSecret;
+
+    @Value("${server.ajp.address:127.0.0.1}")
+    private String ajpAddress;
 
     @Bean
     public SessionRegistry sessionRegistry()
@@ -75,16 +88,35 @@ public class WebAnno
         return new LocalValidatorFactoryBean();
     }
     
+    // The WebAnno User model class picks this bean up by name!
+    @Bean
+    public PasswordEncoder passwordEncoder()
+    {
+        // Set up a DelegatingPasswordEncoder which decodes legacy passwords using the
+        // StandardPasswordEncoder but encodes passwords using the modern BCryptPasswordEncoder 
+        String encoderForEncoding = "bcrypt";
+        Map<String, PasswordEncoder> encoders = new HashMap<>();
+        encoders.put(encoderForEncoding, new BCryptPasswordEncoder());
+        DelegatingPasswordEncoder delegatingEncoder = new DelegatingPasswordEncoder(
+                encoderForEncoding, encoders);
+        // Decode legacy passwords without encoder ID using the StandardPasswordEncoder
+        delegatingEncoder.setDefaultPasswordEncoderForMatches(new StandardPasswordEncoder());
+        return delegatingEncoder;
+    }
+    
     @Bean
     public EmbeddedServletContainerFactory servletContainer()
     {
-        TomcatEmbeddedServletContainerFactory tomcat = new TomcatEmbeddedServletContainerFactory();
+        TomcatEmbeddedServletContainerFactory factory = new TomcatEmbeddedServletContainerFactory();
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
             ajpConnector.setPort(ajpPort);
-            tomcat.addAdditionalTomcatConnectors(ajpConnector);
+            ajpConnector.setAttribute("secretRequired", ajpSecretRequired);
+            ajpConnector.setAttribute("secret", ajpSecret);
+            ajpConnector.setAttribute("address", ajpAddress);
+            factory.addAdditionalTomcatConnectors(ajpConnector);
         }
-        return tomcat;
+        return factory;
     }
 
     @Override

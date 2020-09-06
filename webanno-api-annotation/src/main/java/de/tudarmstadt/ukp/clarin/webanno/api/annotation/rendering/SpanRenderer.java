@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -45,8 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
 /**
  * Render spans.
@@ -106,9 +106,13 @@ public class SpanRenderer
 
             // Render slots
             int fi = 0;
-            for (AnnotationFeature feat : typeAdapter.listFeatures()) {
-                if (MultiValueMode.ARRAY.equals(feat.getMultiValueMode())
-                        && LinkMode.WITH_ROLE.equals(feat.getLinkMode())) {
+            nextFeature: for (AnnotationFeature feat : typeAdapter.listFeatures()) {
+                if (!feat.isEnabled()) {
+                    continue nextFeature;
+                }
+                
+                if (ARRAY.equals(feat.getMultiValueMode())
+                        && WITH_ROLE.equals(feat.getLinkMode())) {
                     List<LinkWithRoleModel> links = typeAdapter.getFeatureValue(feat, fs);
                     for (int li = 0; li < links.size(); li++) {
                         LinkWithRoleModel link = links.get(li);

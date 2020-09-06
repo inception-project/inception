@@ -144,12 +144,20 @@
                       <select wicket:id="type" class="form-control" data-container="body"></select>
                     </div>
                   </div>
-                  <div class="form-group">
+                  <div class="form-group" wicket:enclosure="attachType">
                     <label wicket:for="attachType" class="col-sm-4 control-label"> <wicket:label
                         key="attachToLayer" />
                     </label>
                     <div class="col-sm-8">
                       <select wicket:id="attachType" class="form-control" data-container="body"></select>
+                    </div>
+                  </div>
+                  <div class="form-group" wicket:enclosure="effectiveAttachType">
+                    <label class="col-sm-4 control-label"> 
+                      <wicket:message key="attachToLayer" />
+                    </label>
+                    <div class="col-sm-8">
+                      <span wicket:id="effectiveAttachType" class="form-control" readonly/>
                     </div>
                   </div>
                 </div>
