@@ -284,4 +284,6 @@ _(Span layers)_
 | Link feature that can point only to the selected span layer.
 |====
 
+NOTE: Features on built-in layers cannot be deleted.
+
 NOTE: Please take care that when working with non-custom layers, they have to be ex- and imported, if you want to use the resulting files in e.g. correction projects.
