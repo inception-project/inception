@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -170,8 +171,8 @@ public class ProjectLayersPanel
                 
                 // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor
                 // does not actually appear in the input field. However, using JQuery here works.
-                _target.appendJavaScript("$('#"
-                        + layerDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();");
+                _target.appendJavaScript(WicketUtil.wrapInTryCatch("$('#"
+                        + layerDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();"));
             }));
 
             final Map<AnnotationLayer, String> colors = new HashMap<>();
@@ -478,8 +479,8 @@ public class ProjectLayersPanel
             aTarget.add(featureDetailForm);
             // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor does
             // not actually appear in the input field. However, using JQuery here works.
-            aTarget.appendJavaScript("$('#"
-                    + featureDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();");
+            aTarget.appendJavaScript(WicketUtil.wrapInTryCatch("$('#"
+                    + featureDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();"));
         }
 
         private List<AnnotationFeature> listFeatures()

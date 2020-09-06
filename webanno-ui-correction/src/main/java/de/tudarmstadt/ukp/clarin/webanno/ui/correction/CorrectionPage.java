@@ -198,7 +198,7 @@ public class CorrectionPage
                     CAS editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
-                    suggestionView.updatePanel(aTarget, curationContainer,
+                    suggestionView.requestUpdate(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
                     
                     annotationEditor.requestRender(aTarget);
@@ -347,7 +347,7 @@ public class CorrectionPage
     private void update(AjaxRequestTarget target)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
-        suggestionView.updatePanel(target, curationContainer,
+        suggestionView.requestUpdate(target, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
     }
     
