@@ -17,15 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class ThreadLockingInvocationHandler
     implements InvocationHandler
 {
+    private final List<String> UNCHECKED_METHODS = asList("toString", "hashCode", "equals");
+    
     private Thread owner;
     private Object target;
     private StackTraceElement[] trace;
@@ -41,7 +45,8 @@ public class ThreadLockingInvocationHandler
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
     {
         Thread current = Thread.currentThread();
-        if (current != owner) {
+        
+        if (current != owner && !UNCHECKED_METHODS.contains(method.getName())) {
             throw new IllegalStateException("Object " + target + " bound to thread " + owner
                     + " but method " + method + " was called by thread " + current
                     + ". Object originally created at:\n" + getTrace());
@@ -71,7 +76,8 @@ public class ThreadLockingInvocationHandler
     private String getTrace() 
     {
         return Stream.of(trace)
-                .map(e -> "\t" + e.toString())
-                .collect(joining("\n"));
+                .map(e -> "\t * " + e.toString())
+                .collect(joining("\n")) 
+                + "--- END OF CREATION TRACE ---\n";
     }
 }
