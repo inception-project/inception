@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadExtension;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WorkloadManagerAutoConfiguration#workloadRegistry(List, ExtensionPoint)}.
+ * {@link WorkloadManagerAutoConfiguration#workloadRegistry}
  * </p>
  */
 public class WorkloadRegistryImpl

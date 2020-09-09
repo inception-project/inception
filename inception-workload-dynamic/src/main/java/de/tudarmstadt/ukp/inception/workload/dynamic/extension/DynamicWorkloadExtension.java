@@ -23,7 +23,7 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadExtension;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadExtension()}
+ * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadExtension}
  * </p>
  */
 public class DynamicWorkloadExtension implements WorkloadExtension

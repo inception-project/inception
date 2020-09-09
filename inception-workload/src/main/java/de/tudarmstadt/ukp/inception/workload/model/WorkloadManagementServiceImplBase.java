@@ -30,8 +30,7 @@ import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WorkloadManagerAutoConfiguration#
- * workloadManagementService(EntityManager, WorkloadRegistry)}.
+ * {@link WorkloadManagerAutoConfiguration#workloadManagementService}
  * </p>
  */
 public class WorkloadManagementServiceImplBase implements WorkloadManagementService

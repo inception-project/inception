@@ -23,7 +23,7 @@ import de.tudarmstadt.ukp.inception.workload.monitoring.config.StaticWorkloadMan
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link StaticWorkloadManagerAutoConfiguration#staticWorkloadExtension()}
+ * {@link StaticWorkloadManagerAutoConfiguration#staticWorkloadExtension}
  * </p>
  */
 public class StaticWorkloadExtension implements WorkloadExtension

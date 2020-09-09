@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfigura
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WorkloadManagerAutoConfiguration#workloadManager()}.
+ * {@link WorkloadManagerAutoConfiguration#workloadManager}.
  * A persistence object for the workflow and workload properties of each project
  * </p>
  */

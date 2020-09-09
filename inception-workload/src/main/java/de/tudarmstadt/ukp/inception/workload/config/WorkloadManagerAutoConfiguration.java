@@ -37,9 +37,6 @@ import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistryImpl;
 import de.tudarmstadt.ukp.inception.workload.settings.ProjectWorkloadSettingsPanelFactory;
 
-/**
- * Provides Spring beans for the workload settings panel and the workload management service
- */
 @Configuration
 @Order(300)
 public class WorkloadManagerAutoConfiguration
