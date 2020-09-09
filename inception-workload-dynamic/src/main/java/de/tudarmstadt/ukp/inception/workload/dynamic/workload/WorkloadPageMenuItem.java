@@ -76,6 +76,7 @@ public class WorkloadPageMenuItem implements MenuItem
     public boolean applies()
     {
         Project sessionProject = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
+
         if (sessionProject == null) {
             return false;
         }
@@ -89,8 +90,9 @@ public class WorkloadPageMenuItem implements MenuItem
         return (projectService.isCurator(sessionProject, user)
             || projectService.isProjectAdmin(sessionProject, user))
             && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
-            && workloadManagementService.getOrCreateWorkloadManagerConfiguration(sessionProject).
-            getExtensionPointID().equals(EXTENSION_ID);
+            && EXTENSION_ID.equals(workloadManagementService.
+            getOrCreateWorkloadManagerConfiguration(sessionProject).
+            getExtensionPointID());
     }
 
     @Override

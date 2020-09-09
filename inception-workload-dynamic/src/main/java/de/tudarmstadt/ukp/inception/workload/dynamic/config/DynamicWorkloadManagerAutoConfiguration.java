@@ -26,8 +26,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadEx
 
 @Configuration
 @Order(300)
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",
-    matchIfMissing = true)
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean

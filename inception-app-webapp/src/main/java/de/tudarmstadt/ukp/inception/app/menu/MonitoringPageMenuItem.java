@@ -90,8 +90,9 @@ public class MonitoringPageMenuItem implements MenuItem
         return (projectService.isCurator(sessionProject, user)
             || projectService.isProjectAdmin(sessionProject, user))
             && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
-            && workloadManagementService.getOrCreateWorkloadManagerConfiguration(sessionProject).
-            getExtensionPointID().equals(EXTENSION_ID);
+            && EXTENSION_ID.equals(workloadManagementService.
+            getOrCreateWorkloadManagerConfiguration(sessionProject).
+            getExtensionPointID());
     }
     
     @Override

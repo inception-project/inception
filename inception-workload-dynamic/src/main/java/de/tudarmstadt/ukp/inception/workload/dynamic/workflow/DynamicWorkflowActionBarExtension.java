@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.workflow;
 
+import static de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension.EXTENSION_ID;
+
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 
 @Component
@@ -34,14 +37,16 @@ public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {
     private final WorkloadRegistry workloadRegistry;
+    private final WorkloadManagementService workloadManagementService;
     private final @PersistenceContext EntityManager entityManager;
 
     @Autowired
     public DynamicWorkflowActionBarExtension(EntityManager aEntityManager,
-        WorkloadRegistry aWorkloadRegistry)
+        WorkloadRegistry aWorkloadRegistry, WorkloadManagementService aWorkloadManagementService)
     {
         entityManager = aEntityManager;
         workloadRegistry = aWorkloadRegistry;
+        workloadManagementService = aWorkloadManagementService;
     }
 
     @Override
@@ -59,7 +64,9 @@ public class DynamicWorkflowActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        return false;
+        return EXTENSION_ID.equals(workloadManagementService.
+            getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
+            .getExtensionPointID());
     }
 
     @Override
