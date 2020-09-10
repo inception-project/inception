@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.junit.Assume.assumeTrue;
 
@@ -206,6 +207,12 @@ public class LappsGridRecommenderConformityTest
             con.setReadTimeout(2500);
             con.setRequestProperty("Content-Type", "application/sparql-query");
             int status = con.getResponseCode();
+            
+            // should be open to all users (no password auth.),
+            // this is an indicator for the service being down
+            if (status == HTTP_UNAUTHORIZED) {
+                return false;
+            }
             
             if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
                 String location = con.getHeaderField("Location");
