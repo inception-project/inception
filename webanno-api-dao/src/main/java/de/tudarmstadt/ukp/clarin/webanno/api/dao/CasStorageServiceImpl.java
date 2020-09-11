@@ -99,6 +99,7 @@ public class CasStorageServiceImpl
 
     private final long EVICT_IDLE_CASES_AFTER_MINUTES = 5;
     private final long SHARED_CAS_CACHE_SIZE = 10_000;
+    private final long CAS_BORROW_WAIT_TIMEOUT_MINUTES = 3;
 
     private final CasDoctor casDoctor;
     private final AnnotationSchemaService schemaService;
@@ -143,7 +144,7 @@ public class CasStorageServiceImpl
         // Setting this to 0 because we do not want any CAS to stick around in memory indefinitely
         config.setMinIdlePerKey(0);
         // Run an evictor thread every 5 minutes
-        config.setTimeBetweenEvictionRunsMillis(MINUTES.toMillis(5));
+        config.setTimeBetweenEvictionRunsMillis(MINUTES.toMillis(EVICT_IDLE_CASES_AFTER_MINUTES));
         // Allow the evictor to drop idle CASes from the pool after 5 minutes (i.e. on each run)
         config.setMinEvictableIdleTimeMillis(MINUTES.toMillis(EVICT_IDLE_CASES_AFTER_MINUTES));
         // Allow the evictor to drop all idle CASes on every eviction run
@@ -157,6 +158,7 @@ public class CasStorageServiceImpl
         // is returned
         config.setTestOnReturn(true);
         config.setTestOnBorrow(true);
+        config.setMaxWaitMillis(MINUTES.toMillis(CAS_BORROW_WAIT_TIMEOUT_MINUTES));
         // We do not have to set maxTotal because the default is already to have no limit (-1)
         exclusiveAccessPool = new GenericKeyedObjectPool<>(new PooledCasHolderFactory(), config);
         
@@ -503,13 +505,13 @@ public class CasStorageServiceImpl
                     
                     log.trace(
                             "CAS storage session [{}]: borrowed CAS [{}] for [{}]@[{}]({}) loaded from storage",
-                            session.hashCode(), holder.getCas().hashCode(), aUsername,
+                            session.hashCode(), holder.getCasHashCode(), aUsername,
                             aDocument.getName(), aDocument.getId());
                 }
                 else {
                     log.trace(
                             "CAS storage session [{}]: borrowed CAS [{}] for [{}]@[{}]({}) was already in memory",
-                            session.hashCode(), holder.getCas().hashCode(), aUsername,
+                            session.hashCode(), holder.getCasHashCode(), aUsername,
                             aDocument.getName(), aDocument.getId());
                     
                     transferCasOwnershipToCurrentThread(holder.getCas());
@@ -525,7 +527,7 @@ public class CasStorageServiceImpl
                 if (key != null && holder != null) {
                     log.trace(
                             "CAS storage session [{}]: returning borrowed CAS [{}] for [{}]@[{}]({}) after failure to load CAS",
-                            session.hashCode(), holder.getCas().hashCode(), aUsername,
+                            session.hashCode(), holder.getCasHashCode(), aUsername,
                             aDocument.getName(), aDocument.getId());
                     try {
                         exclusiveAccessPool.returnObject(key, holder);
