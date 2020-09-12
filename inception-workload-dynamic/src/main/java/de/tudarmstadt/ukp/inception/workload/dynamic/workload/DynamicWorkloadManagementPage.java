@@ -286,8 +286,6 @@ public class DynamicWorkloadManagementPage extends ApplicationPageBase
         dateTo = new AjaxDatePicker("to", PropertyModel.of(aProv, "filter.to"),
                 "MM/dd/yyyy");
 
-        dateFrom.setOutputMarkupId(true);
-        dateTo.setOutputMarkupId(true);
 
         searchForm.add(dateFrom);
         searchForm.add(dateTo);

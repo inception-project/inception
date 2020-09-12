@@ -87,7 +87,7 @@ public class ElasticSearchProvider
             
             QueryBuilder qb = QueryBuilders.simpleQueryStringQuery(aQuery)
                     .field(aTraits.getDefaultField());
-            
+
             if (aTraits.isRandomOrder()) {
                 RandomScoreFunctionBuilder randomFunc = ScoreFunctionBuilders.randomFunction();
                 randomFunc.seed(aTraits.getSeed());
@@ -100,6 +100,7 @@ public class ElasticSearchProvider
             
             SearchRequest searchRequest = new SearchRequest(aTraits.getIndexName())
                     .source(searchSourceBuilder);
+
             SearchResponse response = client.search(searchRequest);
     
             for (SearchHit hit: response.getHits().getHits()) {

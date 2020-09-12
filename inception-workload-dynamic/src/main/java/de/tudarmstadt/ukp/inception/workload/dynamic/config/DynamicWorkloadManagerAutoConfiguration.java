@@ -23,9 +23,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.settings.ProjectWorkloadSettingsPanelFactory;
 
-@Configuration
 @Order(300)
+@Configuration
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkloadManagerAutoConfiguration
 {
@@ -35,4 +36,9 @@ public class DynamicWorkloadManagerAutoConfiguration
         return new DynamicWorkloadExtension();
     }
 
+    @Bean
+    public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory()
+    {
+        return new ProjectWorkloadSettingsPanelFactory();
+    }
 }

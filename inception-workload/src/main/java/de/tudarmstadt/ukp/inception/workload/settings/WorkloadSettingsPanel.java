@@ -87,6 +87,6 @@ public class WorkloadSettingsPanel extends Panel
         workloadManagementService.setWorkloadManagerConfiguration(
             workloadStrategy.getModelObject(),project);
 
-        success("Workflow and workload settings changed");
+        success("Workload settings changed");
     }
 }

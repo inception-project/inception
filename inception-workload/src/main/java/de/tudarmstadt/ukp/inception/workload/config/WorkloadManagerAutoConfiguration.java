@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImpl
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistryImpl;
-import de.tudarmstadt.ukp.inception.workload.settings.ProjectWorkloadSettingsPanelFactory;
 
 @Configuration
 @Order(300)
@@ -48,12 +47,6 @@ public class WorkloadManagerAutoConfiguration
     {
         return new WorkloadRegistryImpl(aWorkloadExtensions,
             aExtensionPoint);
-    }
-
-    @Bean
-    public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory()
-    {
-        return new ProjectWorkloadSettingsPanelFactory();
     }
 
     @Bean
