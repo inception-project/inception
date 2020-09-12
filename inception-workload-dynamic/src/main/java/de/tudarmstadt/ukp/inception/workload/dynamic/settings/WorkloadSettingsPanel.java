@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.settings;
+package de.tudarmstadt.ukp.inception.workload.dynamic.settings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +68,9 @@ public class WorkloadSettingsPanel extends Panel
             strategies.add(extension.getId());
         }
         workloadStrategy.setChoices(strategies);
+        workloadStrategy.setModel(new Model(
+            workloadManagementService.getOrCreateWorkloadManagerConfiguration(project)
+                .getExtensionPointID()));
 
         //add them to the form
         form.add(workloadStrategy);

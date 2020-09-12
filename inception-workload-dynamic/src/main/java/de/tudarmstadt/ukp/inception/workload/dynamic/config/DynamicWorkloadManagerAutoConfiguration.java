@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.settings.ProjectWorkloadSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.workload.dynamic.settings.ProjectWorkloadSettingsPanelFactory;
 
 @Order(300)
 @Configuration
