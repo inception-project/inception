@@ -125,6 +125,15 @@ public class CasHolder
     {
         V get() throws Exception;
     }
+    
+    public String getCasHashCode() {
+        if (cas != null) {
+            return String.valueOf(cas.hashCode());
+        }
+        else {
+            return "<unset>";
+        }
+    }
 
     @Override
     public String toString()

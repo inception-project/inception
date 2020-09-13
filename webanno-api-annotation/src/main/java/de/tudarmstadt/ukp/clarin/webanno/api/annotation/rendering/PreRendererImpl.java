@@ -21,6 +21,7 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -50,6 +51,8 @@ public class PreRendererImpl implements PreRenderer
     public void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
             List<AnnotationLayer> aLayers)
     {
+        Validate.notNull(aCas, "CAS cannot be null");
+        
         if (aLayers.isEmpty()) {
             return;
         }
