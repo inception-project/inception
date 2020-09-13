@@ -68,9 +68,8 @@ public class WorkloadSettingsPanel extends Panel
             strategies.add(extension.getId());
         }
         workloadStrategy.setChoices(strategies);
-        workloadStrategy.setModel(new Model(
-            workloadManagementService.getOrCreateWorkloadManagerConfiguration(project)
-                .getExtensionPointID()));
+        workloadStrategy.setModel(new Model(workloadManagementService.
+            getOrCreateWorkloadManagerConfiguration(project).getExtensionPointID()));
 
         //add them to the form
         form.add(workloadStrategy);

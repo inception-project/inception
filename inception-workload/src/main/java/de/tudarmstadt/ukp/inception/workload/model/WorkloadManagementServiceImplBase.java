@@ -86,7 +86,7 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
     private WorkloadManager createDefaultEntry(Project aProject)
     {
         entityManager.persist(new WorkloadManager(
-            aProject,workloadRegistry.getExtensions().get(0).getId(),null));
+            aProject,"Static Workload",null));
         WorkloadManager result = entityManager.createQuery(
             "SELECT wm " +
                 "FROM WorkloadManager wm " +
