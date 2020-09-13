@@ -273,7 +273,7 @@ public class ManageUsersPage
             selectedUser.setObject(null);
         }
 
-        info("User details have been saved.");
+        info("Details for user [" + user.getUsername() + "] have been saved.");
         
         aTarget.add(detailForm);
         aTarget.add(users);
