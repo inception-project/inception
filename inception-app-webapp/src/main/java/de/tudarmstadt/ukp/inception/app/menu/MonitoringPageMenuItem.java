@@ -21,7 +21,9 @@ import static de.tudarmstadt.ukp.inception.workload.monitoring.extension.StaticW
 
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -33,21 +35,23 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-
 
 @Order(300)
 @Component
 public class MonitoringPageMenuItem implements MenuItem
 {
+    private final ApplicationContext applicationContext;
     private final UserDao userRepo;
     private final ProjectService projectService;
     private final WorkloadManagementService workloadManagementService;
 
     @Autowired
-    public MonitoringPageMenuItem(UserDao aUserRepo,
+    public MonitoringPageMenuItem(ApplicationContext aApplicationContextUserDao, UserDao aUserRepo,
         ProjectService aProjectService, WorkloadManagementService aWorkloadManagementService)
     {
+        applicationContext = aApplicationContextUserDao;
         userRepo = aUserRepo;
         projectService = aProjectService;
         workloadManagementService = aWorkloadManagementService;
@@ -81,6 +85,14 @@ public class MonitoringPageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
+
+        //Check if dynamic workload is enabled, if not use static workload manager
+        try {
+            applicationContext.getBean(DynamicWorkloadExtension.class);
+        } catch (NoSuchBeanDefinitionException e) {
+            workloadManagementService.setWorkloadManagerConfiguration(EXTENSION_ID,sessionProject);
+        }
+
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
 
