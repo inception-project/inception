@@ -1283,7 +1283,7 @@ public abstract class AnnotationDetailEditorPanel
                 // If the feature does not exist in the given Feature Structure, 
                 // then the typesystem might be out of date
                 error("The annotation typesystem might be out of date, "
-                        + "try re-loading the document!");
+                        + "try re-opening the document!");
                 LOG.error(String.format("Unable to find %s in the current cas typesystem",
                         feature.getName()));
                 return;
