@@ -20,62 +20,36 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.storage;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 
 import java.io.IOException;
-import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.MergeDocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 @Component(CurationDocumentService.SERVICE_NAME)
-public class CurationDocumentServiceImpl
+public class CurationDocumentServiceImpl extends MergeDocumentServiceImpl
     implements CurationDocumentService
 {
+    
     private @Autowired CasStorageService casStorageService;
-    private @Autowired AnnotationSchemaService annotationService;
 
     @PersistenceContext
     private EntityManager entityManager;
-
+    
     public CurationDocumentServiceImpl()
     {
-        // Nothing to do
-    }
-
-    @Override
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    @Transactional
-    public void writeCurationCas(CAS aCas, SourceDocument aDocument, boolean aUpdateTimestamp)
-        throws IOException
-    {
-        casStorageService.writeCas(aDocument, aCas, CURATION_USER);
-        if (aUpdateTimestamp) {
-            aDocument.setTimestamp(new Timestamp(new Date().getTime()));
-            entityManager.merge(aDocument);
-        }
-    }
-
-    @Override
-    public CAS readCurationCas(SourceDocument aDocument)
-        throws IOException
-    {
-        return casStorageService.readCas(aDocument, CURATION_USER);
+        // Do nothing       
     }
 
     @Override
@@ -83,13 +57,6 @@ public class CurationDocumentServiceImpl
         throws IOException
     {
         casStorageService.deleteCas(aDocument, CURATION_USER);
-    }
-
-    @Override
-    public void upgradeCurationCas(CAS aCas, SourceDocument aDocument)
-        throws UIMAException, IOException
-    {
-        annotationService.upgradeCas(aCas, aDocument, CURATION_USER);
     }
 
     @Override
@@ -108,14 +75,6 @@ public class CurationDocumentServiceImpl
                 .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
         docs.sort(SourceDocument.NAME_COMPARATOR);
         return docs;
-    }
-    
-    @Override
-    public Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException
-    {
-        Validate.notNull(aDocument, "Source document must be specified");
-        
-        return casStorageService.getCasTimestamp(aDocument, CURATION_USER);
     }
     
     @Override
@@ -155,8 +114,9 @@ public class CurationDocumentServiceImpl
     }
 
     @Override
-    public boolean existsCurationCas(SourceDocument aDocument) throws IOException
+    public String getResultCasUser()
     {
-        return casStorageService.existsCas(aDocument, CURATION_USER);
+        return CURATION_USER;
     }
+
 }

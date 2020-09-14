@@ -112,7 +112,7 @@ public class AutomationUtil
         for (SourceDocument d : aDocumentService.listSourceDocuments(aState.getProject())) {
             loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
                     aState.getUser());
-            CAS cas = aCorrectionDocumentService.readCorrectionCas(d);
+            CAS cas = aCorrectionDocumentService.readResultCas(d);
 
             for (AnnotationFS sentence : selectSentences(cas)) {
                 String sentenceText = sentence.getCoveredText().toLowerCase();
@@ -128,7 +128,7 @@ public class AutomationUtil
                     }
                 }
             }
-            aCorrectionDocumentService.writeCorrectionCas(cas, d);
+            aCorrectionDocumentService.writeResultCas(cas, d, false);
         }
     }
 
@@ -141,7 +141,7 @@ public class AutomationUtil
         for (SourceDocument d : aDocumentService.listSourceDocuments(aState.getProject())) {
             loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
                     aState.getUser());
-            CAS cas = aCorrectionDocumentService.readCorrectionCas(d);
+            CAS cas = aCorrectionDocumentService.readResultCas(d);
 
             RelationAdapter adapter = (RelationAdapter) aAnnotationService
                     .getAdapter(aFeature.getLayer());
@@ -185,7 +185,7 @@ public class AutomationUtil
 
             }
 
-            aCorrectionDocumentService.writeCorrectionCas(cas, d);
+            aCorrectionDocumentService.writeResultCas(cas, d, false);
         }
     }
 
@@ -277,13 +277,13 @@ public class AutomationUtil
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         CAS cas = null;
-        if (!aCorrectionDocumentService.existsCorrectionCas(aDocument)) {
+        if (!aCorrectionDocumentService.existsResultCas(aDocument)) {
             try {
                 AnnotationDocument logedInUserAnnotationDocument = aDocumentService
                         .getAnnotationDocument(aDocument, logedInUser);
                 cas = aDocumentService.readAnnotationCas(logedInUserAnnotationDocument);
                 annotationService.upgradeCas(cas, logedInUserAnnotationDocument);
-                aCorrectionDocumentService.writeCorrectionCas(cas, aDocument);
+                aCorrectionDocumentService.writeResultCas(cas, aDocument, false);
             }
             catch (DataRetrievalFailureException | NoResultException e) {
                 cas = aDocumentService.readAnnotationCas(
@@ -291,13 +291,13 @@ public class AutomationUtil
                 // upgrade this cas
                 annotationService.upgradeCas(cas,
                         aDocumentService.createOrGetAnnotationDocument(aDocument, logedInUser));
-                aCorrectionDocumentService.writeCorrectionCas(cas, aDocument);
+                aCorrectionDocumentService.writeResultCas(cas, aDocument, false);
             }
         }
         else {
-            cas = aCorrectionDocumentService.readCorrectionCas(aDocument);
+            cas = aCorrectionDocumentService.readResultCas(aDocument);
             // upgrade this automation cas
-            aCorrectionDocumentService.upgradeCorrectionCas(cas, aDocument);
+            aCorrectionDocumentService.upgradeResultCas(cas, aDocument);
         }
     }
 
@@ -316,7 +316,7 @@ public class AutomationUtil
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
                     aBModel.getUser());
-            CAS cas = aCorrectionDocumentService.readCorrectionCas(d);
+            CAS cas = aCorrectionDocumentService.readResultCas(d);
 
             TypeAdapter adapter = aAnnotationService.getAdapter(aFeature.getLayer());
 
@@ -333,7 +333,7 @@ public class AutomationUtil
                     }
                 }
             }
-            aCorrectionDocumentService.writeCorrectionCas(cas,d);
+            aCorrectionDocumentService.writeResultCas(cas, d, false);
         }
     }
 
@@ -361,7 +361,7 @@ public class AutomationUtil
         for (SourceDocument d : aDocumentService.listSourceDocuments(aBModel.getProject())) {
             loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
                     aBModel.getUser());
-            CAS cas = aCorrectionDocumentService.readCorrectionCas(d);
+            CAS cas = aCorrectionDocumentService.readResultCas(d);
             RelationAdapter adapter = (RelationAdapter) aAnnotationService
                     .getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
@@ -398,7 +398,7 @@ public class AutomationUtil
             deleteRelationAnnotation(adapter, aBModel.getDocument(),
                     aBModel.getUser().getUsername(), cas, aFeature, beginOffset, endOffset,
                     depCoveredText, govCoveredText, aValue);
-            aCorrectionDocumentService.writeCorrectionCas(cas, d);
+            aCorrectionDocumentService.writeResultCas(cas, d, false);
         }
     }
 
@@ -697,7 +697,7 @@ public class AutomationUtil
                 .listSourceDocuments(feature.getProject());
         for (SourceDocument sourceDocument : sourceDocuments) {
             if (sourceDocument.getState().equals(SourceDocumentState.CURATION_FINISHED)) {
-                CAS cas = aCurationDocumentService.readCurationCas(sourceDocument);
+                CAS cas = aCurationDocumentService.readResultCas(sourceDocument);
                 for (AnnotationFS sentence : selectSentences(cas)) {
                     if (aBase) { // base training document
                         trainOut.append(
@@ -776,7 +776,7 @@ public class AutomationUtil
             BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));
             CAS cas;
             try {
-                cas = aCorrectionDocumentService.readCorrectionCas(document);
+                cas = aCorrectionDocumentService.readResultCas(document);
             }
             catch (Exception e) {
                 AnnotationDocument annoDoc = aRepository.createOrGetAnnotationDocument(document,
@@ -1799,7 +1799,7 @@ public class AutomationUtil
                 // to the correction CAS - this makes the comparison between the time stamp
                 // stored in the CAS and the on-disk timestamp of the correction CAS invalid
                 CasMetadataUtils.clearCasMetadata(cas);
-                aCorrectionDocumentService.writeCorrectionCas(cas, document);
+                aCorrectionDocumentService.writeResultCas(cas, document, false);
                 status.setAnnoDocs(status.getAnnoDocs() - 1);
             }
             catch (DataRetrievalFailureException e) {

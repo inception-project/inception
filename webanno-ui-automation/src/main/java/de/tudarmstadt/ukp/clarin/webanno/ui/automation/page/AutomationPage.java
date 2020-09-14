@@ -71,7 +71,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -121,7 +120,6 @@ public class AutomationPage
     private @SpringBean AnnotationEditorProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean AutomationService automationService;
 
@@ -261,8 +259,8 @@ public class AutomationPage
                 }
 
                 try {
-                    SuggestionBuilder builder = new SuggestionBuilder(casStorageService,
-                            documentService, correctionDocumentService, curationDocumentService,
+                    SuggestionBuilder builder = new SuggestionBuilder(
+                            documentService, correctionDocumentService,
                             annotationService, userRepository);
                     curationContainer = builder.buildCurationContainer(state);
                     setCurationSegmentBeginEnd(getEditorCas());
@@ -461,8 +459,8 @@ public class AutomationPage
 
             // Read the correction CAS - if it does not exist yet, from the initial CAS
             CAS correctionCas;
-            if (correctionDocumentService.existsCorrectionCas(state.getDocument())) {
-                correctionCas = correctionDocumentService.readCorrectionCas(state.getDocument());
+            if (correctionDocumentService.existsResultCas(state.getDocument())) {
+                correctionCas = correctionDocumentService.readResultCas(state.getDocument());
             }
             else {
                 correctionCas = documentService.createOrReadInitialCas(state.getDocument());
@@ -474,12 +472,12 @@ public class AutomationPage
                     FORCE_CAS_UPGRADE);
 
             // Update the CASes
-            correctionDocumentService.upgradeCorrectionCas(correctionCas, state.getDocument());
+            correctionDocumentService.upgradeResultCas(correctionCas, state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas, annotationDocument.getDocument(),
                     state.getUser(), false);
-            correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument());
+            correctionDocumentService.writeResultCas(correctionCas, state.getDocument(), false);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
@@ -540,8 +538,8 @@ public class AutomationPage
     {
         try {
             AnnotatorState state = getModelObject();
-            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
-                    correctionDocumentService, curationDocumentService, annotationService,
+            SuggestionBuilder builder = new SuggestionBuilder(documentService,
+                    correctionDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             setCurationSegmentBeginEnd(getEditorCas());

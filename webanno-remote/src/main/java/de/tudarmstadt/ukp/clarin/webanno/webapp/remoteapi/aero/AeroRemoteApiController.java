@@ -815,7 +815,7 @@ public class AeroRemoteApiController
         CAS annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
         
         // If they are compatible, then we can store the new annotations
-        curationService.writeCurationCas(annotationCas, document, false);
+        curationService.writeResultCas(annotationCas, document, false);
 
         AnnotationDocumentState resultState = AnnotationDocumentState.IN_PROGRESS;
         if (aState.isPresent()) {
