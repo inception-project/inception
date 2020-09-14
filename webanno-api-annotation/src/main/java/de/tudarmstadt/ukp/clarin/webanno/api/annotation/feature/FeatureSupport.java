@@ -213,6 +213,9 @@ public interface FeatureSupport<T>
     default String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        if (labelFeature == null) {
+            return null;
+        }
         return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
     }
     
@@ -220,7 +223,7 @@ public interface FeatureSupport<T>
     {
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
         
-        if (labelFeature.getRange().isPrimitive()) {
+        if (labelFeature != null && labelFeature.getRange().isPrimitive()) {
             return getLazyDetails(aFeature, aFs.getFeatureValueAsString(labelFeature));
         }
         else {
@@ -283,7 +286,7 @@ public interface FeatureSupport<T>
         setFeature(fs, aFeature, value);
     }
 
-    default <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
+    default <V> V getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS) 
     {
         Object value;
         
