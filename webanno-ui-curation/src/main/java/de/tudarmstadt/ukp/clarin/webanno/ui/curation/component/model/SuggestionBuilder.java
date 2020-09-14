@@ -310,9 +310,14 @@ public class SuggestionBuilder
             return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
         }
         
+        CAS mergeCas = null;
         try {
             if (AUTOMATION.equals(aState.getMode()) || CORRECTION.equals(aState.getMode())) {
-                CAS mergeCas = correctionDocumentService.readCorrectionCas(aDocument);
+                if (!correctionDocumentService.existsCorrectionCas(aDocument)) {
+                    return initializeMergeCas(aState, aCasses, 
+                            aTemplate, aMergeIncompleteAnnotations);
+                }
+                mergeCas = correctionDocumentService.readCorrectionCas(aDocument);
                 if (aUpgrade) {
                     correctionDocumentService.upgradeCorrectionCas(mergeCas, aDocument);
                     correctionDocumentService.writeCorrectionCas(mergeCas, aDocument);
@@ -322,7 +327,11 @@ public class SuggestionBuilder
                 return mergeCas;
             }
             else {
-                CAS mergeCas = curationDocumentService.readCurationCas(aDocument);
+                if (!curationDocumentService.existsCurationCas(aDocument)) {
+                    return initializeMergeCas(aState, aCasses, 
+                            aTemplate, aMergeIncompleteAnnotations);
+                }
+                mergeCas = curationDocumentService.readCurationCas(aDocument);
                 if (aUpgrade) {
                     curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
                     curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
@@ -334,8 +343,9 @@ public class SuggestionBuilder
         }
         // Create JCas, if it could not be loaded from the file system
         catch (Exception e) {
-            return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
+            log.error(e.getMessage());
         }
+        return mergeCas;
     }
     
     public CAS initializeMergeCas(AnnotatorState aState, Map<String, CAS> aCasses,
