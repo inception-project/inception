@@ -666,6 +666,11 @@ public class SuggestionViewPanel
             UserAnnotationSegment seg = vis.getModelObject();
 
             CAS cas = casses.get(seg.getUsername());
+            
+            if (cas == null) {
+                // This may happen if a user has not yet finished document
+                return;
+            }
 
             // Set up coloring strategy
             ColoringStrategy curationColoringStrategy = makeColoringStrategy(

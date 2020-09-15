@@ -30,7 +30,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.BeanIds;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.GlobalAuthenticationConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -49,6 +48,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.WebAnnoDaoAuthenticationProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter;
 
 // There is no @EnableWebSecurity here because adding that would turn off Spring Boots security
@@ -71,45 +71,32 @@ public class WebAnnoSecurity
 {
     private @Value("${auth.preauth.header.principal:remote_user}") String preAuthPrincipalHeader;
     
-    private final DataSource dataSource;
-    private final AuthenticationManager authenticationManager;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthenticationProvider authenticationProvider;
-    private final UserDao userRepository;
-    
-    // The AuthenticationManager is created by this configuration, yet we also need to access it
-    // when constructing the OverridableUserDetailsManager - to break the cyclic dependency, we
-    // lazily inject it here.
-    @Autowired
-    public WebAnnoSecurity(PasswordEncoder aPasswordEncoder,
-            @Lazy AuthenticationManager aAuthenticationManager,
-            @Lazy AuthenticationProvider aAuthenticationProvider, DataSource aDataSource,
-            UserDao aUserRepository)
-    {
-        passwordEncoder = aPasswordEncoder;
-        authenticationManager = aAuthenticationManager;
-        authenticationProvider = aAuthenticationProvider;
-        dataSource = aDataSource;
-        userRepository = aUserRepository;
-    }
-
-    @Autowired
-    protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception
-    {
-        auth.authenticationProvider(authenticationProvider);
-    }
-    
     @Order(1)
     @Configuration
-    public static class RemoteApiSecurity
+    public class RemoteApiSecurity
         extends WebSecurityConfigurerAdapter
     {
+        private final PasswordEncoder passwordEncoder;
+        private final UserDetailsManager userDetailsService;
+        
+        @Autowired
+        public RemoteApiSecurity(PasswordEncoder aPasswordEncoder,
+                UserDetailsManager aUserDetailsService)
+        {
+            passwordEncoder = aPasswordEncoder;
+            userDetailsService = aUserDetailsService;
+        }
+        
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
             aHttp
                 .antMatcher("/api/**")
                 .csrf().disable()
+                // We hard-wire the internal user DB as the authentication provider here because
+                // because the API shouldn't work with external pre-authentication
+                .authenticationProvider(remoteApiAuthenticationProvider())
+                //.userDetailsService(userDetailsService)
                 .authorizeRequests()
                     .anyRequest().access("hasAnyRole('ROLE_REMOTE')")
                 .and()
@@ -117,6 +104,13 @@ public class WebAnnoSecurity
                 .and()
                 .sessionManagement()
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        }
+
+        private AuthenticationProvider remoteApiAuthenticationProvider() {
+            DaoAuthenticationProvider authProvider = new WebAnnoDaoAuthenticationProvider();
+            authProvider.setUserDetailsService(userDetailsService);
+            authProvider.setPasswordEncoder(passwordEncoder);
+            return authProvider;
         }
     }
     
@@ -173,6 +167,14 @@ public class WebAnnoSecurity
     public class ShibbolethSecurity
         extends WebSecurityConfigurerAdapter
     {
+        private ShibbolethRequestHeaderAuthenticationFilter filter;
+        
+        @Autowired
+        public ShibbolethSecurity(ShibbolethRequestHeaderAuthenticationFilter aFilter)
+        {
+            filter = aFilter;
+        }
+        
         // Expose the AuthenticationManager using the legacy bean name that is expected by
         // WebAnno's SpringAuthenticatedWebSession. This can be removed when the explicit bean name
         // declaration has been removed from SpringAuthenticatedWebSession.
@@ -190,7 +192,7 @@ public class WebAnnoSecurity
                 .rememberMe()
                 .and()
                 .csrf().disable()
-                .addFilterBefore(preAuthFilter(), RequestHeaderAuthenticationFilter.class)
+                .addFilterBefore(filter, RequestHeaderAuthenticationFilter.class)
                 .authorizeRequests()
                     // Resources need to be publicly accessible so they don't trigger the login
                     // page. Otherwise it could happen that the user is redirected to a resource
@@ -216,46 +218,55 @@ public class WebAnnoSecurity
     
     @Bean
     @Profile("auto-mode-preauth")
-    public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter()
+    public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter(
+            UserDao aUserRepository,
+            UserDetailsManager aUserDetailsService,
+            @Lazy AuthenticationManager aAuthenticationManager)
     {
         ShibbolethRequestHeaderAuthenticationFilter filter = 
                 new ShibbolethRequestHeaderAuthenticationFilter();
         filter.setPrincipalRequestHeader(preAuthPrincipalHeader);
-        filter.setAuthenticationManager(authenticationManager);
-        filter.setUserDetailsManager(userDetailsService());
-        filter.setUserRepository(userRepository);
+        filter.setAuthenticationManager(aAuthenticationManager);
+        filter.setUserDetailsManager(aUserDetailsService);
+        filter.setUserRepository(aUserRepository);
         filter.setExceptionIfHeaderMissing(true);
         return filter;
     }
     
     @Bean(name = "authenticationProvider")
     @Profile("auto-mode-builtin")
-    public DaoAuthenticationProvider internalAuthenticationProvider()
+    @Autowired
+    public DaoAuthenticationProvider internalAuthenticationProvider(
+            UserDetailsManager aUserDetailsService,
+            PasswordEncoder aPasswordEncoder)
     {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService());
-        authProvider.setPasswordEncoder(passwordEncoder);
+        DaoAuthenticationProvider authProvider = new WebAnnoDaoAuthenticationProvider();
+        authProvider.setUserDetailsService(aUserDetailsService);
+        authProvider.setPasswordEncoder(aPasswordEncoder);
         return authProvider;
     }
-
+    
     @Bean(name = "authenticationProvider")
     @Profile("auto-mode-preauth")
-    public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider()
+    public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
+            UserDetailsManager aUserDetailsService)
     {
         PreAuthenticatedAuthenticationProvider authProvider = 
                 new PreAuthenticatedAuthenticationProvider();
         authProvider.setPreAuthenticatedUserDetailsService(
                 new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(
-                        userDetailsService()));
+                        aUserDetailsService));
         return authProvider;
     }
 
     @Bean
-    public UserDetailsManager userDetailsService()
+    @Autowired
+    public UserDetailsManager userDetailsService(DataSource aDataSource,
+            @Lazy AuthenticationManager aAuthenticationManager)
     {
         OverridableUserDetailsManager manager = new OverridableUserDetailsManager();
-        manager.setDataSource(dataSource);
-        manager.setAuthenticationManager(authenticationManager);
+        manager.setDataSource(aDataSource);
+        manager.setAuthenticationManager(aAuthenticationManager);
         return manager;
     }
     

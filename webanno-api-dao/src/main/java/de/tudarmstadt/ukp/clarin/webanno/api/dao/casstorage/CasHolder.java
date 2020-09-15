@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
 import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.uima.cas.CAS;
 
 /**
@@ -123,4 +125,23 @@ public class CasHolder
     {
         V get() throws Exception;
     }
+    
+    public String getCasHashCode() {
+        if (cas != null) {
+            return String.valueOf(cas.hashCode());
+        }
+        else {
+            return "<unset>";
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.DEFAULT_STYLE).append("key", key)
+                .append("deleted", deleted).append("typeSystemOutdated", typeSystemOutdated)
+                .toString();
+    }
+    
+    
 }

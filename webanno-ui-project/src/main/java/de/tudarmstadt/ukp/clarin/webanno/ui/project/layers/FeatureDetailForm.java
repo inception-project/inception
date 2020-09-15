@@ -187,7 +187,8 @@ public class FeatureDetailForm
         // we clear the currently selected feature.
         add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
         add(new LambdaAjaxButton<>("delete", this::actionDelete).add(
-                visibleWhen(() -> !isNull(getModelObject().getId()))));
+                visibleWhen(() -> !isNull(getModelObject().getId()) && 
+                        !getModelObject().getLayer().isBuiltIn())));
         // Set default form processing to false to avoid saving data
         add(new LambdaButton("cancel", this::actionCancel).setDefaultFormProcessing(false));
         

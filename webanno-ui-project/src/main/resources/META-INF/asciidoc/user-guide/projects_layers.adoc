@@ -223,6 +223,8 @@ In this section, features and their properties can be configured.
 NOTE: When a feature is first created, only ASCII characters are allowed for the feature name because the internal UIMA name is derived from the initial layer name. After the feature has been created, the name can be changed arbitrarily. The internal UIMA feature name will not be updated. The internal UIMA name is
 e.g. used when exporting data or in constraint rules.
 
+NOTE: Features cannot be added to or deleted from built-in layers.
+
 The following feature types are supported.
 
 .Feature types
