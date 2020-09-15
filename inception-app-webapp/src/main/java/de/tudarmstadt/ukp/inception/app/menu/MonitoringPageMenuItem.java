@@ -86,9 +86,16 @@ public class MonitoringPageMenuItem implements MenuItem
             return false;
         }
 
-        //Check if dynamic workload is enabled, if not use static workload manager
+        //Check if for currently in the DB set workload strategy the bean is used,
+        //if not use the static workload manager.
+        //Other strategies simply get a new case.
         try {
-            applicationContext.getBean(DynamicWorkloadExtension.class);
+            switch (workloadManagementService.
+                getOrCreateWorkloadManagerConfiguration(sessionProject).getExtensionPointID()) {
+            case "Dynamic workload":
+                applicationContext.getBean(DynamicWorkloadExtension.class);
+                break;
+            }
         } catch (NoSuchBeanDefinitionException e) {
             workloadManagementService.setWorkloadManagerConfiguration(EXTENSION_ID,sessionProject);
         }
