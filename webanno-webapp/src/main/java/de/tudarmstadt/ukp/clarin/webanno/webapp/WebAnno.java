@@ -114,11 +114,9 @@ public class WebAnno
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
             ajpConnector.setPort(ajpPort);
-            ajpConnector.setProperty("secretRequired", ajpSecretRequired);
-            if (Boolean.valueOf(ajpSecretRequired)) {
-                ajpConnector.setProperty("secret", ajpSecret);
-            }
-            ajpConnector.setProperty("address", ajpAddress);
+            ajpConnector.setAttribute("secretRequired", ajpSecretRequired);
+            ajpConnector.setAttribute("secret", ajpSecret);
+            ajpConnector.setAttribute("address", ajpAddress);
             factory.addAdditionalTomcatConnectors(ajpConnector);
         }
         return factory;
