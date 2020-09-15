@@ -36,8 +36,8 @@ public class ConstraintsParserTest
     @Parameters(name = "{index}: running on file {0}")
     public static Iterable<File> ruleFiles()
     {
-        return asList(new File("src/test/resources/rules/").listFiles(
-                (FilenameFilter) new SuffixFileFilter(asList(".rules"))));
+        return asList(new File("src/test/resources/rules/")
+                .listFiles((FilenameFilter) new SuffixFileFilter(asList(".rules"))));
     }
 
     private File ruleFile;
@@ -48,9 +48,10 @@ public class ConstraintsParserTest
     }
 
     @Test
-    public void thatRuleFileCanBeParsed()
-        throws Exception
+    public void thatRuleFileCanBeParsed() throws Exception
     {
         ConstraintsParser.parse(ruleFile);
     }
+
+
 }

@@ -25,8 +25,6 @@ import static org.apache.commons.io.IOUtils.toInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.List;
 
 import org.apache.commons.io.input.BOMInputStream;
@@ -54,7 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -235,11 +233,10 @@ public class ProjectConstraintsPanel
                 {
                     ConstraintSet constraintSet = DetailForm.this.getModelObject();
                     
-                    try (Reader r = new StringReader(script.getModelObject())) {
-                        ConstraintsGrammar parser = new ConstraintsGrammar(r);
-                        parser.Parse();
-                    }
-                    catch (ParseException | IOException e) {
+                    try {
+                        ConstraintsParser.parse(script.getModelObject());
+                    }                 
+                    catch (ParseException e) {
                         error("Unable to parse constraints file [" + constraintSet.getName() + "]"
                                 + ExceptionUtils.getRootCauseMessage(e));
                         return;
@@ -384,8 +381,7 @@ public class ProjectConstraintsPanel
                 // Handling Windows BOM
                 try (BOMInputStream bomInputStream = new BOMInputStream(
                         constraintRulesFile.getInputStream(), false)) {
-                    ConstraintsGrammar parser = new ConstraintsGrammar(bomInputStream);
-                    parser.Parse();
+                    ConstraintsParser.parse(bomInputStream);
                 }
                 catch (IOException e) {
                     error("Unable to read the constraints file [" + constraintFilename + "]"

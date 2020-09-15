@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
@@ -86,6 +87,27 @@ public class ConstraintsParser
         ConstraintsParser parser = new ConstraintsParser(aInputStream, aEncoding);
         ASTConstraintsSet astConstraintsSet = parser.constraintsSet();
         return new ParsedConstraints(astConstraintsSet);
+    }
+    
+    public static ParsedConstraints parse(String aInput) throws ParseException
+    {
+        StringReader reader = null;
+        try {
+            reader = new StringReader(aInput);
+            ConstraintsParser parser = new ConstraintsParser(reader);
+            ASTConstraintsSet astConstraintsSet = parser.constraintsSet();
+            return new ParsedConstraints(astConstraintsSet);
+        }
+        finally {
+            if (reader != null) {
+                try {
+                  reader.close();
+                }
+                catch (Exception e) {
+                    // Ignore
+                }
+            }
+        }
     }
     
     public static String asFlatString(SimpleNode aToken) {
