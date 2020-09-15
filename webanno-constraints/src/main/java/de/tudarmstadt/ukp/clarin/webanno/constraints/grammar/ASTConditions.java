@@ -9,7 +9,7 @@ public class ASTConditions
     extends SimpleNode
 {
     private List<ASTCondition> conditions = new ArrayList<>();
-    
+
     public ASTConditions(int id)
     {
         super(id);
@@ -31,7 +31,7 @@ public class ASTConditions
     {
         conditions.add(aCondition);
     }
-    
+
     public List<ASTCondition> getConditions()
     {
         return conditions;

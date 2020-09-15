@@ -7,7 +7,7 @@ public class ASTRule
 {
     private ASTConditions conditions;
     private ASTRestrictions restrictions;
-    
+
     public ASTRule(int id)
     {
         super(id);
@@ -29,7 +29,7 @@ public class ASTRule
     {
         conditions = aConditions;
     }
-    
+
     public ASTConditions getConditions()
     {
         return conditions;
@@ -39,7 +39,7 @@ public class ASTRule
     {
         restrictions = aRestrictions;
     }
-    
+
     public ASTRestrictions getRestrictions()
     {
         return restrictions;

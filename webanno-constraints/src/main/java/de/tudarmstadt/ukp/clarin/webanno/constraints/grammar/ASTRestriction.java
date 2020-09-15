@@ -8,7 +8,7 @@ public class ASTRestriction
     private ASTPath path;
     private String value;
     private boolean important;
-    
+
     public ASTRestriction(int id)
     {
         super(id);
@@ -25,7 +25,7 @@ public class ASTRestriction
     {
         return visitor.visit(this, data);
     }
-    
+
     public ASTPath getPath()
     {
         return path;
@@ -50,7 +50,7 @@ public class ASTRestriction
     {
         this.important = important;
     }
-    
+
     public boolean isImportant()
     {
         return important;

@@ -9,7 +9,7 @@ public class ASTRestrictions
     extends SimpleNode
 {
     private List<ASTRestriction> restrictions = new ArrayList<>();
-    
+
     public ASTRestrictions(int id)
     {
         super(id);
@@ -31,7 +31,7 @@ public class ASTRestrictions
     {
         restrictions.add(aRestriction);
     }
-    
+
     public List<ASTRestriction> getRestrictions()
     {
         return restrictions;

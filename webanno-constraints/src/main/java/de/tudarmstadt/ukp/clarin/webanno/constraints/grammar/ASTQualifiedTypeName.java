@@ -2,38 +2,41 @@
 /* JavaCCOptions:MULTI=true,NODE_USES_PARSER=false,VISITOR=true,TRACK_TOKENS=true,NODE_PREFIX=AST,NODE_EXTENDS=,NODE_FACTORY=,SUPPORT_CLASS_VISIBILITY_PUBLIC=true */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.grammar;
 
-public
-class ASTQualifiedTypeName extends SimpleNode {
-  public ASTQualifiedTypeName(int id) {
-    super(id);
-  }
+public class ASTQualifiedTypeName
+    extends SimpleNode
+{
+    public ASTQualifiedTypeName(int id)
+    {
+        super(id);
+    }
 
-  public ASTQualifiedTypeName(ConstraintsParser p, int id) {
-    super(p, id);
-  }
+    public ASTQualifiedTypeName(ConstraintsParser p, int id)
+    {
+        super(p, id);
+    }
 
+    /** Accept the visitor. **/
+    @Override
+    public Object jjtAccept(ConstraintsParserVisitor visitor, Object data)
+    {
 
-  /** Accept the visitor. **/
-  @Override
-public Object jjtAccept(ConstraintsParserVisitor visitor, Object data) {
+        return visitor.visit(this, data);
+    }
 
-    return
-    visitor.visit(this, data);
-  }
+    public String asString()
+    {
+        StringBuilder sb = new StringBuilder();
 
-  public String asString() {
-      StringBuilder sb = new StringBuilder();
-      
-      Token t = jjtGetFirstToken();
-      while (t != jjtGetLastToken() && t != null) {
-          sb.append(t.image);
-          t = t.next;
-          if (t.specialToken != null) {
-              sb.append(t.specialToken.image);
-          }
-      }
-      sb.append(t.image);
-      return sb.toString();
-  }
+        Token t = jjtGetFirstToken();
+        while (t != jjtGetLastToken() && t != null) {
+            sb.append(t.image);
+            t = t.next;
+            if (t.specialToken != null) {
+                sb.append(t.specialToken.image);
+            }
+        }
+        sb.append(t.image);
+        return sb.toString();
+    }
 }
 /* JavaCC - OriginalChecksum=49b3e7d6d861656ac39020eb95b6437f (do not edit this line) */
