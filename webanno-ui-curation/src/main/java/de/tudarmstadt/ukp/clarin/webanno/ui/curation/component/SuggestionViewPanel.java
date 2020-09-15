@@ -404,7 +404,7 @@ public class SuggestionViewPanel
                 || aState.getMode().equals(Mode.CORRECTION))
                         ? documentService.readAnnotationCas(
                                 documentService.getAnnotationDocument(sourceDocument, user))
-                        : curationDocumentService.readResultCas(sourceDocument);
+                        : curationDocumentService.readCurationCas(sourceDocument);
     }
 
     private void writeEditorCas(AnnotatorState state, CAS aCas)
@@ -418,10 +418,10 @@ public class SuggestionViewPanel
                     .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
         }
         else if (state.getMode().equals(Mode.CURATION)) {
-            curationDocumentService.writeResultCas(aCas, state.getDocument(), true);
+            curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
             updateDocumentTimestampAfterWrite(state,
-                    curationDocumentService.getResultCasTimestamp(state.getDocument()));
+                    curationDocumentService.getCurationCasTimestamp(state.getDocument()));
         }
     }
 
@@ -430,7 +430,7 @@ public class SuggestionViewPanel
         AnnotatorState state = aSegment.getAnnotatorState();
 
         if (state.getMode().equals(Mode.AUTOMATION) || state.getMode().equals(Mode.CORRECTION)) {
-            return correctionDocumentService.readResultCas(state.getDocument());
+            return correctionDocumentService.readCorrectionCas(state.getDocument());
         }
         else {
             return documentService.readAnnotationCas(aSegment.getAnnotatorState().getDocument(),
@@ -812,7 +812,7 @@ public class SuggestionViewPanel
             // is the only document we compare with.
 
             // The CAS the user can edit is the one from the virtual CORRECTION USER
-            annotatorCas = correctionDocumentService.readResultCas(sourceDocument);
+            annotatorCas = correctionDocumentService.readCorrectionCas(sourceDocument);
 
             User user = userRepository.getCurrentUser();
             AnnotationDocument annotationDocument = documentService
@@ -825,7 +825,7 @@ public class SuggestionViewPanel
             // active users.
 
             // The CAS the user can edit is the one from the virtual CURATION USER
-            annotatorCas = curationDocumentService.readResultCas(sourceDocument);
+            annotatorCas = curationDocumentService.readCurationCas(sourceDocument);
 
             // Now we get all the other CASes from the repository
             List<AnnotationDocument> annotationDocuments = documentService

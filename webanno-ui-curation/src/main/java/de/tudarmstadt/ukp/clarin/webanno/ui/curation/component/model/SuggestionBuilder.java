@@ -53,8 +53,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.MergeDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -64,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationS
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -91,20 +93,26 @@ public class SuggestionBuilder
 
     private final AnnotationSchemaService schemaService;
     private final DocumentService documentService;
-    private final MergeDocumentService mergeDocumentService;
+    private final CorrectionDocumentService correctionDocumentService;
+    private final CurationDocumentService curationDocumentService;
     private final UserDao userRepository;
+    private final CasStorageService casStorageService;
 
     private int diffRangeBegin;
     private int diffRangeEnd;
 
-    public SuggestionBuilder(DocumentService aDocumentService,
-            MergeDocumentService aMergeDocumentService,
+    public SuggestionBuilder(CasStorageService aCasStorageService,
+            DocumentService aDocumentService,
+            CorrectionDocumentService aCorrectionDocumentService,
+            CurationDocumentService aCurationDocumentService,
             AnnotationSchemaService aAnnotationService, UserDao aUserDao)
     {
         documentService = aDocumentService;
-        mergeDocumentService = aMergeDocumentService;
+        correctionDocumentService = aCorrectionDocumentService;
+        curationDocumentService = aCurationDocumentService;
         schemaService = aAnnotationService;
         userRepository = aUserDao;
+        casStorageService = aCasStorageService;
     }
 
     public CurationContainer buildCurationContainer(AnnotatorState aState)
@@ -301,18 +309,36 @@ public class SuggestionBuilder
         if (aForceRecreateCas) {
             return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
         }
-
+        
         CAS mergeCas = null;
         try {
-            if (!mergeDocumentService.existsResultCas(aDocument)) {
-                return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
+            if (AUTOMATION.equals(aState.getMode()) || CORRECTION.equals(aState.getMode())) {
+                if (!correctionDocumentService.existsCorrectionCas(aDocument)) {
+                    return initializeMergeCas(aState, aCasses, 
+                            aTemplate, aMergeIncompleteAnnotations);
+                }
+                mergeCas = correctionDocumentService.readCorrectionCas(aDocument);
+                if (aUpgrade) {
+                    correctionDocumentService.upgradeCorrectionCas(mergeCas, aDocument);
+                    correctionDocumentService.writeCorrectionCas(mergeCas, aDocument);
+                    updateDocumentTimestampAfterWrite(aState, correctionDocumentService
+                            .getCorrectionCasTimestamp(aState.getDocument()));
+                }
+                return mergeCas;
             }
-            mergeCas = mergeDocumentService.readResultCas(aDocument);
-            if (aUpgrade) {
-                mergeDocumentService.upgradeResultCas(mergeCas, aDocument);
-                mergeDocumentService.writeResultCas(mergeCas, aDocument, false);
-                updateDocumentTimestampAfterWrite(aState,
-                        mergeDocumentService.getResultCasTimestamp(aState.getDocument()));
+            else {
+                if (!curationDocumentService.existsCurationCas(aDocument)) {
+                    return initializeMergeCas(aState, aCasses, 
+                            aTemplate, aMergeIncompleteAnnotations);
+                }
+                mergeCas = curationDocumentService.readCurationCas(aDocument);
+                if (aUpgrade) {
+                    curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
+                    curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
+                    updateDocumentTimestampAfterWrite(aState, curationDocumentService
+                            .getCurationCasTimestamp(aState.getDocument()));
+                }
+                return mergeCas;
             }
         }
         // Create JCas, if it could not be loaded from the file system
@@ -329,14 +355,15 @@ public class SuggestionBuilder
         CAS mergeCas;
         if (AUTOMATION.equals(aState.getMode()) || CORRECTION.equals(aState.getMode())) {
             mergeCas = createCorrectionCas(aState, aTemplate);
+            updateDocumentTimestampAfterWrite(aState,
+                    correctionDocumentService.getCorrectionCasTimestamp(aState.getDocument()));
         }
         else {
             mergeCas = createCurationCas(aState, aTemplate, aCasses,
-                    aState.getAnnotationLayers(), aMergeIncompleteAnnotations); 
+                    aState.getAnnotationLayers(), aMergeIncompleteAnnotations);
+            updateDocumentTimestampAfterWrite(aState,
+                    curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
         }
-        
-        updateDocumentTimestampAfterWrite(aState,
-                mergeDocumentService.getResultCasTimestamp(aState.getDocument()));
 
         return mergeCas;
     }
@@ -431,7 +458,7 @@ public class SuggestionBuilder
                     mergeCas, aCasses);
         }
 
-        mergeDocumentService.writeResultCas(mergeCas, aRandomAnnotationDocument.getDocument(),
+        curationDocumentService.writeCurationCas(mergeCas, aRandomAnnotationDocument.getDocument(),
                 false);
         
         return mergeCas;
@@ -456,8 +483,10 @@ public class SuggestionBuilder
 
         CAS mergeCas = documentService.readAnnotationCas(annotationDocument);
         
-        mergeDocumentService.writeResultCas(mergeCas,
-                aRandomAnnotationDocument.getDocument(), true);
+        correctionDocumentService.writeCorrectionCas(mergeCas,
+                aRandomAnnotationDocument.getDocument());
+        updateDocumentTimestampAfterWrite(aState, correctionDocumentService
+                .getCorrectionCasTimestamp(aState.getDocument()));
         
         return mergeCas;
     }

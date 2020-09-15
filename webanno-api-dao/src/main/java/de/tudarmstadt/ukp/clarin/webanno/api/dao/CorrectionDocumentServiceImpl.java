@@ -19,23 +19,73 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 
+import java.io.IOException;
+import java.util.Optional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.apache.commons.lang3.Validate;
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 @Component(CorrectionDocumentService.SERVICE_NAME)
-public class CorrectionDocumentServiceImpl extends MergeDocumentServiceImpl
+public class CorrectionDocumentServiceImpl
     implements CorrectionDocumentService
 {
+    private @Autowired CasStorageService casStorageService;
+    private @Autowired AnnotationSchemaService annotationService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public CorrectionDocumentServiceImpl()
     {
-        // Do nothing
+        // Nothing to do
     }
 
     @Override
-    public String getResultCasUser()
+    public boolean existsCorrectionCas(SourceDocument aSourceDocument)
+        throws IOException
     {
-        return CORRECTION_USER;
+        return casStorageService.existsCas(aSourceDocument, CORRECTION_USER);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    public void writeCorrectionCas(CAS aCas, SourceDocument aDocument)
+        throws IOException
+    {
+        casStorageService.writeCas(aDocument, aCas, CORRECTION_USER);
+    }
+
+    @Override
+    public CAS readCorrectionCas(SourceDocument aDocument)
+        throws IOException
+    {
+        return casStorageService.readCas(aDocument, CORRECTION_USER);
+    }
+
+    @Override
+    public void upgradeCorrectionCas(CAS aCas, SourceDocument aDocument)
+        throws UIMAException, IOException
+    {
+        annotationService.upgradeCas(aCas, aDocument, CORRECTION_USER);
+    }
+    
+    @Override
+    public Optional<Long> getCorrectionCasTimestamp(SourceDocument aDocument) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        
+        return casStorageService.getCasTimestamp(aDocument, CORRECTION_USER);
     }
 }

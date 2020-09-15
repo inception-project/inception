@@ -72,6 +72,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
@@ -125,6 +126,7 @@ public class CurationPage
 
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
@@ -496,11 +498,11 @@ public class CurationPage
         ensureIsEditable(); 
         
         AnnotatorState state = getModelObject();
-        curationDocumentService.writeResultCas(aCas, state.getDocument(), true);
+        curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
         // Update timestamp in state
         Optional<Long> diskTimestamp = curationDocumentService
-                .getResultCasTimestamp(state.getDocument());
+                .getCurationCasTimestamp(state.getDocument());
         if (diskTimestamp.isPresent()) {
             state.setAnnotationDocumentTimestamp(diskTimestamp.get());
         }
@@ -570,15 +572,15 @@ public class CurationPage
             
             // Initialize timestamp in state
             updateDocumentTimestampAfterWrite(state, curationDocumentService
-                    .getResultCasTimestamp(state.getDocument()));
+                    .getCurationCasTimestamp(state.getDocument()));
                         
             // Initialize the visible content
             state.moveToUnit(mergeCas, aFocus + 1, TOP);
         
             currentprojectId = state.getProject().getId();
     
-            SuggestionBuilder builder = new SuggestionBuilder(documentService,
-                    curationDocumentService, annotationService,
+            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
+                    correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setState(state);
@@ -629,8 +631,8 @@ public class CurationPage
 
         AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
         
-        SuggestionBuilder cb = new SuggestionBuilder(documentService,
-                curationDocumentService, annotationService,
+        SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
+                correctionDocumentService, curationDocumentService, annotationService,
                 userRepository);
         Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
                 state.getMode());
@@ -821,7 +823,7 @@ public class CurationPage
             fSn = 0;
             try {
                 AnnotatorState state = CurationPage.this.getModelObject();
-                CAS cas = curationDocumentService.readResultCas(state.getDocument());
+                CAS cas = curationDocumentService.readCurationCas(state.getDocument());
                 updateCurationView(curationContainer, curationViewItem, aTarget, cas);
                 state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
             }
@@ -867,9 +869,9 @@ public class CurationPage
 
         // If we have a timestamp, then use it to detect if there was a concurrent access
         verifyAndUpdateDocumentTimestamp(state, curationDocumentService
-                .getResultCasTimestamp(state.getDocument()));
+                .getCurationCasTimestamp(state.getDocument()));
 
-        return curationDocumentService.readResultCas(state.getDocument());
+        return curationDocumentService.readCurationCas(state.getDocument());
     }
     
     public void init(AjaxRequestTarget aTarget, CurationContainer aCC)
