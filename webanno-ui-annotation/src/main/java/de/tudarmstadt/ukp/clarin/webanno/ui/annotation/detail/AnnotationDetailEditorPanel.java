@@ -1279,6 +1279,16 @@ public abstract class AnnotationDetailEditorPanel
                 continue;
             }
 
+            if (aFS != null && aFS.getType().getFeatureByBaseName(feature.getName()) == null) {
+                // If the feature does not exist in the given Feature Structure, 
+                // then the typesystem might be out of date
+                error("The annotation typesystem might be out of date, "
+                        + "try re-opening the document!");
+                LOG.error(String.format("Unable to find %s in the current cas typesystem",
+                        feature.getName()));
+                return;
+            }
+            
             Serializable value = null;
             VID vid = null;
             if (aFS != null) {
