@@ -39,6 +39,8 @@ public class ShibbolethRequestHeaderAuthenticationFilter
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    public static final String EMPTY_PASSWORD = "";
+    
     private UserDetailsManager userDetailsManager;
     private UserDao userRepository;
 
@@ -46,7 +48,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     {
         User u = new User();
         u.setUsername((String) super.getPreAuthenticatedPrincipal(aRequest));
-        u.setPassword("");
+        u.setPassword(EMPTY_PASSWORD);
         u.setEnabled(true);
         
         Set<Role> s = new HashSet<>();
