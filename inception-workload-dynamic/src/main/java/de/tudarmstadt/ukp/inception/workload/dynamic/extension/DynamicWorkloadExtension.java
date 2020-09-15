@@ -28,12 +28,12 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadExtension;
  */
 public class DynamicWorkloadExtension implements WorkloadExtension
 {
-    public static final String EXTENSION_ID = "Dynamic Workload";
+    public static final String DYNAMIC_EXTENSION_ID = "Dynamic Workload";
 
     @Override
     public String getId()
     {
-        return EXTENSION_ID;
+        return DYNAMIC_EXTENSION_ID;
     }
 
 }

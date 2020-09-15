@@ -157,6 +157,14 @@
      <artifactId>javax.servlet-api</artifactId>
      <scope>provided</scope> 
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-static</artifactId>
+    </dependency>
   </dependencies>
   
   <build>

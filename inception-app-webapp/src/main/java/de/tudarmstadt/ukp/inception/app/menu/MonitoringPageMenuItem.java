@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
-import static de.tudarmstadt.ukp.inception.workload.monitoring.extension.StaticWorkloadExtension.EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.workload.monitoring.extension.StaticWorkloadExtension.STATIC_EXTENSION_ID;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -35,23 +33,22 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Order(300)
 @Component
 public class MonitoringPageMenuItem implements MenuItem
 {
-    private final ApplicationContext applicationContext;
     private final UserDao userRepo;
     private final ProjectService projectService;
     private final WorkloadManagementService workloadManagementService;
 
     @Autowired
-    public MonitoringPageMenuItem(ApplicationContext aApplicationContextUserDao, UserDao aUserRepo,
-        ProjectService aProjectService, WorkloadManagementService aWorkloadManagementService)
+    public MonitoringPageMenuItem(
+        UserDao aUserRepo,
+        ProjectService aProjectService,
+        WorkloadManagementService aWorkloadManagementService)
     {
-        applicationContext = aApplicationContextUserDao;
         userRepo = aUserRepo;
         projectService = aProjectService;
         workloadManagementService = aWorkloadManagementService;
@@ -81,23 +78,11 @@ public class MonitoringPageMenuItem implements MenuItem
     @Override
     public boolean applies()
     {
+
+        System.out.println("Checking");
         Project sessionProject = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
         if (sessionProject == null) {
             return false;
-        }
-
-        //Check if for currently in the DB set workload strategy the bean is used,
-        //if not use the static workload manager.
-        //Other strategies simply get a new case.
-        try {
-            switch (workloadManagementService.
-                getOrCreateWorkloadManagerConfiguration(sessionProject).getExtensionPointID()) {
-            case "Dynamic workload":
-                applicationContext.getBean(DynamicWorkloadExtension.class);
-                break;
-            }
-        } catch (NoSuchBeanDefinitionException e) {
-            workloadManagementService.setWorkloadManagerConfiguration(EXTENSION_ID,sessionProject);
         }
 
         // The project object stored in the session is detached from the persistence context and
@@ -109,7 +94,7 @@ public class MonitoringPageMenuItem implements MenuItem
         return (projectService.isCurator(sessionProject, user)
             || projectService.isProjectAdmin(sessionProject, user))
             && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
-            && EXTENSION_ID.equals(workloadManagementService.
+            && STATIC_EXTENSION_ID.equals(workloadManagementService.
             getOrCreateWorkloadManagerConfiguration(sessionProject).
             getExtensionPointID());
     }

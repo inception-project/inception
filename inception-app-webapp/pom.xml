@@ -521,10 +521,6 @@
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload-static</artifactId>
     </dependency>
-    <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-workload-dynamic</artifactId>
-    </dependency>
   </dependencies>
   <build>
     <plugins>

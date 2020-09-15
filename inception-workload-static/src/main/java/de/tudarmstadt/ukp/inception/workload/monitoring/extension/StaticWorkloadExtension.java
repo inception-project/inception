@@ -28,12 +28,12 @@ import de.tudarmstadt.ukp.inception.workload.monitoring.config.StaticWorkloadMan
  */
 public class StaticWorkloadExtension implements WorkloadExtension
 {
-    public static final String EXTENSION_ID = "Static Workload";
+    public static final String STATIC_EXTENSION_ID = "Static Workload";
 
     @Override
     public String getId()
     {
-        return EXTENSION_ID;
+        return STATIC_EXTENSION_ID;
     }
 
 }

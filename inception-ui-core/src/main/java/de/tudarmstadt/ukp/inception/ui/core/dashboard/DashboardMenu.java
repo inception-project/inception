@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.inception.workload.monitoring.extension.StaticWorkloadExtension.STATIC_EXTENSION_ID;
 
 import java.util.List;
 
@@ -37,11 +38,14 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.UrlResourceReference;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 
 public class DashboardMenu
     extends Panel
@@ -49,10 +53,19 @@ public class DashboardMenu
     private static final long serialVersionUID = 8582941766827165724L;
 
     private boolean sendProjectIdToPage = true;
-    
+
+    private @SpringBean WorkloadRegistry workloadRegistry;
+    private @SpringBean WorkloadManagementService workloadManagementService;
+
     public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel)
     {
         super(aId, aModel);
+
+        if (getProject() != null && workloadRegistry.getExtension(workloadManagementService.
+            getOrCreateWorkloadManagerConfiguration(getProject()).getExtensionPointID()) == null) {
+            workloadManagementService.setWorkloadManagerConfiguration(
+                STATIC_EXTENSION_ID,getProject());
+        }
 
         add(new ListView<MenuItem>("items", aModel)
         {
@@ -73,13 +86,11 @@ public class DashboardMenu
                         @Override
                         public void onClick()
                         {
-                            Project project = Session.get()
-                                    .getMetaData(SessionMetaData.CURRENT_PROJECT);
                             // For legacy WebAnno pages, we set PAGE_PARAM_PROJECT_ID while
                             // INCEpTION pages may pick the project up from the session.
                             PageParameters params = new PageParameters();
-                            if (project != null) {
-                                params.set(PAGE_PARAM_PROJECT_ID, project.getId());
+                            if (getProject() != null) {
+                                params.set(PAGE_PARAM_PROJECT_ID, getProject().getId());
                             }
                             setResponsePage(pageClass, params);
                         }
@@ -102,7 +113,6 @@ public class DashboardMenu
                 aItem.add(menulink);
                 aItem.setVisible(item.applies() /*&& (project != null || isAdminItem)*/);
             }
-
         });
     }
     
@@ -123,5 +133,10 @@ public class DashboardMenu
     public void setSendProjectIdToPage(boolean aSendProjectIdToPage)
     {
         sendProjectIdToPage = aSendProjectIdToPage;
+    }
+
+    public Project getProject()
+    {
+        return Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
     }
 }

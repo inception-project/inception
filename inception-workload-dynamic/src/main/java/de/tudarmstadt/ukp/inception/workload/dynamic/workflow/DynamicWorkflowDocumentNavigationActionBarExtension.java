@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.workflow;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension.EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.extension.DynamicWorkloadExtension.DYNAMIC_EXTENSION_ID;
 
 import java.util.Optional;
 
@@ -41,13 +41,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 
 @Component
 public class DynamicWorkflowDocumentNavigationActionBarExtension implements ActionBarExtension
 {
     private final DocumentService documentService;
-    private final WorkloadRegistry workloadRegistry;
     private final WorkloadManagementService workloadManagementService;
 
     private final @PersistenceContext EntityManager entityManager;
@@ -55,12 +53,10 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(
         DocumentService aDocumentService,
-        EntityManager aEntityManager,
-        WorkloadRegistry aWorkloadRegistry, WorkloadManagementService aWorkloadManagementService)
+        EntityManager aEntityManager, WorkloadManagementService aWorkloadManagementService)
     {
         documentService = aDocumentService;
         entityManager = aEntityManager;
-        workloadRegistry = aWorkloadRegistry;
         workloadManagementService = aWorkloadManagementService;
     }
 
@@ -79,7 +75,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     @Override
     public boolean accepts (AnnotationPageBase aPage)
     {
-        return EXTENSION_ID.equals(workloadManagementService.
+        return DYNAMIC_EXTENSION_ID.equals(workloadManagementService.
             getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
             .getExtensionPointID());
     }
