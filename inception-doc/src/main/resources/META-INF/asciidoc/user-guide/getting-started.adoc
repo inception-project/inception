@@ -1,18 +1,18 @@
 = Getting Started
 :toc:
 
-This Getting-Started-Guide helps new users to install, start and work with {product-name}. It gives a quick overview (estimated time for reading only: approx. 20-30 minutes) on the key functionalities in order to get familiar with the tool. It excludes special cases and details due to
-simplicity and focuses on the first steps. <<Know Our Documentation For Further Reading>> on any
-topic. You are already in the User Guide document. The main documentation of this User Guide starts right after the Getting Started section: <<{product-name} User Guide>>.
+This _Getting Started_ Guide helps new users to install, start and work with {product-name}. It gives a quick overview (estimated time for reading only: approx. 20-30 minutes) on the key functionalities in order to get familiar with the tool. It excludes special cases and details due to
+simplicity and focuses on the first steps. <<Know our documentation for further reading>> on any
+topic. You are already in the User Guide document. The main documentation of this User Guide starts right after the _Getting Started_ section: <<{product-name} User Guide>>.
 
-For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[four tutorial videos] covering an Introduction, an Overview, Recommender Basics and Entity Linking. Getting Started will refer to them wherever it might be helpful.
+For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[tutorial videos] covering an Introduction, an Overview, Recommender Basics and Entity Linking. _Getting Started_ will refer to them wherever it might be helpful.
 
-NOTE: *Note-boxes:* In Getting Started, the note-boxes provide additional information. They may be skipped for fast reading if background knowledge exists. Also, they may be consulted later on for quick checkups on basic concepts.
+NOTE: *Note-boxes:* In _Getting Started_, the note-boxes provide additional information. They may be skipped for fast reading if background knowledge exists. Also, they may be consulted later on for quick checkups on basic concepts.
 
-After the <<Introduction>>, Getting Started leads you to using {product-name} in three steps:
+After the <<Introduction>>, _Getting Started_ leads you to using {product-name} in three steps:
 
-. We will see how to install it in <<Installing and Starting INCEpTION>>
-. The structure of {product-name} and a project is explained for a basic orientation and understanding in <<Settings and Structure Of an Annotation Project>>
+. We will see how to install it in <<Installing and starting {product-name}>>
+. In <<Settings and Structure of an Annotation Project>>, for a basic orientation and understanding the structure of a project will be explained.
 . You will be guided to make your first annotations in <<First Annotations with {product-name}>>.
 
 
@@ -21,29 +21,27 @@ After the <<Introduction>>, Getting Started leads you to using {product-name} in
 
 === What can {product-name} be used for?
 
-For a first impression on what {product-name} is, you may want to watch our https://www.youtube.com/watch?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&time_continue=135&v=Ely8eBKqiSI&feature=emb_logo)[introduction video].
-
+For a first impression on what {product-name} is, you may want to watch our https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=1[introduction video].
 
 {product-name} is a *text-annotation enviroment* useful for various kinds
 of annotation tasks. It is a web application in which several users
 can work on the same annotation project and it can hold several annotation projects
-at a time. The core functionality is annotating written
-text but in {product-name}, you can also create your corpus to be annotated and manage the data needed in so called knowledge bases. 
+at a time. The core functionality is annotating written text. However, you can also connect {product-name} to a background corpus to select documents for annotation and integrate knowledge bases. 
 Annotations are usually used for linguistic and/or machine learning concerns.
 The following picture gives you a first impression on how annotated texts look like. In this example, text xref:layers_and_features_in_getting_started[spans] have been annotated as whether they refer to a person (PER), location (LOC), organization (ORG) or any other (OTH).
 
 image:getting_started_example_for_annotations.png[image,width=567,height=436]
 
-What‘s more on {product-name} beyond annotating written text is that it combines three key features in one plattform: First, before you annotate, you need a corpus to be annotated (*Corpus Creation*). You might have one already and import it or create it in {product-name}. Second, you might want to annotate the corpus (*Annotation*) and/or merge the annotations which different annotators made (*Curation*). Third, you might want to manage the knowledge used for annotating
+Beyond annotationg, {product-name} includes two more key features: First, before you annotate, you need a corpus to be annotated (*Corpus Creation*). You might have one already and import it or create it in {product-name}. Second, you might want to annotate the corpus (*Annotation*) and/or merge the annotations which different annotators made (*Curation*). Third, you might want to manage the knowledge used for annotating
 (*Knowledge Bases*). You can do all three steps with
-{product-name} or only one or two. In addition, {product-name} is extendable and adoptable to individual
-requrements. Often, it provides predefined elements, like xref:knowledge_bases_in_getting_started[knowledge bases], xref:layers_and_features_in_getting_started[layers] and xref:tagsets_in_getting_started[tagsets] to give you a starting point but you can also modify them or create your own from the scrach. You may for example integrate a knowledge base of your choice; create and modify your own knowledge base; create and modify own layers and tagsets to annotate your individual task; build own so called xref:recommenders_in_getting_started[recommenders] which automatically suggest annotations to you so you will work quicker and easier; and much more.
+{product-name} or only one or two. In addition, {product-name} is extendable and adaptable to individual
+requirements. Often, it provides predefined elements, like xref:knowledge_bases_in_getting_started[knowledge bases], xref:layers_and_features_in_getting_started[layers] and xref:tagsets_in_getting_started[tagsets] to give you a starting point but you can also modify them or create your own from the scrach. You may for example integrate a knowledge base of your choice; create and modify custom knowledge base; create and modify custom layers and tagsets to annotate your individual task; build custom so called xref:recommenders_in_getting_started[recommenders] which automatically suggest annotations to you so you will work quicker and easier; and much more.
 
-Getting Started focuses on annotating. For details on any
+_Getting Started_ focuses on annotating. For details on any
 other topic like Corpus Creation or the like, see the main documentation part of this User Guide: <<INCEpTION User Guide>>.
 
-[[Do_You_Have_Questions_or_Feedback]]
-=== Do You Have Questions or Feedback?
+[[do_you_have_questions_or_feedback]]
+=== Do you have questions or feedback?
 
 {product-name} is still in developement, so you are welcome to give us feedback and tell us your wishes and requirements.
 
@@ -53,14 +51,14 @@ other topic like Corpus Creation or the like, see the main documentation part of
 
 * Or consider the {product-name} users *mailing list*: inception-users@googlegroups.com
 
-* You can also open an *issue on https://github.com/inception-project/inception/issues*[Github].
+* You can also open an issue on https://github.com/inception-project/inception/issues[*Github*].
 
 
 
-=== Know Our Documentation for Further Reading
+=== Know our documentation for further reading
 Our main documentation consists of three parts: 
 
-* *User Guide*: If you only _use_ {product-name} and do not develop it, the xref:{product-name} User Guide[User Guide] beginning right after Getting Started is the one of your choice. If it does not answer your questions, don't hesitate to contact us (see <<Do You Have Questions or Feedback?>>). 
+* *User Guide*: If you only _use_ {product-name} and do not develop it, the xref:{product-name} User Guide[User Guide] beginning right after _Getting Started_ is the one of your choice. If it does not answer your questions, don't hesitate to contact us (see <<Do you have questions or feedback?>>). 
 
 NOTE: *User Guide-Shortcuts:* Whenever you find a *blue questionmark*-sign in {product-name}, you may click on it to be linked to the respective section of the User Guide.
 
@@ -69,14 +67,14 @@ NOTE: *User Guide-Shortcuts:* Whenever you find a *blue questionmark*-sign in {p
 * *Developer Guide*: {product-name} is open source. So if you would like to develop, the https://inception-project.github.io/documentation/latest/developer-guide[Developer Guide] might be interesting for you.
 
 
-== Installing and Starting INCEpTION
+== Installing and starting {product-name}
 
 === Installing Java
 
 In order to run {product-name}, you need to have Java installed in version 8 or higher. If you do not have Java installed yet, please install the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java] or link:https://adoptopenjdk.net[OpenJDK]. Both work perfectly fine so you can choose either of them.
 
 
-=== Download and Start {product-name}
+=== Download and start {product-name}
 
 In this section, we will download, open and log in to {product-name}:
 
@@ -90,7 +88,7 @@ downloading the latest version, your previous work will not be lost: In
 the new version, you will find all your projects, documents, users etc. like
 before without doing anything. +
 Check the website, subscribe to github notifications or the
-google group (see <<Do You Have Questions or Feedback?>>) to be notified when a new version has been released.
+google group (see <<Do you have questions or feedback?>>) to be notified when a new version has been released.
 
 
 *Step 2 - Open (via double-click):* Now, simply double-click on the downloaded .jar-file. After a
@@ -123,7 +121,7 @@ http://localhost:8080/[_http://localhost:8080_] in you browser.
 ** For more installation details, see the https://inception-project.github.io/documentation/[Admin Guide].
 
 
-==== Download and Import an Example Project
+==== Download and import an Example Project
 
 In order to understand what you read in this guide, it makes sense to have an annotation project to look at and click through. We created some example projects. You find them in the section https://inception-project.github.io/example-projects/[Example Projects] on our website.
 
@@ -132,9 +130,10 @@ image:getting_started_download_example_project.png[image,width=636,height=128]
 
 *Step 1 - Download:* For this guide, we use the _Interactive Concept Linking_ project. Please download it from the https://inception-project.github.io/example-projects/[Example Projects] section on our website. It constists of two documents about pets. The first one contains some annotations as an example, the second one is meant to be your playground. It has originally been created for concept linking annotation but in every project, you can create any kinds of annotations.
 
+[[concept_linking_in_getting_started]]
 NOTE: *Concept Linking:* This is the kind of annotation telling whether the annotated text part refers to a
 Person (in {product-name}, it will per default get the tag PER), Organization (ORG), Location (LOC) or any other (OTH). +
-The respective layer to annotate this aspect is the _Named Entity_ layer. If you are not sure what layers are, check the box on xref:layers_and_features_in_getting_started[_Layers And Features_] in the section <<Project Settings>>. 
+The respective layer to annotate this aspect is the _Named Entity_ layer. If you are not sure what layers are, check the box on xref:layers_and_features_in_getting_started[_Layers and Features_] in the section <<Project Settings>>. Also see <<Concept Linking>> in the User Guide.
 
 * *Step 2 - Import:* After logging into
 {product-name}, click on the blue folder on the top right (next to „Import project archives“) and browse for the example project you have
@@ -142,10 +141,10 @@ downloaded in Step 1. Finally, click the grey upload button right next to
 the blue folder to upload the selected project. The project has now been added and you can use it to follow the explanations of the next section.
 
 
-== Settings and Structure Of an Annotation Project
+== Settings and Structure of an Annotation Project
 In this section, we will have a look on the structure of every annotation project in {product-name}. If you prefer to make some annotations first, you may go on with <<First Annotations with {product-name}>> and return later. This section here gives you a basic orientation in {product-name}.
 
-You may have different projects in {product-name} at the same time. First, let‘s see what elements each project _has_ and where you can adjust these elements by examining the <<Project Settings>>. Second, we will find out what you can _do_ in each project having a look on the <<Structure Of an Annotation Project>>.
+You may have different projects in {product-name} at the same time. First, let‘s see what elements each project _has_ and where you can adjust these elements by examining the <<Project Settings>>. Second, we will find out what you can _do_ in each project having a look on the <<Structure of an Annotation Project>>.
 
 
 === Project Settings
@@ -160,10 +159,10 @@ Each project consists of the following elements:
 * Optional: *Guidelines* for you and your team
 
 For a quick overview on the settings, you might want to watch our tutorial video https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[Overview].
-As for all topics of Getting Started, you will find more details on each of them in the man documentation <<{product-name} User Guide>>.
+As for all topics of _Getting Started_, you will find more details on each of them in the man documentation <<{product-name} User Guide>>.
 
 
-The Settings provide a tab for each of these elements. There are more tabs but we focus on the most important ones only to get started. You reach the settings after logging in when you click on the name of a project and then on "Settings" on the left. If you have not imported the example project yet, we propose to follow the instruction in <<Download and Import an Example Project>> first.
+The Settings provide a tab for each of these elements. There are more tabs but we focus on the most important ones only to get started. You reach the settings after logging in when you click on the name of a project and then on "Settings" on the left. If you have not imported the example project yet, we propose to follow the instruction in <<Download and import an Example Project>> first.
 
 [[documents_in_getting_started]]
 * *Documents:* Here, you may upload your files to be annotated. Make sure that the format selected in the dropdown on the
@@ -210,14 +209,14 @@ select section *Users* on the left. For *user roles* (for an _instance_ of {prod
 |===
 
 [[layers_and_features_in_getting_started]]
-NOTE: *Layers and Features:* There are different "aspects" or "categories" you might want to annotate. For example, you might want to annotate all the places and persons in a text and link them to a knowledge base entry (see the boy about xref:knowledge_bases_in_getting_started[Knowledge Bases]) to tell _which_ concrete place or person they are. This way of annotation is called _Named Entity_. In another case, you might want to annotate which words are verbs, nouns, adjectives, prepositions and so on (called _Part of Speech_). What we called "aspects", "categories" or "ways to annotate" here, is referred to as *layers* in {product-name} as in many other annotation tools, too. + 
-{product-name} supports *span layers* in order to annotate a span from one character („letter“) in the text to another, *relation layers* in order to annotate the relation between two span annotations and *chain layers* which are normally used to annotate coreferences, that is, to show that different words or phrases refer to the same person or object (but not which one). A span layer annotation always anchors on one span only. A relation layer annotation always anchors on the two span annotations of the relation. Chains anchor on all spans which are part of the chain. For span layers, the default granularity is to annotate one or more tokens („words“) but you can adjust to character level or sentence level in the layer details (see <<Layers>> in the main documentation; especially <<Properties>> ). +
+NOTE: *Layers and Features:* There are different "aspects" or "categories" you might want to annotate. For example, you might want to annotate all the places and persons in a text and link them to a knowledge base entry (see the box about xref:knowledge_bases_in_getting_started[Knowledge Bases]) to tell _which_ concrete place or person they are. This way of annotation is called _Named Entity_. In another case, you might want to annotate which words are verbs, nouns, adjectives, prepositions and so on (called _Part of Speech_). What we called "aspects", "categories" or "ways to annotate" here, is referred to as *layers* in {product-name} as in many other annotation tools, too. + 
+{product-name} supports *span layers* in order to annotate a span from one character („letter“) in the text to another, *relation layers* in order to annotate the relation between two span annotations and *chain layers* which are normally used to annotate coreferences, that is, to show that different words or phrases refer to the same person or object (but not which one). A span layer annotation always anchors on one span only. A relation layer annotation always anchors on the two span annotations of the relation. Chains anchor on all spans which are part of the chain. For span layers, the default granularity is to annotate one or more tokens („words“) but you can adjust to character level or sentence level in the layer details (see <<Layers>> in the main documentation; especially <<Properties>>). +
 Each layer provides appropriate fields, so called *features* to enter a lable as what to annotate the selected text part. For example, on the _Named Entity_ layer in {product-name}, you find two feature-fields: _value_ and _identifier_. In _value_, you can enter what kind of entity it is ("LOC" for a location, "PER" for a person, "ORG" for an organization and "OTH" for other) In _identifier_ you can enter which concrete entity (which must be in the knowledge base) it is. For the example "Paris", ot may be the French capital; the person Paris Hilton; a company named "Paris" or something else. +
 {product-name} provides default layers with default features to give you a starting point. Default layers cannot be deleted as selfmade layers can. However, new features can be added.
 See the main documentation for details on <<Layers>>, features, the different types of layers and features, how to create custom layers and how to adjust them for your individual task.
 
 * *Layers:* In this section, you may modify existing layers to use for
-your annotations and also create own layers. In case you do not want to work
+your annotations and also create custom layers. In case you do not want to work
 on default layers only but wish to use custom layers designed for your individual task, we recommend reading the documentation for details on <<Layers>>.
 
 
@@ -225,7 +224,7 @@ on default layers only but wish to use custom layers designed for your individua
 NOTE: *Tagsets:* In order all annotations to have consistent labels, it is preferrable to use defined tags which can be given to the annotations. If users do not enter free text for a lable but stick to predefindes tags, they avoid different names for the same thing and varying spelling. A set of such definded tags is called a tagset. It is so to say a collection of lables which can be used for an annotation. {product-name} comes with predefined tagsets out of the box and like many times before, they serve as a suggestion and starting point only. You can modify them or create your own ones.
 
 NOTE: *Feature Types:* The tags of your tagsets must always fit the feature type of the feature they are used for. The feature type defines what type of information the feature can be, for example "Primitive: Integer" for whole numbers, "Primitive: Float" for decimals; "Primitive: Boolean" for a true/false lable only; the most common one "Primitive: String" for text lables or "KB: Concept/Instance/Property" if the feature shall link to a knowledge base. There are more types for features but these are the most important ones for you to know. +
-Changing the type does only work for your own features, not for default features. In order to do so, scroll in the "Feature Details" panel until you see the field "Type" and select the type of your choice.
+Changing the type does only work for custom features, not for default features. In order to do so, scroll in the "Feature Details" panel until you see the field "Type" and select the type of your choice.
 If a tagset shall be linked to a feature, they must have the same type.
 For more details, see the <<Features>> in the main documentation.
 
@@ -238,7 +237,7 @@ image:getting_started_tagset_create.png[image,width=1366,height=768]
 [[link_to_a_layer_and_feature]]
 ** In order to use the tagset, it is necessary to *link it to a layer and feature*. Herefore, click on the *Layers*-tab and select the layer from the list at the left. As an example, let's select the layer _Named entity_. Two new panels open now: "Layer Details" and "Features". We focus on the second one. Choose the feature your tagset is made for. In this example, we choose the feature _value_. When you click on it, the panel "Feature details" opens. In this panel, scroll down to "Tagsets" and chose your tagset (to stick with our example: "Example_Tagset") from the dropdown and click _save_. The tagset which was selected before is not linked to the layer any more but the new one is. 
 
-** From now on, you can select your tags for annotating. Navigate to the annotation page (click _INCEpTION_ on the top left -> _Annotation_ and choose the document "pets2.txt"). When you double-click on any part in the text, for example "Socke" in line one, and click on the dropdown _value_ on the right, you find the tags "DOG" and "CAT" to choose from. (For details on how to annotate, see <<First Annotations with {product-name}>>)
+** From now on, you can select your tags for annotating. Navigate to the annotation page (click _INCEpTION_ on the top left -> _Annotation_ and choose the document "pets2.txt"). On the layer dropdown on the right, chose the layer _Named entity_ When you double-click on any part in the text, for example "Socke" in line one, and click on the dropdown _value_ on the right, you find the tags "DOG" and "CAT" to choose from. (For details on how to annotate, see <<First Annotations with {product-name}>>)
 
 ** You might want to xref:link_to_a_layer_and_feature[link "Named Entity tags" again to the _Named entity_ Layer and _value_ feature] in order to use them like they were before our little experiment.
 
@@ -247,18 +246,18 @@ image:getting_started_tagset_use.png[image,width=1285,height=574]
 
 ** For more details on Tagsets, see the main documentation, <<Tagsets>>.
 
-*_Note_: Tagsets can be changed and deleted. But the annotations they have been used for will remain with the same tag though.* Other than the defalut layers, default tagsets can also be deleted.
+*_Note_: Tagsets can be changed and deleted. But the annotations they have been used for will remain with the same tag though.* Other than the default layers, default tagsets can also be deleted.
 
 
 NOTE: *Saving:* Some steps, like annotations, are saved automatically in {product-name}. Others need to be saved manually. Whenever there is a blue *save*-button, it is necessary to click it to save the work.
 
 [[knowledge_bases_in_getting_started]]
-NOTE: *Knowledge Bases* are data bases for knowledge. Let's assume, the mention "Paris" is to be annotated. There are many different Parises - persons, the capital city of France and more - so the annotation is to tell clearly what entity named Paris is meant here. Herefore, the knowledge base needs to have an entry of the correct entity. In the annotation, we then want to make a reference to that very entry. +
+NOTE: *Knowledge Bases* are data bases for knowledge. Let's assume, the mention "Paris" is to be annotated. There are many different Parises - persons, the capital city of France and more - so the annotation is to tell clearly what entity with the name "Paris" is meant here. Herefore, the knowledge base needs to have an entry of the correct entity. In the annotation, we then want to make a reference to that very entry. +
 There are knowledge bases on the web ("remote") which can be used with {product-name} like e.g. WikiData. One can also create own, new knowledge bases and use them in {product-name}. They will be saved on your device ("local").
 
 * In the section *Knowledge Base*, you can change the settings for the
 knowledge bases used in your project, you can import local and remote
-knowledge bases into your project and you can create an own knowledge base. The latter will be empty at first. It will not be filled here in the settings but at the knowledge base page ( -> _Dashboard_, -> _Knowledge base_; also see the part xref:knowledge_bases_in_getting_started_in_structrue[Knowledge Base] in <<Structure Of an Annotation Project>>). In order to import or create a knowledge base, just click the „create“-button and {product-name} will lead you.
+knowledge bases into your project and you can create a custom knowledge base. The latter will be empty at first. It will not be filled here in the settings but at the knowledge base page ( -> _Dashboard_, -> _Knowledge base_; also see the part xref:knowledge_bases_in_getting_started_in_structrue[Knowledge Base] in <<Structure of an Annotation Project>>). In order to import or create a knowledge base, just click the „create“-button and {product-name} will lead you.
 
 ** *Note* that you can have several knowledge bases in your INCEpTION
 instance but you can choose for every project which one(s) to use. Using many little knowledge bases in one project will slow down the performance more than few big ones.
@@ -269,11 +268,11 @@ knowledge bases.
 
 ** *For details* on knowledge bases, see our main documentation on <<Knowledge Base>>s, or our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s../[tutorial video „Overview“] mentioning knowledge bases.
 
-** If you like to explore a knowledge base learning by doing check the example project we have downloaded and imported before. It contains a small knowledge base, too.
+** If you like to explore a knowledge base check the example project we have downloaded and imported before. It contains a small knowledge base, too.
 
 [[recommenders_in_getting_started]]
 * In the section *Recommenders*, you can create and modify your
-recommenders. They learn from what the user annotates and give suggestions. For details on how to _use_ recommenders, see our main documentation on xref:sect_annotation_recommendation[Recommenders] in the Annotation section. For details on _how to create an adjust_ them, see xref:sect_projects_recommendation[Recommenders] in the Projects section.
+recommenders. They learn from what the user annotates and give suggestions. For details on how to _use_ recommenders, see our main documentation on xref:sect_annotation_recommendation[Recommenders] in the Annotation section. For details on _how to create and adjust_ them, see xref:sect_projects_recommendation[Recommenders] in the Projects section.
 Or check the https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3/[tutorial video „Recommender Basics“].
 
 * In the *Guidelines* section, you may import files with guidelines. There is no automatic correction or warning from {product-name} if guidelines are violated but it is a short way for every user in the project to read and check the team guidelines while working. On the annotation page
@@ -283,20 +282,20 @@ look them up by clicking on the guidelines button on the top which looks like a 
 
 [[export_in_getting_started]]
 * In the *Export* section, you can export your project partially or wholly. Projects
-which have been exported can be imported again in INCEpTION the way we did with our example project in section <<Download and Import an Example Project>>: at the start page with the *Import* button. We recommend exporting projects on a regular basis in order to have a backup. For the
+which have been exported can be imported again in INCEpTION the way we did with our example project in section <<Download and import an Example Project>>: at the start page with the *Import* button. We recommend exporting projects on a regular basis in order to have a backup. For the
 different formats, their strengths and weaknesses, check the main documentation, xref:sect_formats[Appendix A: Formats]. We recommend using WebAnno TSV x.x (where
 x.x. is the highest number available, e.g. 3.2) whenever possible. Since
 it has been created specially for this application, it will provide all
 features required best. However, many other formats are provided.
 
 
-=== Structure Of an Annotation Project
+=== Structure of an Annotation Project
 
-In this section, we examine the dashboard. If you are in a project already, click on the dashboard button on the top to get there. If you just logged in, just choose a project by clicking on it name. As you are a Project Manager (see xref:User_rights[User Rights]), you see all of the following sub pages. For details on each section, check the <<{product-name} User Guide>>.
+In this section, we examine the dashboard. If you are in a project already, click on the dashboard button on the top to get there. If you just logged in, choose a project by clicking on its name. As you are a Project Manager (see xref:User_rights[User Rights]), you see all of the following sub pages. For details on each section, check the <<{product-name} User Guide>>.
 
-* *Annotation*: If you went to <<First Annotations with {product-name}>> before, you have been here already. Here, the annotators can go to to annotate the texts.
+* *Annotation*: If you went to <<First Annotations with {product-name}>> before, you have been here already. Here, the annotators can go to annotate the texts.
 
-NOTE: *Curation:* If several annotators work on a project, their annotations usually do not match perfectly. The process which annotations to finally keep is called Curation.
+NOTE: *Curation:* If several annotators work on a project, their annotations usually do not match perfectly. During the process called "Curation", you decide which annotations to keep in the final result.
 
 * *Curation*: Everyone with curation rights (see xref:User_rights[User Rights]) within a project can curate it. All other users
 do not have access to nor see this page. Only documents marked as
@@ -305,8 +304,8 @@ curate, see the main documentation -> <<Curation>> or just try it out:
 
 ** Create some annotations in any document
 ** Mark the document as finished: Just click on the lock on top.
-** Add another fake user (see xref:users_in_getting_started[Users] in the section <<Project Settings>>).
-** Log out and log in again as the fake user.
+** Add another user, just for testing this (see xref:users_in_getting_started[Users] in the section <<Project Settings>>).
+** Log out and log in again as the test user.
 ** In the very same document, make some annotations which are the same and some which are different than before. Mark the document as finished.
 ** Log in as any user with curation rights (e.g. as the „admin“ user we
 used before), enter the curation page and explore how to curate: You
@@ -317,9 +316,9 @@ it.
 
 [[knowledge_bases_in_getting_started_in_structrue]]
 * *Knowledge Base*: Also see xref:knowledge_bases_in_getting_started[the note-box on knowledge bases]. On the Knowledge Base page, you can manage and create your
-knowledge base(s) for the project you are in. You can create new knowledge bases from the scratch, modify them and integrate existing knowledge bases into your project which are either local (that is, they are saved on your device) or remote (that is, they are online). Note that this knowledge base page is distinct from the tab of the same name in the project settings (see xref:knowledge_bases_in_getting_started[Knowledge Base in section Project Settings]).
+knowledge base(s) for the project you are in. You can create new knowledge bases from scratch, modify them and integrate existing knowledge bases into your project which are either local (that is, they are saved on your device) or remote (that is, they are online). Note that this knowledge base page is distinct from the tab of the same name in the project settings (see xref:knowledge_bases_in_getting_started[Knowledge Base in section Project Settings]).
 
-NOTE: *Agreement:* The annotations of different annotators usually do not match perfectly. This aspect of difference / similarity is called agreement. For agreement, the measures provided in {product-name}, precision, recall and F1 are common.
+NOTE: *Agreement:* The annotations of different annotators usually do not match perfectly. This aspect of difference / similarity is called agreement. For agreement, some common measures are provided.
 
 * *Agreement*: On this page, you can calculate the so called annotator agreement.
 *_Note:_* Only documents *marked as finished* by annotators (clicking on the
@@ -328,10 +327,10 @@ little lock on the annotation page) are taken into account.
 * *Monitoring:* Here you can check the overall progress of your
 project; see which user is working on or has finished which document; and toggle for each user the status of each document between *Done / In Progress* or between *New / Locked*. For details, see <<Monitoring>> in the main documentation.
 
-* *Evaluation*: The evaluation page shows a learning courve diagram of
+* *Evaluation*: The evaluation page shows a learning curve diagram of
 each recommender (see xref:recommenders_in_getting_started[Recommender]).
 
-* *Settings*: Here, you can organize, manage and adjust all the details of your project. We had a look on those you need to get started for your own projects in the section <<Project Settings>> already.
+* *Settings*: Here, you can organize, manage and adjust all the details of your project. We had a look those you need to get started for your own projects in the section <<Project Settings>> already.
 
 This was the overview on what you can _do_ in each project and what elements each project _has_. Now you are ready to go for your own annotations.
 
@@ -339,8 +338,8 @@ This was the overview on what you can _do_ in each project and what elements eac
 == First Annotations with {product-name}
 
 
-In this section, we will make first annotations. If you have not downloaded and imported an example project yet, we recommend to return to <<Download and Import an Example Project>> and do so first.
-In this section, no or little theory and background will be explained. In case you want to have some theory and background knowledge first, we recommend reading the section <<Structure Of an Annotation Project>>.
+In this section, we will make first annotations. If you have not downloaded and imported an example project yet, we recommend to return to <<Download and import an Example Project>> and do so first.
+In this section, no or little theory and background will be explained. In case you want to have some theory and background knowledge first, we recommend reading the section <<Structure of an Annotation Project>>.
 
 
 *Create your first annotations*
@@ -348,7 +347,7 @@ In this section, no or little theory and background will be explained. In case y
 You may want to watch our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s[tutorial video „Overview“] on how to create
 annotations. But this guide, too, will lead you step by step. We will create a Named Entity annotation which tells whether a mention is a person (PER), location (LOC), organization (ORG) or other (OTH):
 
-NOTE: *Creating an Own Project:* In this guide, we will use our example project. If you would like to create an own project later on, click on *create*, enter a project name and click on *save*. Use the *Projects* link at the top of the screen to return to the project overview and select the project you just created to work with it. See <<Project Settings>> in order to add documents, users, guidelines and more to your project.
+NOTE: *Creating an own Project:* In this guide, we will use our example project. If you would like to create an own project later on, click on *create*, enter a project name and click on *save*. Use the *Projects* link at the top of the screen to return to the project overview and select the project you just created to work with it. See <<Project Settings>> in order to add documents, users, guidelines and more to your project.
 
 *Step 1 - Opening a Project:* After logging in, what you see first is the *Project overview*. Here, you can see all the projects which you have access to. Right now, this will be only the example project. Choose the example project by clicking on its name and you will be on the *Dashboard* of this project.
 
@@ -361,7 +360,7 @@ In case of own projects, you will find the description you have given it instead
 *Step 2 - Open the Annotation Page:* In order to annotate, click on *Annotation* on the top left. You will be asked to open the document which you want to annotate. For this guide, choose _pets1.tsv_.
 
 NOTE: *Annotations in Newly Imported Projects:* In the example project, you will see several annotations already. If you import projects or single documents (see xref:documents_in_getting_started[Documents]) without any annotations, there will be none. But in the
-example projects, we have added some annotations already as examples. If you export a project (see  xref:export_in_getting_started[Export]) and import it again (as we just did with the example project in <<Download and Import an Example Project>>), there will be the same annotations like before.
+example projects, we have added some annotations already as examples. If you export a project (see  xref:export_in_getting_started[Export]) and import it again (as we just did with the example project in <<Download and import an Example Project>>), there will be the same annotations like before.
 
 *Step 3 - Create an Annotation:* After opening the document, select *Named entity* from the *Layer* dropdown menu on the right side of the screen to create your first annotation. Then, use the mouse to select a word in the annotation area, e.g. _in my home_ in line one. When you release the mouse button, the annotation will immediately be created and you can edit its details in the right sidebar (see next paragraph).
 
@@ -373,29 +372,29 @@ example projects, we have added some annotations already as examples. If you exp
 
 Now, let‘s examine the right panel to edit the details. You find the panel named _Layer_ on top and _Annotation_ below.
 
-In the *Layer*-dropdown, you can choose the layer you want to annotate with as we just did. You always have to choose it before you make a new annotation. After an annotation has been created, its layer cannot change any more. In order to change it, you need to delete it, select the right layer and create a new annotation.
+In the *Layer*-dropdown, you can choose the layer you want to annotate with as we just did. You always have to choose it before you make a new annotation. After an annotation has been created, its layer cannot be changed any more. In order to change it, you need to delete it, select the right layer and create a new annotation.
 
-If you are not sure what layers are, check xref:layers_and_features_in_getting_started[the box on _Layers And Features_ in the section Project Settings]. In order to learn how to adjust and create them for your purpose, see section <<Layers>> in the main documentation.
+If you are not sure what layers are, check xref:layers_and_features_in_getting_started[the box on _Layers and Features_ in the section Project Settings]. In order to learn how to adjust and create them for your purpose, see section <<Layers>> in the main documentation.
 
 
 In the *Annotation* panel, you see the details of a selected
-annotation. 
+annotation. They are called features.
 
 image:getting_started_annotation_panel.png[image,width=284,height=447]
 
 It shows the layer the annotation is made in (field „Layer"; here: _Named entity_)
-and what part of the text has been annotated (field „Text“; here _in my home_). Below, you can see and modify what has been entered for each of the so called *Features*. If you are not sure what features are, check xref:layers_and_features_in_getting_started[the box on _Layers And Features_ in the section Project Settings]. (Here: The layer _Named entity_ has the features "identifier" and "value". The *identifier* tells, to which entity in the knowledge base the annotated text refers to. For example, in case the home referred to here is a location the knowledge base knows, you can choose it in the dropdown of this field. The *value* tells if it is a Location (LOC) like here, a Person (PER), Organization (ORG) or any other (OTH).) +
+and what part of the text has been annotated (field „Text“; here _in my home_). Below, you can see and modify what has been entered for each of the so called *Features*. If you are not sure what features are, check xref:layers_and_features_in_getting_started[the box on _Layers and Features_ in the section Project Settings]. (Here: The layer _Named entity_ (see xref:concept_linking_in_getting_started[the note box on Concept Linking]) has the features "identifier" and "value". The *identifier* tells, to which entity in the knowledge base the annotated text refers to. For example, in case the home referred to here is a location the knowledge base knows, you can choose it in the dropdown of this field. The *value* tells if it is a Location (LOC) like here, a Person (PER), Organization (ORG) or any other (OTH).) +
 You may enter free text here or work with tagsets to have a well
-defined set of lables to enter so all of the users within one project will use the same lables. You can modify and create tagsets in the project settings. See section xref:tagsets_in_getting_started[Tagsets] in Getting Started or check the main documentation for <<Tagsets>>.
+defined set of lables to enter so all of the users within one project will use the same lables. You can modify and create tagsets in the project settings. See section xref:tagsets_in_getting_started[Tagsets] in _Getting Started_ or check the main documentation for <<Tagsets>>.
 
-You have almost finished the Getting Started. One word about the *Annotation Sidebar*. It folds out when clicking
+You have almost finished the _Getting Started_. One word about the left *Annotation Sidebar*. It folds out when clicking
 on the little arrow on top.
 
-image:getting_started_Sidebar_closed.png[image,width=462,height=460]
-image:getting_started_Sidebar_open.png[image,width=479,height=542]
+image:getting_started_Sidebar_closed.png[image,width=462,height=460,align="center"]
+image::getting_started_Sidebar_open.png[align="center"]
 
 There are several features you might want to
-check the main documentation for. Especially the *Recommender* section of the sidebar (the black speech bubble) is worth a look in case you use recommenders (see xref:recommenders_in_getting_started[Recommenders Project Settings]). Amongst others, you will find their measures and learning behaviours here. Also note the *Search* in the sidebar (the magnifier
+check the main documentation for. Especially the *Recommender* section of the sidebar (the black speech bubble) is worth a look in case you use recommenders (see xref:recommenders_in_getting_started[Recommenders in the section Project Settings]). Amongst others, you will find their measures and learning behaviours here. Also note the *Search* in the sidebar (the magnifier
 glass): You can create or delete annotations on all or some of the
 search results.
 
@@ -405,8 +404,8 @@ instructions for other example-projects, read the <<{product-name} User Guide>> 
 One way or the other: *Have fun exploring*!
 
 == Thank You
-We hope the Getting Started helped you with your first steps on {product-name} and gave you a general idea of how it works. For further reading and more details, we recommend the main documentation, the <<{product-name} User Guide>> starting right after this paragraph.
+We hope the _Getting Started_ helped you with your first steps in {product-name} and gave you a general idea of how it works. For further reading and more details, we recommend the main documentation, the <<{product-name} User Guide>> starting right after this paragraph.
 
-Do not hestitate to xref:Do_You_Have_Questions_or_Feedback[contact us] if you struggle, have any questions or special requirements. We
+Do not hestitate to xref:do_you_have_questions_or_feedback[contact us] if you struggle, have any questions or special requirements. We
 wish you success with your projects and you are welcome to let us know what you are working on.
 
