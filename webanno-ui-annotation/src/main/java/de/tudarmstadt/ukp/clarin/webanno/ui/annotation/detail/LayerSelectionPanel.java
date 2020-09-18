@@ -292,6 +292,11 @@ public class LayerSelectionPanel
             }
         }
         
+        // if there is only one layer, we use it to create new annotations
+        if (selectableLayers.size() == 1) {
+            state.setDefaultAnnotationLayer(selectableLayers.get(0));
+        }
+        
         if (state.getDefaultAnnotationLayer() != null) {
             state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
         }
