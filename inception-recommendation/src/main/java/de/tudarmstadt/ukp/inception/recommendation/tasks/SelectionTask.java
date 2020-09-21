@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,6 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.concurrent.LazyInitializer;
-import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -231,13 +232,10 @@ public class SelectionTask
         List<CAS> casses = new ArrayList<>();
         for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
             try {
-                CAS cas = documentService.readAnnotationCas(document, aUserName);
-                annoService.upgradeCasIfRequired(cas, document);
+                CAS cas = documentService.readAnnotationCas(document, aUserName, AUTO_CAS_UPGRADE);
                 casses.add(cas);
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
-            } catch (UIMAException e) {
-                log.error("Cannot upgrade annotation CAS.", e);
             }
         }
         return casses;
