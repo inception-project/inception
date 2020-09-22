@@ -504,22 +504,26 @@
     <dependency>
       <groupId>org.webjars.bowergithub.xbsoftware</groupId>
       <artifactId>enjoyhint</artifactId>
-	</dependency> 
-	<dependency>
-	    <groupId>org.webjars.npm</groupId>
-	    <artifactId>kinetic</artifactId>
-	</dependency>
-	<dependency>
-	    <groupId>org.webjars.bower</groupId>
-	    <artifactId>jquery.scrollTo</artifactId>
-	</dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-workload</artifactId>
     </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-workload-static</artifactId>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>kinetic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>jquery.scrollTo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-static</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-dynamic</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -731,6 +735,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-static</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
