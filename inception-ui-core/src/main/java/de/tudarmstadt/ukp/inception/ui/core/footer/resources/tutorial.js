@@ -506,15 +506,11 @@ function createDashboardRoutine2() {
 			'showSkip': false
 		},
 		{
-			'next li:nth-of-type(3)' : 'This will show you the agreement between annotators across documents.',
+			'next li:nth-of-type(3)' : 'Here, you can see the annotators\' progress and assign documents.',
 			'showSkip': false
 		},
 		{
-			'next li:nth-of-type(4)' : 'Here, you can see the annotators\' progress and assign documents.',
-			'showSkip': false
-		},
-		{
-			'next li:nth-of-type(5)' : 'This allows you to evaluate your recommenders.',
+			'next li:nth-of-type(4)' : 'This allows you to evaluate your recommenders.',
 			'showSkip': false
 		} 
 		];
