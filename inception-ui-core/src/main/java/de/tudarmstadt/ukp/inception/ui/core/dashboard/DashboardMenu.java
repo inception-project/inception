@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
-import static de.tudarmstadt.ukp.inception.workload.monitoring.extension.StaticWorkloadExtension.STATIC_EXTENSION_ID;
 
 import java.util.List;
 
@@ -38,14 +37,11 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.UrlResourceReference;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.registry.WorkloadRegistry;
 
 public class DashboardMenu
     extends Panel
@@ -54,18 +50,9 @@ public class DashboardMenu
 
     private boolean sendProjectIdToPage = true;
 
-    private @SpringBean WorkloadRegistry workloadRegistry;
-    private @SpringBean WorkloadManagementService workloadManagementService;
-
     public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel)
     {
         super(aId, aModel);
-
-        if (getProject() != null && workloadRegistry.getExtension(workloadManagementService.
-            getOrCreateWorkloadManagerConfiguration(getProject()).getExtensionPointID()) == null) {
-            workloadManagementService.setWorkloadManagerConfiguration(
-                STATIC_EXTENSION_ID,getProject());
-        }
 
         add(new ListView<MenuItem>("items", aModel)
         {
@@ -113,6 +100,7 @@ public class DashboardMenu
                 aItem.add(menulink);
                 aItem.setVisible(item.applies() /*&& (project != null || isAdminItem)*/);
             }
+
         });
     }
     

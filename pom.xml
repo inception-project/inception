@@ -134,7 +134,7 @@
     <!-- Curation -->
     <module>inception-curation</module>
     <module>inception-workload</module>
-    <module>inception-workload-static</module>
+    <module>inception-workload-matrix</module>
     <module>inception-workload-dynamic</module>
   </modules>
   <repositories>
@@ -290,7 +290,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-workload-static</artifactId>
+        <artifactId>inception-workload-matrix</artifactId>
         <version>0.17.0-SNAPSHOT</version>
       </dependency>
       <dependency>

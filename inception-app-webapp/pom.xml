@@ -233,10 +233,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-project</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-brat</artifactId>
       <exclusions>
         <exclusion>
@@ -519,7 +515,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-workload-static</artifactId>
+      <artifactId>inception-workload-matrix</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -735,7 +731,9 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-static</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>

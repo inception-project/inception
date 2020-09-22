@@ -15,22 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.config;
+package de.tudarmstadt.ukp.inception.workload.matrix.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 
 @Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",
-    matchIfMissing = false)
-public class DynamicWorkloadManagerAutoConfiguration
+@ConditionalOnProperty(prefix = "workload.matrix", name = "enabled", havingValue = "true", 
+    matchIfMissing = true)
+public class MatrixWorkloadManagerAutoConfiguration
 {
     @Bean
-    public DynamicWorkloadExtension dynamicWorkloadExtension()
+    public MatrixWorkloadExtension matrixWorkloadExtension()
     {
-        return new DynamicWorkloadExtension();
+        return new MatrixWorkloadExtension();
     }
 }

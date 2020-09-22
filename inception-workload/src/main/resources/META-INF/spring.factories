@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfiguration
+de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration

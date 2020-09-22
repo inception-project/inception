@@ -32,12 +32,12 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WorkloadManagerAutoConfiguration#workloadManager}.
+ * {@link WorkloadManagementAutoConfiguration#workloadManager}.
  * A persistence object for the workflow and workload properties of each project
  * </p>
  */
@@ -95,11 +95,11 @@ public class WorkloadManager implements Serializable
         project = aProject;
     }
 
-    public String getExtensionPointID() {
+    public String getType() {
         return workloadType;
     }
 
-    public void setExtensionPointID(String aWorkloadType) {
+    public void setType(String aWorkloadType) {
         workloadType = aWorkloadType;
     }
 
@@ -129,5 +129,4 @@ public class WorkloadManager implements Serializable
     {
         return Objects.hash(project, workloadType);
     }
-
 }
