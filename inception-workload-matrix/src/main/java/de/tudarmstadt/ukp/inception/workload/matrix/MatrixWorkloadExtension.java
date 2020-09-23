@@ -25,7 +25,7 @@ import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManager
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link MatrixWorkloadManagerAutoConfiguration#staticWorkloadExtension}
+ * {@link MatrixWorkloadManagerAutoConfiguration#matrixWorkloadExtension}
  * </p>
  */
 @Order(-10)
