@@ -3,32 +3,30 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
   <changeSet author="Christoph Scheunemann" id="20200408-01">
-    <createTable tableName="workload_assignment">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="dynamic_workflow" />
+      </not>
+    </preConditions>
+    <createTable tableName="dynamic_workflow">
       <column autoIncrement="true" name="id" type="BIGINT">
         <constraints primaryKey="true" />
       </column>
       <column name="project" type="BIGINT">
         <constraints nullable="false" />
       </column>
-      <column name="workflowmanagertype" type="VARCHAR(50)">
+      <column name="defaultAnnotations" type="INT">
         <constraints nullable="false" />
       </column>
-        <column name="workloadmanagertype" type="VARCHAR(50)">
-            <constraints nullable="false" />
-        </column>
-        <column name="workflow" type="VARCHAR(50)">
-            <constraints nullable="false" />
-        </column>
-        <column name="numberofannotations" type="int">
-            <constraints nullable="false" />
-        </column>
-        <column name="traits" type="CLOB(64000)"></column>
+      <column name="workflow" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
     </createTable>
-    <createIndex indexName="FK_project_id" tableName="workload_assignment">
+    <createIndex indexName="FK_project_id" tableName="dynamic_workflow">
       <column name="project" />
     </createIndex>
     <addForeignKeyConstraint constraintName="FK_project_id"
-      baseTableName="workload_assignment" baseColumnNames="project"
+      baseTableName="dynamic_workflow" baseColumnNames="project"
       referencedTableName="project" referencedColumnNames="id"
       deferrable="false" initiallyDeferred="false" 
       onDelete="CASCADE" onUpdate="CASCADE"/>
