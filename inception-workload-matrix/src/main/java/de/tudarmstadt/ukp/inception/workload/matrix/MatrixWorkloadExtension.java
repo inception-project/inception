@@ -31,12 +31,12 @@ import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManager
 @Order(-10)
 public class MatrixWorkloadExtension implements WorkloadManagerExtension
 {
-    public static final String STATIC_EXTENSION_ID = "static";
+    public static final String MATRIX_WORKLOAD_MANAGER_EXTENSION_ID = "matrix";
     
     @Override
     public String getId()
     {
-        return STATIC_EXTENSION_ID;
+        return MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
     }
     
     @Override

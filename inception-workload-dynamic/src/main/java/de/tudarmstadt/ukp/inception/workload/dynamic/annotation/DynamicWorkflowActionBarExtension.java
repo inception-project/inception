@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
-import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -61,7 +61,7 @@ public class DynamicWorkflowActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
-        return DYNAMIC_EXTENSION_ID.equals(workloadManagementService.
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
             getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
             .getType());
     }

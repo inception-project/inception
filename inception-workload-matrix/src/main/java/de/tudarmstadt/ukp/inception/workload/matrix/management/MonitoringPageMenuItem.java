@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.matrix.management;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
-import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.STATIC_EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
@@ -97,7 +97,7 @@ public class MonitoringPageMenuItem implements MenuItem
         return (projectService.isCurator(project, user)
             || projectService.isManager(project, user))
             && PROJECT_TYPE_ANNOTATION.equals(project.getMode())
-            && STATIC_EXTENSION_ID.equals(workloadManagementService.
+            && MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
             getOrCreateWorkloadManagerConfiguration(project).
             getType());
     }
