@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import java.util.Optional;
 
@@ -75,7 +75,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     @Override
     public boolean accepts (AnnotationPageBase aPage)
     {
-        return DYNAMIC_EXTENSION_ID.equals(workloadManagementService.
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
             getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
             .getType());
     }

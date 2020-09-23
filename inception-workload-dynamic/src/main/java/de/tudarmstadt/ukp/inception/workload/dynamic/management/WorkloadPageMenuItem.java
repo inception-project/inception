@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
-import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
@@ -90,7 +90,7 @@ public class WorkloadPageMenuItem implements MenuItem
         return (projectService.isCurator(sessionProject, user)
             || projectService.isProjectAdmin(sessionProject, user))
             && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
-            && DYNAMIC_EXTENSION_ID.equals(workloadManagementService.
+            && DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
             getOrCreateWorkloadManagerConfiguration(sessionProject).
             getType());
     }
