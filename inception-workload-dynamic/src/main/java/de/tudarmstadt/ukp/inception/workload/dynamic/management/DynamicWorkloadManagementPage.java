@@ -19,9 +19,13 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Objects.isNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -42,6 +46,7 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigationTo
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -66,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -74,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManagementService;
@@ -106,11 +113,11 @@ public class DynamicWorkloadManagementPage
 
     private BootstrapRadioChoice<String> dateChoices;
 
-    private BootstrapSelect<WorkflowManagerType> workflowChoices;
-    private BootstrapSelect<String> userSelection;
-    private BootstrapSelect<String> resetDocument;
-    private BootstrapSelect<String> assignDocument;
-    private BootstrapSelect<String> documentState;
+    private DropDownChoice<WorkflowManagerType> workflowChoices;
+    private DropDownChoice<User> userSelection;
+    private DropDownChoice<AnnotationDocument> resetDocument;
+    private DropDownChoice<SourceDocument> assignDocument;
+    private DropDownChoice<AnnotationDocumentState> documentState;
 
     private Form<Void> searchForm;
     private Form<Void> settingsForm;
@@ -396,7 +403,7 @@ public class DynamicWorkloadManagementPage
         defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
 
         // Finally, add the confirm button at the end
-        Button save = new LambdaAjaxButton("save", this::actionConfirm);
+        Button save = new LambdaAjaxButton<>("save", this::actionConfirm);
 
         settingsForm.add(defaultNumberDocumentsTextField);
         settingsForm.add(save);
@@ -432,40 +439,31 @@ public class DynamicWorkloadManagementPage
         userSelectionForm.setOutputMarkupId(true);
 
         // Show all available users
-        userSelection = new BootstrapSelect("userSelection", new Model<>(new ArrayList<String>()));
-        userSelection.setMarkupId("Select a user");
-        userSelection.setChoices(Model
-                .ofList(projectService.listProjectUsersWithPermissions(currentProject.getObject())
-                        .stream().map(User::getUsername).sorted().collect(Collectors.toList())));
 
-        userSelection.add(new AjaxFormComponentUpdatingBehavior("onchange")
+        userSelection = new BootstrapSelect<>("userSelection",
+                LoadableDetachableModel.of(this::getUsersForCurrentProject));
+        userSelection.setModel(new Model(User.class));
+        userSelection.setRequired(true);
+
+        userSelection.setChoiceRenderer(new LambdaChoiceRenderer<>(User::getUsername));
+
+        userSelection.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                System.out.println("-------------------");
-                System.out.println("CLICKED");
-                selectedUser = userRepository.get(userSelection.getDefaultModelObjectAsString());
-                resetDocument
-                        .setChoices(
-                                Model.ofList(documentService
-                                        .listAnnotationDocuments(currentProject.getObject(),
-                                                userRepository.get(userSelection
-                                                        .getDefaultModelObjectAsString()))
-                                        .stream().map(AnnotationDocument::getName).sorted()
-                                        .collect(Collectors.toList())));
 
-                assignDocument.setChoices(Model.ofList(documentService
-                        .listAnnotationDocuments(currentProject.getObject(), selectedUser).stream()
-                        .map(AnnotationDocument::getName).sorted().collect(Collectors.toList())));
+                selectedUser = userRepository.getCurrentUser();
+                assignDocument.setChoices(getDocumentsForSelectedUser());
+                resetDocument.setChoices(getCreatedDocumentsForSelectedUser());
 
-                aTarget.add(userDetailForm);
-                aTarget.add(userForm);
+                aTarget.add(assignDocument);
+                aTarget.add(resetDocument);
             }
-
         });
 
         userSelectionForm.add(userSelection);
+
         return userSelectionForm;
     }
 
@@ -480,36 +478,95 @@ public class DynamicWorkloadManagementPage
 
     private Form<Void> createUserDetailForm()
     {
+
         userDetailForm = new Form<>("userDetailForm");
         userDetailForm.setOutputMarkupId(true);
 
         // Show ALL documents in the project (even those for which the user
         // does not have an annotations document created yet (due to lazy creation)
-        assignDocument = new BootstrapSelect("assignDocument",
-                new Model<>(new ArrayList<String>()));
-        assignDocument.setMarkupId("Select a document");
+        assignDocument = new OverviewListChoice<>("assignDocument",
+                LoadableDetachableModel.of(this::getDocumentsForSelectedUser));
+        assignDocument.setModel(new Model(SourceDocument.class));
+        assignDocument.setChoiceRenderer(new LambdaChoiceRenderer<>(SourceDocument::getName));
         userDetailForm.add(assignDocument);
 
+        /*
+         * TODO next, change to multi select
+         * 
+         * IModel<Collection<User>> documentsToAddModel = new CollectionModel<>(new ArrayList<>());
+         * MultiSelect<User> documentsToAdd("documentsToAdd", new ChoiceRenderer<>("documents")) {
+         * 
+         * 
+         * };
+         * 
+         */
+
         Button assign = new LambdaAjaxButton<>("assign", this::actionAssignDocument);
+
+        assign.add(enabledWhen(() -> !isNull(assignDocument.getDefaultModelObject())));
+
         userDetailForm.add(assign);
 
         // Shows all annotation documents for the user that exist in the DB
-        resetDocument = new BootstrapSelect("resetDocument", new Model<>(new ArrayList<String>()));
-        resetDocument.setMarkupId("Select the new State");
+        resetDocument = new BootstrapSelect<>("resetDocument",
+                LoadableDetachableModel.of(this::getCreatedDocumentsForSelectedUser));
+        resetDocument.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocument::getName));
         userDetailForm.add(resetDocument);
 
-        documentState = new BootstrapSelect("documentState", new Model<>(new ArrayList<String>()));
-        documentState.setMarkupId("Select the new State");
-        List<String> documentstates = new ArrayList<>();
-        documentstates.add(AnnotationDocumentState.IN_PROGRESS.getName());
-        documentstates.add(AnnotationDocumentState.FINISHED.getName());
-        documentState.setChoices(documentstates);
+        documentState = new BootstrapSelect<>("documentState",
+                LoadableDetachableModel.of(this::getAnnotationDocumentStates));
+        documentState
+                .setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocumentState::getName));
+
+        documentState.setRequired(true);
+        documentState.add(enabledWhen(() -> !isNull(resetDocument.getDefaultModelObject())));
+
         userDetailForm.add(documentState);
 
         Button set = new LambdaAjaxButton<>("set", this::actionSetDocumentStatus);
+
+        set.add(enabledWhen(() -> !isNull(resetDocument.getDefaultModelObject())
+                && !isNull(documentState.getDefaultModelObject())));
+
+        userDetailForm.add(visibleWhen(() -> !isNull(userSelection.getDefaultModelObject())));
+
         userDetailForm.add(set);
 
         return userDetailForm;
+    }
+
+    private List<User> getUsersForCurrentProject()
+    {
+        return projectService.listProjectUsersWithPermissions(currentProject.getObject());
+    }
+
+    private List<SourceDocument> getDocumentsForSelectedUser()
+    {
+        if (selectedUser == null) {
+            return new ArrayList<>();
+        }
+        else {
+            return new ArrayList<>(documentService
+                    .listAnnotatableDocuments(currentProject.getObject(), selectedUser).keySet());
+        }
+
+    }
+
+    private List<AnnotationDocument> getCreatedDocumentsForSelectedUser()
+    {
+        if (selectedUser == null) {
+            return new ArrayList<>();
+        }
+        else {
+            return documentService
+                    .listAnnotatableDocuments(currentProject.getObject(), selectedUser).values()
+                    .stream().filter(Objects::nonNull).collect(Collectors.toList());
+        }
+    }
+
+    private List<AnnotationDocumentState> getAnnotationDocumentStates()
+    {
+        return Arrays.stream(AnnotationDocumentState.values()).collect(Collectors.toList());
     }
 
     private void actionSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -542,13 +599,49 @@ public class DynamicWorkloadManagementPage
         success("Changes saved");
     }
 
-    private void actionSetDocumentStatus(AjaxRequestTarget ajaxRequestTarget, Form<?> aForm)
+    private void actionSetDocumentStatus(AjaxRequestTarget aAjaxRequestTarget, Form<?> aForm)
     {
-
+        documentService.transitionAnnotationDocumentState(
+                documentService.getAnnotationDocument(
+                        documentService.getSourceDocument(currentProject.getObject(),
+                                resetDocument.getModelObject().getName()),
+                        selectedUser),
+                AnnotationDocumentStateTransition
+                        .valueOf(documentState.getModelObject().getName()));
+        aAjaxRequestTarget.add(table);
     }
 
-    private void actionAssignDocument(AjaxRequestTarget ajaxRequestTarget, Form<?> aForm)
+    private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget, Form<?> aForm)
     {
 
+        aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
+
+        AnnotationDocument annotationDocument = documentService
+                .getAnnotationDocument(documentService.getSourceDocument(currentProject.getObject(),
+                        assignDocument.getModelObject().getName()), selectedUser);
+        if (annotationDocument != null) {
+            if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)) {
+                documentService.transitionAnnotationDocumentState(annotationDocument,
+                        AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+            }
+            else {
+                error("Selected Document is either already assigned or even finished.");
+            }
+        }
+        else {
+            // User did not even start the document, create a new one
+            AnnotationDocumentState state = AnnotationDocumentState.NEW;
+            annotationDocument = new AnnotationDocument();
+            annotationDocument.setDocument(documentService
+                    .getSourceDocument(currentProject.getObject(), annotationDocument.getName()));
+            annotationDocument.setName(annotationDocument.getName());
+            annotationDocument.setProject(currentProject.getObject());
+            annotationDocument.setUser(selectedUser.getUsername());
+            annotationDocument.setState(state);
+            documentService.createAnnotationDocument(annotationDocument);
+
+            success("Document assigned");
+            aAjaxRequestTarget.add(table);
+        }
     }
 }

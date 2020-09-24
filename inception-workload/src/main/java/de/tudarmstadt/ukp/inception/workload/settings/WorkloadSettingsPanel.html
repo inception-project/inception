@@ -16,15 +16,54 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-<html xmlns:wicket="http://wicket.apache.org" xmlns="http://www.w3.org/1999/html" lang="">
+<html xmlns:wicket="http://wicket.apache.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <wicket:head>
+        <style type="text/css">
+            input[type="radio"], label {
+
+                vertical-align: middle;
+                padding: 4px;
+                margin: 4px;
+            }
+        </style>
+    </wicket:head>
 </head>
+
 <body>
 <wicket:panel>
-
+    <div class="scrolling flex-content flex-h-container flex-gutter">
+        <form wicket:id="form" class="col-sm-5 flex-gutter">
+            <div class="card m-2 ">
+                <div class="card-header">
+                    <wicket:message key="Settings"/>
+                </div>
+                <div class="card-body">
+                    <div class="card m-2 ">
+                        <div class="card-header">
+                            <wicket:message key="Monitoring"/>
+                        </div>
+                        <div class="card-body">
+                            <label class="col-form-label" >
+                                <wicket:message key="workloadType"/>
+                                <a target="_blank" wicket:message="href:workload.help.link">
+                                    <i class="fas fa-question-circle"></i>
+                                </a>
+                            </label>
+                            <br />
+                            <div class="col-sm-8">
+                                <select wicket:id="workloadStrategy" class="form-control" data-container="body"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" wicket:id="save">
+                        <i class="fas fa-save"></i>&nbsp;
+                        <wicket:message key="save"/>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 </wicket:panel>
-
 </body>
 </html>

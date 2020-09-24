@@ -120,8 +120,8 @@
                   <i class="fas fa-user"></i>&nbsp;
                   <wicket:message key="users" />
                 </button>
-                <form wicket:id="userForm" class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 800px;">
-                  <form wicket:id="userSelectionForm">
+                <form wicket:id="userForm" class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 800px; min-height: 400px;">
+                  <form wicket:id="userSelectionForm" style="min-height: 150px;">
                     <div class="card-header">
                       <wicket:message key="userSelection"/>
                     </div>
@@ -141,7 +141,7 @@
                         <div class="card-header">
                           <wicket:message key="assignDocument" />
                       </div>
-                      <div class="card-body">
+                      <div class="card-body" style="min-height: 120px;">
                           <select wicket:id="assignDocument" class="form-control" data-container="body"></select>
                       </div>
                       <div class="card-footer">
@@ -154,7 +154,7 @@
                        <div class="card-header">
                         <wicket:message key="resetDocument" />
                       </div>
-                      <div class="card-body">
+                      <div class="card-body" style="min-height: 120px;">
                         <select wicket:id="resetDocument" class="form-control" data-container="body"></select>
                         <select wicket:id="documentState" class="form-control" data-container="body"></select>
                        </div>
