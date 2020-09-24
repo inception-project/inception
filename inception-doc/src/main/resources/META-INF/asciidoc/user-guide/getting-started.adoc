@@ -1,9 +1,23 @@
-= Getting Started
-:toc:
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 
 This _Getting Started_ Guide helps new users to install, start and work with {product-name}. It gives a quick overview (estimated time for reading only: approx. 20-30 minutes) on the key functionalities in order to get familiar with the tool. It excludes special cases and details due to
 simplicity and focuses on the first steps. <<See our documentation for further reading>> on any
-topic. You are already in the User Guide document. The main documentation of this User Guide starts right after the _Getting Started_ section: <<{product-name} User Guide>>.
+topic. You are already in the User Guide document. The main documentation of this User Guide starts right after the _Getting Started_ section: <<sect_core_funct, Core Functionalities>>.
 
 For quick overviews, also see our https://www.youtube.com/playlist?list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-[tutorial videos] covering an https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=1[Introduction], an https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=2[Overview], https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3[Recommender Basics] and https://www.youtube.com/watch?v=p5SQq5W1rQI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=4[Entity Linking]. _Getting Started_ will refer to them wherever it might be helpful.
 

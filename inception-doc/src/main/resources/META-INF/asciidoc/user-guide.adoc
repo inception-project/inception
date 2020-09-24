@@ -14,26 +14,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-include::{include-dir}getting-started.adoc[leveloffset=+1]
-
 = {product-name} User Guide
 The {product-name} Team
 
-This guide summarizes the functionality of {product-name} from the user's perspective.
+= Getting Started
 
-NOTE: It is assumed that you plan to test the {product-name} standalone version or an already existing server installation of {product-name}. For information on how to set up {product-name} for a group of users on a server, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
-
-All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
-
-= Introduction
+include::{include-dir}getting-started.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}workflow.adoc[leveloffset=+1]
-
-
-
+[[sect_core_funct]]
 = Core functionalities
+
+include::{include-dir}workflow.adoc[leveloffset=+1]
 
 include::{include-dir}login.adoc[leveloffset=+1]
 
