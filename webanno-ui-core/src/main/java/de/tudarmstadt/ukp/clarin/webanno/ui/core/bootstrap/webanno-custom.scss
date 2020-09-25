@@ -349,6 +349,9 @@ tr.even:hover{
     vertical-align:bottom;
 }
 
+/*
+ * We do not have the images on-board right now. Would be better to replace them with
+ * Font Awesome anyway probably.
 tr.headers th.wicket_orderDown a{
     padding-right:24px;
     background-image:url(../images/descending.png);
@@ -362,6 +365,7 @@ tr.headers th.wicket_orderUp a{
     background-position:right;
     background-repeat:no-repeat;
 }
+*/
 
 div.navigatorLabel{
     float:left;
