@@ -15,22 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.config;
+package de.tudarmstadt.ukp.inception.workload.extension;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
-
-@Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",
-    matchIfMissing = false)
-public class DynamicWorkloadManagerAutoConfiguration
+public interface WorkloadManagerExtension extends Extension<Project>
 {
-    @Bean
-    public DynamicWorkloadExtension dynamicWorkloadExtension()
+    @Override
+    default boolean accepts(Project project)
     {
-        return new DynamicWorkloadExtension();
+        return true;
     }
+    
+    String getLabel();
 }

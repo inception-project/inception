@@ -15,15 +15,17 @@
  - See the License for the specific language governing permissions and
  - limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-app</artifactId>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <version>0.17.0-SNAPSHOT</version>
     </parent>
+    <modelVersion>4.0.0</modelVersion>
     <artifactId>inception-workload-dynamic</artifactId>
-    <name>INCEpTION - Workload-dynamic - UI</name>
+    <name>INCEpTION - Workload Management - Dynamic</name>
     <dependencies>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -57,6 +59,22 @@
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
       </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-workload</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-beans</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-autoconfigure</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>com.googlecode.wicket-jquery-ui</groupId>
+        <artifactId>wicket-kendo-ui</artifactId>
+      </dependency>
 
 
       <!-- WICKET DEPENDENCIES -->
@@ -69,20 +87,12 @@
         <artifactId>wicket-spring</artifactId>
       </dependency>
       <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot</artifactId>
-      </dependency>
-      <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-context</artifactId>
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-extensions</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-autoconfigure</artifactId>
       </dependency>
       <dependency>
         <groupId>org.apache.wicket</groupId>
@@ -101,14 +111,6 @@
         <artifactId>wicket-util</artifactId>
       </dependency>
       <dependency>
-        <groupId>com.googlecode.wicket-jquery-ui</groupId>
-        <artifactId>wicket-kendo-ui</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-beans</artifactId>
-      </dependency>
-      <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-core</artifactId>
       </dependency>
@@ -124,7 +126,5 @@
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-core</artifactId>
       </dependency>
-
-
     </dependencies>
 </project>
