@@ -92,16 +92,21 @@ public class FeatureEditorListPanel
         featureEditorContainer.setOutputMarkupPlaceholderTag(true);
         featureEditorContainer.add(featureEditorPanelContent = new FeatureEditorPanelContent("featureEditors"));
         featureEditorContainer.add(createFocusResetHelper());
-        featureEditorContainer.add(visibleWhen(() -> !hasFeatures()));
+        featureEditorContainer.add(visibleWhen(() -> selectedLayerHasFeatures()));
         add(featureEditorContainer);
         
         noFeaturesWarning = new WebMarkupContainer("noFeaturesWarning");
         noFeaturesWarning.setOutputMarkupPlaceholderTag(true);
-        noFeaturesWarning.add(visibleWhen(() -> hasFeatures()));
+        noFeaturesWarning.add(visibleWhen(() -> selectedLayerHasNoFeatures()));
         add(noFeaturesWarning);
     }
     
-    private boolean hasFeatures() {
+    private boolean selectedLayerHasFeatures() {
+        return getModelObject().getSelection().getAnnotation().isSet() && 
+                !getModelObject().getFeatureStates().isEmpty();
+    }
+    
+    private boolean selectedLayerHasNoFeatures() {
         return getModelObject().getSelection().getAnnotation().isSet() && 
                 getModelObject().getFeatureStates().isEmpty();
     }
