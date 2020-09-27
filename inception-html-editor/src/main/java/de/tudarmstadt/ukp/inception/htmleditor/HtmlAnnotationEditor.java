@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.inception.htmleditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static javax.xml.transform.OutputKeys.INDENT;
 import static javax.xml.transform.OutputKeys.METHOD;
 import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
@@ -29,7 +31,10 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.stream.Collectors;
 
 import javax.xml.transform.TransformerConfigurationException;
@@ -68,9 +73,16 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
@@ -79,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Div;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph;
@@ -100,6 +113,8 @@ public class HtmlAnnotationEditor
 
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean ColoringService coloringService;
 
     public HtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
@@ -125,8 +140,8 @@ public class HtmlAnnotationEditor
                 JavaScriptHeaderItem.forReference(AnnotatorJsJavascriptResourceReference.get()));
 
         if (getModelObject().getDocument() != null) {
-            initAnnotatorJs(aResponse, vis, storeAdapter);
-            //render(RequestCycle.get().find(AjaxRequestTarget.class));
+            aResponse.render(
+                    OnDomReadyHeaderItem.forScript(initAnnotatorJs(vis, storeAdapter)));
         }
     }
 
@@ -234,13 +249,12 @@ public class HtmlAnnotationEditor
         return json;
     }
 
-    private static void initAnnotatorJs(IHeaderResponse aResponse, WebComponent aContainer,
-            StoreAdapter aAdapter)
+    private String initAnnotatorJs(WebComponent aContainer, StoreAdapter aAdapter)
     {
         String callbackUrl = aAdapter.getCallbackUrl().toString();
         StringBuilder script = new StringBuilder();
         script.append(
-                "var ann = $('#" + aContainer.getMarkupId() + "').annotator({readOnly: true});");
+                "var ann = $('#" + aContainer.getMarkupId() + "').annotator({readOnly: false});");
         script.append("ann.annotator('addPlugin', 'Store', {");
         script.append("    prefix: null,");
         script.append("    emulateJSON: true,");
@@ -250,17 +264,39 @@ public class HtmlAnnotationEditor
         script.append("        create:  '" + callbackUrl + "',");
         script.append("        update:  '" + callbackUrl + "',");
         script.append("        destroy: '" + callbackUrl + "',");
-        script.append("        search:  '" + callbackUrl + "'");
+        script.append("        search:  '" + callbackUrl + "',");
+        script.append("        select:  '" + callbackUrl + "'");
         script.append("    }");
         script.append("});");
-        // script.append("Wicket.$('" + vis.getMarkupId() + "').annotator = ann;");
-        aResponse.render(OnDomReadyHeaderItem.forScript(script.toString()));
+        //script.append("Wicket.$('" + vis.getMarkupId() + "').annotator = ann;");
+        return WicketUtil.wrapInTryCatch(script.toString());
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
+        // REC: I didn't find a good way of clearing the annotations, so we do it the hard way:
+        // - rerender the entire document
+        // - re-add all the annotations
         aTarget.add(vis);
+        aTarget.appendJavaScript(initAnnotatorJs(vis, storeAdapter));
+
+//        aTarget.appendJavaScript(WicketUtil.wrapInTryCatch(String.join("\n",
+//            "$('#" + vis.getMarkupId() + "').data('annotator').plugins.Store._getAnnotations();",
+//            "$('#" + vis.getMarkupId() + "').data('annotator').plugins.Store._getAnnotations();"
+//        )));
+    }
+    
+    private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
+    {
+        LOG.error(aMessage, aCause);
+        handleError(aMessage + ": " + ExceptionUtils.getRootCauseMessage(aCause), aTarget);
+    }
+
+    private void handleError(String aMessage, AjaxRequestTarget aTarget)
+    {
+        error(aMessage);
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
     
     private class StoreAdapter
@@ -307,10 +343,62 @@ public class HtmlAnnotationEditor
                 if ("DELETE".equals(method) && StringUtils.isNotEmpty(payload)) {
                     delete(aTarget, payload);
                 }
+
+                // Existing annotation deleted
+                if ("HEAD".equals(method) && StringUtils.isNotEmpty(payload)) {
+                    select(aTarget, payload);
+                }
             }
             catch (Exception e) {
                 error("Error: " + e.getMessage());
                 LOG.error("Error: " + e.getMessage(), e);
+            }
+        }
+        
+        private void select(AjaxRequestTarget aTarget, String payload)
+            throws JsonParseException, JsonMappingException, IOException
+        {
+            Annotation anno = JSONUtil.getObjectMapper().readValue(payload,
+                    Annotation.class);
+
+            if (anno.getRanges().isEmpty()) {
+                // Spurious creation event that is to be ignored.
+                return;
+            }
+            
+            VID paramId = VID.parse(anno.getId());
+            
+            try {
+                CAS cas = getCasProvider().get();
+                
+                if (paramId.isSynthetic()) {
+                    extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
+                            cas, paramId, "spanOpenDialog");
+                    return;
+                }
+
+                AnnotationFS fs = selectByAddr(cas, AnnotationFS.class, paramId.getId());
+                if (fs.getBegin() > -1 && fs.getEnd() > -1) {
+                    AnnotatorState state = getModelObject();
+                    if (state.isSlotArmed()) {
+                        // When filling a slot, the current selection is *NOT* changed. The
+                        // Span annotation which owns the slot that is being filled remains
+                        // selected!
+                        getActionHandler().actionFillSlot(aTarget, cas, fs.getBegin(),
+                                fs.getEnd(), paramId);
+                    }
+                    else {
+                        state.getSelection().selectSpan(paramId, cas, fs.getBegin(),
+                                fs.getEnd());
+                        getActionHandler().actionSelect(aTarget);
+                    }
+                }
+                else {
+                    handleError("Unable to select span annotation: No match was found", aTarget);
+                }
+            }
+            catch (AnnotationException | IOException e) {
+                handleError("Unable to select span annotation", e, aTarget);
             }
         }
 
@@ -325,27 +413,52 @@ public class HtmlAnnotationEditor
                 return;
             }
 
-            String json = toJson(anno);
-            // Since we cannot pass the JSON directly to Brat, we attach it to the HTML
+            // Since we cannot pass the JSON directly to AnnotatorJS, we attach it to the HTML
             // element into which AnnotatorJS governs. In our modified annotator-full.js, we pick it
             // up from there and then pass it on to AnnotatorJS to do the rendering.
-            aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
+            // String json = toJson(anno);
+            // aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
+
+            try {
+                CAS cas = getCasProvider().get();
+                int begin = anno.getRanges().get(0).getStartOffset();
+                int end = anno.getRanges().get(0).getEndOffset();
+                AnnotatorState state = getModelObject();
+                if (begin > -1 && end > -1) {
+                    if (state.isSlotArmed()) {
+                        // When filling a slot, the current selection is *NOT* changed. The
+                        // Span annotation which owns the slot that is being filled remains
+                        // selected!
+                        getActionHandler().actionFillSlot(aTarget, cas, begin,
+                                end, NONE_ID);
+                    }
+                    else {
+                        state.getSelection().selectSpan(cas, begin, end);
+                        getActionHandler().actionCreateOrUpdate(aTarget, cas);
+                    }
+                }
+                else {
+                    handleError("Unable to create span annotation: No match was found", aTarget);
+                }
+            }
+            catch (IOException | AnnotationException e) {
+                handleError("Unable to create span annotation", e, aTarget);
+            }
         }
 
         private void delete(AjaxRequestTarget aTarget, String aPayload)
         {
-            // TODO Auto-generated method stub
+            // We delete annotations via the detail sidebar, so this method is no needed.
         }
 
         private void update(AjaxRequestTarget aTarget, String aPayload)
         {
-            // TODO Auto-generated method stub
+            // We update annotations via the detail sidebar, so this method is no needed.
         }
 
         private void read(AjaxRequestTarget aTarget)
             throws JsonParseException, JsonMappingException, IOException
         {
-            AnnotatorState aState = getModelObject();
             CAS cas = getCasProvider().get();
 
             VDocument vdoc = new VDocument();
@@ -353,20 +466,35 @@ public class HtmlAnnotationEditor
 
             List<Annotation> annotations = new ArrayList<>();
 
-            // Render visible (custom) layers
-            // Map<String[], Queue<String>> colorQueues = new HashMap<>();
-            for (AnnotationLayer layer : vdoc.getAnnotationLayers()) {
-                // ColoringStrategy coloringStrategy = ColoringStrategy.getBestStrategy(
-                // annotationService, layer, aState.getPreferences(), colorQueues);
+            AnnotatorState state = getModelObject();
 
+            // Render visible (custom) layers
+            Map<String[], Queue<String>> colorQueues = new HashMap<>();
+            for (AnnotationLayer layer : vdoc.getAnnotationLayers()) {
+                ColoringStrategy coloringStrategy = coloringService.getStrategy(layer,
+                        state.getPreferences(), colorQueues);
+                
+                // If the layer is not included in the rendering, then we skip here - but only after
+                // we have obtained a coloring strategy for this layer and thus secured the layer
+                // color. This ensures that the layer colors do not change depending on the number
+                // of visible layers.
+                if (!vdoc.getAnnotationLayers().contains(layer)) {
+                    continue;
+                }
+                
                 TypeAdapter typeAdapter = annotationService.getAdapter(layer);
 
+                ColoringRules coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
+                        .map(ColoringRulesTrait::getColoringRules).orElse(null);
+
                 for (VSpan vspan : vdoc.spans(layer.getId())) {
-                    String bratLabelText = getUiLabelText(typeAdapter, vspan);
+                    String labelText = getUiLabelText(typeAdapter, vspan);
+                    String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
                     Annotation anno = new Annotation();
                     anno.setId(vspan.getVid().toString());
-                    anno.setText(bratLabelText);
+                    anno.setText(labelText);
+                    anno.setColor(color);
                     // Looks like the "quote" is not really required for AnnotatorJS to render the
                     // annotation.
                     anno.setQuote("");
@@ -376,7 +504,7 @@ public class HtmlAnnotationEditor
             }
 
             String json = toJson(annotations);
-            // Since we cannot pass the JSON directly to Brat, we attach it to the HTML
+            // Since we cannot pass the JSON directly to AnnotatorJS, we attach it to the HTML
             // element into which AnnotatorJS governs. In our modified annotator-full.js, we pick it
             // up from there and then pass it on to AnnotatorJS to do the rendering.
             aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");

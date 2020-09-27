@@ -30,6 +30,9 @@ public class Annotation
     private List<Range> ranges;
     private String quote;
     private String text;
+    // INCEPTION EXTENSION BEGIN
+    private String color;
+    // INCEPTION EXTENSION END
 
     public String getId()
     {
@@ -69,5 +72,15 @@ public class Annotation
     public void setText(String aText)
     {
         text = aText;
+    }
+
+    public String getColor()
+    {
+        return color;
+    }
+
+    public void setColor(String aColor)
+    {
+        color = aColor;
     }
 }

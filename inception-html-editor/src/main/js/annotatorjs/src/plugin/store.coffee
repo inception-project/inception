@@ -21,9 +21,10 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   # - annotationUpdated: An annotation has been updated.
   # - annotationDeleted: An annotation has been deleted.
   events:
-    'annotationCreated': 'annotationCreated'
-    'annotationDeleted': 'annotationDeleted'
-    'annotationUpdated': 'annotationUpdated'
+    'annotationCreated':  'annotationCreated'
+    'annotationDeleted':  'annotationDeleted'
+    'annotationUpdated':  'annotationUpdated'
+    'annotationSelected': 'annotationSelected'
 
   # User customisable options available.
   options:
@@ -136,6 +137,11 @@ class Annotator.Plugin.Store extends Annotator.Plugin
       this.registerAnnotation(annotation)
 
       this._apiRequest('create', annotation, (data) =>
+# INCEPTION EXTENSION BEGIN
+# This is necessary because we channel the AnnotatorJS Ajax events though Wicket and channel
+# responses back through a "temp" variable on the DOM element to which the annotator is attached.
+        data = this.annotator.element[0].temp
+# INCEPTION EXTENSION END
         # Update with (e.g.) ID from server.
         if not data.id?
           console.warn Annotator._t("Warning: No ID returned from server for annotation "), annotation
@@ -160,7 +166,14 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   # Returns nothing.
   annotationUpdated: (annotation) ->
     if annotation in this.annotations
-      this._apiRequest 'update', annotation, ((data) => this.updateAnnotation(annotation, data))
+      this._apiRequest 'update', annotation, ((data) => 
+# INCEPTION EXTENSION BEGIN
+# This is necessary because we channel the AnnotatorJS Ajax events though Wicket and channel
+# responses back through a "temp" variable on the DOM element to which the annotator is attached.
+        data = this.annotator.element[0].temp
+# INCEPTION EXTENSION END
+        this.updateAnnotation(annotation, data)
+      )
 
   # Public: Callback method for annotationDeleted event. Receives an annotation
   # and sends a DELETE request to the server using the URI for the destroy
@@ -177,6 +190,17 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   annotationDeleted: (annotation) ->
     if annotation in this.annotations
       this._apiRequest 'destroy', annotation, (() => this.unregisterAnnotation(annotation))
+
+  # Public: Callback method for annotationSelected event. Receives an annotation
+  # and sends a DELETE request to the server using the URI for the destroy
+  # action.
+  #
+  # annotation - An annotation Object that was selected.
+  #
+  # Returns nothing.
+  annotationSelected: (annotation) ->
+    if annotation in this.annotations
+      this._apiRequest 'select', annotation, (() => {})
 
   # Public: Registers an annotation with the Store. Used to check whether an
   # annotation has already been created when using Store#annotationCreated().
@@ -258,7 +282,12 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   #   console.log @annotation # => [{}, {}, {}]
   #
   # Returns nothing.
-  _onLoadAnnotations: (data=[]) =>
+  _onLoadAnnotations: (data) =>
+# INCEPTION EXTENSION BEGIN
+# This is necessary because we channel the AnnotatorJS Ajax events though Wicket and channel
+# responses back through a "temp" variable on the DOM element to which the annotator is attached.
+    data = this.annotator.element[0].temp || []
+# INCEPTION EXTENSION END
 
     annotationMap = {}
     for a in @annotations
@@ -298,7 +327,12 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   # data - An Array of annotation Objects
   #
   # Returns nothing.
-  _onLoadAnnotationsFromSearch: (data={}) =>
+  _onLoadAnnotationsFromSearch: (data) =>
+# INCEPTION EXTENSION BEGIN
+# This is necessary because we channel the AnnotatorJS Ajax events though Wicket and channel
+# responses back through a "temp" variable on the DOM element to which the annotator is attached.
+    data = this.annotator.element[0].temp || {}
+# INCEPTION EXTENSION END
     this._onLoadAnnotations(data.rows || [])
 
   # Public: Dump an array of serialized annotations
@@ -335,7 +369,22 @@ class Annotator.Plugin.Store extends Annotator.Plugin
     url = this._urlFor(action, id)
     options = this._apiRequestOptions(action, obj, onSuccess)
 
-    request = $.ajax(url, options)
+# INCEPTION EXTENSION BEGIN
+# We channel Ajax requests through Wicket. This allows us to use an AjaxRequestTarget in the
+# backend and to update/re-render parts of the screen as part of Ajax requests.
+#   request = $.ajax(url, options)
+    Wicket.Ajax.ajax({
+      "m" : "POST",
+      "c" : this.annotator.element.attr('id'),
+      "u" : url,
+      "ep" : options.data,
+      # success
+      "sh" : [ options.success ],
+      # error
+      "fh" : [ options.error ]
+    })
+    request = {}
+# INCEPTION EXTENSION END
 
     # Append the id and action to the request object
     # for use in the error callback.
@@ -375,7 +424,10 @@ class Annotator.Plugin.Store extends Annotator.Plugin
 
     # If emulateHTTP is enabled, we send a POST and put the real method in an
     # HTTP request header.
-    if @options.emulateHTTP and method in ['PUT', 'DELETE']
+# INCEPTION EXTENSION BEGIN
+#   if @options.emulateHTTP and method in ['PUT', 'DELETE']
+    if @options.emulateHTTP
+# INCEPTION EXTENSION END
       opts.headers = $.extend(opts.headers, {'X-HTTP-Method-Override': method})
       opts.type = 'POST'
 
@@ -444,6 +496,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
       'update':  'PUT'
       'destroy': 'DELETE'
       'search':  'GET'
+      'select':  'HEAD'
     }
 
     table[action]

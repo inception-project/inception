@@ -5,6 +5,7 @@ class Annotator.Viewer extends Annotator.Widget
   events:
     ".annotator-edit click":   "onEditClick"
     ".annotator-delete click": "onDeleteClick"
+    ".annotator-select click": "onSelectClick"
 
   # Classes for toggling annotator state.
   classes:
@@ -133,9 +134,10 @@ class Annotator.Viewer extends Annotator.Widget
       item = $(@item).clone().appendTo(list).data('annotation', annotation)
       controls = item.find('.annotator-controls')
 
-      link = controls.find('.annotator-link')
-      edit = controls.find('.annotator-edit')
-      del  = controls.find('.annotator-delete')
+      link   = controls.find('.annotator-link')
+      edit   = controls.find('.annotator-edit')
+      del    = controls.find('.annotator-delete')
+      select = item.find('.annotator-select')
 
       links = new LinkParser(annotation.links or []).get('alternate', {'type': 'text/html'})
       if links.length is 0 or not links[0].href?
@@ -143,16 +145,21 @@ class Annotator.Viewer extends Annotator.Widget
       else
         link.attr('href', links[0].href)
 
-      if @options.readOnly
-        edit.remove()
-        del.remove()
-      else
-        controller = {
-          showEdit: -> edit.removeAttr('disabled')
-          hideEdit: -> edit.attr('disabled', 'disabled')
-          showDelete: -> del.removeAttr('disabled')
-          hideDelete: -> del.attr('disabled', 'disabled')
-        }
+# INCEPTION EXTENSION BEGIN
+#     if @options.readOnly
+#       edit.remove()
+#       del.remove()
+#     else
+#       controller = {
+#         showEdit: -> edit.removeAttr('disabled')
+#         hideEdit: -> edit.attr('disabled', 'disabled')
+#         showDelete: -> del.removeAttr('disabled')
+#         hideDelete: -> del.attr('disabled', 'disabled')
+#       }
+      edit.remove()
+      del.remove()
+      controller = {}
+# INCEPTION EXTENSION END
 
       for field in @fields
         element = $(field.element).clone().appendTo(item)[0]
@@ -211,6 +218,14 @@ class Annotator.Viewer extends Annotator.Widget
   # Returns nothing.
   onDeleteClick: (event) =>
     this.onButtonClick(event, 'delete')
+
+  # Callback function: called when the select button is clicked.
+  #
+  # event - An Event object.
+  #
+  # Returns nothing.
+  onSelectClick: (event) =>
+    this.onButtonClick(event, 'select')
 
   # Fires an event of type and passes in the associated annotation.
   #

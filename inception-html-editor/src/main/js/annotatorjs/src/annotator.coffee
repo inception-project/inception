@@ -100,12 +100,13 @@ class Annotator extends Delegator
     @viewer.hide()
       .on("edit", this.onEditAnnotation)
       .on("delete", this.onDeleteAnnotation)
+      .on("select", this.onSelectAnnotation)
       .addField({
         load: (field, annotation) =>
           if annotation.text
-            $(field).html(Util.escape(annotation.text))
+            $(field).html("<div class='annotator-select'>"+Util.escape(annotation.text)+"</div>")
           else
-            $(field).html("<i>#{_t 'No Comment'}</i>")
+            $(field).html("<div class='annotator-select'><i>#{_t 'No Comment'}</i></div>")
           this.publish('annotationViewerTextField', [field, annotation])
       })
       .element.appendTo(@wrapper).bind({
@@ -311,8 +312,16 @@ class Annotator extends Delegator
 
     for normed in normedRanges
       annotation.quote.push      $.trim(normed.text())
-      annotation.ranges.push     normed.serialize(@wrapper[0], '.annotator-hl')
-      $.merge annotation.highlights, this.highlightRange(normed)
+# INCEPTION EXTENSION BEGIN
+# The backend is unable to interpret start/end XPath expressions, so we need to get all 
+# offsets relative to the annotator-wrapper.
+#     annotation.ranges.push     normed.serialize(@wrapper[0], '.annotator-hl')
+      annotation.ranges.push     normed.serialize(@wrapper[0], ':not(.annotator-wrapper)')
+# INCEPTION EXTENSION END
+      if annotation.color
+        $.merge annotation.highlights, this.highlightRange(normed, "background-color: #{annotation.color}")
+      else
+        $.merge annotation.highlights, this.highlightRange(normed)
 
     # Join all the quotes into one string.
     annotation.quote = annotation.quote.join(' / ')
@@ -359,6 +368,15 @@ class Annotator extends Delegator
         $(h).replaceWith(h.childNodes)
 
     this.publish('annotationDeleted', [annotation])
+    annotation
+
+  # Public: Selects the annotation by calling out to the server
+  #
+  # annotation - An annotation Object to select.
+  #
+  # Returns selected annotation.
+  selectAnnotation: (annotation) ->
+    this.publish('annotationSelected', [annotation])
     annotation
 
   # Public: Loads an Array of annotations into the @element. Breaks the task
@@ -408,10 +426,10 @@ class Annotator extends Delegator
   # cssClass - A CSS class to use for the highlight (default: 'annotator-hl')
   #
   # Returns an array of highlight Elements.
-  highlightRange: (normedRange, cssClass='annotator-hl') ->
+  highlightRange: (normedRange, cssStyle='', cssClass='annotator-hl') ->
     white = /^\s*$/
 
-    hl = $("<span class='#{cssClass}'></span>")
+    hl = $("<span class='#{cssClass}' style='#{cssStyle}'></span>")
 
     # Ignore text nodes that contain only whitespace characters. This prevents
     # spans being injected between elements that can only contain a restricted
@@ -427,10 +445,10 @@ class Annotator extends Delegator
   # cssClass - A CSS class to use for the highlight (default: 'annotator-hl')
   #
   # Returns an array of highlight Elements.
-  highlightRanges: (normedRanges, cssClass='annotator-hl') ->
+  highlightRanges: (normedRanges, cssStyle='', cssClass='annotator-hl') ->
     highlights = []
     for r in normedRanges
-      $.merge highlights, this.highlightRange(r, cssClass)
+      $.merge highlights, this.highlightRange(r, cssStyle, cssClass)
     highlights
 
   # Public: Registers a plugin with the Annotator. A plugin can only be
@@ -575,12 +593,24 @@ class Annotator extends Delegator
       container = range.commonAncestor
       return if this.isAnnotator(container)
 
-    if event and @selectedRanges.length
-      @adder
-        .css(Util.mousePosition(event, @wrapper[0]))
-        .show()
-    else
-      @adder.hide()
+# INCEPTION EXTENSION BEGIN
+# When a user selects a span of text, we want to immediately create an annotation at that position.
+# We do not first want to display the "adder" icon and we also don't want to use the AnnotatorJS
+# editor.
+#    if event and @selectedRanges.length
+#      @adder
+#        .css(Util.mousePosition(event, @wrapper[0]))
+#        .show()
+#    else
+#      @adder.hide()
+    @annotation = this.setupAnnotation(this.createAnnotation())
+    $(@annotation.highlights).removeClass('annotator-hl-temporary')
+    if @annotation.ranges.length > 0
+        this.publish('annotationCreated', [@annotation])
+
+    return
+# INCEPTION EXTENSION END
+
 
   # Public: Determines if the provided element is part of the annotator plugin.
   # Useful for ignoring mouse actions on the annotator elements.
@@ -724,6 +754,18 @@ class Annotator extends Delegator
 
     # Delete highlight elements.
     this.deleteAnnotation annotation
+
+  # Annotator#viewer callback function. Selects the annotation provided to the
+  # callback.
+  #
+  # annotation - An annotation Object for selection.
+  #
+  # Returns nothing.
+  onSelectAnnotation: (annotation) =>
+    @viewer.hide()
+
+    # Select highlight elements.
+    this.selectAnnotation annotation
 
 # Create namespace for Annotator plugins
 class Annotator.Plugin extends Delegator
