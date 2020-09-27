@@ -1,5 +1,5 @@
 /*
- * Copyright 2020
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -22,7 +22,7 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDe
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.html.HtmlDocumentReader;
+import org.dkpro.core.io.html.HtmlReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
@@ -34,11 +34,11 @@ import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSuppor
  * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlFormatSupport()}.
  * </p>
  */
-public class HtmlFormatSupport
+public class LegacyHtmlFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "htmldoc";
-    public static final String NAME = "HTML";
+    public static final String ID = "html";
+    public static final String NAME = "HTML (legacy)";
     
     @Override
     public String getId()
@@ -62,6 +62,6 @@ public class HtmlFormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(HtmlDocumentReader.class, aTSD);
+        return createReaderDescription(HtmlReader.class, aTSD);
     }
 }

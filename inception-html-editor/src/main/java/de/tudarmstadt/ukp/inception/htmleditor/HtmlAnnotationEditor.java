@@ -19,17 +19,29 @@ package de.tudarmstadt.ukp.inception.htmleditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
+import static javax.xml.transform.OutputKeys.INDENT;
+import static javax.xml.transform.OutputKeys.METHOD;
+import static javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -44,8 +56,11 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.Strings;
+import org.dkpro.core.api.xml.Cas2SaxEvents;
+import org.dkpro.core.api.xml.type.XmlDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -126,10 +141,44 @@ public class HtmlAnnotationEditor
             return "";
         }
         
-        StringBuilder buf = new StringBuilder(Strings.escapeMarkup(cas.getDocumentText()));
+        try {
+            if (cas.select(XmlDocument.class).isEmpty()) {
+                return renderLegacyHtml(cas);
+            }
+            else {
+                return renderHtmlDocumentStructure(cas);
+            }
+        }
+        catch (Exception e) {
+            handleError("Unable to render data", e);
+            return "";
+        }
+    }
+    
+    private String renderHtmlDocumentStructure(CAS aCas)
+        throws IOException, TransformerConfigurationException, CASException, SAXException
+    {
+        try (Writer out = new StringWriter()) {
+            SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory.newInstance();
+            tf.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true);
+            TransformerHandler th = tf.newTransformerHandler();
+            th.getTransformer().setOutputProperty(OMIT_XML_DECLARATION, "yes");
+            th.getTransformer().setOutputProperty(METHOD, "xml");
+            th.getTransformer().setOutputProperty(INDENT, "no");
+            th.setResult(new StreamResult(out));
+            
+            Cas2SaxEvents serializer = new Cas2SaxEvents(th);
+            serializer.process(aCas.getJCas());
+            return out.toString();
+        }
+    }
+    
+    private String renderLegacyHtml(CAS aCas)
+    {
+        StringBuilder buf = new StringBuilder(Strings.escapeMarkup(aCas.getDocumentText()));
 
         List<Node> nodes = new ArrayList<>();
-        for (AnnotationFS div : select(cas, getType(cas, Div.class))) {
+        for (AnnotationFS div : select(aCas, getType(aCas, Div.class))) {
             if (div.getType().getName().equals(Paragraph.class.getName())) {
                 Node startNode = new Node();
                 startNode.position = div.getBegin();
