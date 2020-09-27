@@ -20,7 +20,8 @@
 At the top of the screen, there is always a menu bar visible which allows a quick navigation within
 the application. It offers the following items:
 
-  * **Home** - always takes you back to the main menu.
+  * **Projects** - always takes you back to the <<user-guide.adoc#sect_projects_list,Project overview>>.
+  * **Dashboard** - is only visible if it is possible to take you to your last visited <<user-guide.adoc#sect_dashboard,Project dashboard>>.
   * **Help** - opens the integrated help system in a new browser window.
   * **Administration** - takes you to the administrator dashboard which allows configuring projects
     or managing users. This item is only available to administrators.

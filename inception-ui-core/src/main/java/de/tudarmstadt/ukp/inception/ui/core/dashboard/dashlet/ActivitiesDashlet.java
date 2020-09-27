@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.ArrayList;
@@ -150,10 +151,10 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         AnnotationDocumentState annoDocState = annoDocument.getState();
 
         // check that anno doc exists and user has not finished annotating it
-        if (!AnnotationDocumentState.IN_PROGRESS.equals(annoDocState)) {
-            log.info(String.format(
-                    "Annotation document [%s] in project [%d]] is locked for user [%s]",
-                    aDocument.getName(), project.getId(), user.getUsername()));
+        if (!IN_PROGRESS.equals(annoDocState)) {
+            log.debug("Annotation document [{}]({}) in project [{}]({}) is locked for user [{}]. "
+                    + "Skipping...", aDocument.getName(), aDocument.getId(), project.getName(), 
+                    project.getId(), user.getUsername());
             return false;
         }
         
@@ -176,7 +177,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
             document = documentService.getSourceDocument(projectModel.getObject().getId(), docId);
         }
         catch (NoResultException e) {
-            log.info(String.format("Source document [%d] no longer exists.", docId));
+            log.debug("Source document with id [{}] no longer exists. Skipping...", docId);
             return document;
         }
 
@@ -202,7 +203,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         
         String eventName = aEvent.getEvent();
         if (!annotationEvents.contains(eventName)) {
-            log.info(String.format("Unknown last activities event: %s", eventName));
+            log.info("Unknown last activities event: {}", eventName);
             return getDummyLink(aId);
         }        
        

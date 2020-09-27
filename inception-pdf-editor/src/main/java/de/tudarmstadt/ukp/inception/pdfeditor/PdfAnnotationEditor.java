@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
@@ -93,6 +94,7 @@ public class PdfAnnotationEditor
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
@@ -143,37 +145,39 @@ public class PdfAnnotationEditor
      */
     public void renderPdfAnnoModel(AjaxRequestTarget aTarget)
     {
-        if (getModelObject().getProject() != null)
-        {
-            try
-            {
-                CAS cas = getCasProvider().get();
-                // get sentences in which page begin and end offsets are and use those to compute
-                // the new page begin and end offsets. required because annotation rendering will
-                // sometimes fail if offset in middle of a sentence
-                AnnotationFS beginSent = selectSentenceAt(cas, pageOffset.getBegin());
-                int begin = (beginSent != null) ? beginSent.getBegin() : pageOffset.getBegin();
-                AnnotationFS endSent = selectSentenceAt(cas, pageOffset.getEnd());
-                int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
+        if (getModelObject().getProject() == null || pageOffset == null) {
+            return;
+        }
 
-                VDocument vdoc = render(cas, begin, end);
-                PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
-                    vdoc, cas.getDocumentText(), annotationService, pdfExtractFile, begin);
-                // show unmatched spans to user
-                if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
-                    String annotations = pdfAnnoModel.getUnmatchedSpans().stream()
-                        .map(span -> "(id: " + span.getId() + ", text: \"" + span.getText() + "\")")
-                        .collect(Collectors.joining(", "));
-                    handleError("Could not find a match for the following annotations: "
-                        + annotations, aTarget);
-                }
-                String script = getAnnotationsJS(pdfAnnoModel);
-                aTarget.appendJavaScript(script);
+        try
+        {
+            CAS cas = getCasProvider().get();
+            // get sentences in which page begin and end offsets are and use those to compute
+            // the new page begin and end offsets. required because annotation rendering will
+            // sometimes fail if offset in middle of a sentence
+            AnnotationFS beginSent = selectSentenceAt(cas, pageOffset.getBegin());
+            int begin = (beginSent != null) ? beginSent.getBegin() : pageOffset.getBegin();
+            AnnotationFS endSent = selectSentenceAt(cas, pageOffset.getEnd());
+            int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
+
+            VDocument vdoc = render(cas, begin, end);
+            PdfAnnoRenderer renderer = new PdfAnnoRenderer(annotationService, coloringService);
+            PdfAnnoModel pdfAnnoModel = renderer.render(getModelObject(),
+                vdoc, cas.getDocumentText(), pdfExtractFile, begin);
+            // show unmatched spans to user
+            if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
+                String annotations = pdfAnnoModel.getUnmatchedSpans().stream()
+                    .map(span -> "(id: " + span.getId() + ", text: \"" + span.getText() + "\")")
+                    .collect(Collectors.joining(", "));
+                handleError("Could not find a match for the following annotations: "
+                    + annotations, aTarget);
             }
-            catch (IOException e)
-            {
-                handleError("Unable to load data", e, aTarget);
-            }
+            String script = getAnnotationsJS(pdfAnnoModel);
+            aTarget.appendJavaScript(script);
+        }
+        catch (IOException e)
+        {
+            handleError("Unable to load data", e, aTarget);
         }
     }
 
@@ -246,7 +250,7 @@ public class PdfAnnotationEditor
                 else {
                     state.getSelection().selectSpan(paramId, aCas, offset.getBegin(),
                             offset.getEnd());
-                    getActionHandler().actionSelect(aTarget, aCas);
+                    getActionHandler().actionSelect(aTarget);
                 }
             }
             else {
@@ -322,11 +326,11 @@ public class PdfAnnotationEditor
                 selection.selectArc(paramId, originFs, targetFs);
 
                 if (selection.getAnnotation().isSet()) {
-                    getActionHandler().actionSelect(aTarget, aCas);
+                    getActionHandler().actionSelect(aTarget);
                 }
             }
         }
-        catch (AnnotationException e) {
+        catch (Exception e) {
             handleError("Unable to select relation annotation", e, aTarget);
         }
     }

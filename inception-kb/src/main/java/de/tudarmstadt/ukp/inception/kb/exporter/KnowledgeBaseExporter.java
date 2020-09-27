@@ -39,11 +39,11 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -57,11 +57,18 @@ import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
-@Component
-public class KnowledgeBaseExporter implements ProjectExporter
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceAutoConfiguration#knowledgeBaseExporter}.
+ * </p>
+ */
+public class KnowledgeBaseExporter
+    implements ProjectExporter
 {
     private static final String KEY = "knowledge_bases";
     private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBaseExporter.class);
@@ -94,7 +101,8 @@ public class KnowledgeBaseExporter implements ProjectExporter
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aFile)
         throws Exception
     {
         Project project = aRequest.getProject();

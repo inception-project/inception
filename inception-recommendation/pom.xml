@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.14.0-SNAPSHOT</version>
+    <version>0.17.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-recommendation</artifactId>
   <name>INCEpTION - Recommendation - Core</name>
@@ -123,6 +123,10 @@
       <artifactId>spring-boot</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-core</artifactId>
     </dependency>
@@ -134,6 +138,10 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-extensions</artifactId>
     </dependency>
     <dependency>
       <groupId>org.danekja</groupId>
@@ -216,11 +224,6 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-autoconfigure</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

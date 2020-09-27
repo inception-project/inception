@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.RdfCollection.collect
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY_RESTRICTIONS;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.SECONDARY;
+import static java.lang.Character.isWhitespace;
 import static java.lang.Integer.toHexString;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
@@ -59,9 +60,11 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -499,6 +502,12 @@ public class SPARQLQueryBuilder
     {
         kb = aKB;
         mode = aMode;
+        
+        // The Wikidata search service we are using does not return properties, so we have to do 
+        // this the old-fashioned way...
+        if (Mode.PROPERTY.equals(mode) && FTS_WIKIDATA.equals(aKB.getFullTextSearchIri())) {
+            forceDisableFTS = true;
+        }
     }
     
     private void addPattern(Priority aPriority, GraphPattern aPattern)
@@ -655,7 +664,12 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
-        if (aValues.length == 0) {
+        String[] values = Arrays.stream(aValues)
+                .map(SPARQLQueryBuilder::sanitizeQueryString)
+                .filter(StringUtils::isNotBlank)
+                .toArray(String[]::new);
+        
+        if (values.length == 0) {
             returnEmptyResult = true;
             return this;
         }
@@ -663,19 +677,21 @@ public class SPARQLQueryBuilder
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(values));
         }
         else if (FTS_FUSEKI.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Fuseki_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Fuseki_FTS(values));
         }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(values));
         }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Wikidata_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Wikidata_FTS(values));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_No_FTS(aValues));
+            // For exact matching, we do not make use of regexes, so we keep this as a primary
+            // condition - unlike in withLabelContainingAnyOf or withLabelStartingWith
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_No_FTS(values));
         }
         else {
             throw new IllegalStateException(
@@ -747,6 +763,14 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
             
+            // We assume that the FTS is case insensitive and found that some FTSes (i.e. 
+            // Fuseki) can have trouble matching if they get upper-case query when they
+            // internally lower-case#
+            if (caseInsensitive) {
+                String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+                sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
+            }
+
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
@@ -809,9 +833,14 @@ public class SPARQLQueryBuilder
     }
 
     @Override
-    public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
+    public SPARQLQueryBuilder withLabelMatchingAnyOf(String... aValues)
     {
-        if (aValues.length == 0) {
+        String[] values = Arrays.stream(aValues)
+                .map(SPARQLQueryBuilder::sanitizeQueryString)
+                .filter(StringUtils::isNotBlank)
+                .toArray(String[]::new);
+        
+        if (values.length == 0) {
             returnEmptyResult = true;
             return this;
         }
@@ -819,19 +848,173 @@ public class SPARQLQueryBuilder
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingAnyOf_RDF4J_FTS(values));
         }
         else if (FTS_FUSEKI.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_Fuseki_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingAnyOf_Fuseki_FTS(values));
         }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingAnyOf_Virtuoso_FTS(values));
         }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_Wikidata_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingAnyOf_Wikidata_FTS(values));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_No_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingAnyOf_No_FTS(values));
+        }
+        else {
+            throw new IllegalStateException(
+                    "Unknown FTS mode: [" + kb.getFullTextSearchIri() + "]");
+        }
+        
+        // Retain only the first description - do this here since we change the server-side reduce
+        // flag above when using Lucene FTS
+        projections.add(getLabelProjection());
+        labelImplicitlyRetrieved = true;
+        
+        return this;
+    }
+    
+    private GraphPattern withLabelMatchingAnyOf_No_FTS(String[] aValues)
+    {
+        // Falling back to "contains" semantics if there is no FTS
+        return withLabelContainingAnyOf_No_FTS(aValues);
+    }
+
+    private GraphPattern withLabelMatchingAnyOf_Wikidata_FTS(String[] aValues)
+    {
+        // In our KB settings, the language can be unset, but the Wikidata entity search
+        // requires a preferred language. So we use English as the default.
+        String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
+                            .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)));
+        }
+        
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
+    private GraphPattern withLabelMatchingAnyOf_Virtuoso_FTS(String[] aValues)
+    {
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+                        
+            valuePatterns.add(VAR_SUBJECT
+                    .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                    .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO, 
+                            literalOf("\"" + sanitizedValue + "\""))));
+        }
+        
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
+    private GraphPattern withLabelMatchingAnyOf_Fuseki_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_FUSEKI_SEARCH);
+        
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
+
+            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
+                continue;
+            }
+            
+            // We assume that the FTS is case insensitive and found that some FTSes (i.e. 
+            // Fuseki) can have trouble matching if they get upper-case query when they
+            // internally lower-case#
+            if (caseInsensitive) {
+                String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+                sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
+            }
+
+            valuePatterns.add(VAR_SUBJECT
+                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(fuzzyQuery)))
+                    .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+        }
+        
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
+    private GraphPattern withLabelMatchingAnyOf_RDF4J_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_LUCENE_SEARCH);
+        
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            // Strip single quotes and asterisks because they have special semantics
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+            
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
+            
+            valuePatterns.add(VAR_SUBJECT
+                    .has(FTS_LUCENE,
+                            bNode(LUCENE_QUERY, literalOf(fuzzyQuery))
+                            .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
+                    .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+        }
+        
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
+    @Override
+    public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
+    {
+        String[] values = Arrays.stream(aValues)
+                .map(SPARQLQueryBuilder::sanitizeQueryString)
+                .filter(StringUtils::isNotBlank)
+                .toArray(String[]::new);
+        
+        if (values.length == 0) {
+            returnEmptyResult = true;
+            return this;
+        }
+        
+        IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
+        
+        if (FTS_LUCENE.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(values));
+        }
+        else if (FTS_FUSEKI.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelContainingAnyOf_Fuseki_FTS(values));
+        }
+        else if (FTS_VIRTUOSO.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(values));
+        }
+        else if (FTS_WIKIDATA.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelContainingAnyOf_Wikidata_FTS(values));
+        }
+        else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
+            // Label matching without FTS is slow, so we add this with low prio and hope that some
+            // other higher-prio condition exists which limites the number of candidates to a
+            // manageable level
+            addPattern(SECONDARY, withLabelContainingAnyOf_No_FTS(values));
         }
         else {
             throw new IllegalStateException(
@@ -897,6 +1080,14 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
 
+            // We assume that the FTS is case insensitive and found that some FTSes (i.e. 
+            // Fuseki) can have trouble matching if they get upper-case query when they
+            // internally lower-case#
+            if (caseInsensitive) {
+                String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+                sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
+            }
+            
             if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
@@ -963,28 +1154,32 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
     {
-        if (aPrefixQuery.length() == 0) {
+        String value = sanitizeQueryString(aPrefixQuery);
+        
+        if (value == null || value.length() == 0) {
             returnEmptyResult = true;
             return this;
         }
         
-        
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(value));
         }
         else if (FTS_FUSEKI.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_Fuseki_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWith_Fuseki_FTS(value));
         }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_Virtuoso_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWith_Virtuoso_FTS(value));
         }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_Wikidata_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWith_Wikidata_FTS(value));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelStartingWith_No_FTS(aPrefixQuery));
+            // Label matching without FTS is slow, so we add this with low prio and hope that some
+            // other higher-prio condition exists which limites the number of candidates to a
+            // manageable level
+            addPattern(SECONDARY, withLabelStartingWith_No_FTS(value));
         }
         else {
             throw new IllegalStateException(
@@ -1126,8 +1321,16 @@ public class SPARQLQueryBuilder
         serverSideReduce = false;
         
         prefixes.add(PREFIX_FUSEKI_SEARCH);
-        
+
         String queryString = aPrefixQuery.trim();
+
+        // We assume that the FTS is case insensitive and found that some FTSes (i.e. 
+        // Fuseki) can have trouble matching if they get upper-case query when they
+        // internally lower-case#
+        if (caseInsensitive) {
+            String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+            queryString = queryString.toLowerCase(Locale.forLanguageTag(language));
+        }
         
         if (queryString.isEmpty()) {
             returnEmptyResult = true;
@@ -1194,17 +1397,21 @@ public class SPARQLQueryBuilder
                     function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
+            
+            // Match without language
+            expressions.add(and(
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
+                            .parenthesize());
         }
-        
-        // Match without language
-        expressions.add(and(
-                function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
-                        .parenthesize());
+        else {
+            // Match ignoring language
+            expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
+        }
         
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
-
+    
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
     {
         String language = kb.getDefaultLanguage();
@@ -1234,18 +1441,25 @@ public class SPARQLQueryBuilder
                     "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
         }
         
-        // Match with default language
         if (language != null) {
+            // Match with default language
             expressions.add(and(
                     function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
+            
+            // Match without language
+            expressions.add(and(
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
+                            .parenthesize());
+        }
+        else {
+            // Match ignoring language
+            expressions.add(
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
         }
 
-        expressions.add(and(
-                function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
-                        .parenthesize());
 
         // Match with any language (the reduce code doesn't handle this properly atm)
         // expressions.add(function(aFunction, variable, literalOf(value)));
@@ -1406,15 +1620,19 @@ public class SPARQLQueryBuilder
         // Match with any language (the reduce code doesn't handle this properly atm)
         // labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
         
-        // Find all labels without any language
-        labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), EMPTY_STRING)));
-
         // Find all labels corresponding to the KB language
         if (language != null) {
+            // Find all labels without any language
+            labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE).filter(
+                    function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), EMPTY_STRING)));
+            
             labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), 
                             literalOf(language))));
+        }
+        else {
+            // Find all labels ignoring any language
+            labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
         }
 
         addPattern(SECONDARY, bindLabelProperties(VAR_LABEL_PROPERTY));
@@ -1439,19 +1657,24 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> descriptionPatterns = new ArrayList<>();
 
-        // Find all descriptions corresponding to the KB language
         if (language != null) {
+            // Find all descriptions corresponding to the KB language
             descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)
                     .filter(function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), 
                             literalOf(language))));
+            
+            // Find all descriptions without any language
+            descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE).filter(
+                    function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), EMPTY_STRING)));
+        }
+        else {
+            // Find all descriptions ignoring language
+            descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
         }
 
         // Match with any language (the reduce code doesn't handle this properly atm)
         // descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
         
-        // Find all descriptions without any language
-        descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)
-                .filter(function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), EMPTY_STRING)));
 
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would 
         // normally match to be removed from the results set. Using a UNION seems to address this
@@ -1498,7 +1721,7 @@ public class SPARQLQueryBuilder
                 GraphPatterns.and(concat(primaryPatterns.stream(), primaryRestrictions.stream())
                         .toArray(GraphPattern[]::new)).getQueryString()));
         
-        // Then add the optional elements
+        // Then add the optional or lower-prio elements 
         secondaryPatterns.stream().forEach(query::where);
         
         if (serverSideReduce) {
@@ -1692,7 +1915,8 @@ public class SPARQLQueryBuilder
             }
             // Found an exact language match -> use that one instead
             // Note that having a language implies that there is a label!
-            else if (kb.getDefaultLanguage().equals(handle.getLanguage())) {
+            else if (kb.getDefaultLanguage() != null
+                    && kb.getDefaultLanguage().equals(handle.getLanguage())) {
                 cMap.put(handle.getIdentifier(), handle);
             }
         }
@@ -1761,14 +1985,92 @@ public class SPARQLQueryBuilder
         }
     }
     
+    /**
+     * Removes leading and trailing space and single quote characters which could cause the query 
+     * string to escape its quotes in the SPARQL query.
+     */
+    public static String sanitizeQueryString(String aQuery)
+    {
+        if (aQuery == null || aQuery.length() == 0) {
+            return aQuery;
+        }
+        
+        boolean trailingSpace = isWhitespace(aQuery.charAt(aQuery.length() - 1));
+        
+        int end = aQuery.length();
+        while (end > 0 && (isWhitespace(aQuery.charAt(end - 1)) || aQuery.charAt(end - 1) == '\''
+                || aQuery.charAt(end - 1) == '"')) {
+            end--;
+        }
+
+        int begin = 0;
+        while (begin < aQuery.length() && (isWhitespace(aQuery.charAt(begin))
+                || aQuery.charAt(begin) == '\'' || aQuery.charAt(begin) == '"')) {
+            begin++;
+        }
+
+        if (begin >= end) {
+            return "";
+        }
+        
+        if (begin > 0 || end < aQuery.length()) {
+            if (trailingSpace) {
+                return aQuery.substring(begin, end) + ' ';
+            }
+            else {
+                return aQuery.substring(begin, end);
+            }
+        }
+        
+        return aQuery;
+    }
+    
     public static String sanitizeQueryStringForFTS(String aQuery)
     {
         return aQuery
                 // character classes to replace with a simple space
-                .replaceAll("[\\p{Punct}\\p{Space}\\p{Cntrl}[+*(){}\\[\\]]]+", " ")
+                .replaceAll("[\\p{Punct}\\p{Space}\\p{Cntrl}[~+*(){}\\[\\]]]+", " ")
                 // character classes to remove from the query string
                 // \u00AD : SOFT HYPHEN
                 .replaceAll("[\\u00AD]", "")
                 .trim();
+    }
+    
+    public static String convertToFuzzyMatchingQuery(String aQuery)
+    {
+        StringJoiner joiner = new StringJoiner(" ");
+        for (String term : aQuery.split(" ")) {
+            if (term.length() > 4) {
+                joiner.add(term + "~");
+            }
+            // REC: excluding terms of 3 or less characters helps reducing the problem that a
+            // mention of "Counties of Catherlagh" matches "Anne of Austria", but actually
+            // this should be handled by stopwords and not be excluding any short words... 
+            // I think
+            else if (term.length() >= 3) {
+                joiner.add(term);
+            }
+        }
+
+        return joiner.toString();
+    }
+
+    @Override
+    public boolean equals(final Object other)
+    {
+        if (!(other instanceof SPARQLQueryBuilder)) {
+            return false;
+        }
+        
+        SPARQLQueryBuilder castOther = (SPARQLQueryBuilder) other;
+        String query = selectQuery().getQueryString();
+        String otherQuery = castOther.selectQuery().getQueryString();
+        return query.equals(otherQuery);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return selectQuery().getQueryString().hashCode();
     }
 }

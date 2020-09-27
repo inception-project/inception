@@ -22,6 +22,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,7 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -72,13 +75,7 @@ public class ElasticSearchProvider
     {
         List<ExternalSearchResult> results = new ArrayList<>();
 
-        String indexName = aTraits.getIndexName();
-        String hostUrl = aTraits.getRemoteUrl().replaceFirst("https?://", "")
-                .replaceFirst("www.", "")
-                .split(":")[0];
-        
-        try (RestHighLevelClient client = new RestHighLevelClient(
-                RestClient.builder(new HttpHost(hostUrl, 9200, "http")))) {
+        try (RestHighLevelClient client = makeClient(aTraits)) {
             HighlightBuilder highlightBuilder = new HighlightBuilder()
                     .field(new HighlightBuilder.Field(aTraits.getDefaultField())
                             .highlighterType("unified"));
@@ -101,7 +98,8 @@ public class ElasticSearchProvider
                 searchSourceBuilder.query(qb);
             }
             
-            SearchRequest searchRequest = new SearchRequest(indexName).source(searchSourceBuilder);
+            SearchRequest searchRequest = new SearchRequest(aTraits.getIndexName())
+                    .source(searchSourceBuilder);
             SearchResponse response = client.search(searchRequest);
     
             for (SearchHit hit: response.getHits().getHits()) {
@@ -111,8 +109,8 @@ public class ElasticSearchProvider
                     continue;
                 }
                 
-                ExternalSearchResult result = new ExternalSearchResult(aRepository, indexName,
-                        hit.getId());
+                ExternalSearchResult result = new ExternalSearchResult(aRepository,
+                        aTraits.getIndexName(), hit.getId());
     
                 // If the order is random, then the score doesn't reflect the quality, so we do not
                 // forward it to the user
@@ -175,12 +173,7 @@ public class ElasticSearchProvider
         GetRequest getRequest = new GetRequest(aTraits.getIndexName(), aTraits.getObjectType(),
                 aDocumentId);
         
-        String hostUrl = aTraits.getRemoteUrl().replaceFirst("https?://", "")
-                .replaceFirst("www.", "")
-                .split(":")[0];
-        
-        try (RestHighLevelClient client = new RestHighLevelClient(
-                RestClient.builder(new HttpHost(hostUrl, 9200, "http")))) {
+        try (RestHighLevelClient client = makeClient(aTraits)) {
             ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
                     aDocumentId);
             
@@ -205,12 +198,7 @@ public class ElasticSearchProvider
         GetRequest getRequest = new GetRequest(aTraits.getIndexName(), aTraits.getObjectType(),
                 aDocumentId);
         
-        String hostUrl = aTraits.getRemoteUrl().replaceFirst("https?://", "")
-                .replaceFirst("www.", "")
-                .split(":")[0];
-        
-        try (RestHighLevelClient client = new RestHighLevelClient(
-                RestClient.builder(new HttpHost(hostUrl, 9200, "http")))) {
+        try (RestHighLevelClient client = makeClient(aTraits)) {
             // Send get query
             Map<String, Object> result = client.get(getRequest).getSourceAsMap();
             Map<String, String> document = (Map) result.get(ELASTIC_HIT_DOC_KEY);
@@ -232,5 +220,14 @@ public class ElasticSearchProvider
             ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
         return TextFormatSupport.ID;
+    }
+    
+    private RestHighLevelClient makeClient(ElasticSearchProviderTraits aTraits)
+        throws MalformedURLException
+    {
+        URL hostUrl = new URL(aTraits.getRemoteUrl());
+        RestClientBuilder builder = RestClient
+                .builder(new HttpHost(hostUrl.getHost(), hostUrl.getPort(), hostUrl.getProtocol()));
+        return new RestHighLevelClient(builder);
     }
 }

@@ -18,10 +18,9 @@
 package de.tudarmstadt.ukp.inception.search.index;
 
 import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.core.Ordered;
 
 public abstract class PhysicalIndexFactoryImplBase
-    implements BeanNameAware, Ordered, PhysicalIndexFactory
+    implements BeanNameAware, PhysicalIndexFactory
 {
     private String beanName;
 
@@ -35,11 +34,5 @@ public abstract class PhysicalIndexFactoryImplBase
     public String getBeanName()
     {
         return beanName;
-    }
-
-    @Override
-    public int getOrder()
-    {
-        return Ordered.LOWEST_PRECEDENCE;
     }
 }

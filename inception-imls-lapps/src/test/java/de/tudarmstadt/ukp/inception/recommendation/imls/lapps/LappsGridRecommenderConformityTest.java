@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
 import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
 import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.junit.Assume.assumeTrue;
 
@@ -43,11 +45,15 @@ import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.SoftAssertions;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.dkpro.core.io.xmi.XmiReader;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -60,16 +66,32 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridSe
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 @RunWith(JUnitParamsRunner.class)
 public class LappsGridRecommenderConformityTest
 {
+    private CasStorageSession casStorageSession;
+    
+    @Before
+    public void setup() throws Exception
+    {
+        casStorageSession = CasStorageSession.open();
+    }
+    
+    @After
+    public void tearDown()
+    {
+        CasStorageSession.get().close();
+    }
+    
     @Test
     @Parameters(method = "getNerServices")
     public void testNerConformity(LappsGridService aService) throws Exception
     {
         CAS cas = loadData();
-
+        
         predict(aService.getUrl(), cas);
 
         SoftAssertions softly = new SoftAssertions();
@@ -88,7 +110,7 @@ public class LappsGridRecommenderConformityTest
     public void testPosConformity(LappsGridService aService) throws Exception
     {
         CAS cas = loadData();
-
+        
         predict(aService.getUrl(), cas);
 
         SoftAssertions softly = new SoftAssertions();
@@ -115,6 +137,7 @@ public class LappsGridRecommenderConformityTest
     private CAS loadData() throws IOException, UIMAException {
         Path path = Paths.get("src", "test", "resources", "testdata", "tnf.xmi");
         CAS cas = loadData(path.toFile());
+        casStorageSession.add("test", EXCLUSIVE_WRITE_ACCESS, cas);
 
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
@@ -184,6 +207,12 @@ public class LappsGridRecommenderConformityTest
             con.setReadTimeout(2500);
             con.setRequestProperty("Content-Type", "application/sparql-query");
             int status = con.getResponseCode();
+            
+            // should be open to all users (no password auth.),
+            // this is an indicator for the service being down
+            if (status == HTTP_UNAUTHORIZED) {
+                return false;
+            }
             
             if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
                 String location = con.getHeaderField("Location");

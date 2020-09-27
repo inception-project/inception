@@ -19,10 +19,6 @@ package de.tudarmstadt.ukp.inception.pdfeditor.config;
 
 public interface PdfEditorProperties
 {
-    public boolean isEnabled();
-
-    public void setEnabled(boolean aEnabled);
-
     public boolean isDebug();
 
     public void setDebug(boolean aDebug);

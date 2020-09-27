@@ -21,12 +21,19 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDe
 
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.pdf.PdfReader;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportAutoConfiguration;
 
-@Component
+/**
+ * Support for PDF file format.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link PdfAnnotationEditorSupportAutoConfiguration#pdfFormatSupport()}.
+ * </p>
+ */
 public class PdfFormatSupport
     implements FormatSupport
 {
@@ -52,8 +59,9 @@ public class PdfFormatSupport
     }
     
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
-        return createReaderDescription(PdfReader.class);
+        return createReaderDescription(PdfReader.class, aTSD);
     }
 }

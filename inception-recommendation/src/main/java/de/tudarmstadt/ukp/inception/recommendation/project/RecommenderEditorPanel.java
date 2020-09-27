@@ -129,6 +129,10 @@ public class RecommenderEditorPanel
         recommenderModel = aRecommender;
 
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
+        // Need to set this explicitly to cover the case where we might switch from a recommender 
+        // which has no upload parts in its traits to one which has.
+        // See: #1552 Changing recommender type throws exception 
+        form.setMultiPart(true);
         add(form);
 
         
@@ -428,7 +432,7 @@ public class RecommenderEditorPanel
     {
         if (recommenderModel != null && recommenderModel.getObject().getLayer() != null) {
             return annotationSchemaService
-                    .listAnnotationFeature(recommenderModel.getObject().getLayer())
+                    .listSupportedFeatures(recommenderModel.getObject().getLayer())
                     .stream()
                     .filter(feat -> feat.getType() != null)
                     .collect(Collectors.toList());

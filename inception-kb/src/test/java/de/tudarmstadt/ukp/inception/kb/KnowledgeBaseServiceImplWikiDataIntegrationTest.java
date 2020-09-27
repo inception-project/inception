@@ -32,23 +32,27 @@ import javax.persistence.EntityManager;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -59,12 +63,18 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 @RunWith(Parameterized.class)
-@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
+public class KnowledgeBaseServiceImplWikiDataIntegrationTest
+{
+    static {
+        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+        System.setProperty("spring.main.banner-mode", "off");
+    }
 
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Wikidata (official/direct mapping)";
@@ -101,20 +111,15 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
                 .collect(Collectors.toList());
     }
 
-    @BeforeClass
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
-
     @Before
     public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
+        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
         String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
@@ -258,5 +263,16 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.setMaxResults(1000);
 
         return kb_wikidata_direct;
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration 
+    @EntityScan(
+            basePackages = {
+                "de.tudarmstadt.ukp.inception.kb.model",
+                "de.tudarmstadt.ukp.clarin.webanno.model"
+    })
+    public static class SpringConfig {
+        // No content
     }
 }

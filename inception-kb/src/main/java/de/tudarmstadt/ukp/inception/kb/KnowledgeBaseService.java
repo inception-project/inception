@@ -41,17 +41,17 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public interface KnowledgeBaseService
 {
-    String SERVICE_NAME = "knowledgeBaseService";
-    
     /**
-     * Reads knowledgebase profiles from a YAML file and stores them in a HashMap with the key that
+     * Reads knowledge base profiles from a YAML file and stores them in a HashMap with the key that
      * is defined in the file and a corresponding {@link KnowledgeBaseProfile} object as value
      * 
-     * @return a HashMap with the knowledgebase profiles
+     * @return a HashMap with the knowledge base profiles
      * @throws IOException
      *             if an error occurs when reading the file
      */
@@ -61,7 +61,7 @@ public interface KnowledgeBaseService
 
     /**
      * Writes the contents of a knowledge base of type {@link RepositoryType#LOCAL} to a given
-     * {@link OutputStream} in a specificable format.<br>
+     * {@link OutputStream} in a specifiable format.<br>
      * No action will be taken if the given knowledge base is not of type
      * {@link RepositoryType#LOCAL} (nothing will be written to the output stream).
      *
@@ -87,6 +87,7 @@ public interface KnowledgeBaseService
     boolean knowledgeBaseExists(Project project, String kbName);
 
     Optional<KnowledgeBase> getKnowledgeBaseById(Project project, String aId);
+    Optional<KnowledgeBase> getKnowledgeBaseByName(Project project, String aId);
 
     /**
      * Update the configuration of a knowledge base.
@@ -520,4 +521,19 @@ public interface KnowledgeBaseService
      * @return whether the knowledge base with the given id is available or not
      */
     boolean isKnowledgeBaseEnabled(Project aProject, String repositoryID);
+    
+    /**
+     * Execute the given query and return the results. The service will try to cache the results for
+     * faster subsequent access.
+     * <p>
+     * <b>NOTE:</b> Do <b>NOT</b> use this method when current data from the KB is required, in 
+     * particular if it is a writable KB.
+     * 
+     * @param aQuery
+     *            a SPARQL query built using {@link SPARQLQueryBuilder}
+     * @return a list of {@link KBHandle KBHandles}
+     */
+    List<KBHandle> listHandlesCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);
+    
+    Optional<KBHandle> fetchHandleCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);
 }

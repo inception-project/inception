@@ -44,6 +44,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
@@ -131,20 +132,21 @@ public class PdfAnnoRendererTest
         layerBehaviorRegistry.init();
 
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
-            new SpanLayerSupport(featureSupportRegistry, null, schemaService,
-                layerBehaviorRegistry),
-            new RelationLayerSupport(featureSupportRegistry, null, schemaService,
-                layerBehaviorRegistry),
-            new ChainLayerSupport(featureSupportRegistry, null, schemaService,
-                layerBehaviorRegistry)));
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
 
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
+        when(schemaService.listSupportedLayers(any())).thenReturn(asList(posLayer));
         when(schemaService.listAnnotationFeature(any(Project.class)))
+            .thenReturn(asList(posFeature));
+        when(schemaService.listSupportedFeatures(any(Project.class)))
             .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(layer).createAdapter(layer);
+            return layerRegistry.getLayerSupport(layer).createAdapter(layer, 
+                () -> schemaService.listAnnotationFeature(layer));
         });
 
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
@@ -175,8 +177,10 @@ public class PdfAnnoRendererTest
                 schemaService.listAnnotationLayer(project));
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
-        PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
-            cas.getDocumentText(), schemaService, pdfExtractFile, 0);
+        PdfAnnoRenderer renderer = new PdfAnnoRenderer(schemaService,
+                new ColoringServiceImpl(schemaService));
+        PdfAnnoModel annoFile = renderer.render(state, vdoc, cas.getDocumentText(), pdfExtractFile,
+                0);
 
         assertThat(annoFile.getAnnoFileContent())
             .isEqualToNormalizingNewlines(contentOf(

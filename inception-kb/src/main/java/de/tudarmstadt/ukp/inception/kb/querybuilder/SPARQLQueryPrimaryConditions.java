@@ -50,7 +50,7 @@ public interface SPARQLQueryPrimaryConditions
     
     /**
      * Find entries where the label matches exactly one of the given values. The match is
-     * case-sensitive and it takes the default language of the KB into consideration.
+     * case-sensitive if requested and it takes the default language of the KB into consideration.
      * 
      * @param aValues
      *            label values.
@@ -78,6 +78,19 @@ public interface SPARQLQueryPrimaryConditions
      */
     SPARQLQueryPrimaryConditions withLabelContainingAnyOf(String... aValues);
 
+    /**
+     * Find entries where the label matching one of the given values. The match may be fuzzy if this
+     * is supported by the FTS. If there is no support for fuzzy matching in the FTS, then this
+     * falls back to simply calling {@link #withLabelContainingAnyOf} Depending on the
+     * circumstances, the match may be case sensitive or not.
+     * 
+     * @param aValues
+     *            label values.
+     * @return the builder (fluent API)
+     */
+    SPARQLQueryPrimaryConditions withLabelMatchingAnyOf(String... aValues);
+
+    
     /**
      * Match all the roots of the class hierarchy.
      * <p>

@@ -62,7 +62,10 @@ public class EventRepositoryImpl
             entityManager.persist(event);
         }
         long duration = System.currentTimeMillis() - start;
-        log.debug("... {} events stored ... ({}ms)", aEvents.length, duration);
+
+        if (aEvents.length > 0) {
+            log.debug("... {} events stored ... ({}ms)", aEvents.length, duration);
+        }
     }
 
     @Override

@@ -85,13 +85,13 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
                 // activation strategies for menu items. Thus, we need to re-implement the menu
                 // items for INCEpTION.
                 AnnotationPageMenuItem.class,
-                CurationPageMenuItem.class,
                 MonitoringPageMenuItem.class,
                 AgreementPageMenuItem.class,
 
                 // INCEpTION uses its recommenders, not the WebAnno automation code
                 AutomationService.class, 
                 AutomationMiraTemplateExporter.class,
+                CurationPageMenuItem.class,
                 AutomationTrainingDocumentExporter.class
         })})
 @EntityScan(basePackages = {
@@ -106,9 +106,18 @@ public class INCEpTION
 {
     private static final String PROTOCOL = "AJP/1.3";
     
-    @Value("${tomcat.ajp.port:-1}")
+    @Value("${server.ajp.port:-1}")
     private int ajpPort;
-    
+
+    @Value("${server.ajp.secret-required:true}")
+    private String ajpSecretRequired;
+
+    @Value("${server.ajp.secret:}")
+    private String ajpSecret;
+
+    @Value("${server.ajp.address:127.0.0.1}")
+    private String ajpAddress;
+
     @Bean
     @Primary
     public Validator validator()
@@ -144,13 +153,16 @@ public class INCEpTION
     @Bean
     public TomcatServletWebServerFactory servletContainer()
     {
-        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
+        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
             ajpConnector.setPort(ajpPort);
-            tomcat.addAdditionalTomcatConnectors(ajpConnector);
+            ajpConnector.setAttribute("secretRequired", ajpSecretRequired);
+            ajpConnector.setAttribute("secret", ajpSecret);
+            ajpConnector.setAttribute("address", ajpAddress);
+            factory.addAdditionalTomcatConnectors(ajpConnector);
         }
-        return tomcat;
+        return factory;
     }
 
     @Override
@@ -196,14 +208,12 @@ public class INCEpTION
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
         init(builder);
-        
         builder.listeners(event -> {
             if (event instanceof ApplicationReadyEvent
                     || event instanceof ShutdownDialogAvailableEvent) {
                 splash.ifPresent(it -> it.dispose());
             }
         });
-        
         builder.run(args);
     }
 }

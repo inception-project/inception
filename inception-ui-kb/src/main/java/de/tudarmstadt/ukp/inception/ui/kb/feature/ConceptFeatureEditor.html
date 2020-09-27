@@ -18,18 +18,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-  <div class="form-group" wicket:enclosure="value">
-    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label control-label">
+  <div class="form-group form-row" wicket:enclosure="value">
+    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
       <span wicket:id="feature"/>
     </label>
     <div class="feature-editor-value">
-      <div class="input-group col-sm-12">
-        <span class="input-group-addon">
-          <span wicket:id="iriInfoBadge"/>
-          <a wicket:id="openIri" target="_blank"><i class="fas fa-external-link-alt"></i></a>
-          <span wicket:id="disabledKBWarning"/>
-        </span> 
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <div class="input-group-text">
+            <span wicket:id="iriInfoBadge" class="mr-2"/>
+            <a wicket:id="openIri" target="_blank">
+              <i class="fas fa-external-link-alt"></i>
+            </a>
+            <span wicket:id="disabledKBWarning" class="ml-2"/>
+          </div>
+        </div> 
         <input style="width: 100%;" wicket:id="value" class="form-control" type="text"/>
+      </div>
+      <div wicket:enclosure="description" class="scrolling border border-top-0 rounded-bottom p-1" style="max-height: 4.5rem; word-wrap: break-word;" readonly>
+        <small class="text-muted" wicket:id="description"/>
       </div>
       <div wicket:id="keyBindings" class="col-sm-12"/>
     </div>

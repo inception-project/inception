@@ -47,6 +47,8 @@
     <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
     <!-- Avoid warning on cookies with an invalid expiration date - cf. issue #739 -->
     <Logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
+    <!-- Avoid warning when components is not rerendered because it has been removed from page -->
+    <Logger name="org.apache.wicket.page.PartialPageUpdate" level="ERROR"/>
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
       <AppenderRef ref="ProjectAppender" />

@@ -30,21 +30,24 @@ import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -54,10 +57,14 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 
-@ContextConfiguration(classes =  SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class KnowledgeBaseServiceImplQualifierIntegrationTest {
+public class KnowledgeBaseServiceImplQualifierIntegrationTest
+{
+    static {
+        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+        System.setProperty("spring.main.banner-mode", "off");
+    }
 
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
@@ -85,20 +92,15 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     private KBHandle propertyHandle;
     private KBStatement statement;
 
-    @BeforeClass
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
-
     @Before
     public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
+        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.WIKIDATA);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -258,10 +260,10 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void deleteQualifier_WithNonExistentQualifier_ShouldDoNothing()
     {
-        assertThatCode(() -> {
+        assertThatCode(() -> 
             sut.deleteQualifier(kb,
-                    testFixtures.buildQualifier(statement, property, "Test qualifier"));
-        }).doesNotThrowAnyException();
+                    testFixtures.buildQualifier(statement, property, "Test qualifier"))
+        ).doesNotThrowAnyException();
     }
 
     @Test
@@ -320,5 +322,16 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
 
         assertThat(qualifiers)
             .isEmpty();
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration 
+    @EntityScan(
+            basePackages = {
+                "de.tudarmstadt.ukp.inception.kb.model",
+                "de.tudarmstadt.ukp.clarin.webanno.model"
+    })
+    public static class SpringConfig {
+        // No content
     }
 }

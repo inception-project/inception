@@ -137,6 +137,7 @@ public class SearchPage extends ApplicationPageBase
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
             error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
@@ -194,7 +195,7 @@ public class SearchPage extends ApplicationPageBase
 
             applicationEventPublisher.get()
                     .publishEvent(new ExternalSearchQueryEvent(this, model.repository.getProject(),
-                            userRepository.getCurrentUser().getUsername(), model.query));
+                            userRepository.getCurrentUsername(), model.query));
 
             aTarget.add(dataTableContainer);
         }

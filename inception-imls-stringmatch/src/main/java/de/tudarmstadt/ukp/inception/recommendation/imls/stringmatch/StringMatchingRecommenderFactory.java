@@ -18,23 +18,29 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.settings.StringMatchingRecommenderTraitsEditor;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link StringMatchingRecommenderAutoConfiguration#stringMatchingRecommenderFactory}.
+ * </p>
+ */
 public class StringMatchingRecommenderFactory
     extends RecommendationEngineFactoryImplBase<StringMatchingRecommenderTraits>
 {
@@ -76,8 +82,10 @@ public class StringMatchingRecommenderFactory
             return false;
         }
 
-        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-            && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
+        // We exclude sentence level for the moment for no better reason than that would probably
+        // generate quite large dictionaries...
+        return (asList(CHARACTERS, SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
+            && SPAN_TYPE.equals(aLayer.getType())
             && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
     
