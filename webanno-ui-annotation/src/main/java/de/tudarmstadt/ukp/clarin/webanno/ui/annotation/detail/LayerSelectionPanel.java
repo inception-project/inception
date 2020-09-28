@@ -186,7 +186,7 @@ public class LayerSelectionPanel
         if (prevDefaultLayer != state.getPreferences().getDefaultLayer()) {
             try {
                 userPreferencesService.savePreferences(state.getProject(),
-                        userDao.getCurrentUser().getUsername(), state.getMode(),
+                        userDao.getCurrentUsername(), state.getMode(),
                         state.getPreferences());
             }
             catch (IOException e) {
@@ -290,6 +290,11 @@ public class LayerSelectionPanel
             if (layer.getType().equals(SPAN_TYPE) || layer.getType().equals(CHAIN_TYPE)) {
                 selectableLayers.add(layer);
             }
+        }
+        
+        // if there is only one layer, we use it to create new annotations
+        if (selectableLayers.size() == 1) {
+            state.setDefaultAnnotationLayer(selectableLayers.get(0));
         }
         
         if (state.getDefaultAnnotationLayer() != null) {

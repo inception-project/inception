@@ -548,8 +548,15 @@ public class BratRenderer
                 }
                 ti ++;
             }
+
         }
-        return abbr.toString();
+        
+        if (abbr.length() + 3 >= aName.length()) {
+            return aName;
+        } else {
+            abbr.append("...");
+        }
+        return abbr.toString();    
     }
     
     /**

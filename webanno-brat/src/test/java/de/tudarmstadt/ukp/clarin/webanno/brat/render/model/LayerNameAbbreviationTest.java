@@ -27,10 +27,10 @@ public class LayerNameAbbreviationTest
     @Test
     public void test()
     {
-        assertEquals("Dep", abbreviate("Dependency"));
-        assertEquals("MorFea", abbreviate("Morphological features"));
-        assertEquals("SemArg", abbreviate("Semantic argument"));
-        assertEquals("OneTwoThr", abbreviate("One two three"));
-        assertEquals("FooOfLal", abbreviate("Foo of Lala"));
+        assertEquals("Dep...", abbreviate("Dependency"));
+        assertEquals("MorFea...", abbreviate("Morphological features"));
+        assertEquals("SemArg...", abbreviate("Semantic argument"));
+        assertEquals("OneTwoThr...", abbreviate("One two three"));
+        assertEquals("Foo of Lala", abbreviate("Foo of Lala"));
     }
 }

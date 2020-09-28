@@ -102,21 +102,41 @@ public class ProjectServiceImpl
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
-    private @Autowired UserDao userRepository;
-    private @Autowired ApplicationEventPublisher applicationEventPublisher;
-    private @Autowired RepositoryProperties repositoryProperties;
-    private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
+    private final UserDao userRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final RepositoryProperties repositoryProperties;
+    private final List<ProjectInitializer> initializerProxy;
     private List<ProjectInitializer> initializers;
 
     private boolean running = false;
 
     private List<ProjectType> projectTypes;
-    
-    public ProjectServiceImpl()
+            
+    @Autowired
+    public ProjectServiceImpl(UserDao aUserRepository, 
+            ApplicationEventPublisher aApplicationEventPublisher, 
+            RepositoryProperties aRepositoryProperties,
+            @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
     {
-        // Nothing to do
+        userRepository = aUserRepository;
+        applicationEventPublisher = aApplicationEventPublisher;
+        repositoryProperties = aRepositoryProperties;
+        initializerProxy = aInitializerProxy;
     }
-    
+   
+    /**
+     * This constructor is used for testing to set specific test objects for fields
+     */
+    public ProjectServiceImpl(UserDao aUserRepository, 
+            ApplicationEventPublisher aApplicationEventPublisher, 
+            RepositoryProperties aRepositoryProperties,
+            List<ProjectInitializer> aInitializerProxy,
+            EntityManager aEntityManager)
+    {
+        this(aUserRepository, aApplicationEventPublisher, aRepositoryProperties, aInitializerProxy);
+        entityManager = aEntityManager;
+    }
+
     @Override
     @Transactional
     public void createProject(Project aProject)
@@ -447,24 +467,16 @@ public class ProjectServiceImpl
 
     @Override
     public List<User> listProjectUsersWithPermissions(Project aProject)
-    {
+    {       
         String query = 
-                "SELECT DISTINCT perm.user " +
-                "FROM ProjectPermission AS perm " +
-                "WHERE perm.project = :project " +
-                "ORDER BY perm.user ASC";
-        List<String> usernames = entityManager
-                .createQuery(query, String.class)
+                "SELECT DISTINCT u FROM User u, ProjectPermission pp " +
+                "WHERE pp.user = u.username " +
+                "AND pp.project = :project " +
+                "ORDER BY u.username ASC";
+        List<User> users = entityManager
+                .createQuery(query, User.class)
                 .setParameter("project", aProject)
                 .getResultList();
-
-        List<User> users = new ArrayList<>();
-
-        for (String username : usernames) {
-            if (userRepository.exists(username)) {
-                users.add(userRepository.get(username));
-            }
-        }
         return users;
     }
 
@@ -473,21 +485,15 @@ public class ProjectServiceImpl
             PermissionLevel aPermissionLevel)
     {
         String query = 
-                "SELECT DISTINCT user " +
-                "FROM ProjectPermission " +
-                "WHERE project = :project AND level = :level " +
-                "ORDER BY user ASC";
-        List<String> usernames = entityManager
-                .createQuery(query, String.class)
+                "SELECT DISTINCT u FROM User u, ProjectPermission pp " +
+                "WHERE pp.user = u.username " +
+                "AND pp.project = :project AND pp.level = :level " +
+                "ORDER BY u.username ASC";
+        List<User> users = entityManager
+                .createQuery(query, User.class)
                 .setParameter("project", aProject)
                 .setParameter("level", aPermissionLevel)
                 .getResultList();
-        List<User> users = new ArrayList<>();
-        for (String username : usernames) {
-            if (userRepository.exists(username)) {
-                users.add(userRepository.get(username));
-            }
-        }
         return users;
     }
 
@@ -1006,5 +1012,38 @@ public class ProjectServiceImpl
                 initsDeferred.add(initializer);
             }
         }
+    }
+
+    @Override
+    public List<Project> listProjectsForAgreement()
+    {
+        String query = 
+                "SELECT DISTINCT p FROM Project p, ProjectPermission pp " +
+                "WHERE pp.project = p.id " +
+                "AND pp.level = :annotator " + 
+                "GROUP BY p.id HAVING count(*) > 1 " +
+                "ORDER BY p.name ASC";
+        List<Project> projects = entityManager
+                .createQuery(query, Project.class)
+                .setParameter("annotator", PermissionLevel.ANNOTATOR)
+                .getResultList();
+        return projects;
+    }
+
+    @Override
+    public List<Project> listManageableCuratableProjects(User aUser)
+    {
+        String query = 
+                "SELECT DISTINCT p FROM Project p, ProjectPermission pp " +
+                "WHERE pp.project = p.id " +
+                "AND pp.user = :username AND (pp.level = :curator OR pp.level = :manager)" +
+                "ORDER BY p.name ASC";
+        List<Project> projects = entityManager
+                .createQuery(query, Project.class)
+                .setParameter("username", aUser.getUsername())
+                .setParameter("curator", PermissionLevel.CURATOR)
+                .setParameter("manager", PermissionLevel.MANAGER)
+                .getResultList();
+        return projects;
     }
 }

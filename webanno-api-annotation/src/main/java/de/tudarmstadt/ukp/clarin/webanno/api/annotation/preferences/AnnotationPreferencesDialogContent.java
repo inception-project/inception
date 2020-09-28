@@ -130,12 +130,18 @@ public class AnnotationPreferencesDialogContent
         form.add(createLayerContainer());
 
         // Add a check box to enable/disable automatic page navigations while annotating
-        form.add(new CheckBox("scrollPage"));
+        CheckBox scrollCheckBox = new CheckBox("scrollPage");
+        scrollCheckBox.setOutputMarkupId(true);
+        form.add(scrollCheckBox);
 
         // Add a check box to enable/disable arc collapsing
-        form.add(new CheckBox("collapseArcs"));
+        CheckBox collapseCheckBox = new CheckBox("collapseArcs");
+        collapseCheckBox.setOutputMarkupId(true);
+        form.add(collapseCheckBox);
 
-        form.add(new CheckBox("rememberLayer"));
+        CheckBox rememberCheckbox = new CheckBox("rememberLayer");
+        rememberCheckbox.setOutputMarkupId(true);
+        form.add(rememberCheckbox);
 
         // Add global read-only coloring strategy combo box
         DropDownChoice<ReadonlyColoringBehaviour> readOnlyColor = new BootstrapSelect<>(
@@ -151,9 +157,7 @@ public class AnnotationPreferencesDialogContent
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Preferences> aForm)
-    {
-        String username = userDao.getCurrentUser().getUsername();
-        
+    {        
         try {
             AnnotatorState state = stateModel.getObject();
             Preferences model = form.getModelObject();
@@ -172,8 +176,9 @@ public class AnnotationPreferencesDialogContent
             state.setAnnotationLayers(model.annotationLayers.stream()
                     .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                     .collect(Collectors.toList()));
-            
-            PreferencesUtil.savePreference(userPreferencesService, state, username);
+
+            PreferencesUtil.savePreference(userPreferencesService, state,
+                    userDao.getCurrentUsername());
         }
         catch (IOException e) {
             error("Preference file not found");

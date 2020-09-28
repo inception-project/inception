@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceR
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 /**
  * Base class for displaying a BRAT visualization. Override methods {@code #getCollectionData()} and
@@ -154,8 +155,10 @@ public abstract class BratVisualizer
     
     private String bratRenderCommand(String aJson)
     {
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + aJson
-                + "]);";
+        String str = WicketUtil.wrapInTryCatch(
+                "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + 
+                   aJson + "]);");
+        return str;
     }
 
     public void render(AjaxRequestTarget aTarget)

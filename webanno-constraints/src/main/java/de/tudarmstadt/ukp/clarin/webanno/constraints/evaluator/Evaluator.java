@@ -40,20 +40,22 @@ public interface Evaluator
     List<PossibleValue> generatePossibleValues(FeatureStructure aContext, String aFeature,
             ParsedConstraints parsedConstraints)
         throws UIMAException;
-    
-//    /**
-//     * 
-//     * @param aContext The feature structure /Scope in the rules
-//     * @param parsedConstraints Object containing parsed rules
-//     * @return true if there are rules for the feature structure
-//     */
-//    boolean areThereRulesFor(FeatureStructure aContext, ParsedConstraints parsedConstraints);
-    
+
+    // /**
+    // *
+    // * @param aContext The feature structure /Scope in the rules
+    // * @param parsedConstraints Object containing parsed rules
+    // * @return true if there are rules for the feature structure
+    // */
+    // boolean areThereRulesFor(FeatureStructure aContext, ParsedConstraints parsedConstraints);
+
     /**
-     * 
-     * @param aContext The feature structure /Scope in the rules
-     * @param aFeature The affected feature
-     * @param parsedConstraints Object containing parsed rules
+     * @param aContext
+     *            The feature structure /Scope in the rules
+     * @param aFeature
+     *            The affected feature
+     * @param parsedConstraints
+     *            Object containing parsed rules
      * @return true if features can be affected by this execution
      */
     boolean isThisAffectedByConstraintRules(FeatureStructure aContext, String aFeature,

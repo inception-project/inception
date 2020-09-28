@@ -96,7 +96,8 @@ public class DocumentServiceImplDatabaseTest
         @Bean
         public ProjectService projectService()
         {
-            return new ProjectServiceImpl();
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher, 
+                    repositoryProperties(), null);
         }
         
         @Bean

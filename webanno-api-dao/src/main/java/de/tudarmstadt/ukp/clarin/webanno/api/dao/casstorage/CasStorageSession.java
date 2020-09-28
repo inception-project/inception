@@ -221,6 +221,19 @@ public class CasStorageSession
                         .removeIf(metadata -> metadata.getCas() == aCas));
     }
 
+    /**
+     * Removed managed CAS from session for given document and username
+     */
+    public void remove(Long aDocumentId, String aUsername)
+    {
+        Map<String, SessionManagedCas> casByUser = managedCases.get(aDocumentId);
+        
+        if (casByUser == null) {
+            return;
+        }
+        
+        casByUser.remove(aUsername);
+    }
     
     /**
      * Register the given CAS into the session.

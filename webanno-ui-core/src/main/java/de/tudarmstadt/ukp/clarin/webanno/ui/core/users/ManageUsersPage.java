@@ -209,7 +209,7 @@ public class ManageUsersPage
                 selectedUser.setObject(user);
             }
             else if (SecurityUtil.isProfileSelfServiceAllowed()
-                    && userRepository.getCurrentUser().getUsername().equals(user.getUsername())) {
+                    && userRepository.getCurrentUsername().equals(user.getUsername())) {
                 selectedUser.setObject(userRepository.getCurrentUser());
             }
             else {
@@ -273,7 +273,7 @@ public class ManageUsersPage
             selectedUser.setObject(null);
         }
 
-        info("User details have been saved.");
+        info("Details for user [" + user.getUsername() + "] have been saved.");
         
         aTarget.add(detailForm);
         aTarget.add(users);

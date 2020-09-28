@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
@@ -42,6 +43,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -228,15 +230,16 @@ public class AgreementPage
         {
             // If the currently selected measure is not compatible with the selected feature, then
             // we clear the measure selection.
+            AnnotationFeature selectedFeature = featureList.getModelObject();
             boolean measureCompatibleWithFeature = measureDropDown.getModel()
                     .map(k -> agreementRegistry.getAgreementMeasureSupport(k.getKey()))
-                    .map(s -> s.accepts(featureList.getModelObject()))
+                    .map(s -> selectedFeature != null && s.accepts(selectedFeature))
                     .orElse(false).getObject();
             if (!measureCompatibleWithFeature) {
                 measureDropDown.setModelObject(null);
             }
             
-            aTarget.add(measureDropDown, runCalculationsButton);
+            aTarget.add(measureDropDown, runCalculationsButton, traitsContainer);
         }
 
         @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -257,12 +260,19 @@ public class AgreementPage
                     (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS)
                             .getDefaultModelObject());
             
-            Serializable result = measure.getAgreement(getCasMap());
+            Map<String, List<CAS>> casMap = getCasMap();
             
-            resultsContainer.addOrReplace(ams.createResultsPanel(MID_RESULTS, Model.of(result),
-                    AgreementPage.this::getCasMap));
-            
-            aTarget.add(resultsContainer);
+            if (casMap.values().stream().allMatch(list -> list == null || list.isEmpty())) {
+                error("No documents with annotations were found.");
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
+            else {
+                Serializable result = measure.getAgreement(casMap);
+                resultsContainer.addOrReplace(ams.createResultsPanel(MID_RESULTS, Model.of(result),
+                        AgreementPage.this::getCasMap));
+                aTarget.add(resultsContainer);
+            }
+                        
         }
         
         List<Pair<String, String>> listMeasures()
@@ -339,18 +349,12 @@ public class AgreementPage
         
         private List<Project> listAllowedProjects()
         {
-            List<Project> allowedProject = new ArrayList<>();
-
             User user = userRepository.getCurrentUser();
 
-            List<Project> allProjects = projectService.listProjects();
-            for (Project project : allProjects) {
-                if (projectService.isManager(project, user)
-                        || projectService.isCurator(project, user)) {
-                    allowedProject.add(project);
-                }
-            }
-            return allowedProject;
+            List<Project> userProjects = projectService.listManageableCuratableProjects(user);
+            List<Project> allowedProjects = projectService.listProjectsForAgreement();
+            allowedProjects.retainAll(userProjects);
+            return allowedProjects;
         }
     }
 
@@ -417,7 +421,7 @@ public class AgreementPage
         for (User user : users) {
             List<CAS> cases = new ArrayList<>();
 
-            // Bulk-fetch all source documents for which there is already an annoation document for
+            // Bulk-fetch all source documents for which there is already an annotation document for
             // the user which is faster then checking for their existence individually
             List<SourceDocument> docsForUser = documentService
                     .listAnnotationDocuments(project, user).stream()
@@ -435,25 +439,22 @@ public class AgreementPage
                         
                         if (traits.isLimitToFinishedDocuments()
                                 && !annotationDocument.getState().equals(FINISHED)) {
-                            // Add a skip marker for the current CAS to the CAS list - this is 
-                            // necessary because we expect the CAS lists for all users to have the
-                            // same size
+                            // Add a skip marker (null) for the current CAS to the CAS list - this 
+                            // is necessary because we expect the CAS lists for all users to have
+                            // the same size
                             cases.add(null);
                             continue nextDocument;
                         }
+                    }
                         
-                        cas = documentService.readAnnotationCas(annotationDocument,
-                                SHARED_READ_ONLY_ACCESS);
-                    }
-                    else if (!traits.isLimitToFinishedDocuments()) {
-                        // ... if we are not limited to finished documents and if there is no
-                        // annotation document, then we use the initial CAS for that user.
-                        cas = documentService.createOrReadInitialCas(document);
-                    }
+                    // Reads the user's annotation document or the initial source document -
+                    // depending on what is available
+                    cas = documentService.readAnnotationCas(document, user.getUsername(),
+                            AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
                 }
                 catch (Exception e) {
-                    LOG.error("Unable to load data", e);
                     error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                    LOG.error("Unable to load data", e);
                 }
                 
                 if (cas != null) {
@@ -469,20 +470,7 @@ public class AgreementPage
                 // source document yet.
                 cases.add(cas);
             }
-            
-            // Bulk-upgrade CASes - this is faster than upgrading them individually since the
-            // bulk upgrade only loads the project type system once.
-            try {
-                annotationService.upgradeCasIfRequired(cases, project);
-                // REC: I think there is no need to write the CASes here. We would not
-                // want to interfere with currently active annotator users
-            }
-            catch (Exception e) {
-                LOG.error("Unable to upgrade CAS", e);
-                error("Unable to upgrade CAS: " + ExceptionUtils.getRootCauseMessage(e));
-                continue;
-            }
-                
+                            
             cachedCASes.put(user.getUsername(), cases);
         }
 

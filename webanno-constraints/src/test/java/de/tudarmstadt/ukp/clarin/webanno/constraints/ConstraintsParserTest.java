@@ -17,118 +17,40 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
-import java.io.FileInputStream;
+import static java.util.Arrays.asList;
 
+import java.io.File;
+import java.io.FilenameFilter;
+
+import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.parser.ConstraintsParser;
 
+@RunWith(value = Parameterized.class)
 public class ConstraintsParserTest
 {
-    @Test
-    public void test1()
-        throws Exception
+    @Parameters(name = "{index}: running on file {0}")
+    public static Iterable<File> ruleFiles()
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/1.rules"));
-        Parse p = parser.Parse();
+        return asList(new File("src/test/resources/rules/").listFiles(
+                (FilenameFilter) new SuffixFileFilter(asList(".rules"))));
+    }
+
+    private File ruleFile;
+
+    public ConstraintsParserTest(File aRuleFile)
+    {
+        ruleFile = aRuleFile;
     }
 
     @Test
-    public void test2()
+    public void thatRuleFileCanBeParsed()
         throws Exception
     {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/2.rules"));
-        Parse p = parser.Parse();
+        ConstraintsParser.parse(ruleFile);
     }
-
-    @Test
-    public void test3()
-        throws Exception
-    {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/3.rules"));
-        Parse p = parser.Parse();
-    }
-
-    @Test
-    public void test4()
-        throws Exception
-    {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/4.rules"));
-        Parse p = parser.Parse();
-    }
-
-    @Test
-    public void test5()
-        throws Exception
-    {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/5.rules"));
-        Parse p = parser.Parse();
-    }
-
-    @Test
-    public void test6()
-        throws Exception
-    {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/6.rules"));
-        Parse p = parser.Parse();
-    }
-
-    @Test
-    public void test7()
-        throws Exception
-    {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/7.rules"));
-        Parse p = parser.Parse();
-    }
-
-    @Test
-    public void test8()
-        throws Exception
-    {
-        ConstraintsGrammar parser = new ConstraintsGrammar(new FileInputStream(
-                "src/test/resources/rules/8.rules"));
-        Parse p = parser.Parse();
-    }
-
-    /*
-     * @Test public void testWithData() throws Exception { // BACKGROUND DATA JCas jcas =
-     * JCasFactory.createJCas(); jcas.setDocumentText("Eva's");
-     * 
-     * Lemma l = new Lemma(jcas, 0,5); l.setValue("Eva"); l.addToIndexes();
-     * 
-     * Token t = new Token(jcas, 0,5); t.setLemma(l); t.addToIndexes();
-     * 
-     * // CONTEXT ANNOTATION WE SUPPOSE USER TO BE EDITING AND FOR WHICH WE NEED POSSIBLE VALUES
-     * NamedEntity ne = new NamedEntity(jcas, 0,5); // ne.setValue("PERSON"); ne.addToIndexes();
-     * 
-     * String rules = "import "+Lemma.class+" as Lemma;\n" +
-     * "@Lemma.value = \"Eva\" -> value = \"PERSON\"";
-     * 
-     * 
-     * ConstraintsGrammar parser = new ConstraintsGrammar(new StringInputStream(rules)); Parse
-     * parsedRules = parser.Parse();
-     * 
-     * List<String> possibleValues = extractPossibleValues(rules, ne, "value");
-     * 
-     * assertEquals(asList("PERSON"), possibleValues);
-     * 
-     * // The stuff below is supposedly in a completely different part of the code, so we assume
-     * only // have access to rules, ne, and "value" (the args of extractPossibleValues)
-     * 
-     * String fqTypeName = resolveImport("Lemma");
-     * 
-     * CAS cas = ne.getCAS(); Type lemmaType = CasUtil.getType(ne.getCAS(), fqTypeName);
-     * 
-     * List<AnnotationFS> candidates = BratAjaxCasUtil.selectAt(cas, lemmaType, ne.getBegin(),
-     * ne.getEnd()); String value = candidates.get(0).getFeatureValueAsString
-     * (lemmaType.getFeatureByBaseName("value")); }
-     */
 }
