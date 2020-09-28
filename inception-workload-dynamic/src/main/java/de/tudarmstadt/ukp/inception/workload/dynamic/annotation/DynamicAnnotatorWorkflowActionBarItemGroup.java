@@ -18,9 +18,16 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.workflow.DynamicRandomizedWorkflowTypeExtension.RANDOMIZED_WORKFLOW_EXTENSION_ID;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -30,6 +37,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
@@ -44,8 +52,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManagementService;
 
-public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
+public class DynamicAnnotatorWorkflowActionBarItemGroup
+    extends Panel
 {
     private static final long serialVersionUID = -292514874000914541L;
 
@@ -53,28 +63,32 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
     private @SpringBean ProjectService projectService;
     private @PersistenceContext EntityManager entityManager;
     private final AnnotationPageBase page;
-    private final LambdaAjaxLink finishDocumentLink;
+    private final DynamicWorkflowManagementService dynamicWorkflowManagementService;
+    private List<AnnotationDocument> annotationDocumentList;
     protected final ConfirmationDialog finishDocumentDialog;
 
-    public DynamicAnnotatorWorkflowActionBarItemGroup(
-        String aId, AnnotationPageBase aPage, EntityManager aEntityManager)
+    public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage,
+            EntityManager aEntityManager,
+            DynamicWorkflowManagementService aDynamicWorkflowManagementService)
     {
         super(aId);
 
-        //Same as for the default
+        // Same as for the default
         page = aPage;
         entityManager = aEntityManager;
+        dynamicWorkflowManagementService = aDynamicWorkflowManagementService;
 
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-            new StringResourceModel("FinishDocumentDialog.title", this, null),
-            new StringResourceModel("FinishDocumentDialog.text", this, null)));
+                new StringResourceModel("FinishDocumentDialog.title", this, null),
+                new StringResourceModel("FinishDocumentDialog.text", this, null)));
 
+        LambdaAjaxLink finishDocumentLink;
         add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-            this::actionFinishDocument));
+                this::actionFinishDocument));
         finishDocumentLink.setOutputMarkupId(true);
-        finishDocumentLink.add(enabledWhen(() -> page.isEditable()));
+        finishDocumentLink.add(enabledWhen(page::isEditable));
         finishDocumentLink.add(new Label("state")
-            .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
+                .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
     }
 
     protected AnnotationPageBase getAnnotationPage()
@@ -89,8 +103,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
 
     protected void actionFinishDocument(AjaxRequestTarget aTarget)
     {
-        finishDocumentDialog.setConfirmAction((_target) ->
-        {
+        finishDocumentDialog.setConfirmAction((_target) -> {
             page.actionValidateDocument(_target, page.getEditorCas());
 
             AnnotatorState state = page.getModelObject();
@@ -98,39 +111,82 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
             Project project = state.getProject();
             SourceDocument document = state.getDocument();
 
-            AnnotationDocument annotationDocument = documentService
-                .getAnnotationDocument(document, user);
+            annotationDocumentList = documentService.listAnnotationDocuments(project);
+
+            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(document,
+                    user);
 
             documentService.transitionAnnotationDocumentState(annotationDocument,
-                ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
 
-            //Go through all documents in a random order and check if there is a Annotation document
-            //with the state NEW
-            String query =  "FROM SourceDocument " +
-                            "WHERE project = :project " +
-                            "ORDER BY rand()";
-            for (SourceDocument doc: entityManager.createQuery(query,SourceDocument.class)
-                .setParameter("project", project).getResultList()) {
-                //Check if it even exists or is state NEW
-                if (documentService.listAnnotatableDocuments(project,user).get(doc) == null ||
-                    documentService.listAnnotatableDocuments(project,user).get(doc).
-                        getState().equals(NEW)) {
-                    getAnnotationPage().getModelObject().setDocument(doc, documentService.
-                        listSourceDocuments(project));
-                    //This document had the state NEW, load it
-                    getAnnotationPage().actionLoadDocument(_target);
-                    _target.add(page);
-                    return;
+            // Check which workflow type is active (switch used for easily adding new types)
+            switch (dynamicWorkflowManagementService.getOrCreateWorkflowEntry(project)
+                    .getWorkflow()) {
+            case (RANDOMIZED_WORKFLOW_EXTENSION_ID):
+                // Go through all documents in a random order and check if there
+                // is a Annotation document with the state NEW
+                String query = "FROM SourceDocument " + "WHERE project = :project "
+                        + "ORDER BY rand()";
+                for (SourceDocument doc : entityManager.createQuery(query, SourceDocument.class)
+                        .setParameter("project", project).getResultList()) {
+                    // Check if it exist or is NEW and the default
+                    // number of annotations > users working on the document + 1
+                    if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
+                            || documentService.listAnnotatableDocuments(project, user).get(doc)
+                                    .getState().equals(NEW)
+                                    && getUsersWorkingOnTheDocument(doc)
+                                            + 1 < dynamicWorkflowManagementService
+                                                    .getOrCreateWorkflowEntry(project)
+                                                    .getDefaultAnnotations()) {
+
+                        getAnnotationPage().getModelObject().setDocument(doc,
+                                documentService.listSourceDocuments(project));
+                        Optional<AjaxRequestTarget> target = RequestCycle.get()
+                                .find(AjaxRequestTarget.class);
+                        getAnnotationPage().actionLoadDocument(target.orElse(null));
+                        return;
+                    }
                 }
+                break;
+            default:
+                // Default, simply go through the list and return the first document
+                // which state is NEW and the default number annotations < users working on the
+                // document + 1
+                Map.Entry<SourceDocument, AnnotationDocument> doc = documentService
+                        .listAnnotatableDocuments(project, user).entrySet().stream()
+                        .filter(d -> d.getValue() == null || d.getValue().getState().equals(NEW)
+                                && (getUsersWorkingOnTheDocument(d.getKey())
+                                        + 1) < (dynamicWorkflowManagementService
+                                                .getOrCreateWorkflowEntry(project)
+                                                .getDefaultAnnotations()))
+                        .findFirst().orElse(null);
+                getAnnotationPage().getModelObject().setDocument(doc.getKey(),
+                        documentService.listSourceDocuments(project));
+                Optional<AjaxRequestTarget> target = RequestCycle.get()
+                        .find(AjaxRequestTarget.class);
+                getAnnotationPage().actionLoadDocument(target.orElse(null));
+                return;
             }
 
-            //Check if no new document has been selected, return to homepage
-            if (getAnnotationPage().getModelObject().getDocument().equals(document)) {
-                getAnnotationPage().setResponsePage(getAnnotationPage().getApplication().
-                    getHomePage());
-                getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");
+            // No documents left
+            if (getAnnotationPage().getModelObject().getDocument() == null) {
+                getAnnotationPage()
+                        .setResponsePage(getAnnotationPage().getApplication().getHomePage());
+                getAnnotationPage().getSession().info(
+                        "There are no more documents to annotate available for you. Please contact your project supervisor.");
             }
         });
+
         finishDocumentDialog.show(aTarget);
+
+    }
+
+    public int getUsersWorkingOnTheDocument(SourceDocument aDocument)
+    {
+        return annotationDocumentList.stream()
+                .filter(d -> d.getDocument().equals(aDocument) && !d.getState().equals(NEW)
+                        && !d.getState().equals(IGNORE))
+                .map(AnnotationDocument::getUser).sorted().collect(Collectors.joining(", "))
+                .length();
     }
 }

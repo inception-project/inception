@@ -85,7 +85,7 @@ public class DynamicWorkflowManagementServiceImplBase implements DynamicWorkflow
     private DynamicWorkflowManager createDefaultEntry(Project aProject)
     {
         entityManager.persist(new DynamicWorkflowManager(
-            aProject,6,"Default"));
+            aProject,6,"default"));
         DynamicWorkflowManager result = entityManager.createQuery(
             "SELECT wm " +
                 "FROM  DynamicWorkflowManager wm " +

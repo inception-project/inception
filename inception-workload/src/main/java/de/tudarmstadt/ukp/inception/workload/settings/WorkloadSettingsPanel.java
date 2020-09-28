@@ -55,10 +55,10 @@ public class WorkloadSettingsPanel extends Panel
         //Basic form
         Form<Void> form = new Form<>("form");
 
-        workloadStrategy = new BootstrapSelect("workloadStrategy",
-            LoadableDetachableModel.of(this::getWorkloadManager));
+        workloadStrategy = new BootstrapSelect<>("workloadStrategy");
         workloadStrategy.setChoiceRenderer(
                 new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
+        workloadStrategy.setModel(LoadableDetachableModel.of(this::getWorkloadManager));
         workloadStrategy.setRequired(true);
         workloadStrategy.setNullValid(false);
         workloadStrategy.setChoices(workloadManagerExtensionPoint.getTypes());

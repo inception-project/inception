@@ -54,7 +54,6 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     private final List<SourceDocument> shownDocuments;
     private Filter filter;
     private DocumentService documentService;
-    private int defaultAnnotations;
 
     public AnnotationQueueOverviewDataProvider(
         List<SourceDocument> aData,
@@ -64,8 +63,6 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         headers = aHeaders;
         allAnnotationDocuments = aAllAnnotationDocuments;
         shownDocuments = new ArrayList<>();
-        //TODO default value must be saved permanently, Issue #1776
-        defaultAnnotations = 6;
 
         //Init filter
         filter = new Filter();
