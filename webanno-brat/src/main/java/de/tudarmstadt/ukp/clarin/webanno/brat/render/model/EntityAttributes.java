@@ -20,11 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.NumericBooleanSerializer;
 
 /**
  * This is not part of the original brat data model.
  */
-@JsonInclude(Include.NON_NULL)
+@JsonInclude(Include.NON_DEFAULT)
 public class EntityAttributes
 {
     public static final String ATTR_LABEL = "l";
@@ -35,7 +38,8 @@ public class EntityAttributes
     private @JsonProperty(ATTR_LABEL) String labelText;
     private @JsonProperty(ATTR_COLOR) String color;
     private @JsonProperty(ATTR_HOVER_TEXT) String hoverText;
-    private @JsonProperty(ATTR_ACTION_BUTTONS) Boolean actionButtons;
+    @JsonSerialize(using = NumericBooleanSerializer.class)
+    private @JsonProperty(ATTR_ACTION_BUTTONS) boolean actionButtons;
     
     public void setLabelText(String aLabelText)
     {

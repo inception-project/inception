@@ -618,7 +618,7 @@ var Visualizer = (function($, window, undefined) {
               span.hovertext = attributes.h;
             }
             if(attributes.hasOwnProperty('a')) {
-              span.actionButtons = attributes.a;
+              span.actionButtons = !!(attributes.a);
             }
           }
 // WEBANNO EXTENSION END

@@ -52,25 +52,25 @@ public class Entity
     }
 
     public Entity(int aId, String aType, Offsets aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext, Boolean aActionButtons)
+            String aHoverSpantext)
     {
-        this(aId, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext, aActionButtons);
+        this(aId, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext);
     }
 
     public Entity(int aId, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext, Boolean aActionButtons)
+            String aHoverSpantext)
     {
-        this(new VID(aId), aType, aOffsets, aLabelText, aColor, aHoverSpantext, aActionButtons);
+        this(new VID(aId), aType, aOffsets, aLabelText, aColor, aHoverSpantext, false);
     }
 
     public Entity(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor,
-            String aHoverSpantext, Boolean aActionButtons)
+            String aHoverSpantext, boolean aActionButtons)
     {
         this(aVid, aType, asList(aOffsets), aLabelText, aColor, aHoverSpantext, aActionButtons);
     }
 
     public Entity(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText, String aColor,
-            String aHovertext, Boolean aActionButtons)
+            String aHovertext, boolean aActionButtons)
     {
         vid = aVid;
         type = aType;

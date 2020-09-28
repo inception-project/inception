@@ -294,7 +294,7 @@ public class BratRenderer
                             aResponse.addEntity(new Entity(new VID(fs), "Token",
                                     new Offsets(range.getBegin(), range.getEnd()),
                                     fs.getCoveredText(), "#d9d9d9",
-                                    "[" + fs.getBegin() + "-" + fs.getEnd() + "]", null));
+                                    "[" + fs.getBegin() + "-" + fs.getEnd() + "]", false));
                         }
                     });
         }

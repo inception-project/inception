@@ -35,14 +35,15 @@ public class EntityTest
         throws IOException
     {
         String json = JSONUtil.toPrettyJsonString(new Entity(new VID(1, 2), "type",
-                new Offsets(1, 2), "label", "color", "somehoverspantext"));
+                new Offsets(1, 2), "label", "color", "somehoverspantext", true));
 
         assertEquals(
                 String.join("\n",
                         "[ \"1.2\", \"type\", [ [ 1, 2 ] ], {",
                         "  \"l\" : \"label\",",
                         "  \"c\" : \"color\",",
-                        "  \"h\" : \"somehoverspantext\"",
+                        "  \"h\" : \"somehoverspantext\",",
+                        "  \"a\" : 1",
                         "} ]"),
                 json);
     }
