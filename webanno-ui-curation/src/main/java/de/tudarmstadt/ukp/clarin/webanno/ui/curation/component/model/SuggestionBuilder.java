@@ -310,32 +310,32 @@ public class SuggestionBuilder
             return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
         }
         
-        try {
-            if (AUTOMATION.equals(aState.getMode()) || CORRECTION.equals(aState.getMode())) {
-                CAS mergeCas = correctionDocumentService.readCorrectionCas(aDocument);
-                if (aUpgrade) {
-                    correctionDocumentService.upgradeCorrectionCas(mergeCas, aDocument);
-                    correctionDocumentService.writeCorrectionCas(mergeCas, aDocument);
-                    updateDocumentTimestampAfterWrite(aState, correctionDocumentService
-                            .getCorrectionCasTimestamp(aState.getDocument()));
-                }
-                return mergeCas;
+        CAS mergeCas = null;
+        if (AUTOMATION.equals(aState.getMode()) || CORRECTION.equals(aState.getMode())) {
+            if (!correctionDocumentService.existsCorrectionCas(aDocument)) {
+                return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
             }
-            else {
-                CAS mergeCas = curationDocumentService.readCurationCas(aDocument);
-                if (aUpgrade) {
-                    curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
-                    curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
-                    updateDocumentTimestampAfterWrite(aState, curationDocumentService
-                            .getCurationCasTimestamp(aState.getDocument()));
-                }
-                return mergeCas;
+            mergeCas = correctionDocumentService.readCorrectionCas(aDocument);
+            if (aUpgrade) {
+                correctionDocumentService.upgradeCorrectionCas(mergeCas, aDocument);
+                correctionDocumentService.writeCorrectionCas(mergeCas, aDocument);
+                updateDocumentTimestampAfterWrite(aState,
+                        correctionDocumentService.getCorrectionCasTimestamp(aState.getDocument()));
             }
         }
-        // Create JCas, if it could not be loaded from the file system
-        catch (Exception e) {
-            return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
+        else {
+            if (!curationDocumentService.existsCurationCas(aDocument)) {
+                return initializeMergeCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
+            }
+            mergeCas = curationDocumentService.readCurationCas(aDocument);
+            if (aUpgrade) {
+                curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
+                curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
+                updateDocumentTimestampAfterWrite(aState,
+                        curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
+            }
         }
+        return mergeCas;
     }
     
     public CAS initializeMergeCas(AnnotatorState aState, Map<String, CAS> aCasses,
