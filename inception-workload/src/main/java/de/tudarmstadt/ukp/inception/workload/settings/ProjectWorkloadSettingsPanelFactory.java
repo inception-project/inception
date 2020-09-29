@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
  * {@link WorkloadManagementAutoConfiguration#projectWorkloadSettingsPanelFactory}.
  * </p>
  */
-@Order(600)
+@Order(340)
 public class ProjectWorkloadSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
