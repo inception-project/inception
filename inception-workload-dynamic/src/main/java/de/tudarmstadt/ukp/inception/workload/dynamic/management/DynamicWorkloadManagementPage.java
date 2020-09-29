@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Objects.isNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,7 +30,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
-
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
@@ -45,7 +46,6 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigationTo
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Button;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
@@ -103,7 +103,6 @@ public class DynamicWorkloadManagementPage
     private static final long serialVersionUID = 1180618893870240262L;
 
     private Form<Void> searchForm;
-    private Form<Void> userForm;
     private Form<Collection<SourceDocument>> userAssignDocumentForm;
     private Form<AnnotationDocument> userResetDocumentForm;
 
@@ -123,11 +122,10 @@ public class DynamicWorkloadManagementPage
 
     private BootstrapRadioChoice<String> dateChoices;
 
-    private DropDownChoice<WorkflowManagerType> workflowChoices;
-    private DropDownChoice<User> userSelection;
-    private DropDownChoice<AnnotationDocument> resetDocument;
-    private DropDownChoice<AnnotationDocumentState> documentState;
-
+    private BootstrapSelect<WorkflowManagerType> workflowChoices;
+    private BootstrapSelect<User> userSelection;
+    private BootstrapSelect<AnnotationDocument> resetDocument;
+    private BootstrapSelect<AnnotationDocumentState> documentState;
 
     // SpringBeans
     private @SpringBean UserDao userRepository;
@@ -152,7 +150,7 @@ public class DynamicWorkloadManagementPage
 
         // Get current Project
         currentProject.setObject(
-            getProjectFromParameters(aPageParameters.get(PAGE_PARAM_PROJECT_ID)).get());
+                getProjectFromParameters(aPageParameters.get(PAGE_PARAM_PROJECT_ID)).get());
 
         commonInit();
     }
@@ -174,8 +172,8 @@ public class DynamicWorkloadManagementPage
 
         // Data Provider for the table
         AnnotationQueueOverviewDataProvider dataProvider = new AnnotationQueueOverviewDataProvider(
-            documentService.listSourceDocuments(currentProject.getObject()), headers,
-            documentService.listAnnotationDocuments(currentProject.getObject()));
+                documentService.listSourceDocuments(currentProject.getObject()), headers,
+                documentService.listAnnotationDocuments(currentProject.getObject()));
 
         infoDialog = new ModalWindow("infoDialog");
         add(infoDialog);
@@ -184,15 +182,15 @@ public class DynamicWorkloadManagementPage
         // Each column creates TableMetaData
         List<IColumn<SourceDocument, String>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("Document"), getString("Document"),
-            SourceDocument::getName));
+                SourceDocument::getName));
         columns.add(new LambdaColumn<>(new ResourceModel("Finished"), getString("Finished"),
-            dataProvider::getFinishedAmountForDocument));
+                dataProvider::getFinishedAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Processed"), getString("Processed"),
-            dataProvider::getInProgressAmountForDocument));
+                dataProvider::getInProgressAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Users"), getString("Users"),
-            dataProvider::getUsersWorkingOnTheDocument));
+                dataProvider::getUsersWorkingOnTheDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
-            dataProvider::lastAccessTimeForDocument));
+                dataProvider::lastAccessTimeForDocument));
 
         // Own column type, contains only a clickable image (AJAX event),
         // creates a small panel dialog containing metadata
@@ -202,7 +200,7 @@ public class DynamicWorkloadManagementPage
 
             @Override
             public void populateItem(Item<ICellPopulator<SourceDocument>> aItem, String componentId,
-                                     IModel<SourceDocument> rowModel)
+                    IModel<SourceDocument> rowModel)
             {
                 Fragment fragment = new Fragment(componentId, "infoColumn",
                     DynamicWorkloadManagementPage.this);
@@ -234,7 +232,7 @@ public class DynamicWorkloadManagementPage
 
         // Set contents of the modalWindow
         infoDialog.setContent(new WorkloadMetadataDialog(infoDialog.getContentId(), doc,
-            listUsersFinishedForDocument(doc), listUsersInProgressForDocument(doc)));
+                listUsersFinishedForDocument(doc), listUsersInProgressForDocument(doc)));
 
         // Open the dialog
         infoDialog.show(aTarget);
@@ -257,9 +255,9 @@ public class DynamicWorkloadManagementPage
     {
         List<String> result = new ArrayList<>();
         for (AnnotationDocument anno : documentService
-            .listAnnotationDocuments(currentProject.getObject())) {
+                .listAnnotationDocuments(currentProject.getObject())) {
             if (anno.getState().equals(AnnotationDocumentState.FINISHED)
-                && anno.getName().equals(aDocument.getName())) {
+                    && anno.getName().equals(aDocument.getName())) {
                 result.add(anno.getUser());
             }
         }
@@ -270,9 +268,9 @@ public class DynamicWorkloadManagementPage
     {
         List<String> result = new ArrayList<>();
         for (AnnotationDocument anno : documentService
-            .listAnnotationDocuments(currentProject.getObject())) {
+                .listAnnotationDocuments(currentProject.getObject())) {
             if (anno.getState().equals(AnnotationDocumentState.IN_PROGRESS)
-                && anno.getDocument().equals(aDocument)) {
+                    && anno.getDocument().equals(aDocument)) {
                 result.add(anno.getUser());
             }
         }
@@ -287,12 +285,12 @@ public class DynamicWorkloadManagementPage
 
         // Filter Textfields and their AJAX events
         userFilterTextField = new TextField<>("userFilter",
-            PropertyModel.of(aProv, "filter.username"), String.class);
+                PropertyModel.of(aProv, "filter.username"), String.class);
 
         userFilterTextField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
         documentFilterTextField = new TextField<>("documentFilter",
-            PropertyModel.of(aProv, "filter.documentName"), String.class);
+                PropertyModel.of(aProv, "filter.documentName"), String.class);
 
         documentFilterTextField.setOutputMarkupId(true);
 
@@ -316,7 +314,7 @@ public class DynamicWorkloadManagementPage
 
         // Create the radio button group
         dateChoices = new BootstrapRadioChoice<>("date", new Model<>(getString("between")),
-            dateChoice);
+                dateChoice);
         dateChoices.setInline(true);
         dateChoices.setOutputMarkupId(true);
 
@@ -391,13 +389,13 @@ public class DynamicWorkloadManagementPage
 
         // Init defaultDocumentsNumberTextField
         defaultNumberDocumentsTextField = new NumberTextField<>("defaultDocumentsNumberTextField",
-            new Model<>(), Integer.class);
+                new Model<>(), Integer.class);
 
         // Set value for input and additional features
         defaultNumberDocumentsTextField
-            .setDefaultModel(new CompoundPropertyModel<>(dynamicWorkflowManagementService
-                .getOrCreateWorkflowEntry(currentProject.getObject())
-                .getDefaultAnnotations()));
+                .setDefaultModel(new CompoundPropertyModel<>(dynamicWorkflowManagementService
+                        .getOrCreateWorkflowEntry(currentProject.getObject())
+                        .getDefaultAnnotations()));
         defaultNumberDocumentsTextField.setMinimum(1);
         defaultNumberDocumentsTextField.setRequired(true);
         defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
@@ -411,7 +409,7 @@ public class DynamicWorkloadManagementPage
         workflowChoices = new BootstrapSelect<>("workloadStrategy");
         workflowChoices.setDefaultModel(LoadableDetachableModel.of(this::getWorkflowManager));
         workflowChoices
-            .setChoiceRenderer(new LambdaChoiceRenderer<>(WorkflowManagerType::getUiName));
+                .setChoiceRenderer(new LambdaChoiceRenderer<>(WorkflowManagerType::getUiName));
         workflowChoices.setChoices(workflowManagerExtensionPoint.getTypes());
         workflowChoices.setRequired(true);
         workflowChoices.setNullValid(false);
@@ -424,7 +422,7 @@ public class DynamicWorkloadManagementPage
 
     public Form<Void> createUserForm()
     {
-        userForm = new Form<>("userForm");
+        Form<Void> userForm = new Form<>("userForm");
         userForm.setOutputMarkupId(true);
 
         userForm.add(createUserSelectionForm());
@@ -442,9 +440,9 @@ public class DynamicWorkloadManagementPage
         // Show all available users
 
         userSelection = new BootstrapSelect<>("userSelection");
+        userSelection.setChoiceRenderer(new LambdaChoiceRenderer<>(User::getUsername));
         userSelection.setModel(new Model<>());
         userSelection.setNullValid(true);
-        userSelection.setChoiceRenderer(new LambdaChoiceRenderer<>(User::getUsername));
         userSelection.setChoices(this::getUsersForCurrentProject);
 
         userSelection.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -469,50 +467,54 @@ public class DynamicWorkloadManagementPage
         // Show ALL documents in the project (even those for which the user
         // does not have an annotations document created yet
         IModel<Collection<SourceDocument>> documentsToAddModel = new CollectionModel<>(
-            new ArrayList<>());
+                new ArrayList<>());
         userAssignDocumentForm = new Form<>("userAssignDocumentForm", documentsToAddModel);
-        userAssignDocumentForm.setOutputMarkupId(true);
         // This ensures that we get the user input in getChoices
-        MultiSelect<SourceDocument> documentsToAdd = new MultiSelect<SourceDocument>("documentsToAdd",
-            new ChoiceRenderer<>("name")) {
+        MultiSelect<SourceDocument> documentsToAdd = new MultiSelect<SourceDocument>(
+                "documentsToAdd", new ChoiceRenderer<>("name"))
+        {
             private static final long serialVersionUID = -6211358256515198208L;
 
             @Override
-            protected void onConfigure(KendoDataSource aDataSource) {
+            protected void onConfigure(KendoDataSource aDataSource)
+            {
                 // This ensures that we get the user input in getChoices
                 aDataSource.set("serverFiltering", true);
             }
 
             @Override
-            public void onConfigure(JQueryBehavior aBehavior) {
+            public void onConfigure(JQueryBehavior aBehavior)
+            {
                 super.onConfigure(aBehavior);
                 aBehavior.setOption("placeholder",
-                    Options.asString(getString("documentsToAssign")));
+                        Options.asString(getString("documentsToAssign")));
                 aBehavior.setOption("filter", Options.asString("contains"));
                 aBehavior.setOption("autoClose", false);
             }
 
             @Override
-            public List<SourceDocument> getChoices() {
+            public List<SourceDocument> getChoices()
+            {
                 final String input = RequestCycleUtils
-                    .getQueryParameterValue("filter[filters][0][value]").toString();
+                        .getQueryParameterValue("filter[filters][0][value]").toString();
 
                 List<SourceDocument> result = new ArrayList<>();
 
                 if (userSelection.getModelObject() != null) {
                     if (input != null) {
                         for (SourceDocument sourceDocument : documentService
-                            .listAnnotatableDocuments(currentProject.getObject(),
-                                userSelection.getModelObject())
-                            .keySet()) {
+                                .listAnnotatableDocuments(currentProject.getObject(),
+                                        userSelection.getModelObject())
+                                .keySet()) {
                             if (sourceDocument.getName().contains(input)) {
                                 result.add(sourceDocument);
                             }
                         }
-                    } else {
+                    }
+                    else {
                         result.addAll(
-                            documentService.listAnnotatableDocuments(currentProject.getObject(),
-                                userSelection.getModelObject()).keySet());
+                                documentService.listAnnotatableDocuments(currentProject.getObject(),
+                                        userSelection.getModelObject()).keySet());
                     }
                 }
                 return result;
@@ -522,7 +524,8 @@ public class DynamicWorkloadManagementPage
         documentsToAdd.setModel(documentsToAddModel);
         documentsToAdd.setOutputMarkupId(true);
 
-        //userAssignDocumentForm.add(visibleWhen(() -> !isNull(userSelection.getModelObject())));
+        userAssignDocumentForm.setOutputMarkupPlaceholderTag(true);
+        userAssignDocumentForm.add(visibleWhen(() -> !isNull(userSelection.getModelObject())));
         userAssignDocumentForm.add(documentsToAdd);
 
         userAssignDocumentForm.add(new LambdaAjaxButton<>("assign", this::actionAssignDocument));
@@ -536,23 +539,25 @@ public class DynamicWorkloadManagementPage
         resetDocument = new BootstrapSelect<>("resetDocument");
         resetDocument.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocument::getName));
         resetDocument.setChoices(this::getCreatedDocumentsForSelectedUser);
-        resetDocument.setModel(new Model<>());
+        resetDocument.setModel(LoadableDetachableModel.of(this::getSelectedAnnotationDocument));
         resetDocument.setOutputMarkupId(true);
         userResetDocumentForm.add(resetDocument);
 
         documentState = new BootstrapSelect<>("documentState");
         documentState
-            .setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocumentState::getName));
+                .setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocumentState::getName));
         documentState.setChoices(this::getAnnotationDocumentStates);
 
-        documentState.setModel(new Model<>());
-        documentState.setMarkupId("documentState");
+        documentState
+                .setModel(LoadableDetachableModel.of(this::getSelectedAnnotationDocumentState));
         documentState.setOutputMarkupId(true);
         userResetDocumentForm.add(documentState);
 
+        userResetDocumentForm.setOutputMarkupPlaceholderTag(true);
+        userResetDocumentForm.add(visibleWhen(() -> !isNull(userSelection.getModelObject())));
+
         userResetDocumentForm.add(new LambdaAjaxButton<>("set", this::actionSetDocumentStatus));
 
-        //userResetDocumentForm.add(visibleWhen(() -> !isNull(userSelection.getModelObject())));
         return userResetDocumentForm;
 
     }
@@ -560,9 +565,9 @@ public class DynamicWorkloadManagementPage
     private WorkflowManagerType getWorkflowManager()
     {
         DynamicWorkflowManager manager = dynamicWorkflowManagementService
-            .getOrCreateWorkflowEntry(currentProject.getObject());
+                .getOrCreateWorkflowEntry(currentProject.getObject());
         WorkflowManagerExtension extension = workflowManagerExtensionPoint
-            .getExtension(manager.getWorkflow());
+                .getExtension(manager.getWorkflow());
         return new WorkflowManagerType(extension.getId(), extension.getLabel());
     }
 
@@ -578,16 +583,26 @@ public class DynamicWorkloadManagementPage
         }
         else {
             return new ArrayList<>(documentService.listAnnotationDocuments(
-                currentProject.getObject(), userSelection.getModelObject()));
+                    currentProject.getObject(), userSelection.getModelObject()));
         }
     }
 
     private List<AnnotationDocumentState> getAnnotationDocumentStates()
     {
         return Arrays.stream(AnnotationDocumentState.values())
-            .filter(s -> s.getName().equals(AnnotationDocumentState.IN_PROGRESS.getName())
-                || s.getName().equals(AnnotationDocumentState.FINISHED.getName()))
-            .collect(Collectors.toList());
+                .filter(s -> s.getName().equals(AnnotationDocumentState.IN_PROGRESS.getName())
+                        || s.getName().equals(AnnotationDocumentState.FINISHED.getName()))
+                .collect(Collectors.toList());
+    }
+
+    private AnnotationDocument getSelectedAnnotationDocument()
+    {
+        return resetDocument.getModelObject();
+    }
+
+    private AnnotationDocumentState getSelectedAnnotationDocumentState()
+    {
+        return documentState.getModelObject();
     }
 
     private void actionSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -611,42 +626,46 @@ public class DynamicWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         dynamicWorkflowManagementService.setDefaultAnnotations(
-            Integer.parseInt(defaultNumberDocumentsTextField.getInput()),
-            currentProject.getObject());
+                Integer.parseInt(defaultNumberDocumentsTextField.getInput()),
+                currentProject.getObject());
 
         dynamicWorkflowManagementService.setWorkflow(
-            workflowChoices.getModelObject().getWorkloadManagerExtensionId(),
-            currentProject.getObject());
+                workflowChoices.getModelObject().getWorkloadManagerExtensionId(),
+                currentProject.getObject());
 
         success("Changes saved");
     }
 
     private void actionSetDocumentStatus(AjaxRequestTarget aAjaxRequestTarget,
-                                         Form<AnnotationDocumentState> aForm)
+            Form<AnnotationDocumentState> aForm)
     {
         aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
         if (resetDocument.getModelObject() == null) {
             error("Please select a document you wish to change its status first!");
-        } else if (documentState.getModelObject() == null) {
+        }
+        else if (documentState.getModelObject() == null) {
             error("Please select a state you wish to assign to the document");
         }
         else {
             if (documentState.getModelObject().equals(AnnotationDocumentState.IN_PROGRESS)) {
                 documentService.transitionAnnotationDocumentState(
-                    documentService.getAnnotationDocument(
-                        documentService.getSourceDocument(currentProject.getObject(),
-                            resetDocument.getModelObject().getName()),
-                        userSelection.getModelObject()),
-                    AnnotationDocumentStateTransition.
-                        ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
-            } else {
+                        documentService.getAnnotationDocument(
+                                documentService.getSourceDocument(
+                                        currentProject.getObject(),
+                                        resetDocument.getModelObject().getName()),
+                                userSelection.getModelObject()),
+                        AnnotationDocumentStateTransition.
+                            ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
+            }
+            else {
                 documentService.transitionAnnotationDocumentState(
-                    documentService.getAnnotationDocument(
-                        documentService.getSourceDocument(currentProject.getObject(),
-                            resetDocument.getModelObject().getName()),
-                        userSelection.getModelObject()),
-                    AnnotationDocumentStateTransition.
-                        ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+                        documentService.getAnnotationDocument(
+                                documentService.getSourceDocument(
+                                        currentProject.getObject(),
+                                        resetDocument.getModelObject().getName()),
+                                userSelection.getModelObject()),
+                        AnnotationDocumentStateTransition.
+                            ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
             }
 
             success("Document status changed");
@@ -654,7 +673,7 @@ public class DynamicWorkloadManagementPage
     }
 
     private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget,
-                                      Form<List<SourceDocument>> aForm)
+            Form<List<SourceDocument>> aForm)
     {
         aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
 
@@ -666,14 +685,14 @@ public class DynamicWorkloadManagementPage
             for (SourceDocument sourceDocument : aForm.getModelObject()) {
                 try {
                     AnnotationDocument annotationDocument = documentService
-                        .getAnnotationDocument(sourceDocument, userSelection.getModelObject());
+                            .getAnnotationDocument(sourceDocument, userSelection.getModelObject());
                     if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)) {
                         documentService.transitionAnnotationDocumentState(annotationDocument,
-                            AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+                                AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
                     }
                     else {
                         error("Document '" + sourceDocument.getName()
-                            + "' is either already assigned or even finished.");
+                                + "' is either already assigned or even finished.");
                     }
 
                 }
@@ -682,7 +701,7 @@ public class DynamicWorkloadManagementPage
                     AnnotationDocument annotationDocument = new AnnotationDocument();
                     annotationDocument.setName(sourceDocument.getName());
                     annotationDocument.setDocument(documentService.getSourceDocument(
-                        currentProject.getObject(), annotationDocument.getName()));
+                            currentProject.getObject(), annotationDocument.getName()));
                     annotationDocument.setProject(currentProject.getObject());
                     annotationDocument.setUser(userSelection.getModelObject().getUsername());
                     annotationDocument.setState(state);

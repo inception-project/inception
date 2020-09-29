@@ -105,7 +105,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     {
         User user = aPage.getModelObject().getUser();
         Project project = aPage.getModelObject().getProject();
-        annotationDocumentList = documentService.listAnnotationDocuments(project);
+        annotationDocumentList = documentService.listAnnotationDocuments(project, user);
         // Check if there is a document in progress and return this one
         for (AnnotationDocument annotationDocument : annotationDocumentList) {
             // There was one in progress, load it
@@ -145,7 +145,12 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                         }
                     }
                 }
-                break;
+
+                // No documents left
+                aPage.setResponsePage(aPage.getApplication().getHomePage());
+                aPage.getSession().info(
+                        "There are no more documents to annotate available for you. Please contact your project supervisor.");
+
             default:
                 // Default, simply go through the list and return the first document
                 for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
@@ -167,13 +172,6 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                     }
                 }
             }
-        }
-
-        // No documents left
-        if (aPage.getModelObject().getDocument() == null) {
-            aPage.setResponsePage(aPage.getApplication().getHomePage());
-            aPage.getSession().info(
-                    "There are no more documents to annotate available for you. Please contact your project supervisor.");
         }
     }
 

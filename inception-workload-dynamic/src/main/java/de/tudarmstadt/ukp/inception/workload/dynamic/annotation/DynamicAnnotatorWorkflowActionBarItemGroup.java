@@ -19,6 +19,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
@@ -27,7 +28,6 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.workflow.DynamicRand
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -111,13 +111,25 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             Project project = state.getProject();
             SourceDocument document = state.getDocument();
 
-            annotationDocumentList = documentService.listAnnotationDocuments(project);
+            annotationDocumentList = documentService.listAnnotationDocuments(project, user);
 
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(document,
                     user);
 
             documentService.transitionAnnotationDocumentState(annotationDocument,
                     ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+
+            for (AnnotationDocument anno : annotationDocumentList) {
+                // There was one in progress, load it
+                if (anno.getState().equals(IN_PROGRESS)) {
+                    getAnnotationPage().getModelObject().setDocument(anno.getDocument(),
+                            documentService.listSourceDocuments(project));
+                    Optional<AjaxRequestTarget> target = RequestCycle.get()
+                            .find(AjaxRequestTarget.class);
+                    getAnnotationPage().actionLoadDocument(target.orElse(null));
+                    return;
+                }
+            }
 
             // Check which workflow type is active (switch used for easily adding new types)
             switch (dynamicWorkflowManagementService.getOrCreateWorkflowEntry(project)
@@ -143,7 +155,12 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                         }
                     }
                 }
-                break;
+                // No documents left
+                getAnnotationPage()
+                        .setResponsePage(getAnnotationPage().getApplication().getHomePage());
+                getAnnotationPage().getSession().info(
+                        "There are no more documents to annotate available for you. Please contact your project supervisor.");
+
             default:
                 // Default, simply go through the list and return the first document
                 for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
@@ -165,26 +182,16 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                     }
                 }
             }
-
-            // No documents left
-            if (getAnnotationPage().getModelObject().getDocument() == null) {
-                getAnnotationPage()
-                        .setResponsePage(getAnnotationPage().getApplication().getHomePage());
-                getAnnotationPage().getSession().info(
-                        "There are no more documents to annotate available for you. Please contact your project supervisor.");
-            }
         });
-
         finishDocumentDialog.show(aTarget);
-
     }
 
     public int getUsersWorkingOnTheDocument(SourceDocument aDocument)
     {
-        return annotationDocumentList.stream()
+        return (int) documentService
+                .listAnnotationDocuments(getAnnotationPage().getModelObject().getProject()).stream()
                 .filter(d -> d.getDocument().equals(aDocument) && !d.getState().equals(NEW)
                         && !d.getState().equals(IGNORE))
-                .map(AnnotationDocument::getUser).sorted().collect(Collectors.joining(", "))
-                .length();
+                .count();
     }
 }
