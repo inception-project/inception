@@ -402,7 +402,7 @@ function createDashboardRoutine() {
 function createOpenDocumentsRoutine(enjoyHint) {
 	var a = [
 		    {
-		    	'click .tab1' : 'Click here to add a document to the project.',
+		    	'click li:contains(Documents)' : 'Click here to add a document to the project.',
 		    	'showSkip': false
 		    }
 			];
@@ -425,7 +425,7 @@ function createAddDocumentRoutine(enjoyHint) {
 function createOpenRecommendersRoutine(enjoyHint) {
 	var a = [
 			{
-				'click .tab5' : 'Now, lets add a recommender. Click here!',
+				'click li:contains(Recommenders)' : 'Now, lets add a recommender. Click here!',
 				'showSkip': false
 		    }
 			];
