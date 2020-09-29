@@ -562,22 +562,25 @@ var VisualizerUI = (function($, window, undefined) {
                     var spanPosition = target.position();
                     var spanWidth = target.width();
                     var spanHeight = target.height();
-                    var acceptBtn = $('<button id="span_accept_btn"></button>')
-                        .css({ top: 0, left: 0, width: spanWidth / 2, height: spanHeight });
-                    var rejectBtn = $('<button id="span_reject_btn"></button>')
-                        .css({ top: 0, left: spanWidth/2, width: spanWidth / 2, height: spanHeight });
+                    var acceptBtn = $('<button id="span_accept_btn">Accept</button>')
+                        .css({ top: 0, left: 0, width: 45, height: spanHeight});
+                    var rejectBtn = $('<button id="span_reject_btn">Reject</button>')
+                        .css({ top: 0, left: spanWidth/2, width:45 , height: spanHeight });
                     
                     //TODO: fix why 10
                     var buttonsWrapper = $('#span_btns_wrapper')
-                        .css({ top: spanPosition.top - 10 , left: spanPosition.left})
+                        .css({ top: spanPosition.top - 10 , left: spanPosition.left - (acceptBtn.width() * 2)})
                         .mouseleave(function() {
                             hideSpanButtons();
                         });
-                    
+                        //hide the buttons when comments are hidden (i.e. mouse left the span)
+                    	dispatcher.on('hideComment', hideSpanButtons);
+					
                     clearTimeout(displayButtonsTimer);
                     displayButtonsTimer = setTimeout(function() {
                         // make sure that no buttons exist and then add button
                         buttonsWrapper.empty().append(acceptBtn).append(rejectBtn);
+                        
                         buttonsShown = true;
                         buttonsWrapper.show();
                     }, 700);
@@ -585,6 +588,9 @@ var VisualizerUI = (function($, window, undefined) {
             }
 
             var hideSpanButtons = function() {
+                if($("#span_btns_wrapper:hover").length != 0){
+              	    return;
+                }
                 clearTimeout(displayButtonsTimer);
                 if (buttonsShown) {
                     $('#span_btns_wrapper').empty().hide();

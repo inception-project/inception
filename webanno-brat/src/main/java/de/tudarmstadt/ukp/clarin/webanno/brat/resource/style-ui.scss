@@ -44,6 +44,8 @@ $background_color_11: #ffcccc;
 $background_color_12: #cccccc;
 $background_color_13: #eeeeee;
 $background_color_14: #dddddd;
+$background_color_15: lightgreen;
+$background_color_16: pink;
 
 .brat {
   @font-face {
@@ -555,21 +557,24 @@ $background_color_14: #dddddd;
     }
   }
   #span_accept_btn {
-    background-color: lightgreen;
+    background-color:$background_color_15;
+    font-size: 9px;
     border: none;
-	display: inline;
+    display: inline;
     opacity: 0.7;
+    padding: 0;
   }
   #span_reject_btn {
-    background-color: red;
+    background-color: $background_color_16;
+    font-size: 9px;
     border: none;
     display:inline;
     opacity: 0.7;
+    padding: 0;
   }
   #span_btns_wrapper {
-	margin: 0;
+    margin: 0;
     position: fixed;
-//    display: inline;
   }
 }
 
