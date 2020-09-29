@@ -48,7 +48,7 @@ public class WorkloadManagementAutoConfiguration
         EntityManager aEntityManager, WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
     {
         return new WorkloadManagementServiceImplBase(aEntityManager,
-                aWorkloadManagerExtensionPoint);
+            aWorkloadManagerExtensionPoint);
     }
 
     @Bean

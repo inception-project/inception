@@ -27,6 +27,6 @@ public interface WorkflowManagerExtension extends Extension<Project>
     {
         return true;
     }
-    
+
     String getLabel();
 }

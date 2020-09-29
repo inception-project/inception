@@ -25,7 +25,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowDocumentNavigationActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.extensions.DynamicWorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.extensions.DynamicWorkflowExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManagementService;
@@ -36,6 +39,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.DynamicRandomizedW
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowManagerExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
@@ -49,7 +53,7 @@ public class DynamicWorkloadManagerAutoConfiguration
 
     @Bean
     public DynamicWorkflowManagementService dynamicWorkflowManagementService(
-            EntityManager aEntityManager)
+        EntityManager aEntityManager)
     {
         return new DynamicWorkflowManagementServiceImplBase(aEntityManager);
     }
@@ -68,14 +72,14 @@ public class DynamicWorkloadManagerAutoConfiguration
 
     @Bean
     public DynamicWorkflowExtensionPoint dynamicWorkflowExtensionPoint(
-            List<WorkflowManagerExtension> aWorkflowManagerExtensions)
+        List<WorkflowManagerExtension> aWorkflowManagerExtensions)
     {
         return new DynamicWorkflowExtensionPointImpl(aWorkflowManagerExtensions);
     }
 
     @Bean
     public WorkflowManagerExtensionPoint workflowManagerExtensionPoint(
-            List<WorkflowManagerExtension> aWorkflowManagerExtensions)
+        List<WorkflowManagerExtension> aWorkflowManagerExtensions)
     {
         return new WorkflowManagerExtensionPointImpl(aWorkflowManagerExtensions);
     }
@@ -86,4 +90,30 @@ public class DynamicWorkloadManagerAutoConfiguration
         return new DynamicWorkflowManager();
     }
 
+    @Bean
+    public DynamicWorkflowDocumentNavigationActionBarExtension
+        dynamicWorkflowDocumentNavigationActionBarExtension(
+        DocumentService aDocumentService,
+        EntityManager aEntityManager,
+        WorkloadManagementService aWorkloadManagementService,
+        DynamicWorkflowManagementService aDynamicWorkflowManagementService)
+    {
+        return new DynamicWorkflowDocumentNavigationActionBarExtension(
+            aDocumentService,
+            aEntityManager,
+            aWorkloadManagementService,
+            aDynamicWorkflowManagementService);
+    }
+
+    @Bean
+    public DynamicWorkflowActionBarExtension dynamicWorkflowActionBarExtension(
+        EntityManager aEntityManager,
+        WorkloadManagementService aWorkloadManagementService,
+        DynamicWorkflowManagementService aDynamicWorkflowManagementService)
+    {
+        return new DynamicWorkflowActionBarExtension(
+            aEntityManager,
+            aWorkloadManagementService,
+            aDynamicWorkflowManagementService);
+    }
 }

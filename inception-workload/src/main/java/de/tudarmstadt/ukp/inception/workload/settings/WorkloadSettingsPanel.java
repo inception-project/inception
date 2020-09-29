@@ -57,7 +57,7 @@ public class WorkloadSettingsPanel extends Panel
 
         workloadStrategy = new BootstrapSelect<>("workloadStrategy");
         workloadStrategy.setChoiceRenderer(
-                new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
+            new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
         workloadStrategy.setModel(LoadableDetachableModel.of(this::getWorkloadManager));
         workloadStrategy.setRequired(true);
         workloadStrategy.setNullValid(false);
@@ -72,13 +72,13 @@ public class WorkloadSettingsPanel extends Panel
 
         add(form);
     }
-    
+
     private WorkloadManagerType getWorkloadManager()
     {
         WorkloadManager manager = workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(project);
+            .getOrCreateWorkloadManagerConfiguration(project);
         WorkloadManagerExtension extension = workloadManagerExtensionPoint
-                .getExtension(manager.getType());
+            .getExtension(manager.getType());
         return new WorkloadManagerType(extension.getId(), extension.getLabel());
     }
 
@@ -87,7 +87,7 @@ public class WorkloadSettingsPanel extends Panel
         aTarget.addChildren(getPage(), IFeedback.class);
 
         workloadManagementService.setWorkloadManagerConfiguration(
-                workloadStrategy.getModelObject().getWorkloadManagerExtensionId(), project);
+            workloadStrategy.getModelObject().getWorkloadManagerExtensionId(), project);
 
         success("Workload settings changed");
     }

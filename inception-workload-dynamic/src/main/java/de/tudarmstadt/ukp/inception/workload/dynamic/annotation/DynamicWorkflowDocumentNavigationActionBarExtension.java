@@ -126,43 +126,41 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                         + "ORDER BY rand()";
                 for (SourceDocument doc : entityManager.createQuery(query, SourceDocument.class)
                         .setParameter("project", project).getResultList()) {
-                    // Check if it exist or is NEW and the default
-                    // number of annotations > users working on the document + 1
-                    if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
-                            || documentService.listAnnotatableDocuments(project, user).get(doc)
-                                    .getState().equals(NEW)
-                                    && getUsersWorkingOnTheDocument(doc)
-                                            + 1 < dynamicWorkflowManagementService
-                                                    .getOrCreateWorkflowEntry(project)
-                                                    .getDefaultAnnotations()) {
-
-                        aPage.getModelObject().setDocument(doc,
-                                documentService.listSourceDocuments(project));
-                        Optional<AjaxRequestTarget> target = RequestCycle.get()
-                                .find(AjaxRequestTarget.class);
-                        aPage.actionLoadDocument(target.orElse(null));
-                        return;
+                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= dynamicWorkflowManagementService
+                            .getOrCreateWorkflowEntry(project).getDefaultAnnotations()) {
+                        if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
+                                || (documentService.listAnnotatableDocuments(project, user).get(doc)
+                                        .getState().equals(NEW))) {
+                            aPage.getModelObject().setDocument(doc,
+                                    documentService.listSourceDocuments(project));
+                            Optional<AjaxRequestTarget> target = RequestCycle.get()
+                                    .find(AjaxRequestTarget.class);
+                            aPage.actionLoadDocument(target.orElse(null));
+                            return;
+                        }
                     }
                 }
                 break;
             default:
                 // Default, simply go through the list and return the first document
-                // which state is NEW and the default number annotations < users working on the
-                // document + 1
-                Map.Entry<SourceDocument, AnnotationDocument> document = documentService
-                        .listAnnotatableDocuments(project, user).entrySet().stream()
-                        .filter(d -> d.getValue() == null || d.getValue().getState().equals(NEW)
-                                && (getUsersWorkingOnTheDocument(d.getKey())
-                                        + 1) < (dynamicWorkflowManagementService
-                                                .getOrCreateWorkflowEntry(project)
-                                                .getDefaultAnnotations()))
-                        .findFirst().orElse(null);
-                aPage.getModelObject().setDocument(document.getKey(),
-                        documentService.listSourceDocuments(project));
-                Optional<AjaxRequestTarget> target = RequestCycle.get()
-                        .find(AjaxRequestTarget.class);
-                aPage.actionLoadDocument(target.orElse(null));
-                return;
+                for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
+                        .listAnnotatableDocuments(project, user).entrySet()) {
+                    // First check if too many users are already working on the document
+                    if (((getUsersWorkingOnTheDocument(entry.getKey())
+                            + 1) <= dynamicWorkflowManagementService
+                                    .getOrCreateWorkflowEntry(project).getDefaultAnnotations())) {
+                        // Now check if there either is no annotation document yet created or its
+                        // state is NEW
+                        if (entry.getValue() == null || entry.getValue().getState().equals(NEW)) {
+                            aPage.getModelObject().setDocument(entry.getKey(),
+                                    documentService.listSourceDocuments(project));
+                            Optional<AjaxRequestTarget> target = RequestCycle.get()
+                                    .find(AjaxRequestTarget.class);
+                            aPage.actionLoadDocument(target.orElse(null));
+                            return;
+                        }
+                    }
+                }
             }
         }
 

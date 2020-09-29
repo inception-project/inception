@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 
 @Configuration
-@ConditionalOnProperty(prefix = "workload.matrix", name = "enabled", havingValue = "true", 
+@ConditionalOnProperty(prefix = "workload.matrix", name = "enabled", havingValue = "true",
     matchIfMissing = true)
 public class MatrixWorkloadManagerAutoConfiguration
 {
