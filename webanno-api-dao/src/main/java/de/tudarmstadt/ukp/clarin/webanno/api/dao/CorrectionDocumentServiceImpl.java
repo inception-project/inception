@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -57,13 +56,7 @@ public class CorrectionDocumentServiceImpl
     public boolean existsCorrectionCas(SourceDocument aSourceDocument)
         throws IOException
     {
-        try {
-            readCorrectionCas(aSourceDocument);
-            return true;
-        }
-        catch (FileNotFoundException e) {
-            return false;
-        }
+        return casStorageService.existsCas(aSourceDocument, CORRECTION_USER);
     }
 
     @Override

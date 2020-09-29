@@ -153,4 +153,10 @@ public class CurationDocumentServiceImpl
         
         return SourceDocumentState.CURATION_FINISHED.equals(d.getState());
     }
+
+    @Override
+    public boolean existsCurationCas(SourceDocument aDocument) throws IOException
+    {
+        return casStorageService.existsCas(aDocument, CURATION_USER);
+    }
 }
