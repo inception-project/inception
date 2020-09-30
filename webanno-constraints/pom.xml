@@ -128,9 +128,9 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.javacc.plugin</groupId>
-        <artifactId>javacc-maven-plugin</artifactId>
-        <version>3.0.2</version>
+        <groupId>com.helger.maven</groupId>
+        <artifactId>ph-javacc-maven-plugin</artifactId>
+        <version>4.1.4</version>
         <executions>
           <execution>
             <id>default</id>
@@ -139,6 +139,8 @@
               <goal>jjtree-javacc</goal>
             </goals>
             <configuration>
+              <grammarEncoding>UTF-8</grammarEncoding>
+              <outputEncoding>UTF-8</outputEncoding>
               <isStatic>false</isStatic>
               <visitor>true</visitor>
               <multi>true</multi>
@@ -190,8 +192,8 @@
               <pluginExecutions>
                 <pluginExecution>
                   <pluginExecutionFilter>
-                    <groupId>org.javacc.plugin</groupId>
-                    <artifactId>javacc-maven-plugin</artifactId>
+                    <groupId>com.helger.maven</groupId>
+                    <artifactId>ph-javacc-maven-plugin</artifactId>
                     <versionRange>[3.0.2,)</versionRange>
                     <goals>
                       <goal>jjtree-javacc</goal>
