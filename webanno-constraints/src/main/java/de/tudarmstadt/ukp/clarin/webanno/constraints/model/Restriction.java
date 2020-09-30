@@ -17,10 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.asFlatString;
+
 import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTRestriction;
 
 /**
  * Class containing object representation of Restriction of a rule.
@@ -33,6 +37,17 @@ public class Restriction
     private final String path;
     private final String value;
     private final boolean flagImportant;
+
+    public Restriction(ASTRestriction aRestriction)
+    {
+        this(asFlatString(aRestriction.getPath()), aRestriction.getValue(),
+                aRestriction.isImportant());
+    }
+
+    public Restriction(String aPath, String aValue)
+    {
+        this(aPath, aValue, false);
+    }
 
     public Restriction(String aPath, String aValue, boolean aFlagImportant)
     {

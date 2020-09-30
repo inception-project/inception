@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import de.tudarmstadt.ukp.clarin.webanno.constraints.parser.ConstraintsParser;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser;
 
 @RunWith(value = Parameterized.class)
 public class ConstraintsParserTest
@@ -36,8 +36,8 @@ public class ConstraintsParserTest
     @Parameters(name = "{index}: running on file {0}")
     public static Iterable<File> ruleFiles()
     {
-        return asList(new File("src/test/resources/rules/").listFiles(
-                (FilenameFilter) new SuffixFileFilter(asList(".rules"))));
+        return asList(new File("src/test/resources/rules/")
+                .listFiles((FilenameFilter) new SuffixFileFilter(asList(".rules"))));
     }
 
     private File ruleFile;
@@ -48,9 +48,10 @@ public class ConstraintsParserTest
     }
 
     @Test
-    public void thatRuleFileCanBeParsed()
-        throws Exception
+    public void thatRuleFileCanBeParsed() throws Exception
     {
         ConstraintsParser.parse(ruleFile);
     }
+
+
 }

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
-import static de.tudarmstadt.ukp.clarin.webanno.constraints.parser.ConstraintsParser.parseFile;
+import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.parseFile;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;

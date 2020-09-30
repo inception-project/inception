@@ -127,73 +127,35 @@
   </dependencies>
   <build>
     <plugins>
-<!--       <plugin> -->
-<!--         <groupId>org.javacc.plugin</groupId> -->
-<!--         <artifactId>javacc-maven-plugin</artifactId> -->
-<!--         <version>3.0.2</version> -->
-<!--         <executions> -->
-<!--           <execution> -->
-<!--             <id>default</id> -->
-<!--             <phase>generate-sources</phase> -->
-<!--             <goals> -->
-<!--               <goal>jtb-javacc</goal> -->
-<!--             </goals> -->
-<!--             <configuration> -->
-<!--               <lookAhead>2</lookAhead> -->
-<!--               <isStatic>false</isStatic> -->
-<!--               <javadocFriendlyComments>true</javadocFriendlyComments> -->
-              
-<!--             </configuration> -->
-<!--           </execution> -->
-<!--         </executions> -->
-<!--         <dependencies> -->
-<!--           <dependency> -->
-<!--             <groupId>edu.purdue.cs</groupId> -->
-<!--             <artifactId>jtb</artifactId> -->
-<!--             <version>1.4.12</version> -->
-<!--           </dependency> -->
-<!--         </dependencies> -->
-<!--       </plugin> -->
       <plugin>
-          <groupId>com.helger.maven</groupId>
-          <artifactId>ph-javacc-maven-plugin</artifactId>
-          <version>3.0.0</version>
-          <executions>
+        <groupId>org.javacc.plugin</groupId>
+        <artifactId>javacc-maven-plugin</artifactId>
+        <version>3.0.2</version>
+        <executions>
           <execution>
             <id>default</id>
             <phase>generate-sources</phase>
             <goals>
-              <goal>jtb-javacc</goal>
+              <goal>jjtree-javacc</goal>
             </goals>
             <configuration>
-              <lookAhead>2</lookAhead>
               <isStatic>false</isStatic>
+              <visitor>true</visitor>
+              <multi>true</multi>
+              <nodeDefaultVoid>false</nodeDefaultVoid>
+              <trackTokens>true</trackTokens>
+              <lookAhead>2</lookAhead>
               <javadocFriendlyComments>true</javadocFriendlyComments>
             </configuration>
           </execution>
         </executions>
-      </plugin>      
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>fix-jtb-javadoc</id>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target>
-                <replace dir="target/generated-sources/jtb">
-                  <include name="**/*.java" />
-                  <replacetoken>-&gt;</replacetoken>
-                  <replacevalue>-&amp;gt;</replacevalue>
-                </replace>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>net.java.dev.javacc</groupId>
+            <artifactId>javacc</artifactId>
+            <version>7.0.9</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -207,7 +169,7 @@
             </goals>
             <configuration>
               <sources>
-                <source>${project.build.directory}/generated-sources/jtb/</source>
+                <source>${project.build.directory}/generated-sources/jjtree/</source>
                 <source>${project.build.directory}/generated-sources/javacc/</source>
               </sources>
             </configuration>
@@ -228,26 +190,11 @@
               <pluginExecutions>
                 <pluginExecution>
                   <pluginExecutionFilter>
-                    <groupId>com.helger.maven</groupId>
-                    <artifactId>ph-javacc-maven-plugin</artifactId>
-                    <versionRange>[2.8.0,)</versionRange>
-                    <goals>
-                      <goal>jtb-javacc</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <execute>
-                      <runOnConfiguration>true</runOnConfiguration>
-                      <runOnIncremental>true</runOnIncremental>
-                    </execute>
-                  </action>
-                </pluginExecution>                <pluginExecution>
-                  <pluginExecutionFilter>
                     <groupId>org.javacc.plugin</groupId>
                     <artifactId>javacc-maven-plugin</artifactId>
-                    <versionRange>[2.8.0,)</versionRange>
+                    <versionRange>[3.0.2,)</versionRange>
                     <goals>
-                      <goal>jtb-javacc</goal>
+                      <goal>jjtree-javacc</goal>
                     </goals>
                   </pluginExecutionFilter>
                   <action>
@@ -255,19 +202,6 @@
                       <runOnConfiguration>true</runOnConfiguration>
                       <runOnIncremental>true</runOnIncremental>
                     </execute>
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <versionRange>[1.0.0,)</versionRange>
-                    <goals>
-                      <goal>run</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
                   </action>
                 </pluginExecution>
               </pluginExecutions>
