@@ -6,5 +6,5 @@
 
 <suppressions>
     <suppress files=".*[\\/]target[\\/].*" checks=".*"/>
-    <suppress files=".*AST.*[\\/].java$" checks=".*"/>
+    <suppress files=".*[\\/]AST.*.java$" checks=".*"/>
 </suppressions>
