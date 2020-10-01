@@ -15,22 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import org.apache.wicket.markup.html.panel.Panel;
 
-@Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",
-    matchIfMissing = false)
-public class DynamicWorkloadManagerAutoConfiguration
+public class DynamicDocumentNavigator extends Panel
 {
-    @Bean
-    public DynamicWorkloadExtension dynamicWorkloadExtension()
+    public DynamicDocumentNavigator(String aID)
     {
-        return new DynamicWorkloadExtension();
+        super(aID);
     }
 }
