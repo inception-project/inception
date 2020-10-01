@@ -18,12 +18,16 @@
 package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTConstraintsSet;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTRule;
 
 /***
  * Serialized Class containing objects after parsing and creating objects based on rules file.
@@ -39,10 +43,24 @@ public class ParsedConstraints
     //Contains possible scenarios for which rules are available.
     private Set<FSFPair> rulesSet = null;
 
-    public ParsedConstraints(Map<String, String> imports, List<Scope> scopes)
+    public ParsedConstraints(Map<String, String> aAliases, List<Scope> aScopes)
     {
-        this.imports = imports;
-        this.scopes = scopes;
+        imports = aAliases;
+        scopes = aScopes;
+    }
+
+    public ParsedConstraints(ASTConstraintsSet astConstraintsSet)
+    {
+        imports = astConstraintsSet.getImports();
+        scopes = new ArrayList<>();
+        
+        for (Entry<String, List<ASTRule>> ruleGroup : astConstraintsSet.getScopes().entrySet()) {
+            List<Rule> rules = new ArrayList<Rule>();
+            for (ASTRule astRule : ruleGroup.getValue()) {
+                rules.add(new Rule(astRule));
+            }
+            scopes.add(new Scope(ruleGroup.getKey(), rules));
+        }
     }
 
     @Override

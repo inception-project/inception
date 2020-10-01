@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
-import static de.tudarmstadt.ukp.clarin.webanno.constraints.parser.ConstraintsParser.parseFile;
+import static de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsParser.parseFile;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder.buildAnnotation;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.FeatureStructureBuilder.buildFS;
 import static java.util.Arrays.asList;
@@ -37,7 +37,10 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Condition;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Restriction;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Rule;
 
 public class ComplexTypeTest
 {
@@ -103,6 +106,11 @@ public class ComplexTypeTest
                 .buildAndAddToIndexes();
 
         ParsedConstraints constraints = parseFile("src/test/resources/rules/feature_path_in_condition.rules");
+        
+        assertThat(constraints.getScopeByName("Prof").getRules())
+                .containsExactly(new Rule(
+                        new Condition("boss.fullName", "Hans Juergen Proeml"),
+                        new Restriction("professorName", "Iryna Gurevych")));
 
         List<PossibleValue> possibleValues = sut.generatePossibleValues(gurevych, "professorName",
                 constraints);
