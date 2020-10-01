@@ -205,6 +205,7 @@ public class RecommendationSpanRenderer
                         new VRange(ao.getBegin() - aWindowBeginOffset,
                                 ao.getEnd() - aWindowBeginOffset),
                         featureAnnotation, Collections.emptyMap(), color);
+                v.setActionButtons(true);
                 v.addLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
                 v.addLazyDetail(new VLazyDetailQuery(feature.getName(), ao.getLabel()));
                 vdoc.add(v);
