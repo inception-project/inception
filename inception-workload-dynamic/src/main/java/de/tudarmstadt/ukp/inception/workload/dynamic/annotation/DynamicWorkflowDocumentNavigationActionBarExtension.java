@@ -91,10 +91,9 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         if (aPage.getModelObject().getProject() == null) {
             return false;
         }
-
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
-                .getType());
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
+            getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
+            .getType());
     }
 
     @Override
