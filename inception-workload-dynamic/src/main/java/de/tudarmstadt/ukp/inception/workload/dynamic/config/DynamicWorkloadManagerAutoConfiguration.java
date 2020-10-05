@@ -17,29 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
-import java.util.List;
-
-import javax.persistence.EntityManager;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowActionBarExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.annotation.DynamicWorkflowDocumentNavigationActionBarExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.extensions.DynamicWorkflowExtensionPoint;
-import de.tudarmstadt.ukp.inception.workload.dynamic.extensions.DynamicWorkflowExtensionPointImpl;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManagementService;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManagementServiceImplBase;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManager;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.DynamicDefaultWorkflowTypeExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.DynamicRandomizedWorkflowTypeExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowManagerExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowManagerExtensionPoint;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowManagerExtensionPointImpl;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
@@ -51,42 +33,4 @@ public class DynamicWorkloadManagerAutoConfiguration
         return new DynamicWorkloadExtension();
     }
 
-    @Bean
-    public DynamicWorkflowManagementService dynamicWorkflowManagementService(
-        EntityManager aEntityManager)
-    {
-        return new DynamicWorkflowManagementServiceImplBase(aEntityManager);
-    }
-
-    @Bean
-    public DynamicDefaultWorkflowTypeExtension dynamicDefaultWorkflowTypeExtension()
-    {
-        return new DynamicDefaultWorkflowTypeExtension();
-    }
-
-    @Bean
-    public DynamicRandomizedWorkflowTypeExtension dynamicRandomizedWorkflowTypeExtension()
-    {
-        return new DynamicRandomizedWorkflowTypeExtension();
-    }
-
-    @Bean
-    public DynamicWorkflowExtensionPoint dynamicWorkflowExtensionPoint(
-        List<WorkflowManagerExtension> aWorkflowManagerExtensions)
-    {
-        return new DynamicWorkflowExtensionPointImpl(aWorkflowManagerExtensions);
-    }
-
-    @Bean
-    public WorkflowManagerExtensionPoint workflowManagerExtensionPoint(
-        List<WorkflowManagerExtension> aWorkflowManagerExtensions)
-    {
-        return new WorkflowManagerExtensionPointImpl(aWorkflowManagerExtensions);
-    }
-
-    @Bean
-    public DynamicWorkflowManager dynamicWorkflowManager()
-    {
-        return new DynamicWorkflowManager();
-    }
 }

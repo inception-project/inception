@@ -24,14 +24,13 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 @Component
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
@@ -39,17 +38,14 @@ public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {
     private final WorkloadManagementService workloadManagementService;
-    private final DynamicWorkflowManagementService dynamicWorkflowManagementService;
     private final @PersistenceContext EntityManager entityManager;
 
     @Autowired
     public DynamicWorkflowActionBarExtension(EntityManager aEntityManager,
-            WorkloadManagementService aWorkloadManagementService,
-            DynamicWorkflowManagementService aDynamicWorkflowManagementService)
+            WorkloadManagementService aWorkloadManagementService)
     {
         entityManager = aEntityManager;
         workloadManagementService = aWorkloadManagementService;
-        dynamicWorkflowManagementService = aDynamicWorkflowManagementService;
 
     }
 
@@ -81,6 +77,6 @@ public class DynamicWorkflowActionBarExtension
     public Panel createActionBarItem(String aID, AnnotationPageBase aAnnotationPageBase)
     {
         return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase,
-                entityManager, dynamicWorkflowManagementService);
+                entityManager, workloadManagementService);
     }
 }

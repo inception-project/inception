@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.workflow.DynamicRandomizedWorkflowTypeExtension.RANDOMIZED_WORKFLOW_EXTENSION_ID;
 
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManagementService;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 public class DynamicAnnotatorWorkflowActionBarItemGroup
     extends Panel
@@ -63,20 +62,19 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private @SpringBean ProjectService projectService;
     private @PersistenceContext EntityManager entityManager;
     private final AnnotationPageBase page;
-    private final DynamicWorkflowManagementService dynamicWorkflowManagementService;
-    private List<AnnotationDocument> annotationDocumentList;
+    private final WorkloadManagementService workloadManagementService;
     protected final ConfirmationDialog finishDocumentDialog;
+    private List<AnnotationDocument> annotationDocumentList;
 
     public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage,
-            EntityManager aEntityManager,
-            DynamicWorkflowManagementService aDynamicWorkflowManagementService)
+            EntityManager aEntityManager, WorkloadManagementService aWorkloadManagementService)
     {
         super(aId);
 
         // Same as for the default
         page = aPage;
         entityManager = aEntityManager;
-        dynamicWorkflowManagementService = aDynamicWorkflowManagementService;
+        workloadManagementService = aWorkloadManagementService;
 
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
                 new StringResourceModel("FinishDocumentDialog.title", this, null),
@@ -131,18 +129,15 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                 }
             }
 
-            // Check which workflow type is active (switch used for easily adding new types)
-            switch (dynamicWorkflowManagementService.getOrCreateWorkflowEntry(project)
-                    .getWorkflow()) {
-            case (RANDOMIZED_WORKFLOW_EXTENSION_ID):
+            if ((workloadManagementService.getTraits(project).split(",")[0]).equals("randomized")) {
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
                 String query = "FROM SourceDocument " + "WHERE project = :project "
                         + "ORDER BY rand()";
                 for (SourceDocument doc : entityManager.createQuery(query, SourceDocument.class)
                         .setParameter("project", project).getResultList()) {
-                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= dynamicWorkflowManagementService
-                            .getOrCreateWorkflowEntry(project).getDefaultAnnotations()) {
+                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= Integer
+                            .parseInt(workloadManagementService.getTraits(project).split(",")[1])) {
                         if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
                                 || (documentService.listAnnotatableDocuments(project, user).get(doc)
                                         .getState().equals(NEW))) {
@@ -160,15 +155,14 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                         .setResponsePage(getAnnotationPage().getApplication().getHomePage());
                 getAnnotationPage().getSession().info(
                         "There are no more documents to annotate available for you. Please contact your project supervisor.");
-
-            default:
+            }
+            else {
                 // Default, simply go through the list and return the first document
                 for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
                         .listAnnotatableDocuments(project, user).entrySet()) {
                     // First check if too many users are already working on the document
-                    if (((getUsersWorkingOnTheDocument(entry.getKey())
-                            + 1) <= dynamicWorkflowManagementService
-                                    .getOrCreateWorkflowEntry(project).getDefaultAnnotations())) {
+                    if (((getUsersWorkingOnTheDocument(entry.getKey()) + 1) <= Integer.parseInt(
+                            workloadManagementService.getTraits(project).split(",")[1]))) {
                         // Now check if there either is no annotation document yet created or its
                         // state is NEW
                         if (entry.getValue() == null || entry.getValue().getState().equals(NEW)) {

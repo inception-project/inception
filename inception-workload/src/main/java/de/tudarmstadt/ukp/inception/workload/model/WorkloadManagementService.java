@@ -22,6 +22,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public interface WorkloadManagementService
 {
     WorkloadManager getOrCreateWorkloadManagerConfiguration(Project aProject);
+    String getTraits(Project aProject);
 
     void setWorkloadManagerConfiguration(String workloadType, Project aProject);
     void setTraits(String aTraits, Project aProject);

@@ -40,12 +40,10 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-model</artifactId>
     </dependency>
-    
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-tx</artifactId>
@@ -62,7 +60,10 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
-
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>

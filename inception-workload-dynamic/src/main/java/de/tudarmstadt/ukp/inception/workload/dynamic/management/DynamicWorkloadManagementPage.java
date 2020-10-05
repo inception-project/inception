@@ -88,13 +88,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManagementService;
-import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManager;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowManagerExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowManagerExtensionPoint;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowManagerType;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @MountPath("/workload.html")
 public class DynamicWorkloadManagementPage
@@ -122,7 +118,7 @@ public class DynamicWorkloadManagementPage
 
     private BootstrapRadioChoice<String> dateChoices;
 
-    private BootstrapSelect<WorkflowManagerType> workflowChoices;
+    private BootstrapSelect<String> workflowChoices;
     private BootstrapSelect<User> userSelection;
     private BootstrapSelect<AnnotationDocument> resetDocument;
     private BootstrapSelect<AnnotationDocumentState> documentState;
@@ -132,8 +128,7 @@ public class DynamicWorkloadManagementPage
     private @SpringBean ProjectService projectService;
     private @SpringBean MenuItemRegistry menuItemService;
     private @SpringBean DocumentService documentService;
-    private @SpringBean DynamicWorkflowManagementService dynamicWorkflowManagementService;
-    private @SpringBean WorkflowManagerExtensionPoint workflowManagerExtensionPoint;
+    private @SpringBean WorkloadManagementService workloadManagementService;
 
     public DynamicWorkloadManagementPage()
     {
@@ -371,10 +366,10 @@ public class DynamicWorkloadManagementPage
         // Condition for filter inputs to be enabled
         dateTo.add(enabledWhen(
             () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0))
-                && unused.getValue().equals("false")));
+                 && unused.getValue().equals("false")));
         dateFrom.add(enabledWhen(
             () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1))
-                && unused.getValue().equals("false")));
+                 && unused.getValue().equals("false")));
         dateChoices.add(enabledWhen(() -> unused.getValue().equals("false")));
         userFilterTextField.add(enabledWhen(() -> unused.getValue().equals("false")));
         documentFilterTextField.add(enabledWhen(() -> unused.getValue().equals("false")));
@@ -392,10 +387,12 @@ public class DynamicWorkloadManagementPage
                 new Model<>(), Integer.class);
 
         // Set value for input and additional features
-        defaultNumberDocumentsTextField
-                .setDefaultModel(new CompoundPropertyModel<>(dynamicWorkflowManagementService
-                        .getOrCreateWorkflowEntry(currentProject.getObject())
-                        .getDefaultAnnotations()));
+        //Catch NP for older version projects
+        if (workloadManagementService.getTraits(currentProject.getObject()) == null) {
+            workloadManagementService.setTraits("default,6",currentProject.getObject());
+        }
+        defaultNumberDocumentsTextField.setDefaultModel(new CompoundPropertyModel<>(Integer.parseInt
+            (workloadManagementService.getTraits(currentProject.getObject()).split(",")[1])));
         defaultNumberDocumentsTextField.setMinimum(1);
         defaultNumberDocumentsTextField.setRequired(true);
         defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
@@ -408,9 +405,10 @@ public class DynamicWorkloadManagementPage
 
         workflowChoices = new BootstrapSelect<>("workloadStrategy");
         workflowChoices.setDefaultModel(LoadableDetachableModel.of(this::getWorkflowManager));
-        workflowChoices
-                .setChoiceRenderer(new LambdaChoiceRenderer<>(WorkflowManagerType::getUiName));
-        workflowChoices.setChoices(workflowManagerExtensionPoint.getTypes());
+        List<String> choices = new ArrayList<>();
+        choices.add(getString("def"));
+        choices.add(getString("randomized"));
+        workflowChoices.setChoices(choices);
         workflowChoices.setRequired(true);
         workflowChoices.setNullValid(false);
 
@@ -562,15 +560,6 @@ public class DynamicWorkloadManagementPage
 
     }
 
-    private WorkflowManagerType getWorkflowManager()
-    {
-        DynamicWorkflowManager manager = dynamicWorkflowManagementService
-                .getOrCreateWorkflowEntry(currentProject.getObject());
-        WorkflowManagerExtension extension = workflowManagerExtensionPoint
-                .getExtension(manager.getWorkflow());
-        return new WorkflowManagerType(extension.getId(), extension.getLabel());
-    }
-
     private List<User> getUsersForCurrentProject()
     {
         return projectService.listProjectUsersWithPermissions(currentProject.getObject());
@@ -585,6 +574,11 @@ public class DynamicWorkloadManagementPage
             return new ArrayList<>(documentService.listAnnotationDocuments(
                     currentProject.getObject(), userSelection.getModelObject()));
         }
+    }
+
+    private String getWorkflowManager()
+    {
+        return workloadManagementService.getTraits(currentProject.getObject()).split(",")[0];
     }
 
     private List<AnnotationDocumentState> getAnnotationDocumentStates()
@@ -625,14 +619,9 @@ public class DynamicWorkloadManagementPage
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        dynamicWorkflowManagementService.setDefaultAnnotations(
+        workloadManagementService.setTraits(workflowChoices.getDefaultModelObjectAsString() + "," +
                 Integer.parseInt(defaultNumberDocumentsTextField.getInput()),
                 currentProject.getObject());
-
-        dynamicWorkflowManagementService.setWorkflow(
-                workflowChoices.getModelObject().getWorkloadManagerExtensionId(),
-                currentProject.getObject());
-
         success("Changes saved");
     }
 

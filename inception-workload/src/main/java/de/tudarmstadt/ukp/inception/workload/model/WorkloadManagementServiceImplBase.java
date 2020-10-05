@@ -66,7 +66,7 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
         }
         catch (NoResultException e) {
             result = new WorkloadManager(aProject,
-                    workloadManagerExtensionPoint.getDefault().getId(), null);
+                    workloadManagerExtensionPoint.getDefault().getId(), "default,6");
             entityManager.persist(result);
         }
         
@@ -75,7 +75,8 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
     
     @Override
     @Transactional
-    public void setWorkloadManagerConfiguration(String aExtensionPointID, Project aProject) {
+    public void setWorkloadManagerConfiguration(String aExtensionPointID, Project aProject)
+    {
         entityManager.createQuery(
             "UPDATE WorkloadManager " +
                 "SET workloadType = :extensionPointID " +
@@ -87,7 +88,8 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
 
     @Override
     @Transactional
-    public void setTraits(String aTraits, Project aProject) {
+    public void setTraits(String aTraits, Project aProject)
+    {
         entityManager.createQuery(
             "UPDATE WorkloadManager " +
                 "SET traits = :traits " +
@@ -95,5 +97,15 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
             .setParameter("traits", aTraits)
             .setParameter("projectID", aProject)
             .executeUpdate();
+    }
+
+    @Override
+    @Transactional
+    public String getTraits(Project aProject)
+    {
+        return entityManager
+            .createQuery("SELECT traits " + "FROM WorkloadManager "
+                + "WHERE project = :projectID", String.class)
+            .setParameter("projectID", aProject).getSingleResult();
     }
 }
