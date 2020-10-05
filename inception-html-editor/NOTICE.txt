@@ -9,3 +9,4 @@ https://github.com/okfn/annotator/blob/master/LICENSE
 Files:
 - annotator-full.js
 - annotator.min.css
+- src/main/js/annotatorjs
