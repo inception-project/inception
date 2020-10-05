@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.settings;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +30,7 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
 
 @Order(300)
 @Component
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class ProjectWorkloadSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {

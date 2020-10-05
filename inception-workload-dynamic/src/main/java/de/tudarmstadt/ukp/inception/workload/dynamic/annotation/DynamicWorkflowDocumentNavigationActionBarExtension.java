@@ -46,7 +46,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.dynamic.model.DynamicWorkflowManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
+@Component
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkflowDocumentNavigationActionBarExtension
     implements ActionBarExtension
 {

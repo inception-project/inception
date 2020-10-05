@@ -89,31 +89,4 @@ public class DynamicWorkloadManagerAutoConfiguration
     {
         return new DynamicWorkflowManager();
     }
-
-    @Bean
-    public DynamicWorkflowDocumentNavigationActionBarExtension
-        dynamicWorkflowDocumentNavigationActionBarExtension(
-        DocumentService aDocumentService,
-        EntityManager aEntityManager,
-        WorkloadManagementService aWorkloadManagementService,
-        DynamicWorkflowManagementService aDynamicWorkflowManagementService)
-    {
-        return new DynamicWorkflowDocumentNavigationActionBarExtension(
-            aDocumentService,
-            aEntityManager,
-            aWorkloadManagementService,
-            aDynamicWorkflowManagementService);
-    }
-
-    @Bean
-    public DynamicWorkflowActionBarExtension dynamicWorkflowActionBarExtension(
-        EntityManager aEntityManager,
-        WorkloadManagementService aWorkloadManagementService,
-        DynamicWorkflowManagementService aDynamicWorkflowManagementService)
-    {
-        return new DynamicWorkflowActionBarExtension(
-            aEntityManager,
-            aWorkloadManagementService,
-            aDynamicWorkflowManagementService);
-    }
 }
