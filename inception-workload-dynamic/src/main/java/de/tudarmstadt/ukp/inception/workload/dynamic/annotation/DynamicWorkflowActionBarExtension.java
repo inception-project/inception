@@ -46,7 +46,6 @@ public class DynamicWorkflowActionBarExtension
     {
         entityManager = aEntityManager;
         workloadManagementService = aWorkloadManagementService;
-
     }
 
     @Override

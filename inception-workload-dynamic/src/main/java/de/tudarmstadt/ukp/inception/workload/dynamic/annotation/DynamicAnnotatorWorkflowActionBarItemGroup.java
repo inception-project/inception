@@ -61,9 +61,10 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @PersistenceContext EntityManager entityManager;
+    
     private final AnnotationPageBase page;
     private final WorkloadManagementService workloadManagementService;
-    protected final ConfirmationDialog finishDocumentDialog;
+    private final ConfirmationDialog finishDocumentDialog;
     private List<AnnotationDocument> annotationDocumentList;
 
     public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage,
