@@ -49,7 +49,7 @@ public class DashboardMenu
     private static final long serialVersionUID = 8582941766827165724L;
 
     private boolean sendProjectIdToPage = true;
-    
+
     public DashboardMenu(String aId, final IModel<List<MenuItem>> aModel)
     {
         super(aId, aModel);
@@ -73,13 +73,11 @@ public class DashboardMenu
                         @Override
                         public void onClick()
                         {
-                            Project project = Session.get()
-                                    .getMetaData(SessionMetaData.CURRENT_PROJECT);
                             // For legacy WebAnno pages, we set PAGE_PARAM_PROJECT_ID while
                             // INCEpTION pages may pick the project up from the session.
                             PageParameters params = new PageParameters();
-                            if (project != null) {
-                                params.set(PAGE_PARAM_PROJECT_ID, project.getId());
+                            if (getProject() != null) {
+                                params.set(PAGE_PARAM_PROJECT_ID, getProject().getId());
                             }
                             setResponsePage(pageClass, params);
                         }
@@ -123,5 +121,10 @@ public class DashboardMenu
     public void setSendProjectIdToPage(boolean aSendProjectIdToPage)
     {
         sendProjectIdToPage = aSendProjectIdToPage;
+    }
+
+    public Project getProject()
+    {
+        return Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
     }
 }

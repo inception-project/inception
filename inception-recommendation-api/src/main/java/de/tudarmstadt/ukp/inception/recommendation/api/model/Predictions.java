@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -146,7 +148,7 @@ public class Predictions
             .filter(f -> aWindowEnd == -1 || (f.getValue().getEnd() <= aWindowEnd))
             .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
             .map(Map.Entry::getValue)
-            .collect(Collectors.toList());
+            .collect(toList());
     }
 
     /**
@@ -174,7 +176,7 @@ public class Predictions
                 .filter(f -> f.getDocumentName().equals(aDocument.getName()))
                 .filter(f -> f.getBegin() == aBegin && f.getEnd() == aEnd)
                 .filter(f -> f.getLabel().equals(aLabel))
-                .max(Comparator.comparingInt(SpanSuggestion::getId));
+                .max(comparingInt(SpanSuggestion::getId));
     }
     
     /**

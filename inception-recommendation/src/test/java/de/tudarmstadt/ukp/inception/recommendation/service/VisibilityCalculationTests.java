@@ -92,6 +92,7 @@ public class VisibilityCalculationTests
         List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
         featureList.add(new AnnotationFeature("value", "uima.cas.String"));
         when(annoService.listAnnotationFeature(layer)).thenReturn(featureList);
+        when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
         
         sut = new RecommendationServiceImpl(null, null, null, null, annoService, null,
                 recordService, (EntityManager) null);

@@ -30,9 +30,9 @@
               <textarea wicket:id="queryInput" class="form-control" style="resize: vertical; word-break: break-all;" rows="5"></textarea>
             </div>
             <div class="form-group from-row flex-h-container flex-gutter flex-only-internal-gutter">
-              <button wicket:id="search" type="submit" class="btn btn-primary flex-content">
+              <button wicket:id="search" type="submit" class="btn btn-primary flex-content" wicket:message="title:search">
                 <i class="fas fa-search" aria-hidden="true"></i>
-                Search
+                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="search"/></span>
               </button>
               <button wicket:id="toggleOptionsVisibility" type="button" class="btn btn-secondary">
                 <i class="fas fa-cog" aria-hidden="true"></i>
@@ -121,9 +121,9 @@
         </div>
         <form wicket:id="annotateForm" style="margin-top: 5px">
           <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
-            <button wicket:id="annotateAllButton" type="submit" class="btn btn-primary flex-content">
+            <button wicket:id="annotateAllButton" type="submit" class="btn btn-primary flex-content" wicket:message="title:create">
               <i class="fas fa-plus" aria-hidden="true"></i>
-                Create Annotations
+              <span class="d-none d-xl-inline">&nbsp;<wicket:message key="create"/></span>
             </button>
             <button wicket:id="toggleCreateOptionsVisibility" type="button" class="btn btn-secondary">
               <i class="fas fa-cog" aria-hidden="true"></i>
@@ -146,9 +146,9 @@
           </form>
 
           <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
-            <button wicket:id="deleteButton" type="submit" class="btn btn-primary flex-content">
+            <button wicket:id="deleteButton" type="submit" class="btn btn-danger flex-content" wicket:message="title:delete">
               <i class="fas fa-trash" aria-hidden="true"></i>
-                Delete Annotations
+              <span class="d-none d-xl-inline">&nbsp;<wicket:message key="delete"/></span>
             </button>
             <button wicket:id="toggleDeleteOptionsVisibility" type="button" class="btn btn-secondary">
               <i class="fas fa-cog" aria-hidden="true"></i>
@@ -171,9 +171,9 @@
           </form>
           
           <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
-            <button wicket:id="clearButton" class="btn btn-primary flex-content">
+            <button wicket:id="clearButton" class="btn btn-secondary flex-content" wicket:message="title:clear">
               <i class="fas fa-times"></i>
-                Clear
+              <span class="d-none d-xl-inline">&nbsp;<wicket:message key="clear"/></span>
             </button>
           </div>
         </form>

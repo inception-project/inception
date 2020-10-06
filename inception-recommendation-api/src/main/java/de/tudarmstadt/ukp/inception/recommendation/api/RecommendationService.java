@@ -168,4 +168,9 @@ public interface RecommendationService
     void setPredictForAllDocuments(String aUser, Project aProject, boolean aPredictForAllDocuments);
 
     List<LogMessageGroup> getLog(String aUser, Project aProject);
+    
+    /**
+     * Retrieve the total amount of enabled recommenders
+     */
+    long countEnabledRecommenders();
 }

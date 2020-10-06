@@ -26,8 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public abstract class AnnotationSuggestion
 {
-    public static final String EXTENSION_ID = "recommendationEditorExtension";
-
+    public static final String EXTENSION_ID = "rec";
+    
     /**
      * Suggestion is overlapping with an existing annotation
      */

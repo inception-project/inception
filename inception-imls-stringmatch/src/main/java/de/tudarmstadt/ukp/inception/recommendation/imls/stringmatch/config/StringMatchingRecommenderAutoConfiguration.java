@@ -27,12 +27,12 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.exporter.GazeteerExporter;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerServiceImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.ner.StringMatchingNerClassificationToolFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.pos.StringMatchingPosClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.exporter.GazeteerExporter;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.GazeteerServiceImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.ner.StringMatchingNerClassificationToolFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.pos.StringMatchingPosClassificationToolFactory;
 
 @Configuration
 @ConditionalOnBean(RecommendationService.class)

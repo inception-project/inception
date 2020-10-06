@@ -111,8 +111,8 @@ function runRoutines() {
 						}
 					});
 					// disable the buttons that should not be clicked during the tutorial
-					if (document.querySelectorAll("[name^='projectArchiveUpload']").length > 0){
-						document.querySelectorAll("[name^='projectArchiveUpload']")[0].disabled = true;
+					if (document.querySelectorAll("[name^='projectImport']").length > 0){
+						document.querySelectorAll("[name^='projectImport']")[0].disabled = true;
 					}
 					document.querySelectorAll("[id^='roleFilterLink']")
 						.forEach(element => element.disabled = true);
@@ -123,7 +123,7 @@ function runRoutines() {
 			}
 			
 			
-			else if (currentPage.includes("project.html") && ps == "projectView") 
+			else if (!currentPage.includes("projectsetting.html") && ps == "projectView") 
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
@@ -139,7 +139,10 @@ function runRoutines() {
 					enjoyhint_instance.runScript();
 			} 
 			
-			else if (currentPage.includes("projectsetting.html") && ps == "projectsettingView") {
+			// this is kind of an ugly work around for instances with context path root, 
+			// setting cookie contextpath to /project on dashboard, see #1668
+			else if (currentPage.includes("projectsetting.html") && 
+					(ps == "projectsettingView" || ps == "projectView")) {
 				
 				enjoyhint_instance = new EnjoyHint({     
 					
@@ -192,7 +195,7 @@ function runRoutines() {
 				enjoyhint_instance.runScript();
 			}
 			
-			else if (currentPage.includes("project.html") && ps == "projectsettingsConfigured")
+			else if (ps == "projectsettingsConfigured")
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
@@ -215,7 +218,7 @@ function runRoutines() {
 				enjoyhint_instance.runScript();
 			}
 			
-			else if (currentPage.includes("project.html") && ps == "farewell")
+			else if (ps == "farewell")
 			{
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
@@ -367,7 +370,7 @@ function createFirstPageRoutinePart2() {
 	
 	var a = [
 			{
-				'next .file-input-new' : "Instead of creating a new project, existing projects can also be imported.", 'showSkip': false
+				'next [name=projectImport]' : "Instead of creating a new project, existing projects can also be imported.", 'showSkip': false
 			},
 			{
 				'next .input-group:last' : "You can filter the projects based on your role in them.",
@@ -399,7 +402,7 @@ function createDashboardRoutine() {
 function createOpenDocumentsRoutine(enjoyHint) {
 	var a = [
 		    {
-		    	'click .tab1' : 'Click here to add a document to the project.',
+		    	'click li:contains(Documents)' : 'Click here to add a document to the project.',
 		    	'showSkip': false
 		    }
 			];
@@ -422,7 +425,7 @@ function createAddDocumentRoutine(enjoyHint) {
 function createOpenRecommendersRoutine(enjoyHint) {
 	var a = [
 			{
-				'click .tab5' : 'Now, lets add a recommender. Click here!',
+				'click li:contains(Recommenders)' : 'Now, lets add a recommender. Click here!',
 				'showSkip': false
 		    }
 			];
@@ -460,7 +463,7 @@ function createRecommenderSettingsRoutine(enjoyHint) {
 				'showSkip': false
 			},
 			{
-				'click [href=\'./project.html\']:last' : "Now, let's go back to the Dashboard.",
+				'click [href=\'.\']:last' : "Now, let's go back to the Dashboard.",
 				'showSkip': false
 			} 
 			];
@@ -503,15 +506,11 @@ function createDashboardRoutine2() {
 			'showSkip': false
 		},
 		{
-			'next li:nth-of-type(3)' : 'This will show you the agreement between annotators across documents.',
+			'next li:nth-of-type(3)' : 'Here, you can see the annotators\' progress and assign documents.',
 			'showSkip': false
 		},
 		{
-			'next li:nth-of-type(4)' : 'Here, you can see the annotators\' progress and assign documents.',
-			'showSkip': false
-		},
-		{
-			'next li:nth-of-type(5)' : 'This allows you to evaluate your recommenders.',
+			'next li:nth-of-type(4)' : 'This allows you to evaluate your recommenders.',
 			'showSkip': false
 		} 
 		];

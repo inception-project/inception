@@ -42,10 +42,14 @@ import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2000Reader;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.testing.DkproTestContext;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -67,6 +71,7 @@ public class DL4JSequenceRecommenderTest
 
     private RecommenderContext context;
     private DL4JSequenceRecommenderTraits traits;
+    private CasStorageSession casSession;
 
     @Before
     public void setUp()
@@ -85,6 +90,12 @@ public class DL4JSequenceRecommenderTest
         traits.setTrainingSetSizeLimit(250);
         traits.setPredictionLimit(250);
         traits.setBatchSize(50);
+        casSession = CasStorageSession.open();
+    }
+    
+    @After
+    public void tearDown() {
+        CasStorageSession.get().close();
     }
 
     @Test
@@ -262,7 +273,8 @@ public class DL4JSequenceRecommenderTest
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
                 cache);
-        JCas cas = loadPosDevelopmentData();
+        JCas cas = loadPosDevelopmentData("thatPosTrainingWorks");
+        casSession.add("testingNer", CasAccessMode.EXCLUSIVE_WRITE_ACCESS, cas.getCas());
 
         sut.train(context, asList(cas.getCas()));
 
@@ -276,7 +288,7 @@ public class DL4JSequenceRecommenderTest
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
                 cache);
-        JCas cas = loadPosDevelopmentData();
+        JCas cas = loadPosDevelopmentData("thatPosPredictionWorks");
         
         sut.train(context, asList(cas.getCas()));
 
@@ -303,7 +315,7 @@ public class DL4JSequenceRecommenderTest
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
                 cache);
-        JCas cas = loadPosDevelopmentData();
+        JCas cas = loadPosDevelopmentData("thatPosEvaluationWorks");
 
         EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
@@ -323,12 +335,13 @@ public class DL4JSequenceRecommenderTest
         assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
+    @Ignore
     @Test
     public void thatNerTrainingWorks() throws Exception
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas cas = loadNerDevelopmentData();
+        JCas cas = loadNerDevelopmentData("thatNerTrainingWorks");
 
         sut.train(context, asList(cas.getCas()));
 
@@ -337,12 +350,13 @@ public class DL4JSequenceRecommenderTest
             .isNotNull();
     }
 
+    @Ignore
     @Test
     public void thatNerPredictionWorks() throws Exception
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas jCas = loadNerDevelopmentData();
+        JCas jCas = loadNerDevelopmentData("thatNerPredictionWorks");
         CAS cas = jCas.getCas();
 
         sut.train(context, asList(cas));
@@ -364,13 +378,14 @@ public class DL4JSequenceRecommenderTest
             .anyMatch(l -> !l.getValue().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
+    @Ignore
     @Test
     public void thatNerEvaluationWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas cas = loadNerDevelopmentData();
+        JCas cas = loadNerDevelopmentData("thatNerEvaluationWorks");
 
         EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
@@ -391,13 +406,14 @@ public class DL4JSequenceRecommenderTest
         assertThat(accuracy).isBetween(0.0, 1.0);
     }
 
+    @Ignore
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 50, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas cas = loadNerDevelopmentData();
+        JCas cas = loadNerDevelopmentData("thatIncrementalNerEvaluationWorks");
 
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
@@ -413,7 +429,7 @@ public class DL4JSequenceRecommenderTest
         }
     }
 
-    private JCas loadPosDevelopmentData() throws IOException, UIMAException
+    private JCas loadPosDevelopmentData(String aTestId) throws IOException, UIMAException
     {
         Dataset ds = loader.load("conll2000-en", CONTINUE);
         
@@ -421,12 +437,14 @@ public class DL4JSequenceRecommenderTest
                 Conll2000Reader.PARAM_PATTERNS, ds.getDefaultSplit().getTestFiles(), 
                 Conll2000Reader.PARAM_LANGUAGE, ds.getLanguage());
         
-        JCas cas = JCasFactory.createJCas();
-        reader.getNext(cas.getCas());
-        return cas;
+        JCas jcas = JCasFactory.createJCas();
+        CAS cas = jcas.getCas();
+        reader.getNext(cas);
+        casSession.add(aTestId, CasAccessMode.EXCLUSIVE_WRITE_ACCESS, cas);
+        return jcas;
     }
 
-    private JCas loadNerDevelopmentData() throws IOException, UIMAException
+    private JCas loadNerDevelopmentData(String aTestId) throws IOException, UIMAException
     {
         Dataset ds = loader.load("germeval2014-de", CONTINUE);
         
@@ -438,9 +456,11 @@ public class DL4JSequenceRecommenderTest
             Conll2002Reader.PARAM_HAS_HEADER, true, 
             Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
         
-        JCas cas = JCasFactory.createJCas();
-        reader.getNext(cas.getCas());
-        return cas;
+        JCas jcas = JCasFactory.createJCas();
+        CAS cas = jcas.getCas();
+        reader.getNext(cas);
+        casSession.add(aTestId, CasAccessMode.EXCLUSIVE_WRITE_ACCESS, cas);
+        return jcas;
     }
 
     private static Recommender buildPosRecommender()

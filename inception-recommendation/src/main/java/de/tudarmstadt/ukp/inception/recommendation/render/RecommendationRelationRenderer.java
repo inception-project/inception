@@ -28,13 +28,11 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -57,12 +55,23 @@ public class RecommendationRelationRenderer
         typeAdapter = aTypeAdapter;
     }
 
+    /**
+     * Add annotations from the CAS, which is controlled by the window size, to the VDocument
+     * {@link VDocument}
+     *
+     * @param aCas
+     *            The CAS object containing annotations
+     * @param vdoc
+     *            A VDocument containing annotations for the given layer
+     * @param aState
+     *            Data model for brat annotations
+     */
     @Override
-    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState,
-        ColoringStrategy aColoringStrategy, AnnotationLayer aLayer,
-        RecommendationService aRecommendationService, LearningRecordService aLearningRecordService,
-        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
-        DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset)
+    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, AnnotationLayer aLayer,
+            RecommendationService aRecommendationService,
+            LearningRecordService learningRecordService, AnnotationSchemaService aAnnotationService,
+            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService,
+            int aWindowBeginOffset, int aWindowEndOffset)
     {
         if (aCas == null || aRecommendationService == null) {
             return;
@@ -87,7 +96,7 @@ public class RecommendationRelationRenderer
             return;
         }
 
-        String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
+        String bratTypeName = typeAdapter.getEncodedTypeName();
 
         // TODO: Sort by confidence
         for (RelationSuggestion suggestion : suggestions) {

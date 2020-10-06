@@ -41,6 +41,8 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -76,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -85,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
@@ -124,11 +128,13 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 @Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
-
+    
     @Rule
     public TestWatcher watcher = new TestWatcher()
     {
@@ -147,7 +153,7 @@ public class MtasDocumentIndexTest
             userRepository.create(new User("admin", Role.ROLE_ADMIN));
         }
     }
-
+    
     private void createProject(Project aProject) throws Exception
     {
         projectService.createProject(aProject);
@@ -159,26 +165,33 @@ public class MtasDocumentIndexTest
         throws Exception
     {
         Project project = null;
-        for (Pair<SourceDocument, String> doc : aDocuments) {
-            project = doc.getLeft().getProject();
-            
-            try (InputStream fileStream = new ByteArrayInputStream(
-                    doc.getRight().getBytes(UTF_8))) {
-                documentService.uploadSourceDocument(fileStream, doc.getLeft());
+        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+            for (Pair<SourceDocument, String> doc : aDocuments) {
+                log.info("Uploading document via documentService.uploadSourceDocument: {}", doc);
+                project = doc.getLeft().getProject();
+                
+                try (InputStream fileStream = new ByteArrayInputStream(
+                        doc.getRight().getBytes(UTF_8))) {
+                    documentService.uploadSourceDocument(fileStream, doc.getLeft());
+                }
             }
         }
         
         // Avoid the compiler complaining about project not being an effectively final variable
+        log.info("Waiting for uploaded documents to be indexed...");
         Project p = project;
         await("Waiting for indexing process to complete")
                 .atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> searchService.isIndexValid(p) && !searchService.isIndexInProgress(p));
+        log.info("Indexing complete!");
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
         throws Exception
     {
+        log.info("Preparing annotated document....");
+        
         // Manually build annotated CAS
         JCas jCas = JCasFactory.createJCas();
         
@@ -214,13 +227,18 @@ public class MtasDocumentIndexTest
                 .createOrGetAnnotationDocument(aSourceDocument, aUser);
 
         // Write annotated CAS to annotated document
-        documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+            log.info("Writing annotated document using documentService.writeAnnotationCas");
+            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+        }
 
+        log.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete")
                 .atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> searchService.isIndexValid(aProject)
                         && !searchService.isIndexInProgress(aProject));
+        log.info("Indexing complete!");
     }
 
     @Test
@@ -473,9 +491,11 @@ public class MtasDocumentIndexTest
         @Rule TemporaryFolder folder;
         
         @Bean
-        public ProjectService projectService()
+        public ProjectService projectService(
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
-            return new ProjectServiceImpl();
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
+                    repositoryProperties(), aInitializerProxy);
         }
 
         @Bean
@@ -570,10 +590,11 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public DocumentService documentService()
+        public DocumentService documentService(
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
             return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), importExportService(), projectService(),
+                    casStorageService(), importExportService(), projectService(aInitializerProxy),
                     applicationEventPublisher, entityManager);
         }
 

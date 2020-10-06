@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
@@ -61,6 +62,7 @@ import com.github.openjson.JSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
@@ -99,6 +101,8 @@ public class MtasUimaParser
     
     private static final String SPECIAL_ATTR_REL_SOURCE = "source";
     private static final String SPECIAL_ATTR_REL_TARGET = "target";
+    
+    private static final String CAS_BEING_INDEXED = "casBeingIndexed";
     
     // Annotation schema and project services with knowledge base service
     private @Autowired AnnotationSchemaService annotationSchemaService;
@@ -157,26 +161,30 @@ public class MtasUimaParser
     public MtasTokenCollection createTokenCollection(Reader aReader)
         throws MtasParserException, MtasConfigException
     {
-        long start = System.currentTimeMillis();
-        LOG.debug("Starting creation of token collection");
-
-        CAS cas;
-        try {
-            cas = readCas(aReader);
-        }
-        catch (Exception e) {
-            LOG.error("Unable to decode CAS", e);
-            return new MtasTokenCollection();
-        }
-
-        try {
-            createTokenCollection(cas);
-            LOG.debug("Created token collection in {} ms", (System.currentTimeMillis() - start));
-            return tokenCollection;
-        }
-        catch (Exception e) {
-            LOG.error("Unable to create token collection", e);
-            return new MtasTokenCollection();
+        try (CasStorageSession session = CasStorageSession.openNested()) {
+            long start = System.currentTimeMillis();
+            LOG.debug("Starting creation of token collection");
+    
+            CAS cas;
+            try {
+                cas = readCas(aReader);
+                session.add(CAS_BEING_INDEXED, EXCLUSIVE_WRITE_ACCESS, cas);
+            }
+            catch (Exception e) {
+                LOG.error("Unable to decode CAS", e);
+                return new MtasTokenCollection();
+            }
+    
+            try {
+                createTokenCollection(cas);
+                LOG.debug("Created token collection in {} ms",
+                        (System.currentTimeMillis() - start));
+                return tokenCollection;
+            }
+            catch (Exception e) {
+                LOG.error("Unable to create token collection", e);
+                return new MtasTokenCollection();
+            }
         }
     }
     
@@ -350,8 +358,14 @@ public class MtasUimaParser
     {
         int mtasId = aMtasId;
 
+        // If there are no features on the layer, do not attempt to index them
+        List<AnnotationFeature> features = layerFeatures.get(aAnnotation.getType().getName());
+        if (features == null) {
+            return mtasId;
+        }
+        
         // Iterate over the features of this layer and index them one-by-one
-        for (AnnotationFeature feature : layerFeatures.get(aAnnotation.getType().getName())) {
+        for (AnnotationFeature feature : features) {
             Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
                     .getIndexingSupport(feature);
             if (fis.isPresent()) {
