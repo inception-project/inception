@@ -17,23 +17,16 @@
 = {product-name} User Guide
 The {product-name} Team
 
-This guide summarizes the functionality of {product-name} from the user's perspective.
-
-NOTE: It is assumed that you plan to test the {product-name} standalone version or an already existing server installation of {product-name}. For information on how to set up {product-name} for a group of users on a server, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
-
-All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
-
-= Introduction
+= Getting Started
 
 include::{include-dir}getting-started.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}workflow.adoc[leveloffset=+1]
-
-
-
+[[sect_core_funct]]
 = Core functionalities
+
+include::{include-dir}workflow.adoc[leveloffset=+1]
 
 include::{include-dir}login.adoc[leveloffset=+1]
 
