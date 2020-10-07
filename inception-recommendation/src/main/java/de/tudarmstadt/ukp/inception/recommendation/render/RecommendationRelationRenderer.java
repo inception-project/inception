@@ -88,6 +88,7 @@ public class RecommendationRelationRenderer
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
         // TODO: Group suggestions by same source and target
+        // TODO: Use window begin and end
         List<RelationSuggestion> suggestions = predictions
                 .getRelationPredictionsForLayer(sourceDocumentName, aLayer, -1, -1);
 

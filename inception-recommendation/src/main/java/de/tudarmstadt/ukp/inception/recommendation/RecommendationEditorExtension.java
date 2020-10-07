@@ -223,9 +223,8 @@ public class RecommendationEditorExtension
 
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        VID recommendationVid = VID.parse(aVID.getExtensionPayload());
         Optional<RelationSuggestion> prediction = predictions
-                .getPredictionByVID(document, recommendationVid)
+                .getPredictionByVID(document, aVID)
                 .filter(f -> f instanceof RelationSuggestion)
                 .map(f -> (RelationSuggestion) f);
 
@@ -256,7 +255,7 @@ public class RecommendationEditorExtension
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // TODO: Log the action to the learning record
-        acceptRecommendation(suggestion, aState, aTarget, aCas, recommendationVid, address);
+        acceptRecommendation(suggestion, aState, aTarget, aCas, aVID, address);
     }
 
     private void acceptRecommendation(AnnotationSuggestion aSuggestion,
