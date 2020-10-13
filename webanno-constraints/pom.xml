@@ -141,6 +141,7 @@
             <configuration>
               <grammarEncoding>UTF-8</grammarEncoding>
               <outputEncoding>UTF-8</outputEncoding>
+              <unicodeInput>true</unicodeInput>
               <isStatic>false</isStatic>
               <visitor>true</visitor>
               <multi>true</multi>
