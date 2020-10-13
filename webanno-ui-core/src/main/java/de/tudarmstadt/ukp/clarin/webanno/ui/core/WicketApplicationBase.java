@@ -123,8 +123,6 @@ public abstract class WicketApplicationBase
         
         getCspSettings().blocking().disabled();
         
-//        initSpring();
-        
         initStatelessChecker();
         
         if (!isInitialized) {
