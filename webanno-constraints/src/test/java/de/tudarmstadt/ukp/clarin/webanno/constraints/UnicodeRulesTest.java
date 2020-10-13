@@ -22,9 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
-import org.codehaus.plexus.util.StringUtils;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
