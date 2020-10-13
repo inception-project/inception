@@ -141,12 +141,12 @@ public abstract class VObject
         return label;
     }
     
-    public Boolean isActionButtons()
+    public boolean isActionButtons()
     {
         return actionButtons; 
     }
     
-    public void setActionButtons(Boolean aActionButtons)
+    public void setActionButtons(boolean aActionButtons)
     {
         actionButtons = aActionButtons;
     }

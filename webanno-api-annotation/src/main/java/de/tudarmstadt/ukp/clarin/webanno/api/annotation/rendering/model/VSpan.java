@@ -76,7 +76,7 @@ public class VSpan
     {
         this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures, aHoverFeatures, null);
     }
-    
+
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, List<VRange> aOffsets,
             Map<String, String> aFeatures, Map<String, String> aHoverFeatures, String aColor)
     {

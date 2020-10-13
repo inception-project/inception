@@ -10,10 +10,10 @@ public class NumericBooleanSerializer
     extends JsonSerializer<Boolean>
 {
     @Override
-    public void serialize(Boolean b, JsonGenerator jsonGenerator,
-            SerializerProvider serializerProvider)
+    public void serialize(Boolean aValue, JsonGenerator aGenerator,
+            SerializerProvider aSerializerProvider)
         throws IOException
     {
-        jsonGenerator.writeNumber(b ? 1 : 0);
+        aGenerator.writeNumber(aValue ? 1 : 0);
     }
 }
