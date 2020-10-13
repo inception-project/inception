@@ -49,7 +49,7 @@ public class InstanceIdentityServiceImpl implements InstanceIdentityService
     {
         // Fetch the instance identity or generate it if we don't have one yet
         InstanceIdentity id = getInstanceIdentity();
-        log.info("Instance identity: {}", id.getId());
+        log.debug("Instance identity: {}", id.getId());
     }
     
     @Override
