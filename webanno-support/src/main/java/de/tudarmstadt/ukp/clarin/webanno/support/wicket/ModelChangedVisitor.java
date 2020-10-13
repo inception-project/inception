@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.WicketRuntimeException;
+import org.apache.wicket.model.ChainingModel;
 import org.apache.wicket.model.CompoundPropertyModel;
-import org.apache.wicket.model.IChainingModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.IWrapModel;
 import org.apache.wicket.util.visit.IVisit;
@@ -74,8 +74,8 @@ public class ModelChangedVisitor
                 }
                 nested = next;
             }
-            else if (nested instanceof IChainingModel) {
-                final IModel<?> next = ((IChainingModel<?>) nested).getChainedModel();
+            else if (nested instanceof ChainingModel) {
+                final IModel<?> next = ((ChainingModel<?>) nested).getChainedModel();
                 if (nested == next) {
                     throw new WicketRuntimeException(
                             "Model for " + nested + " is self-referential");

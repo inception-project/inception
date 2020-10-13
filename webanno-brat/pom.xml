@@ -147,10 +147,15 @@
       <artifactId>wicket-webjars</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-sass</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>animate.css</artifactId>
       <version>3.2.6</version>
     </dependency>
+    
     
     <!-- JUNIT DEPENDENCY FOR TESTING -->
     <dependency>

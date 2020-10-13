@@ -46,8 +46,8 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
-import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -119,21 +119,14 @@ public class PairwiseCodingAgreementTable
         
         // This model makes sure we add a "null" dummy rater which accounts for the header columns
         // of the table.
-        final IModel<List<String>> ratersAdapter = new AbstractReadOnlyModel<List<String>>()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public List<String> getObject()
-            {
-                List<String> raters = new ArrayList<>();
-                if (getModelObject() != null) {
-                    raters.add(null);
-                    raters.addAll(getModelObject().getRaters());
-                }
-                return raters;
+        final IModel<List<String>> ratersAdapter = LoadableDetachableModel.of(() -> {
+            List<String> raters = new ArrayList<>();
+            if (getModelObject() != null) {
+                raters.add(null);
+                raters.addAll(getModelObject().getRaters());
             }
-        };
+            return raters;
+        });
 
         add(formatField = new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
                 Model.of(CSV), asList(AgreementReportExportFormat.values()),
@@ -398,6 +391,7 @@ public class PairwiseCodingAgreementTable
         return new ByteArrayInputStream(buf.toByteArray());
     }
     
+    @SuppressWarnings("unchecked")
     public PairwiseAnnotationResult<CodingAgreementResult> getModelObject()
     {
         return (PairwiseAnnotationResult<CodingAgreementResult>) getDefaultModelObject();

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassResourceReference;
+import de.agilecoders.wicket.sass.SassResourceReference;
 
 public class BratCssUiReference
     extends SassResourceReference

@@ -74,7 +74,6 @@ import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.model.AbstractReadOnlyModel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -905,17 +904,7 @@ public class MonitoringPage
         public DocumentStatusColumnMetaData(final TableDataProvider prov, final int colNumber,
                 Project aProject)
         {
-            super(new AbstractReadOnlyModel<String>()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public String getObject()
-                {
-                    return prov.getColNames().get(colNumber);
-
-                }
-            });
+            super(LoadableDetachableModel.of(() -> prov.getColNames().get(colNumber)));
             columnNumber = colNumber;
             project = aProject;
         }
