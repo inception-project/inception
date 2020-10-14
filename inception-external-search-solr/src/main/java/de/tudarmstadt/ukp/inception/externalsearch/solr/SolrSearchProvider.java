@@ -75,12 +75,11 @@ public class SolrSearchProvider
         //build client
         HttpSolrClient solrClient = makeClient(aTraits);
         try {
-            pingClient(solrClient, aTraits);
             try {
                 SolrQuery query = new SolrQuery();
-                query = new SolrQuery();
+                //query = new SolrQuery();
                 query.setParam("qt", aTraits.getSearchPath());
-                solrClient.query(aTraits.getIndexName(), query);
+                //solrClient.query(aTraits.getIndexName(), query);
 
                 if (aQuery.isEmpty() | aQuery.equals("*:*"))
                     aQuery = "*:*";
@@ -106,9 +105,9 @@ public class SolrSearchProvider
 
 
                 //RESPONSE
-                QueryResponse response = new QueryResponse();
+                QueryResponse response ;//= new QueryResponse();
                 try {
-                    response = solrClient.query(query);
+                    response = solrClient.query(aTraits.getIndexName(), query);
                     SolrDocumentList documents = response.getResults();
 
                     for (SolrDocument document : documents) {
@@ -278,16 +277,16 @@ public class SolrSearchProvider
 
         HttpSolrClient client = makeClient(aTraits);
 
-        QueryResponse response = new QueryResponse();
-        SolrDocumentList documents = new SolrDocumentList();
-        SolrDocument document = new SolrDocument();
+        QueryResponse response;
+        SolrDocumentList documents;
+        SolrDocument document;
 
         getQuery.setRows(1);
         getQuery.setParam("collection", aTraits.getIndexName());
         getQuery.setParam("qt", aTraits.getSearchPath());
 
         try {
-            response = client.query(getQuery);
+            response = client.query(aTraits.getIndexName(), getQuery);
             documents = response.getResults();
             document = documents.get(0);
         } catch (SolrException | SolrServerException e) {
