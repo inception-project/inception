@@ -30,11 +30,9 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.Bootst
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
-import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 public class WorkloadSettingsPanel extends Panel
 {
@@ -58,7 +56,7 @@ public class WorkloadSettingsPanel extends Panel
         workloadStrategy = new BootstrapSelect<>("workloadStrategy");
         workloadStrategy.setChoiceRenderer(
             new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
-        workloadStrategy.setModel(LoadableDetachableModel.of(this::getWorkloadManager));
+        //workloadStrategy.setModel(LoadableDetachableModel.of(WorkloadManagerType::new);
         workloadStrategy.setRequired(true);
         workloadStrategy.setNullValid(false);
         workloadStrategy.setChoices(workloadManagerExtensionPoint.getTypes());
@@ -71,15 +69,6 @@ public class WorkloadSettingsPanel extends Panel
         form.add(confirm);
 
         add(form);
-    }
-
-    private WorkloadManagerType getWorkloadManager()
-    {
-        WorkloadManager manager = workloadManagementService
-            .getOrCreateWorkloadManagerConfiguration(project);
-        WorkloadManagerExtension extension = workloadManagerExtensionPoint
-            .getExtension(manager.getType());
-        return new WorkloadManagerType(extension.getId(), extension.getLabel());
     }
 
     private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)

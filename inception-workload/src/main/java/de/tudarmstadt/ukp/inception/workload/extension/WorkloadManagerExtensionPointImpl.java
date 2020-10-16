@@ -27,6 +27,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 
@@ -37,22 +38,21 @@ import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfig
  * </p>
  */
 public class WorkloadManagerExtensionPointImpl
-    extends ExtensionPoint_ImplBase<Project, WorkloadManagerExtension>
-    implements WorkloadManagerExtensionPoint
+    extends ExtensionPoint_ImplBase<Project, WorkloadManagerExtension<Project>>
+    implements WorkloadManagerExtensionPoint<Extension<Project>>
 {
 
     @Autowired
-    public WorkloadManagerExtensionPointImpl(
-        List<WorkloadManagerExtension> aExtensions)
+    public WorkloadManagerExtensionPointImpl(List<WorkloadManagerExtension<Project>> aExtensions)
     {
         super(aExtensions);
     }
 
     @Override
-    public List<WorkloadManagerExtension> getExtensions(Project aContext)
+    public List<WorkloadManagerExtension<Project>> getExtensions(Project aContext)
     {
-        Map<String, WorkloadManagerExtension> byRole = new LinkedHashMap<>();
-        for (WorkloadManagerExtension extension : super.getExtensions(aContext)) {
+        Map<String, WorkloadManagerExtension<Project>> byRole = new LinkedHashMap<>();
+        for (WorkloadManagerExtension<Project> extension : super.getExtensions(aContext)) {
             byRole.put(extension.getId(), extension);
         }
         return new ArrayList<>(byRole.values());
@@ -63,7 +63,7 @@ public class WorkloadManagerExtensionPointImpl
     {
         return getExtensions().get(0);
     }
-    
+
     @Override
     public List<WorkloadManagerType> getTypes()
     {

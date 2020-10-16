@@ -17,18 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.*;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -45,7 +41,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 @Component
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
@@ -54,17 +52,17 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
 {
     private final DocumentService documentService;
     private final WorkloadManagementService workloadManagementService;
+    private final DynamicWorkloadExtension dynamicWorkloadExtension;
     private List<AnnotationDocument> annotationDocumentList;
-
-    private final @PersistenceContext EntityManager entityManager;
 
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
-            EntityManager aEntityManager, WorkloadManagementService aWorkloadManagementService)
+            WorkloadManagementService aWorkloadManagementService,
+            DynamicWorkloadExtension aDynamicWorkloadExtension)
     {
         documentService = aDocumentService;
-        entityManager = aEntityManager;
         workloadManagementService = aWorkloadManagementService;
+        dynamicWorkloadExtension = aDynamicWorkloadExtension;
     }
 
     @Override
@@ -119,15 +117,17 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
 
         // Nothing in progress found
         if (aPage.getModelObject().getDocument() == null) {
-            if ((workloadManagementService.getTraits(project).split(",")[0]).equals("randomized")) {
+            WorkloadManager currentWorkload = workloadManagementService
+                    .getOrCreateWorkloadManagerConfiguration(project);
+
+            if (dynamicWorkloadExtension.readTraits(currentWorkload).equals("randomized")) {
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
-                String query = "FROM SourceDocument " + "WHERE project = :project "
-                        + "ORDER BY rand()";
-                for (SourceDocument doc : entityManager.createQuery(query, SourceDocument.class)
-                        .setParameter("project", project).getResultList()) {
-                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= Integer
-                            .parseInt(workloadManagementService.getTraits(project).split(",")[1])) {
+                List<SourceDocument> randomList = documentService.listSourceDocuments(project);
+                Collections.shuffle(randomList);
+                for (SourceDocument doc : randomList) {
+                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= (Integer
+                            .parseInt(dynamicWorkloadExtension.readTraits(currentWorkload)))) {
                         if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
                                 || (documentService.listAnnotatableDocuments(project, user).get(doc)
                                         .getState().equals(NEW))) {
@@ -140,12 +140,10 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                         }
                     }
                 }
-
                 // No documents left
                 aPage.setResponsePage(aPage.getApplication().getHomePage());
                 aPage.getSession().info(
                         "There are no more documents to annotate available for you. Please contact your project supervisor.");
-
             }
             else {
 
@@ -153,8 +151,8 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                 for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
                         .listAnnotatableDocuments(project, user).entrySet()) {
                     // First check if too many users are already working on the document
-                    if (((getUsersWorkingOnTheDocument(entry.getKey()) + 1) <= Integer.parseInt(
-                            workloadManagementService.getTraits(project).split(",")[1]))) {
+                    if (((getUsersWorkingOnTheDocument(entry.getKey()) + 1) <= Integer
+                            .parseInt(dynamicWorkloadExtension.readTraits(currentWorkload)))) {
                         // Now check if there either is no annotation document yet created or its
                         // state is NEW
                         if (entry.getValue() == null || entry.getValue().getState().equals(NEW)) {

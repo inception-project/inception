@@ -19,9 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,13 +36,10 @@ public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {
     private final WorkloadManagementService workloadManagementService;
-    private final @PersistenceContext EntityManager entityManager;
 
     @Autowired
-    public DynamicWorkflowActionBarExtension(EntityManager aEntityManager,
-            WorkloadManagementService aWorkloadManagementService)
+    public DynamicWorkflowActionBarExtension(WorkloadManagementService aWorkloadManagementService)
     {
-        entityManager = aEntityManager;
         workloadManagementService = aWorkloadManagementService;
 
     }
@@ -77,6 +72,6 @@ public class DynamicWorkflowActionBarExtension
     public Panel createActionBarItem(String aID, AnnotationPageBase aAnnotationPageBase)
     {
         return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase,
-                entityManager, workloadManagementService);
+            workloadManagementService);
     }
 }

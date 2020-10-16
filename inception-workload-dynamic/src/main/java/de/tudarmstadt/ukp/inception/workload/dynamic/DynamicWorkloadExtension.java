@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * <p>
@@ -26,8 +31,11 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
  * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadExtension()}
  * </p>
  */
-public class DynamicWorkloadExtension implements WorkloadManagerExtension
+public class DynamicWorkloadExtension<T>
+    implements WorkloadManagerExtension<T>
 {
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     public static final String DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID = "dynamic";
 
     @Override
@@ -41,4 +49,40 @@ public class DynamicWorkloadExtension implements WorkloadManagerExtension
     {
         return "Dynamic assignment";
     }
+
+    @Override
+    public T readTraits(WorkloadManager aWorkloadManager)
+    {
+        T traits = null;
+
+        try {
+            traits = JSONUtil.fromJsonString((Class<T>) createTraits().getClass(),
+                    aWorkloadManager.getTraits());
+        }
+        catch (Exception e) {
+            this.log.error("Unable to read traits", e);
+        }
+
+        if (traits == null) {
+            traits = this.createTraits();
+        }
+
+        return traits;
+    }
+
+    @Override
+    public void writeTraits(WorkloadManager aWorkloadManager, T aWorkloadTrait)
+    {
+        try {
+            System.out.println(aWorkloadTrait);
+            String t = JSONUtil.toJsonString(aWorkloadTrait);
+            System.out.println(t);
+            aWorkloadManager.setTraits(JSONUtil.toJsonString(aWorkloadTrait));
+        }
+        catch (Exception e) {
+            this.log.error("Unable to write traits", e);
+        }
+
+    }
+
 }
