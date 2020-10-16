@@ -17,25 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.workload.extension;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
-public interface WorkloadManagerExtension<T> extends Extension<T>
+public interface WorkloadManagerExtension
+    extends Extension<Project>
 {
     @Override
-    default boolean accepts(T project)
+    default boolean accepts(Project project)
     {
         return true;
     }
-    
+
     String getLabel();
 
-    T readTraits(WorkloadManager aWorkloadManager);
+    WorkloadTraits readTraits(WorkloadManager aWorkloadManager);
 
-    void writeTraits(WorkloadManager aWorkloadManager, T aWorkloadTrait);
+    void writeTraits(WorkloadManagementService aWorkloadManagementService,
+            WorkloadTraits aWorkloadTrait, Project aProject);
 
-    default T createTraits()
-    {
-        return null;
-    }
 }

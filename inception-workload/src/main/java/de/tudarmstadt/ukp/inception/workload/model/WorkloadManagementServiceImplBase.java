@@ -84,4 +84,17 @@ public class WorkloadManagementServiceImplBase
                 .setParameter("extensionPointID", aExtensionPointID)
                 .setParameter("projectID", aProject).executeUpdate();
     }
+
+    @Override
+    @Transactional
+    public void setWorkloadManagerConfiguration(String aExtensionPointID, String aTraits,
+            Project aProject)
+    {
+        entityManager
+                .createQuery("UPDATE WorkloadManager "
+                        + "SET workloadType = :extensionPointID, traits = :traits "
+                        + "WHERE project = :projectID")
+                .setParameter("extensionPointID", aExtensionPointID).setParameter("traits", aTraits)
+                .setParameter("projectID", aProject).executeUpdate();
+    }
 }

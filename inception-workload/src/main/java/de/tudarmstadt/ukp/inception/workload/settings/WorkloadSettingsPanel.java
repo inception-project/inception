@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.settings;
 
+import java.io.IOException;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Button;
@@ -28,13 +30,18 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerType;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
-public class WorkloadSettingsPanel extends Panel
+public class WorkloadSettingsPanel
+    extends Panel
 {
     private static final long serialVersionUID = -6220828178550562376L;
 
@@ -50,34 +57,51 @@ public class WorkloadSettingsPanel extends Panel
 
         project = aProject.getObject();
 
-        //Basic form
+        // Basic form
         Form<Void> form = new Form<>("form");
 
         workloadStrategy = new BootstrapSelect<>("workloadStrategy");
-        workloadStrategy.setChoiceRenderer(
-            new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
-        //workloadStrategy.setModel(LoadableDetachableModel.of(WorkloadManagerType::new);
+        workloadStrategy
+                .setChoiceRenderer(new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
+        workloadStrategy.setModel(LoadableDetachableModel.of(this::getWorkloadManager));
         workloadStrategy.setRequired(true);
         workloadStrategy.setNullValid(false);
         workloadStrategy.setChoices(workloadManagerExtensionPoint.getTypes());
 
-        //add them to the form
+        // add them to the form
         form.add(workloadStrategy);
 
-        //Finally, add the confirm button at the end
+        // Finally, add the confirm button at the end
         Button confirm = new LambdaAjaxButton<>("save", this::actionConfirm);
         form.add(confirm);
 
         add(form);
     }
 
-    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
+    private WorkloadManagerType getWorkloadManager()
+    {
+        WorkloadManager manager = workloadManagementService
+                .getOrCreateWorkloadManagerConfiguration(project);
+        WorkloadManagerExtension extension = workloadManagerExtensionPoint
+                .getExtension(manager.getType());
+        return new WorkloadManagerType(extension.getId(), extension.getLabel());
+    }
+
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm) throws IOException
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        workloadManagementService.setWorkloadManagerConfiguration(
-            workloadStrategy.getModelObject().getWorkloadManagerExtensionId(), project);
 
+        if (workloadManagementService.getOrCreateWorkloadManagerConfiguration(project)
+                .getTraits() != null) {
+            workloadManagementService.setWorkloadManagerConfiguration(
+                    workloadStrategy.getModelObject().getWorkloadManagerExtensionId(), project);
+        }
+        else {
+            workloadManagementService.setWorkloadManagerConfiguration(
+                    workloadStrategy.getModelObject().getWorkloadManagerExtensionId(),
+                    JSONUtil.toJsonString(new WorkloadTraits()), project);
+        }
         success("Workload settings changed");
     }
 }

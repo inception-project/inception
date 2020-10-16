@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,7 +40,6 @@ public class DynamicWorkflowActionBarExtension
     public DynamicWorkflowActionBarExtension(WorkloadManagementService aWorkloadManagementService)
     {
         workloadManagementService = aWorkloadManagementService;
-
     }
 
     @Override

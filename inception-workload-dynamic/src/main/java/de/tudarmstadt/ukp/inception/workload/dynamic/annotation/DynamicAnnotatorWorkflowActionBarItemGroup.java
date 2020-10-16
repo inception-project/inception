@@ -18,7 +18,9 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.*;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
@@ -132,14 +134,15 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             WorkloadManager currentWorkload = workloadManagementService
                     .getOrCreateWorkloadManagerConfiguration(project);
 
-            if (dynamicWorkloadExtension.readTraits(currentWorkload).equals("randomized")) {
+            if (dynamicWorkloadExtension.readTraits(currentWorkload)
+                .getWorkloadType().equals("Randomized workflow")) {
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
                 List<SourceDocument> randomList = documentService.listSourceDocuments(project);
                 Collections.shuffle(randomList);
                 for (SourceDocument doc : randomList) {
-                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= (Integer
-                            .parseInt(dynamicWorkloadExtension.readTraits(currentWorkload)))) {
+                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= dynamicWorkloadExtension
+                            .readTraits(currentWorkload).getDefaultNumberOfAnnotations()) {
                         if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
                                 || (documentService.listAnnotatableDocuments(project, user).get(doc)
                                         .getState().equals(NEW))) {
@@ -163,8 +166,9 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                 for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
                         .listAnnotatableDocuments(project, user).entrySet()) {
                     // First check if too many users are already working on the document
-                    if ((getUsersWorkingOnTheDocument(entry.getKey()) + 1) <= Integer
-                            .parseInt(dynamicWorkloadExtension.readTraits(currentWorkload))) {
+                    if ((getUsersWorkingOnTheDocument(entry.getKey())
+                            + 1) <= dynamicWorkloadExtension.readTraits(currentWorkload)
+                                    .getDefaultNumberOfAnnotations()) {
                         // Now check if there either is no annotation document yet created or its
                         // state is NEW
                         if (entry.getValue() == null || entry.getValue().getState().equals(NEW)) {

@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -89,8 +88,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @MountPath("/workload.html")
@@ -179,15 +180,15 @@ public class DynamicWorkloadManagementPage
         // Each column creates TableMetaData
         List<IColumn<SourceDocument, String>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("Document"), getString("Document"),
-                SourceDocument::getName));
+            SourceDocument::getName));
         columns.add(new LambdaColumn<>(new ResourceModel("Finished"), getString("Finished"),
-                dataProvider::getFinishedAmountForDocument));
+            dataProvider::getFinishedAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Processed"), getString("Processed"),
-                dataProvider::getInProgressAmountForDocument));
+            dataProvider::getInProgressAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Annotators"), getString("Annotators"),
-                dataProvider::getUsersWorkingOnTheDocument));
+            dataProvider::getUsersWorkingOnTheDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
-                dataProvider::lastAccessTimeForDocument));
+            dataProvider::lastAccessTimeForDocument));
 
         // Own column type, contains only a clickable image (AJAX event),
         // creates a small panel dialog containing metadata
@@ -200,9 +201,9 @@ public class DynamicWorkloadManagementPage
                     IModel<SourceDocument> rowModel)
             {
                 Fragment fragment = new Fragment(componentId, "infoColumn",
-                        DynamicWorkloadManagementPage.this);
+                    DynamicWorkloadManagementPage.this);
                 fragment.add(new LambdaAjaxLink("showInfoDialog",
-                        _target -> actionShowInfoDialog(_target, rowModel)));
+                    _target -> actionShowInfoDialog(_target, rowModel)));
                 aItem.add(fragment);
             }
         });
@@ -367,11 +368,11 @@ public class DynamicWorkloadManagementPage
 
         // Condition for filter inputs to be enabled
         dateTo.add(enabledWhen(
-                () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0))
-                        && unused.getValue().equals("false")));
+            () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0))
+                 && unused.getValue().equals("false")));
         dateFrom.add(enabledWhen(
-                () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1))
-                        && unused.getValue().equals("false")));
+            () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1))
+                 && unused.getValue().equals("false")));
         dateChoices.add(enabledWhen(() -> unused.getValue().equals("false")));
         userFilterTextField.add(enabledWhen(() -> unused.getValue().equals("false")));
         documentFilterTextField.add(enabledWhen(() -> unused.getValue().equals("false")));
@@ -388,20 +389,12 @@ public class DynamicWorkloadManagementPage
         defaultNumberDocumentsTextField = new NumberTextField<>("defaultDocumentsNumberTextField",
                 new Model<>(), Integer.class);
 
-        // Set value for input and additional features
-        // Catch NP for older version projects
-        if (workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(currentProject.getObject())
-                .getTraits() == null) {
-            dynamicWorkloadExtension.writeTraits(workloadManagementService
-                    .getOrCreateWorkloadManagerConfiguration(currentProject.getObject()),
-                    "TTTETET");
-        }
-        /*
-         * defaultNumberDocumentsTextField.setDefaultModel(new CompoundPropertyModel<>(
-         * (workloadManager.getTraits())));
-         * 
-         */
+        WorkloadTraits traits = dynamicWorkloadExtension.readTraits(
+            workloadManagementService.getOrCreateWorkloadManagerConfiguration(
+                currentProject.getObject()));
+
+        defaultNumberDocumentsTextField.setDefaultModel(new CompoundPropertyModel<>(
+            (traits.getDefaultNumberOfAnnotations())));
         defaultNumberDocumentsTextField.setMinimum(1);
         defaultNumberDocumentsTextField.setRequired(true);
         defaultNumberDocumentsTextField.setConvertEmptyInputStringToNull(false);
@@ -413,7 +406,7 @@ public class DynamicWorkloadManagementPage
         settingsForm.add(save);
 
         workflowChoices = new BootstrapSelect<>("workloadStrategy");
-        workflowChoices.setDefaultModel(LoadableDetachableModel.of(this::getWorkflowManager));
+        workflowChoices.setDefaultModel(Model.of(traits.getWorkloadType()));
         List<String> choices = new ArrayList<>();
         choices.add(getString("def"));
         choices.add(getString("randomized"));
@@ -628,12 +621,10 @@ public class DynamicWorkloadManagementPage
     private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
     {
         aTarget.addChildren(getPage(), IFeedback.class);
-
-        dynamicWorkloadExtension.writeTraits(workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(currentProject.getObject()), "TEST");
-        // new WorkloadTrait(workflowChoices.getDefaultModelObjectAsString(),
-        // Integer.parseInt(defaultNumberDocumentsTextField.getInput()))
-
+        dynamicWorkloadExtension.writeTraits(workloadManagementService,
+                new WorkloadTraits(workflowChoices.getDefaultModelObjectAsString(),
+                        Integer.parseInt(defaultNumberDocumentsTextField.getInput())),
+            currentProject.getObject());
         success("Changes saved");
     }
 
@@ -655,7 +646,8 @@ public class DynamicWorkloadManagementPage
                                         currentProject.getObject(),
                                         resetDocument.getModelObject().getName()),
                                 userSelection.getModelObject()),
-                        AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
+                        AnnotationDocumentStateTransition.
+                            ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
             }
             else {
                 documentService.transitionAnnotationDocumentState(
@@ -664,7 +656,8 @@ public class DynamicWorkloadManagementPage
                                         currentProject.getObject(),
                                         resetDocument.getModelObject().getName()),
                                 userSelection.getModelObject()),
-                        AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+                        AnnotationDocumentStateTransition.
+                            ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
             }
 
             success("Document status changed");
