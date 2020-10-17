@@ -17,33 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.DefaultAnnotationsProperties;
-import de.tudarmstadt.ukp.inception.workload.dynamic.manager.WorkloadProperties;
-import de.tudarmstadt.ukp.inception.workload.dynamic.page.settings.ProjectWorkloadSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.workload.dynamic.page.workload.WorkloadPageMenuItem;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 
-//@AutoConfigureAfter(WorkloadServiceAutoConfiguration.class)
-//@ConditionalOnBean(WorkloadManagerRegistry.class)
 @Configuration
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",
+    matchIfMissing = false)
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean
-    public WorkloadPageMenuItem workloadPageMenuItem(UserDao aUserRepo,
-            ProjectService aProjectService, WorkloadProperties aWorkloadProperties,
-            DefaultAnnotationsProperties aDefaultAnnotations)
+    public DynamicWorkloadExtension dynamicWorkloadExtension()
     {
-        return new WorkloadPageMenuItem(aUserRepo, aProjectService, aWorkloadProperties,
-                aDefaultAnnotations);
-    }
-    
-    @Bean
-    public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory()
-    {
-        return new ProjectWorkloadSettingsPanelFactory();
+        return new DynamicWorkloadExtension();
     }
 }

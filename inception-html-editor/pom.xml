@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.17.0-SNAPSHOT</version>
+    <version>0.18.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-html-editor</artifactId>
   <name>INCEpTION - Editor - HTML</name>
@@ -53,6 +53,10 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-html-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-xml-asl</artifactId>
     </dependency>
     
     <dependency>
@@ -124,9 +128,9 @@
               <id>default</id>
               <configuration>
                 <excludes combine.children="append">
-                  <!-- These test files contain license info but are not recognized by RAT -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator-full.js</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator.min.css</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator.*</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator-full.*</exclude>
+                  <exclude>src/main/js/annotatorjs/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>
