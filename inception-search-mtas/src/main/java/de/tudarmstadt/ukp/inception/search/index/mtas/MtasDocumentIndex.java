@@ -264,9 +264,6 @@ public class MtasDocumentIndex
         if (_indexWriter != null) {
             try {
                 _indexWriter.commit();
-                log.debug(
-                        "Executed scheduled commit to complete in project [{}]({})",
-                        project.getName(), project.getId());
             }
             catch (IOException e) {
                 log.error("Error committing changes to index for project [{}]({})",
@@ -279,7 +276,6 @@ public class MtasDocumentIndex
     public synchronized void close()
     {
         if (schedulerService != null) {
-            log.debug("close: shutting down scheduler");
             schedulerService.shutdown();
         }
         
