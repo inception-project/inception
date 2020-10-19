@@ -1658,6 +1658,14 @@ public class RecommendationServiceImpl
         }
     }
 
+    @Override
+    public void calculateVisibilityForRelations(CAS aCas, String aUser, AnnotationLayer aLayer,
+        Collection<SuggestionGroup<RelationSuggestion>> aRecommendations,
+        int aWindowBegin, int aWindowEnd)
+    {
+        
+    }
+
     private void hideSuggestionsRejectedOrSkipped(SpanSuggestion aSuggestion,
             List<LearningRecord> aRecordedRecommendations)
     {

@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommende
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -154,6 +155,10 @@ public interface RecommendationService
     
     void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup<AnnotationSuggestion>> aRecommendations,
+            int aWindowBegin, int aWindowEnd);
+
+    void calculateVisibilityForRelations(CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations,
             int aWindowBegin, int aWindowEnd);
 
     List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);

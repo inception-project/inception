@@ -108,6 +108,7 @@ public class Predictions
     public List<RelationSuggestion> getRelationPredictionsForLayer(
             String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
+        // TODO: Use window begin and end
         return predictions.entrySet().stream()
                 .filter(f -> f.getValue() instanceof RelationSuggestion)
                 .map(f -> (Entry<ExtendedId, RelationSuggestion>) (Entry) f)
@@ -116,6 +117,7 @@ public class Predictions
                 .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
     }
+
     /**
      * TODO #176 use the document Id once it it available in the CAS
      *         
@@ -125,7 +127,7 @@ public class Predictions
     public SuggestionDocumentGroup<SpanSuggestion> getSpanPredictions(String aDocumentName,
             AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        return new SuggestionDocumentGroup(getFlattenedSpanPredictions(aDocumentName, aLayer,
+        return new SuggestionDocumentGroup<>(getFlattenedSpanPredictions(aDocumentName, aLayer,
                 aWindowBegin, aWindowEnd));
     }
 
@@ -149,6 +151,32 @@ public class Predictions
             .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
             .map(Map.Entry::getValue)
             .collect(toList());
+    }
+
+    /**
+     * TODO #176 use the document Id once it it available in the CAS
+     *
+     * Get the predictions of a given window, where the outer list is a list of tokens and the inner
+     * list is a list of predictions for a token
+     */
+    public SuggestionDocumentGroup<RelationSuggestion> getRelationPredictions(String aDocumentName,
+        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+    {
+        return null;
+    }
+
+    /**
+     *  TODO #176 use the document Id once it it available in the CAS
+     *  TODO: Use window
+     *
+     * Get the relation predictions of a document for a given window in a flattened list.
+     * If the parameters {@code aWindowBegin} and {@code aWindowEnd} are {@code -1},
+     * then they are ignored respectively. This is useful when all suggestions should be fetched.
+     */
+    private List<SpanSuggestion> getFlattenedRelationPredictions(String aDocumentName,
+        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+    {
+        return null;
     }
 
     /**

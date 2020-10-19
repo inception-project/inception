@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.settings.StringMatchingRelationRecommenderTraitsEditor;
 
 @Component
-@ConditionalOnProperty(prefix = "imls.relation.string", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "imls.relation.string", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class StringMatchingRelationRecommenderFactory
     extends RecommendationEngineFactoryImplBase<StringMatchingRelationRecommenderTraits>
 {

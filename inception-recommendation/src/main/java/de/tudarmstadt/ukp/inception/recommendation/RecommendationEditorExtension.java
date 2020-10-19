@@ -221,6 +221,7 @@ public class RecommendationEditorExtension
     {
         SourceDocument document = aState.getDocument();
 
+        // TODO: Find out why we do not unpack the aVID here like we do for span recommendations
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         Optional<RelationSuggestion> prediction = predictions
