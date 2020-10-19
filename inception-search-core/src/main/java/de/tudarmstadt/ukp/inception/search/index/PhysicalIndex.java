@@ -38,6 +38,7 @@ public interface PhysicalIndex
     /**
      * Deletes the index data, e.g. by removing the index files from disk. If necessary, the index
      * is closed before.
+     * @throws IOException
      */
     void delete() throws IOException;
 
@@ -67,10 +68,13 @@ public interface PhysicalIndex
     
     /**
      * Retrieve the timestamp of this annotation document
-     * @param aDocument
-     *          The annotation document
-     * @return
-     *          The document timestamp field value. Empty string if document is not found.
+     * 
+     * @param aSrcDocId
+     *            the source document's ID
+     * @param aAnnoDocId
+     *            the annotation document's ID
+     * @return The first found document timestamp field value. Empty string if document is not
+     *         found.
      * @throws IOException
      */
     public Optional<String> getTimestamp(long aSrcDocId, long aAnnoDocId) throws IOException;

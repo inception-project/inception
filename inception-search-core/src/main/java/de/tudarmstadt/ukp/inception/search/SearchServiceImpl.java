@@ -166,6 +166,7 @@ public class SearchServiceImpl
      * 
      * @param aEvent
      *            The BeforeProjectRemovedEvent event
+     * @throws IOException
      */
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
