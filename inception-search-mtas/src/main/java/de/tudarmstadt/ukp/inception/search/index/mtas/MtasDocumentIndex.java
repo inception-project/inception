@@ -63,8 +63,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
@@ -81,7 +79,6 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
-import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -267,6 +264,9 @@ public class MtasDocumentIndex
         if (_indexWriter != null) {
             try {
                 _indexWriter.commit();
+                log.debug(
+                        "Executed scheduled commit to complete in project [{}]({})",
+                        project.getName(), project.getId());
             }
             catch (IOException e) {
                 log.error("Error committing changes to index for project [{}]({})",
@@ -278,11 +278,17 @@ public class MtasDocumentIndex
     @Override
     public synchronized void close()
     {
-        OPEN_INDEXES.remove(project.getId());
-
         if (schedulerService != null) {
+            log.debug("close: shutting down scheduler");
             schedulerService.shutdown();
         }
+        
+        closeIndex();
+    }
+
+    private void closeIndex()
+    {
+        OPEN_INDEXES.remove(project.getId());
 
         if (!isOpen()) {
             return;
@@ -319,13 +325,18 @@ public class MtasDocumentIndex
             return;
         }
         
-        // Cancel any existing commit
-        if (_commitFuture != null) {
-            _commitFuture.cancel(false);
+        // already scheduled commit which is not done yet, we don't need to schedule again
+        if (_commitFuture != null && !_commitFuture.isDone()) {
+            return;
         }
         
+        log.debug("Enqueuing new future to index for project [{}]({})", project.getName(),
+                project.getId());
+          
         _commitFuture = schedulerService.schedule(() -> {
             try {
+                log.debug("Executing future to index for project [{}]({})", project.getName(),
+                        project.getId());
                 if (_indexWriter != null && _indexWriter.isOpen()) {
                     _indexWriter.commit();
                     log.debug("Committed changes to index for project [{}]({})", project.getName(),
@@ -880,14 +891,13 @@ public class MtasDocumentIndex
 
         // Add document to the Lucene index
         indexWriter.addDocument(doc);
-
-        scheduleCommit();
     };
 
     @Override
     public void indexDocument(SourceDocument aDocument, byte[] aBinaryCas) throws IOException
     {
         indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aBinaryCas);
+        scheduleCommit();
     };
 
     @Override
@@ -895,6 +905,7 @@ public class MtasDocumentIndex
     {
         indexDocument(aDocument.getName(), aDocument.getDocument().getId(), aDocument.getId(),
                 aDocument.getUser(), aBinaryCas);
+        scheduleCommit();
     };
 
     /**
@@ -922,7 +933,6 @@ public class MtasDocumentIndex
         IndexWriter indexWriter = getIndexWriter();
         indexWriter.deleteDocuments(new Term(FIELD_ID,
                 String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId)));
-        scheduleCommit();
     }
 
     /**
@@ -959,8 +969,6 @@ public class MtasDocumentIndex
 
         // Delete document based on the previous query
         indexWriter.deleteDocuments(booleanQuery.build());
-
-        scheduleCommit();
     }
 
     /**
@@ -973,23 +981,19 @@ public class MtasDocumentIndex
     public void deindexDocument(SourceDocument aDocument) throws IOException
     {
         deindexDocument(aDocument.getId(), -1, "");
+        scheduleCommit();
     }
 
     @Override
     public synchronized void clear() throws IOException
     {
-        // Disable the scheduler temporarily to avoid new commits getting scheduled
-        if (schedulerService != null) {
-            schedulerService.shutdown();
-        }
-        
         // Remove all data from the index
         IndexWriter indexWriter = getIndexWriter();
         indexWriter.deleteAll();
         
         // Close the index temporarily because we want the IndexWriter to be re-initialized on the
         // next access in order to pick up the current layer configuration of the project.
-        close();
+        closeIndex();
     }
     
     /**
@@ -1002,6 +1006,7 @@ public class MtasDocumentIndex
     public void deindexDocument(AnnotationDocument aDocument) throws IOException
     {
         deindexDocument(aDocument.getDocument().getId(), aDocument.getId(), aDocument.getUser());
+        scheduleCommit();
     }
 
     /**
@@ -1015,6 +1020,7 @@ public class MtasDocumentIndex
     {
         deindexDocument(aDocument.getDocument().getId(), aDocument.getId(), aDocument.getUser(),
                 aTimestamp);
+        scheduleCommit();
     }
 
     /**
@@ -1048,36 +1054,46 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException
+    public Optional<String> getTimestamp(long aSrcDocId, long aAnnoDocId) throws IOException
     {
         Optional<String> result = Optional.empty();
+        
+        if (aSrcDocId == -1 || aAnnoDocId == -1) {
+            return result;
+        }
 
         // Prepare index searcher for accessing index
-        Directory directory = FSDirectory.open(getIndexDir().toPath());
-        IndexReader indexReader = DirectoryReader.open(directory);
-        IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+        ReferenceManager<IndexSearcher> searchManager = getSearcherManager();
+        searchManager.maybeRefresh();
+        IndexSearcher indexSearcher = searchManager.acquire();
+        try {
 
-        // Prepare query for the annotation document for this annotation document
-        Term term = new Term(FIELD_ID,
-                String.format("%d/%d", aDocument.getDocument().getId(), aDocument.getId()));
-        
-        TermQuery query = new TermQuery(term);
+            // Prepare query for the annotation document for this annotation document
+            Term term = new Term(FIELD_ID, String.format("%d/%d", aSrcDocId, aAnnoDocId));
 
-        // Do query
-        TopDocs docs = indexSearcher.search(query, 1);
+            TermQuery query = new TermQuery(term);
 
-        if (docs.scoreDocs.length > 0) {
-            // If there are results, retrieve first document, since all results should come
-            // from the same document
-            Document document = indexSearcher.doc(docs.scoreDocs[0].doc);
+            // Do query
+            TopDocs docs = indexSearcher.search(query, 1);
 
-            // Retrieve the timestamp field if it exists
-            if (document.getField(FIELD_TIMESTAMP) != null) {
-                result = Optional.ofNullable(StringUtils
-                        .trimToNull(document.getField(FIELD_TIMESTAMP).stringValue()));
+            if (docs.scoreDocs.length > 0) {
+                // If there are results, retrieve first document, since all results should come
+                // from the same document
+                Document document = indexSearcher.doc(docs.scoreDocs[0].doc);
+
+                // Retrieve the timestamp field if it exists
+                if (document.getField(FIELD_TIMESTAMP) != null) {
+                    result = Optional.ofNullable(StringUtils
+                            .trimToNull(document.getField(FIELD_TIMESTAMP).stringValue()));
+                }
             }
         }
-        
+        finally {
+            if (indexSearcher != null) {
+                searchManager.release(indexSearcher);
+                indexSearcher = null;
+            }
+        }
         return result;
     }
     
@@ -1108,5 +1124,28 @@ public class MtasDocumentIndex
     {
         T run(IndexSearcher searcher, SearchQueryRequest aRequest, MtasSpanQuery q)
             throws Exception;
+    }
+
+    @Override
+    public void reindexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException
+    {
+        long srcDocId = aDocument.getDocument().getId();
+        long annoDocId = aDocument.getId();
+        String user = aDocument.getUser();
+        
+        Optional<String> oldTimestamp = getTimestamp(srcDocId, annoDocId);
+        indexDocument(aDocument.getName(), srcDocId, annoDocId, user, aBinaryCas);
+        if (oldTimestamp.isPresent()) {
+            deindexDocument(srcDocId, annoDocId, user, oldTimestamp.get());
+        }
+        scheduleCommit();        
+    }
+
+    @Override
+    public void reindexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas) 
+            throws IOException
+    {
+        deindexDocument(aSourceDocument.getId(), -1, "");
+        indexDocument(aSourceDocument, aBinaryCas);
     }
 }

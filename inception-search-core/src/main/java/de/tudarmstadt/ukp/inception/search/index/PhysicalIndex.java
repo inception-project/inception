@@ -60,6 +60,8 @@ public interface PhysicalIndex
     void deindexDocument(AnnotationDocument aDocument) throws IOException;
 
     void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException;
+    
+    void reindexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
 
     void clear() throws IOException;
     
@@ -71,5 +73,7 @@ public interface PhysicalIndex
      *          The document timestamp field value. Empty string if document is not found.
      * @throws IOException
      */
-    public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException;
+    public Optional<String> getTimestamp(long aSrcDocId, long aAnnoDocId) throws IOException;
+
+    void reindexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas) throws IOException;
 }

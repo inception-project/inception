@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -311,8 +310,7 @@ public class SearchServiceImpl
             // threads to update the index concurrently. The underlying index code should hopefully
             // be thread-safe...
             try {
-                index.getPhysicalIndex().deindexDocument(aSourceDocument);
-                index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
+                index.getPhysicalIndex().reindexDocument(aSourceDocument, aBinaryCas);
             }
             catch (IOException e) {
                 log.error("Error indexing source document [{}]({}) in project [{}]({})",
@@ -355,34 +353,12 @@ public class SearchServiceImpl
             // threads to update the index concurrently. The underlying index code should hopefully
             // be thread-safe...
             try {
-                // NOTE: Deleting and then re-indexing the annotation document could lead to
-                // no results for this annotation document being returned while the
-                // re-indexing is still in process. Therefore, we check if there is already
-                // a version of the annotation document index, we obtain the timestamp of this
-                // version, then we add the new version, and finally we remove the old version
-                // as identified by the timestamp.
-
-                // Retrieve the timestamp for the current indexed annotation document
-                Optional<String> oldVersionTimestamp = index.getPhysicalIndex()
-                        .getTimestamp(aAnnotationDocument);
-
                 // Add annotation document to the index again
                 log.trace(
                         "Indexing new version of annotation document [{}]({}) in project [{}]({})",
                         aAnnotationDocument.getName(), aAnnotationDocument.getId(),
                         project.getName(), project.getId());
-                index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
-
-                // If there was a previous timestamped indexed annotation document, remove it from
-                // index
-                if (oldVersionTimestamp.isPresent()) {
-                    log.trace(
-                            "Removing old version of annotation document [{}]({}) in project [{}]({}) with timestamp [{}]",
-                            aAnnotationDocument.getName(), aAnnotationDocument.getId(),
-                            project.getName(), project.getId(), oldVersionTimestamp.get());
-                    index.getPhysicalIndex().deindexDocument(aAnnotationDocument,
-                            oldVersionTimestamp.get());
-                }
+                index.getPhysicalIndex().reindexDocument(aAnnotationDocument, aBinaryCas);
             }
             catch (IOException e) {
                 log.error("Error indexing annotation document [{}]({}) in project [{}]({})",
