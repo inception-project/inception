@@ -61,6 +61,11 @@ public class DynamicWorkflowActionBarExtension
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
+        // #Issue 1813 fix
+        if (aPage.getModelObject().getProject() == null) {
+            return false;
+        }
+
         return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
             getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
             .getType());
