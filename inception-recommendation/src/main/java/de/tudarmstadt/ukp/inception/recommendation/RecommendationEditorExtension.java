@@ -57,7 +57,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.RejectActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -144,11 +146,15 @@ public class RecommendationEditorExtension
         VID extendedVID = new VID(aVID.getExtensionId(), vid.getLayerId(), vid.getId(), 
                 vid.getSubId(), vid.getAttribute(), vid.getSlot(), aVID.getExtensionPayload());
         // Create annotation
-        if (SpanAnnotationResponse.is(aAction)) {
+        if (SpanAnnotationResponse.is(aAction))
+        || 
+        AcceptActionResponse.is(aAction)) {
             actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
         // Reject annotation
-        else if (DoActionResponse.is(aAction)) {
+        else if (DoActionResponse.is(aAction)
+        || 
+        RejectActionResponse.is(aAction)) {
             actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
     }
