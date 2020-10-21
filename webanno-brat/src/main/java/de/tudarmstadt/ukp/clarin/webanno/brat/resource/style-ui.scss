@@ -556,7 +556,7 @@ $background_color_16: pink;
       margin-top: 25px;
     }
   }
-  #span_accept_btn {
+  .span_accept_btn {
     background-color:$background_color_15;
     font-size: 9px;
     border: none;
@@ -564,7 +564,7 @@ $background_color_16: pink;
     opacity: 0.7;
     padding: 0;
   }
-  #span_reject_btn {
+  .span_reject_btn {
     background-color: $background_color_16;
     font-size: 9px;
     border: none;

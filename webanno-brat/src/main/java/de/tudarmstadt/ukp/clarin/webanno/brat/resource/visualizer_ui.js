@@ -556,36 +556,79 @@ var VisualizerUI = (function($, window, undefined) {
 
 // BEGIN WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
             var displayButtonsTimer = null;
-            var buttonsShown = false;
-            var displaySpanButtons = function (evt, target, spanId) {
-                if(target.attr('data-span-id')) {
+						var buttonsShown = false;
+						var acceptAction = function(evt, offsets, editedSpan, id) {
+							// must be logged in
+							if (that.user === null) return;
+
+							evt.preventDefault();
+							dispatcher.post('ajax', [{
+								action: 'acceptAction',
+								offsets: $.toJSON(offsets),
+								id: id,
+								labelText: editedSpan.labelText,
+								type: editedSpan.type
+							}, 'serverResult']);
+						
+						};
+            
+            var rejectAction = function(evt, offsets, editedSpan, id) {
+							// must be logged in
+              if (that.user === null) return;
+
+							evt.preventDefault();
+							dispatcher.post('ajax', [{
+								action: 'rejectAction',
+								offsets: $.toJSON(offsets),
+								id: id,
+								labelText: editedSpan.labelText,
+								type: editedSpan.type
+							}, 'serverResult']);
+						};
+            
+            var displaySpanButtons = function(evt, target, spanId) {
+                var id;
+                if (id = target.attr('data-span-id')) {
                     var spanPosition = target.position();
                     var spanWidth = target.width();
                     var spanHeight = target.height();
-                    var acceptBtn = $('<button id="span_accept_btn">Accept</button>')
-                        .css({ top: 0, left: 0, width: 45, height: spanHeight});
-                    var rejectBtn = $('<button id="span_reject_btn">Reject</button>')
-                        .css({ top: 0, left: spanWidth/2, width:45 , height: spanHeight });
-                    
-                    //TODO: fix why 10
+                    var editedSpan = data.spans[id];
+                    var offsets = [];
+
+                    $.each(editedSpan.fragments, function(fragmentNo, fragment) {
+                        offsets.push([fragment.from, fragment.to]);
+                    });
+
+                    var acceptBtn = $(`<button class="span_accept_btn">Accept<button>`)
+										.css({ top: 0, left: 0, width: 45, height: spanHeight })
+										.on('click', ((evt) => {
+											dispatcher.post('acceptButtonClicked', [evt, offsets, editedSpan, id]);
+										}));
+
+                    var rejectBtn = $('<button class="span_reject_btn">Reject</button>')
+										.css({ top: 0, left: spanWidth / 2, width: 45, height: spanHeight })
+										.on('click', ((evt) => {
+											dispatcher.post('rejectButtonClicked', [evt, offsets, editedSpan, id]);
+										}));
+
                     var buttonsWrapper = $('#span_btns_wrapper')
-                        .css({ top: spanPosition.top - 10 , left: spanPosition.left - (acceptBtn.width() * 2)})
+                        .css({ top: spanPosition.top - 10, left: spanPosition.left - (acceptBtn.width() * 2) })
                         .mouseleave(function() {
-                            hideSpanButtons();
-                        });
-                        //hide the buttons when comments are hidden (i.e. mouse left the span)
-                    	dispatcher.on('hideComment', hideSpanButtons);
-					
+                        hideSpanButtons();
+                    });
+                    //hide the buttons when comments are hidden (i.e. mouse left the span)
+                    dispatcher.on('hideComment', hideSpanButtons);
+
                     clearTimeout(displayButtonsTimer);
                     displayButtonsTimer = setTimeout(function() {
-                        // make sure that no buttons exist and then add button
+                    // make sure that no buttons exist and then add button
                         buttonsWrapper.empty().append(acceptBtn).append(rejectBtn);
-                        
+
                         buttonsShown = true;
                         buttonsWrapper.show();
-                    }, 700);
+                    }, 100);
                 }
-            }
+            };
 
             var hideSpanButtons = function() {
                 if($("#span_btns_wrapper:hover").length != 0){
@@ -594,7 +637,7 @@ var VisualizerUI = (function($, window, undefined) {
                 clearTimeout(displayButtonsTimer);
                 if (buttonsShown) {
                     $('#span_btns_wrapper').empty().hide();
-					buttonsShown = false;
+                    buttonsShown = false;
                 }
             };
 // END WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
@@ -1185,6 +1228,8 @@ var VisualizerUI = (function($, window, undefined) {
           on('keydown', onKeyDown).
           on('mousemove', onMouseMove).
           on('displaySpanButtons', displaySpanButtons).
+					on('acceptButtonClicked', acceptAction).
+          on('rejectButtonClicked', rejectAction).
           on('contextmenu', contextMenu);
 // WEBANNO EXTENSION BEGIN
 /*
