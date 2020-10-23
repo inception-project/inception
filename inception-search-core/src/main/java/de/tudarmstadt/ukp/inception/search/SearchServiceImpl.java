@@ -311,7 +311,7 @@ public class SearchServiceImpl
             // threads to update the index concurrently. The underlying index code should hopefully
             // be thread-safe...
             try {
-                index.getPhysicalIndex().reindexDocument(aSourceDocument, aBinaryCas);
+                index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
             }
             catch (IOException e) {
                 log.error("Error indexing source document [{}]({}) in project [{}]({})",
@@ -359,7 +359,7 @@ public class SearchServiceImpl
                         "Indexing new version of annotation document [{}]({}) in project [{}]({})",
                         aAnnotationDocument.getName(), aAnnotationDocument.getId(),
                         project.getName(), project.getId());
-                index.getPhysicalIndex().reindexDocument(aAnnotationDocument, aBinaryCas);
+                index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
             }
             catch (IOException e) {
                 log.error("Error indexing annotation document [{}]({}) in project [{}]({})",

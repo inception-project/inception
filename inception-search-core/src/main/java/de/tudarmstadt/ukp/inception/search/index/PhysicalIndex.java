@@ -51,10 +51,6 @@ public interface PhysicalIndex
 
     long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
-    
-    void indexDocument(SourceDocument aDocument, byte[] aBinaryCas) throws IOException;
-
-    void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
 
@@ -62,7 +58,7 @@ public interface PhysicalIndex
 
     void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException;
     
-    void reindexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
+    void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
 
     void clear() throws IOException;
     
@@ -79,5 +75,5 @@ public interface PhysicalIndex
      */
     public Optional<String> getTimestamp(long aSrcDocId, long aAnnoDocId) throws IOException;
 
-    void reindexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas) throws IOException;
+    void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas) throws IOException;
 }

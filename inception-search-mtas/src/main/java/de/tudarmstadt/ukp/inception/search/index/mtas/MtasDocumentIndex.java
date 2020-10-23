@@ -889,21 +889,6 @@ public class MtasDocumentIndex
         indexWriter.addDocument(doc);
     };
 
-    @Override
-    public void indexDocument(SourceDocument aDocument, byte[] aBinaryCas) throws IOException
-    {
-        indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aBinaryCas);
-        scheduleCommit();
-    };
-
-    @Override
-    public void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException
-    {
-        indexDocument(aDocument.getName(), aDocument.getDocument().getId(), aDocument.getId(),
-                aDocument.getUser(), aBinaryCas);
-        scheduleCommit();
-    };
-
     /**
      * Remove document from the index
      * 
@@ -1123,12 +1108,18 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public void reindexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException
+    public void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException
     {
         long srcDocId = aDocument.getDocument().getId();
         long annoDocId = aDocument.getId();
         String user = aDocument.getUser();
         
+        // NOTE: Deleting and then re-indexing the annotation document could lead to
+        // no results for this annotation document being returned while the
+        // re-indexing is still in process. Therefore, we check if there is already
+        // a version of the annotation document index, we obtain the timestamp of this
+        // version, then we add the new version, and finally we remove the old version
+        // as identified by the timestamp.
         Optional<String> oldTimestamp = getTimestamp(srcDocId, annoDocId);
         indexDocument(aDocument.getName(), srcDocId, annoDocId, user, aBinaryCas);
         if (oldTimestamp.isPresent()) {
@@ -1138,10 +1129,14 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public void reindexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas) 
+    public void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas) 
             throws IOException
     {
+        // NOTE: deleting all index versions related to the sourcedoc is ok in comparison to 
+        // re-indexing annotation documents, because we do this before the search
+        // is accessed and therefore do not care about indices not being available for a short time
         deindexDocument(aSourceDocument.getId(), -1, "");
-        indexDocument(aSourceDocument, aBinaryCas);
+        indexDocument(aSourceDocument.getName(), aSourceDocument.getId(), -1, "", aBinaryCas);
+        scheduleCommit();
     }
 }
