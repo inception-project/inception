@@ -17,17 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_PROJECT_CREATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage.NEW_PROJECT_ID;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -53,7 +56,6 @@ import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -80,6 +82,7 @@ public class ProjectsOverviewPage
     private static final String MID_ROLE_FILTER = "roleFilter";
     private static final String MID_PROJECTS = "projects";
     private static final String MID_PROJECT = "project";
+    private static final String MID_ID = "id";
     private static final String MID_IMPORT_PROJECT_PANEL = "importProjectPanel";
     private static final String MID_NEW_PROJECT = "newProject";
     private static final String MID_LEAVE_PROJECT = "leaveProject";
@@ -189,6 +192,10 @@ public class ProjectsOverviewPage
                 createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
                 aItem.add(createdLabel);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
+                Label projectId = new Label(MID_ID, () -> aItem.getModelObject().getId());
+                projectId.add(visibleWhen(() -> 
+                        DEVELOPMENT.equals(getApplication().getConfigurationType())));
+                aItem.add(projectId);
             }
 
             @Override
@@ -327,14 +334,13 @@ public class ProjectsOverviewPage
                         projectService.getProjectPermissionLevels(currentUser, proj)
                                 .stream()
                                 .anyMatch(activeRoleFilters.getObject()::contains))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
     
     private void actionCreateProject(AjaxRequestTarget aTarget)
     {
         PageParameters params = new PageParameters();
-        params.set(WebAnnoConst.PAGE_PARAM_PROJECT_ID, ProjectPage.NEW_PROJECT_ID);
+        params.set(PAGE_PARAM_PROJECT_ID, NEW_PROJECT_ID);
         setResponsePage(ProjectPage.class, params);        
     }
-
 }
