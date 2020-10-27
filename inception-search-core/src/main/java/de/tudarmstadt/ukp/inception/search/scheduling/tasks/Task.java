@@ -121,6 +121,10 @@ public abstract class Task
     /**
      * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
      * the given task.
+     * 
+     * @param aTask
+     *            the given scheduling task
+     * @return whether the given task matches this one
      */
     public abstract boolean matches(Task aTask);
 
