@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2020
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -33,11 +33,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-public class XmiFormatSupport
+public class XmiXml11FormatSupport
     implements FormatSupport
 {
-    public static final String ID = "xmi";
-    public static final String NAME = "UIMA CAS XMI (XML 1.0)";
+    public static final String ID = "xmi-xml1.1";
+    public static final String NAME = "UIMA CAS XMI (XML 1.1)";
     
     @Override
     public String getId()
@@ -77,6 +77,6 @@ public class XmiFormatSupport
         throws ResourceInitializationException
     {
         return createEngineDescription(XmiWriter.class, aTSD,
-                XmiWriter.PARAM_VERSION, "1.0");
+                XmiWriter.PARAM_VERSION, "1.1");
     }
 }
