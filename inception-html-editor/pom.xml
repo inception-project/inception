@@ -131,6 +131,7 @@
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator.*</exclude>
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources/annotator-full.*</exclude>
                   <exclude>src/main/js/annotatorjs/**/*</exclude>
+                  <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>
