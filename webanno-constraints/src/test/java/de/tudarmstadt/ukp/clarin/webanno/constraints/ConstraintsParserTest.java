@@ -52,6 +52,4 @@ public class ConstraintsParserTest
     {
         ConstraintsParser.parse(ruleFile);
     }
-
-
 }

@@ -1,0 +1,23 @@
+import my.Lemma as Lemma;
+
+Lemma {
+  /* (original) */
+  @Lemma="English"               -> value="This is a test.";
+  @Lemma="Amharic"               -> value="ይህ ፈተና ነው ፡፡";
+  @Lemma="Arabic"                -> value="هذا اختبار.";
+  @Lemma="Armenian"              -> value="Սա թեստ է.";
+  @Lemma="Bangla"                -> value="এটা একটা পরীক্ষা.";
+  @Lemma="Belarusian"            -> value="Гэта тэст.";
+  @Lemma="Bulgarian"             -> value="Това е тест.";
+  @Lemma="Burmese"               -> value="ဒါကစမ်းသပ်မှုတစ်ခု";
+  @Lemma="Catalan"               -> value="Això és un test.";
+  @Lemma="Chinese (simplified)"  -> value="这是一个测试。";
+  @Lemma="Chinese (traditional)" -> value="這是一個測試。";
+  @Lemma="Georgian"              -> value="Ეს ტესტია.";
+  @Lemma="Greek"                 -> value="Αυτό είναι ένα τεστ.";
+  @Lemma="Gujarati"              -> value="આ એક કસોટી છે.";
+  @Lemma="Hebrew"                -> value="זה מבחן.";
+  @Lemma="Hindi"                 -> value="यह एक परीक्षण है।";
+  @Lemma="Icelandic"             -> value="Þetta er próf.";
+  @Lemma="Emoji"                 -> value="🤷‍♀️";
+}
