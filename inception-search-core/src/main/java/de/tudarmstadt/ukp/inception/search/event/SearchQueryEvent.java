@@ -79,6 +79,7 @@ public class SearchQueryEvent
     
     /**
      * Query is limited to the given document.
+     * @return the source document if it exists or empty optional
      */
     public Optional<SourceDocument> getSourceDocument()
     {

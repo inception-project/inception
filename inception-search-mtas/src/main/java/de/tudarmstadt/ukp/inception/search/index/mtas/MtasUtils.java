@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +61,9 @@ public final class MtasUtils
     {
         ByteBuffer buffer = ByteBuffer.allocate(4).put(aBytesRef.bytes, aBytesRef.offset,
                 aBytesRef.length);
-        buffer.flip();
+        // Cast to buffer to permit code to run on Java 8.
+        // See: https://github.com/inception-project/inception/issues/1828#issuecomment-717047584
+        ((Buffer) buffer).flip();
         return buffer.getInt();
     }
     
