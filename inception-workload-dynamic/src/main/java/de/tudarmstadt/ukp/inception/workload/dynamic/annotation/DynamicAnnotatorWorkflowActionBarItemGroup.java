@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -66,8 +67,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private final WorkloadManagementService workloadManagementService;
 
     protected final ConfirmationDialog finishDocumentDialog;
-
-    private List<AnnotationDocument> annotationDocumentList;
 
     public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage,
             WorkloadManagementService aWorkloadManagementService)
@@ -111,22 +110,22 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             Project project = state.getProject();
             SourceDocument document = state.getDocument();
 
-            annotationDocumentList = documentService.listAnnotationDocuments(project, user);
-
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(document,
                     user);
 
             documentService.transitionAnnotationDocumentState(annotationDocument,
                     ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
 
+            // FIXME: Instead of querying for ALL documents, it would be faster to have a query
+            // method to get annotation documents in a particular state...
+            List<AnnotationDocument> annotationDocumentList = documentService
+                    .listAnnotationDocuments(project, user);
             for (AnnotationDocument anno : annotationDocumentList) {
                 // There was one in progress, load it
-                if (anno.getState().equals(IN_PROGRESS)) {
+                if (IN_PROGRESS.equals(anno.getState())) {
                     getAnnotationPage().getModelObject().setDocument(anno.getDocument(),
                             documentService.listSourceDocuments(project));
-                    Optional<AjaxRequestTarget> target = RequestCycle.get()
-                            .find(AjaxRequestTarget.class);
-                    getAnnotationPage().actionLoadDocument(target.orElse(null));
+                    getAnnotationPage().actionLoadDocument(_target);
                     return;
                 }
             }
@@ -134,15 +133,16 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             WorkloadManager currentWorkload = workloadManagementService
                     .getOrCreateWorkloadManagerConfiguration(project);
 
-            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkloadType()) {
+            WorkloadTraits traits = dynamicWorkloadExtension.readTraits(currentWorkload);
+            switch (traits.getWorkloadType()) {
             case ("Randomized workflow"):
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
                 List<SourceDocument> randomList = documentService.listSourceDocuments(project);
                 Collections.shuffle(randomList);
                 for (SourceDocument doc : randomList) {
-                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= (dynamicWorkloadExtension
-                            .readTraits(currentWorkload).getDefaultNumberOfAnnotations())) {
+                    if (getUsersWorkingOnTheDocument(doc) < traits
+                            .getDefaultNumberOfAnnotations()) {
                         if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
                                 || (documentService.listAnnotatableDocuments(project, user).get(doc)
                                         .getState().equals(NEW))) {
