@@ -28,7 +28,7 @@ import org.apache.wicket.util.visit.IVisitor;
 
 /**
  * In contrast to {@link Component#sameInnermostModel}, this visitor can not only handle
- * {@link IWrapModel} but also {@link IChainingModel}, e.g. {@link CompoundPropertyModel}
+ * {@link IWrapModel} but also {@link ChainingModel}, e.g. {@link CompoundPropertyModel}
  * which is used in forms.
  */
 public class ModelChangedVisitor
