@@ -102,6 +102,6 @@ public class WorkloadSettingsPanel
                     workloadStrategy.getModelObject().getWorkloadManagerExtensionId(),
                     JSONUtil.toJsonString(new WorkloadTraits()), project);
         }
-        success("Workload settings changed");
+        success("Workload settings saved");
     }
 }

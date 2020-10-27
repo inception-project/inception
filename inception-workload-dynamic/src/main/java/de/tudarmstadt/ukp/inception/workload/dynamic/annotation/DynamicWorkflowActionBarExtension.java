@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
@@ -35,11 +36,14 @@ public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {
     private final WorkloadManagementService workloadManagementService;
+    private final ProjectService projectService;
 
     @Autowired
-    public DynamicWorkflowActionBarExtension(WorkloadManagementService aWorkloadManagementService)
+    public DynamicWorkflowActionBarExtension(
+        WorkloadManagementService aWorkloadManagementService, ProjectService aProjectService)
     {
         workloadManagementService = aWorkloadManagementService;
+        projectService = aProjectService;
     }
 
     @Override
@@ -61,9 +65,12 @@ public class DynamicWorkflowActionBarExtension
         if (aPage.getModelObject().getProject() == null) {
             return false;
         }
+
+        //Curator are excluded from the feature
         return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
             getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
-            .getType());
+            .getType()) && !projectService.isCurator(
+                aPage.getModelObject().getProject(), aPage.getModelObject().getUser());
     }
 
     @Override

@@ -134,15 +134,15 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             WorkloadManager currentWorkload = workloadManagementService
                     .getOrCreateWorkloadManagerConfiguration(project);
 
-            if (dynamicWorkloadExtension.readTraits(currentWorkload)
-                .getWorkloadType().equals("Randomized workflow")) {
+            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkloadType()) {
+            case ("Randomized workflow"):
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
                 List<SourceDocument> randomList = documentService.listSourceDocuments(project);
                 Collections.shuffle(randomList);
                 for (SourceDocument doc : randomList) {
-                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= dynamicWorkloadExtension
-                            .readTraits(currentWorkload).getDefaultNumberOfAnnotations()) {
+                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= (dynamicWorkloadExtension
+                            .readTraits(currentWorkload).getDefaultNumberOfAnnotations())) {
                         if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
                                 || (documentService.listAnnotatableDocuments(project, user).get(doc)
                                         .getState().equals(NEW))) {
@@ -155,20 +155,27 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                         }
                     }
                 }
-                // No documents left
-                getAnnotationPage()
-                        .setResponsePage(getAnnotationPage().getApplication().getHomePage());
-                getAnnotationPage().getSession().info(
-                        "There are no more documents to annotate available for you. Please contact your project supervisor.");
-            }
-            else {
+                //No documents left
+                noDocumentsLeft();
+                break;
+
+
+            case ("Curriculum annotation"):
+
+                // TODO logic for Curriculum annotation
+
+                //No documents left
+                noDocumentsLeft();
+                break;
+
+            default:
                 // Default, simply go through the list and return the first document
                 for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
                         .listAnnotatableDocuments(project, user).entrySet()) {
                     // First check if too many users are already working on the document
-                    if ((getUsersWorkingOnTheDocument(entry.getKey())
+                    if (((getUsersWorkingOnTheDocument(entry.getKey())
                             + 1) <= dynamicWorkloadExtension.readTraits(currentWorkload)
-                                    .getDefaultNumberOfAnnotations()) {
+                                    .getDefaultNumberOfAnnotations())) {
                         // Now check if there either is no annotation document yet created or its
                         // state is NEW
                         if (entry.getValue() == null || entry.getValue().getState().equals(NEW)) {
@@ -181,6 +188,9 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                         }
                     }
                 }
+                //No documents left
+                noDocumentsLeft();
+                break;
             }
         });
         finishDocumentDialog.show(aTarget);
@@ -193,5 +203,14 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                 .filter(d -> d.getDocument().equals(aDocument) && !d.getState().equals(NEW)
                         && !d.getState().equals(IGNORE))
                 .count();
+    }
+
+    public void noDocumentsLeft()
+    {
+        // Nothing left, so returning to homepage and showing hint
+        getAnnotationPage().setResponsePage(getAnnotationPage().
+            getApplication().getHomePage());
+        getAnnotationPage().getSession().info(
+            "There are no more documents to annotate available for you. Please contact your project supervisor.");
     }
 }

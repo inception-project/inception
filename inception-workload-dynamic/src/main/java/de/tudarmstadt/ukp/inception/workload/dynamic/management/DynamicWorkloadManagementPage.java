@@ -410,6 +410,7 @@ public class DynamicWorkloadManagementPage
         List<String> choices = new ArrayList<>();
         choices.add(getString("def"));
         choices.add(getString("randomized"));
+        choices.add(getString("curriculum"));
         workflowChoices.setChoices(choices);
         workflowChoices.setRequired(true);
         workflowChoices.setNullValid(false);

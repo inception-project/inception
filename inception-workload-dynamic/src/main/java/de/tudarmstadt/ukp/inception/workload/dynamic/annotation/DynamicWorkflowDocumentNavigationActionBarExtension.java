@@ -36,6 +36,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav.DefaultDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
@@ -57,14 +59,17 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     private final DynamicWorkloadExtension dynamicWorkloadExtension;
     private List<AnnotationDocument> annotationDocumentList;
 
+    private final ProjectService projectService;
+
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
             WorkloadManagementService aWorkloadManagementService,
-            DynamicWorkloadExtension aDynamicWorkloadExtension)
+            DynamicWorkloadExtension aDynamicWorkloadExtension, ProjectService aProjectService)
     {
         documentService = aDocumentService;
         workloadManagementService = aWorkloadManagementService;
         dynamicWorkloadExtension = aDynamicWorkloadExtension;
+        projectService = aProjectService;
     }
 
     @Override
@@ -86,9 +91,12 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         if (aPage.getModelObject().getProject() == null) {
             return false;
         }
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
-                .getType());
+        // Curator are excluded from the feature
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID
+                .equals(workloadManagementService.getOrCreateWorkloadManagerConfiguration(
+                        aPage.getModelObject().getProject()).getType())
+                && !projectService.isCurator(aPage.getModelObject().getProject(),
+                        aPage.getModelObject().getUser());
     }
 
     @Override
@@ -122,8 +130,8 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
             WorkloadManager currentWorkload = workloadManagementService
                     .getOrCreateWorkloadManagerConfiguration(project);
 
-            if (dynamicWorkloadExtension.readTraits(currentWorkload).
-                getWorkloadType().equals("Randomized workflow")) {
+            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkloadType()) {
+            case ("Randomized workflow"):
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
                 List<SourceDocument> randomList = documentService.listSourceDocuments(project);
@@ -144,12 +152,18 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                     }
                 }
                 // No documents left
-                aPage.setResponsePage(aPage.getApplication().getHomePage());
-                aPage.getSession().info(
-                        "There are no more documents to annotate available for you. Please contact your project supervisor.");
-            }
-            else {
+                noDocumentsLeft(aPage);
+                break;
 
+            case ("Curriculum annotation"):
+
+                //TODO logic for Curriculum annotation
+
+                // No documents left
+                noDocumentsLeft(aPage);
+                break;
+
+            default:
                 // Default, simply go through the list and return the first document
                 for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
                         .listAnnotatableDocuments(project, user).entrySet()) {
@@ -169,6 +183,9 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                         }
                     }
                 }
+                // No documents left
+                noDocumentsLeft(aPage);
+                break;
             }
         }
     }
@@ -180,5 +197,14 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                         && !d.getState().equals(IGNORE))
                 .map(AnnotationDocument::getUser).sorted().collect(Collectors.joining(", "))
                 .length();
+    }
+
+    public void noDocumentsLeft(ApplicationPageBase aPage)
+    {
+        // Nothing left, so returning to homepage and showing hint
+        aPage.setResponsePage(aPage.
+            getApplication().getHomePage());
+        aPage.getSession().info(
+            "There are no more documents to annotate available for you. Please contact your project supervisor.");
     }
 }
