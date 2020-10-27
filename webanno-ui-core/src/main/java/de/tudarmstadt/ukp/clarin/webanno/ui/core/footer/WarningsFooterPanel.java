@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.footer;
 
+import static org.apache.commons.lang3.StringUtils.defaultString;
+
 import java.util.Locale;
 import java.util.Properties;
 
@@ -28,7 +30,6 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.protocol.http.ClientProperties;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -117,9 +118,10 @@ public class WarningsFooterPanel
         } else {
             clientInfo = new WebClientInfo(requestCycle);
         }
-        ClientProperties clientProperties = clientInfo.getProperties();
-        boolean isUsingUnsupportedBrowser = !clientProperties.isBrowserSafari()
-                && !clientProperties.isBrowserChrome();
+        
+        String userAgent = defaultString(clientInfo.getUserAgent(), "").toLowerCase();
+        boolean isUsingUnsupportedBrowser = !(userAgent.contains("safari")
+                || userAgent.contains("chrome"));
         
         boolean ignoreWarning = "false".equalsIgnoreCase(
                 settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER));

@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static java.time.Duration.ofMillis;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
-import static org.apache.wicket.util.time.Duration.milliseconds;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
@@ -123,7 +123,7 @@ public abstract class FeatureEditor
         // there is a race condition between the saving the value of the feature
         // editor and the loading of the new annotation. Delay the feature editor
         // save to give preference to loading the new annotation.
-        aAttributes.setThrottlingSettings(new ThrottlingSettings(milliseconds(aDelay), true));
+        aAttributes.setThrottlingSettings(new ThrottlingSettings(ofMillis(aDelay), true));
         aAttributes.getAjaxCallListeners().add(new AjaxCallListener()
         {
             private static final long serialVersionUID = 3157811089824093324L;

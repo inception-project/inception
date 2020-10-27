@@ -60,8 +60,7 @@ public class BootstrapAwareJQueryUIJavaScriptResourceReference
     {
         IBootstrapSettings settings = Bootstrap.getSettings();
         final JavaScriptReferenceHeaderItem jsReference = JavaScriptHeaderItem.forReference(
-                settings.getJsResourceReference(), new PageParameters(), "bootstrap-js",
-                settings.deferJavascript());
+                settings.getJsResourceReference(), new PageParameters(), "bootstrap-js");
         return Dependencies.combine(super.getDependencies(), jsReference);
     }
 

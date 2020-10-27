@@ -30,7 +30,7 @@
 | Linux (64bit), macOS (64bit), Windows (64bit)
 
 | Java Runtime Environment
-| version 8 or higher
+| version 11 or higher
 |===
 
 .Requirements run a WebAnno server
@@ -40,7 +40,7 @@
 | Linux (64bit), macOS (64bit), Windows (64bit)
 
 | Java Runtime Environment
-| version 8 or higher
+| version 11 or higher
 
 | Apache Tomcat (or compatible)
 | version 9.0 or higher (Servlet API 4.0.0)
