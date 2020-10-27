@@ -38,6 +38,7 @@ public interface PhysicalIndex
     /**
      * Deletes the index data, e.g. by removing the index files from disk. If necessary, the index
      * is closed before.
+     * @throws IOException
      */
     void delete() throws IOException;
 
@@ -50,26 +51,29 @@ public interface PhysicalIndex
 
     long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
-    
-    void indexDocument(SourceDocument aDocument, byte[] aBinaryCas) throws IOException;
-
-    void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
 
     void deindexDocument(AnnotationDocument aDocument) throws IOException;
 
     void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException;
+    
+    void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
 
     void clear() throws IOException;
     
     /**
      * Retrieve the timestamp of this annotation document
-     * @param aDocument
-     *          The annotation document
-     * @return
-     *          The document timestamp field value. Empty string if document is not found.
+     * 
+     * @param aSrcDocId
+     *            the source document's ID
+     * @param aAnnoDocId
+     *            the annotation document's ID
+     * @return The first found document timestamp field value. Empty string if document is not
+     *         found.
      * @throws IOException
      */
-    public Optional<String> getTimestamp(AnnotationDocument aDocument) throws IOException;
+    public Optional<String> getTimestamp(long aSrcDocId, long aAnnoDocId) throws IOException;
+
+    void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas) throws IOException;
 }

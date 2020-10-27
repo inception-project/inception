@@ -149,6 +149,7 @@ public class SearchResult
     /**
      * Indicates whether the document to which this result applies cannot be modified by the user
      * who issued the query.
+     * @return whether the document is read-only
      */
     public boolean isReadOnly()
     {
