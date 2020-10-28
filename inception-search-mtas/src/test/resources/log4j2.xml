@@ -2,7 +2,7 @@
 <Configuration status="WARN">
   <Appenders>
     <Console name="ConsoleAppender" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %tid %level{length=5} %logger{1} - %msg%n" />
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%thread] %level{length=5} %logger{1} - %msg%n" />
     </Console>
   </Appenders>
 
@@ -10,7 +10,9 @@
     <Logger name="mtas" level="INFO"/>
     <Logger name="de.tudarmstadt.ukp.inception.search" level="INFO"/>
     <Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl" level="INFO"/>
-<!--     <Logger name="de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser" level="TRACE"/> -->
+		<logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl" level="TRACE"/>
+		<Logger name="de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession" level="TRACE"/>
+		<Logger name="de.tudarmstadt.ukp.inception.search.SearchServiceImpl" level="TRACE"/>
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
     </Root>

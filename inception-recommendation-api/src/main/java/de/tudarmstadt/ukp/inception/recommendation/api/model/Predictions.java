@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.newSetFromMap;
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,7 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.wicket.util.collections.ConcurrentHashSet;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -55,7 +57,7 @@ public class Predictions
     private static final long serialVersionUID = -1598768729246662885L;
     
     private Map<ExtendedId, AnnotationSuggestion> predictions = new ConcurrentHashMap<>();
-    private Set<String> seenDocumentsForPrediction = new ConcurrentHashSet<>();
+    private Set<String> seenDocumentsForPrediction = newSetFromMap(new ConcurrentHashMap<>());
     
     private final Project project;
     private final User user;
@@ -131,7 +133,7 @@ public class Predictions
             .filter(f -> aWindowEnd == -1 || (f.getKey().getEnd() <= aWindowEnd))
             .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
             .map(Map.Entry::getValue)
-            .collect(Collectors.toList());
+            .collect(toList());
     }
 
     /**
@@ -157,7 +159,7 @@ public class Predictions
                 .filter(f -> f.getDocumentName().equals(aDocument.getName()))
                 .filter(f -> f.getBegin() == aBegin && f.getEnd() == aEnd)
                 .filter(f -> f.getLabel().equals(aLabel))
-                .max(Comparator.comparingInt(AnnotationSuggestion::getId));
+                .max(comparingInt(AnnotationSuggestion::getId));
     }
     
     /**

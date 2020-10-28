@@ -1,13 +1,12 @@
-
 /*
-** Annotator v1.2.10
+** Annotator v1.2.10-dev-inception-app-0.16.1-200-g7395de0fb
 ** https://github.com/okfn/annotator/
 **
-** Copyright 2015, the Annotator project contributors.
+** Copyright 2020, the Annotator project contributors.
 ** Dual licensed under the MIT and GPLv3 licenses.
 ** https://github.com/okfn/annotator/blob/master/LICENSE
 **
-** Built at: 2015-02-26 03:26:47Z
+** Built at: 2020-09-27 16:46:03Z
  */
 
 
@@ -613,7 +612,11 @@
           }
         }
         if (r.end == null) {
-          node = this.endContainer.childNodes[this.endOffset - 1];
+          if (this.endOffset) {
+            node = this.endContainer.childNodes[this.endOffset - 1];
+          } else {
+            node = this.endContainer.previousSibling;
+          }
           r.end = Util.getLastTextNodeUpTo(node);
           r.endOffset = r.end.nodeValue.length;
         }
@@ -866,6 +869,7 @@
     Annotator.prototype.viewerHideTimer = null;
 
     function Annotator(element, options) {
+      this.onSelectAnnotation = __bind(this.onSelectAnnotation, this);
       this.onDeleteAnnotation = __bind(this.onDeleteAnnotation, this);
       this.onEditAnnotation = __bind(this.onEditAnnotation, this);
       this.onAdderClick = __bind(this.onAdderClick, this);
@@ -906,12 +910,12 @@
       this.viewer = new Annotator.Viewer({
         readOnly: this.options.readOnly
       });
-      this.viewer.hide().on("edit", this.onEditAnnotation).on("delete", this.onDeleteAnnotation).addField({
+      this.viewer.hide().on("edit", this.onEditAnnotation).on("delete", this.onDeleteAnnotation).on("select", this.onSelectAnnotation).addField({
         load: function(field, annotation) {
           if (annotation.text) {
-            $(field).html(Util.escape(annotation.text));
+            $(field).html("<div class='annotator-select'>" + Util.escape(annotation.text) + "</div>");
           } else {
-            $(field).html("<i>" + (_t('No Comment')) + "</i>");
+            $(field).html("<div class='annotator-select'><i>" + (_t('No Comment')) + "</i></div>");
           }
           return _this.publish('annotationViewerTextField', [field, annotation]);
         }
@@ -1065,8 +1069,12 @@
       for (_l = 0, _len3 = normedRanges.length; _l < _len3; _l++) {
         normed = normedRanges[_l];
         annotation.quote.push($.trim(normed.text()));
-        annotation.ranges.push(normed.serialize(this.wrapper[0], '.annotator-hl'));
-        $.merge(annotation.highlights, this.highlightRange(normed));
+        annotation.ranges.push(normed.serialize(this.wrapper[0], ':not(.annotator-wrapper)'));
+        if (annotation.color) {
+          $.merge(annotation.highlights, this.highlightRange(normed, "background-color: " + annotation.color));
+        } else {
+          $.merge(annotation.highlights, this.highlightRange(normed));
+        }
       }
       annotation.quote = annotation.quote.join(' / ');
       $(annotation.highlights).data('annotation', annotation);
@@ -1095,6 +1103,11 @@
         }
       }
       this.publish('annotationDeleted', [annotation]);
+      return annotation;
+    };
+
+    Annotator.prototype.selectAnnotation = function(annotation) {
+      this.publish('annotationSelected', [annotation]);
       return annotation;
     };
 
@@ -1136,13 +1149,16 @@
       }
     };
 
-    Annotator.prototype.highlightRange = function(normedRange, cssClass) {
+    Annotator.prototype.highlightRange = function(normedRange, cssStyle, cssClass) {
       var hl, node, white, _k, _len2, _ref1, _results;
+      if (cssStyle == null) {
+        cssStyle = '';
+      }
       if (cssClass == null) {
         cssClass = 'annotator-hl';
       }
       white = /^\s*$/;
-      hl = $("<span class='" + cssClass + "'></span>");
+      hl = $("<span class='" + cssClass + "' style='" + cssStyle + "'></span>");
       _ref1 = normedRange.textNodes();
       _results = [];
       for (_k = 0, _len2 = _ref1.length; _k < _len2; _k++) {
@@ -1154,15 +1170,18 @@
       return _results;
     };
 
-    Annotator.prototype.highlightRanges = function(normedRanges, cssClass) {
+    Annotator.prototype.highlightRanges = function(normedRanges, cssStyle, cssClass) {
       var highlights, r, _k, _len2;
+      if (cssStyle == null) {
+        cssStyle = '';
+      }
       if (cssClass == null) {
         cssClass = 'annotator-hl';
       }
       highlights = [];
       for (_k = 0, _len2 = normedRanges.length; _k < _len2; _k++) {
         r = normedRanges[_k];
-        $.merge(highlights, this.highlightRange(r, cssClass));
+        $.merge(highlights, this.highlightRange(r, cssStyle, cssClass));
       }
       return highlights;
     };
@@ -1241,26 +1260,15 @@
           return;
         }
       }
-// INCEPTION EXTENSION BEGIN
-// When a user selects a span of text, we want to immediately create an annotation at that position.
-// We do not first want to display the "adder" icon and we also don't want to use the AnnotatorJS
-// editor.
-//      if (event && this.selectedRanges.length) {
-//        return this.adder.css(Util.mousePosition(event, this.wrapper[0])).show();
-//      } else {
-//        return this.adder.hide();
-//      }
-      annotation = this.setupAnnotation(this.createAnnotation());
-      $(annotation.highlights).removeClass('annotator-hl-temporary');
-      if (annotation.ranges.length > 0) {
-    	  this.publish('annotationCreated', [annotation]);
+      this.annotation = this.setupAnnotation(this.createAnnotation());
+      $(this.annotation.highlights).removeClass('annotator-hl-temporary');
+      if (this.annotation.ranges.length > 0) {
+        this.publish('annotationCreated', [this.annotation]);
       }
-      return;
-// INCEPTION EXTENSION END
     };
 
     Annotator.prototype.isAnnotator = function(element) {
-      return !!$(element).parents().addBack().filter('[class^=annotator-]').not('[class=annotator-hl]').not(this.wrapper).length;
+      return !!$(element).parents().addBack().filter('[class^=annotator-]').not('[class^=annotator-hl]').not(this.wrapper).length;
     };
 
     Annotator.prototype.onHighlightMouseover = function(event) {
@@ -1334,6 +1342,11 @@
     Annotator.prototype.onDeleteAnnotation = function(annotation) {
       this.viewer.hide();
       return this.deleteAnnotation(annotation);
+    };
+
+    Annotator.prototype.onSelectAnnotation = function(annotation) {
+      this.viewer.hide();
+      return this.selectAnnotation(annotation);
     };
 
     return Annotator;
@@ -1682,16 +1695,16 @@
             left: event.pageX - mousedown.left
           };
           if (mousedown.element === resize[0]) {
-            height = textarea.outerHeight();
-            width = textarea.outerWidth();
+            height = textarea.height();
+            width = textarea.width();
             directionX = editor.hasClass(classes.invert.x) ? -1 : 1;
             directionY = editor.hasClass(classes.invert.y) ? 1 : -1;
             textarea.height(height + (diff.top * directionY));
             textarea.width(width + (diff.left * directionX));
-            if (textarea.outerHeight() !== height) {
+            if (textarea.height() !== height) {
               mousedown.top = event.pageY;
             }
-            if (textarea.outerWidth() !== width) {
+            if (textarea.width() !== width) {
               mousedown.left = event.pageX;
             }
           } else if (mousedown.element === controls[0]) {
@@ -1721,7 +1734,8 @@
 
     Viewer.prototype.events = {
       ".annotator-edit click": "onEditClick",
-      ".annotator-delete click": "onDeleteClick"
+      ".annotator-delete click": "onDeleteClick",
+      ".annotator-select click": "onSelectClick"
     };
 
     Viewer.prototype.classes = {
@@ -1739,6 +1753,7 @@
     };
 
     function Viewer(options) {
+      this.onSelectClick = __bind(this.onSelectClick, this);
       this.onDeleteClick = __bind(this.onDeleteClick, this);
       this.onEditClick = __bind(this.onEditClick, this);
       this.load = __bind(this.load, this);
@@ -1773,7 +1788,7 @@
     };
 
     Viewer.prototype.load = function(annotations) {
-      var annotation, controller, controls, del, edit, element, field, item, link, links, list, _k, _l, _len2, _len3, _ref2, _ref3;
+      var annotation, controller, controls, del, edit, element, field, item, link, links, list, select, _k, _l, _len2, _len3, _ref2, _ref3;
       this.annotations = annotations || [];
       list = this.element.find('ul:first').empty();
       _ref2 = this.annotations;
@@ -1784,6 +1799,7 @@
         link = controls.find('.annotator-link');
         edit = controls.find('.annotator-edit');
         del = controls.find('.annotator-delete');
+        select = item.find('.annotator-select');
         links = new LinkParser(annotation.links || []).get('alternate', {
           'type': 'text/html'
         });
@@ -1792,25 +1808,9 @@
         } else {
           link.attr('href', links[0].href);
         }
-        if (this.options.readOnly) {
-          edit.remove();
-          del.remove();
-        } else {
-          controller = {
-            showEdit: function() {
-              return edit.removeAttr('disabled');
-            },
-            hideEdit: function() {
-              return edit.attr('disabled', 'disabled');
-            },
-            showDelete: function() {
-              return del.removeAttr('disabled');
-            },
-            hideDelete: function() {
-              return del.attr('disabled', 'disabled');
-            }
-          };
-        }
+        edit.remove();
+        del.remove();
+        controller = {};
         _ref3 = this.fields;
         for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
           field = _ref3[_l];
@@ -1839,6 +1839,10 @@
 
     Viewer.prototype.onDeleteClick = function(event) {
       return this.onButtonClick(event, 'delete');
+    };
+
+    Viewer.prototype.onSelectClick = function(event) {
+      return this.onButtonClick(event, 'select');
     };
 
     Viewer.prototype.onButtonClick = function(event, type) {
@@ -2195,7 +2199,8 @@
     Store.prototype.events = {
       'annotationCreated': 'annotationCreated',
       'annotationDeleted': 'annotationDeleted',
-      'annotationUpdated': 'annotationUpdated'
+      'annotationUpdated': 'annotationUpdated',
+      'annotationSelected': 'annotationSelected'
     };
 
     Store.prototype.options = {
@@ -2245,11 +2250,7 @@
       if (__indexOf.call(this.annotations, annotation) < 0) {
         this.registerAnnotation(annotation);
         return this._apiRequest('create', annotation, function(data) {
-// INCEPTION EXTENSION BEGIN
-// This is necessary because we channel the AnnotatorJS Ajax events though Wicket and channel
-// responses back through a "temp" variable on the DOM element to which the annotator is attached.
           data = _this.annotator.element[0].temp;
-// INCEPTION EXTENSION END
           if (data.id == null) {
             console.warn(Annotator._t("Warning: No ID returned from server for annotation "), annotation);
           }
@@ -2264,11 +2265,7 @@
       var _this = this;
       if (__indexOf.call(this.annotations, annotation) >= 0) {
         return this._apiRequest('update', annotation, (function(data) {
-// INCEPTION EXTENSION BEGIN
-// This is necessary because we channel the AnnotatorJS Ajax events though Wicket and channel
-// responses back through a "temp" variable on the DOM element to which the annotator is attached.
           data = _this.annotator.element[0].temp;
-// INCEPTION EXTENSION END
           return _this.updateAnnotation(annotation, data);
         }));
       }
@@ -2279,6 +2276,15 @@
       if (__indexOf.call(this.annotations, annotation) >= 0) {
         return this._apiRequest('destroy', annotation, (function() {
           return _this.unregisterAnnotation(annotation);
+        }));
+      }
+    };
+
+    Store.prototype.annotationSelected = function(annotation) {
+      var _this = this;
+      if (__indexOf.call(this.annotations, annotation) >= 0) {
+        return this._apiRequest('select', annotation, (function() {
+          return {};
         }));
       }
     };
@@ -2305,15 +2311,8 @@
     };
 
     Store.prototype._onLoadAnnotations = function(data) {
-// INCEPTION EXTENSION BEGIN
-// This is necessary because we channel the AnnotatorJS Ajax events though Wicket and channel
-// responses back through a "temp" variable on the DOM element to which the annotator is attached.
-      data = this.annotator.element[0].temp;
-// INCEPTION EXTENSION END
       var a, annotation, annotationMap, newData, _k, _l, _len2, _len3, _ref3;
-      if (data == null) {
-        data = [];
-      }
+      data = this.annotator.element[0].temp || [];
       annotationMap = {};
       _ref3 = this.annotations;
       for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
@@ -2339,14 +2338,7 @@
     };
 
     Store.prototype._onLoadAnnotationsFromSearch = function(data) {
-// INCEPTION EXTENSION BEGIN
-// This is necessary because we channel the AnnotatorJS Ajax events though Wicket and channel
-// responses back through a "temp" variable on the DOM element to which the annotator is attached.
-      data = this.annotator.element[0].temp;
-// INCEPTION EXTENSION END
-      if (data == null) {
-        data = {};
-      }
+      data = this.annotator.element[0].temp || {};
       return this._onLoadAnnotations(data.rows || []);
     };
 
@@ -2366,22 +2358,15 @@
       id = obj && obj.id;
       url = this._urlFor(action, id);
       options = this._apiRequestOptions(action, obj, onSuccess);
-// INCEPTION EXTENSION BEGIN
-// We channel Ajax requests through Wicket. This allows us to use an AjaxRequestTarget in the
-// backend and to update/re-render parts of the screen as part of Ajax requests.
-      // request = $.ajax(url, options);
-	  Wicket.Ajax.ajax({
-		"m" : "POST",
-		"c" : this.annotator.element.attr('id'),
-		"u" : url,
-		"ep" : options.data,
-		// success
-		"sh" : [ options.success ],
-		// error
-        "fh" : [ options.error ]
-	  });
-	  request = {};
-// INCEPTION EXTENSION END
+      Wicket.Ajax.ajax({
+        "m": "POST",
+        "c": this.annotator.element.attr('id'),
+        "u": url,
+        "ep": options.data,
+        "sh": [options.success],
+        "fh": [options.error]
+      });
+      request = {};
       request._id = id;
       request._action = action;
       return request;
@@ -2397,7 +2382,7 @@
         success: onSuccess || function() {},
         error: this._onError
       };
-      if (this.options.emulateHTTP /* && (method === 'PUT' || method === 'DELETE') */) {
+      if (this.options.emulateHTTP) {
         opts.headers = $.extend(opts.headers, {
           'X-HTTP-Method-Override': method
         });
@@ -2442,7 +2427,8 @@
         'read': 'GET',
         'update': 'PUT',
         'destroy': 'DELETE',
-        'search': 'GET'
+        'search': 'GET',
+        'select': 'HEAD'
       };
       return table[action];
     };

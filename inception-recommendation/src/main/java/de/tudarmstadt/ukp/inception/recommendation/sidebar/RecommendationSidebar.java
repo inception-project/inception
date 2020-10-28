@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
@@ -93,9 +96,18 @@ public class RecommendationSidebar
         tip.setOption("width", Options.asString("300px"));
         warning.add(tip);
         
-        add(new LambdaAjaxLink("showLog", this::actionShowLog));
+        Label noRecommendersLabel = new Label("noRecommendersLabel",
+                new StringResourceModel("noRecommenders"));
+        List<Recommender> recommenders = recommendationService
+                .listEnabledRecommenders(aModel.getObject().getProject());
+        noRecommendersLabel.add(visibleWhen(() -> recommenders.isEmpty()));
+        add(noRecommendersLabel);
         
-        add(new LambdaAjaxLink("retrain", this::actionRetrain));
+        add(new LambdaAjaxLink("showLog", this::actionShowLog)
+                .add(visibleWhen(() -> !recommenders.isEmpty())));
+
+        add(new LambdaAjaxLink("retrain", this::actionRetrain)
+                .add(visibleWhen(() -> !recommenders.isEmpty())));
         
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
@@ -104,20 +116,24 @@ public class RecommendationSidebar
                 .setMaximum(10)
                 .setStep(1));
 
-        form.add(new CheckBox("showAllPredictions"));
+        form.add(new CheckBox("showAllPredictions").setOutputMarkupId(true));
 
         form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
                 aAnnotationPage.actionRefreshDocument(_target)));
+        form.add(visibleWhen(() -> !recommenders.isEmpty()));
         
         add(form);
 
-        add(new LearningCurveChartPanel(LEARNING_CURVE, aModel));
+        add(new LearningCurveChartPanel(LEARNING_CURVE, aModel)
+                .add(visibleWhen(() -> !recommenders.isEmpty())));
         
         recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
+        recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
         add(recommenderInfos);
         
         logDialog = new LogDialog("logDialog", Model.of("Recommender Log"));
         add(logDialog);
+        
     }
 
     @Override
@@ -180,6 +196,13 @@ public class RecommendationSidebar
                     .listEnabledRecommenders(layer)) {
                 RecommendationEngineFactory<?> factory = recommendationService
                         .getRecommenderFactory(recommender);
+                
+                // E.g. if the module providing a configured recommender has been disabled but the
+                // recommender is still configured.
+                if (factory == null) {
+                    continue;
+                }
+                
                 if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                     mismatchedRecommenderNames.add(recommender.getName());
                 }

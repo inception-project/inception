@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -44,6 +43,7 @@ import com.github.benmanes.caffeine.cache.RemovalCause;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
@@ -166,6 +166,7 @@ public class SearchServiceImpl
      * 
      * @param aEvent
      *            The BeforeProjectRemovedEvent event
+     * @throws IOException
      */
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
@@ -310,7 +311,6 @@ public class SearchServiceImpl
             // threads to update the index concurrently. The underlying index code should hopefully
             // be thread-safe...
             try {
-                index.getPhysicalIndex().deindexDocument(aSourceDocument);
                 index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
             }
             catch (IOException e) {
@@ -354,34 +354,12 @@ public class SearchServiceImpl
             // threads to update the index concurrently. The underlying index code should hopefully
             // be thread-safe...
             try {
-                // NOTE: Deleting and then re-indexing the annotation document could lead to
-                // no results for this annotation document being returned while the
-                // re-indexing is still in process. Therefore, we check if there is already
-                // a version of the annotation document index, we obtain the timestamp of this
-                // version, then we add the new version, and finally we remove the old version
-                // as identified by the timestamp.
-
-                // Retrieve the timestamp for the current indexed annotation document
-                Optional<String> oldVersionTimestamp = index.getPhysicalIndex()
-                        .getTimestamp(aAnnotationDocument);
-
                 // Add annotation document to the index again
                 log.trace(
                         "Indexing new version of annotation document [{}]({}) in project [{}]({})",
                         aAnnotationDocument.getName(), aAnnotationDocument.getId(),
                         project.getName(), project.getId());
                 index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
-
-                // If there was a previous timestamped indexed annotation document, remove it from
-                // index
-                if (oldVersionTimestamp.isPresent()) {
-                    log.trace(
-                            "Removing old version of annotation document [{}]({}) in project [{}]({}) with timestamp [{}]",
-                            aAnnotationDocument.getName(), aAnnotationDocument.getId(),
-                            project.getName(), project.getId(), oldVersionTimestamp.get());
-                    index.getPhysicalIndex().deindexDocument(aAnnotationDocument,
-                            oldVersionTimestamp.get());
-                }
             }
             catch (IOException e) {
                 log.error("Error indexing annotation document [{}]({}) in project [{}]({})",
@@ -463,13 +441,29 @@ public class SearchServiceImpl
                 List<AnnotationDocument> annotationDocumentsForUser = documentService
                         .listAnnotationDocuments(aProject, user);
                 for (AnnotationDocument doc : annotationDocumentsForUser) {
-                    indexDocument(doc, casToByteArray(documentService.readAnnotationCas(doc)));
+                    // Because serialization is a process which modifies internal data structures of
+                    // the CAS, we need exclusive access the CAS for the time being.
+                    // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
+                    // for https://issues.apache.org/jira/browse/UIMA-6162
+                    byte[] casAsByteArray;
+                    try (CasStorageSession session = CasStorageSession.openNested()) {
+                        casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
+                    }
+                    indexDocument(doc, casAsByteArray);
                 }
             }
 
             // Index all the source documents
             for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
-                indexDocument(doc, casToByteArray(documentService.createOrReadInitialCas(doc)));
+                // Because serialization is a process which modifies internal data structures of
+                // the CAS, we need exclusive access the CAS for the time being.
+                // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
+                // for https://issues.apache.org/jira/browse/UIMA-6162
+                byte[] casAsByteArray;
+                try (CasStorageSession session = CasStorageSession.openNested()) {
+                    casAsByteArray = casToByteArray(documentService.createOrReadInitialCas(doc));
+                }
+                indexDocument(doc, casAsByteArray);
             }            
             
             // After re-indexing, reset the invalid flag

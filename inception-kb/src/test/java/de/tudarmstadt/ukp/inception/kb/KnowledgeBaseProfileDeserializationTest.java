@@ -75,7 +75,8 @@ public class KnowledgeBaseProfileDeserializationTest
         }
         KnowledgeBaseProfile testProfile = profiles.get("test_profile");
         Assertions.assertThat(testProfile)
-                .isEqualToComparingFieldByFieldRecursively(referenceProfile);
+                .usingRecursiveComparison()
+                .isEqualTo(referenceProfile);
     }
 
     private KnowledgeBaseInfo createReferenceInfo()

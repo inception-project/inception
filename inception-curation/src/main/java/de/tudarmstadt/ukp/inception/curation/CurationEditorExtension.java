@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -169,7 +168,7 @@ public class CurationEditorExtension
             }
         }
         
-        aPanel.actionSelect(aTarget, aTargetCas);
+        aPanel.actionSelect(aTarget);
         aPanel.actionCreateOrUpdate(aTarget, aTargetCas);  //should also update timestamps
     }
 
@@ -205,6 +204,12 @@ public class CurationEditorExtension
             return;
         }
         
+        // check if user already finished with this document
+        User currentUser = userRepository.getCurrentUser();
+        if (documentService.isAnnotationFinished(aState.getDocument(), currentUser)) {
+            return;
+        }
+        
         //check annotatorstate metadata if user is currently curating for this project
         long projectId = aState.getProject().getId();
         Boolean isCurating = aState.getMetaData(CurationMetadata.CURATION_USER_PROJECT);
@@ -212,14 +217,15 @@ public class CurationEditorExtension
             return;
         }
             
-        Optional<List<User>> selectedUsers = curationService
-                .listUsersSelectedForCuration(userRepository.getCurrentUser().getUsername(), 
-                        projectId);
-        if (!selectedUsers.isPresent()) {
+        List<User> selectedUsers = curationService
+                .listUsersReadyForCuration(currentUser.getUsername(), 
+                        aState.getProject(), aState.getDocument());
+        if (selectedUsers.isEmpty()) {
             return;
         }
 
-        for (User user : selectedUsers.get()) {
+        for (User user : selectedUsers) {
+                        
             try {
                 CAS userCas = documentService.readAnnotationCas(aState.getDocument(),
                         user.getUsername());

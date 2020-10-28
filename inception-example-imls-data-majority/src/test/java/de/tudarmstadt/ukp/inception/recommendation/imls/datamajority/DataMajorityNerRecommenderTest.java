@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.addScoreFeature;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
@@ -49,6 +50,7 @@ import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -94,7 +96,10 @@ public class DataMajorityNerRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
-        addScoreFeature(cas, NamedEntity.class.getName(), "value");
+        try (CasStorageSession session = CasStorageSession.open()) {
+            session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
+            addScoreFeature(cas, NamedEntity.class.getName(), "value");
+        }
         
         sut.train(context, asList(cas));
 
