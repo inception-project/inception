@@ -34,7 +34,6 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.BaseHttpSolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
-import org.apache.solr.client.solrj.request.SolrPing;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -218,8 +217,8 @@ public class SolrSearchProvider
      * @param aCollectionId the name of the collection
      * @param aDocumentId the id of the document
      * @return is used by the module external search core in order to get a preview of the document
-     * @throws SolrServerException Connection timeout, exception and request exception
-     * @throws IllegalArgumentException 
+     * @throws IllegalArgumentException inconsistent collection names
+     * @throws IOException issues in communication with Solr server
      */
     @Override
     public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
@@ -326,20 +325,6 @@ public class SolrSearchProvider
                 .build();
     }
 
-    /**
-     * Ping the Solr server
-     * @param client
-     * @param aTraits
-     * @throws IOException
-     * @throws SolrServerException Wrong URL or collection
-     */
-    private void pingClient(HttpSolrClient client, SolrSearchProviderTraits aTraits)
-            throws IOException, SolrServerException
-    {
-        SolrPing ping = new SolrPing();
-        ping.getParams().add("distrib", "true");
-        ping.process(client, aTraits.getIndexName());
-    }
 
     /**
      * Escape special characters for standard query parser. Usefull when retrieving document with
