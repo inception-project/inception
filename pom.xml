@@ -55,8 +55,8 @@
   </distributionManagement>
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.target>8</maven.compiler.target>
-    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>nl.ru.test.category.SlowTests</excludedTestCategories>
@@ -65,7 +65,7 @@
     <assertj.version>3.15.0</assertj.version>
     <spring.version>5.2.7.RELEASE</spring.version>
     <spring.boot.version>2.3.4.RELEASE</spring.boot.version>
-    <spring.security.version>5.4.1.RELEASE</spring.security.version>
+    <spring.security.version>5.4.1</spring.security.version>
     <wicket.version>9.1.0</wicket.version>
     <wicketstuff.version>9.1.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.0.0</wicket-jquery-ui.version>
