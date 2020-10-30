@@ -24,7 +24,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
-import de.tudarmstadt.ukp.inception.workload.extension.WorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -54,34 +53,34 @@ public class DynamicWorkloadExtension
     }
 
     @Override
-    public WorkloadTraits readTraits(WorkloadManager aWorkloadManager)
+    public DynamicWorkloadTrait readTraits(WorkloadManager aWorkloadManager)
     {
-        WorkloadTraits traits = null;
+        DynamicWorkloadTrait traits = null;
 
         try {
-            traits = JSONUtil.fromJsonString(WorkloadTraits.class, aWorkloadManager.getTraits());
+            traits = JSONUtil.fromJsonString(DynamicWorkloadTrait.class,
+                    aWorkloadManager.getTraits());
         }
         catch (Exception e) {
             this.log.error("Unable to read traits", e);
         }
 
         if (traits == null) {
-            traits = new WorkloadTraits();
+            traits = new DynamicWorkloadTrait();
         }
 
         return traits;
     }
 
     @Override
-    public void writeTraits(WorkloadManagementService aWorkloadManagementService,
-            WorkloadTraits aWorkloadTrait, Project aProject)
+    public void writeTraits(WorkloadManagementService aWorkloadManagementService, Object aTrait, Project aProject)
     {
         try {
             aWorkloadManagementService
                     .setWorkloadManagerConfiguration(
                             aWorkloadManagementService
                                     .getOrCreateWorkloadManagerConfiguration(aProject).getType(),
-                            JSONUtil.toJsonString(aWorkloadTrait), aProject);
+                            JSONUtil.toJsonString(aTrait), aProject);
         }
         catch (Exception e) {
             this.log.error("Unable to write traits", e);

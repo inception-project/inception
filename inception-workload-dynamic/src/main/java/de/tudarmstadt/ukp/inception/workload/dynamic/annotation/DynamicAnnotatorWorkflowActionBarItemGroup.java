@@ -18,7 +18,6 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
@@ -27,14 +26,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
+import javax.persistence.EntityManager;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
@@ -61,6 +60,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
+    private @SpringBean EntityManager entityManager;
 
     private final AnnotationPageBase page;
     private final WorkloadManagementService workloadManagementService;
@@ -111,61 +111,47 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             Project project = state.getProject();
             SourceDocument document = state.getDocument();
 
-            annotationDocumentList = documentService.listAnnotationDocuments(project, user);
-
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(document,
                     user);
 
             documentService.transitionAnnotationDocumentState(annotationDocument,
                     ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
 
-            for (AnnotationDocument anno : annotationDocumentList) {
-                // There was one in progress, load it
-                if (anno.getState().equals(IN_PROGRESS)) {
-                    getAnnotationPage().getModelObject().setDocument(anno.getDocument(),
-                            documentService.listSourceDocuments(project));
-                    Optional<AjaxRequestTarget> target = RequestCycle.get()
-                            .find(AjaxRequestTarget.class);
-                    getAnnotationPage().actionLoadDocument(target.orElse(null));
-                    return;
-                }
+            List<AnnotationDocument> inProgressDocuments = workloadManagementService
+                    .getAnnotationDocumentsForSpecificState(IN_PROGRESS, project, user);
+            if (inProgressDocuments.size() > 0) {
+                getAnnotationPage().getModelObject().setDocument(
+                        inProgressDocuments.get(0).getDocument(),
+                        documentService.listSourceDocuments(project));
+                getAnnotationPage().actionLoadDocument(_target);
+                return;
             }
 
             WorkloadManager currentWorkload = workloadManagementService
                     .getOrCreateWorkloadManagerConfiguration(project);
 
-            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkloadType()) {
+            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getType()) {
             case ("Randomized workflow"):
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
                 List<SourceDocument> randomList = documentService.listSourceDocuments(project);
                 Collections.shuffle(randomList);
+                Map<SourceDocument, AnnotationDocument> documentsOfCurrentUser = documentService
+                        .listAnnotatableDocuments(project, user);
                 for (SourceDocument doc : randomList) {
-                    if ((getUsersWorkingOnTheDocument(doc) + 1) <= (dynamicWorkloadExtension
-                            .readTraits(currentWorkload).getDefaultNumberOfAnnotations())) {
-                        if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
-                                || (documentService.listAnnotatableDocuments(project, user).get(doc)
-                                        .getState().equals(NEW))) {
-                            getAnnotationPage().getModelObject().setDocument(doc,
-                                    documentService.listSourceDocuments(project));
-                            Optional<AjaxRequestTarget> target = RequestCycle.get()
-                                    .find(AjaxRequestTarget.class);
-                            getAnnotationPage().actionLoadDocument(target.orElse(null));
-                            return;
-                        }
+                    if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(doc, project)
+                            + 1) <= (dynamicWorkloadExtension.readTraits(currentWorkload)
+                                    .getDefaultNumberOfAnnotations())
+                            && (documentsOfCurrentUser.get(doc) == null
+                                    || NEW.equals(documentsOfCurrentUser.get(doc).getState()))) {
+                        getAnnotationPage().getModelObject().setDocument(doc,
+                                documentService.listSourceDocuments(project));
+                        getAnnotationPage().actionLoadDocument(_target);
+                        return;
                     }
                 }
-                //No documents left
-                noDocumentsLeft();
-                break;
-
-
-            case ("Curriculum annotation"):
-
-                // TODO logic for Curriculum annotation
-
-                //No documents left
-                noDocumentsLeft();
+                // No documents left, return to homepage and show corressponding message
+                redirectUSerToHomePage();
                 break;
 
             default:
@@ -173,44 +159,33 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                 for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
                         .listAnnotatableDocuments(project, user).entrySet()) {
                     // First check if too many users are already working on the document
-                    if (((getUsersWorkingOnTheDocument(entry.getKey())
+                    if (((workloadManagementService
+                            .getAmountOfUsersWorkingOnADocument(entry.getKey(), project))
                             + 1) <= dynamicWorkloadExtension.readTraits(currentWorkload)
-                                    .getDefaultNumberOfAnnotations())) {
+                                    .getDefaultNumberOfAnnotations()) {
                         // Now check if there either is no annotation document yet created or its
                         // state is NEW
-                        if (entry.getValue() == null || entry.getValue().getState().equals(NEW)) {
+                        if (entry.getValue() == null || NEW.equals(entry.getValue().getState())) {
                             getAnnotationPage().getModelObject().setDocument(entry.getKey(),
                                     documentService.listSourceDocuments(project));
-                            Optional<AjaxRequestTarget> target = RequestCycle.get()
-                                    .find(AjaxRequestTarget.class);
-                            getAnnotationPage().actionLoadDocument(target.orElse(null));
+                            getAnnotationPage().actionLoadDocument(_target);
                             return;
                         }
                     }
                 }
-                //No documents left
-                noDocumentsLeft();
+                // No documents left, return to homepage and show corressponding message
+                redirectUSerToHomePage();
                 break;
             }
         });
         finishDocumentDialog.show(aTarget);
     }
 
-    public int getUsersWorkingOnTheDocument(SourceDocument aDocument)
-    {
-        return (int) documentService
-                .listAnnotationDocuments(getAnnotationPage().getModelObject().getProject()).stream()
-                .filter(d -> d.getDocument().equals(aDocument) && !d.getState().equals(NEW)
-                        && !d.getState().equals(IGNORE))
-                .count();
-    }
-
-    public void noDocumentsLeft()
+    public void redirectUSerToHomePage()
     {
         // Nothing left, so returning to homepage and showing hint
-        getAnnotationPage().setResponsePage(getAnnotationPage().
-            getApplication().getHomePage());
+        getAnnotationPage().setResponsePage(getAnnotationPage().getApplication().getHomePage());
         getAnnotationPage().getSession().info(
-            "There are no more documents to annotate available for you. Please contact your project supervisor.");
+                "There are no more documents to annotate available for you. Please contact your project supervisor.");
     }
 }

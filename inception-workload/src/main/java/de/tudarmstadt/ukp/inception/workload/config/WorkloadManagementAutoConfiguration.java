@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImplBase;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 @Configuration
@@ -47,7 +47,7 @@ public class WorkloadManagementAutoConfiguration
     public WorkloadManagementService workloadManagementService(
         EntityManager aEntityManager, WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
     {
-        return new WorkloadManagementServiceImplBase(aEntityManager,
+        return new WorkloadManagementServiceImpl(aEntityManager,
             aWorkloadManagerExtensionPoint);
     }
 

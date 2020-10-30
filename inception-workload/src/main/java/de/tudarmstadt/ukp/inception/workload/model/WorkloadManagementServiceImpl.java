@@ -17,13 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.workload.model;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 
@@ -33,15 +39,15 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
  * {@link WorkloadManagementAutoConfiguration#workloadManagementService}
  * </p>
  */
-public class WorkloadManagementServiceImplBase
+public class WorkloadManagementServiceImpl
     implements WorkloadManagementService
 {
     private final EntityManager entityManager;
     private final WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
 
     @Autowired
-    public WorkloadManagementServiceImplBase(EntityManager aEntityManager,
-            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+    public WorkloadManagementServiceImpl(EntityManager aEntityManager,
+                                         WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
     {
         entityManager = aEntityManager;
         workloadManagerExtensionPoint = aWorkloadManagerExtensionPoint;
@@ -96,5 +102,46 @@ public class WorkloadManagementServiceImplBase
                         + "WHERE project = :projectID")
                 .setParameter("extensionPointID", aExtensionPointID).setParameter("traits", aTraits)
                 .setParameter("projectID", aProject).executeUpdate();
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationDocument> getAnnotationDocumentsForSpecificState(
+            AnnotationDocumentState aState, Project aProject, User aUser)
+    {
+        return entityManager
+                .createQuery("SELECT AnnotationDocument FROM AnnotationDocument "
+                        + "WHERE project = :projectID " + "AND user = :userID "
+                        + "AND state = :state", AnnotationDocument.class)
+                .setParameter("projectID", aProject).setParameter("userID", aUser)
+                .setParameter("state", aState).getResultList();
+
+    }
+
+    @Override
+    @Transactional
+    public List<User> getUsersForSpecificDocumentAndState(AnnotationDocumentState aState,
+            SourceDocument aSourceDocument, Project aProject)
+    {
+        return entityManager
+                .createQuery("SELECT User FROM AnnotationDocument " + "WHERE project = :projectID "
+                        + "AND name = :document " + "AND state = :state",
+                        User.class)
+                .setParameter("projectID", aProject)
+                .setParameter("document", aSourceDocument)
+                .setParameter("state", aState).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public int getAmountOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject)
+    {
+        return entityManager
+                .createQuery(
+                        "SELECT User " + "FROM AnnotationDocument anno "
+                                + "WHERE anno.name = :name " + "AND anno.project = :project ",
+                        Integer.class)
+                .setParameter("name", aDocument).setParameter("project", aProject)
+                .getSingleResult();
     }
 }

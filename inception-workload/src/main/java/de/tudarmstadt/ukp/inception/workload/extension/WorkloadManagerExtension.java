@@ -22,7 +22,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
-public interface WorkloadManagerExtension
+public interface WorkloadManagerExtension<T>
     extends Extension<Project>
 {
     @Override
@@ -33,9 +33,8 @@ public interface WorkloadManagerExtension
 
     String getLabel();
 
-    WorkloadTraits readTraits(WorkloadManager aWorkloadManager);
+    T readTraits(WorkloadManager aWorkloadManager);
 
-    void writeTraits(WorkloadManagementService aWorkloadManagementService,
-            WorkloadTraits aWorkloadTrait, Project aProject);
-
+    void writeTraits(WorkloadManagementService aWorkloadManagementService, T aTrait,
+            Project aProject);
 }
