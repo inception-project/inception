@@ -67,8 +67,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
 
     protected final ConfirmationDialog finishDocumentDialog;
 
-    private List<AnnotationDocument> annotationDocumentList;
-
     public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage,
             WorkloadManagementService aWorkloadManagementService)
     {
