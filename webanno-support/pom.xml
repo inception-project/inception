@@ -134,14 +134,6 @@
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.bit3</groupId>
-      <artifactId>jsass</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket.webjars</groupId>
-      <artifactId>wicket-webjars</artifactId>
-    </dependency>
 
 
     <!-- Hibernate dependencies -->

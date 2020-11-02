@@ -55,25 +55,23 @@
   </distributionManagement>
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.target>8</maven.compiler.target>
-    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
   
     <mockito.version>3.3.3</mockito.version>
     <assertj.version>3.15.0</assertj.version>
     <spring.version>5.2.7.RELEASE</spring.version>
-    <spring.boot.version>2.3.1.RELEASE</spring.boot.version>
-    <spring.security.version>5.3.3.RELEASE</spring.security.version>
-    <wicket.version>8.8.0</wicket.version>
-    <wicketstuff.version>8.8.0</wicketstuff.version>
-    <wicket-jquery-ui.version>8.8.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>3.0.0-M15</wicket-bootstrap.version>
-    <!-- 2.x is for Wicket 8; 3.x is for Wicket 9 -->
-    <wicket-jquery-selectors.version>2.0.9</wicket-jquery-selectors.version>
-    <!-- 2.x is for Wicket 8; 3.x is for Wicket 9 -->
-    <wicket-webjars.version>2.0.18</wicket-webjars.version>    
-    <wicket-spring-boot.version>2.1.9</wicket-spring-boot.version>
-    <bootstrap.version>4.4.1-1</bootstrap.version>
+    <spring.boot.version>2.3.4.RELEASE</spring.boot.version>
+    <spring.security.version>5.4.1</spring.security.version>
+    <wicket.version>9.1.0</wicket.version>
+    <wicketstuff.version>9.1.0</wicketstuff.version>
+    <wicket-jquery-ui.version>9.0.0</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>5.0.2</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>3.0.1</wicket-jquery-selectors.version>
+    <wicket-webjars.version>3.0.1</wicket-webjars.version>
+    <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
+    <bootstrap.version>4.5.2</bootstrap.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <uimafit.version>3.1.0</uimafit.version>

@@ -38,7 +38,7 @@ import org.apache.wicket.core.request.mapper.HomePageMapper;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.IRequestMapper;
-import org.apache.wicket.request.cycle.AbstractRequestCycleListener;
+import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.resource.PackageResourceReference;
@@ -59,15 +59,15 @@ import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
+import de.agilecoders.wicket.sass.BootstrapSass;
+import de.agilecoders.wicket.sass.SassCacheManager;
+import de.agilecoders.wicket.sass.SassCompilerOptionsFactory;
 import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.clarin.webanno.support.sass.BootstrapSass;
-import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassCacheManager;
-import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassCompilerOptionsFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.BootstrapAwareJQueryUIJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
@@ -121,7 +121,7 @@ public abstract class WicketApplicationBase
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
         getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);        
         
-//        initSpring();
+        getCspSettings().blocking().disabled();
         
         initStatelessChecker();
         
@@ -253,7 +253,7 @@ public abstract class WicketApplicationBase
     }
     protected void initMDCLifecycle()
     {
-        getRequestCycleListeners().add(new AbstractRequestCycleListener()
+        getRequestCycleListeners().add(new IRequestCycleListener()
         {
             @Override
             public void onBeginRequest(RequestCycle cycle)

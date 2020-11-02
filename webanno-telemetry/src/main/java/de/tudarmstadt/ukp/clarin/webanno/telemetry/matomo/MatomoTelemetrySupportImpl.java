@@ -25,6 +25,7 @@ import static ch.rasc.piwik.tracking.QueryParameter.VISIT_CUSTOM_VARIABLE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.PROP_VERSION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getVersionProperties;
 import static java.util.Arrays.asList;
+import static java.util.Collections.newSetFromMap;
 
 import java.io.IOException;
 import java.security.cert.CertificateException;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -42,7 +44,6 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.util.collections.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -99,7 +100,7 @@ public class MatomoTelemetrySupportImpl
     
     // Set of all principals that were active in the interval between one PING and the next. Gets
     // cleared when the PING is sent.
-    private final Set<Object> activePrincipals = new ConcurrentHashSet<>(10);
+    private final Set<Object> activePrincipals = newSetFromMap(new ConcurrentHashMap<>());
 
     private PiwikTracker tracker;
     

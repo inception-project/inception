@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
@@ -63,11 +64,15 @@ public final class FastIOUtils
         ) {
             final ByteBuffer buffer = allocateDirect(8192);
             while (in.read(buffer) != -1) {
-                buffer.flip();
+                // Cast to buffer to permit code to run on Java 8.
+                // See: https://github.com/inception-project/inception/issues/1828#issuecomment-717047584
+                ((Buffer) buffer).flip();
                 out.write(buffer);
                 buffer.compact();
             }
-            buffer.flip();
+            // Cast to buffer to permit code to run on Java 8.
+            // See: https://github.com/inception-project/inception/issues/1828#issuecomment-717047584
+            ((Buffer) buffer).flip();
             while (buffer.hasRemaining()) {
                 out.write(buffer);
             }

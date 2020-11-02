@@ -142,6 +142,10 @@
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-sass</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
     <dependency>
