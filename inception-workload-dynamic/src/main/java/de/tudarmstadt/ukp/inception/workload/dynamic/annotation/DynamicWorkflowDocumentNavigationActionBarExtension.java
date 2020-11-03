@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.workflow.RandomizedWorkflowExtension.RANDOMIZED_WORKFLOW;
 
 import java.util.Collections;
 import java.util.List;
@@ -119,10 +120,11 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         List<AnnotationDocument> inProgressDocuments = workloadManagementService
                 .getAnnotationDocumentsForSpecificState(IN_PROGRESS, project, user);
 
+        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+
         if (inProgressDocuments.size() > 0) {
             aPage.getModelObject().setDocument(inProgressDocuments.get(0).getDocument(),
                     documentService.listSourceDocuments(project));
-            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
             aPage.actionLoadDocument(target.orElse(null));
         }
 
@@ -131,8 +133,8 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
             WorkloadManager currentWorkload = workloadManagementService
                     .getOrCreateWorkloadManagerConfiguration(project);
 
-            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkloadType()) {
-            case ("Randomized workflow"):
+            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getType()) {
+            case (RANDOMIZED_WORKFLOW):
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
                 List<SourceDocument> randomList = documentService.listSourceDocuments(project);
@@ -147,8 +149,6 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                                     || NEW.equals(documentsOfCurrentUser.get(doc).getState()))) {
                         aPage.getModelObject().setDocument(doc,
                                 documentService.listSourceDocuments(project));
-                        Optional<AjaxRequestTarget> target = RequestCycle.get()
-                                .find(AjaxRequestTarget.class);
                         aPage.actionLoadDocument(target.orElse(null));
                         return;
                     }
@@ -171,8 +171,6 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                         if (entry.getValue() == null || NEW.equals(entry.getValue().getState())) {
                             aPage.getModelObject().setDocument(entry.getKey(),
                                     documentService.listSourceDocuments(project));
-                            Optional<AjaxRequestTarget> target = RequestCycle.get()
-                                    .find(AjaxRequestTarget.class);
                             aPage.actionLoadDocument(target.orElse(null));
                             return;
                         }

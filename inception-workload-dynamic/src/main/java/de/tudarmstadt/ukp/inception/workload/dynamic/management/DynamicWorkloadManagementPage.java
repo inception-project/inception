@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.DateSelection;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -122,12 +123,14 @@ public class DynamicWorkloadManagementPage
     private TextField<String> userFilterTextField;
     private TextField<String> documentFilterTextField;
 
-    private BootstrapRadioChoice<String> dateChoices;
+    private BootstrapRadioChoice<DateSelection> dateChoices;
 
     private BootstrapSelect<String> workflowChoices;
     private BootstrapSelect<User> userSelection;
     private BootstrapSelect<AnnotationDocument> resetDocument;
     private BootstrapSelect<AnnotationDocumentState> documentState;
+
+    private DateSelection dateSelection;
 
     // SpringBeans
     private @SpringBean UserDao userRepository;
@@ -284,16 +287,10 @@ public class DynamicWorkloadManagementPage
         searchForm.add(dateTo);
 
         // Date choices
-        // FIXME: This should use an Enum value as model - and I18N should be used to map the
-        // enum's values to the display values
-        List<String> dateChoice = new ArrayList<>();
-        dateChoice.add(getString("from"));
-        dateChoice.add(getString("until"));
-        dateChoice.add(getString("between"));
-
+        List<DateSelection> dateChoice = Arrays.asList(dateSelection.getClass().getEnumConstants());
         // Create the radio button group
-        dateChoices = new BootstrapRadioChoice<>("date", new Model<>(getString("between")),
-                dateChoice);
+        dateChoices = new BootstrapRadioChoice<>
+            ("date", new Model<>(DateSelection.between), dateChoice);
         dateChoices.setInline(true);
         dateChoices.setOutputMarkupId(true);
 
@@ -303,12 +300,8 @@ public class DynamicWorkloadManagementPage
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
             {
-                if (getDefaultModelObjectAsString().equals(dateChoice.get(0))) {
-                    dateTo.setModelObject(null);
-                }
-                else if (getDefaultModelObjectAsString().equals(dateChoice.get(1))) {
-                    dateFrom.setModelObject(null);
-                }
+                dateTo.setModelObject(null);
+                dateFrom.setModelObject(null);
 
                 ajaxRequestTarget.add(dateFrom);
                 ajaxRequestTarget.add(dateTo);
@@ -325,7 +318,7 @@ public class DynamicWorkloadManagementPage
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
             {
-                if (getDefaultModelObjectAsString().equals("true")) {
+                if (getModelObject()) {
                     userFilterTextField.setModelObject(null);
                     dateFrom.setModelObject(null);
                     dateTo.setModelObject(null);
@@ -349,10 +342,10 @@ public class DynamicWorkloadManagementPage
 
         // Condition for filter inputs to be enabled
         dateTo.add(enabledWhen(
-            () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0))
+            () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0).name())
                 && !unused.getModelObject()));
         dateFrom.add(enabledWhen(
-            () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1))
+            () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1).name())
                 && !unused.getModelObject()));
         dateChoices.add(enabledWhen(() -> !unused.getModelObject()));
         userFilterTextField.add(enabledWhen(() -> !unused.getModelObject()));
@@ -558,12 +551,6 @@ public class DynamicWorkloadManagementPage
         }
     }
 
-    private String getWorkflowManager()
-    {
-        return workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(currentProject.getObject()).getTraits();
-    }
-
     private List<AnnotationDocumentState> getAnnotationDocumentStates()
     {
         return Arrays.stream(AnnotationDocumentState.values())
@@ -657,7 +644,6 @@ public class DynamicWorkloadManagementPage
             error("Please add documents you want to assign.");
         }
         else {
-
             for (SourceDocument sourceDocument : aForm.getModelObject()) {
                 try {
                     AnnotationDocument annotationDocument = documentService

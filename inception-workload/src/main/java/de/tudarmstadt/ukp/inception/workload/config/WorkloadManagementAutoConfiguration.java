@@ -25,6 +25,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPointImpl;
@@ -38,7 +40,7 @@ public class WorkloadManagementAutoConfiguration
 {
     @Bean
     public WorkloadManagerExtensionPoint workloadExtensionPoint(
-        List<WorkloadManagerExtension> aWorkloadExtensions)
+        List<WorkloadManagerExtension<Extension<Project>>> aWorkloadExtensions)
     {
         return new WorkloadManagerExtensionPointImpl(aWorkloadExtensions);
     }

@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.workflow.RandomizedWorkflowExtension.RANDOMIZED_WORKFLOW;
 
 import java.util.Collections;
 import java.util.List;
@@ -129,7 +130,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                     .getOrCreateWorkloadManagerConfiguration(project);
 
             switch (dynamicWorkloadExtension.readTraits(currentWorkload).getType()) {
-            case ("Randomized workflow"):
+            case (RANDOMIZED_WORKFLOW):
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
                 List<SourceDocument> randomList = documentService.listSourceDocuments(project);
