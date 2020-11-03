@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.DateSelection;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -90,10 +89,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadTrait;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.DateSelection;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.traits.DynamicWorkloadTrait;
 import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtensionPoint;
 
@@ -106,8 +106,6 @@ public class DynamicWorkloadManagementPage
     private Form<Void> searchForm;
     private Form<Collection<SourceDocument>> userAssignDocumentForm;
     private Form<AnnotationDocument> userResetDocumentForm;
-
-    private WorkflowExtensionPoint workflowExtensionPoint;
 
     private final IModel<Project> currentProject = new Model<>();
 
@@ -130,8 +128,6 @@ public class DynamicWorkloadManagementPage
     private BootstrapSelect<AnnotationDocument> resetDocument;
     private BootstrapSelect<AnnotationDocumentState> documentState;
 
-    private DateSelection dateSelection;
-
     // SpringBeans
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
@@ -139,6 +135,7 @@ public class DynamicWorkloadManagementPage
     private @SpringBean DocumentService documentService;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
+    private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
 
     public DynamicWorkloadManagementPage()
     {
@@ -287,10 +284,10 @@ public class DynamicWorkloadManagementPage
         searchForm.add(dateTo);
 
         // Date choices
-        List<DateSelection> dateChoice = Arrays.asList(dateSelection.getClass().getEnumConstants());
+        List<DateSelection> dateChoice = Arrays.asList(DateSelection.values());
         // Create the radio button group
-        dateChoices = new BootstrapRadioChoice<>
-            ("date", new Model<>(DateSelection.between), dateChoice);
+        dateChoices = new BootstrapRadioChoice<>("date", new Model<>(DateSelection.between),
+                dateChoice);
         dateChoices.setInline(true);
         dateChoices.setOutputMarkupId(true);
 
@@ -318,7 +315,7 @@ public class DynamicWorkloadManagementPage
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
             {
-                if (getModelObject()) {
+                if (Boolean.getBoolean(getDefaultModelObjectAsString())) {
                     userFilterTextField.setModelObject(null);
                     dateFrom.setModelObject(null);
                     dateTo.setModelObject(null);
@@ -343,13 +340,17 @@ public class DynamicWorkloadManagementPage
         // Condition for filter inputs to be enabled
         dateTo.add(enabledWhen(
             () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0).name())
-                && !unused.getModelObject()));
+                && !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
         dateFrom.add(enabledWhen(
             () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1).name())
-                && !unused.getModelObject()));
-        dateChoices.add(enabledWhen(() -> !unused.getModelObject()));
-        userFilterTextField.add(enabledWhen(() -> !unused.getModelObject()));
-        documentFilterTextField.add(enabledWhen(() -> !unused.getModelObject()));
+                && !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
+
+        dateChoices.add(enabledWhen(() ->
+                    !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
+        userFilterTextField.add(enabledWhen(() ->
+                    !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
+        documentFilterTextField.add(enabledWhen(() ->
+                    !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
 
         return searchForm;
     }
@@ -379,10 +380,9 @@ public class DynamicWorkloadManagementPage
         settingsForm.add(save);
 
         workflowChoices = new BootstrapSelect<>("workloadStrategy");
-        workflowChoices.setDefaultModel(Model.of(traits.getType()));
+        workflowChoices.setDefaultModel(Model.of(traits.getWorkflowType()));
         List<String> choices = workflowExtensionPoint.getExtensions().stream()
-            .map(WorkflowExtension::getLabel)
-            .collect(Collectors.toList());
+                .map(WorkflowExtension::getLabel).collect(Collectors.toList());
         workflowChoices.setChoices(choices);
         workflowChoices.setRequired(true);
         workflowChoices.setNullValid(false);
@@ -590,13 +590,13 @@ public class DynamicWorkloadManagementPage
         aTarget.addChildren(getPage(), IFeedback.class);
 
         dynamicWorkloadExtension.writeTraits(workloadManagementService,
-            new DynamicWorkloadTrait(workflowChoices.getModelValue(),
-                Integer.parseInt(defaultNumberDocumentsTextField.getInput())),
-            currentProject.getObject());
+                new DynamicWorkloadTrait(workflowChoices.getDefaultModelObjectAsString(),
+                        Integer.parseInt(defaultNumberDocumentsTextField.getInput())),
+                currentProject.getObject());
 
         if (workflowChoices.getDefaultModelObjectAsString().equals(getString("randomized")))
 
-        success("Changes saved");
+            success("Changes saved");
     }
 
     private void actionSetDocumentStatus(AjaxRequestTarget aAjaxRequestTarget,

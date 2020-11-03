@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
-import static de.tudarmstadt.ukp.inception.workload.dynamic.workflow.RandomizedWorkflowExtension.RANDOMIZED_WORKFLOW;
+import static de.tudarmstadt.ukp.inception.workload.workflow.types.RandomizedWorkflowExtension.RANDOMIZED_WORKFLOW;
 
 import java.util.Collections;
 import java.util.List;
@@ -133,7 +133,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
             WorkloadManager currentWorkload = workloadManagementService
                     .getOrCreateWorkloadManagerConfiguration(project);
 
-            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getType()) {
+            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkflowType()) {
             case (RANDOMIZED_WORKFLOW):
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW

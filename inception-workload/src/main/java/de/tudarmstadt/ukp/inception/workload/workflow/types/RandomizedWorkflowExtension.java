@@ -15,18 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.workflow;
+package de.tudarmstadt.ukp.inception.workload.workflow.types;
 
-import java.util.List;
+import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
-import de.tudarmstadt.ukp.inception.workload.workflow.types.WorkflowType;
-
-public interface WorkflowExtensionPoint
-    extends ExtensionPoint<Project, WorkflowExtension>
+public class RandomizedWorkflowExtension implements WorkflowExtension
 {
-    WorkflowExtension getDefault();
+    public static final String RANDOMIZED_WORKFLOW = "randomized";
 
-    List<WorkflowType> getTypes();
+    @Override
+    public String getLabel()
+    {
+        return "Randomized workflow";
+    }
+
+    @Override
+    public String getId()
+    {
+        return RANDOMIZED_WORKFLOW;
+    }
 }

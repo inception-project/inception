@@ -27,6 +27,7 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
+import de.tudarmstadt.ukp.inception.workload.traits.MatrixWorkloadTrait;
 
 /**
  * <p>
@@ -36,7 +37,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
  */
 @Order(-10)
 public class MatrixWorkloadExtension
-    implements WorkloadManagerExtension
+    implements WorkloadManagerExtension<MatrixWorkloadTrait>
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -76,7 +77,7 @@ public class MatrixWorkloadExtension
 
     @Override
     public void writeTraits(WorkloadManagementService aWorkloadManagementService,
-                            Object aTrait, Project aProject)
+                            MatrixWorkloadTrait aTrait, Project aProject)
     {
         try {
             aWorkloadManagementService

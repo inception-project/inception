@@ -31,13 +31,14 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
-import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
+import de.tudarmstadt.ukp.inception.workload.traits.DynamicWorkloadTrait;
 
 public class WorkloadSettingsPanel
     extends Panel
@@ -81,9 +82,9 @@ public class WorkloadSettingsPanel
     {
         WorkloadManager manager = workloadManagementService
                 .getOrCreateWorkloadManagerConfiguration(project);
-        WorkloadManagerExtension extension = workloadManagerExtensionPoint
+        Extension extension = workloadManagerExtensionPoint
                 .getExtension(manager.getType());
-        return new WorkloadManagerType(extension.getId(), extension.getLabel());
+        return new WorkloadManagerType(extension.getId(), extension.getId());
     }
 
     private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm) throws IOException
@@ -99,7 +100,7 @@ public class WorkloadSettingsPanel
         else {
             workloadManagementService.setWorkloadManagerConfiguration(
                     workloadStrategy.getModelObject().getWorkloadManagerExtensionId(),
-                    JSONUtil.toJsonString(new WorkloadTraits()), project);
+                    JSONUtil.toJsonString(new DynamicWorkloadTrait()), project);
         }
         success("Workload settings saved");
     }

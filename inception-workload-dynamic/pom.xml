@@ -137,9 +137,5 @@
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-core</artifactId>
         </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-workload-matrix</artifactId>
-        </dependency>
     </dependencies>
 </project>

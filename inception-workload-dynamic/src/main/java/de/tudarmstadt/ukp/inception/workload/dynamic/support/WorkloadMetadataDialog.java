@@ -21,11 +21,11 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 
 public class WorkloadMetadataDialog extends Panel

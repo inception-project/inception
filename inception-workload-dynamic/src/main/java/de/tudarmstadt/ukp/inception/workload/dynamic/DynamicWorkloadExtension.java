@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManag
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
+import de.tudarmstadt.ukp.inception.workload.traits.DynamicWorkloadTrait;
 
 /**
  * <p>
@@ -34,7 +35,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
  * </p>
  */
 public class DynamicWorkloadExtension
-    implements WorkloadManagerExtension
+    implements WorkloadManagerExtension<DynamicWorkloadTrait>
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -73,7 +74,8 @@ public class DynamicWorkloadExtension
     }
 
     @Override
-    public void writeTraits(WorkloadManagementService aWorkloadManagementService, Object aTrait, Project aProject)
+    public void writeTraits(WorkloadManagementService aWorkloadManagementService,
+            DynamicWorkloadTrait aTrait, Project aProject)
     {
         try {
             aWorkloadManagementService

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.workload.extension;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 
@@ -30,10 +29,10 @@ import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfig
  * {@link WorkloadManagementAutoConfiguration#workloadExtensionPoint}.
  * </p>
  */
-public interface WorkloadManagerExtensionPoint
-    extends ExtensionPoint<Project, WorkloadManagerExtension<Extension<Project>>>
+public interface WorkloadManagerExtensionPoint<T>
+    extends ExtensionPoint<Project, WorkloadManagerExtension<T>>
 {
-    WorkloadManagerExtension<Extension<Project>> getDefault();
+    WorkloadManagerExtension<T> getDefault();
     
     List<WorkloadManagerType> getTypes();
 }

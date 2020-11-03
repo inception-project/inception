@@ -15,26 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.matrix;
+package de.tudarmstadt.ukp.inception.workload.traits;
 
 import java.io.Serializable;
+
+import de.tudarmstadt.ukp.inception.workload.workflow.types.DefaultWorkflowExtension;
 
 /**
  * Trait for dynamic workload
  */
-public class MatrixWorkloadTrait implements Serializable
+public class DynamicWorkloadTrait
+    implements Serializable
 {
-    private static final long serialVersionUID = 6984531953353384507L;
-    private static final String MATRIX_WORKLOAD_TRAIT = "matrix";
+    private static final long serialVersionUID = 7558423338392462923L;
 
+    private String workflowType;
     private int defaultNumberOfAnnotations;
 
-    public MatrixWorkloadTrait()
+    public DynamicWorkloadTrait()
     {
+        workflowType = DefaultWorkflowExtension.DEFAULT_WORKFLOW;
+        defaultNumberOfAnnotations = 6;
+
     }
-    public String getType()
+    public DynamicWorkloadTrait(String aWorkflowType, int aDefaultNumberOfAnnotations)
     {
-        return MATRIX_WORKLOAD_TRAIT;
+        workflowType = aWorkflowType;
+        defaultNumberOfAnnotations = aDefaultNumberOfAnnotations;
     }
 
     public int getDefaultNumberOfAnnotations()
@@ -45,5 +52,13 @@ public class MatrixWorkloadTrait implements Serializable
     public void setDefaultNumberOfAnnotations(int defaultNumberOfAnnotations)
     {
         this.defaultNumberOfAnnotations = defaultNumberOfAnnotations;
+    }
+
+    public String getWorkflowType() {
+        return workflowType;
+    }
+
+    public void setWorkflowType(String workflowType) {
+        this.workflowType = workflowType;
     }
 }

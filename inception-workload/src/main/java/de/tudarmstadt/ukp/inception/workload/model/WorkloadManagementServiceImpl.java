@@ -47,7 +47,7 @@ public class WorkloadManagementServiceImpl
 
     @Autowired
     public WorkloadManagementServiceImpl(EntityManager aEntityManager,
-                                         WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
     {
         entityManager = aEntityManager;
         workloadManagerExtensionPoint = aWorkloadManagerExtensionPoint;
@@ -125,10 +125,8 @@ public class WorkloadManagementServiceImpl
     {
         return entityManager
                 .createQuery("SELECT User FROM AnnotationDocument " + "WHERE project = :projectID "
-                        + "AND name = :document " + "AND state = :state",
-                        User.class)
-                .setParameter("projectID", aProject)
-                .setParameter("document", aSourceDocument)
+                        + "AND name = :document " + "AND state = :state", User.class)
+                .setParameter("projectID", aProject).setParameter("document", aSourceDocument)
                 .setParameter("state", aState).getResultList();
     }
 

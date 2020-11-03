@@ -25,32 +25,41 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
+import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtensionPoint;
+import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.workload.workflow.types.CurriculumWorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.workflow.types.DefaultWorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.workflow.types.RandomizedWorkflowExtension;
 
 @Configuration
 @Order(300)
-public class WorkloadManagementAutoConfiguration
+public class WorkloadManagementAutoConfiguration<T>
 {
     @Bean
-    public WorkloadManagerExtensionPoint workloadExtensionPoint(
-        List<WorkloadManagerExtension<Extension<Project>>> aWorkloadExtensions)
+    public WorkloadManagerExtensionPoint<T> workloadExtensionPoint(
+            List<WorkloadManagerExtension<T>> aWorkloadExtensions)
     {
-        return new WorkloadManagerExtensionPointImpl(aWorkloadExtensions);
+        return new WorkloadManagerExtensionPointImpl<>(aWorkloadExtensions);
     }
 
     @Bean
-    public WorkloadManagementService workloadManagementService(
-        EntityManager aEntityManager, WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+    public WorkflowExtensionPoint workflowExtensionPoint(List<WorkflowExtension> aWorkflowExtension)
     {
-        return new WorkloadManagementServiceImpl(aEntityManager,
-            aWorkloadManagerExtensionPoint);
+        return new WorkflowExtensionPointImpl(aWorkflowExtension);
+    }
+
+    @Bean
+    public WorkloadManagementService workloadManagementService(EntityManager aEntityManager,
+            WorkloadManagerExtensionPoint<T> aWorkloadManagerExtensionPoint)
+    {
+        return new WorkloadManagementServiceImpl(aEntityManager, aWorkloadManagerExtensionPoint);
     }
 
     @Bean
@@ -58,5 +67,26 @@ public class WorkloadManagementAutoConfiguration
     {
         return new WorkloadManager();
     }
+
+    @Bean
+    public CurriculumWorkflowExtension curriculumWorkflowExtension()
+    {
+        return new CurriculumWorkflowExtension();
+    }
+
+    @Bean
+    public DefaultWorkflowExtension defaultWorkflowExtension()
+    {
+        return new DefaultWorkflowExtension();
+    }
+
+    @Bean
+    public RandomizedWorkflowExtension randomizedWorkflowExtension()
+    {
+        return new RandomizedWorkflowExtension();
+    }
+
+
+
 
 }
