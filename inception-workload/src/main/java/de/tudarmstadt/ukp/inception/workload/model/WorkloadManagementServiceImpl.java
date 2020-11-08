@@ -109,12 +109,12 @@ public class WorkloadManagementServiceImpl
     public List<AnnotationDocument> getAnnotationDocumentsForSpecificState(
             AnnotationDocumentState aState, Project aProject, User aUser)
     {
-        return entityManager
-                .createQuery("SELECT AnnotationDocument FROM AnnotationDocument "
-                        + "WHERE project = :projectID " + "AND user = :userID "
-                        + "AND state = :state", AnnotationDocument.class)
-                .setParameter("projectID", aProject).setParameter("userID", aUser)
-                .setParameter("state", aState).getResultList();
+        return entityManager.createQuery(
+                "SELECT anno FROM AnnotationDocument anno " + "WHERE anno.project = :projectID "
+                        + "AND anno.user = :userID " + "AND anno.state = :state",
+                AnnotationDocument.class).setParameter("projectID", aProject)
+                .setParameter("userID", aUser.getUsername()).setParameter("state", aState)
+                .getResultList();
 
     }
 
@@ -124,22 +124,37 @@ public class WorkloadManagementServiceImpl
             SourceDocument aSourceDocument, Project aProject)
     {
         return entityManager
-                .createQuery("SELECT User FROM AnnotationDocument " + "WHERE project = :projectID "
-                        + "AND name = :document " + "AND state = :state", User.class)
-                .setParameter("projectID", aProject).setParameter("document", aSourceDocument)
-                .setParameter("state", aState).getResultList();
+                .createQuery("SELECT AnnotationDocument.user FROM AnnotationDocument anno "
+                        + "WHERE anno.project = :projectID " + "AND anno.name = :document "
+                        + "AND anno.state = :state", User.class)
+                .setParameter("projectID", aProject)
+                .setParameter("document", aSourceDocument.getName()).setParameter("state", aState)
+                .getResultList();
     }
 
     @Override
     @Transactional
-    public int getAmountOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject)
+    public Long getAmountOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject)
     {
         return entityManager
                 .createQuery(
-                        "SELECT User " + "FROM AnnotationDocument anno "
+                        " SELECT COUNT(anno) " + "FROM AnnotationDocument anno "
                                 + "WHERE anno.name = :name " + "AND anno.project = :project ",
-                        Integer.class)
-                .setParameter("name", aDocument).setParameter("project", aProject)
+                        Long.class)
+                .setParameter("name", aDocument.getName()).setParameter("project", aProject)
                 .getSingleResult();
     }
+
+    @Override
+    @Transactional
+    public List<AnnotationDocument> getAnnotationDocumentListForUserWithState(Project aProject,
+            User aUser, AnnotationDocumentState aState)
+    {
+        return entityManager.createQuery("SELECT anno "
+                + "FROM SourceDocument source LEFT JOIN AnnotationDocument anno ON "
+                + "source.project = :project AND anno.user = :user AND anno.name = source.name AND anno.state = :state",
+                AnnotationDocument.class).setParameter("project", aProject)
+                .setParameter("state", aState).getResultList();
+    }
+
 }

@@ -133,23 +133,25 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             case (RANDOMIZED_WORKFLOW):
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
-                List<SourceDocument> randomList = documentService.listSourceDocuments(project);
+                List<AnnotationDocument> randomList = workloadManagementService
+                        .getAnnotationDocumentListForUserWithState(project, user, NEW);
                 Collections.shuffle(randomList);
-                Map<SourceDocument, AnnotationDocument> documentsOfCurrentUser = documentService
-                        .listAnnotatableDocuments(project, user);
-                for (SourceDocument doc : randomList) {
-                    if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(doc, project)
+
+                for (AnnotationDocument doc : randomList) {
+                    SourceDocument sourceDocumentForCurrentAnnotationDocument = documentService
+                            .getSourceDocument(project, doc.getName());
+                    if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(
+                            sourceDocumentForCurrentAnnotationDocument, project)
                             + 1) <= (dynamicWorkloadExtension.readTraits(currentWorkload)
-                                    .getDefaultNumberOfAnnotations())
-                            && (documentsOfCurrentUser.get(doc) == null
-                                    || NEW.equals(documentsOfCurrentUser.get(doc).getState()))) {
-                        getAnnotationPage().getModelObject().setDocument(doc,
+                                    .getDefaultNumberOfAnnotations())) {
+                        getAnnotationPage().getModelObject().setDocument(
+                                sourceDocumentForCurrentAnnotationDocument,
                                 documentService.listSourceDocuments(project));
                         getAnnotationPage().actionLoadDocument(_target);
                         return;
                     }
                 }
-                // No documents left, return to homepage and show corressponding message
+                // No documents left, return to homepage and show corresponding message
                 redirectUSerToHomePage();
                 break;
 
@@ -172,7 +174,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                         }
                     }
                 }
-                // No documents left, return to homepage and show corressponding message
+                // No documents left, return to homepage and show corresponding message
                 redirectUSerToHomePage();
                 break;
             }

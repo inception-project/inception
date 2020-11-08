@@ -122,10 +122,11 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
 
         Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
 
-        if (inProgressDocuments.size() > 0) {
+        if (!inProgressDocuments.isEmpty()) {
             aPage.getModelObject().setDocument(inProgressDocuments.get(0).getDocument(),
                     documentService.listSourceDocuments(project));
             aPage.actionLoadDocument(target.orElse(null));
+            return;
         }
 
         // Nothing in progress found
@@ -137,23 +138,25 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
             case (RANDOMIZED_WORKFLOW):
                 // Go through all documents in a random order and check if there
                 // is a Annotation document with the state NEW
-                List<SourceDocument> randomList = documentService.listSourceDocuments(project);
+                List<AnnotationDocument> randomList = workloadManagementService
+                        .getAnnotationDocumentListForUserWithState(project, user, NEW);
                 Collections.shuffle(randomList);
-                Map<SourceDocument, AnnotationDocument> documentsOfCurrentUser = documentService
-                        .listAnnotatableDocuments(project, user);
-                for (SourceDocument doc : randomList) {
-                    if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(doc, project)
+
+                for (AnnotationDocument doc : randomList) {
+                    SourceDocument sourceDocumentForCurrentAnnotationDocument = documentService
+                            .getSourceDocument(project, doc.getName());
+                    if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(
+                            sourceDocumentForCurrentAnnotationDocument, project)
                             + 1) <= (dynamicWorkloadExtension.readTraits(currentWorkload)
-                                    .getDefaultNumberOfAnnotations())
-                            && (documentsOfCurrentUser.get(doc) == null
-                                    || NEW.equals(documentsOfCurrentUser.get(doc).getState()))) {
-                        aPage.getModelObject().setDocument(doc,
+                                    .getDefaultNumberOfAnnotations())) {
+                        aPage.getModelObject().setDocument(
+                                sourceDocumentForCurrentAnnotationDocument,
                                 documentService.listSourceDocuments(project));
                         aPage.actionLoadDocument(target.orElse(null));
                         return;
                     }
                 }
-                // No documents left, return to homepage and show corressponding message
+                // No documents left, return to homepage and show corresponding message
                 redirectUSerToHomePage(aPage);
                 break;
 

@@ -128,6 +128,8 @@ public class DynamicWorkloadManagementPage
     private BootstrapSelect<AnnotationDocument> resetDocument;
     private BootstrapSelect<AnnotationDocumentState> documentState;
 
+    private MultiSelect<SourceDocument> documentsToAdd;
+
     // SpringBeans
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
@@ -345,12 +347,12 @@ public class DynamicWorkloadManagementPage
             () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1).name())
                 && !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
 
-        dateChoices.add(enabledWhen(() ->
-                    !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
-        userFilterTextField.add(enabledWhen(() ->
-                    !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
-        documentFilterTextField.add(enabledWhen(() ->
-                    !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
+        dateChoices.add(
+                enabledWhen(() -> !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
+        userFilterTextField.add(
+                enabledWhen(() -> !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
+        documentFilterTextField.add(
+                enabledWhen(() -> !Boolean.getBoolean(unused.getDefaultModelObjectAsString())));
 
         return searchForm;
     }
@@ -443,7 +445,7 @@ public class DynamicWorkloadManagementPage
                 new ArrayList<>());
         userAssignDocumentForm = new Form<>("userAssignDocumentForm", documentsToAddModel);
         // This ensures that we get the user input in getChoices
-        MultiSelect<SourceDocument> documentsToAdd = new MultiSelect<SourceDocument>(
+        documentsToAdd = new MultiSelect<SourceDocument>(
                 "documentsToAdd", new ChoiceRenderer<>("name"))
         {
             private static final long serialVersionUID = -6211358256515198208L;
@@ -636,34 +638,31 @@ public class DynamicWorkloadManagementPage
     }
 
     private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget,
-            Form<List<SourceDocument>> aForm)
-    {
+            Form<List<SourceDocument>> aForm) {
         aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
 
         if (aForm.getModelObject() == null) {
             error("Please add documents you want to assign.");
-        }
-        else {
-            for (SourceDocument sourceDocument : aForm.getModelObject()) {
-                try {
-                    AnnotationDocument annotationDocument = documentService
-                            .getAnnotationDocument(sourceDocument, userSelection.getModelObject());
-                    if (annotationDocument.getState().equals(AnnotationDocumentState.NEW)) {
-                        documentService.transitionAnnotationDocumentState(annotationDocument,
-                                AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
-                    }
-                    else {
-                        error("Document '" + sourceDocument.getName()
-                                + "' is either already assigned or even finished.");
-                    }
+        } else {
+            Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
+            for (SourceDocument source : documentsToAssign) {
 
-                }
-                catch (NoResultException nre) {
+                try {
+                    AnnotationDocument annotationDocument = documentService.getAnnotationDocument
+                        (source, userSelection.getModelObject());
+                    if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
+                        documentService.transitionAnnotationDocumentState(annotationDocument,
+                            AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+                    } else {
+                        error("Document '" + annotationDocument.getName()
+                            + "' is either already assigned or even finished.");
+                    }
+                } catch (NoResultException nre) {
                     AnnotationDocumentState state = AnnotationDocumentState.IN_PROGRESS;
                     AnnotationDocument annotationDocument = new AnnotationDocument();
-                    annotationDocument.setName(sourceDocument.getName());
+                    annotationDocument.setName(source.getName());
                     annotationDocument.setDocument(documentService.getSourceDocument(
-                            currentProject.getObject(), annotationDocument.getName()));
+                        currentProject.getObject(), annotationDocument.getName()));
                     annotationDocument.setProject(currentProject.getObject());
                     annotationDocument.setUser(userSelection.getModelObject().getUsername());
                     annotationDocument.setState(state);
@@ -672,7 +671,7 @@ public class DynamicWorkloadManagementPage
                     success("Document(s) assigned");
                 }
             }
+            aAjaxRequestTarget.add(this);
         }
-        aAjaxRequestTarget.add(this);
     }
 }
