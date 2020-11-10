@@ -25,6 +25,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
+/**
+ * Interface for all required DB calls. Short explanation given in the
+ * Interface implementation class WorkloadManagementServiceImpl
+ */
 public interface WorkloadManagementService
 {
     WorkloadManager getOrCreateWorkloadManagerConfiguration(Project aProject);
@@ -32,9 +36,6 @@ public interface WorkloadManagementService
     void setWorkloadManagerConfiguration(String aWorkloadType, Project aProject);
 
     void setWorkloadManagerConfiguration(String aWorkloadType, String traits, Project aProject);
-
-    List<AnnotationDocument> getAnnotationDocumentsForSpecificState(AnnotationDocumentState aState,
-            Project aProject, User aUser);
 
     List<User> getUsersForSpecificDocumentAndState(AnnotationDocumentState aState,
             SourceDocument aSourceDocumentt, Project aProject);

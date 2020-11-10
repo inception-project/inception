@@ -21,8 +21,15 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.workflow.types.WorkflowType;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WorkloadManagementAutoConfiguration#workflowExtensionPoint}.
+ * </p>
+ */
 public interface WorkflowExtensionPoint
     extends ExtensionPoint<Project, WorkflowExtension>
 {

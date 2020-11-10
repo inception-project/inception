@@ -19,7 +19,11 @@ package de.tudarmstadt.ukp.inception.workload.workflow.types;
 
 import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
 
-public class CurriculumWorkflowExtension implements WorkflowExtension
+/**
+ * Curriculum workflow extension type
+ */
+public class CurriculumWorkflowExtension
+    implements WorkflowExtension
 {
     public static final String CURRICULUM_EXTENSION = "curriculum";
 

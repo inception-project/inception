@@ -22,7 +22,7 @@ import java.io.Serializable;
 import de.tudarmstadt.ukp.inception.workload.workflow.types.DefaultWorkflowExtension;
 
 /**
- * Trait for dynamic workload
+ * Trait class for dynamic workload
  */
 public class DynamicWorkloadTrait
     implements Serializable

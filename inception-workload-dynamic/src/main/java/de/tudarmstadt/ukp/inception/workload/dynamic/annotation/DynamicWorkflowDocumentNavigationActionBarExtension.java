@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.inception.workload.workflow.types.RandomizedWor
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
@@ -51,6 +50,12 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
+/**
+ * This is only enabled for annotators of a project with the dynamic workload enabled. Upon entering
+ * the annotation page (unlike in the default annotation flow before) the annotator cannot choose
+ * which document he/she wants to annotate, but rather get one selected depending on the workflow
+ * strategy
+ */
 @Component
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkflowDocumentNavigationActionBarExtension
@@ -59,11 +64,10 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     private final DocumentService documentService;
     private final WorkloadManagementService workloadManagementService;
     private final DynamicWorkloadExtension dynamicWorkloadExtension;
-    private List<AnnotationDocument> annotationDocumentList;
-
-    private @SpringBean EntityManager entityManager;
-
     private final ProjectService projectService;
+
+    // SpringBeans
+    private @SpringBean EntityManager entityManager;
 
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
@@ -109,81 +113,85 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         return new DynamicDocumentNavigator(aId);
     }
 
-    // Init of the page, select a random document
+    // Init of the page, select a document
     @Override
     public void onInitialize(AnnotationPageBase aPage)
     {
         User user = aPage.getModelObject().getUser();
         Project project = aPage.getModelObject().getProject();
+        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
 
         // Check if there is a document in progress and return this one
         List<AnnotationDocument> inProgressDocuments = workloadManagementService
-                .getAnnotationDocumentsForSpecificState(IN_PROGRESS, project, user);
+                .getAnnotationDocumentListForUserWithState(project, user, IN_PROGRESS);
 
-        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+        // Assign a new document with actionLoadDocument
 
-        if (!inProgressDocuments.isEmpty()) {
-            aPage.getModelObject().setDocument(inProgressDocuments.get(0).getDocument(),
-                    documentService.listSourceDocuments(project));
-            aPage.actionLoadDocument(target.orElse(null));
-            return;
-        }
-
-        // Nothing in progress found
-        if (aPage.getModelObject().getDocument() == null) {
-            WorkloadManager currentWorkload = workloadManagementService
-                    .getOrCreateWorkloadManagerConfiguration(project);
-
-            switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkflowType()) {
-            case (RANDOMIZED_WORKFLOW):
-                // Go through all documents in a random order and check if there
-                // is a Annotation document with the state NEW
-                List<AnnotationDocument> randomList = workloadManagementService
-                        .getAnnotationDocumentListForUserWithState(project, user, NEW);
-                Collections.shuffle(randomList);
-
-                for (AnnotationDocument doc : randomList) {
-                    SourceDocument sourceDocumentForCurrentAnnotationDocument = documentService
-                            .getSourceDocument(project, doc.getName());
-                    if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(
-                            sourceDocumentForCurrentAnnotationDocument, project)
-                            + 1) <= (dynamicWorkloadExtension.readTraits(currentWorkload)
-                                    .getDefaultNumberOfAnnotations())) {
-                        aPage.getModelObject().setDocument(
-                                sourceDocumentForCurrentAnnotationDocument,
-                                documentService.listSourceDocuments(project));
-                        aPage.actionLoadDocument(target.orElse(null));
-                        return;
-                    }
-                }
-                // No documents left, return to homepage and show corresponding message
-                redirectUSerToHomePage(aPage);
-                break;
-
-            default:
-                // Default, simply go through the list and return the first document
-                for (Map.Entry<SourceDocument, AnnotationDocument> entry : documentService
-                        .listAnnotatableDocuments(project, user).entrySet()) {
-                    // First check if too many users are already working on the document
-                    if (((workloadManagementService
-                            .getAmountOfUsersWorkingOnADocument(entry.getKey(), project))
-                            + 1) <= dynamicWorkloadExtension.readTraits(currentWorkload)
-                                    .getDefaultNumberOfAnnotations()) {
-                        // Now check if there either is no annotation document yet created or its
-                        // state is NEW
-                        if (entry.getValue() == null || NEW.equals(entry.getValue().getState())) {
-                            aPage.getModelObject().setDocument(entry.getKey(),
-                                    documentService.listSourceDocuments(project));
-                            aPage.actionLoadDocument(target.orElse(null));
-                            return;
-                        }
-                    }
-                }
-                // No documents left, return to homepage and show corressponding message
-                redirectUSerToHomePage(aPage);
-                break;
+        // First, check if there are other documents which have been in the state INPROGRESS
+        // Load the first one found
+        for (AnnotationDocument a : inProgressDocuments) {
+            if (a != null && IN_PROGRESS.equals(a.getState())) {
+                aPage.getModelObject().setDocument(a.getDocument(),
+                        documentService.listSourceDocuments(project));
+                aPage.actionLoadDocument(target.orElse(null));
+                return;
             }
         }
+
+        // No annotation documents in the state INPROGRESS, now select a new one
+        // depending on the workload strategy selected
+        WorkloadManager currentWorkload = workloadManagementService
+                .getOrCreateWorkloadManagerConfiguration(project);
+
+        // Get all documents for which the state is NEW, or which have not been created yet.
+        List<AnnotationDocument> annotationDocuments = workloadManagementService
+                .getAnnotationDocumentListForUserWithState(project, user, NEW);
+
+        // Switch for all workflow types which are available. If a new one is created.
+        // simply add a new case here.
+        switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkflowType()) {
+
+        // Go through all documents in a random order
+        case (RANDOMIZED_WORKFLOW):
+            // Shuffle the List then call loadNewDocument
+            Collections.shuffle(annotationDocuments);
+            loadNewDocument(annotationDocuments, project, currentWorkload, aPage);
+            break;
+
+        // Default workflow selected, nothing to change in the list
+        default:
+            loadNewDocument(annotationDocuments, project, currentWorkload, aPage);
+            break;
+        }
+    }
+
+    private void loadNewDocument(List<AnnotationDocument> aAnnotationDocuments, Project aProject,
+            WorkloadManager aCurrentWorkload, AnnotationPageBase aPage)
+    {
+        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+
+        // Go through all documents of the list
+        for (AnnotationDocument doc : aAnnotationDocuments) {
+            if (doc != null) {
+                SourceDocument sourceDocumentForCurrentAnnotationDocument = documentService
+                    .getSourceDocument(aProject, doc.getName());
+                // Check if there are less annotators working on the selected document than
+                // the default number of annotation set by the project manager
+                if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(
+                    sourceDocumentForCurrentAnnotationDocument, aProject)
+                    + 1) <= (dynamicWorkloadExtension.readTraits(aCurrentWorkload)
+                    .getDefaultNumberOfAnnotations())) {
+                    // This was the case, so load the document and return
+                    aPage.getModelObject().setDocument(sourceDocumentForCurrentAnnotationDocument,
+                        documentService.listSourceDocuments(aProject));
+                    aPage.actionLoadDocument(target.orElse(null));
+                    return;
+                }
+            }
+        }
+        // No documents left, return to homepage and show corresponding message
+        redirectUSerToHomePage(aPage);
+
     }
 
     public void redirectUSerToHomePage(ApplicationPageBase aPage)

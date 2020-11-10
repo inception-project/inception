@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.traits;
 import java.io.Serializable;
 
 /**
- * Trait for dynamic workload
+ * Trait class for default matrix workload
  */
 public class MatrixWorkloadTrait implements Serializable
 {

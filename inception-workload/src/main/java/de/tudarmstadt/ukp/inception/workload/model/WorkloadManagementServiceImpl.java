@@ -38,21 +38,28 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
  * This class is exposed as a Spring Component via
  * {@link WorkloadManagementAutoConfiguration#workloadManagementService}
  * </p>
+ * Implementation of the WorkloadManagementService Interface. Very important class to get all the
+ * fast DB lookups which are required.
  */
 public class WorkloadManagementServiceImpl
     implements WorkloadManagementService
 {
     private final EntityManager entityManager;
-    private final WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
+    private final WorkloadManagerExtensionPoint<Project> workloadManagerExtensionPoint;
 
     @Autowired
     public WorkloadManagementServiceImpl(EntityManager aEntityManager,
-            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
     {
         entityManager = aEntityManager;
         workloadManagerExtensionPoint = aWorkloadManagerExtensionPoint;
     }
 
+    /**
+     * Returns for a given project a WorkloadManager Object. Also applicable for older INCEpTION
+     * version where the workload feature was not present. Also, if no entity can be found, a new
+     * entry will be created and returned.
+     */
     @Override
     @Transactional
     public WorkloadManager getOrCreateWorkloadManagerConfiguration(Project aProject)
@@ -80,6 +87,9 @@ public class WorkloadManagementServiceImpl
         return result;
     }
 
+    /**
+     * Simply updates the DB entry with a new workload manager extension type.
+     */
     @Override
     @Transactional
     public void setWorkloadManagerConfiguration(String aExtensionPointID, Project aProject)
@@ -91,6 +101,10 @@ public class WorkloadManagementServiceImpl
                 .setParameter("projectID", aProject).executeUpdate();
     }
 
+    /**
+     * As with the other setWorkloadManagerConfiguration method, this also simply updates the DB
+     * entry. However, this method also updates the traits of a WorkloadManager entity
+     */
     @Override
     @Transactional
     public void setWorkloadManagerConfiguration(String aExtensionPointID, String aTraits,
@@ -104,27 +118,17 @@ public class WorkloadManagementServiceImpl
                 .setParameter("projectID", aProject).executeUpdate();
     }
 
-    @Override
-    @Transactional
-    public List<AnnotationDocument> getAnnotationDocumentsForSpecificState(
-            AnnotationDocumentState aState, Project aProject, User aUser)
-    {
-        return entityManager.createQuery(
-                "SELECT anno FROM AnnotationDocument anno " + "WHERE anno.project = :projectID "
-                        + "AND anno.user = :userID " + "AND anno.state = :state",
-                AnnotationDocument.class).setParameter("projectID", aProject)
-                .setParameter("userID", aUser.getUsername()).setParameter("state", aState)
-                .getResultList();
-
-    }
-
+    /**
+     * This method is a fast DB search to get all USERS (List) for a specific SourceDocument in a
+     * specific Project for a certain State.
+     */
     @Override
     @Transactional
     public List<User> getUsersForSpecificDocumentAndState(AnnotationDocumentState aState,
             SourceDocument aSourceDocument, Project aProject)
     {
         return entityManager
-                .createQuery("SELECT AnnotationDocument.user FROM AnnotationDocument anno "
+                .createQuery("SELECT user FROM User user, AnnotationDocument anno "
                         + "WHERE anno.project = :projectID " + "AND anno.name = :document "
                         + "AND anno.state = :state", User.class)
                 .setParameter("projectID", aProject)
@@ -132,6 +136,10 @@ public class WorkloadManagementServiceImpl
                 .getResultList();
     }
 
+    /**
+     * This method is a fast DB search to get a TOTAL NUMBER (Long) of Users working on a specific
+     * SourceDocument in a specific Project.
+     */
     @Override
     @Transactional
     public Long getAmountOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject)
@@ -145,6 +153,10 @@ public class WorkloadManagementServiceImpl
                 .getSingleResult();
     }
 
+    /**
+     * This method is a fast DB search to get all ANNOTATION DOCUMENTS (List) for a specific User in
+     * a specific Project with a specific State.
+     */
     @Override
     @Transactional
     public List<AnnotationDocument> getAnnotationDocumentListForUserWithState(Project aProject,
@@ -154,7 +166,8 @@ public class WorkloadManagementServiceImpl
                 + "FROM SourceDocument source LEFT JOIN AnnotationDocument anno ON "
                 + "source.project = :project AND anno.user = :user AND anno.name = source.name AND anno.state = :state",
                 AnnotationDocument.class).setParameter("project", aProject)
-                .setParameter("state", aState).getResultList();
+                .setParameter("state", aState).setParameter("user", aUser.getUsername())
+                .getResultList();
     }
 
 }

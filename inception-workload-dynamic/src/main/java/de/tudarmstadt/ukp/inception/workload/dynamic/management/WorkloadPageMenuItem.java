@@ -80,18 +80,18 @@ public class WorkloadPageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
-
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
+        Project project = projectService.getProject(sessionProject.getId());
 
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
 
-        return (projectService.isCurator(sessionProject, user)
-            || projectService.isProjectAdmin(sessionProject, user))
-            && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
+        return (projectService.isCurator(project, user)
+            || projectService.isProjectAdmin(project, user))
+            && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())
             && DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
-            getOrCreateWorkloadManagerConfiguration(sessionProject).
+            getOrCreateWorkloadManagerConfiguration(project).
             getType());
     }
 

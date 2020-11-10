@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.workload.workflow.types;
 
 import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
 
+/**
+ * Randomized workflow extension type
+ */
 public class RandomizedWorkflowExtension implements WorkflowExtension
 {
     public static final String RANDOMIZED_WORKFLOW = "randomized";

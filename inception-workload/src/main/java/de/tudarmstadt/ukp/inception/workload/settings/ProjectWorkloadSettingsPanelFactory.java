@@ -34,11 +34,11 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
 public class ProjectWorkloadSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
-    private final WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
+    private final WorkloadManagerExtensionPoint<Project> workloadManagerExtensionPoint;
 
     @Autowired
     public ProjectWorkloadSettingsPanelFactory(
-        WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+        WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
     {
         workloadManagerExtensionPoint = aWorkloadManagerExtensionPoint;
     }

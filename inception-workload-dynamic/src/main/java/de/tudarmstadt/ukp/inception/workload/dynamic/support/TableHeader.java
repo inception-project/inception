@@ -15,26 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.workflow.types;
+package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
-import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
-
-/**
- * Default workflow extension type
- */
-public class DefaultWorkflowExtension implements WorkflowExtension
+public enum TableHeader
 {
-    public static final String DEFAULT_WORKFLOW = "default";
+    document("Document"),
+    finished("Finished"),
+    processed("Processed"),
+    annotators("Annotators"),
+    updated("Updated"),
+    actions("actions");
 
-    @Override
-    public String getLabel()
-    {
-        return "Default workflow";
-    }
+    private final String id;
 
-    @Override
-    public String getId()
+    TableHeader(String aId)
     {
-        return DEFAULT_WORKFLOW;
+        id = aId;
     }
 }

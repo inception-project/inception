@@ -22,6 +22,10 @@ import java.io.Serializable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+/**
+ * WorkflowType represents the type of workflow currently enabled. Consists of a uiName which
+ * represents the String in the UI and a workloadManagerExtensionId.
+ */
 public class WorkflowType
     implements Serializable
 {
