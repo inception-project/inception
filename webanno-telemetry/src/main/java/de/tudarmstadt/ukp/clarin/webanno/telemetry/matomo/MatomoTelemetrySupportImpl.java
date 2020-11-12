@@ -362,16 +362,16 @@ public class MatomoTelemetrySupportImpl
         
         return asList(
                 new TelemetryDetail("Instance ID", id.getId(), 
-                        "Unique anonyous identifier for your installation. This value is randomly "
+                        "Unique anonymous identifier for your installation. This value is randomly "
                         + "generated when the application is started for the first time and then "
                         + "stored in the database. By collecting this value, we can count the "
                         + "number of installations and report it e.g. when applying for funding."),
                 new TelemetryDetail("Visitor ID", Long.toHexString(uuid.getMostSignificantBits()), 
                         "This is a short version of the instance ID required for technical "
                         + "resons by the Matomo telemetry server we are using."),
-                new TelemetryDetail("Appliction", applicationName, 
-                        "The name of the application. There are different applications using this"
-                        + "telemetry service By this value, we can identify the popularity of "
+                new TelemetryDetail("Application", applicationName,
+                        "The name of the application. There are different applications using this "
+                        + "telemetry service. By this value, we can identify the popularity of "
                         + "these different applications."),
                 new TelemetryDetail("Version", getVersionProperties().getProperty(PROP_VERSION), 
                         "The version of the application. This helps us assess whether old "
