@@ -78,11 +78,10 @@ public class DynamicWorkloadExtension
             DynamicWorkloadTrait aTrait, Project aProject)
     {
         try {
-            aWorkloadManagementService
-                    .setWorkloadManagerConfiguration(
-                            aWorkloadManagementService
-                                    .getOrCreateWorkloadManagerConfiguration(aProject).getType(),
-                            JSONUtil.toJsonString(aTrait), aProject);
+            WorkloadManager manager = aWorkloadManagementService
+                    .loadOrCreateWorkloadManagerConfiguration(aProject);
+            manager.setTraits(JSONUtil.toJsonString(aTrait));
+            aWorkloadManagementService.saveConfiguration(manager);
         }
         catch (Exception e) {
             this.log.error("Unable to write traits", e);

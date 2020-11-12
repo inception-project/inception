@@ -91,7 +91,7 @@ public class WorkloadPageMenuItem implements MenuItem
             || projectService.isProjectAdmin(project, user))
             && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())
             && DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
-            getOrCreateWorkloadManagerConfiguration(project).
+            loadOrCreateWorkloadManagerConfiguration(project).
             getType());
     }
 

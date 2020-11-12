@@ -31,11 +31,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
  */
 public interface WorkloadManagementService
 {
-    WorkloadManager getOrCreateWorkloadManagerConfiguration(Project aProject);
+    WorkloadManager loadOrCreateWorkloadManagerConfiguration(Project aProject);
 
-    void setWorkloadManagerConfiguration(String aWorkloadType, Project aProject);
-
-    void setWorkloadManagerConfiguration(String aWorkloadType, String traits, Project aProject);
+    void saveConfiguration(WorkloadManager aManager);
 
     List<User> getUsersForSpecificDocumentAndState(AnnotationDocumentState aState,
             SourceDocument aSourceDocumentt, Project aProject);

@@ -41,10 +41,9 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 import de.tudarmstadt.ukp.inception.workload.traits.DynamicWorkloadTrait;
 
 /**
- * This class represents the panel "workload" shown in any projects settings.
- * It can be used to enable the experimental feature "workload".
- * It consists of a simple dropdown menu from which a project manager can
- * select which workload type he wants to use.
+ * This class represents the panel "workload" shown in any projects settings. It can be used to
+ * enable the experimental feature "workload". It consists of a simple dropdown menu from which a
+ * project manager can select which workload type he wants to use.
  */
 public class WorkloadSettingsPanel
     extends Panel
@@ -54,7 +53,7 @@ public class WorkloadSettingsPanel
     private final BootstrapSelect<WorkloadManagerType> workloadStrategy;
     private final Project project;
 
-    //Springbeans
+    // Springbeans
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
 
@@ -70,7 +69,7 @@ public class WorkloadSettingsPanel
         // Basic form
         Form<Void> form = new Form<>("form");
 
-        //Dropdown menu
+        // Dropdown menu
         workloadStrategy = new BootstrapSelect<>("workloadStrategy");
         workloadStrategy
                 .setChoiceRenderer(new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
@@ -95,9 +94,8 @@ public class WorkloadSettingsPanel
     private WorkloadManagerType getWorkloadManager()
     {
         WorkloadManager manager = workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(project);
-        Extension extension = workloadManagerExtensionPoint
-                .getExtension(manager.getType());
+                .loadOrCreateWorkloadManagerConfiguration(project);
+        Extension extension = workloadManagerExtensionPoint.getExtension(manager.getType());
         return new WorkloadManagerType(extension.getId(), extension.getId());
     }
 
@@ -108,19 +106,21 @@ public class WorkloadSettingsPanel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        //Either traits are already available for the project
-        if (workloadManagementService.getOrCreateWorkloadManagerConfiguration(project)
-                .getTraits() != null) {
-            workloadManagementService.setWorkloadManagerConfiguration(
-                    workloadStrategy.getModelObject().getWorkloadManagerExtensionId(), project);
+        // Either traits are already available for the project
+        WorkloadManager manager = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(project);
+        if (manager != null) {
+            manager.setType(workloadStrategy.getModelObject().getWorkloadManagerExtensionId());
+            workloadManagementService.saveConfiguration(manager);
         }
-        //or they are not available (first time after project creation or "older" projects)
+        // or they are not available (first time after project creation or "older" projects)
         else {
-            workloadManagementService.setWorkloadManagerConfiguration(
-                    workloadStrategy.getModelObject().getWorkloadManagerExtensionId(),
-                    JSONUtil.toJsonString(new DynamicWorkloadTrait()), project);
+            DynamicWorkloadTrait trait = new DynamicWorkloadTrait();
+            manager.setType(workloadStrategy.getModelObject().getWorkloadManagerExtensionId());
+            manager.setTraits(JSONUtil.toJsonString(trait));
+            workloadManagementService.saveConfiguration(manager);
         }
-        //In both cases, get the feedback message that it is properly saved now
+        // In both cases, get the feedback message that it is properly saved now
         success("Workload settings saved");
     }
 }

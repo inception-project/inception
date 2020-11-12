@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 public enum DateSelection
 {
-    from("from"),
-    until("until"),
-    between("between");
+    FROM("from"),
+    UNTIL("until"),
+    BETWEEN("between");
 
     private final String id;
 

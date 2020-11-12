@@ -279,7 +279,7 @@ public class DynamicWorkloadManagementPage
         // Date choices of the radio buttons
         List<DateSelection> dateChoice = Arrays.asList(DateSelection.values());
         // Create the radio button group
-        dateChoices = new BootstrapRadioChoice<>("date", new Model<>(DateSelection.between),
+        dateChoices = new BootstrapRadioChoice<>("date", new Model<>(DateSelection.BETWEEN),
                 dateChoice);
         dateChoices.setInline(true);
         dateChoices.setOutputMarkupId(true);
@@ -359,7 +359,7 @@ public class DynamicWorkloadManagementPage
         defaultNumberDocumentsTextField
                 .setDefaultModel(new CompoundPropertyModel<>((dynamicWorkloadExtension
                         .readTraits(
-                                workloadManagementService.getOrCreateWorkloadManagerConfiguration(
+                                workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
                                         currentProject.getObject()))
                         .getDefaultNumberOfAnnotations())));
 
@@ -587,7 +587,7 @@ public class DynamicWorkloadManagementPage
     private WorkflowType getWorkflowChoice()
     {
         DynamicWorkloadTrait traits = dynamicWorkloadExtension.readTraits(workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
+                .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
         Extension extension = workflowExtensionPoint.getExtension(traits.getWorkflowType());
         return new WorkflowType(extension.getId(), traits.getWorkflowType());
     }

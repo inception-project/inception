@@ -62,7 +62,7 @@ public class WorkloadManagementServiceImpl
      */
     @Override
     @Transactional
-    public WorkloadManager getOrCreateWorkloadManagerConfiguration(Project aProject)
+    public WorkloadManager loadOrCreateWorkloadManagerConfiguration(Project aProject)
     {
         WorkloadManager result;
         try {
@@ -88,34 +88,19 @@ public class WorkloadManagementServiceImpl
     }
 
     /**
-     * Simply updates the DB entry with a new workload manager extension type.
+     * Saves the configuration in the DB
      */
     @Override
     @Transactional
-    public void setWorkloadManagerConfiguration(String aExtensionPointID, Project aProject)
-    {
-        entityManager
-                .createQuery("UPDATE WorkloadManager " + "SET workloadType = :extensionPointID "
-                        + "WHERE project = :projectID")
-                .setParameter("extensionPointID", aExtensionPointID)
-                .setParameter("projectID", aProject).executeUpdate();
-    }
-
-    /**
-     * As with the other setWorkloadManagerConfiguration method, this also simply updates the DB
-     * entry. However, this method also updates the traits of a WorkloadManager entity
-     */
-    @Override
-    @Transactional
-    public void setWorkloadManagerConfiguration(String aExtensionPointID, String aTraits,
-            Project aProject)
+    public void saveConfiguration(WorkloadManager aManager)
     {
         entityManager
                 .createQuery("UPDATE WorkloadManager "
-                        + "SET workloadType = :extensionPointID, traits = :traits "
+                        + "SET workloadType = :workloadType, traits = :traits "
                         + "WHERE project = :projectID")
-                .setParameter("extensionPointID", aExtensionPointID).setParameter("traits", aTraits)
-                .setParameter("projectID", aProject).executeUpdate();
+                .setParameter("workloadType", aManager.getType())
+                .setParameter("traits", aManager.getTraits())
+                .setParameter("projectID", aManager.getProject()).executeUpdate();
     }
 
     /**

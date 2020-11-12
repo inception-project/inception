@@ -32,15 +32,15 @@ public class Filter implements Serializable
     private String documentName;
 
     //Checkbox
-    private String selected;
+    private boolean selected = false;
 
     //dates
     private Date from;
     private Date to;
 
     //Default constructor
-    public Filter() {
-        this.selected = "false";
+    public Filter()
+    {
     }
 
     public String getUsername() {
@@ -51,7 +51,7 @@ public class Filter implements Serializable
         return documentName;
     }
 
-    public String getSelected() {
+    public boolean getSelected() {
         return selected;
     }
 
@@ -71,7 +71,7 @@ public class Filter implements Serializable
         this.documentName = aDocumentName;
     }
 
-    public void setSelected(String aSelected) {
+    public void setSelected(boolean aSelected) {
         this.selected = aSelected;
     }
 

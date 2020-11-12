@@ -101,7 +101,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         }
         // Curator are excluded from the feature
         return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID
-                .equals(workloadManagementService.getOrCreateWorkloadManagerConfiguration(
+                .equals(workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
                         aPage.getModelObject().getProject()).getType())
                 && !projectService.isCurator(aPage.getModelObject().getProject(),
                         aPage.getModelObject().getUser());
@@ -141,7 +141,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         // No annotation documents in the state INPROGRESS, now select a new one
         // depending on the workload strategy selected
         WorkloadManager currentWorkload = workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(project);
+                .loadOrCreateWorkloadManagerConfiguration(project);
 
         // Get all documents for which the state is NEW, or which have not been created yet.
         List<AnnotationDocument> annotationDocuments = workloadManagementService

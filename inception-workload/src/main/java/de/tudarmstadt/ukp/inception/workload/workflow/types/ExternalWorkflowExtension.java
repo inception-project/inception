@@ -22,20 +22,20 @@ import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
 /**
  * Curriculum workflow extension type
  */
-public class CurriculumWorkflowExtension
+public class ExternalWorkflowExtension
     implements WorkflowExtension
 {
-    public static final String CURRICULUM_EXTENSION = "curriculum";
+    public static final String EXTERNAL_EXTENSION = "external";
 
     @Override
     public String getLabel()
     {
-        return "Curriculum workflow";
+        return "External workflow";
     }
 
     @Override
     public String getId()
     {
-        return CURRICULUM_EXTENSION;
+        return EXTERNAL_EXTENSION;
     }
 }

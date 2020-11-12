@@ -35,8 +35,8 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtensionPointImpl;
-import de.tudarmstadt.ukp.inception.workload.workflow.types.CurriculumWorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.workflow.types.DefaultWorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.workflow.types.ExternalWorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.workflow.types.RandomizedWorkflowExtension;
 
 @Configuration
@@ -70,9 +70,9 @@ public class WorkloadManagementAutoConfiguration<T>
     }
 
     @Bean
-    public CurriculumWorkflowExtension curriculumWorkflowExtension()
+    public ExternalWorkflowExtension curriculumWorkflowExtension()
     {
-        return new CurriculumWorkflowExtension();
+        return new ExternalWorkflowExtension();
     }
 
     @Bean

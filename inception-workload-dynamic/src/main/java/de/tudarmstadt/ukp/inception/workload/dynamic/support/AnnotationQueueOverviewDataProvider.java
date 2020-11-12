@@ -172,14 +172,9 @@ public class AnnotationQueueOverviewDataProvider
         List<SourceDocument> dateList = new ArrayList<>();
         List<SourceDocument> unusedList = new ArrayList<>();
 
-        // Avoid error in one specific case
-        if (filter.getSelected() == null) {
-            filter.setSelected(Boolean.FALSE.toString());
-        }
-
         for (SourceDocument doc : aData) {
             // Unused documents selected
-            if (Boolean.getBoolean(filter.getSelected())) {
+            if (filter.getSelected()) {
                 if ((getInProgressAmountForDocument(doc) == 0)
                         && (getFinishedAmountForDocument(doc) == 0)) {
                     unusedList.add(doc);
@@ -258,7 +253,7 @@ public class AnnotationQueueOverviewDataProvider
             finalList.add(userNameList);
         }
 
-        if (unusedList.size() > 0 || filter.getSelected().equals(Boolean.TRUE.toString())) {
+        if (unusedList.size() > 0 || filter.getSelected()) {
             finalList.add(unusedList);
         }
 

@@ -98,7 +98,7 @@ public class MonitoringPageMenuItem implements MenuItem
             || projectService.isManager(project, user))
             && PROJECT_TYPE_ANNOTATION.equals(project.getMode())
             && MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
-            getOrCreateWorkloadManagerConfiguration(project).
+            loadOrCreateWorkloadManagerConfiguration(project).
             getType());
     }
     

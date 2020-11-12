@@ -68,7 +68,7 @@ public class DynamicWorkflowActionBarExtension
 
         //Curator are excluded from the feature
         return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
-            getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
+            loadOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
             .getType()) && !projectService.isCurator(
                 aPage.getModelObject().getProject(), aPage.getModelObject().getUser());
     }

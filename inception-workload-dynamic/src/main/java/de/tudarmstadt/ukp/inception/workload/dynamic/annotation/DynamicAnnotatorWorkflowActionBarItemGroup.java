@@ -149,7 +149,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             // No annotation documents in the state INPROGRESS, now select a new one
             // depending on the workload strategy selected
             WorkloadManager currentWorkload = workloadManagementService
-                    .getOrCreateWorkloadManagerConfiguration(project);
+                    .loadOrCreateWorkloadManagerConfiguration(project);
 
             // Get all documents for which the state is NEW, or which have not been created yet.
             List<AnnotationDocument> annotationDocuments = workloadManagementService
