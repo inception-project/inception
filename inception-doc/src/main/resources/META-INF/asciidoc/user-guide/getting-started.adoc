@@ -142,7 +142,7 @@ In order to understand what you read in this guide, it makes sense to have an an
 image::getting_started_download_example_project.png[align="center"]
 
 
-*Step 1 - Download:* For this guide, we use the _Interactive Concept Linking_ project. Please download it from the https://inception-project.github.io/example-projects/[Example Projects] section on our website. It consists of two documents about pets. The first one contains some annotations as an example, the second one is meant to be your playground. It has originally been created for concept linking annotation but in every project, you can create any kind of annotations. We will use it for Named Entity Recognition.
+*Step 1 - Download:* For this guide, we use the _Interactive Concept Linking_ project. Please download it from the https://inception-project.github.io/example-projects/[Example Projects] section on our website and save it without extracting it first. It consists of two documents about pets. The first one contains some annotations as an example, the second one is meant to be your playground. It has originally been created for concept linking annotation but in every project, you can create any kind of annotations. We will use it for Named Entity Recognition.
 
 [[named_entity_recognition_in_getting_started]]
 NOTE: *Named Entity Recognition:* This is a certain kind of annotation. In _Getting Started_, we use it to tell whether the annotated text part refers to a person (in {product-name}, the buit-in tag for person is PER), organization (ORG), location (LOC) or any other (OTH). +
