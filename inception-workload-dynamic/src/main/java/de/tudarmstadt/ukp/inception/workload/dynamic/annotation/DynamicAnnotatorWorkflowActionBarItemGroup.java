@@ -19,14 +19,13 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.workload.workflow.types.RandomizedWorkflowExtension.RANDOMIZED_WORKFLOW;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import javax.persistence.EntityManager;
 
@@ -35,7 +34,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
@@ -62,11 +60,11 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
  */
 public class DynamicAnnotatorWorkflowActionBarItemGroup
     extends Panel
+    implements Serializable
 {
-    private static final long serialVersionUID = -292514874000914541L;
+    private static final long serialVersionUID = 1731811997451414806L;
 
     private final AnnotationPageBase page;
-    private final WorkloadManagementService workloadManagementService;
 
     protected final ConfirmationDialog finishDocumentDialog;
 
@@ -75,17 +73,16 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private @SpringBean ProjectService projectService;
     private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
     private @SpringBean EntityManager entityManager;
+    private @SpringBean WorkloadManagementService workloadManagementService;
 
     /**
      * Constructor of the ActionBar
      */
-    public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage,
-            WorkloadManagementService aWorkloadManagementService)
+    public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
     {
         super(aId);
 
         page = aPage;
-        workloadManagementService = aWorkloadManagementService;
 
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
                 new StringResourceModel("FinishDocumentDialog.title", this, null),
@@ -137,13 +134,12 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
 
             // First, check if there are other documents which have been in the state INPROGRESS
             // Load the first one found
-            for (AnnotationDocument a : inProgressDocuments) {
-                if (a != null && IN_PROGRESS.equals(a.getState())) {
-                    getAnnotationPage().getModelObject().setDocument(a.getDocument(),
+            if (!inProgressDocuments.isEmpty()) {
+                getAnnotationPage().getModelObject().setDocument(
+                        inProgressDocuments.get(0).getDocument(),
                         documentService.listSourceDocuments(project));
-                    getAnnotationPage().actionLoadDocument(_target);
-                    return;
-                }
+                getAnnotationPage().actionLoadDocument(aTarget);
+                return;
             }
 
             // No annotation documents in the state INPROGRESS, now select a new one
@@ -152,8 +148,8 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                     .loadOrCreateWorkloadManagerConfiguration(project);
 
             // Get all documents for which the state is NEW, or which have not been created yet.
-            List<AnnotationDocument> annotationDocuments = workloadManagementService
-                    .getAnnotationDocumentListForUserWithState(project, user, NEW);
+            List<SourceDocument> sourceDocuments = workloadManagementService
+                    .getAnnotationDocumentListForUser(project, user);
 
             // Switch for all workflow types which are available. If a new one is created.
             // simply add a new case here.
@@ -162,42 +158,36 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             // Go through all documents in a random order
             case (RANDOMIZED_WORKFLOW):
                 // Shuffle the List then call loadNewDocument
-                Collections.shuffle(annotationDocuments);
-                loadNewDocument(annotationDocuments, project, currentWorkload);
+                Collections.shuffle(sourceDocuments);
+                loadNewDocument(sourceDocuments, project, currentWorkload, getAnnotationPage(),
+                        _target);
                 break;
 
-            //Default workflow selected, nothing to change in the list
+            // Default workflow selected, nothing to change in the list
             default:
-                loadNewDocument(annotationDocuments, project, currentWorkload);
+                loadNewDocument(sourceDocuments, project, currentWorkload, getAnnotationPage(),
+                        _target);
                 break;
             }
         });
         finishDocumentDialog.show(aTarget);
     }
 
-    private void loadNewDocument(List<AnnotationDocument> annotationDocuments, Project project,
-            WorkloadManager currentWorkload)
+    private void loadNewDocument(List<SourceDocument> aSourceDocuments, Project aProject,
+            WorkloadManager aCurrentWorkload, AnnotationPageBase aPage, AjaxRequestTarget aTarget)
     {
-        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-
         // Go through all documents of the list
-        for (AnnotationDocument doc : annotationDocuments) {
-            if (doc != null) {
-                SourceDocument sourceDocumentForCurrentAnnotationDocument = documentService
-                    .getSourceDocument(project, doc.getName());
-                // Check if there are less annotators working on the selected document than
-                // the default number of annotation set by the project manager
-                if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(
-                    sourceDocumentForCurrentAnnotationDocument, project)
-                    + 1) <= (dynamicWorkloadExtension.readTraits(currentWorkload)
-                    .getDefaultNumberOfAnnotations())) {
-                    // This was the case, so load the document and return
-                    getAnnotationPage().getModelObject().setDocument(
-                        sourceDocumentForCurrentAnnotationDocument,
-                        documentService.listSourceDocuments(project));
-                    getAnnotationPage().actionLoadDocument(target.orElse(null));
-                    return;
-                }
+        for (SourceDocument doc : aSourceDocuments) {
+            // Check if there are less annotators working on the selected document than
+            // the default number of annotation set by the project manager
+            if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(doc, aProject)
+                    + 1) <= (dynamicWorkloadExtension.readTraits(aCurrentWorkload)
+                            .getDefaultNumberOfAnnotations())) {
+                // This was the case, so load the document and return
+                aPage.getModelObject().setDocument(doc,
+                        documentService.listSourceDocuments(aProject));
+                aPage.actionLoadDocument(aTarget);
+                return;
             }
         }
         // No documents left, return to homepage and show corresponding message

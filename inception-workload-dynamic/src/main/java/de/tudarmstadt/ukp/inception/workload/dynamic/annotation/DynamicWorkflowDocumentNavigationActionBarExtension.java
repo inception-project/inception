@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 import static de.tudarmstadt.ukp.inception.workload.workflow.types.RandomizedWorkflowExtension.RANDOMIZED_WORKFLOW;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -59,8 +59,10 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 @Component
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkflowDocumentNavigationActionBarExtension
-    implements ActionBarExtension
+    implements ActionBarExtension, Serializable
 {
+    private static final long serialVersionUID = -8123846972605546654L;
+
     private final DocumentService documentService;
     private final WorkloadManagementService workloadManagementService;
     private final DynamicWorkloadExtension dynamicWorkloadExtension;
@@ -129,13 +131,11 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
 
         // First, check if there are other documents which have been in the state INPROGRESS
         // Load the first one found
-        for (AnnotationDocument a : inProgressDocuments) {
-            if (a != null && IN_PROGRESS.equals(a.getState())) {
-                aPage.getModelObject().setDocument(a.getDocument(),
-                        documentService.listSourceDocuments(project));
-                aPage.actionLoadDocument(target.orElse(null));
-                return;
-            }
+        if (!inProgressDocuments.isEmpty()) {
+            aPage.getModelObject().setDocument(inProgressDocuments.get(0).getDocument(),
+                    documentService.listSourceDocuments(project));
+            aPage.actionLoadDocument(target.orElse(null));
+            return;
         }
 
         // No annotation documents in the state INPROGRESS, now select a new one
@@ -144,49 +144,43 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
                 .loadOrCreateWorkloadManagerConfiguration(project);
 
         // Get all documents for which the state is NEW, or which have not been created yet.
-        List<AnnotationDocument> annotationDocuments = workloadManagementService
-                .getAnnotationDocumentListForUserWithState(project, user, NEW);
+        List<SourceDocument> sourceDocuments = workloadManagementService
+                .getAnnotationDocumentListForUser(project, user);
 
-        // Switch for all workflow types which are available. If a new one is created.
+        // Switch for all workflow types which are available. If a new one is created
         // simply add a new case here.
         switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkflowType()) {
 
         // Go through all documents in a random order
         case (RANDOMIZED_WORKFLOW):
             // Shuffle the List then call loadNewDocument
-            Collections.shuffle(annotationDocuments);
-            loadNewDocument(annotationDocuments, project, currentWorkload, aPage);
+            Collections.shuffle(sourceDocuments);
+            loadNewDocument(sourceDocuments, project, currentWorkload, aPage, target);
             break;
 
         // Default workflow selected, nothing to change in the list
         default:
-            loadNewDocument(annotationDocuments, project, currentWorkload, aPage);
+            loadNewDocument(sourceDocuments, project, currentWorkload, aPage, target);
             break;
         }
     }
 
-    private void loadNewDocument(List<AnnotationDocument> aAnnotationDocuments, Project aProject,
-            WorkloadManager aCurrentWorkload, AnnotationPageBase aPage)
+    private void loadNewDocument(List<SourceDocument> aSourceDocuments, Project aProject,
+                                 WorkloadManager aCurrentWorkload, AnnotationPageBase aPage,
+                                 Optional<AjaxRequestTarget> aTarget)
     {
-        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-
         // Go through all documents of the list
-        for (AnnotationDocument doc : aAnnotationDocuments) {
-            if (doc != null) {
-                SourceDocument sourceDocumentForCurrentAnnotationDocument = documentService
-                    .getSourceDocument(aProject, doc.getName());
-                // Check if there are less annotators working on the selected document than
-                // the default number of annotation set by the project manager
-                if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(
-                    sourceDocumentForCurrentAnnotationDocument, aProject)
+        for (SourceDocument doc : aSourceDocuments) {
+            // Check if there are less annotators working on the selected document than
+            // the default number of annotation set by the project manager
+            if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(doc, aProject)
                     + 1) <= (dynamicWorkloadExtension.readTraits(aCurrentWorkload)
-                    .getDefaultNumberOfAnnotations())) {
-                    // This was the case, so load the document and return
-                    aPage.getModelObject().setDocument(sourceDocumentForCurrentAnnotationDocument,
+                            .getDefaultNumberOfAnnotations())) {
+                // This was the case, so load the document and return
+                aPage.getModelObject().setDocument(doc,
                         documentService.listSourceDocuments(aProject));
-                    aPage.actionLoadDocument(target.orElse(null));
-                    return;
-                }
+                aPage.actionLoadDocument(aTarget.orElse(null));
+                return;
             }
         }
         // No documents left, return to homepage and show corresponding message

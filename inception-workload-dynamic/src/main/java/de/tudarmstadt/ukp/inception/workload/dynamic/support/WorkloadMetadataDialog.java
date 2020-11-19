@@ -19,13 +19,11 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 
 public class WorkloadMetadataDialog extends Panel
@@ -34,16 +32,16 @@ public class WorkloadMetadataDialog extends Panel
     private static final long serialVersionUID = 2797336810690526392L;
 
     public WorkloadMetadataDialog(String aID, SourceDocument aDocument,
-                                  List<User> finishedUsers, List<User> inProgressUsers)
+                                  List<String> finishedUsers, List<String> inProgressUsers)
     {
         super(aID);
 
         //TODO more content, e.g. created date
         Label documentName = new Label("documentName", aDocument.getName());
         Label userInProgress = new Label("userInProgress",
-            inProgressUsers.isEmpty() ? "-" : inProgressUsers.stream().map(User::getUsername).collect(Collectors.joining(", ")));
+            inProgressUsers.isEmpty() ? "-" : String.join(", ", inProgressUsers));
         Label userFinished = new Label("userFinished",
-            finishedUsers.isEmpty() ? "-" : finishedUsers.stream().map(User::getUsername).collect(Collectors.joining(", ")));
+            finishedUsers.isEmpty() ? "-" : String.join(", ", finishedUsers));
 
         add(documentName);
         add(userInProgress);

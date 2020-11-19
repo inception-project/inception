@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -42,8 +43,10 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
  * fast DB lookups which are required.
  */
 public class WorkloadManagementServiceImpl
-    implements WorkloadManagementService
+    implements WorkloadManagementService, Serializable
 {
+    private static final long serialVersionUID = 4019275726336545144L;
+
     private final EntityManager entityManager;
     private final WorkloadManagerExtensionPoint<Project> workloadManagerExtensionPoint;
 
@@ -109,14 +112,13 @@ public class WorkloadManagementServiceImpl
      */
     @Override
     @Transactional
-    public List<User> getUsersForSpecificDocumentAndState(AnnotationDocumentState aState,
-            SourceDocument aSourceDocument, Project aProject)
+    public List<AnnotationDocument> getUsersForSpecificDocumentAndState(
+            AnnotationDocumentState aState, SourceDocument aSourceDocument, Project aProject)
     {
-        return entityManager
-                .createQuery("SELECT user FROM User user, AnnotationDocument anno "
-                        + "WHERE anno.project = :projectID " + "AND anno.name = :document "
-                        + "AND anno.state = :state", User.class)
-                .setParameter("projectID", aProject)
+        return entityManager.createQuery(
+                "SELECT anno FROM AnnotationDocument anno " + "WHERE anno.project = :projectID "
+                        + "AND anno.name = :document " + "AND anno.state = :state",
+                AnnotationDocument.class).setParameter("projectID", aProject)
                 .setParameter("document", aSourceDocument.getName()).setParameter("state", aState)
                 .getResultList();
     }
@@ -139,6 +141,21 @@ public class WorkloadManagementServiceImpl
     }
 
     /**
+     * This method is a fast DB search to get all SOURCE DOCUMENTS (List) for a specific User in a
+     * specific Project with a State NEW.
+     */
+    @Override
+    @Transactional
+    public List<SourceDocument> getAnnotationDocumentListForUser(Project aProject, User aUser)
+    {
+        return entityManager.createQuery("SELECT source FROM SourceDocument source "
+                + "WHERE source.project = :project AND source.name NOT IN (SELECT anno.name FROM AnnotationDocument anno "
+                + "WHERE anno.user = :user AND (anno.state = 'INPROGRESS' OR anno.state = 'FINISHED'))",
+                SourceDocument.class).setParameter("project", aProject)
+                .setParameter("user", aUser.getUsername()).getResultList();
+    }
+
+    /**
      * This method is a fast DB search to get all ANNOTATION DOCUMENTS (List) for a specific User in
      * a specific Project with a specific State.
      */
@@ -147,11 +164,10 @@ public class WorkloadManagementServiceImpl
     public List<AnnotationDocument> getAnnotationDocumentListForUserWithState(Project aProject,
             User aUser, AnnotationDocumentState aState)
     {
-        return entityManager.createQuery("SELECT anno "
-                + "FROM SourceDocument source LEFT JOIN AnnotationDocument anno ON "
-                + "source.project = :project AND anno.user = :user AND anno.name = source.name AND anno.state = :state",
+        return entityManager.createQuery("SELECT anno FROM AnnotationDocument anno "
+                + "WHERE anno.user = :user AND anno.project = :project AND anno.state = :state",
                 AnnotationDocument.class).setParameter("project", aProject)
-                .setParameter("state", aState).setParameter("user", aUser.getUsername())
+                .setParameter("user", aUser.getUsername()).setParameter("state", aState)
                 .getResultList();
     }
 

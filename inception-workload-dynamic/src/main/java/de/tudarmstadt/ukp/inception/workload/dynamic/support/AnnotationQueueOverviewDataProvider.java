@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -64,10 +65,10 @@ public class AnnotationQueueOverviewDataProvider
      * of the first column of the table.
      */
     public AnnotationQueueOverviewDataProvider(List<SourceDocument> aData,
-            List<TableHeader> aHeaders, List<AnnotationDocument> aAllAnnotationDocuments)
+            List<AnnotationDocument> aAllAnnotationDocuments)
     {
         data = aData;
-        headers = aHeaders;
+        headers = Arrays.asList(TableHeader.values());
         allAnnotationDocuments = aAllAnnotationDocuments;
         shownDocuments = new ArrayList<>();
 

@@ -26,8 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
- * Interface for all required DB calls. Short explanation given in the
- * Interface implementation class WorkloadManagementServiceImpl
+ * Interface for all required DB calls. Short explanation given in the Interface implementation
+ * class WorkloadManagementServiceImpl
  */
 public interface WorkloadManagementService
 {
@@ -35,10 +35,13 @@ public interface WorkloadManagementService
 
     void saveConfiguration(WorkloadManager aManager);
 
-    List<User> getUsersForSpecificDocumentAndState(AnnotationDocumentState aState,
+    List<AnnotationDocument> getUsersForSpecificDocumentAndState(AnnotationDocumentState aState,
             SourceDocument aSourceDocumentt, Project aProject);
 
     Long getAmountOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject);
+
+    List<SourceDocument> getAnnotationDocumentListForUser(Project aProject,
+            User aUser);
 
     List<AnnotationDocument> getAnnotationDocumentListForUserWithState(Project aProject, User aUser,
             AnnotationDocumentState aState);

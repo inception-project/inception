@@ -76,7 +76,6 @@ public class DynamicWorkflowActionBarExtension
     @Override
     public Panel createActionBarItem(String aID, AnnotationPageBase aAnnotationPageBase)
     {
-        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase,
-            workloadManagementService);
+        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase);
     }
 }
