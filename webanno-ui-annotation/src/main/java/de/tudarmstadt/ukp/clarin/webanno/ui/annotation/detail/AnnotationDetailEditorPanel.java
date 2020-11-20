@@ -1396,8 +1396,6 @@ public abstract class AnnotationDetailEditorPanel
      */
     private void populateTagsBasedOnRules(CAS aCas, FeatureState aModel)
     {
-        LOG.trace("populateTagsBasedOnRules(feature: " + aModel.feature.getUiName() + ")");
-
         AnnotatorState state = getModelObject();
 
         // Add values from rules
@@ -1421,19 +1419,19 @@ public abstract class AnnotationDetailEditorPanel
         // Fetch possible values from the constraint rules
         List<PossibleValue> possibleValues;
         try {
-            FeatureStructure featureStructure = selectFsByAddr(aCas, state.getSelection()
-                .getAnnotation().getId());
+            FeatureStructure featureStructure = selectFsByAddr(aCas,
+                    state.getSelection().getAnnotation().getId());
 
             Evaluator evaluator = new ValuesGenerator();
-            //Only show indicator if this feature can be affected by Constraint rules!
-            aModel.indicator.setAffected(evaluator.isThisAffectedByConstraintRules(
-                featureStructure, restrictionFeaturePath, state.getConstraints()));
+            // Only show indicator if this feature can be affected by Constraint rules!
+            aModel.indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
+                    restrictionFeaturePath, state.getConstraints()));
 
-            possibleValues = evaluator.generatePossibleValues(
-                featureStructure, restrictionFeaturePath, state.getConstraints());
+            possibleValues = evaluator.generatePossibleValues(featureStructure,
+                    restrictionFeaturePath, state.getConstraints());
 
             LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
-                + restrictionFeaturePath + "]: " + possibleValues);
+                    + restrictionFeaturePath + "]: " + possibleValues);
         }
         catch (Exception e) {
             error("Unable to evaluate constraints: " + ExceptionUtils.getRootCauseMessage(e));
@@ -1442,17 +1440,10 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // Fetch actual tagset
-        List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature.getTagset());
+        List<Tag> tags = annotationService.listTags(aModel.feature.getTagset());
 
         // First add tags which are suggested by rules and exist in tagset
-        List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset, aModel.indicator);
-
-        // Then add the remaining tags
-        for (Tag remainingTag : valuesFromTagset) {
-            if (!tagset.contains(remainingTag)) {
-                tagset.add(remainingTag);
-            }
-        }
+        List<Tag> tagset = compareSortAndAdd(possibleValues, tags, aModel.indicator);
 
         // Record the possible values and the (re-ordered) tagset in the feature state
         aModel.possibleValues = possibleValues;
@@ -1464,40 +1455,46 @@ public abstract class AnnotationDetailEditorPanel
      * exist in tagset and is suggested by rules. The remaining values from tagset are added
      * afterwards.
      */
-    private static List<Tag> compareSortAndAdd(List<PossibleValue> possibleValues,
-        List<Tag> valuesFromTagset, RulesIndicator rulesIndicator)
+    private static List<Tag> compareSortAndAdd(List<PossibleValue> aPossibleValues,
+            List<Tag> aTags, RulesIndicator aRulesIndicator)
     {
-        //if no possible values, means didn't satisfy conditions
-        if (possibleValues.isEmpty()) {
-            rulesIndicator.didntMatchAnyRule();
-        }
-        
         List<Tag> returnList = new ArrayList<>();
-        // Sorting based on important flag
-        // possibleValues.sort(null);
-        // Comparing to check which values suggested by rules exists in existing
-        // tagset and adding them first in list.
-        for (PossibleValue value : possibleValues) {
-            for (Tag tag : valuesFromTagset) {
-                if (value.getValue().equalsIgnoreCase(tag.getName())) {
-                    //Matching values found in tagset and shown in dropdown
-                    rulesIndicator.rulesApplied();
-                    // HACK BEGIN
-                    tag.setReordered(true);
-                    // HACK END
-                    //Avoid duplicate entries
-                    if (!returnList.contains(tag)) {
-                        returnList.add(tag);
-                    }
-                }
+
+        // if no possible values, means didn't satisfy conditions
+        if (aPossibleValues.isEmpty()) {
+            aRulesIndicator.didntMatchAnyRule();
+            return returnList;
+        }
+
+        Map<String, Tag> tagIndex = new LinkedHashMap<>();
+        for (Tag tag : aTags) {
+            tagIndex.put(tag.getName(), tag);
+        }
+
+        for (PossibleValue value : aPossibleValues) {
+            Tag tag = tagIndex.get(value.getValue());
+            if (tag == null) {
+                continue;
             }
+
+            // Matching values found in tagset and shown in dropdown
+            aRulesIndicator.rulesApplied();
+            // HACK BEGIN
+            tag.setReordered(true);
+            // HACK END
+            returnList.add(tag);
+            // Avoid duplicate entries
+            tagIndex.remove(value.getValue());
         }
-        
-        //If no matching tags found
+
+        // If no matching tags found
         if (returnList.isEmpty()) {
-            rulesIndicator.didntMatchAnyTag();
+            aRulesIndicator.didntMatchAnyTag();
         }
         
+        // Add all remaining non-matching tags to the list
+        returnList.addAll(tagIndex.values());
+
         return returnList;
     }
 
