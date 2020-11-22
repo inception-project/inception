@@ -170,14 +170,14 @@ public class RelationAdapter
                 fs, getTargetAnnotation(fs), getSourceAnnotation(fs)));
     }
 
-    private AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
+    public AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
     {
         Feature sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
         AnnotationFS sourceToken = (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
         return sourceToken;
     }
 
-    private AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
+    public AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
     {
         Feature targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
         AnnotationFS targetToken = (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
