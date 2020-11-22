@@ -166,7 +166,7 @@ public class LinkFeatureEditor
                 AnnotatorState state = stateModel.getObject();
 
                 if (aModel.targetAddr <= -1) {
-                    return "";
+                    return aModel.role;
                 }
 
                 CAS cas;
@@ -213,7 +213,8 @@ public class LinkFeatureEditor
                         LoadableDetachableModel.of(() -> getRole(aItem.getModelObject()))));
 
                 aItem.add(new LambdaAjaxLink("jumpToAnnotation", _target -> actionHandler
-                        .actionSelectAndJump(_target, new VID(aItem.getModelObject().targetAddr))));
+                        .actionSelectAndJump(_target, new VID(aItem.getModelObject().targetAddr)))
+                        .add(visibleWhen(() -> aItem.getModelObject().targetAddr != -1)));
 
                 final Label label;
                 if (aItem.getModelObject().targetAddr == -1
