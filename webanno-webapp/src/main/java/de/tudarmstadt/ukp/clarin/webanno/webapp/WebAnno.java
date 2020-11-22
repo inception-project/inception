@@ -76,13 +76,6 @@ public class WebAnno
     private String ajpAddress;
 
     @Bean
-    @Primary
-    public Validator validator()
-    {
-        return new LocalValidatorFactoryBean();
-    }
-    
-    @Bean
     public PluginManager pluginManager()
     {
         PluginManagerImpl pluginManager = new PluginManagerImpl(
