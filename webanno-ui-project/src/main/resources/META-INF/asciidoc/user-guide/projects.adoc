@@ -25,8 +25,6 @@ NOTE: This functionality is only available to *managers* of existing projects,
 This is the place to specify/edit annotation projects.  
 You can either select one of the existing projects for editing, or click *Create Project* to add a project.
 
-Although correction and automation projects function similarly, the management differs after the creation of the document. For further description, look at the corresponding chapters <<sect_automation>> and <<sect_correction>>.
-
 Click on *Create Project* to create a new project. 
 
 image::project1.jpg[align="center"]

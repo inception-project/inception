@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanDeletedEv
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -516,5 +517,11 @@ public class ChainAdapter
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
         return messages;
+    }
+    
+    @Override
+    public void select(AnnotatorState aState, AnnotationFS aAnno)
+    {
+        aState.getSelection().selectSpan(aAnno);
     }
 }

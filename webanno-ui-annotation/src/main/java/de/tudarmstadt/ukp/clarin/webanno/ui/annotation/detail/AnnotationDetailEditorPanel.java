@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
@@ -80,6 +79,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
@@ -106,8 +106,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -138,6 +136,7 @@ public abstract class AnnotationDetailEditorPanel
     private final AnnotationInfoPanel selectedAnnotationInfoPanel;
     private final FeatureEditorListPanel featureEditorListPanel;
     private final WebMarkupContainer buttonContainer;
+    private final AttachedAnnotationListPanel relationListPanel;
 
     // Components
     private final ConfirmationDialog deleteAnnotationDialog;
@@ -166,9 +165,13 @@ public abstract class AnnotationDetailEditorPanel
                 new StringResourceModel("ReplaceDialog.title", this, null),
                 new StringResourceModel("ReplaceDialog.text", this, null)));
         add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel(), this));
-        add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel()));
+        add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
+                this));
         add(featureEditorListPanel = new FeatureEditorListPanel("featureEditorContainer",
                 getModel(), this));
+        add(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aPage,
+                this, aModel));
+        relationListPanel.setOutputMarkupPlaceholderTag(true);
         
         buttonContainer = new WebMarkupContainer("buttonContainer");
         buttonContainer.setOutputMarkupPlaceholderTag(true);
@@ -553,11 +556,64 @@ public abstract class AnnotationDetailEditorPanel
         // Edit existing annotation
         loadFeatureEditorModels(aTarget);
         if (aTarget != null) {
-            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel);
+            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel, relationListPanel);
         }
 
         // Ensure we re-render and update the highlight
         onChange(aTarget);
+    }
+    
+    @Override
+    public void actionSelect(AjaxRequestTarget aTarget, AnnotationFS annoFs)
+        throws IOException, AnnotationException
+    {
+        AnnotatorState state = getModelObject();
+        
+        TypeAdapter adapter = annotationService
+                .getAdapter(annotationService.findLayer(state.getProject(), annoFs));
+        
+        adapter.select(getModelObject(), annoFs);
+        actionSelect(aTarget);
+    }
+
+    @Override
+    public void actionSelect(AjaxRequestTarget aTarget, VID aVid)
+        throws IOException, AnnotationException
+    {
+        actionSelect(aTarget, selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
+    }
+    
+    @Override
+    public void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
+        throws IOException, AnnotationException
+    {
+        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
+                aFS.getBegin(), aFS.getEnd());
+    }
+    
+    @Override
+    public void actionJump(AjaxRequestTarget aTarget, VID aVid)
+        throws IOException, AnnotationException
+    {
+        actionJump(aTarget, selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
+    }
+    
+    @Override
+    public void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS annoFs)
+        throws IOException, AnnotationException
+    {
+        actionSelect(aTarget, annoFs);
+        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
+                annoFs.getBegin(), annoFs.getEnd());
+    }
+    
+    @Override
+    public void actionSelectAndJump(AjaxRequestTarget aTarget, VID aVid)
+        throws IOException, AnnotationException
+    {
+        CAS cas = editorPage.getEditorCas();
+        AnnotationFS annoFs = selectAnnotationByAddr(cas, aVid.getId());
+        actionSelectAndJump(aTarget, annoFs);
     }
 
     @Override
@@ -638,7 +694,7 @@ public abstract class AnnotationDetailEditorPanel
             // to make the buttons show up if previously no annotation was selected
             aTarget.add(buttonContainer);
             // Also update the features and selected annotation info
-            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel);
+            aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel, relationListPanel);
         }
 
         state.clearArmedSlot();
@@ -900,11 +956,9 @@ public abstract class AnnotationDetailEditorPanel
         
         AttachStatus attachStatus = new AttachStatus();
         
-        Set<AnnotationFS> attachedRels = getAttachedRels(annotationService, aFS, layer);
-        boolean attachedToReadOnlyRels = attachedRels.stream().anyMatch(relFS -> {
-            AnnotationLayer relLayer = annotationService.findLayer(aProject, relFS);
-            return relLayer.isReadonly();
-        });
+        List<AttachedAnnotation> attachedRels = annotationService.getAttachedRels(layer, aFS);
+        boolean attachedToReadOnlyRels = attachedRels.stream()
+                .anyMatch(rel -> rel.getLayer().isReadonly());
         if (attachedToReadOnlyRels) {
             attachStatus.readOnlyAttached |= true;
         }
@@ -924,11 +978,9 @@ public abstract class AnnotationDetailEditorPanel
         attachStatus.attachCount += attachedSpans.size();
         */
 
-        Set<FeatureStructure> attachedLinks = getAttachedLinks(aFS, layer);
-        boolean attachedToReadOnlyLinks = attachedLinks.stream().anyMatch(relFS -> {
-            AnnotationLayer relLayer = annotationService.findLayer(aProject, relFS);
-            return relLayer.isReadonly();
-        });
+        List<AttachedAnnotation> attachedLinks = annotationService.getAttachedLinks(layer, aFS);
+        boolean attachedToReadOnlyLinks = attachedLinks.stream()
+                .anyMatch(rel -> rel.getLayer().isReadonly());
         if (attachedToReadOnlyLinks) {
             attachStatus.readOnlyAttached |= true;
         }
@@ -1015,11 +1067,10 @@ public abstract class AnnotationDetailEditorPanel
         // NOTE: It is important that this happens before UNATTACH SPANS since the attach feature
         // is no longer set after UNATTACH SPANS!
         if (adapter instanceof SpanAdapter) {
-            for (AnnotationFS attachedFs : getAttachedRels(annotationService, fs, layer)) {
-                aCas.removeFsFromIndexes(attachedFs);
-                info("The attached annotation for relation type [" + annotationService
-                    .findLayer(state.getProject(), attachedFs.getType().getName()).getUiName()
-                    + "] is deleted");
+            for (AttachedAnnotation rel : annotationService.getAttachedRels(layer, fs)) {
+                aCas.removeFsFromIndexes(rel.getEndpoint());
+                info("The attached annotation for relation type [" + rel.getLayer().getUiName()
+                        + "] has been deleted");
             }
         }
 
@@ -1396,8 +1447,6 @@ public abstract class AnnotationDetailEditorPanel
      */
     private void populateTagsBasedOnRules(CAS aCas, FeatureState aModel)
     {
-        LOG.trace("populateTagsBasedOnRules(feature: " + aModel.feature.getUiName() + ")");
-
         AnnotatorState state = getModelObject();
 
         // Add values from rules
@@ -1421,19 +1470,19 @@ public abstract class AnnotationDetailEditorPanel
         // Fetch possible values from the constraint rules
         List<PossibleValue> possibleValues;
         try {
-            FeatureStructure featureStructure = selectFsByAddr(aCas, state.getSelection()
-                .getAnnotation().getId());
+            FeatureStructure featureStructure = selectFsByAddr(aCas,
+                    state.getSelection().getAnnotation().getId());
 
             Evaluator evaluator = new ValuesGenerator();
-            //Only show indicator if this feature can be affected by Constraint rules!
-            aModel.indicator.setAffected(evaluator.isThisAffectedByConstraintRules(
-                featureStructure, restrictionFeaturePath, state.getConstraints()));
+            // Only show indicator if this feature can be affected by Constraint rules!
+            aModel.indicator.setAffected(evaluator.isThisAffectedByConstraintRules(featureStructure,
+                    restrictionFeaturePath, state.getConstraints()));
 
-            possibleValues = evaluator.generatePossibleValues(
-                featureStructure, restrictionFeaturePath, state.getConstraints());
+            possibleValues = evaluator.generatePossibleValues(featureStructure,
+                    restrictionFeaturePath, state.getConstraints());
 
             LOG.debug("Possible values for [" + featureStructure.getType().getName() + "] ["
-                + restrictionFeaturePath + "]: " + possibleValues);
+                    + restrictionFeaturePath + "]: " + possibleValues);
         }
         catch (Exception e) {
             error("Unable to evaluate constraints: " + ExceptionUtils.getRootCauseMessage(e));
@@ -1442,17 +1491,10 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // Fetch actual tagset
-        List<Tag> valuesFromTagset = annotationService.listTags(aModel.feature.getTagset());
+        List<Tag> tags = annotationService.listTags(aModel.feature.getTagset());
 
         // First add tags which are suggested by rules and exist in tagset
-        List<Tag> tagset = compareSortAndAdd(possibleValues, valuesFromTagset, aModel.indicator);
-
-        // Then add the remaining tags
-        for (Tag remainingTag : valuesFromTagset) {
-            if (!tagset.contains(remainingTag)) {
-                tagset.add(remainingTag);
-            }
-        }
+        List<Tag> tagset = compareSortAndAdd(possibleValues, tags, aModel.indicator);
 
         // Record the possible values and the (re-ordered) tagset in the feature state
         aModel.possibleValues = possibleValues;
@@ -1464,40 +1506,46 @@ public abstract class AnnotationDetailEditorPanel
      * exist in tagset and is suggested by rules. The remaining values from tagset are added
      * afterwards.
      */
-    private static List<Tag> compareSortAndAdd(List<PossibleValue> possibleValues,
-        List<Tag> valuesFromTagset, RulesIndicator rulesIndicator)
+    private static List<Tag> compareSortAndAdd(List<PossibleValue> aPossibleValues,
+            List<Tag> aTags, RulesIndicator aRulesIndicator)
     {
-        //if no possible values, means didn't satisfy conditions
-        if (possibleValues.isEmpty()) {
-            rulesIndicator.didntMatchAnyRule();
-        }
-        
         List<Tag> returnList = new ArrayList<>();
-        // Sorting based on important flag
-        // possibleValues.sort(null);
-        // Comparing to check which values suggested by rules exists in existing
-        // tagset and adding them first in list.
-        for (PossibleValue value : possibleValues) {
-            for (Tag tag : valuesFromTagset) {
-                if (value.getValue().equalsIgnoreCase(tag.getName())) {
-                    //Matching values found in tagset and shown in dropdown
-                    rulesIndicator.rulesApplied();
-                    // HACK BEGIN
-                    tag.setReordered(true);
-                    // HACK END
-                    //Avoid duplicate entries
-                    if (!returnList.contains(tag)) {
-                        returnList.add(tag);
-                    }
-                }
+
+        // if no possible values, means didn't satisfy conditions
+        if (aPossibleValues.isEmpty()) {
+            aRulesIndicator.didntMatchAnyRule();
+            return returnList;
+        }
+
+        Map<String, Tag> tagIndex = new LinkedHashMap<>();
+        for (Tag tag : aTags) {
+            tagIndex.put(tag.getName(), tag);
+        }
+
+        for (PossibleValue value : aPossibleValues) {
+            Tag tag = tagIndex.get(value.getValue());
+            if (tag == null) {
+                continue;
             }
+
+            // Matching values found in tagset and shown in dropdown
+            aRulesIndicator.rulesApplied();
+            // HACK BEGIN
+            tag.setReordered(true);
+            // HACK END
+            returnList.add(tag);
+            // Avoid duplicate entries
+            tagIndex.remove(value.getValue());
         }
-        
-        //If no matching tags found
+
+        // If no matching tags found
         if (returnList.isEmpty()) {
-            rulesIndicator.didntMatchAnyTag();
+            aRulesIndicator.didntMatchAnyTag();
         }
         
+        // Add all remaining non-matching tags to the list
+        returnList.addAll(tagIndex.values());
+
         return returnList;
     }
 
@@ -1516,7 +1564,8 @@ public abstract class AnnotationDetailEditorPanel
         state.getFeatureStates().clear();
         state.getSelection().clear();
         if (aTarget != null) {
-            aTarget.add(selectedAnnotationInfoPanel, buttonContainer, featureEditorListPanel);
+            aTarget.add(selectedAnnotationInfoPanel, buttonContainer, featureEditorListPanel,
+                    relationListPanel);
         }        
         
         // Refresh the selectable layers dropdown
@@ -1524,39 +1573,6 @@ public abstract class AnnotationDetailEditorPanel
         if (aTarget != null) {
             aTarget.add(layerSelectionPanel);
         }
-    }
-
-    private Set<FeatureStructure> getAttachedLinks(AnnotationFS aFs, AnnotationLayer aLayer)
-    {
-        CAS cas = aFs.getCAS();
-        Set<FeatureStructure> attachedLinks = new HashSet<>();
-        TypeAdapter adapter = annotationService.getAdapter(aLayer);
-        if (adapter instanceof SpanAdapter) {
-            for (AnnotationFeature linkFeature : annotationService
-                    .listAttachedLinkFeatures(aLayer)) {
-                if (MultiValueMode.ARRAY.equals(linkFeature.getMultiValueMode())
-                        && LinkMode.WITH_ROLE.equals(linkFeature.getLinkMode())) {
-                    // Fetch slot hosts that could link to the current FS and check if any of
-                    // them actually links to the current FS
-                    Type linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
-                    for (FeatureStructure linkFS : CasUtil.selectFS(cas, linkHost)) {
-                        List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
-                                linkFS);
-                        for (int li = 0; li < links.size(); li++) {
-                            LinkWithRoleModel link = links.get(li);
-                            AnnotationFS linkTarget = selectByAddr(cas, AnnotationFS.class,
-                                    link.targetAddr);
-                            // If the current annotation fills a slot, then add the slot host to
-                            // our list of attached links.
-                            if (isSame(linkTarget, aFs)) {
-                                attachedLinks.add(linkFS);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return attachedLinks;
     }
     
     private static Set<AnnotationFS> getAttachedSpans(AnnotationSchemaService aAS, AnnotationFS aFs,
@@ -1580,62 +1596,6 @@ public abstract class AnnotationDetailEditorPanel
         return attachedSpans;
     }
     
-    private static Set<AnnotationFS> getAttachedRels(AnnotationSchemaService aAS, AnnotationFS aFs,
-            AnnotationLayer aLayer)
-    {
-        CAS cas = aFs.getCAS();
-        Set<AnnotationFS> toBeDeleted = new HashSet<>();
-        for (AnnotationLayer relationLayer : aAS.listAttachedRelationLayers(aLayer)) {
-            RelationAdapter relationAdapter = (RelationAdapter) aAS.getAdapter(relationLayer);
-            Type relationType = CasUtil.getType(cas, relationLayer.getName());
-            Feature sourceFeature = relationType.getFeatureByBaseName(relationAdapter
-                .getSourceFeatureName());
-            Feature targetFeature = relationType.getFeatureByBaseName(relationAdapter
-                .getTargetFeatureName());
-
-            // This code is already prepared for the day that relations can go between
-            // different layers and may have different attach features for the source and
-            // target layers.
-            Feature relationSourceAttachFeature = null;
-            Feature relationTargetAttachFeature = null;
-            if (relationAdapter.getAttachFeatureName() != null) {
-                relationSourceAttachFeature = sourceFeature.getRange().getFeatureByBaseName(
-                    relationAdapter.getAttachFeatureName());
-                relationTargetAttachFeature = targetFeature.getRange().getFeatureByBaseName(
-                    relationAdapter.getAttachFeatureName());
-            }
-
-            for (AnnotationFS relationFS : CasUtil.select(cas, relationType)) {
-                // Here we get the annotations that the relation is pointing to in the UI
-                FeatureStructure sourceFS;
-                if (relationSourceAttachFeature != null) {
-                    sourceFS = relationFS.getFeatureValue(sourceFeature).getFeatureValue(
-                        relationSourceAttachFeature);
-                }
-                else {
-                    sourceFS = relationFS.getFeatureValue(sourceFeature);
-                }
-
-                FeatureStructure targetFS;
-                if (relationTargetAttachFeature != null) {
-                    targetFS = relationFS.getFeatureValue(targetFeature).getFeatureValue(
-                        relationTargetAttachFeature);
-                }
-                else {
-                    targetFS = relationFS.getFeatureValue(targetFeature);
-                }
-
-                if (isSame(sourceFS, aFs) || isSame(targetFS, aFs)) {
-                    toBeDeleted.add(relationFS);
-                    LOG.debug("Deleted relation [" + getAddr(relationFS) + "] from layer ["
-                        + relationLayer.getName() + "]");
-                }
-            }
-        }
-
-        return toBeDeleted;
-    }
-
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
             Exception aException)
     {
@@ -1789,7 +1749,8 @@ public abstract class AnnotationDetailEditorPanel
                 layerSelectionPanel, 
                 buttonContainer, 
                 selectedAnnotationInfoPanel,
-                featureEditorListPanel);
+                featureEditorListPanel, 
+                relationListPanel);
     }
     
     @OnEvent(stop = true)

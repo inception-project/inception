@@ -1,0 +1,317 @@
+/*
+ * Copyright 2020
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
+
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.ClassAttributeModifier;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.markup.repeater.RefreshingView;
+import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
+import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+
+public class AttachedAnnotationListPanel
+    extends Panel
+{
+    private static final long serialVersionUID = 2229431469432051779L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(AttachedAnnotationListPanel.class);
+
+    private @SpringBean AnnotationSchemaService schemaService;
+    private @SpringBean LayerSupportRegistry layerRegistry;
+    
+    private final AnnotationPageBase page;
+    private final WebMarkupContainer noAttachedAnnotationsInfo;
+    private final WebMarkupContainer attachedAnnotationsContainer;
+    private final AnnotationActionHandler actionHandler;
+    
+    private final IModel<List<AttachedAnnotationInfo>> annotations;
+    
+    public AttachedAnnotationListPanel(String aId, AnnotationPageBase aPage,
+            AnnotationActionHandler aActionHandler, IModel<AnnotatorState> aModel)
+    {
+        super(aId, aModel);
+        
+        page = aPage;
+        annotations = LoadableDetachableModel.of(this::getRelationInfo);
+        actionHandler = aActionHandler;
+        
+        noAttachedAnnotationsInfo = new WebMarkupContainer("noAttachedAnnotationsInfo");
+        noAttachedAnnotationsInfo.setOutputMarkupPlaceholderTag(true);
+        noAttachedAnnotationsInfo.add(visibleWhen(
+            () -> getModelObject() != null && getModelObject().getSelection().isSet()
+                    && SPAN_TYPE.equals(getModelObject().getSelectedAnnotationLayer().getType())
+                    && annotations.getObject().isEmpty()));
+        add(noAttachedAnnotationsInfo);
+        
+        attachedAnnotationsContainer = new WebMarkupContainer("attachedAnnotationsContainer");
+        attachedAnnotationsContainer.setOutputMarkupPlaceholderTag(true);
+        attachedAnnotationsContainer.add(new AttachedAnnotationList("annotations", annotations));
+        attachedAnnotationsContainer.add(visibleWhen(() -> !annotations.getObject().isEmpty()));
+        add(attachedAnnotationsContainer);
+    }
+
+    @SuppressWarnings("unchecked")
+    public IModel<AnnotatorState> getModel()
+    {
+        return (IModel<AnnotatorState>) getDefaultModel();
+    }
+
+    public AnnotatorState getModelObject()
+    {
+        return (AnnotatorState) getDefaultModelObject();
+    }
+    
+    private List<AttachedAnnotationInfo> getRelationInfo()
+    {
+        Selection selection = getModelObject().getSelection();
+
+        if (!selection.isSet()) {
+            return Collections.emptyList();
+        }
+        
+        CAS cas;
+        try {
+            cas = page.getEditorCas();
+        }
+        catch (IOException e) {
+            // If we have trouble accessing the CAS, we probably never get here anyway... 
+            // the AnnotationPageBase should already have found the issue and displayed some 
+            // error to the user.
+            LOG.error("Unable to access editor CAS", e);
+            return Collections.emptyList();
+        }
+        
+        AnnotationFS annoFs = selectAnnotationByAddr(cas, selection.getAnnotation().getId());
+        VID localVid = new VID(annoFs);
+        
+        List<AttachedAnnotation> attachedAnnotations = new ArrayList<>();
+        attachedAnnotations.addAll(schemaService
+                .getAttachedRels(getModelObject().getSelectedAnnotationLayer(), annoFs));
+        attachedAnnotations.addAll(schemaService
+                .getAttachedLinks(getModelObject().getSelectedAnnotationLayer(), annoFs));
+        
+        Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
+        Map<AnnotationLayer, Renderer> rendererCache = new HashMap<>();
+        Map<AnnotationLayer, TypeAdapter> adapterCache = new HashMap<>();
+        
+        List<AttachedAnnotationInfo> result = new ArrayList<>();
+        for (AttachedAnnotation rel : attachedAnnotations) {
+            AnnotationLayer layer = rel.getLayer();
+            List<AnnotationFeature> features = featureCache.get(layer);
+            TypeAdapter adapter;
+            Renderer renderer;
+            if (features == null) {
+                features = schemaService.listSupportedFeatures(layer);
+                featureCache.put(layer, features);
+
+                adapter = schemaService.getAdapter(layer);
+                adapterCache.put(layer, adapter);
+                
+                renderer = layerRegistry.getLayerSupport(layer).createRenderer(layer,
+                    () -> featureCache.get(layer));
+                rendererCache.put(layer, renderer);
+            }
+            else {
+                adapter = adapterCache.get(layer);
+                renderer = rendererCache.get(layer);
+            }
+            
+            Map<String, String> renderedFeatures;
+            if (rel.getRelation() != null) {
+                renderedFeatures = renderer.renderLabelFeatureValues(adapter,
+                        rel.getRelation(), features);
+            }
+            else {
+                renderedFeatures = renderer.renderLabelFeatureValues(adapter,
+                        rel.getEndpoint(), features);
+            }
+
+            String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+
+            if (isEmpty(labelText)) {
+                labelText = rel.getLayer().getUiName();
+            }
+            else {
+                labelText = rel.getLayer().getUiName() + ": " + labelText;
+            }
+            
+            AttachedAnnotationInfo i = new AttachedAnnotationInfo(layer, localVid,
+                    rel.getRelation() != null ? new VID(rel.getRelation()) : null,
+                    new VID(rel.getEndpoint()), labelText, rel.getEndpoint().getCoveredText(),
+                    rel.getDirection());
+            result.add(i);
+        }
+        
+        return result;
+    }
+    
+    private class AttachedAnnotationInfo implements Serializable
+    {
+        private static final long serialVersionUID = -6096671317063130452L;
+        
+        private final AnnotationLayer layer;
+        private final VID localVid;
+        private final VID relationVid;
+        private final VID endPointVid;
+        private final String label;
+        private final String endpointText;
+        private final Direction direction;
+
+        public AttachedAnnotationInfo(AnnotationLayer aLayer, VID aLocalVid, VID aRelationVid,
+                VID aEndPointVid, String aLabel, String aEndpointText, Direction aDirection)
+        {
+            layer = aLayer;
+            localVid = aLocalVid;
+            relationVid = aRelationVid;
+            endPointVid = aEndPointVid;
+            label = aLabel;
+            endpointText = aEndpointText;
+            direction = aDirection;
+        }
+    }
+    
+    private class AttachedAnnotationList
+        extends RefreshingView<AttachedAnnotationInfo>
+    {
+        private static final long serialVersionUID = -5522565328169426657L;
+
+        public AttachedAnnotationList(String aId, IModel<List<AttachedAnnotationInfo>> aRelations)
+        {
+            super(aId, aRelations);
+        }
+        
+        @SuppressWarnings("unchecked")
+        public List<AttachedAnnotationInfo> getModelObject()
+        {
+            return (List<AttachedAnnotationInfo>) getDefaultModelObject();
+        }
+
+        @Override
+        protected Iterator<IModel<AttachedAnnotationInfo>> getItemModels()
+        {
+            return new ModelIteratorAdapter<AttachedAnnotationInfo>(getModelObject())
+            {
+                @Override
+                protected IModel<AttachedAnnotationInfo> model(AttachedAnnotationInfo aRelationInfo)
+                {
+                    return Model.of(aRelationInfo);
+                }
+            };
+        }
+
+        @Override
+        protected void populateItem(Item<AttachedAnnotationInfo> aItem)
+        {
+            AttachedAnnotationInfo info = aItem.getModelObject();
+
+            aItem.add(new Label("label", info.label));
+            
+            aItem.add(new Label("endpoint", info.endpointText));
+            
+            aItem.add(new LambdaAjaxLink("jumpToEndpoint",
+                _target -> actionHandler.actionSelectAndJump(_target, info.endPointVid)));
+            
+            LambdaAjaxLink selectRelation = new LambdaAjaxLink("selectRelation",
+                _target -> actionHandler.actionSelect(_target, info.relationVid));
+            selectRelation.setEnabled(info.relationVid != null);
+            aItem.add(selectRelation);
+            
+            selectRelation.add(new WebMarkupContainer("direction")
+                    .add(new DirectionDecorator(info.direction)));
+        }
+    }
+    
+    private static class DirectionDecorator
+        extends ClassAttributeModifier
+    {
+        private static final String ICON_MARKER_CLASS = "fas";
+        private static final String ICON_LOOP = "fa-redo";
+        private static final String ICON_OUTGOING = "fa-sign-out-alt";
+        private static final String ICON_INCOMING = "fa-sign-in-alt";
+
+        private static final long serialVersionUID = 7586775261302386820L;
+
+        private final Direction direction;
+        
+        public DirectionDecorator(Direction aDirection)
+        {
+            direction = aDirection;
+        }
+
+        @Override
+        protected Set<String> update(Set<String> aClasses)
+        {
+            aClasses.removeAll(asList(ICON_LOOP, ICON_INCOMING, ICON_OUTGOING));
+            aClasses.add(ICON_MARKER_CLASS);
+            switch (direction) {
+            case INCOMING:
+                aClasses.add(ICON_INCOMING);
+                break;
+            case OUTGOING:
+                aClasses.add(ICON_OUTGOING);
+                break;
+            case LOOP:
+                aClasses.add(ICON_LOOP);
+                break;
+            }
+
+            return aClasses;
+        }
+    }
+}

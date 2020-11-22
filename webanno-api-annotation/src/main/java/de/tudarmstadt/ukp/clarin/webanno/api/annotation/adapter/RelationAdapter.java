@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -170,14 +171,14 @@ public class RelationAdapter
                 fs, getTargetAnnotation(fs), getSourceAnnotation(fs)));
     }
 
-    private AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
+    public AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
     {
         Feature sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
         AnnotationFS sourceToken = (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
         return sourceToken;
     }
 
-    private AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
+    public AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
     {
         Feature targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
         AnnotationFS targetToken = (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
@@ -205,5 +206,12 @@ public class RelationAdapter
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
         return messages;
+    }
+    
+    @Override
+    public void select(AnnotatorState aState, AnnotationFS aAnno)
+    {
+        aState.getSelection().selectArc(new VID(aAnno), getSourceAnnotation(aAnno),
+                getTargetAnnotation(aAnno));
     }
 }

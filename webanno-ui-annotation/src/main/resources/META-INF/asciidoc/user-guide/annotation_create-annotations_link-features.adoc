@@ -25,11 +25,18 @@ button to create the slot. Next, click on field in the newly created slot to *ar
 color will change to indicate that it is armed. Now you can fill the slot by double-clicking on a 
 span annotation. To remove a slot, arm it and then press the *del* button.
 
-== Role labels
+.Navigating along links
+Once a slot has been filled, there is a cross-hair icon in the slot field header which can be used
+to navigate to the slot filler.
 
-If role labels are disabled for the link feature layer they cannot be manually set by the user.
-Instead the UI label of the linked annotation is displayed.
+When a span annotation is selected which acts as a slot filler in any link feature, then the 
+annotation owning the slow is shown in the annotation detail panel. Here, the cross-hair icon can be used to jump to the slot owner.
+
+.Role labels
 If role labels are enabled they can be changed by the user at any time.
 To change a previously selected role label, no prior deletion is needed.
 Just double-click on the instance you want to change, it will be highlighted in orange, and chose
 another role label.
+
+If role labels are disabled for the link feature layer they cannot be manually set by the user.
+Instead the UI label of the linked annotation is displayed.
