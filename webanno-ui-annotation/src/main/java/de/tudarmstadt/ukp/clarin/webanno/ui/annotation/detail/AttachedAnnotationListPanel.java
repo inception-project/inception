@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -31,11 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ClassAttributeModifier;
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -53,9 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
@@ -174,18 +172,29 @@ public class AttachedAnnotationListPanel
                 renderer = rendererCache.get(layer);
             }
             
-            Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
-                    rel.getEndpoint(), features);
+            Map<String, String> renderedFeatures;
+            if (rel.getRelation() != null) {
+                renderedFeatures = renderer.renderLabelFeatureValues(adapter,
+                        rel.getRelation(), features);
+            }
+            else {
+                renderedFeatures = renderer.renderLabelFeatureValues(adapter,
+                        rel.getEndpoint(), features);
+            }
+
             String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
-            
-            if (StringUtils.isEmpty(labelText)) {
-                labelText = "(" + rel.getLayer().getUiName() + ")";
+
+            if (isEmpty(labelText)) {
+                labelText = rel.getLayer().getUiName();
+            }
+            else {
+                labelText = rel.getLayer().getUiName() + ": " + labelText;
             }
             
             AttachedAnnotationInfo i = new AttachedAnnotationInfo(layer, localVid,
                     rel.getRelation() != null ? new VID(rel.getRelation()) : null,
                     new VID(rel.getEndpoint()), labelText, rel.getEndpoint().getCoveredText(),
-                    rel.getDirection(), rel.getEndpoint().getBegin(), rel.getEndpoint().getEnd());
+                    rel.getDirection());
             result.add(i);
         }
         
@@ -203,12 +212,9 @@ public class AttachedAnnotationListPanel
         private final String label;
         private final String endpointText;
         private final Direction direction;
-        private final int begin;
-        private final int end;
 
         public AttachedAnnotationInfo(AnnotationLayer aLayer, VID aLocalVid, VID aRelationVid,
-                VID aEndPointVid, String aLabel, String aEndpointText, Direction aDirection,
-                int aBegin, int aEnd)
+                VID aEndPointVid, String aLabel, String aEndpointText, Direction aDirection)
         {
             layer = aLayer;
             localVid = aLocalVid;
@@ -217,8 +223,6 @@ public class AttachedAnnotationListPanel
             label = aLabel;
             endpointText = aEndpointText;
             direction = aDirection;
-            begin = aBegin;
-            end = aEnd;
         }
     }
     
@@ -255,49 +259,32 @@ public class AttachedAnnotationListPanel
         protected void populateItem(Item<AttachedAnnotationInfo> aItem)
         {
             AttachedAnnotationInfo info = aItem.getModelObject();
+
             aItem.add(new Label("label", info.label));
+            
             aItem.add(new Label("endpoint", info.endpointText));
+            
             aItem.add(new LambdaAjaxLink("jumpToEndpoint",
-                _target -> actionJumpToAnnotation(_target, info)));
+                _target -> actionHandler.actionSelectAndJump(_target, info.endPointVid)));
+            
             LambdaAjaxLink selectRelation = new LambdaAjaxLink("selectRelation",
-                _target -> actionSelectRelation(_target, info));
+                _target -> actionHandler.actionSelect(_target, info.relationVid));
             selectRelation.setEnabled(info.relationVid != null);
             aItem.add(selectRelation);
+            
             selectRelation.add(new WebMarkupContainer("direction")
                     .add(new DirectionDecorator(info.direction)));
-        }
-        
-        private void actionSelectRelation(AjaxRequestTarget aTarget,
-                AttachedAnnotationInfo aRelInfo)
-            throws IOException, AnnotationException
-        {
-            AnnotatorState state = AttachedAnnotationListPanel.this.getModelObject();
-
-            CAS cas = page.getEditorCas();
-            AnnotationFS relFs = selectAnnotationByAddr(cas, aRelInfo.relationVid.getId());
-            RelationAdapter adapter = (RelationAdapter) schemaService.getAdapter(aRelInfo.layer);
-            state.getSelection().selectArc(aRelInfo.relationVid, adapter.getSourceAnnotation(relFs),
-                    adapter.getTargetAnnotation(relFs));
-            actionHandler.actionSelect(aTarget);
-        }
-        private void actionJumpToAnnotation(AjaxRequestTarget aTarget,
-                AttachedAnnotationInfo aRelInfo)
-            throws IOException, AnnotationException
-        {
-            AnnotatorState state = AttachedAnnotationListPanel.this.getModelObject();
-
-            CAS cas = page.getEditorCas();
-            AnnotationFS annoFs = selectAnnotationByAddr(cas, aRelInfo.endPointVid.getId());
-            state.getSelection().selectSpan(annoFs);
-            actionHandler.actionSelect(aTarget);
-            page.actionShowSelectedDocument(aTarget, state.getDocument(), aRelInfo.begin,
-                    aRelInfo.end);
         }
     }
     
     private static class DirectionDecorator
         extends ClassAttributeModifier
     {
+        private static final String ICON_MARKER_CLASS = "fas";
+        private static final String ICON_LOOP = "fa-redo";
+        private static final String ICON_OUTGOING = "fa-sign-out-alt";
+        private static final String ICON_INCOMING = "fa-sign-in-alt";
+
         private static final long serialVersionUID = 7586775261302386820L;
 
         private final Direction direction;
@@ -310,20 +297,17 @@ public class AttachedAnnotationListPanel
         @Override
         protected Set<String> update(Set<String> aClasses)
         {
-            aClasses.remove("fa-redo");
-            aClasses.remove("fa-sign-in-alt");
-            aClasses.remove("fa-sign-out-alt");
-
-            aClasses.add("fas");
+            aClasses.removeAll(asList(ICON_LOOP, ICON_INCOMING, ICON_OUTGOING));
+            aClasses.add(ICON_MARKER_CLASS);
             switch (direction) {
             case INCOMING:
-                aClasses.add("fa-sign-in-alt");
+                aClasses.add(ICON_INCOMING);
                 break;
             case OUTGOING:
-                aClasses.add("fa-sign-out-alt");
+                aClasses.add(ICON_OUTGOING);
                 break;
             case LOOP:
-                aClasses.add("fa-redo");
+                aClasses.add(ICON_LOOP);
                 break;
             }
 

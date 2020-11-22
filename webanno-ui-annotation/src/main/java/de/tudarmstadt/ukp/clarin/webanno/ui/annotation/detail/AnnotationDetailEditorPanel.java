@@ -165,7 +165,8 @@ public abstract class AnnotationDetailEditorPanel
                 new StringResourceModel("ReplaceDialog.title", this, null),
                 new StringResourceModel("ReplaceDialog.text", this, null)));
         add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel(), this));
-        add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel()));
+        add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
+                this));
         add(featureEditorListPanel = new FeatureEditorListPanel("featureEditorContainer",
                 getModel(), this));
         add(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aPage,
@@ -560,6 +561,59 @@ public abstract class AnnotationDetailEditorPanel
 
         // Ensure we re-render and update the highlight
         onChange(aTarget);
+    }
+    
+    @Override
+    public void actionSelect(AjaxRequestTarget aTarget, AnnotationFS annoFs)
+        throws IOException, AnnotationException
+    {
+        AnnotatorState state = getModelObject();
+        
+        TypeAdapter adapter = annotationService
+                .getAdapter(annotationService.findLayer(state.getProject(), annoFs));
+        
+        adapter.select(getModelObject(), annoFs);
+        actionSelect(aTarget);
+    }
+
+    @Override
+    public void actionSelect(AjaxRequestTarget aTarget, VID aVid)
+        throws IOException, AnnotationException
+    {
+        actionSelect(aTarget, selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
+    }
+    
+    @Override
+    public void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
+        throws IOException, AnnotationException
+    {
+        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
+                aFS.getBegin(), aFS.getEnd());
+    }
+    
+    @Override
+    public void actionJump(AjaxRequestTarget aTarget, VID aVid)
+        throws IOException, AnnotationException
+    {
+        actionJump(aTarget, selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
+    }
+    
+    @Override
+    public void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS annoFs)
+        throws IOException, AnnotationException
+    {
+        actionSelect(aTarget, annoFs);
+        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
+                annoFs.getBegin(), annoFs.getEnd());
+    }
+    
+    @Override
+    public void actionSelectAndJump(AjaxRequestTarget aTarget, VID aVid)
+        throws IOException, AnnotationException
+    {
+        CAS cas = editorPage.getEditorCas();
+        AnnotationFS annoFs = selectAnnotationByAddr(cas, aVid.getId());
+        actionSelectAndJump(aTarget, annoFs);
     }
 
     @Override
