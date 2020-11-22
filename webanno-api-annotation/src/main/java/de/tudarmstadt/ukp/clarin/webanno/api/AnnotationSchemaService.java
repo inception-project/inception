@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -299,6 +300,8 @@ public interface AnnotationSchemaService
      */
     List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer layer);
     
+    List<AttachedAnnotation> getAttachedRels(AnnotationLayer aLayer, AnnotationFS aFs);
+
     /**
      * List all link features that could potentially link to the annotations of the given layer.
      * These include link features that have the given layer as a target type as well as link
@@ -310,6 +313,8 @@ public interface AnnotationSchemaService
      */
     List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer layer);
      
+    List<AttachedAnnotation> getAttachedLinks(AnnotationLayer aLayer, AnnotationFS aFs);
+    
     /**
      * List all the features in a {@link AnnotationLayer} for this {@link Project}. This includes
      * disabled features.

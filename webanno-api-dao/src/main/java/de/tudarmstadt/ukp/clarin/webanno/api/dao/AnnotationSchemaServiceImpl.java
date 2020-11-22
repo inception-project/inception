@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.INCOMING;
+import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.LOOP;
+import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.OUTGOING;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
@@ -48,7 +53,9 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -64,12 +71,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -80,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -1170,5 +1182,106 @@ public class AnnotationSchemaServiceImpl
                 }
             }
         }
+    }
+    
+    @Override
+    @Transactional
+    public List<AttachedAnnotation> getAttachedRels(AnnotationLayer aLayer, AnnotationFS aFs)
+    {
+        CAS cas = aFs.getCAS();
+        List<AttachedAnnotation> result = new ArrayList<>();
+        for (AnnotationLayer relationLayer : listAttachedRelationLayers(aLayer)) {
+            RelationAdapter relationAdapter = (RelationAdapter) getAdapter(relationLayer);
+            Type relationType = CasUtil.getType(cas, relationLayer.getName());
+            Feature sourceFeature = relationType.getFeatureByBaseName(relationAdapter
+                .getSourceFeatureName());
+            Feature targetFeature = relationType.getFeatureByBaseName(relationAdapter
+                .getTargetFeatureName());
+
+            // This code is already prepared for the day that relations can go between
+            // different layers and may have different attach features for the source and
+            // target layers.
+            Feature relationSourceAttachFeature = null;
+            Feature relationTargetAttachFeature = null;
+            if (relationAdapter.getAttachFeatureName() != null) {
+                relationSourceAttachFeature = sourceFeature.getRange().getFeatureByBaseName(
+                    relationAdapter.getAttachFeatureName());
+                relationTargetAttachFeature = targetFeature.getRange().getFeatureByBaseName(
+                    relationAdapter.getAttachFeatureName());
+            }
+
+            for (AnnotationFS relationFS : CasUtil.select(cas, relationType)) {
+                // Here we get the annotations that the relation is pointing to in the UI
+                AnnotationFS sourceFS;
+                if (relationSourceAttachFeature != null) {
+                    sourceFS = (AnnotationFS) relationFS.getFeatureValue(sourceFeature)
+                            .getFeatureValue(relationSourceAttachFeature);
+                }
+                else {
+                    sourceFS = (AnnotationFS) relationFS.getFeatureValue(sourceFeature);
+                }
+
+                AnnotationFS targetFS;
+                if (relationTargetAttachFeature != null) {
+                    targetFS = (AnnotationFS) relationFS.getFeatureValue(targetFeature)
+                            .getFeatureValue(relationTargetAttachFeature);
+                }
+                else {
+                    targetFS = (AnnotationFS) relationFS.getFeatureValue(targetFeature);
+                }
+
+                boolean isIncoming = isSame(targetFS, aFs);
+                boolean isOutgoing = isSame(sourceFS, aFs);
+
+                if (isIncoming && isOutgoing) {
+                    result.add(new AttachedAnnotation(relationLayer, relationFS, sourceFS, LOOP));
+                }
+                else if (isIncoming) {
+                    result.add(
+                            new AttachedAnnotation(relationLayer, relationFS, sourceFS, INCOMING));
+                }
+                else if (isOutgoing) {
+                    result.add(
+                            new AttachedAnnotation(relationLayer, relationFS, targetFS, OUTGOING));
+                }
+            }
+        }
+
+        return result;
+    }
+    
+    @Override
+    @Transactional
+    public List<AttachedAnnotation> getAttachedLinks(AnnotationLayer aLayer, AnnotationFS aFs)
+    {
+        CAS cas = aFs.getCAS();
+        List<AttachedAnnotation> result = new ArrayList<>();
+        TypeAdapter adapter = getAdapter(aLayer);
+        if (adapter instanceof SpanAdapter) {
+            for (AnnotationFeature linkFeature : listAttachedLinkFeatures(aLayer)) {
+                if (MultiValueMode.ARRAY.equals(linkFeature.getMultiValueMode())
+                        && LinkMode.WITH_ROLE.equals(linkFeature.getLinkMode())) {
+                    // Fetch slot hosts that could link to the current FS and check if any of
+                    // them actually links to the current FS
+                    Type linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
+                    for (FeatureStructure linkFS : CasUtil.selectFS(cas, linkHost)) {
+                        List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
+                                linkFS);
+                        for (int li = 0; li < links.size(); li++) {
+                            LinkWithRoleModel link = links.get(li);
+                            AnnotationFS linkTarget = selectByAddr(cas, AnnotationFS.class,
+                                    link.targetAddr);
+                            // If the current annotation fills a slot, then add the slot host to
+                            // our list of attached links.
+                            if (isSame(linkTarget, aFs)) {
+                                result.add(new AttachedAnnotation(linkFeature.getLayer(),
+                                        (AnnotationFS) linkFS, INCOMING));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 }
