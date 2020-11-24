@@ -47,7 +47,11 @@ public enum SentenceState
     /**
      * In the range of current display window
      */
-    SELECTED_RANGE(true, "#FFFF00"),
+    SELECTED_RANGE(true, "#FFFF00"), 
+    
+    /**
+     * Confirmed annotation.
+     */
     CONFIRMED(true, "#99FF99");
 
     private boolean hasDiff;

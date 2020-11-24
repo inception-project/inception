@@ -24,14 +24,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 
 /**
- * A Model comprises of document and collection brat responses together with the username that
- * will populate the sentence with {@link AnnotationDocument}s
+ * A Model comprises of document and collection brat responses together with the username that will
+ * populate the sentence with {@link AnnotationDocument}s
  */
 public class UserAnnotationSegment
     implements Serializable
 {
     private static final long serialVersionUID = 1785666148278992450L;
-    
+
     private String documentResponse;
     private String collectionData = "{}";
     private String username = "";
@@ -99,7 +99,7 @@ public class UserAnnotationSegment
     {
         selectionByUsernameAndAddress = aSelectionByUsernameAndAddress;
     }
-    
+
     public boolean equals(UserAnnotationSegment segment)
     {
         return segment.getCollectionData().equals(collectionData)
