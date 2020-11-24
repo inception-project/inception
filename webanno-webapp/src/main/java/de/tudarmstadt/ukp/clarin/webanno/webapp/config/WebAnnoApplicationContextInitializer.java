@@ -46,13 +46,13 @@ public class WebAnnoApplicationContextInitializer
         ConfigurableEnvironment aEnvironment = aApplicationContext.getEnvironment();
 
         File settings = SettingsUtil.getSettingsFile();
-        
+
         // If settings were found, add them to the environment
         if (settings != null) {
             log.info("Settings: " + settings);
             try {
-                aEnvironment.getPropertySources().addFirst(
-                        new ResourcePropertySource(new FileSystemResource(settings)));
+                aEnvironment.getPropertySources()
+                        .addFirst(new ResourcePropertySource(new FileSystemResource(settings)));
             }
             catch (IOException e) {
                 throw new IllegalStateException(e);
