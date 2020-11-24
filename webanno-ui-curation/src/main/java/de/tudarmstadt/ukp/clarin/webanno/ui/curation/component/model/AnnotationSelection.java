@@ -34,7 +34,7 @@ public class AnnotationSelection
 
     public AnnotationSelection()
     {
-        // TODO Auto-generated constructor stub
+        // Nothing to do
     }
     
     public Map<String, Integer> getAddressByUsername()

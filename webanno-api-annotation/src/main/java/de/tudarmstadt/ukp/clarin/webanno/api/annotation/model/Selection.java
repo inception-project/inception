@@ -59,6 +59,9 @@ public class Selection
     // selected span text
     private String text;
     
+    private String originText;
+    private String targetText;
+    
     public Selection()
     {
         // Nothing to do
@@ -68,6 +71,8 @@ public class Selection
     {
         selectedAnnotationId = aVid;
         text = "[" + aOriginFs.getCoveredText() + "] - [" + aTargetFs.getCoveredText() + "]";
+        originText = aOriginFs.getCoveredText();
+        targetText = aTargetFs.getCoveredText();
         beginOffset = Math.min(aOriginFs.getBegin(), aTargetFs.getBegin());
         endOffset = Math.max(aOriginFs.getEnd(), aTargetFs.getEnd());
         
@@ -95,6 +100,8 @@ public class Selection
         // Properties used when an arc is selected
         originSpanId = -1;
         targetSpanId = -1;
+        originText = null;
+        targetText = null;
         
         LOG.debug("Span: {}", this);
         
@@ -169,7 +176,22 @@ public class Selection
     {
         return text;
     }
+    
+    public String getOriginText()
+    {
+        return originText;
+    }
+    
+    public String getTargetText()
+    {
+        return targetText;
+    }
 
+    /**
+     * @deprecated Should no longer be used. Instead, text is set implicitly through
+     * {@link #selectSpan} and {@code #selectArc}.
+     */
+    @Deprecated
     public void setText(String aText)
     {
         text = aText;
@@ -180,6 +202,8 @@ public class Selection
      * have to point at an existing annotation. It can also point just at a span of text or at the
      * endpoints of a relation. In this case, the enpoints or begin/end offsets are set, but not the
      * annotation ID.
+     * 
+     * @return  the VID;
      */
     public VID getAnnotation()
     {
@@ -196,6 +220,10 @@ public class Selection
         int tempSpanId = originSpanId;
         originSpanId = targetSpanId;
         targetSpanId = tempSpanId;
+        
+        String tempText = originText;
+        originText = targetText;
+        targetText = tempText;
         
         fireSelectionChanged();
     }
