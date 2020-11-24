@@ -198,6 +198,8 @@ public interface TypeAdapter
      */
     void silenceEvents();
     
+    void select(AnnotatorState aState, AnnotationFS aAnnotation);
+    
     /**
      * @return the encoded type name sent to the browser.
      * @see #decodeTypeName(String)

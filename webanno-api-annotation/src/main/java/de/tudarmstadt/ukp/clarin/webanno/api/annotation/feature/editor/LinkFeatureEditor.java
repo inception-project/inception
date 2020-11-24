@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.io.IOException;
@@ -50,6 +51,7 @@ import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -78,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -158,40 +161,60 @@ public class LinkFeatureEditor
                 };
             }
 
+            private String getRole(LinkWithRoleModel aModel)
+            {
+                AnnotatorState state = stateModel.getObject();
+
+                if (aModel.targetAddr <= -1) {
+                    return aModel.role;
+                }
+
+                CAS cas;
+                try {
+                    cas = actionHandler.getEditorCas();
+                }
+                catch (IOException e) {
+                    handleException(this, null, e);
+                    return "";
+                }
+
+                FeatureStructure fs = selectFsByAddr(cas, aModel.targetAddr);
+                AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
+
+                if (!traits.isEnableRoleLabels()) {
+                    return layer.getUiName();
+                }
+
+                TypeAdapter adapter = annotationService.getAdapter(layer);
+                Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(
+                        layer, () -> annotationService.listAnnotationFeature(layer));
+                List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+                Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
+                        fs, features);
+
+                String roleLabel = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+                if (isEmpty(roleLabel)) {
+                    roleLabel = aModel.role + ": " + layer.getUiName();
+                }
+                else {
+                    roleLabel = aModel.role + ": " + layer.getUiName() + ": " + roleLabel;
+                }
+
+                return roleLabel;
+            }
+            
             @Override
             protected void populateItem(final Item<LinkWithRoleModel> aItem)
             {
                 AnnotatorState state = stateModel.getObject();
 
                 aItem.setModel(new CompoundPropertyModel<>(aItem.getModelObject()));
-                Label role;
-                if (!traits.isEnableRoleLabels() && aItem.getModelObject().targetAddr > -1) {
-                    try {
-                        CAS cas = actionHandler.getEditorCas();
-                        FeatureStructure fs =
-                                selectFsByAddr(cas, aItem.getModelObject().targetAddr);
-                        AnnotationLayer layer =
-                                annotationService.findLayer(state.getProject(),  fs);
-                        TypeAdapter adapter =
-                                annotationService.getAdapter(layer);
-                        Renderer renderer = layerSupportRegistry.getLayerSupport(layer)
-                                .createRenderer(layer,
-                                    () -> annotationService.listAnnotationFeature(layer));
-                        List<AnnotationFeature> features =
-                                annotationService.listAnnotationFeature(layer);
-                        Map<String, String> renderedFeatures =
-                                renderer.renderLabelFeatureValues(adapter, fs, features);
-                        String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
-                        role = new Label("role", labelText);
-                    }
-                    catch (IOException e) {
-                        handleException(this, null, e);
-                        role = new Label("role");
-                    }
-                } else {
-                    role = new Label("role");
-                }
-                aItem.add(role);
+                aItem.add(new Label("role",
+                        LoadableDetachableModel.of(() -> getRole(aItem.getModelObject()))));
+
+                aItem.add(new LambdaAjaxLink("jumpToAnnotation", _target -> actionHandler
+                        .actionSelectAndJump(_target, new VID(aItem.getModelObject().targetAddr)))
+                        .add(visibleWhen(() -> aItem.getModelObject().targetAddr != -1)));
 
                 final Label label;
                 if (aItem.getModelObject().targetAddr == -1
