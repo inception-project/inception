@@ -26,7 +26,7 @@ public class CasDoctorException
 {
     private static final long serialVersionUID = 2061804333509464073L;
     private List<LogMessage> details;
-    
+
     public CasDoctorException()
     {
         super();
@@ -58,7 +58,7 @@ public class CasDoctorException
     {
         super(aCause);
     }
-    
+
     public List<LogMessage> getDetails()
     {
         return details;

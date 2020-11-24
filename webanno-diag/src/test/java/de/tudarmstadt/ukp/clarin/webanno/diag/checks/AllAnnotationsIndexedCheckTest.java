@@ -40,21 +40,20 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class AllAnnotationsIndexedCheckTest
 {
     @Test
-    public void testFail()
-        throws Exception
+    public void testFail() throws Exception
     {
         TypeSystemDescription tsd = UIMAFramework.getResourceSpecifierFactory()
                 .createTypeSystemDescription();
-        
+
         String refTypeName = "RefType";
-        
+
         TypeDescription refTypeDesc = tsd.addType(refTypeName, null, CAS.TYPE_NAME_ANNOTATION);
         refTypeDesc.addFeature("ref", null, CAS.TYPE_NAME_ANNOTATION);
-        
+
         CAS cas = CasCreationUtils.createCas(tsd, null, null);
-        
+
         Type refType = cas.getTypeSystem().getType(refTypeName);
-        
+
         // A regular index annotation
         AnnotationFS anno1 = cas.createAnnotation(cas.getAnnotationType(), 0, 1);
         cas.addFsToIndexes(anno1);
@@ -66,33 +65,32 @@ public class AllAnnotationsIndexedCheckTest
         AnnotationFS anno3 = cas.createAnnotation(refType, 0, 1);
         anno3.setFeatureValue(refType.getFeatureByBaseName("ref"), anno2);
         cas.addFsToIndexes(anno3);
-        
+
         List<LogMessage> messages = new ArrayList<>();
         CasDoctor cd = new CasDoctor(AllFeatureStructuresIndexedCheck.class);
         // A project is not required for this check
         boolean result = cd.analyze(null, cas, messages);
-        
+
         messages.forEach(System.out::println);
-        
+
         assertFalse(result);
     }
 
     @Test
-    public void testOK()
-        throws Exception
+    public void testOK() throws Exception
     {
         TypeSystemDescription tsd = UIMAFramework.getResourceSpecifierFactory()
                 .createTypeSystemDescription();
-        
+
         String refTypeName = "RefType";
-        
+
         TypeDescription refTypeDesc = tsd.addType(refTypeName, null, CAS.TYPE_NAME_ANNOTATION);
         refTypeDesc.addFeature("ref", null, CAS.TYPE_NAME_ANNOTATION);
-        
+
         CAS cas = CasCreationUtils.createCas(tsd, null, null);
-        
+
         Type refType = cas.getTypeSystem().getType(refTypeName);
-        
+
         // A regular index annotation
         AnnotationFS anno1 = cas.createAnnotation(cas.getAnnotationType(), 0, 1);
         cas.addFsToIndexes(anno1);
@@ -105,14 +103,14 @@ public class AllAnnotationsIndexedCheckTest
         AnnotationFS anno3 = cas.createAnnotation(refType, 0, 1);
         anno3.setFeatureValue(refType.getFeatureByBaseName("ref"), anno2);
         cas.addFsToIndexes(anno3);
-        
+
         List<LogMessage> messages = new ArrayList<>();
         CasDoctor cd = new CasDoctor(AllFeatureStructuresIndexedCheck.class);
         // A project is not required for this check
         boolean result = cd.analyze(null, cas, messages);
-        
+
         messages.forEach(System.out::println);
-        
+
         assertTrue(result);
     }
 

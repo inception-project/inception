@@ -47,8 +47,7 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(SPAN_TYPE.equals(layer.getType())
-                    && layer.getAttachFeature() != null)) {
+            if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
                 continue;
             }
 
@@ -60,7 +59,7 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
 
             // Go over the layer that has an attach feature (e.g. Token) and make sure that it is
             // filled
-            // anno   -> e.g. Lemma
+            // anno -> e.g. Lemma
             // attach -> e.g. Token
             // Here we iterate over the attached layer, e.g. Lemma
             for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
@@ -68,7 +67,7 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
                 // e.g. Token
                 for (AnnotationFS attach : selectCovered(attachType, anno)) {
                     AnnotationFS existing = getFeature(attach, attachFeature, AnnotationFS.class);
-                    
+
                     if (existing == null) {
                         setFeature(attach, layer.getAttachFeature().getName(), anno);
                         count++;
@@ -83,7 +82,7 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
                 aMessages.add(LogMessage.info(this,
                         "Reattached [%d] unattached spans on layer [%s].", count, layer.getName()));
             }
-            
+
             if (nonNullCount > 0) {
                 aMessages.add(LogMessage.error(this,
                         "Could not attach [%d] annotations on layer [%s] because attach feature "

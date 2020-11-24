@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * Checks that the offsets of relations match the target of the relation. This mirrors the DKPro
- * Core convention that the offsets of a dependency relation must match the offsets of the 
+ * Core convention that the offsets of a dependency relation must match the offsets of the
  * dependent.
  */
 public class RelationOffsetsCheck
@@ -49,7 +49,7 @@ public class RelationOffsetsCheck
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         boolean ok = true;
-        
+
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             if (!WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
                 continue;
@@ -64,7 +64,7 @@ public class RelationOffsetsCheck
                 // can skip checking the layer because there will be no annotations anyway.
                 continue;
             }
-            
+
             for (AnnotationFS rel : select(aCas, type)) {
                 AnnotationFS target = getFeature(rel, WebAnnoConst.FEAT_REL_TARGET,
                         AnnotationFS.class);

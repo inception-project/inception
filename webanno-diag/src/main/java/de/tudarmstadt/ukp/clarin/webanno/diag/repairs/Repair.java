@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public interface Repair
 {
     void repair(Project aProject, CAS aCas, List<LogMessage> aMessages);
-    
+
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.TYPE)
     @interface Safe
