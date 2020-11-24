@@ -1,7 +1,7 @@
 = Curation
 
 Curation i.e. the process of combining finished annotated documents into a final curated document,
-can be done via the *Curation Page* in INCEpTION (see <<curation.adoc>>) 
+can be done via the *Curation Page* in INCEpTION (see <<sect_curation>>) 
 but also via the *Curation Sidebar* on the *Annotation Page*.
 
 image::curation-sidebar.png[Curation Sidebar]
