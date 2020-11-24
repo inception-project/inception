@@ -1211,6 +1211,10 @@ public class AnnotationSchemaServiceImpl
             }
 
             for (AnnotationFS relationFS : CasUtil.select(cas, relationType)) {
+                if (!(relationFS instanceof AnnotationFS)) {
+                    continue;
+                }
+                
                 // Here we get the annotations that the relation is pointing to in the UI
                 AnnotationFS sourceFS;
                 if (relationSourceAttachFeature != null) {
@@ -1265,6 +1269,10 @@ public class AnnotationSchemaServiceImpl
                     // them actually links to the current FS
                     Type linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
                     for (FeatureStructure linkFS : CasUtil.selectFS(cas, linkHost)) {
+                        if (!(linkFS instanceof AnnotationFS)) {
+                            continue;
+                        }
+                        
                         List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
                                 linkFS);
                         for (int li = 0; li < links.size(); li++) {
