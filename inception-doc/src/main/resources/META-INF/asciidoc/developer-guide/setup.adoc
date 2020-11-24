@@ -22,7 +22,7 @@ This section covers setting up a development environment.
 == Source code management
 
 We use git as our source code management system and collaborate via the {product-name}
-repository on Github.
+repository on https://github.com/inception-project/inception[Github].
 
 === Development workflow
 
