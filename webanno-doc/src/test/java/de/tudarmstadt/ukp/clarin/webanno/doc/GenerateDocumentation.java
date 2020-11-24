@@ -35,20 +35,24 @@ import org.asciidoctor.SafeMode;
 
 public class GenerateDocumentation
 {
-    private static Path asciiDocPath = Paths.get("src", "main", "resources", "META-INF", "asciidoc");
+    private static Path asciiDocPath = Paths.get("src", "main", "resources", "META-INF",
+            "asciidoc");
 
     private static List<Path> getAsciiDocs(Path dir) throws Exception
     {
+        // @formatter:off
         return Files.list(dir)
                 .filter(Files::isDirectory)
                 .filter(p -> Files.exists(p.resolve("pom.xml")))
                 .map(p -> p.resolve(asciiDocPath))
                 .filter(Files::isDirectory)
                 .collect(Collectors.toList());
+        // @formatter:on
     }
 
     private static void buildDoc(String type, Path outputDir)
     {
+        // @formatter:off
         Attributes attributes = AttributesBuilder.attributes()
                 .attribute("source-dir", getWebannoDir() + "/")
                 .attribute("include-dir", outputDir.resolve("asciidoc").resolve(type)
@@ -70,10 +74,11 @@ public class GenerateDocumentation
                 .toDir(outputDir.toFile())
                 .safe(SafeMode.UNSAFE)
                 .attributes(attributes);
+        // @formatter:on
         Asciidoctor asciidoctor = Asciidoctor.Factory.create();
         asciidoctor.requireLibrary("asciidoctor-diagram");
         File f = new File(outputDir.resolve("asciidoc").resolve(type).toString() + ".adoc");
-        asciidoctor.convertFile(f , options);
+        asciidoctor.convertFile(f, options);
     }
 
     public static void main(String... args) throws Exception
@@ -90,12 +95,12 @@ public class GenerateDocumentation
 
         for (Path module : modules) {
             System.out.printf("Including module: %s\n", module);
-            
+
             for (File f : FileUtils.listFiles(module.toFile(), TrueFileFilter.INSTANCE,
                     TrueFileFilter.INSTANCE)) {
                 Path p = f.toPath();
-                Path targetPath = f.toPath().subpath(module.toAbsolutePath().getNameCount()
-                        , p.toAbsolutePath().getNameCount());
+                Path targetPath = f.toPath().subpath(module.toAbsolutePath().getNameCount(),
+                        p.toAbsolutePath().getNameCount());
                 FileUtils.copyFile(f, outputDir.resolve("asciidoc").resolve(targetPath).toFile());
             }
         }
@@ -103,7 +108,7 @@ public class GenerateDocumentation
         buildDoc("user-guide", outputDir);
         buildDoc("developer-guide", outputDir);
         buildDoc("admin-guide", outputDir);
-        
+
         System.out.printf("Documentation written to: %s\n", outputDir);
     }
 
