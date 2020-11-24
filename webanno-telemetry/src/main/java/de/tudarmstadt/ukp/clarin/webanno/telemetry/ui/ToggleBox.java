@@ -36,20 +36,20 @@ public class ToggleBox
     public ToggleBox(String aId)
     {
         super(aId);
-        
+
         getConfig().withIconNull("<i class=\"fa fa-question\"></i> Click to choose...");
         getConfig().withIconChecked("<i class=\"fa fa-check\"></i> Enabled");
         getConfig().withIconUnchecked("<i class=\"fa fa-ban\"></i> Disabled");
         getConfig().withEnclosedLabel(false);
-        
+
         add(new ChoiceRequiredValidator());
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         getConfig().withThreeState(ToggleBox.this.getModelObject() == null);
     }
 
@@ -57,12 +57,11 @@ public class ToggleBox
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        aResponse.render(CssHeaderItem.forCSS(
-                ".checkboxx-toggle-button .cbx-md { width: 10em; }", 
+        aResponse.render(CssHeaderItem.forCSS(".checkboxx-toggle-button .cbx-md { width: 10em; }",
                 "ToggleBox"));
         aResponse.render(OnDomReadyHeaderItem.forScript(coloringScript()));
     }
-    
+
     @Override
     protected void onChange(Boolean aValue, AjaxRequestTarget aTarget)
     {
@@ -70,7 +69,7 @@ public class ToggleBox
             getConfig().withThreeState(false);
             aTarget.add(this);
         }
-        
+
         aTarget.appendJavaScript(coloringScript());
     }
 
@@ -78,12 +77,11 @@ public class ToggleBox
     {
         return WicketUtil.wrapInTryCatch(String.join("\n",
                 "$('.checkboxx-toggle-button .fa-question').each((idx, item) => "
-                + "$(item).closest('.cbx-container').css('background-color', '#fff3cd'))",
+                        + "$(item).closest('.cbx-container').css('background-color', '#fff3cd'))",
                 "$('.checkboxx-toggle-button .fa-check').each((idx, item) => "
-                + "$(item).closest('.cbx-container').css('background-color', '#d4edda'))",
+                        + "$(item).closest('.cbx-container').css('background-color', '#d4edda'))",
                 "$('.checkboxx-toggle-button .fa-ban').each((idx, item) => "
-                + "$(item).closest('.cbx-container').css('background-color', '#f8d7da'))"
-                ));
+                        + "$(item).closest('.cbx-container').css('background-color', '#f8d7da'))"));
     }
 
     private class ChoiceRequiredValidator

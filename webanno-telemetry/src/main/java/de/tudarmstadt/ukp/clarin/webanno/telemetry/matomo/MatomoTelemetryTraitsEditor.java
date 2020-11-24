@@ -37,18 +37,18 @@ public class MatomoTelemetryTraitsEditor
     private static final String MID_FORM = "form";
 
     private @SpringBean TelemetryService telemetryService;
-    
+
     private final MatomoTelemetryTraits traits;
 
     public MatomoTelemetryTraitsEditor(String aId, IModel<TelemetrySettings> aSettings)
     {
         super(aId, aSettings);
-        
+
         TelemetrySettings settings = aSettings.getObject();
-        
+
         TelemetrySupport<MatomoTelemetryTraits> support = telemetryService
                 .getTelemetrySuppport(settings.getSupport()).get();
-        
+
         traits = support.readTraits(settings);
 
         Form<MatomoTelemetryTraits> form = new Form<MatomoTelemetryTraits>(MID_FORM,
@@ -68,7 +68,7 @@ public class MatomoTelemetryTraitsEditor
         };
 
         form.add(new ToggleBox("enabled"));
-        
+
         add(form);
     }
 }

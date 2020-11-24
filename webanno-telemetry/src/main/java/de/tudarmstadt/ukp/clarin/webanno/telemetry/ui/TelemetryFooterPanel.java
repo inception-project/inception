@@ -31,10 +31,10 @@ public class TelemetryFooterPanel
     public TelemetryFooterPanel(String aId)
     {
         super(aId);
-        
+
         BookmarkablePageLink<Void> link = new BookmarkablePageLink<>("telemetry",
                 TelemetrySettingsPage.class);
-        
+
         add(link);
     }
 }
