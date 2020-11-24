@@ -22,7 +22,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ApplicationEventPublisherHolderImpl implements ApplicationEventPublisherHolder
+public class ApplicationEventPublisherHolderImpl
+    implements ApplicationEventPublisherHolder
 {
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
 

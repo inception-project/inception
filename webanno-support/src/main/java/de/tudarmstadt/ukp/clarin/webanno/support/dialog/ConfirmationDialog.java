@@ -42,10 +42,10 @@ public class ConfirmationDialog
 
     private IModel<String> titleModel;
     private IModel<String> contentModel;
-    
+
     private AjaxCallback confirmAction;
     private AjaxCallback cancelAction;
-    
+
     private ContentPanel contentPanel;
 
     public ConfirmationDialog(String aId)
@@ -54,19 +54,19 @@ public class ConfirmationDialog
         titleModel = new StringResourceModel("title", this, null);
         contentModel = new StringResourceModel("text", this, null);
     }
-    
+
     public ConfirmationDialog(String aId, IModel<String> aTitle)
     {
         this(aId, aTitle, Model.of());
     }
-    
+
     public ConfirmationDialog(String aId, IModel<String> aTitle, IModel<String> aContent)
     {
         super(aId);
-        
+
         titleModel = aTitle;
         contentModel = aContent;
-        
+
         setOutputMarkupId(true);
         setInitialWidth(620);
         setInitialHeight(440);
@@ -75,17 +75,17 @@ public class ConfirmationDialog
         setHeightUnit("px");
         setCssClassName("w_blue w_flex");
         showUnloadConfirmation(false);
-        
+
         setModel(new CompoundPropertyModel<>(null));
-        
+
         setContent(contentPanel = new ContentPanel(getContentId(), getModel()));
-        
+
         setCloseButtonCallback((_target) -> {
             onCancelInternal(_target);
             return true;
         });
     }
-    
+
     public IModel<String> getTitleModel()
     {
         return titleModel;
@@ -110,7 +110,7 @@ public class ConfirmationDialog
     {
         setDefaultModel(aModel);
     }
-    
+
     @SuppressWarnings("unchecked")
     public IModel<State> getModel()
     {
@@ -121,27 +121,27 @@ public class ConfirmationDialog
     {
         setDefaultModelObject(aModel);
     }
-    
+
     public State getModelObject()
     {
         return (State) getDefaultModelObject();
-    }    
-    
+    }
+
     @Override
     public void show(IPartialPageRequestHandler aTarget)
     {
         contentModel.detach();
-        
+
         State state = new State();
         state.content = contentModel.getObject();
         state.feedback = null;
         setModelObject(state);
 
         setTitle(titleModel.getObject());
-        
+
         super.show(aTarget);
     }
-    
+
     public AjaxCallback getConfirmAction()
     {
         return confirmAction;
@@ -165,9 +165,9 @@ public class ConfirmationDialog
     protected void onConfirmInternal(AjaxRequestTarget aTarget, Form<State> aForm)
     {
         State state = aForm.getModelObject();
-        
+
         boolean closeOk = true;
-        
+
         // Invoke callback if one is defined
         if (confirmAction != null) {
             try {
@@ -180,7 +180,7 @@ public class ConfirmationDialog
                 closeOk = false;
             }
         }
-        
+
         if (closeOk) {
             close(aTarget);
         }
@@ -225,7 +225,7 @@ public class ConfirmationDialog
             form.add(new Label("feedback"));
             form.add(new LambdaAjaxButton<>("confirm", ConfirmationDialog.this::onConfirmInternal));
             form.add(new LambdaAjaxLink("cancel", ConfirmationDialog.this::onCancelInternal));
-            
+
             add(form);
         }
     }

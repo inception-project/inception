@@ -26,16 +26,17 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.ui.widget.menu.MenuItem;
 
-public class LambdaMenuItem extends MenuItem
+public class LambdaMenuItem
+    extends MenuItem
 {
     private static final long serialVersionUID = -2363349272322540838L;
-    
+
     private AjaxCallback action;
-    
+
     public LambdaMenuItem(String aTitle, AjaxCallback aCallback)
     {
         super(aTitle);
-        
+
         action = aCallback;
     }
 

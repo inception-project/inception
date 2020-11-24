@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ 
+ */
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
 import org.apache.wicket.Page;
@@ -30,11 +30,12 @@ public class WicketUtil
             }
         });
     }
-    
+
     /**
      * Add call that wraps given script in try-catch block to script text
      */
-    public static String wrapInTryCatch(String aJsCall) {
+    public static String wrapInTryCatch(String aJsCall)
+    {
         return " tryCatch(() => {" + aJsCall + "}); ";
     }
 }

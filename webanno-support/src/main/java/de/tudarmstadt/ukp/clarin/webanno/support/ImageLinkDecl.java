@@ -23,11 +23,11 @@ public class ImageLinkDecl
     implements Serializable
 {
     private static final long serialVersionUID = -194642089829169443L;
-    
+
     private String id;
     private String linkUrl;
     private String imageUrl;
-    
+
     public ImageLinkDecl(String aId)
     {
         super();
@@ -38,19 +38,22 @@ public class ImageLinkDecl
     {
         return id;
     }
-    
+
     public String getLinkUrl()
     {
         return linkUrl;
     }
+
     public void setLinkUrl(String aLinkUrl)
     {
         linkUrl = aLinkUrl;
     }
+
     public String getImageUrl()
     {
         return imageUrl;
     }
+
     public void setImageUrl(String aImageUrl)
     {
         imageUrl = aImageUrl;

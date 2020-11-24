@@ -43,7 +43,7 @@ public class LambdaButton
         action = aAction;
         exceptionHandler = aExceptionHandler;
     }
-    
+
     public LambdaButton triggerAfterSubmit()
     {
         triggerAfterSubmit = true;
@@ -57,7 +57,7 @@ public class LambdaButton
             action();
         }
     }
-    
+
     @Override
     public void onAfterSubmit()
     {
@@ -65,7 +65,7 @@ public class LambdaButton
             action();
         }
     }
-    
+
     private void action()
     {
         try {

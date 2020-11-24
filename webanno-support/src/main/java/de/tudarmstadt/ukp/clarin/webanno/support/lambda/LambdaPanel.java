@@ -24,7 +24,7 @@ public class LambdaPanel
     extends Panel
 {
     private static final long serialVersionUID = -5696941146668060244L;
-    
+
     private SerializableMethodDelegate<LambdaPanel> onConfigureAction;
 
     public LambdaPanel(String aId)
@@ -36,18 +36,18 @@ public class LambdaPanel
     {
         super(aId, aModel);
     }
-    
+
     public LambdaPanel onConfigure(SerializableMethodDelegate<LambdaPanel> aAction)
     {
         onConfigureAction = aAction;
         return this;
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         if (onConfigureAction != null) {
             onConfigureAction.run(this);
         }

@@ -27,10 +27,10 @@ public class LambdaAjaxFormChoiceComponentUpdatingBehavior
     extends AjaxFormChoiceComponentUpdatingBehavior
 {
     private static final long serialVersionUID = -8496566485055940375L;
-    
+
     private AjaxCallback action;
     private AjaxExceptionHandler exceptionHandler;
-    
+
     public LambdaAjaxFormChoiceComponentUpdatingBehavior()
     {
         this(null, null);

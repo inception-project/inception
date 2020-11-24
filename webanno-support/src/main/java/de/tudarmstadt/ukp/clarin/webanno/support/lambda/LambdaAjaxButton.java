@@ -58,7 +58,7 @@ public class LambdaAjaxButton<T>
             action(aTarget);
         }
     }
-    
+
     @Override
     public void onAfterSubmit(AjaxRequestTarget aTarget)
     {
@@ -66,8 +66,7 @@ public class LambdaAjaxButton<T>
             action(aTarget);
         }
     }
-    
-    
+
     @SuppressWarnings("unchecked")
     private void action(AjaxRequestTarget aTarget)
     {
@@ -85,7 +84,7 @@ public class LambdaAjaxButton<T>
             }
         }
     }
-    
+
     @Override
     protected void onError(AjaxRequestTarget aTarget)
     {

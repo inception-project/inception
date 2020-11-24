@@ -64,7 +64,7 @@ public class DecoratedObject<T>
     {
         return delegate;
     }
-    
+
     public static <T> DecoratedObject<T> of(T aDelegate)
     {
         return new DecoratedObject<>(aDelegate);

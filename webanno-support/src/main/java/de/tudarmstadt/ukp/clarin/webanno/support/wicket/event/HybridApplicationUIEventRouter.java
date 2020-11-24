@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ 
+ */
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket.event;
 
 import java.util.Optional;
@@ -41,7 +41,7 @@ import org.springframework.stereotype.Component;
 public class HybridApplicationUIEventRouter
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Order(-10)
     @EventListener
     public void routeEvent(HybridApplicationUIEvent aEvent)
@@ -52,15 +52,15 @@ public class HybridApplicationUIEventRouter
             if (RequestCycle.get() == null) {
                 return;
             }
-            
+
             Optional<AjaxRequestTarget> handler = RequestCycle.get().find(AjaxRequestTarget.class);
-            
+
             // If the event was not triggered in a UI context, then do not forward the event to the
             // UI
             if (!handler.isPresent()) {
                 return;
             }
-            
+
             // Otherwise, send the event to the page from which the UI event was triggered
             Page page = (Page) handler.get().getPage();
             try {

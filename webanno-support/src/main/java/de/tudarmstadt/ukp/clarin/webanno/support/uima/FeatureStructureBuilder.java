@@ -48,8 +48,9 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
         features.put(aName, aValue);
         return this;
     }
-    
-    public T buildWithoutAddingToIndexes() {
+
+    public T buildWithoutAddingToIndexes()
+    {
         T subject = cas.createFS(type);
 
         for (Entry<String, Object> fv : features.entrySet()) {
@@ -72,7 +73,7 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
             FSUtil.setFeature(aFS, aName, (FeatureStructure) null);
             return;
         }
-        
+
         try {
             boolean isFeatureStructureValue = FeatureStructure.class
                     .isAssignableFrom(aValue.getClass());
@@ -91,12 +92,11 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
                 // Note: this bug exists at least up to commons-lang3 3.11 - it might be fixed
                 // in later versions.
                 MethodUtils.invokeStaticMethod(FSUtil.class, "setFeature",
-                        new Object[] { aFS, aName, aValue },
-                        new Class[] { FeatureStructure.class, String.class,
-                                FeatureStructure[].class });
+                        new Object[] { aFS, aName, aValue }, new Class[] { FeatureStructure.class,
+                                String.class, FeatureStructure[].class });
                 return;
             }
-            
+
             // Workaround for https://issues.apache.org/jira/browse/LANG-1596
             // Note: we probable need to add this workaround for more types...
             // Note: this bug exists at least up to commons-lang3 3.11 - it might be fixed
@@ -113,7 +113,7 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
                 FSUtil.setFeature(aFS, aName, (boolean[]) aValue);
                 return;
             }
-            
+
             MethodUtils.invokeStaticMethod(FSUtil.class, "setFeature", aFS, aName, aValue);
         }
         catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -125,7 +125,7 @@ public class FeatureStructureBuilder<T extends FeatureStructure>
     {
         return new FeatureStructureBuilder<FeatureStructure>(aCas, CasUtil.getType(aCas, aType));
     }
-    
+
     public CAS getCas()
     {
         return cas;
