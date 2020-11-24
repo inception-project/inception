@@ -342,27 +342,27 @@ public class BratRenderer
         // half-open intervals [begin,end) so that a begin offset must always be
         // smaller than the end of a covering annotation to be considered properly
         // covered.
-        Offsets beginRow =
-                aRows.stream().filter(span -> span.getBegin() <= aBegin && aBegin < span.getEnd())
-                        .findFirst().orElseThrow(() -> new IllegalArgumentException(
-                                "Position [" + aBegin + "] is not in any row"));
+        Offsets beginRow = aRows.stream()
+                .filter(span -> span.getBegin() <= aBegin && aBegin < span.getEnd()).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Position [" + aBegin + "] is not in any row"));
 
         // Zero-width annotations that are on the boundary of two directly
         // adjacent sentences (i.e. without whitespace between them) are considered
         // to be at the end of the first sentence rather than at the beginning of the
         // second sentence.
-        Offsets endRow =
-                aRows.stream().filter(span -> span.getBegin() <= aEnd && aEnd <= span.getEnd())
-                        .findFirst().orElseThrow(() -> new IllegalArgumentException(
-                                "Position [" + aEnd + "] is not in any row"));
+        Offsets endRow = aRows.stream()
+                .filter(span -> span.getBegin() <= aEnd && aEnd <= span.getEnd()).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Position [" + aEnd + "] is not in any row"));
 
         // No need to split
         if (beginRow == endRow) {
             return asList(new Offsets(aBegin, aEnd));
         }
 
-        List<Offsets> coveredRows =
-                aRows.subList(aRows.indexOf(beginRow), aRows.indexOf(endRow) + 1);
+        List<Offsets> coveredRows = aRows.subList(aRows.indexOf(beginRow),
+                aRows.indexOf(endRow) + 1);
 
         List<Offsets> ranges = new ArrayList<>();
         for (Offsets row : coveredRows) {
@@ -405,9 +405,9 @@ public class BratRenderer
         layers.sort(Comparator.comparing(AnnotationLayer::getName));
 
         // Look up all the features once to avoid hammering the database in the loop below
-        Map<AnnotationLayer, List<AnnotationFeature>> layerToFeatures =
-                aAnnotationService.listSupportedFeatures(aProject).stream()
-                        .collect(groupingBy(AnnotationFeature::getLayer));
+        Map<AnnotationLayer, List<AnnotationFeature>> layerToFeatures = aAnnotationService
+                .listSupportedFeatures(aProject).stream()
+                .collect(groupingBy(AnnotationFeature::getLayer));
 
         // Now build the actual configuration
         Set<EntityType> entityTypes = new LinkedHashSet<>();

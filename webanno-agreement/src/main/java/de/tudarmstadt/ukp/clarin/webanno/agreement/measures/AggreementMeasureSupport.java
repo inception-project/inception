@@ -31,7 +31,10 @@ import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public interface AggreementMeasureSupport<T extends DefaultAgreementTraits, R extends Serializable, S extends IAnnotationStudy>
+public interface AggreementMeasureSupport<//
+        T extends DefaultAgreementTraits, //
+        R extends Serializable, //
+        S extends IAnnotationStudy>
     extends BeanNameAware
 {
     String getId();

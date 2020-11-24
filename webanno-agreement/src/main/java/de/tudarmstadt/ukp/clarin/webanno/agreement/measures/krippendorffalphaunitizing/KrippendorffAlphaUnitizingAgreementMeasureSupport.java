@@ -40,8 +40,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class KrippendorffAlphaUnitizingAgreementMeasureSupport
-    extends
-    AgreementMeasureSupport_ImplBase<KrippendorffAlphaUnitizingAgreementTraits, PairwiseAnnotationResult<UnitizingAgreementResult>, IUnitizingAnnotationStudy>
+    extends AgreementMeasureSupport_ImplBase<//
+            KrippendorffAlphaUnitizingAgreementTraits, //
+            PairwiseAnnotationResult<UnitizingAgreementResult>, //
+            IUnitizingAnnotationStudy>
 {
     private final AnnotationSchemaService annotationService;
 

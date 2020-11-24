@@ -33,7 +33,8 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 public class CohenKappaAgreementMeasureTest
     extends AgreementMeasureTestSuite_ImplBase
 {
-    private AggreementMeasureSupport<DefaultAgreementTraits, PairwiseAnnotationResult<CodingAgreementResult>, ICodingAnnotationStudy> sut;
+    private AggreementMeasureSupport<DefaultAgreementTraits, //
+            PairwiseAnnotationResult<CodingAgreementResult>, ICodingAnnotationStudy> sut;
     private DefaultAgreementTraits traits;
 
     @Override

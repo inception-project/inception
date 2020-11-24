@@ -134,7 +134,7 @@ public class AutomationPage
     private SuggestionViewPanel suggestionView;
 
     private final Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = //
-                                                                                                         new HashMap<>();
+            new HashMap<>();
 
     private final SourceListView curationSegment = new SourceListView();
 
