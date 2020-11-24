@@ -34,35 +34,36 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameApp
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
-public class AnnotationInfoPanel extends Panel
+public class AnnotationInfoPanel
+    extends Panel
 {
     private static final long serialVersionUID = -2911353962253404751L;
 
     private final WebMarkupContainer noAnnotationWarning;
     private final WebMarkupContainer annotationInfo;
-    
+
     private final AnnotationDetailEditorPanel actionHandler;
 
     public AnnotationInfoPanel(String aId, IModel<AnnotatorState> aModel,
             AnnotationDetailEditorPanel aOwner)
     {
         super(aId, aModel);
-        
+
         actionHandler = aOwner;
 
         setOutputMarkupPlaceholderTag(true);
-        
+
         // If there are no features, we want this panel to fill its entire parent so the no-data
         // info is shown prominently
-        add(new CssClassNameAppender(LoadableDetachableModel.of(() ->  {
+        add(new CssClassNameAppender(LoadableDetachableModel.of(() -> {
             return !isAnnotationSelected() ? "flex-content flex-v-container" : "";
         })));
-        
+
         noAnnotationWarning = new WebMarkupContainer("noAnnotationWarning");
         noAnnotationWarning.setOutputMarkupPlaceholderTag(true);
         noAnnotationWarning.add(visibleWhen(() -> !isAnnotationSelected()));
         add(noAnnotationWarning);
-        
+
         annotationInfo = new WebMarkupContainer("annotationInfo");
         annotationInfo.setOutputMarkupPlaceholderTag(true);
         annotationInfo.add(visibleWhen(this::isAnnotationSelected));
@@ -71,21 +72,22 @@ public class AnnotationInfoPanel extends Panel
         annotationInfo.add(createSelectedAnnotationLayerLabel());
         add(annotationInfo);
     }
-    
-    private boolean isAnnotationSelected() {
+
+    private boolean isAnnotationSelected()
+    {
         return getModelObject().getSelection().getAnnotation().isSet();
     }
-    
+
     public AnnotationPageBase getEditorPage()
     {
         return (AnnotationPageBase) getPage();
     }
-    
+
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-    
+
     private Label createSelectedAnnotationLayerLabel()
     {
         Label label = new Label("selectedAnnotationLayer",

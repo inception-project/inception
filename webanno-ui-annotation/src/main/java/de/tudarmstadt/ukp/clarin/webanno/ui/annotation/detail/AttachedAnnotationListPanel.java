@@ -74,31 +74,31 @@ public class AttachedAnnotationListPanel
 
     private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean LayerSupportRegistry layerRegistry;
-    
+
     private final AnnotationPageBase page;
     private final WebMarkupContainer noAttachedAnnotationsInfo;
     private final WebMarkupContainer attachedAnnotationsContainer;
     private final AnnotationActionHandler actionHandler;
-    
+
     private final IModel<List<AttachedAnnotationInfo>> annotations;
-    
+
     public AttachedAnnotationListPanel(String aId, AnnotationPageBase aPage,
             AnnotationActionHandler aActionHandler, IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
-        
+
         page = aPage;
         annotations = LoadableDetachableModel.of(this::getRelationInfo);
         actionHandler = aActionHandler;
-        
+
         noAttachedAnnotationsInfo = new WebMarkupContainer("noAttachedAnnotationsInfo");
         noAttachedAnnotationsInfo.setOutputMarkupPlaceholderTag(true);
         noAttachedAnnotationsInfo.add(visibleWhen(
-            () -> getModelObject() != null && getModelObject().getSelection().isSet()
-                    && SPAN_TYPE.equals(getModelObject().getSelectedAnnotationLayer().getType())
-                    && annotations.getObject().isEmpty()));
+                () -> getModelObject() != null && getModelObject().getSelection().isSet()
+                        && SPAN_TYPE.equals(getModelObject().getSelectedAnnotationLayer().getType())
+                        && annotations.getObject().isEmpty()));
         add(noAttachedAnnotationsInfo);
-        
+
         attachedAnnotationsContainer = new WebMarkupContainer("attachedAnnotationsContainer");
         attachedAnnotationsContainer.setOutputMarkupPlaceholderTag(true);
         attachedAnnotationsContainer.add(new AttachedAnnotationList("annotations", annotations));
@@ -116,7 +116,7 @@ public class AttachedAnnotationListPanel
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-    
+
     private List<AttachedAnnotationInfo> getRelationInfo()
     {
         Selection selection = getModelObject().getSelection();
@@ -124,32 +124,32 @@ public class AttachedAnnotationListPanel
         if (!selection.isSet()) {
             return Collections.emptyList();
         }
-        
+
         CAS cas;
         try {
             cas = page.getEditorCas();
         }
         catch (IOException e) {
-            // If we have trouble accessing the CAS, we probably never get here anyway... 
-            // the AnnotationPageBase should already have found the issue and displayed some 
+            // If we have trouble accessing the CAS, we probably never get here anyway...
+            // the AnnotationPageBase should already have found the issue and displayed some
             // error to the user.
             LOG.error("Unable to access editor CAS", e);
             return Collections.emptyList();
         }
-        
+
         AnnotationFS annoFs = selectAnnotationByAddr(cas, selection.getAnnotation().getId());
         VID localVid = new VID(annoFs);
-        
+
         List<AttachedAnnotation> attachedAnnotations = new ArrayList<>();
         attachedAnnotations.addAll(schemaService
                 .getAttachedRels(getModelObject().getSelectedAnnotationLayer(), annoFs));
         attachedAnnotations.addAll(schemaService
                 .getAttachedLinks(getModelObject().getSelectedAnnotationLayer(), annoFs));
-        
+
         Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
         Map<AnnotationLayer, Renderer> rendererCache = new HashMap<>();
         Map<AnnotationLayer, TypeAdapter> adapterCache = new HashMap<>();
-        
+
         List<AttachedAnnotationInfo> result = new ArrayList<>();
         for (AttachedAnnotation rel : attachedAnnotations) {
             AnnotationLayer layer = rel.getLayer();
@@ -162,24 +162,24 @@ public class AttachedAnnotationListPanel
 
                 adapter = schemaService.getAdapter(layer);
                 adapterCache.put(layer, adapter);
-                
+
                 renderer = layerRegistry.getLayerSupport(layer).createRenderer(layer,
-                    () -> featureCache.get(layer));
+                        () -> featureCache.get(layer));
                 rendererCache.put(layer, renderer);
             }
             else {
                 adapter = adapterCache.get(layer);
                 renderer = rendererCache.get(layer);
             }
-            
+
             Map<String, String> renderedFeatures;
             if (rel.getRelation() != null) {
-                renderedFeatures = renderer.renderLabelFeatureValues(adapter,
-                        rel.getRelation(), features);
+                renderedFeatures = renderer.renderLabelFeatureValues(adapter, rel.getRelation(),
+                        features);
             }
             else {
-                renderedFeatures = renderer.renderLabelFeatureValues(adapter,
-                        rel.getEndpoint(), features);
+                renderedFeatures = renderer.renderLabelFeatureValues(adapter, rel.getEndpoint(),
+                        features);
             }
 
             String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
@@ -190,21 +190,22 @@ public class AttachedAnnotationListPanel
             else {
                 labelText = rel.getLayer().getUiName() + ": " + labelText;
             }
-            
+
             AttachedAnnotationInfo i = new AttachedAnnotationInfo(layer, localVid,
                     rel.getRelation() != null ? new VID(rel.getRelation()) : null,
                     new VID(rel.getEndpoint()), labelText, rel.getEndpoint().getCoveredText(),
                     rel.getDirection());
             result.add(i);
         }
-        
+
         return result;
     }
-    
-    private class AttachedAnnotationInfo implements Serializable
+
+    private class AttachedAnnotationInfo
+        implements Serializable
     {
         private static final long serialVersionUID = -6096671317063130452L;
-        
+
         private final AnnotationLayer layer;
         private final VID localVid;
         private final VID relationVid;
@@ -225,7 +226,7 @@ public class AttachedAnnotationListPanel
             direction = aDirection;
         }
     }
-    
+
     private class AttachedAnnotationList
         extends RefreshingView<AttachedAnnotationInfo>
     {
@@ -235,7 +236,7 @@ public class AttachedAnnotationListPanel
         {
             super(aId, aRelations);
         }
-        
+
         @SuppressWarnings("unchecked")
         public List<AttachedAnnotationInfo> getModelObject()
         {
@@ -261,22 +262,22 @@ public class AttachedAnnotationListPanel
             AttachedAnnotationInfo info = aItem.getModelObject();
 
             aItem.add(new Label("label", info.label));
-            
+
             aItem.add(new Label("endpoint", info.endpointText));
-            
+
             aItem.add(new LambdaAjaxLink("jumpToEndpoint",
-                _target -> actionHandler.actionSelectAndJump(_target, info.endPointVid)));
-            
+                    _target -> actionHandler.actionSelectAndJump(_target, info.endPointVid)));
+
             LambdaAjaxLink selectRelation = new LambdaAjaxLink("selectRelation",
-                _target -> actionHandler.actionSelect(_target, info.relationVid));
+                    _target -> actionHandler.actionSelect(_target, info.relationVid));
             selectRelation.setEnabled(info.relationVid != null);
             aItem.add(selectRelation);
-            
+
             selectRelation.add(new WebMarkupContainer("direction")
                     .add(new DirectionDecorator(info.direction)));
         }
     }
-    
+
     private static class DirectionDecorator
         extends ClassAttributeModifier
     {
@@ -288,7 +289,7 @@ public class AttachedAnnotationListPanel
         private static final long serialVersionUID = 7586775261302386820L;
 
         private final Direction direction;
-        
+
         public DirectionDecorator(Direction aDirection)
         {
             direction = aDirection;

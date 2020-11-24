@@ -36,7 +36,7 @@ public abstract class AnnotationSidebarFactory_ImplBase
     {
         return beanName;
     }
-    
+
     @Override
     public int getOrder()
     {

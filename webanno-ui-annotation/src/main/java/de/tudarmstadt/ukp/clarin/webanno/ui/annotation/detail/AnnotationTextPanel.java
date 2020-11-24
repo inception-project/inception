@@ -47,7 +47,7 @@ public class AnnotationTextPanel
     private static final long serialVersionUID = -7722700418471642307L;
 
     private @SpringBean AnnotationSchemaService annotationService;
-    
+
     private final AnnotationActionHandler actionHandler;
 
     public AnnotationTextPanel(String aId, AnnotationActionHandler aActionHandler,
@@ -61,7 +61,7 @@ public class AnnotationTextPanel
                 .add(visibleWhen(() -> !isRelationSelected())));
         add(new LambdaAjaxLink("jumpToAnnotation", this::actionJumpToAnnotation)
                 .add(visibleWhen(() -> !isRelationSelected())));
-        
+
         add(new Label("originText", PropertyModel.of(getModelObject(), "selection.originText"))
                 .add(visibleWhen(() -> isRelationSelected())));
         add(new Label("targetText", PropertyModel.of(getModelObject(), "selection.targetText"))
@@ -76,7 +76,7 @@ public class AnnotationTextPanel
     {
         return getModelObject().getSelection().isArc();
     }
-    
+
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
@@ -86,7 +86,7 @@ public class AnnotationTextPanel
     {
         return (AnnotationPageBase) getPage();
     }
-    
+
     private void actionJumpToAnnotation(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
@@ -104,7 +104,7 @@ public class AnnotationTextPanel
                     new VID(getModelObject().getSelection().getOrigin()));
             return;
         }
-        
+
         CAS cas = getEditorPage().getEditorCas();
         AnnotationFS fs = selectAnnotationByAddr(cas, getModelObject().getSelection().getOrigin());
         fs = FSUtil.getFeature(fs, typeAdapter.getAttachFeatureName(), AnnotationFS.class);
@@ -122,7 +122,7 @@ public class AnnotationTextPanel
                     new VID(getModelObject().getSelection().getTarget()));
             return;
         }
-        
+
         CAS cas = getEditorPage().getEditorCas();
         AnnotationFS fs = selectAnnotationByAddr(cas, getModelObject().getSelection().getTarget());
         fs = FSUtil.getFeature(fs, typeAdapter.getAttachFeatureName(), AnnotationFS.class);

@@ -63,7 +63,7 @@ public class AnnotatorWorkflowActionBarItemGroup
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
                 new StringResourceModel("FinishDocumentDialog.title", this, null),
                 new StringResourceModel("FinishDocumentDialog.text", this, null)));
-        
+
         add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
                 this::actionFinishDocument));
         finishDocumentLink.setOutputMarkupId(true);
@@ -74,8 +74,8 @@ public class AnnotatorWorkflowActionBarItemGroup
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
         add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
                 new StringResourceModel("ResetDocumentDialog.title", this),
-                new StringResourceModel("ResetDocumentDialog.text", this)
-                        .setModel(page.getModel()).setParameters(documentNameModel),
+                new StringResourceModel("ResetDocumentDialog.text", this).setModel(page.getModel())
+                        .setParameters(documentNameModel),
                 documentNameModel));
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
 
@@ -83,16 +83,16 @@ public class AnnotatorWorkflowActionBarItemGroup
                 resetDocumentDialog::show));
         resetDocumentLink.add(enabledWhen(() -> page.isEditable()));
     }
-    
+
     protected AnnotationPageBase getAnnotationPage()
     {
         return page;
     }
-    
+
     public String getStateClass()
     {
         AnnotatorState state = page.getModelObject();
-        
+
         if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
             return FontAwesome5IconType.lock_s.cssClassName();
         }
