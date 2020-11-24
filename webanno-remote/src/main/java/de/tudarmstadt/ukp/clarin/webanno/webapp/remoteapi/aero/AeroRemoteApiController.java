@@ -278,8 +278,11 @@ public class AeroRemoteApiController
     @ApiOperation(value = "Create a new project")
     @ApiImplicitParams({ @ApiImplicitParam(name = PARAM_NAME, paramType = "form", required = true),
             @ApiImplicitParam(name = PARAM_CREATOR, paramType = "form") })
-    @RequestMapping(value = ("/"
-            + PROJECTS), method = RequestMethod.POST, consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(//
+            value = ("/" + PROJECTS), //
+            method = RequestMethod.POST, //
+            consumes = MULTIPART_FORM_DATA_VALUE, //
+            produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RProject>> projectCreate(@RequestParam(PARAM_NAME) String aName,
             @RequestParam(PARAM_CREATOR) Optional<String> aCreator, UriComponentsBuilder aUcb)
         throws Exception
@@ -356,8 +359,11 @@ public class AeroRemoteApiController
     }
 
     @ApiOperation(value = "Import a previously exported project")
-    @RequestMapping(value = ("/" + PROJECTS + "/"
-            + IMPORT), method = RequestMethod.POST, consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(//
+            value = ("/" + PROJECTS + "/" + IMPORT), //
+            method = RequestMethod.POST, //
+            consumes = MULTIPART_FORM_DATA_VALUE, //
+            produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RProject>> projectImport(
             @RequestPart(PARAM_FILE) MultipartFile aFile)
         throws Exception
@@ -467,8 +473,11 @@ public class AeroRemoteApiController
     @ApiImplicitParams({ @ApiImplicitParam(name = PARAM_NAME, paramType = "form", required = true),
             @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
             @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true), })
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/"
-            + DOCUMENTS, method = RequestMethod.POST, consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(//
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, //
+            method = RequestMethod.POST, //
+            consumes = MULTIPART_FORM_DATA_VALUE, //
+            produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RDocument>> documentCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @RequestParam(PARAM_CONTENT) MultipartFile aFile,
@@ -657,9 +666,12 @@ public class AeroRemoteApiController
     @ApiImplicitParams({
             @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
             @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true), })
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID
-            + "}", method = RequestMethod.POST, consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{" //
+                    + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_ANNOTATOR_ID + "}", //
+            method = RequestMethod.POST, //
+            consumes = MULTIPART_FORM_DATA_VALUE, //
+            produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RAnnotation>> annotationsCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
@@ -741,9 +753,12 @@ public class AeroRemoteApiController
     @ApiImplicitParams({
             @ApiImplicitParam(name = PARAM_FORMAT, paramType = "form", required = true),
             @ApiImplicitParam(name = PARAM_STATE, paramType = "form", required = true), })
-    @RequestMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
-            + PARAM_DOCUMENT_ID + "}/"
-            + CURATION, method = RequestMethod.POST, consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(//
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + //
+                    "/{" + PARAM_DOCUMENT_ID + "}/" + CURATION, //
+            method = RequestMethod.POST, //
+            consumes = MULTIPART_FORM_DATA_VALUE, //
+            produces = APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<RResponse<RAnnotation>> curationCreate(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @PathVariable(PARAM_DOCUMENT_ID) long aDocumentId,
