@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.swing.*;
+import javax.swing.JWindow;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.uima.cas.impl.CASImpl;
