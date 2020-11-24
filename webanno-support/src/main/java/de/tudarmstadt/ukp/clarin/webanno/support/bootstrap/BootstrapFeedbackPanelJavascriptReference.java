@@ -30,7 +30,8 @@ public class BootstrapFeedbackPanelJavascriptReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BootstrapFeedbackPanelJavascriptReference INSTANCE = new BootstrapFeedbackPanelJavascriptReference();
+    private static final BootstrapFeedbackPanelJavascriptReference INSTANCE = //
+            new BootstrapFeedbackPanelJavascriptReference();
 
     /**
      * Gets the instance of the resource reference
