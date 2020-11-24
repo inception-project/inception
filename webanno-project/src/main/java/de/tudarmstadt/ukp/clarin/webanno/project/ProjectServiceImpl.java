@@ -220,11 +220,10 @@ public class ProjectServiceImpl
                 "FROM SourceDocument " + 
                 "WHERE project = :project";
         // @formatter:on
-        
-        SourceDocumentStateStats stats = entityManager.createQuery(
-                        query, SourceDocumentStateStats.class)
-                .setParameter("project", aProject)
-                .getSingleResult();
+
+        SourceDocumentStateStats stats = entityManager
+                .createQuery(query, SourceDocumentStateStats.class)
+                .setParameter("project", aProject).getSingleResult();
 
         ProjectState oldState = project.getState();
 

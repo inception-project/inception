@@ -26,7 +26,7 @@ public class ExportedTagSetConstant
      * Export/import tagsets in JSON format
      */
     public static final String JSON_FORMAT = "JSON";
-    
+
     /**
      * Export/Import TagSets in TAB separated format where the first five lines are information
      * about the tagsets such as tagsetname, tagsetdescrition and the remaining lines are tag with

@@ -100,7 +100,6 @@ public class TagSet
         description = aDescription;
     }
 
-
     public Project getProject()
     {
         return project;

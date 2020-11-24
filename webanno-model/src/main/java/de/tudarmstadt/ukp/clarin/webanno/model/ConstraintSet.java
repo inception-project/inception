@@ -33,8 +33,8 @@ import javax.persistence.UniqueConstraint;
  * Set of constraints
  */
 @Entity
-@Table(name = "constraint_set", uniqueConstraints = { @UniqueConstraint(columnNames = { "name",
-        "project" }) })
+@Table(name = "constraint_set", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "project" }) })
 public class ConstraintSet
     implements Serializable
 {

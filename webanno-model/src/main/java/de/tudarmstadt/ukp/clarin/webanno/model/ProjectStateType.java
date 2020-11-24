@@ -19,13 +19,16 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
-/** 
+/**
  * Implementation of {@link PersistentEnumUserType}
  */
-public class ProjectStateType extends PersistentEnumUserType<ProjectState> {
+public class ProjectStateType
+    extends PersistentEnumUserType<ProjectState>
+{
 
     @Override
-    public Class<ProjectState> returnedClass() {
+    public Class<ProjectState> returnedClass()
+    {
         return ProjectState.class;
     }
 

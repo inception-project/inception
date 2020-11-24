@@ -47,8 +47,8 @@ public enum SentenceState
     /**
      * In the range of current display window
      */
-    SELECTED_RANGE(true, "#FFFF00"), 
-    
+    SELECTED_RANGE(true, "#FFFF00"),
+
     /**
      * Confirmed annotation.
      */

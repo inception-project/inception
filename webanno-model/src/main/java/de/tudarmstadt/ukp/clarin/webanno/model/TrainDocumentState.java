@@ -29,7 +29,7 @@ public enum TrainDocumentState
      * This is a newly added training document.
      */
     NEW("NEW"),
-    
+
     /**
      * This training document is processed and used for training a model
      */

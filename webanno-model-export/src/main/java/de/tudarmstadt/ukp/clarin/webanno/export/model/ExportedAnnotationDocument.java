@@ -37,13 +37,13 @@ public class ExportedAnnotationDocument
 {
     @JsonProperty("name")
     private String name;
-    
+
     @JsonProperty("user")
     private String user;
-    
+
     @JsonProperty("state")
     private AnnotationDocumentState state;
-    
+
     @JsonProperty("timestamp")
     private Date timestamp;
 
@@ -57,7 +57,7 @@ public class ExportedAnnotationDocument
     @JsonProperty("updated")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updated;
-    
+
     public String getName()
     {
         return name;

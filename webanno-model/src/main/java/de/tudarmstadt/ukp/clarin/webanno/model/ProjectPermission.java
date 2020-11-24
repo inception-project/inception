@@ -36,8 +36,8 @@ import org.hibernate.annotations.Type;
  * {@code curator}
  */
 @Entity
-@Table(name = "project_permissions", uniqueConstraints = { @UniqueConstraint(columnNames = {
-        "user", "level", "project" }) })
+@Table(name = "project_permissions", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "user", "level", "project" }) })
 public class ProjectPermission
     implements Serializable
 {
@@ -60,7 +60,7 @@ public class ProjectPermission
     {
         // Required for JPA
     }
-    
+
     public ProjectPermission(Project aProject, String aUser, PermissionLevel aLevel)
     {
         project = aProject;

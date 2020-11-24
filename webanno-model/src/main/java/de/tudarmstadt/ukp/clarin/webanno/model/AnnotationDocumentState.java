@@ -22,24 +22,25 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 /**
  * Variables for the different states of a {@link AnnotationDocument} workflow.
  */
-public enum AnnotationDocumentState implements PersistentEnum
+public enum AnnotationDocumentState
+    implements PersistentEnum
 {
     /**
      * For every source document, there will be a NEW annotation document, untill the user start
      * annotating it.
      */
     NEW("NEW", "black"),
-    
+
     /**
      * annotation document has been created for this document for this annotator
      */
     IN_PROGRESS("INPROGRESS", "blue"),
-    
+
     /**
      * annotator has marked annotation document as complete
      */
     FINISHED("FINISHED", "red"),
-    
+
     /**
      * Ignore this annotation document from further processing such as curation
      */
@@ -58,18 +59,18 @@ public enum AnnotationDocumentState implements PersistentEnum
     {
         return getId();
     }
-    
+
     @Override
     public String getId()
     {
         return id;
     }
-    
+
     public String getColor()
     {
         return color;
     }
-    
+
     @Override
     public String toString()
     {
