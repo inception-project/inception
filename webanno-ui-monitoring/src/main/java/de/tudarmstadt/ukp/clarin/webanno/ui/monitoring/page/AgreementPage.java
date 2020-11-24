@@ -97,7 +97,7 @@ public class AgreementPage
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
     private static final String MID_TRAITS = "traits";
     private static final String MID_RESULTS = "results";
-    
+
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -111,27 +111,27 @@ public class AgreementPage
     public AgreementPage()
     {
         super();
-        
+
         commonInit();
     }
 
     public AgreementPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
-        
+
         commonInit();
-       
+
         projectSelectionForm.setVisibilityAllowed(false);
-        
+
         User user = userRepository.getCurrentUser();
-        
+
         // Get current project from parameters
         StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
         Optional<Project> project = getProjectFromParameters(projectParameter);
-        
+
         if (project.isPresent()) {
             Project p = project.get();
-            
+
             // Check access to project
             if (!(projectService.isCurator(p, user) || projectService.isManager(p, user))) {
                 error("You have no permission to access project [" + p.getId() + "]");
@@ -144,19 +144,19 @@ public class AgreementPage
             error("Project [" + projectParameter + "] does not exist");
             setResponsePage(getApplication().getHomePage());
         }
-    }    
-    
+    }
+
     private void commonInit()
     {
         add(projectSelectionForm = new ProjectSelectionForm("projectSelectionForm"));
-        
+
         add(agreementForm = new AgreementForm("agreementForm", Model.of(new AgreementFormModel())));
-        
+
         add(resultsContainer = new WebMarkupContainer("resultsContainer"));
         resultsContainer.setOutputMarkupPlaceholderTag(true);
         resultsContainer.add(new EmptyPanel(MID_RESULTS));
     }
-    
+
     private class AgreementForm
         extends Form<AgreementFormModel>
     {
@@ -179,36 +179,37 @@ public class AgreementPage
             add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
             traitsContainer.setOutputMarkupPlaceholderTag(true);
             traitsContainer.add(new EmptyPanel(MID_TRAITS));
-            
+
             add(new Label("name",
                     PropertyModel.of(projectSelectionForm.getModel(), "project.name")));
-            
+
             add(featureList = new BootstrapSelect<AnnotationFeature>("feature"));
             featureList.setOutputMarkupId(true);
             featureList.setChoices(LoadableDetachableModel.of(this::getEligibleFeatures));
-            featureList.setChoiceRenderer(new LambdaChoiceRenderer<AnnotationFeature>(feature -> 
-                    feature.getLayer().getUiName() + " : " + feature.getUiName()));
-            featureList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", 
+            featureList.setChoiceRenderer(new LambdaChoiceRenderer<AnnotationFeature>(
+                    feature -> feature.getLayer().getUiName() + " : " + feature.getUiName()));
+            featureList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                     this::actionSelectFeature));
 
             runCalculationsButton = new LambdaAjaxButton<>("run", this::actionRunCalculations);
             runCalculationsButton.triggerAfterSubmit();
             add(runCalculationsButton);
 
-            add(measureDropDown = new BootstrapSelect<Pair<String, String>>("measure", 
-                    this::listMeasures) {
+            add(measureDropDown = new BootstrapSelect<Pair<String, String>>("measure",
+                    this::listMeasures)
+            {
                 private static final long serialVersionUID = -2666048788050249581L;
 
                 @Override
                 protected void onModelChanged()
                 {
                     super.onModelChanged();
-                    
+
                     // If the feature type has changed, we need to set up a new traits editor
                     Component newTraits;
                     if (getModelObject() != null) {
-                        AggreementMeasureSupport ams = agreementRegistry.getAgreementMeasureSupport(
-                                getModelObject().getKey());
+                        AggreementMeasureSupport ams = agreementRegistry
+                                .getAgreementMeasureSupport(getModelObject().getKey());
                         newTraits = ams.createTraitsEditor(MID_TRAITS, featureList.getModel(),
                                 Model.of(ams.createTraits()));
                     }
@@ -220,9 +221,9 @@ public class AgreementPage
                 }
             });
             measureDropDown.setChoiceRenderer(new ChoiceRenderer<>("value"));
-            measureDropDown.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> 
-                    _target.add(runCalculationsButton, traitsContainer)));
-            
+            measureDropDown.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                    _target -> _target.add(runCalculationsButton, traitsContainer)));
+
             runCalculationsButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
         }
 
@@ -233,12 +234,12 @@ public class AgreementPage
             AnnotationFeature selectedFeature = featureList.getModelObject();
             boolean measureCompatibleWithFeature = measureDropDown.getModel()
                     .map(k -> agreementRegistry.getAgreementMeasureSupport(k.getKey()))
-                    .map(s -> selectedFeature != null && s.accepts(selectedFeature))
-                    .orElse(false).getObject();
+                    .map(s -> selectedFeature != null && s.accepts(selectedFeature)).orElse(false)
+                    .getObject();
             if (!measureCompatibleWithFeature) {
                 measureDropDown.setModelObject(null);
             }
-            
+
             aTarget.add(measureDropDown, runCalculationsButton, traitsContainer);
         }
 
@@ -252,16 +253,16 @@ public class AgreementPage
             if (feature == null || measureHandle == null) {
                 return;
             }
-            
+
             AggreementMeasureSupport ams = agreementRegistry
                     .getAgreementMeasureSupport(measureDropDown.getModelObject().getKey());
-            
+
             AggreementMeasure measure = ams.createMeasure(feature,
                     (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS)
                             .getDefaultModelObject());
-            
+
             Map<String, List<CAS>> casMap = getCasMap();
-            
+
             if (casMap.values().stream().allMatch(list -> list == null || list.isEmpty())) {
                 error("No documents with annotations were found.");
                 aTarget.addChildren(getPage(), IFeedback.class);
@@ -272,37 +273,34 @@ public class AgreementPage
                         AgreementPage.this::getCasMap));
                 aTarget.add(resultsContainer);
             }
-                        
+
         }
-        
+
         List<Pair<String, String>> listMeasures()
         {
             if (getModelObject().feature == null) {
                 return Collections.emptyList();
             }
-            
+
             return agreementRegistry.getAgreementMeasureSupports(getModelObject().feature).stream()
-                    .map(s -> Pair.of(s.getId(), s.getName()))
-                    .collect(Collectors.toList());
+                    .map(s -> Pair.of(s.getId(), s.getName())).collect(Collectors.toList());
         }
-        
+
         private List<AnnotationFeature> getEligibleFeatures()
         {
             List<AnnotationFeature> features = annotationService
-                    .listAnnotationFeature(
-                            (projectSelectionForm.getModelObject().project));
+                    .listAnnotationFeature((projectSelectionForm.getModelObject().project));
             List<AnnotationFeature> unusedFeatures = new ArrayList<>();
             for (AnnotationFeature feature : features) {
                 if (feature.getLayer().getName().equals(Token.class.getName())
-                        || feature.getLayer().getName()
-                                .equals(WebAnnoConst.COREFERENCE_LAYER)) {
+                        || feature.getLayer().getName().equals(WebAnnoConst.COREFERENCE_LAYER)) {
                     unusedFeatures.add(feature);
                 }
             }
             features.removeAll(unusedFeatures);
             return features;
         }
-        
+
         @Override
         protected void onConfigure()
         {
@@ -339,14 +337,14 @@ public class AgreementPage
                     this::onSelectionChanged));
             add(projectList);
         }
-        
+
         private void onSelectionChanged(AjaxRequestTarget aTarget)
         {
             agreementForm.setModelObject(new AgreementFormModel());
             resultsContainer.addOrReplace(new EmptyPanel(MID_RESULTS));
             aTarget.add(resultsContainer, agreementForm);
         }
-        
+
         private List<Project> listAllowedProjects()
         {
             User user = userRepository.getCurrentUser();
@@ -369,13 +367,13 @@ public class AgreementPage
         public Map<String, Integer> annotatorsProgress = new TreeMap<>();
         public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>();
     }
-    
+
     private Optional<Project> getProjectFromParameters(StringValue projectParam)
     {
         if (projectParam == null || projectParam.isEmpty()) {
             return Optional.empty();
         }
-        
+
         try {
             return Optional.of(projectService.getProject(projectParam.toLong()));
         }
@@ -383,7 +381,7 @@ public class AgreementPage
             return Optional.empty();
         }
     }
-    
+
     // The CASes cannot be serialized, so we make them transient here. However, it does not matter
     // as we do not access the field directly but via getCases() which will re-load them if
     // necessary, e.g. if the transient field is empty after a session is restored from a
@@ -402,21 +400,17 @@ public class AgreementPage
 
         DefaultAgreementTraits traits = (DefaultAgreementTraits) agreementForm.traitsContainer
                 .get(MID_TRAITS).getDefaultModelObject();
-        
+
         // Avoid reloading the CASes when switching features within the same project
-        if (
-                cachedCASes != null && 
-                project.equals(cachedProject) &&
-                cachedLimitToFinishedDocuments == traits.isLimitToFinishedDocuments()
-        ) {
+        if (cachedCASes != null && project.equals(cachedProject)
+                && cachedLimitToFinishedDocuments == traits.isLimitToFinishedDocuments()) {
             return cachedCASes;
         }
-        
+
         List<User> users = projectService.listProjectUsersWithPermissions(project, ANNOTATOR);
 
-        List<SourceDocument> sourceDocuments = documentService
-                .listSourceDocuments(project);
-        
+        List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(project);
+
         cachedCASes = new LinkedHashMap<>();
         for (User user : users) {
             List<CAS> cases = new ArrayList<>();
@@ -425,10 +419,8 @@ public class AgreementPage
             // the user which is faster then checking for their existence individually
             List<SourceDocument> docsForUser = documentService
                     .listAnnotationDocuments(project, user).stream()
-                    .map(AnnotationDocument::getDocument)
-                    .distinct()
-                    .collect(Collectors.toList());
-            
+                    .map(AnnotationDocument::getDocument).distinct().collect(Collectors.toList());
+
             nextDocument: for (SourceDocument document : sourceDocuments) {
                 CAS cas = null;
 
@@ -436,17 +428,17 @@ public class AgreementPage
                     if (docsForUser.contains(document)) {
                         AnnotationDocument annotationDocument = documentService
                                 .getAnnotationDocument(document, user);
-                        
+
                         if (traits.isLimitToFinishedDocuments()
                                 && !annotationDocument.getState().equals(FINISHED)) {
-                            // Add a skip marker (null) for the current CAS to the CAS list - this 
+                            // Add a skip marker (null) for the current CAS to the CAS list - this
                             // is necessary because we expect the CAS lists for all users to have
                             // the same size
                             cases.add(null);
                             continue nextDocument;
                         }
                     }
-                        
+
                     // Reads the user's annotation document or the initial source document -
                     // depending on what is available
                     cas = documentService.readAnnotationCas(document, user.getUsername(),
@@ -456,21 +448,21 @@ public class AgreementPage
                     error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                     LOG.error("Unable to load data", e);
                 }
-                
+
                 if (cas != null) {
                     // Set the CAS name in the DocumentMetaData so that we can pick it
                     // up in the Diff position for the purpose of debugging / transparency.
                     FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
                     FSUtil.setFeature(dmd, "documentId", document.getName());
                     FSUtil.setFeature(dmd, "collectionId", document.getProject().getName());
-                    
+
                 }
 
                 // The next line can enter null values into the list if a user didn't work on this
                 // source document yet.
                 cases.add(cas);
             }
-                            
+
             cachedCASes.put(user.getUsername(), cases);
         }
 

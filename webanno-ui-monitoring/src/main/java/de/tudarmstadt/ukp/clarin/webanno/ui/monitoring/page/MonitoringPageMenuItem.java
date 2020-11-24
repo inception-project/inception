@@ -29,7 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 @Order(300)
-public class MonitoringPageMenuItem implements MenuItem
+public class MonitoringPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -39,19 +40,19 @@ public class MonitoringPageMenuItem implements MenuItem
     {
         return "/monitoring";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/attribution.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Monitoring";
     }
-    
+
     /**
      * Only admins and project managers can see this page
      */
@@ -60,7 +61,7 @@ public class MonitoringPageMenuItem implements MenuItem
     {
         return SecurityUtil.monitoringEnabeled(projectService, userRepo.getCurrentUser());
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {
