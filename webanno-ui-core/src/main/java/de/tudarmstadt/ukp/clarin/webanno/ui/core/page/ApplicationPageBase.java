@@ -59,10 +59,10 @@ public abstract class ApplicationPageBase
     private static final long serialVersionUID = -1690130604031181803L;
 
     public static final MetaDataKey<Class<? extends Component>> MENUBAR_CLASS = //
-            new MetaDataKey<Class<? extends Component>>()
-            {
-                private static final long serialVersionUID = 1L;
-            };
+                                                                              new MetaDataKey<Class<? extends Component>>()
+                                                                              {
+                                                                                  private static final long serialVersionUID = 1L;
+                                                                              };
 
     private FeedbackPanel feedbackPanel;
     private WebMarkupContainer footer;

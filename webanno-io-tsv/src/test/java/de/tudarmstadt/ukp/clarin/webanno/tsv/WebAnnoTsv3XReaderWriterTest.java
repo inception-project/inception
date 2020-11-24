@@ -41,11 +41,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class WebAnnoTsv3XReaderWriterTest
 {
     @Test
-    public void test()
-        throws Exception
+    public void test() throws Exception
     {
         String targetFolder = "target/test-output/" + testContext.getTestOutputFolderName();
-        
+
         // @formatter:off
         CollectionReader reader = CollectionReaderFactory.createReader(
                 WebannoTsv3XReader.class,
@@ -90,7 +89,7 @@ public class WebAnnoTsv3XReaderWriterTest
         assertEquals(JCasUtil.select(cas2.getJCas(), Dependency.class).size(),
                 JCasUtil.select(cas1.getJCas(), Dependency.class).size());
     }
-    
+
     @Rule
     public DkproTestContext testContext = new DkproTestContext();
 }

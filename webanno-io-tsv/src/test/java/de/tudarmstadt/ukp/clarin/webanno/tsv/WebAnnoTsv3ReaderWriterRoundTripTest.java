@@ -116,6 +116,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         String targetFolder = "target/test-output/WebAnnoTsv3ReaderWriterRoundTripTest/"
                 + referenceFolder.getName();
 
+        // @formatter:off
         CollectionReaderDescription reader = createReaderDescription(WebannoTsv3Reader.class,
                 merged,
                 WebannoTsv3Reader.PARAM_SOURCE_LOCATION, referenceFolder,
@@ -123,10 +124,12 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
 
         AnalysisEngineDescription checker = createEngineDescription(
                 DKProCoreConventionsChecker.class);
+        // @formatter:on
 
         // WebannoTsv3Writer doesn't seem to like it if both "SimpleLinkHost" and
         // "ComplexLinkHost" are declared, so I comment out "ComplexLinkHost" which has
         // less tests.
+        // @formatter:off
         AnalysisEngineDescription tsvWriter = createEngineDescription(WebannoTsv3Writer.class,
                 merged,
                 WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
@@ -167,6 +170,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
                 XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
                 XmiWriter.PARAM_STRIP_EXTENSION, true,
                 XmiWriter.PARAM_OVERWRITE, true);
+        // @formatter:on
 
         try {
             SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);

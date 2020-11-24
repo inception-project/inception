@@ -43,7 +43,7 @@ public class BootstrapAwareJQueryUIJavaScriptResourceReference
     private static final long serialVersionUID = 1L;
 
     private static final BootstrapAwareJQueryUIJavaScriptResourceReference INSTANCE = //
-            new BootstrapAwareJQueryUIJavaScriptResourceReference();
+                                                                                    new BootstrapAwareJQueryUIJavaScriptResourceReference();
 
     /**
      * Gets the instance of the resource reference

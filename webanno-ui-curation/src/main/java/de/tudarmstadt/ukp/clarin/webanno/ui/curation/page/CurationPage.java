@@ -259,7 +259,8 @@ public class CurationPage
             public void onChange(AjaxRequestTarget aTarget)
             {
                 try {
-                    // update begin/end of the curationsegment based on annotator state changes
+                    // update begin/end of the curationsegment based on annotator state
+                    // changes
                     // (like sentence change in auto-scroll mode,....
                     aTarget.addChildren(getPage(), IFeedback.class);
                     CurationPage.this.updatePanel(aTarget, curationContainer);

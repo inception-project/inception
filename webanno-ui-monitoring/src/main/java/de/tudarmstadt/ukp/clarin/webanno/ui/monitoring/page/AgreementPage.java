@@ -205,7 +205,8 @@ public class AgreementPage
                 {
                     super.onModelChanged();
 
-                    // If the feature type has changed, we need to set up a new traits editor
+                    // If the feature type has changed, we need to set up a new traits
+                    // editor
                     Component newTraits;
                     if (getModelObject() != null) {
                         AggreementMeasureSupport ams = agreementRegistry
