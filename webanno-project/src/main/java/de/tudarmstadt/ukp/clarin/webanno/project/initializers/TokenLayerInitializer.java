@@ -57,7 +57,7 @@ public class TokenLayerInitializer
     {
         AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
                 aProject, true, SINGLE_TOKEN, NO_OVERLAP);
-        
+
         // Since the user cannot turn off validation for the token layer if there is any kind of
         // problem with the validation functionality we are conservative here and disable validation
         // from the start.

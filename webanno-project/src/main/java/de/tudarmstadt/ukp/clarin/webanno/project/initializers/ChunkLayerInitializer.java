@@ -40,7 +40,7 @@ public class ChunkLayerInitializer
     implements LayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
-    
+
     @Autowired
     public ChunkLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {

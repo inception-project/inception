@@ -76,8 +76,7 @@ public class OrthographyLayerInitializer
                 "operation to be done with specified in tokenIDs token/tokens in order to correct",
                 "Operation", "en",
                 new String[] { "replace", "insert_before", "insert_after", "delete" },
-                new String[] { "replace", "insert before", "insert after", "delete" },
-                aProject);
+                new String[] { "replace", "insert before", "insert after", "delete" }, aProject);
 
         AnnotationFeature operation = new AnnotationFeature();
         operation.setDescription("An operation taken to change this token.");

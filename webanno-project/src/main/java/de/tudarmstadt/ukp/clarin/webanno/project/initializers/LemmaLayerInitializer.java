@@ -41,7 +41,7 @@ public class LemmaLayerInitializer
     implements LayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
-    
+
     @Autowired
     public LemmaLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {

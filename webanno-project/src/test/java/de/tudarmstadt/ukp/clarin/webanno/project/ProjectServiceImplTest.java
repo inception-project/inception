@@ -50,68 +50,68 @@ public class ProjectServiceImplTest
 
     @Autowired
     private TestEntityManager testEntityManager;
-        
+
     private Project testProject;
     private Project testProject2;
     private User beate;
     private User kevin;
-    
+
     @Before
     public void setUp() throws Exception
     {
         sut = new ProjectServiceImpl(null, null, null, null, testEntityManager.getEntityManager());
-        
-        //create users
+
+        // create users
         beate = new User("beate", Role.ROLE_USER, Role.ROLE_ADMIN);
         kevin = new User("kevin", Role.ROLE_USER);
         User noPermissionUser = new User("noPermission", Role.ROLE_USER);
         testEntityManager.persist(beate);
         testEntityManager.persist(noPermissionUser);
         testEntityManager.persist(kevin);
-        
-        //create project and projectPermissions for users
+
+        // create project and projectPermissions for users
         testProject = new Project("testProject");
         testEntityManager.persist(testProject);
         testEntityManager.persist(new ProjectPermission(testProject, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "kevin", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "beate", CURATOR));
-        
-        //create additional project and projectPermissions for users
+
+        // create additional project and projectPermissions for users
         testProject2 = new Project("testProject2");
         testEntityManager.persist(testProject2);
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", CURATOR));
     }
-    
+
     @After
-    public void tearDown() {
+    public void tearDown()
+    {
         testEntityManager.clear();
     }
-    
+
     @SpringBootConfiguration
-    @EnableAutoConfiguration 
-    @EntityScan(
-            basePackages = {
-                "de.tudarmstadt.ukp.clarin.webanno.project",
-                "de.tudarmstadt.ukp.clarin.webanno.model",
-                "de.tudarmstadt.ukp.clarin.webanno.security.model" 
-    })
-    public static class SpringConfig {
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.project",
+            "de.tudarmstadt.ukp.clarin.webanno.model",
+            "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+    public static class SpringConfig
+    {
         // No content
     }
-    
+
     @Test
     public void listProjectsForAgreement_ShouldReturnOneProject()
     {
         List<Project> foundProjects = sut.listProjectsForAgreement();
-        
+
         assertThat(foundProjects).containsExactly(testProject);
     }
-    
+
     @Test
-    public void listProjectUsersWithPermissions_ShouldReturnUsers() {
+    public void listProjectUsersWithPermissions_ShouldReturnUsers()
+    {
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject);
-        
+
         assertThat(foundUsers).containsExactly(beate, kevin);
     }
 

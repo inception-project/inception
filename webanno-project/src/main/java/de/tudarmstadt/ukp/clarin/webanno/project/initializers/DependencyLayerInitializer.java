@@ -45,7 +45,7 @@ public class DependencyLayerInitializer
     implements LayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
-    
+
     @Autowired
     public DependencyLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
@@ -57,7 +57,7 @@ public class DependencyLayerInitializer
     {
         return asList(
                 // Because locks to token boundaries
-                TokenLayerInitializer.class, 
+                TokenLayerInitializer.class,
                 // Because attaches to POS annotations in the UI
                 PartOfSpeechLayerInitializer.class);
     }
@@ -68,7 +68,7 @@ public class DependencyLayerInitializer
         TagSet depTagSet = JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/mul-dep-ud2.json").getInputStream(),
                 annotationSchemaService);
-        
+
         // Dependency Layer
         AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
                 RELATION_TYPE, aProject, true, SINGLE_TOKEN, OVERLAP_ONLY);
