@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.bootstrap;
 
 import de.agilecoders.wicket.sass.SassResourceReference;
 
-public class CustomBootstrapSassReference extends SassResourceReference
+public class CustomBootstrapSassReference
+    extends SassResourceReference
 {
     private static final long serialVersionUID = 1L;
 
@@ -41,6 +42,6 @@ public class CustomBootstrapSassReference extends SassResourceReference
     private CustomBootstrapSassReference()
     {
         super(CustomBootstrapSassReference.class, "bootstrap.scss");
-        //super(GoogleCssReference.class, "css/google-bootstrap.less");
+        // super(GoogleCssReference.class, "css/google-bootstrap.less");
     }
 }

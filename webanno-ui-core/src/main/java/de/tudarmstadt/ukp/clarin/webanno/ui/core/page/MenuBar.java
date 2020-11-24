@@ -48,14 +48,15 @@ public class MenuBar
 
         add(new LogoutPanel("logoutPanel"));
 
-        add(helpLink = new ExternalLink("helpLink", new ResourceModel("page.help.link", "")) {
+        add(helpLink = new ExternalLink("helpLink", new ResourceModel("page.help.link", ""))
+        {
             private static final long serialVersionUID = -2510064191732926764L;
 
             @Override
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 try {
                     // Trying to access the resources - if we can, then we show the link, but if
                     // we fail, then we hide the link
@@ -70,7 +71,7 @@ public class MenuBar
         });
         helpLink.setContextRelative(true);
         helpLink.setPopupSettings(new PopupSettings("_blank"));
-        
+
         links = new ListView<ImageLinkDecl>("links", SettingsUtil.getLinks())
         {
             private static final long serialVersionUID = 1768830545639450786L;

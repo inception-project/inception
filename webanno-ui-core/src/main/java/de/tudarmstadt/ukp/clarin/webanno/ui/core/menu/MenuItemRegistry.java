@@ -27,6 +27,6 @@ public interface MenuItemRegistry
     String SERVICE_NAME = "menuItemService";
 
     Optional<MenuItem> getMenuItem(Class<? extends Page> aClass);
-    
+
     List<MenuItem> getMenuItems();
 }

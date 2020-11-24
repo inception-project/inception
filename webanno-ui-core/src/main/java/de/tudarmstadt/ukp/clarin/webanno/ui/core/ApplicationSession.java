@@ -31,7 +31,7 @@ public class ApplicationSession
     {
         super(aRequest);
     }
-    
+
     /**
      * @return Current WebAnno web session
      */

@@ -28,9 +28,8 @@ public class JQueryUIResourceBehavior
     extends Behavior
 {
     private static final long serialVersionUID = -41338584738835064L;
-    
-    private static final JQueryUIResourceBehavior INSTANCE = 
-            new JQueryUIResourceBehavior();
+
+    private static final JQueryUIResourceBehavior INSTANCE = new JQueryUIResourceBehavior();
 
     public static JQueryUIResourceBehavior get()
     {
@@ -45,8 +44,7 @@ public class JQueryUIResourceBehavior
         JQueryUILibrarySettings jqueryCfg = JQueryUILibrarySettings.get();
 
         if (jqueryCfg.getStyleSheetReference() != null) {
-            aResponse.render(
-                    CssHeaderItem.forReference(jqueryCfg.getStyleSheetReference()));
+            aResponse.render(CssHeaderItem.forReference(jqueryCfg.getStyleSheetReference()));
         }
     }
 }

@@ -27,9 +27,8 @@ public class JQueryJavascriptBehavior
     extends Behavior
 {
     private static final long serialVersionUID = -41338584738835064L;
-    
-    private static final JQueryJavascriptBehavior INSTANCE = 
-            new JQueryJavascriptBehavior();
+
+    private static final JQueryJavascriptBehavior INSTANCE = new JQueryJavascriptBehavior();
 
     public static JQueryJavascriptBehavior get()
     {

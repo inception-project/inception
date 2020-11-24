@@ -24,11 +24,15 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 public interface MenuItem
 {
     String getPath();
+
     String getIcon();
+
     String getLabel();
+
     Class<? extends Page> getPageClass();
+
     boolean applies();
-    
+
     /**
      * {@link WicketApplicationBase} introduces a custom authorization service which prevents access
      * to a page if the user is not able to see the corresponding menu item (cf.
@@ -39,7 +43,8 @@ public interface MenuItem
      * {@code true}. Use this very carefully and ensure that the proper access checks are performed
      * on the target page.
      */
-    default boolean isDirectAccessAllowed() {
+    default boolean isDirectAccessAllowed()
+    {
         return false;
     }
 }

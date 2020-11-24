@@ -46,13 +46,13 @@ public class ProjectSettingsPanelRegistryImpl
     {
         extensionsProxy = aExtensions;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<ProjectSettingsPanelFactory> exts = new ArrayList<>();
@@ -60,22 +60,22 @@ public class ProjectSettingsPanelRegistryImpl
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
-        
+
             for (ProjectSettingsPanelFactory fs : exts) {
                 log.info("Found project setting panel: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
-    }    
+    }
 
     @Override
     public ProjectSettingsPanelFactory getPanel(String aPath)
     {
         return getPanels().stream().filter(psp -> aPath.equals(psp.getPath())).findFirst().get();
     }
-    
+
     @Override
     public List<ProjectSettingsPanelFactory> getPanels()
     {

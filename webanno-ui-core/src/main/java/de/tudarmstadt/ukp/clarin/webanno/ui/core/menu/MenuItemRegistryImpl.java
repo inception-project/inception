@@ -47,13 +47,13 @@ public class MenuItemRegistryImpl
     {
         extensionsProxy = aExtensions;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<MenuItem> exts = new ArrayList<>();
@@ -61,22 +61,21 @@ public class MenuItemRegistryImpl
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
-        
+
             for (MenuItem fs : exts) {
-                log.info("Found menu item: {}",
-                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                log.info("Found menu item: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
-    }    
-    
+    }
+
     @Override
     public Optional<MenuItem> getMenuItem(Class<? extends Page> aClass)
     {
         return extensions.stream().filter(mi -> mi.getPageClass().equals(aClass)).findFirst();
     }
-    
+
     @Override
     public List<MenuItem> getMenuItems()
     {

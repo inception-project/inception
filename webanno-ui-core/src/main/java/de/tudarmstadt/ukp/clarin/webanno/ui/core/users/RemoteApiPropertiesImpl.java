@@ -22,7 +22,8 @@ import org.springframework.stereotype.Component;
 
 @Component("RemoteApiProperties-secondary")
 @ConfigurationProperties("remote-api")
-public class RemoteApiPropertiesImpl implements RemoteApiProperties
+public class RemoteApiPropertiesImpl
+    implements RemoteApiProperties
 {
     private boolean enabled = false;
 
@@ -31,7 +32,7 @@ public class RemoteApiPropertiesImpl implements RemoteApiProperties
     {
         boolean enabledViaLegacySystemProperty = "true"
                 .equals(System.getProperty("webanno.remote-api.enable"));
-        
+
         return enabled || enabledViaLegacySystemProperty;
     }
 

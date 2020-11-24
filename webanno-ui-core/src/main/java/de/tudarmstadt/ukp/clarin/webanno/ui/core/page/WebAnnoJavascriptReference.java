@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class WebAnnoJavascriptReference extends JavaScriptResourceReference
+public class WebAnnoJavascriptReference
+    extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 

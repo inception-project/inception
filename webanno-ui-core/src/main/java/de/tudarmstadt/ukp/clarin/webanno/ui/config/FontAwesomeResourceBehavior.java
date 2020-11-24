@@ -28,9 +28,8 @@ public class FontAwesomeResourceBehavior
     extends Behavior
 {
     private static final long serialVersionUID = -4514352861947850642L;
-    
-    private static final FontAwesomeResourceBehavior INSTANCE = 
-            new FontAwesomeResourceBehavior();
+
+    private static final FontAwesomeResourceBehavior INSTANCE = new FontAwesomeResourceBehavior();
 
     public static FontAwesomeResourceBehavior get()
     {
