@@ -140,7 +140,7 @@ public class BratAnnotationEditor
     // the browser needs to recalculate its layout twice - once of any Wicket components
     // being re-rendered and once for the brat view to re-render.
     private static final boolean DEFERRED_RENDERING = false;
-    
+
     // Whether the profiling built into the the brat visualization JS should be enabled. If
     // this is enabled, profiling data is collected and a report is printed to the browser's
     // JS console after every rendering action
@@ -150,7 +150,7 @@ public class BratAnnotationEditor
     private static final boolean ENABLE_IN_BROWSER_TRACE = false;
 
     private final ContextMenu contextMenu;
-    
+
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
@@ -158,10 +158,10 @@ public class BratAnnotationEditor
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean AnnotationEditorProperties bratProperties;
-    
+
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
-    
+
     private String lastRenderedJson;
     private int lastRenderedWindowStart = -1;
 
@@ -169,16 +169,16 @@ public class BratAnnotationEditor
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(id, aModel, aActionHandler, aCasProvider);
-        
+
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
         add(vis);
-        
+
         LOG.trace("[{}][{}] BratAnnotationEditor", getMarkupId(), vis.getMarkupId());
 
         contextMenu = new ContextMenu("contextMenu");
         add(contextMenu);
-        
+
         requestHandler = new AbstractDefaultAjaxBehavior()
         {
             private static final long serialVersionUID = 1L;
@@ -189,19 +189,19 @@ public class BratAnnotationEditor
                 if (getModelObject().getDocument() == null) {
                     return;
                 }
-                
+
                 long timerStart = System.currentTimeMillis();
-                
+
                 // We always refresh the feedback panel - only doing this in the case were actually
                 // something worth reporting occurs is too much of a hassel...
                 aTarget.addChildren(getPage(), IFeedback.class);
 
                 final IRequestParameters request = getRequest().getPostParameters();
-                
+
                 // Get action from the request
                 String action = request.getParameterValue(PARAM_ACTION).toString();
                 LOG.trace("AJAX-RPC CALLED: [{}]", action);
-                
+
                 // Parse annotation ID if present in request
                 final VID paramId;
                 if (!request.getParameterValue(PARAM_ID).isEmpty()
@@ -215,7 +215,7 @@ public class BratAnnotationEditor
                 else {
                     VID arcId = VID
                             .parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
-                    // HACK: If an arc was clicked that represents a link feature, then 
+                    // HACK: If an arc was clicked that represents a link feature, then
                     // open the associated span annotation instead.
                     if (arcId.isSlotSet() && ArcAnnotationResponse.is(action)) {
                         action = SpanAnnotationResponse.COMMAND;
@@ -245,7 +245,7 @@ public class BratAnnotationEditor
                 else {
                     cas = null;
                 }
-                
+
                 Object result = null;
                 try {
                     // Whenever an action should be performed, do ONLY perform this action and
@@ -275,10 +275,8 @@ public class BratAnnotationEditor
                                 getModelObject().clearArmedSlot();
                             }
 
-                            if (
-                                    ACTION_CONTEXT_MENU.equals(action.toString()) && 
-                                    !paramId.isSlotSet()
-                            ) {
+                            if (ACTION_CONTEXT_MENU.equals(action.toString())
+                                    && !paramId.isSlotSet()) {
                                 actionOpenContextMenu(aTarget, request, cas, paramId);
                             }
                             else if (SpanAnnotationResponse.is(action)) {
@@ -325,14 +323,14 @@ public class BratAnnotationEditor
                     else {
                         json = toJson(result);
                     }
-                    
+
                     // Since we cannot pass the JSON directly to Brat, we attach it to the HTML
                     // element into which BRAT renders the SVG. In our modified ajax.js, we pick it
                     // up from there and then pass it on to BRAT to do the rendering.
-                    aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = "
-                            + json + ";");
+                    aTarget.prependJavaScript(
+                            "Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
                 }
-                
+
                 LOG.trace("AJAX-RPC DONE: [{}] completed in {}ms", action,
                         (System.currentTimeMillis() - timerStart));
             }
@@ -350,18 +348,17 @@ public class BratAnnotationEditor
         // We interpret the databaseParam as the feature which we need to look up the feature
         // support
         StringValue databaseParam = request.getParameterValue("database");
-        
+
         // We interpret the key as the feature value or as a kind of query to be handled by the
         // feature support
         StringValue keyParam = request.getParameterValue("key");
-        
+
         StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
-        
+
         if (layerParam.isEmpty() || keyParam.isEmpty() || databaseParam.isEmpty()) {
             return response;
         }
 
-        
         String database = databaseParam.toString();
         long layerId = decodeTypeName(layerParam.toString());
         AnnotatorState state = getModelObject();
@@ -370,18 +367,18 @@ public class BratAnnotationEditor
                         + "] does not exist in project [" + state.getProject().getName() + "]("
                         + state.getProject().getId() + ")"));
         AnnotationFeature feature = annotationService.getFeature(database, layer);
-        
+
         // Check where the query needs to be routed: to an editor extension or to a feature support
         if (paramId.isSynthetic()) {
             String extensionId = paramId.getExtensionId();
             response.setResults(extensionRegistry.getExtension(extensionId)
                     .renderLazyDetails(state.getDocument(), state.getUser(), paramId, feature,
-                            keyParam.toString()).stream()
-                    .map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
+                            keyParam.toString())
+                    .stream().map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
                     .collect(Collectors.toList()));
             return response;
         }
-        
+
         try {
             response.setResults(featureSupportRegistry.findExtension(feature)
                     .renderLazyDetails(feature, keyParam.toString()).stream()
@@ -392,23 +389,23 @@ public class BratAnnotationEditor
             LOG.error("Unable to load data", e);
             error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
         }
-        
+
         return response;
     }
-    
+
     private void actionOpenContextMenu(AjaxRequestTarget aTarget, IRequestParameters request,
             CAS aCas, VID paramId)
     {
         List<IMenuItem> items = contextMenu.getItemList();
         items.clear();
-        
+
         if (getModelObject().getSelection().isSpan()) {
             items.add(new LambdaMenuItem("Link to ...",
-                _target -> actionArcRightClick(_target, paramId)));
+                    _target -> actionArcRightClick(_target, paramId)));
         }
-        
+
         extensionRegistry.generateContextMenuItems(items);
-        
+
         if (!items.isEmpty()) {
             contextMenu.onOpen(aTarget);
         }
@@ -419,7 +416,7 @@ public class BratAnnotationEditor
         throws AnnotationException, IOException
     {
         StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
-        
+
         if (!layerParam.isEmpty()) {
             long layerId = decodeTypeName(layerParam.toString());
             AnnotatorState state = getModelObject();
@@ -435,15 +432,15 @@ public class BratAnnotationEditor
                         getModelObject().getDocument(), anno);
                 // define anonymous function, fill the body and immediately execute
                 String js = String.format("(function ($PARAM){ %s })(%s)",
-                        WicketUtil.wrapInTryCatch(layer.getOnClickJavascriptAction()), 
+                        WicketUtil.wrapInTryCatch(layer.getOnClickJavascriptAction()),
                         JSONUtil.toJsonString(functionParams));
                 aTarget.appendJavaScript(js);
             }
         }
-        
+
         return null;
     }
-    
+
     private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,
             CAS aCas, VID aSelectedAnnotation)
         throws IOException, AnnotationException
@@ -451,7 +448,7 @@ public class BratAnnotationEditor
         // This is the span the user has marked in the browser in order to create a new slot-filler
         // annotation OR the span of an existing annotation which the user has selected.
         Offsets optUserSelectedSpan = getOffsetsFromRequest(request, aCas, aSelectedAnnotation);
-        
+
         Offsets userSelectedSpan = optUserSelectedSpan;
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
@@ -477,10 +474,10 @@ public class BratAnnotationEditor
                 }
             }
         }
-        
+
         return new SpanAnnotationResponse();
     }
-    
+
     private ArcAnnotationResponse actionArc(AjaxRequestTarget aTarget, IRequestParameters request,
             CAS aCas, VID paramId)
         throws IOException, AnnotationException
@@ -526,7 +523,7 @@ public class BratAnnotationEditor
         // Currently selected span
         AnnotationFS originFs = selectAnnotationByAddr(cas,
                 getModelObject().getSelection().getAnnotation().getId());
-        
+
         // Target span of the relation
         AnnotationFS targetFs = selectAnnotationByAddr(cas, paramId.getId());
 
@@ -551,12 +548,12 @@ public class BratAnnotationEditor
         }
         return info;
     }
-    
+
     private String actionGetDocument(CAS aCas)
     {
         StopWatch timer = new StopWatch();
         timer.start();
-        
+
         GetDocumentResponse response = new GetDocumentResponse();
         String json;
         if (getModelObject().getProject() != null) {
@@ -567,26 +564,26 @@ public class BratAnnotationEditor
         else {
             json = toJson(response);
         }
-        
+
         timer.stop();
         metrics.renderComplete(RenderType.FULL, timer.getTime(), json, null);
-        
+
         return json;
     }
-    
+
     /**
      * Extract offset information from the current request. These are either offsets of an existing
      * selected annotations or offsets contained in the request for the creation of a new
      * annotation.
      */
     private Offsets getOffsetsFromRequest(IRequestParameters request, CAS aCas, VID aVid)
-        throws  IOException
+        throws IOException
     {
         if (aVid.isNotSet() || aVid.isSynthetic()) {
             // Create new span annotation - in this case we get the offset information from the
             // request
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-            
+
             OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
                     OffsetsList.class);
 
@@ -608,7 +605,7 @@ public class BratAnnotationEditor
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         setVisible(getModelObject() != null && getModelObject().getProject() != null);
     }
 
@@ -622,7 +619,7 @@ public class BratAnnotationEditor
         aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
         aResponse.render(CssHeaderItem
                 .forReference(new WebjarsCssResourceReference("animate.css/current/animate.css")));
-                
+
         // Libraries
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(forReference(JQuerySvgResourceReference.get()));
@@ -630,13 +627,13 @@ public class BratAnnotationEditor
         aResponse.render(forReference(JQueryJsonResourceReference.get()));
         aResponse.render(forReference(JQueryScrollbarWidthReference.get()));
         aResponse.render(forReference(JSONPatchResourceReference.get()));
-        
+
         // BRAT helpers
         aResponse.render(forReference(BratConfigurationResourceReference.get()));
         aResponse.render(forReference(BratUtilResourceReference.get()));
         // aResponse.render(
-        //    JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
-        
+        // JavaScriptHeaderItem.forReference(BratAnnotationLogResourceReference.get()));
+
         // BRAT modules
         aResponse.render(forReference(BratDispatcherResourceReference.get()));
         aResponse.render(forReference(BratAjaxResourceReference.get()));
@@ -644,18 +641,18 @@ public class BratAnnotationEditor
         aResponse.render(forReference(BratVisualizerUiResourceReference.get()));
         aResponse.render(forReference(BratAnnotatorUiResourceReference.get()));
         // aResponse.render(
-        //     JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
-        
-        // When the page is re-loaded or when the component is added to the page, we need to 
+        // JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
+
+        // When the page is re-loaded or when the component is added to the page, we need to
         // initialize the brat stuff.
         StringBuilder js = new StringBuilder();
         js.append(bratInitCommand());
         js.append(bratLoadCollectionCommand());
-        
+
         // If a document is already open, we also need to render the document. This happens either
-        // when a page is freshly loaded or when e.g. the whole editor is added to the page or 
+        // when a page is freshly loaded or when e.g. the whole editor is added to the page or
         // when it is added to a partial page update (AJAX request).
-        // If the editor is part of a full or partial page update, then it needs to be 
+        // If the editor is part of a full or partial page update, then it needs to be
         // reinitialized. So we need to use deferred rendering. The render() method checks the
         // partial page update to see if the editor is part of it and if so, it skips itself so
         // no redundant rendering is performed.
@@ -668,21 +665,21 @@ public class BratAnnotationEditor
     private Optional<String> bratRenderCommand(CAS aCas)
     {
         LOG.trace("[{}][{}] bratRenderCommand", getMarkupId(), vis.getMarkupId());
-        
+
         StopWatch timer = new StopWatch();
         timer.start();
-        
+
         GetDocumentResponse response = new GetDocumentResponse();
         render(response, aCas);
         String json = toJson(response);
-        
+
         // By default, we do a full rendering...
         RenderType renderType = FULL;
         String cmd = "renderData";
         String data = json;
         JsonNode diff;
         String diffJsonStr = null;
-        
+
         // Here, we try to balance server CPU load against network load. So if we have a chance
         // of significantly reducing the data sent to the client via a differential update, then
         // we try that. However, if it is pretty obvious that we won't save a lot, then we will
@@ -707,11 +704,11 @@ public class BratAnnotationEditor
                 LOG.error("Unable to generate diff, falling back to full render.", e);
                 // Fall-through
             }
-            
+
             if (previous != null && current != null) {
                 diff = JsonDiff.asJson(previous, current);
                 diffJsonStr = diff.toString();
-                
+
                 if (diff instanceof ArrayNode && ((ArrayNode) diff).isEmpty()) {
                     // No difference? Well, don't render at all :)
                     renderType = SKIP;
@@ -724,25 +721,25 @@ public class BratAnnotationEditor
                     data = diffJsonStr;
                     renderType = DIFFERENTIAL;
                 }
-                
+
                 // LOG.info("Diff: " + diff);
                 // LOG.info("Full: {} Patch: {} Diff time: {}", json.length(), diff.length(),
                 // timer);
             }
         }
-        
+
         // Storing the last rendered JSON as string because JsonNodes are not serializable.
         lastRenderedJson = json;
         lastRenderedWindowStart = aState.getWindowBeginOffset();
-        
+
         timer.stop();
 
         metrics.renderComplete(renderType, timer.getTime(), json, diffJsonStr);
-        
+
         if (SKIP.equals(renderType)) {
             return Optional.empty();
         }
-        
+
         return Optional.of("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd + "', ["
                 + data + "]);");
     }
@@ -754,17 +751,17 @@ public class BratAnnotationEditor
         BratRenderer renderer = new BratRenderer(annotationService, coloringService);
         renderer.render(response, aState, vdoc, aCas);
     }
-    
+
     private String bratInitCommand()
     {
         LOG.trace("[{}][{}] bratInitCommand", getMarkupId(), vis.getMarkupId());
-        
+
         // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
         // variable. If I put a "var" here, then communication fails with messages such as
         // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
         // console.
         StringBuilder js = new StringBuilder();
-        
+
         js.append("(function() {");
         if (ENABLE_IN_BROWSER_TRACE) {
             js.append("  console.log('Initializing (" + vis.getMarkupId() + ")...');");
@@ -779,24 +776,24 @@ public class BratAnnotationEditor
         js.append("  var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');");
         js.append("  var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);");
         js.append("  var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);");
-        //js.append(("var logger = new AnnotationLog(dispatcher);");
+        // js.append(("var logger = new AnnotationLog(dispatcher);");
         js.append("  dispatcher.post('init');");
         js.append("  Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;");
         js.append("  Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;");
         js.append("})();");
-        
+
         return js.toString();
     }
-    
+
     private String bratLoadCollectionCommand()
     {
         LOG.trace("[{}][{}] bratLoadCollectionCommand", getMarkupId(), vis.getMarkupId());
-        
+
         GetCollectionInformationResponse response = actionGetCollectionInformation();
         response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject().getProject(),
                 getModelObject().getAnnotationLayers(), annotationService));
         String json = toJson(response);
-        
+
         StringBuilder js = new StringBuilder();
         if (ENABLE_IN_BROWSER_TRACE) {
             js.append("console.log('Loading collection (" + vis.getMarkupId() + ")...');");
@@ -814,7 +811,7 @@ public class BratAnnotationEditor
     private String bratRenderLaterCommand()
     {
         LOG.trace("[{}][{}] bratRenderLaterCommand", getMarkupId(), vis.getMarkupId());
-        
+
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', " + "["
                 + toJson(getCollection()) + ", '1234', {}, true]);";
     }
@@ -831,7 +828,7 @@ public class BratAnnotationEditor
             renderedEditors = new HashSet<>();
             requestCycle.setMetaData(AnnotationEditorRenderedMetaDataKey.INSTANCE, renderedEditors);
         }
-        
+
         if (renderedEditors.contains(getMarkupId())) {
             LOG.trace("[{}][{}] render (AJAX) - was already rendered in this cycle - skipping",
                     getMarkupId(), vis.getMarkupId());
@@ -839,8 +836,8 @@ public class BratAnnotationEditor
         }
 
         renderedEditors.add(getMarkupId());
-        
-        // Check if the editor or any of its parents has been added to a partial page update. If 
+
+        // Check if the editor or any of its parents has been added to a partial page update. If
         // this is the case, then deferred rendering in renderHead kicks in and we do not need to
         // render here.
         Set<Component> components = new HashSet<>(aTarget.getComponents());
@@ -855,36 +852,36 @@ public class BratAnnotationEditor
                     getMarkupId(), vis.getMarkupId());
             return;
         }
-        
+
         LOG.trace("[{}][{}] render (AJAX)", getMarkupId(), vis.getMarkupId());
-        
+
         try {
             bratRenderCommand(getCasProvider().get()).ifPresent(cmd -> {
                 StringBuilder js = new StringBuilder();
-                
+
                 if (DEFERRED_RENDERING) {
                     js.append("setTimeout(function() {");
                 }
-                
+
                 if (ENABLE_IN_BROWSER_PROFILING) {
                     js.append("Util.profileEnable(true);");
                     js.append("Util.profileClear();");
                 }
-                
+
                 if (ENABLE_IN_BROWSER_TRACE) {
                     js.append("console.log('Rendering (" + vis.getMarkupId() + ")...');");
                 }
-                
+
                 js.append(cmd);
-                
+
                 if (ENABLE_IN_BROWSER_PROFILING) {
                     js.append("Util.profileReport();");
                 }
-                
+
                 if (DEFERRED_RENDERING) {
                     js.append("}, 0);");
                 }
-                
+
                 aTarget.appendJavaScript(js);
             });
         }
@@ -894,7 +891,7 @@ public class BratAnnotationEditor
             aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
-    
+
     private String getCollection()
     {
         if (getModelObject().getProject() != null) {
@@ -915,5 +912,5 @@ public class BratAnnotationEditor
             error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));
         }
         return json;
-    }    
+    }
 }

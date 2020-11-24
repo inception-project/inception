@@ -75,22 +75,22 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class BratRendererTest
 {
     private @Mock AnnotationSchemaService schemaService;
-    
+
     private Project project;
     private AnnotationLayer tokenLayer;
     private AnnotationFeature tokenPosFeature;
     private AnnotationLayer posLayer;
     private AnnotationFeature posFeature;
-    
+
     private PreRenderer preRenderer;
-    
+
     @Before
     public void setup()
     {
         initMocks(this);
-        
+
         project = new Project();
-        
+
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
                 SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
@@ -119,22 +119,22 @@ public class BratRendererTest
         posFeature.setUiName("PosValue");
         posFeature.setLayer(posLayer);
         posFeature.setProject(project);
-        posFeature.setVisible(true);        
+        posFeature.setVisible(true);
 
         FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
                         new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
         featureSupportRegistry.init();
-        
+
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
-        
+
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
                 new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
-        
+
         when(schemaService.listSupportedLayers(any())).thenReturn(asList(posLayer));
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
         when(schemaService.listSupportedFeatures(any(Project.class)))
@@ -144,21 +144,21 @@ public class BratRendererTest
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
             return layerRegistry.getLayerSupport(layer).createAdapter(layer,
-                () -> asList(posFeature));
+                    () -> asList(posFeature));
         });
-        
+
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
     }
-    
+
     @Test
     public void thatSentenceOrientedStrategyRenderCorrectly() throws Exception
     {
         String jsonFilePath = "target/test-output/output-sentence-oriented.json";
         String file = "src/test/resources/tcf04-karin-wl.xml";
-        
+
         CAS cas = JCasFactory.createJCas().getCas();
-        CollectionReader reader = createReader(TcfReader.class,
-                TcfReader.PARAM_SOURCE_LOCATION, file);
+        CollectionReader reader = createReader(TcfReader.class, TcfReader.PARAM_SOURCE_LOCATION,
+                file);
         reader.getNext(cas);
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setPagingStrategy(new SentenceOrientedPagingStrategy());
@@ -168,8 +168,8 @@ public class BratRendererTest
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(),
-                cas, schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
+                schemaService.listAnnotationLayer(project));
 
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer renderer = new BratRenderer(schemaService,
@@ -178,11 +178,10 @@ public class BratRendererTest
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
-        assertThat(contentOf(
-                new File("src/test/resources/output-sentence-oriented.json"), UTF_8))
-                        .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
+        assertThat(contentOf(new File("src/test/resources/output-sentence-oriented.json"), UTF_8))
+                .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
-    
+
     /**
      * generate brat JSON data for the document
      */
@@ -191,10 +190,10 @@ public class BratRendererTest
     {
         String jsonFilePath = "target/test-output/multiline.json";
         String file = "src/test/resources/multiline.txt";
-        
+
         CAS cas = JCasFactory.createJCas().getCas();
-        CollectionReader reader = createReader(TextReader.class,
-                TextReader.PARAM_SOURCE_LOCATION, file);
+        CollectionReader reader = createReader(TextReader.class, TextReader.PARAM_SOURCE_LOCATION,
+                file);
         reader.getNext(cas);
         AnalysisEngine segmenter = createEngine(BreakIteratorSegmenter.class);
         segmenter.process(cas);
@@ -206,8 +205,8 @@ public class BratRendererTest
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(),
-                cas, schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
+                schemaService.listAnnotationLayer(project));
 
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer renderer = new BratRenderer(schemaService,
@@ -216,8 +215,7 @@ public class BratRendererTest
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
-        assertThat(contentOf(
-                new File("src/test/resources/multiline.json"), UTF_8))
-                        .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
+        assertThat(contentOf(new File("src/test/resources/multiline.json"), UTF_8))
+                .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 }

@@ -25,25 +25,26 @@ import org.springframework.stereotype.Component;
 
 @ManagedResource
 @Component
-public class BratMetricsImpl implements BratMetrics
+public class BratMetricsImpl
+    implements BratMetrics
 {
     private long fullRenderCount = 0;
     private long fullRenderedSize = 0;
-    
+
     private long diffRenderAttempts = 0;
     private long diffRenderCount = 0;
     private long diffRenderedSize = 0;
-    
+
     private long skipRenderCount = 0;
-    
+
     private long savedRenderedSize = 0;
-   
+
     private long sentRenderedSize = 0;
-    
+
     private long renderTime = 0;
     private long maxRenderTime = 0;
     private long lastRenderTime = 0;
-    
+
     @ManagedMetric(metricType = MetricType.COUNTER)
     public long getFullRenderCount()
     {
@@ -103,7 +104,7 @@ public class BratMetricsImpl implements BratMetrics
     {
         return sentRenderedSize;
     }
-    
+
     @ManagedOperation
     public void reset()
     {
@@ -118,7 +119,7 @@ public class BratMetricsImpl implements BratMetrics
         maxRenderTime = 0;
         lastRenderTime = 0;
     }
-    
+
     @Override
     public synchronized void renderComplete(RenderType aType, long aTime, String aFull,
             String aDiff)
@@ -143,7 +144,7 @@ public class BratMetricsImpl implements BratMetrics
             }
             break;
         }
-        
+
         renderTime += aTime;
         maxRenderTime = Math.max(maxRenderTime, aTime);
         lastRenderTime = aTime;

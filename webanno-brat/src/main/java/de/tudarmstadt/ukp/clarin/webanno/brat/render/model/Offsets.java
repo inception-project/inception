@@ -28,8 +28,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
+
 /**
  * The start and End offset positions of a span annotation as required by the Brat protocol
+ * 
  * @see Entity
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
@@ -71,7 +73,7 @@ public class Offsets
     {
         end = aEnd;
     }
-    
+
     @Override
     public String toString()
     {
@@ -86,8 +88,7 @@ public class Offsets
         extends JsonDeserializer<Offsets>
     {
         @Override
-        public Offsets deserialize(JsonParser aJp, DeserializationContext aCtxt)
-            throws IOException
+        public Offsets deserialize(JsonParser aJp, DeserializationContext aCtxt) throws IOException
         {
             Offsets offsets = new Offsets();
 

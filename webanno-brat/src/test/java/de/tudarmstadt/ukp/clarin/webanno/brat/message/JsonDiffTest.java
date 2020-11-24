@@ -36,20 +36,19 @@ public class JsonDiffTest
         String f_removedMiddle = "src/test/resources/brat_removed_entity_in_middle.json";
         String f_removedEnd = "src/test/resources/brat_removed_entity_near_end.json";
 
-        MappingJackson2HttpMessageConverter jsonConverter = 
-                new MappingJackson2HttpMessageConverter();
-        
+        MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
+
         ObjectMapper mapper = jsonConverter.getObjectMapper();
-        
+
         JsonNode base = mapper.readTree(new File(f_base));
         JsonNode addedMiddle = mapper.readTree(new File(f_addedMiddle));
         JsonNode removedMiddle = mapper.readTree(new File(f_removedMiddle));
         JsonNode removedEnd = mapper.readTree(new File(f_removedEnd));
-        
+
         JsonNode d_addedMiddle = JsonDiff.asJson(base, addedMiddle);
         JsonNode d_removedMiddle = JsonDiff.asJson(base, removedMiddle);
         JsonNode d_removedEnd = JsonDiff.asJson(base, removedEnd);
-        
+
         System.out.println(d_addedMiddle);
         System.out.println(d_removedMiddle);
         System.out.println(d_removedEnd);

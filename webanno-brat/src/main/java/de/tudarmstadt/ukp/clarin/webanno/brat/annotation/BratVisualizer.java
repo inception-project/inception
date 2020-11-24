@@ -152,19 +152,18 @@ public abstract class BratVisualizer
     {
         return "{}";
     }
-    
+
     private String bratRenderCommand(String aJson)
     {
-        String str = WicketUtil.wrapInTryCatch(
-                "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('renderData', [" + 
-                   aJson + "]);");
+        String str = WicketUtil.wrapInTryCatch("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('renderData', [" + aJson + "]);");
         return str;
     }
 
     public void render(AjaxRequestTarget aTarget)
     {
         LOG.debug("[{}][{}] render", getMarkupId(), vis.getMarkupId());
-        
+
         // Controls whether rendering should happen within the AJAX request or after the AJAX
         // request. Doing it within the request has the benefit of the browser only having to
         // recalculate the layout once at the end of the AJAX request (at least theoretically)
@@ -174,17 +173,17 @@ public abstract class BratVisualizer
         final boolean deferredRendering = false;
 
         StringBuilder js = new StringBuilder();
-        
+
         if (deferredRendering) {
             js.append("setTimeout(function() {");
         }
-        
+
         js.append(bratRenderCommand(getDocumentData()));
-        
+
         if (deferredRendering) {
             js.append("}, 0);");
         }
-        
+
         aTarget.appendJavaScript(js);
     }
 }

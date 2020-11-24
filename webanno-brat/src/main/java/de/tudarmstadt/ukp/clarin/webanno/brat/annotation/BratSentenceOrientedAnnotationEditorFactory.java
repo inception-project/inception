@@ -35,14 +35,14 @@ public class BratSentenceOrientedAnnotationEditorFactory
     {
         return "brat (sentence-oriented)";
     }
-    
+
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
-    
+
     @Override
     public int getOrder()
     {

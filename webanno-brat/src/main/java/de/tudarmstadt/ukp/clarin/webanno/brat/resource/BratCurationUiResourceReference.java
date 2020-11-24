@@ -24,8 +24,7 @@ public class BratCurationUiResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BratCurationUiResourceReference INSTANCE = 
-            new BratCurationUiResourceReference();
+    private static final BratCurationUiResourceReference INSTANCE = new BratCurationUiResourceReference();
 
     /**
      * Gets the instance of the resource reference

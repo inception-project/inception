@@ -69,7 +69,7 @@ public class BratAnnotatorUtility
                 // if annotationDocument is finished, disable editing
                 AnnotationDocument adoc = aRepository.getAnnotationDocument(
                         aBratAnnotatorModel.getDocument(), aBratAnnotatorModel.getUser());
-                
+
                 return adoc.getState().equals(AnnotationDocumentState.FINISHED);
             }
         }
@@ -78,8 +78,7 @@ public class BratAnnotatorUtility
         }
     }
 
-    public static CAS clearAnnotations(CAS aCas)
-        throws IOException
+    public static CAS clearAnnotations(CAS aCas) throws IOException
     {
         CAS target;
         try {
@@ -88,14 +87,14 @@ public class BratAnnotatorUtility
         catch (UIMAException e) {
             throw new IOException(e);
         }
-        
+
         // Copy the CAS - basically we do this just to keep the full type system information
         CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
         deserializeCASComplete(serializer, (CASImpl) getRealCas(target));
 
         // Remove all annotations from the target CAS but we keep the type system!
         target.reset();
-        
+
         // Copy over essential information
         if (exists(aCas, getType(aCas, DocumentMetaData.class))) {
             copyDocumentMetadata(aCas, target);
@@ -105,7 +104,7 @@ public class BratAnnotatorUtility
         }
         target.setDocumentLanguage(aCas.getDocumentLanguage()); // DKPro Core Issue 435
         target.setDocumentText(aCas.getDocumentText());
-        
+
         // Transfer token boundaries
         for (AnnotationFS t : selectTokens(aCas)) {
             target.addFsToIndexes(createToken(target, t.getBegin(), t.getEnd()));

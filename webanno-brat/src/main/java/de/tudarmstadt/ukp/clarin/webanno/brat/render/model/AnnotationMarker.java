@@ -30,18 +30,18 @@ public class AnnotationMarker
 {
     private final VID[] vid;
     private String type;
-    
+
     public AnnotationMarker(String aType, VID aVid)
     {
         vid = new VID[] { aVid };
         type = aType;
     }
-    
+
     public VID getVid()
     {
         return vid[0];
     }
-    
+
     @Override
     public String getType()
     {

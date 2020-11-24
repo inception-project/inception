@@ -23,7 +23,7 @@ public class VisualOptions
 {
     public static final String ARC_BUNDLE_NONE = "none";
     public static final String ARC_BUNDLE_ALL = "all";
-    
+
     @JsonProperty("arc_bundle")
     private String arcBundle = ARC_BUNDLE_NONE;
 

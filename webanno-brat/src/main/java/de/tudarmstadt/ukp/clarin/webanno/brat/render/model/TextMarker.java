@@ -31,13 +31,14 @@ public class TextMarker
     private @JsonIgnore String type;
     private int begin;
     private int end;
-    
+
     public TextMarker(String aType, int aBegin, int aEnd)
     {
         type = aType;
         begin = aBegin;
         end = aEnd;
     }
+
     public int getBegin()
     {
         return begin;
@@ -47,7 +48,7 @@ public class TextMarker
     {
         return end;
     }
-    
+
     @Override
     public String getType()
     {

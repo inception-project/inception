@@ -24,8 +24,7 @@ public class BratSpinnerResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BratSpinnerResourceReference INSTANCE = 
-            new BratSpinnerResourceReference();
+    private static final BratSpinnerResourceReference INSTANCE = new BratSpinnerResourceReference();
 
     /**
      * Gets the instance of the resource reference

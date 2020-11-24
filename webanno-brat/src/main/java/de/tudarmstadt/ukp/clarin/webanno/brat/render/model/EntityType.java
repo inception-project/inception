@@ -72,16 +72,16 @@ public class EntityType
                 asList(aLabel, abbreviate(aLabel)) /* labels */, null /* children */,
                 null /* attributes */, null /* arcs */);
     }
-    
-//    public EntityType(String aName, String aType, String aFgColor, String aBgColor,
-//            String aBorderColor)
-//    {
-//        this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
-//                aFgColor /* fgColor */, aBgColor /* bgColor */, aBorderColor /* borderColor */,
-//                Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */, 
-//                null /* arcs */);
-//    }
-    
+
+    // public EntityType(String aName, String aType, String aFgColor, String aBgColor,
+    // String aBorderColor)
+    // {
+    // this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
+    // aFgColor /* fgColor */, aBgColor /* bgColor */, aBorderColor /* borderColor */,
+    // Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */,
+    // null /* arcs */);
+    // }
+
     private EntityType(String aName, String aType, boolean aUnused, String aHotkey, String aFgColor,
             String aBgColor, String aBorderColor, List<String> aLabels, List<EntityType> aChildren,
             List<String> aAttributes, List<RelationType> aArcs)

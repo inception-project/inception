@@ -34,7 +34,7 @@ public final class OnClickActionParser
     {
         // No instances
     }
-    
+
     /**
      * @return String with substituted variables
      */

@@ -16,6 +16,6 @@
  * limitations under the License.
  */
 /**
- * Brat Specific implementations related to annotation, curation and correction goes here. 
+ * Brat Specific implementations related to annotation, curation and correction goes here.
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat;

@@ -52,7 +52,7 @@ public class Relation
     private String labelText;
     private String color;
     // WEBANNO EXTENSION END
-    
+
     public Relation()
     {
         // Nothing to do
@@ -85,7 +85,7 @@ public class Relation
     {
         vid = new VID(aId);
     }
-    
+
     public VID getVid()
     {
         return vid;
@@ -120,7 +120,7 @@ public class Relation
     {
         labelText = aLabelText;
     }
-    
+
     public String getLabelText()
     {
         return labelText;

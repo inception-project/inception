@@ -24,8 +24,7 @@ public class BratConfigurationResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BratConfigurationResourceReference INSTANCE = 
-            new BratConfigurationResourceReference();
+    private static final BratConfigurationResourceReference INSTANCE = new BratConfigurationResourceReference();
 
     /**
      * Gets the instance of the resource reference
