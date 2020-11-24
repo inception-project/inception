@@ -31,7 +31,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 @Order(120)
-public class CorrectionPageMenuItem implements MenuItem
+public class CorrectionPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -41,19 +42,19 @@ public class CorrectionPageMenuItem implements MenuItem
     {
         return "/correction";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/check_box.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Correction";
     }
-    
+
     /**
      * Only project admins and annotators can see this page
      */
@@ -63,7 +64,7 @@ public class CorrectionPageMenuItem implements MenuItem
         return annotationEnabeled(projectService, userRepo.getCurrentUser(),
                 WebAnnoConst.PROJECT_TYPE_CORRECTION);
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

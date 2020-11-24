@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /**
- * Provides wicket component for Brat Curation page and Classes for applying
- * a diff on annotated documents
+ * Provides wicket component for Brat Curation page and Classes for applying a diff on annotated
+ * documents
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;

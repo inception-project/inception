@@ -30,26 +30,27 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.correction.CorrectionPage;
 
 @Order(1000)
 @Component
-public class CorrectionWorkflowActionBarExtension implements ActionBarExtension
+public class CorrectionWorkflowActionBarExtension
+    implements ActionBarExtension
 {
     @Override
     public String getRole()
     {
         return DefaultWorkflowActionBarExtension.class.getName();
     }
-    
+
     @Override
     public int getPriority()
     {
         return MAX_VALUE;
     }
-    
+
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
         return aPage instanceof CorrectionPage;
     }
-    
+
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
     {
