@@ -53,19 +53,19 @@ public class DocumentListPanel
     private IModel<Project> project;
     private CollectionModel<SourceDocument> selectedDocuments;
     private ConfirmationDialog confirmationDialog;
-    
+
     public DocumentListPanel(String aId, IModel<Project> aProject)
     {
         super(aId);
-     
+
         setOutputMarkupId(true);
-        
+
         project = aProject;
         selectedDocuments = new CollectionModel<>();
 
         Form<Void> form = new Form<>("form");
         add(form);
-        
+
         overviewList = new ListMultipleChoice<>("documents");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         overviewList.setModel(selectedDocuments);
@@ -78,12 +78,12 @@ public class DocumentListPanel
 
         form.add(new LambdaAjaxButton<>("delete", this::actionDelete));
     }
-    
+
     private List<SourceDocument> listSourceDocuments()
     {
         return documentService.listSourceDocuments(project.getObject());
     }
-    
+
     private void actionDelete(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         if (selectedDocuments.getObject() == null || selectedDocuments.getObject().isEmpty()) {
@@ -91,11 +91,11 @@ public class DocumentListPanel
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
-        
+
         confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
                 .setParameters(selectedDocuments.getObject().size()));
         confirmationDialog.show(aTarget);
-        
+
         confirmationDialog.setConfirmAction((_target) -> {
             for (SourceDocument sourceDocument : selectedDocuments.getObject()) {
                 try {

@@ -66,7 +66,7 @@ class ProjectSelectionPanel
         add(createLink = new LambdaAjaxLink("create", this::actionCreate));
         MetaDataRoleAuthorizationStrategy.authorize(createLink, Component.RENDER, StringUtils.join(
                 new String[] { Role.ROLE_ADMIN.name(), Role.ROLE_PROJECT_CREATOR.name() }, ","));
-        
+
         importProjectPanel = new ProjectImportPanel("importPanel", aModel);
         add(importProjectPanel);
         authorize(importProjectPanel, Component.RENDER,

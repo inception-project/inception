@@ -99,7 +99,7 @@ public class ProjectLayersPanel
 
     public static final String MID_FEATURE_SELECTION_FORM = "featureSelectionForm";
     public static final String MID_FEATURE_DETAIL_FORM = "featureDetailForm";
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService repository;
     private @SpringBean UserDao userRepository;
@@ -113,7 +113,7 @@ public class ProjectLayersPanel
     private final FeatureDetailForm featureDetailForm;
     private final ImportLayerForm importLayerForm;
     private Select<AnnotationLayer> layerSelection;
-    
+
     private IModel<AnnotationLayer> selectedLayer;
     private IModel<AnnotationFeature> selectedFeature;
 
@@ -146,7 +146,7 @@ public class ProjectLayersPanel
     protected void onModelChanged()
     {
         super.onModelChanged();
-        
+
         layerDetailForm.setModelObject(null);
         featureDetailForm.setModelObject(null);
     }
@@ -163,16 +163,17 @@ public class ProjectLayersPanel
             add(new LambdaAjaxLink("create", _target -> {
                 AnnotationLayer layer = new AnnotationLayer();
                 layer.setProject(ProjectLayersPanel.this.getModelObject());
-                
+
                 layerDetailForm.setModelObject(layer);
                 featureDetailForm.setModelObject(null);
-                
+
                 _target.add(ProjectLayersPanel.this);
-                
+
                 // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor
                 // does not actually appear in the input field. However, using JQuery here works.
-                _target.appendJavaScript(WicketUtil.wrapInTryCatch("$('#"
-                        + layerDetailForm.getInitialFocusComponent().getMarkupId() + "').focus();"));
+                _target.appendJavaScript(WicketUtil.wrapInTryCatch(
+                        "$('#" + layerDetailForm.getInitialFocusComponent().getMarkupId()
+                                + "').focus();"));
             }));
 
             final Map<AnnotationLayer, String> colors = new HashMap<>();
@@ -191,8 +192,8 @@ public class ProjectLayersPanel
                             if (project.getId() != null) {
                                 List<AnnotationLayer> _layers = annotationService
                                         .listAnnotationLayer(project);
-                                AnnotationLayer tokenLayer = annotationService
-                                        .findLayer(project, Token.class.getName());
+                                AnnotationLayer tokenLayer = annotationService.findLayer(project,
+                                        Token.class.getName());
                                 _layers.remove(tokenLayer);
                                 for (AnnotationLayer layer : _layers) {
                                     if (layer.isBuiltIn() && layer.isEnabled()) {
@@ -232,14 +233,14 @@ public class ProjectLayersPanel
                             "color:" + colors.get(item.getModelObject()) + ";")));
                 }
             };
-            
+
             add(layerSelection.add(layers));
             layerSelection.setOutputMarkupId(true);
             layerSelection.add(OnChangeAjaxBehavior.onChange(_target -> {
                 featureDetailForm.setModelObject(null);
-                
+
                 // list and detail panel share the same model, but they are not
-                // automatically notified of updates to the model unless the 
+                // automatically notified of updates to the model unless the
                 // updates go through their respective setModelObject() calls
                 layerDetailForm.modelChanged();
 
@@ -261,13 +262,13 @@ public class ProjectLayersPanel
         public ImportLayerForm(String id)
         {
             super(id);
-            
+
             add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
             fileUpload.getConfig().showPreview(false);
             fileUpload.getConfig().showUpload(false);
             fileUpload.getConfig().showRemove(false);
             fileUpload.setRequired(true);
-            
+
             add(new LambdaAjaxButton("import", this::actionImport));
         }
 
@@ -316,7 +317,7 @@ public class ProjectLayersPanel
             Project project = ProjectLayersPanel.this.getModelObject();
             TypeSystemDescription tsd = UIMAFramework.getXMLParser()
                     .parseTypeSystemDescription(new XMLInputSource(aIS, null));
-            
+
             annotationService.importUimaTypeSystem(project, tsd);
         }
 
@@ -324,12 +325,12 @@ public class ProjectLayersPanel
         {
             User user = userRepository.getCurrentUser();
             Project project = ProjectLayersPanel.this.getModelObject();
-            
+
             String text = IOUtils.toString(aIS, "UTF-8");
 
             ExportedAnnotationLayer[] exLayers = JSONUtil.getObjectMapper().readValue(text,
                     ExportedAnnotationLayer[].class);
-            
+
             // First import the layers but without setting the attach-layers/features
             Map<String, ExportedAnnotationLayer> exLayersMap = new HashMap<>();
             Map<String, AnnotationLayer> layersMap = new HashMap<>();
@@ -338,7 +339,7 @@ public class ProjectLayersPanel
                 layersMap.put(layer.getName(), layer);
                 exLayersMap.put(layer.getName(), exLayer);
             }
-            
+
             // Second fill in the attach-layer and attach-feature information
             for (AnnotationLayer layer : layersMap.values()) {
                 ExportedAnnotationLayer exLayer = exLayersMap.get(layer.getName());
@@ -346,15 +347,15 @@ public class ProjectLayersPanel
                     layer.setAttachType(layersMap.get(exLayer.getAttachType().getName()));
                 }
                 if (exLayer.getAttachFeature() != null) {
-                    AnnotationLayer attachLayer = annotationService.findLayer(
-                            project, exLayer.getAttachType().getName());
+                    AnnotationLayer attachLayer = annotationService.findLayer(project,
+                            exLayer.getAttachType().getName());
                     AnnotationFeature attachFeature = annotationService
                             .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
                     layer.setAttachFeature(attachFeature);
                 }
                 annotationService.createLayer(layer);
             }
-            
+
             layerDetailForm.setModelObject(layersMap.get(exLayers[0].getName()));
         }
 
@@ -363,7 +364,7 @@ public class ProjectLayersPanel
         {
             Project project = ProjectLayersPanel.this.getModelObject();
             AnnotationLayer layer;
-            
+
             if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(), project)) {
                 layer = annotationService.findLayer(project, aExLayer.getName());
                 ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
@@ -372,7 +373,7 @@ public class ProjectLayersPanel
                 layer = new AnnotationLayer();
                 ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
             }
-            
+
             for (ExportedAnnotationFeature exfeature : aExLayer.getFeatures()) {
                 ExportedTagSet exTagset = exfeature.getTagSet();
                 TagSet tagSet = null;
@@ -397,7 +398,7 @@ public class ProjectLayersPanel
                 feature.setTagset(tagSet);
                 ImportUtil.setFeature(annotationService, feature, exfeature, project, aUser);
             }
-            
+
             return layer;
         }
     }
@@ -411,7 +412,7 @@ public class ProjectLayersPanel
         extends Form<AnnotationFeature>
     {
         private static final String CID_CREATE_FEATURE = "new";
-        
+
         private static final long serialVersionUID = -1L;
 
         public FeatureSelectionForm(String id, IModel<AnnotationFeature> aModel)
@@ -419,7 +420,7 @@ public class ProjectLayersPanel
             super(id, aModel);
 
             setOutputMarkupPlaceholderTag(true);
-            
+
             add(new ListChoice<AnnotationFeature>("feature")
             {
                 private static final long serialVersionUID = 1L;
@@ -440,7 +441,7 @@ public class ProjectLayersPanel
                     setNullValid(false);
                     add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
                         // list and detail panel share the same model, but they are not
-                        // automatically notified of updates to the model unless the 
+                        // automatically notified of updates to the model unless the
                         // updates go through their respective setModelObject() calls
                         featureDetailForm.modelChanged();
                         _target.add(featureDetailForm);
@@ -453,18 +454,17 @@ public class ProjectLayersPanel
                     return "";
                 }
             });
-            
+
             LambdaAjaxLink createButton = new LambdaAjaxLink(CID_CREATE_FEATURE,
                     this::actionCreateFeature);
-            createButton.add(enabledWhen(() -> 
-                    layerDetailForm.getModelObject() != null
+            createButton.add(enabledWhen(() -> layerDetailForm.getModelObject() != null
                     && !layerDetailForm.getModelObject().isBuiltIn()
                     && !layerDetailForm.getModelObject().getType().equals(CHAIN_TYPE)
-                
+
             ));
             add(createButton);
         }
-        
+
         private void actionCreateFeature(AjaxRequestTarget aTarget)
         {
             // cancel selection of feature list
@@ -474,7 +474,7 @@ public class ProjectLayersPanel
             newFeature.setLayer(layerDetailForm.getModelObject());
             newFeature.setProject(ProjectLayersPanel.this.getModelObject());
             featureDetailForm.setDefaultModelObject(newFeature);
-            
+
             aTarget.add(featureSelectionForm);
             aTarget.add(featureDetailForm);
             // AjaxRequestTarget.focusComponent does not work. It sets the focus but the cursor does
@@ -501,12 +501,12 @@ public class ProjectLayersPanel
                 return features;
             }
         }
-        
+
         @Override
         protected void onConfigure()
         {
             super.onConfigure();
-            
+
             setVisible(selectedLayer.getObject() != null
                     && nonNull(selectedLayer.getObject().getId()));
         }

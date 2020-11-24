@@ -49,38 +49,38 @@ public class GuidelinesListPanel
     private OverviewListChoice<String> overviewList;
     private IModel<Project> project;
     private IModel<String> guideline;
-    
+
     public GuidelinesListPanel(String aId, IModel<Project> aProject)
     {
         super(aId);
-     
+
         setOutputMarkupId(true);
-        
+
         project = aProject;
         guideline = Model.of();
 
         Form<Void> form = new Form<>("form");
         add(form);
-        
+
         overviewList = new OverviewListChoice<>("guidelines");
         overviewList.setModel(guideline);
         overviewList.setChoices(LambdaModel.of(this::listGuidelines));
         form.add(overviewList);
-        
+
         ConfirmationDialog confirmationDialog = new ConfirmationDialog("confirmationDialog");
         confirmationDialog.setConfirmAction(this::actionDelete);
         add(confirmationDialog);
 
-        LambdaAjaxButton<Void> delete = new LambdaAjaxButton<>("delete", (t, f) -> 
-                confirmationDialog.show(t));
+        LambdaAjaxButton<Void> delete = new LambdaAjaxButton<>("delete",
+                (t, f) -> confirmationDialog.show(t));
         form.add(delete);
     }
-    
+
     private List<String> listGuidelines()
     {
         return projectService.listGuidelines(project.getObject());
     }
-    
+
     private void actionDelete(AjaxRequestTarget aTarget)
     {
         if (guideline.getObject() == null) {
@@ -88,7 +88,7 @@ public class GuidelinesListPanel
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
-        
+
         try {
             projectService.removeGuideline(project.getObject(), guideline.getObject());
         }

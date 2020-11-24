@@ -81,6 +81,7 @@
                value="GenericWhitespace ''{0}'' is not preceded with whitespace."/>
     </module>
     
+    <!--
     <module name="Indentation">
       <property name="basicOffset" value="4"/>
       <property name="braceAdjustment" value="0"/>
@@ -90,6 +91,7 @@
       <property name="arrayInitIndent" value="8"/>
       <property name="severity" value="error"/>
     </module>
+    -->
     
     <module name="EmptyCatchBlock">
       <property name="exceptionVariableName" value="expected|ignore"/>
