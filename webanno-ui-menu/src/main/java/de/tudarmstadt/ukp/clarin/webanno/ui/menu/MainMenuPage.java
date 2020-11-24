@@ -55,29 +55,27 @@ public class MainMenuPage
     private @SpringBean MenuItemRegistry menuItemService;
 
     private ListView<MenuItem> menu;
-    
+
     public MainMenuPage()
     {
         setStatelessHint(true);
         setVersioned(false);
-        
+
         // In case we restore a saved session, make sure the user actually still exists in the DB.
         // redirect to login page (if no usr is found, admin/admin will be created)
         User user = userRepository.getCurrentUser();
         if (user == null) {
             setResponsePage(LoginPage.class);
         }
-        
+
         // if not either a curator or annotator, display warning message
-        if (
-                !annotationEnabeled(projectService, user, PROJECT_TYPE_ANNOTATION)
+        if (!annotationEnabeled(projectService, user, PROJECT_TYPE_ANNOTATION)
                 && !annotationEnabeled(projectService, user, PROJECT_TYPE_AUTOMATION)
                 && !annotationEnabeled(projectService, user, PROJECT_TYPE_CORRECTION)
-                && !curationEnabeled(projectService, user)) 
-        {
+                && !curationEnabeled(projectService, user)) {
             warn("You are not member of any projects to annotate or curate.");
         }
-        
+
         menu = new ListView<MenuItem>("menu",
                 LoadableDetachableModel.of(menuItemService::getMenuItems))
         {
