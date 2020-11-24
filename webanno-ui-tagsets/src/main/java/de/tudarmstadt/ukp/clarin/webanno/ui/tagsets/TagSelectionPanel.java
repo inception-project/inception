@@ -46,10 +46,10 @@ public class TagSelectionPanel
     public TagSelectionPanel(String id, IModel<TagSet> aTagset, IModel<Tag> aTag)
     {
         super(id, aTagset);
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         selectedTagSet = aTagset;
 
         overviewList = new OverviewListChoice<>("tag");

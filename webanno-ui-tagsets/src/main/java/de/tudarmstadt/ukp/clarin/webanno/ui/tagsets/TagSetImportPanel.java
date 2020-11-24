@@ -62,25 +62,25 @@ public class TagSetImportPanel
     private static final long serialVersionUID = 4612767288793876015L;
 
     private static final Logger LOG = LoggerFactory.getLogger(TagSetImportPanel.class);
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
-    
+
     private IModel<Project> selectedProject;
     private IModel<Preferences> preferences;
     private BootstrapFileInputField fileUpload;
 
     private AjaxCallback importCompleteAction;
-    
+
     public TagSetImportPanel(String aId, IModel<Project> aModel)
     {
         super(aId);
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         preferences = Model.of(new Preferences());
         selectedProject = aModel;
-        
+
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
 
         BootstrapSelect<String> format = new BootstrapSelect<>("format",
@@ -88,20 +88,20 @@ public class TagSetImportPanel
         form.add(format);
         format.setModelObject(JSON_FORMAT); // Set after adding to form to have access to for model
         format.setRequired(true);
-        
+
         form.add(new CheckBox("overwrite"));
-        
+
         form.add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
         fileUpload.getConfig().showPreview(false);
         fileUpload.getConfig().showUpload(false);
         fileUpload.getConfig().showRemove(false);
         fileUpload.setRequired(true);
-        
+
         form.add(new LambdaAjaxButton<>("import", this::actionImport));
-        
+
         add(form);
     }
-    
+
     private void actionImport(AjaxRequestTarget aTarget, Form<Preferences> aForm)
     {
         List<FileUpload> uploadedFiles = fileUpload.getFileUploads();
@@ -121,8 +121,8 @@ public class TagSetImportPanel
                 try {
                     tagInputStream = tagFile.getInputStream();
                     if (aForm.getModelObject().overwrite) {
-                        JsonImportUtil.importTagSetFromJsonWithOverwrite(project,
-                                tagInputStream, annotationService);
+                        JsonImportUtil.importTagSetFromJsonWithOverwrite(project, tagInputStream,
+                                annotationService);
                     }
                     else {
                         JsonImportUtil.importTagSetFromJson(project, tagInputStream,
@@ -130,8 +130,7 @@ public class TagSetImportPanel
                     }
                 }
                 catch (IOException e) {
-                    error("Error Importing TagSet "
-                            + ExceptionUtils.getRootCauseMessage(e));
+                    error("Error Importing TagSet " + ExceptionUtils.getRootCauseMessage(e));
                 }
             }
         }
@@ -141,8 +140,7 @@ public class TagSetImportPanel
                 try {
                     tagInputStream = tagFile.getInputStream();
                     String text = IOUtils.toString(tagInputStream, "UTF-8");
-                    Map<String, String> tabbedTagsetFromFile = ImportUtil
-                            .getTagSetFromFile(text);
+                    Map<String, String> tabbedTagsetFromFile = ImportUtil.getTagSetFromFile(text);
 
                     Set<String> listOfTagsFromFile = tabbedTagsetFromFile.keySet();
                     int i = 0;
@@ -165,22 +163,20 @@ public class TagSetImportPanel
                             if (annotationService.existsTagSet(tagSetName, project)) {
                                 // If overwrite is enabled
                                 if (aForm.getModelObject().overwrite) {
-                                    tagSet = annotationService.getTagSet(tagSetName,
-                                            project);
+                                    tagSet = annotationService.getTagSet(tagSetName, project);
                                     annotationService.removeAllTags(tagSet);
                                 }
                                 else {
                                     tagSet = new TagSet();
-                                    tagSet.setName(JsonImportUtil.copyTagSetName(
-                                            annotationService, tagSetName, project));
+                                    tagSet.setName(JsonImportUtil.copyTagSetName(annotationService,
+                                            tagSetName, project));
                                 }
                             }
                             else {
                                 tagSet = new TagSet();
                                 tagSet.setName(tagSetName);
                             }
-                            tagSet.setDescription(tagSetDescription
-                                    .replace("\\n", "\n"));
+                            tagSet.setDescription(tagSetDescription.replace("\\n", "\n"));
                             tagSet.setLanguage(tagsetLanguage);
                             tagSet.setProject(project);
                             annotationService.createTagSet(tagSet);
@@ -189,8 +185,7 @@ public class TagSetImportPanel
                         // to the tagset
                         else {
                             Tag tag = new Tag();
-                            tag.setDescription(tabbedTagsetFromFile.get(key).replace(
-                                    "\\n", "\n"));
+                            tag.setDescription(tabbedTagsetFromFile.get(key).replace("\\n", "\n"));
                             tag.setName(key);
                             tag.setTagSet(tagSet);
                             annotationService.createTag(tag);
@@ -199,13 +194,12 @@ public class TagSetImportPanel
                     }
                 }
                 catch (Exception e) {
-                    error("Error importing tag set: "
-                            + ExceptionUtils.getRootCauseMessage(e));
+                    error("Error importing tag set: " + ExceptionUtils.getRootCauseMessage(e));
                     LOG.error("Error importing tag set", e);
                 }
             }
         }
-        
+
         try {
             onImportComplete(aTarget);
         }
@@ -214,7 +208,7 @@ public class TagSetImportPanel
             LOG.error("Error importing tag set", e);
         }
     }
-    
+
     protected void onImportComplete(AjaxRequestTarget aTarget) throws Exception
     {
         if (importCompleteAction != null) {
@@ -228,10 +222,11 @@ public class TagSetImportPanel
         return this;
     }
 
-    static class Preferences implements Serializable
+    static class Preferences
+        implements Serializable
     {
         private static final long serialVersionUID = -8602845573913839851L;
-        
+
         String format;
         boolean overwrite;
     }

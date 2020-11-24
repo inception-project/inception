@@ -42,18 +42,18 @@ public class TagSetSelectionPanel
 
     private OverviewListChoice<TagSet> overviewList;
     private TagSetImportPanel tagSetImportPanel;
-    
+
     private IModel<Project> selectedProject;
 
     public TagSetSelectionPanel(String id, IModel<Project> aProject, IModel<TagSet> aTagset)
     {
         super(id, aProject);
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         selectedProject = aProject;
-        
+
         overviewList = new OverviewListChoice<>("tagset");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         overviewList.setModel(aTagset);
@@ -62,7 +62,7 @@ public class TagSetSelectionPanel
         add(overviewList);
 
         add(new LambdaAjaxLink("create", this::actionCreate));
-        
+
         tagSetImportPanel = new TagSetImportPanel("importPanel", selectedProject);
         tagSetImportPanel.setImportCompleteAction(target -> {
             target.add(findParent(ProjectTagSetsPanel.class));
