@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
 /**
  * Indicates that a modification to a read-only CAS was attempted.
  */
-public class WriteAccessNotPermittedException extends CasSessionException
+public class WriteAccessNotPermittedException
+    extends CasSessionException
 {
     private static final long serialVersionUID = 1134756565319074666L;
 

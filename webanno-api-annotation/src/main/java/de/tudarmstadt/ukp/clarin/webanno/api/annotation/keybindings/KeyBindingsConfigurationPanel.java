@@ -57,10 +57,10 @@ public class KeyBindingsConfigurationPanel
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService schemaService;
-    
+
     private final WebMarkupContainer keyBindingsContainer;
     private final IModel<List<KeyBinding>> keyBindings;
-    
+
     private final FeatureEditor editor;
     private final IModel<FeatureState> featureState;
 
@@ -68,9 +68,9 @@ public class KeyBindingsConfigurationPanel
             IModel<List<KeyBinding>> aKeyBindings)
     {
         super(aId, aModel);
-        
+
         keyBindings = aKeyBindings;
-        
+
         Form<KeyBinding> keyBindingForm = new Form<>("keyBindingForm",
                 CompoundPropertyModel.of(new KeyBinding()));
         add(keyBindingForm);
@@ -81,10 +81,9 @@ public class KeyBindingsConfigurationPanel
 
         // We cannot make the key-combo field a required one here because then we'd get a message
         // about keyCombo not being set when saving the entire feature details form!
-        keyBindingsContainer.add(new TextField<String>("keyCombo")
-                .add(new KeyComboValidator()));
+        keyBindingsContainer.add(new TextField<String>("keyCombo").add(new KeyComboValidator()));
         keyBindingsContainer.add(new LambdaAjaxSubmitLink<>("addKeyBinding", this::addKeyBinding));
-        
+
         AnnotationFeature feature = aModel.getObject();
         FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
         featureState = Model.of(new FeatureState(VID.NONE_ID, feature, null));
@@ -98,10 +97,10 @@ public class KeyBindingsConfigurationPanel
         editor.addFeatureUpdateBehavior();
         editor.getLabelComponent().setVisible(false);
         keyBindingsContainer.add(editor);
-        
+
         keyBindingsContainer.add(createKeyBindingsList("keyBindings", keyBindings));
     }
-    
+
     private ListView<KeyBinding> createKeyBindingsList(String aId,
             IModel<List<KeyBinding>> aKeyBindings)
     {
@@ -122,53 +121,53 @@ public class KeyBindingsConfigurationPanel
                 aItem.add(
                         new Label("value", fs.renderFeatureValue(feature, keyBinding.getValue())));
                 aItem.add(new LambdaAjaxLink("removeKeyBinding",
-                    _target -> removeKeyBinding(_target, aItem.getModelObject())));
+                        _target -> removeKeyBinding(_target, aItem.getModelObject())));
             }
         };
     }
-    
+
     public AnnotationFeature getModelObject()
     {
         return (AnnotationFeature) getDefaultModelObject();
     }
-    
+
     private void addKeyBinding(AjaxRequestTarget aTarget, Form<KeyBinding> aForm)
     {
         KeyBinding keyBinding = aForm.getModelObject();
-        
+
         if (StringUtils.isBlank(keyBinding.getKeyCombo())) {
             error("Key combo is required");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
-        
+
         // Copy value from the value editor over into the form model (key binding) and then add it
         // to the list
         AnnotationFeature feature = getModelObject();
         FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
         keyBinding.setValue(fs.unwrapFeatureValue(feature, null, featureState.getObject().value));
         keyBindings.getObject().add(keyBinding);
-        
+
         // Clear form and value editor
         aForm.setModelObject(new KeyBinding());
         featureState.getObject().setValue(null);
-        
+
         success("Key binding added. Do not forget to save the feature details!");
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(keyBindingsContainer);
     }
-    
+
     private void removeKeyBinding(AjaxRequestTarget aTarget, KeyBinding aBinding)
     {
         keyBindings.getObject().remove(aBinding);
         aTarget.add(keyBindingsContainer);
     }
-    
+
     private static class KeyComboValidator
         implements IValidator<String>
     {
         private static final long serialVersionUID = 6697292531559511021L;
-    
+
         @Override
         public void validate(IValidatable<String> aValidatable)
         {

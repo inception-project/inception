@@ -59,15 +59,15 @@ import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 public class AnnotationDocumentsExporterTest
 {
     public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
-    
+
     private RepositoryProperties repositoryProperties;
     private BackupProperties backupProperties;
     private ImportExportService importExportSerivce;
     private CasStorageService casStorageService;
-    
+
     private @Mock DocumentService documentService;
     private @Mock AnnotationSchemaService schemaService;
-    
+
     private Project project;
     private File workFolder;
     private long nextDocId = 1;
@@ -92,10 +92,10 @@ public class AnnotationDocumentsExporterTest
 
         casStorageService = new CasStorageServiceImpl(null, schemaService, repositoryProperties,
                 backupProperties);
-        
+
         importExportSerivce = new ImportExportServiceImpl(repositoryProperties,
                 asList(new XmiFormatSupport()), casStorageService, schemaService);
-        
+
         sut = new AnnotationDocumentExporter(documentService, null, importExportSerivce,
                 repositoryProperties);
     }
@@ -104,7 +104,7 @@ public class AnnotationDocumentsExporterTest
     public void thatImportingAnnotationProjectWorks_3_6_1() throws Exception
     {
         project.setMode(PROJECT_TYPE_ANNOTATION);
-        
+
         // Export the project and import it again
         List<Pair<SourceDocument, String>> imported = runImportAndFetchDocuments(new ZipFile(
                 "src/test/resources/exports/Export+Test+-+Curated+annotation+project_3_6_1.zip"));
@@ -115,30 +115,29 @@ public class AnnotationDocumentsExporterTest
         assertThat(imported).extracting(Pair::getValue)
                 .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin");
     }
-    
+
     @Test
     public void thatImportingCorrectionProjectWorks_3_6_1() throws Exception
     {
         project.setMode(PROJECT_TYPE_CORRECTION);
-        
+
         // Export the project and import it again
         List<Pair<SourceDocument, String>> imported = runImportAndFetchDocuments(new ZipFile(
                 "src/test/resources/exports/Export+Test+-+Curated+correction+project_3_6_1.zip"));
 
         // Check that the curation for the document in the project is imported
-        assertThat(imported).extracting(p -> p.getKey().getName())
-                .containsExactlyInAnyOrder("example_sentence.txt", "example_sentence.txt", 
-                        "example_sentence.txt");
+        assertThat(imported).extracting(p -> p.getKey().getName()).containsExactlyInAnyOrder(
+                "example_sentence.txt", "example_sentence.txt", "example_sentence.txt");
         // Since WebAnno 3.5.x, the CORRECTION_USER CAS is stored with the annotations
         assertThat(imported).extracting(Pair::getValue)
                 .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin", CORRECTION_USER);
     }
-    
+
     @Test
     public void thatImportingCorrectionProjectWorks_3_4_x() throws Exception
     {
         project.setMode(PROJECT_TYPE_CORRECTION);
-        
+
         // Export the project and import it again
         List<Pair<SourceDocument, String>> imported = runImportAndFetchDocuments(new ZipFile(
                 "src/test/resources/exports/Export+Test+-+Curated+correction+project_3_4_8.zip"));
@@ -149,13 +148,14 @@ public class AnnotationDocumentsExporterTest
         // Before WebAnno 3.5.x, the CORRECTION_USER CAS was stored with the curations
         assertThat(imported).extracting(Pair::getValue)
                 .containsExactlyInAnyOrder(INITIAL_CAS_PSEUDO_USER, "admin");
-    }    
+    }
+
     private List<Pair<SourceDocument, String>> runImportAndFetchDocuments(ZipFile aZipFile)
         throws Exception
     {
         // Import the project again
         ExportedProject exProject = ProjectExportServiceImpl.loadExportedProject(aZipFile);
-        
+
         // Provide source documents based on data in the exported project
         when(documentService.listSourceDocuments(any())).then(invocation -> {
             long i = 1;
@@ -167,10 +167,10 @@ public class AnnotationDocumentsExporterTest
                 doc.setProject(project);
                 docs.add(doc);
             }
-            
+
             return docs;
         });
-        
+
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         sut.importData(importRequest, project, exProject, aZipFile);
 
@@ -181,7 +181,7 @@ public class AnnotationDocumentsExporterTest
                 importedCases.add(Pair.of(doc, removeExtension(serFile.getName())));
             }
         }
-        
+
         return importedCases;
     }
 }

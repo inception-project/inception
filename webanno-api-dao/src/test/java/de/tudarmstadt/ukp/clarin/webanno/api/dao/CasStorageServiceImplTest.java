@@ -58,20 +58,20 @@ public class CasStorageServiceImplTest
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
-    
+
     @Before
     public void setup() throws Exception
     {
         casStorageSession = CasStorageSession.open();
-        
+
         backupProperties = new BackupProperties();
-        
+
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
-        
+
         sut = new CasStorageServiceImpl(null, null, repositoryProperties, backupProperties);
     }
-    
+
     @After
     public void tearDown()
     {
@@ -86,38 +86,38 @@ public class CasStorageServiceImplTest
         JCas templateCas = JCasFactory.createText("This is a test");
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, templateCas.getCas());
         String user = "test";
-        
+
         sut.writeCas(doc, templateCas.getCas(), user);
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
-        
+
         // Actual test
         CAS cas = sut.readCas(doc, user);
         assertThat(cas.getDocumentText()).isEqualTo(templateCas.getDocumentText());
-        
+
         sut.deleteCas(doc, user);
         assertThat(sut.getCasFile(doc, user)).doesNotExist();
         assertThat(sut.existsCas(doc, user)).isFalse();
         assertThat(casStorageSession.contains(cas)).isFalse();
     }
-    
+
     @Test
     public void testCasMetadataGetsCreated() throws Exception
     {
         List<TypeSystemDescription> typeSystems = new ArrayList<>();
         typeSystems.add(createTypeSystemDescription());
         typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
-        
+
         JCas cas = JCasFactory.createJCas(mergeTypeSystems(typeSystems));
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas.getCas());
-        
+
         SourceDocument doc = makeSourceDocument(1l, 1l);
         String user = "test";
-        
+
         sut.writeCas(doc, cas.getCas(), user);
-        
+
         JCas cas2 = sut.readCas(doc, user).getJCas();
-        
+
         List<CASMetadata> cmds = new ArrayList<>(select(cas2, CASMetadata.class));
         assertThat(cmds).hasSize(1);
         assertThat(cmds.get(0).getProjectId()).isEqualTo(doc.getProject().getId());
@@ -125,7 +125,7 @@ public class CasStorageServiceImplTest
         assertThat(cmds.get(0).getLastChangedOnDisk())
                 .isEqualTo(sut.getCasTimestamp(doc, user).get());
     }
-    
+
     @Test
     public void testReadOrCreateCas() throws Exception
     {
@@ -134,16 +134,16 @@ public class CasStorageServiceImplTest
         String user = "test";
         String text = "This is a test";
         createCasFile(doc, user, text);
-        
+
         // Actual test
         JCas cas = sut.readCas(doc, user).getJCas();
         assertThat(cas.getDocumentText()).isEqualTo(text);
-        
+
         sut.deleteCas(doc, user);
         assertThat(sut.getCasFile(doc, user)).doesNotExist();
         assertThat(sut.existsCas(doc, user)).isFalse();
     }
-     
+
     @Test
     public void testThatLayerChangeEventInvalidatesCachedCas() throws Exception
     {
@@ -154,7 +154,7 @@ public class CasStorageServiceImplTest
             String text = "This is a test";
             createCasFile(doc, user, text);
         }
-        
+
         // Actual test
         int casIdentity1;
         try (CasStorageSession session = openNested(true)) {
@@ -170,13 +170,13 @@ public class CasStorageServiceImplTest
 
         sut.beforeLayerConfigurationChanged(
                 new LayerConfigurationChangedEvent(this, doc.getProject()));
-        
+
         int casIdentity3;
         try (CasStorageSession session = openNested(true)) {
             JCas cas = sut.readCas(doc, user).getJCas();
             casIdentity3 = System.identityHashCode(cas);
         }
-        
+
         assertThat(casIdentity1)
                 .as("Getting the CAS a second time returns the same instance from memory")
                 .isEqualTo(casIdentity2);
@@ -184,7 +184,7 @@ public class CasStorageServiceImplTest
                 .as("After a type system change event must return a different CAS instance")
                 .isNotEqualTo(casIdentity3);
     }
-    
+
     private JCas createCasFile(SourceDocument doc, String user, String text)
         throws CASException, CasSessionException, IOException
     {
@@ -198,19 +198,19 @@ public class CasStorageServiceImplTest
         }, EXCLUSIVE_WRITE_ACCESS).getJCas();
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
-        
+
         return casTemplate;
     }
-    
+
     private SourceDocument makeSourceDocument(long aProjectId, long aDocumentId)
     {
         Project project = new Project();
         project.setId(aProjectId);
-        
+
         SourceDocument doc = new SourceDocument();
         doc.setProject(project);
         doc.setId(aDocumentId);
-        
+
         return doc;
     }
 }

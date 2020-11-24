@@ -72,10 +72,10 @@ public class AnnotatorStateImpl
      * The source document the to be annotated
      */
     private SourceDocument document;
-    
+
     // This is being used in the action bar paging area to indicate the maximum number of units
     private int documentIndex = -1;
-    
+
     // This is being used in the action bar paging area to indicate the maximum number of units
     private int numberOfDocuments = -1;
 
@@ -100,13 +100,13 @@ public class AnnotatorStateImpl
      * The index of the unit an action occurred (selection, modification, clicking).
      */
     private int focusUnitIndex;
-    
+
     /**
      * The index of the first visible unit in the display window.
      */
     // This is being used in the action bar paging area to indicate the maximum number of units
     private int firstVisibleUnitIndex;
-    
+
     /**
      * The index of the last visible unit in the display window.
      */
@@ -120,7 +120,7 @@ public class AnnotatorStateImpl
     private int unitCount;
 
     private final List<FeatureState> featureModels = new ArrayList<>();
-    
+
     /**
      * Constraints object from rule file
      */
@@ -154,7 +154,7 @@ public class AnnotatorStateImpl
 
     // Text field to capture key-bindings for forward annotations
     private String forwardAnno;
-    
+
     // the default annotation layer
     private AnnotationLayer defaultAnnotationLayer;
 
@@ -166,15 +166,15 @@ public class AnnotatorStateImpl
 
     // User action while annotating on document
     private String userAction;
-    
+
     private Long annotationDocumentTimestamp;
-    
+
     private PagingStrategy pagingStrategy;
-    
+
     private List<Unit> visibleUnits;
-    
+
     private Map<AnnotatorStateMetaDataKey<?>, Object> metaData = new HashMap<>();
-    
+
     public AnnotatorStateImpl(Mode aMode)
     {
         mode = aMode;
@@ -218,19 +218,19 @@ public class AnnotatorStateImpl
     {
         projectLocked = aFlag;
     }
-    
+
     @Override
     public boolean isProjectLocked()
     {
         return projectLocked;
     }
-    
+
     @Override
     public ScriptDirection getScriptDirection()
     {
         return scriptDirection;
     }
-    
+
     @Override
     public void toggleScriptDirection()
     {
@@ -259,13 +259,13 @@ public class AnnotatorStateImpl
     {
         return documentIndex;
     }
-    
+
     @Override
     public int getNumberOfDocuments()
     {
         return numberOfDocuments;
     }
-    
+
     @Override
     public void setDocument(SourceDocument aDocument, List<SourceDocument> aDocuments)
     {
@@ -301,14 +301,14 @@ public class AnnotatorStateImpl
     {
         setPageBegin(aFirstVisibleUnit.getCAS(), aFirstVisibleUnit.getBegin());
     }
-    
+
     @Override
     public void setPageBegin(CAS aCas, int aOffset)
     {
         PagingStrategy ps = getPagingStrategy();
-        
-        setVisibleUnits(ps.unitsStartingAtOffset(aCas, aOffset,
-                getPreferences().getWindowSize()), ps.unitCount(aCas));        
+
+        setVisibleUnits(ps.unitsStartingAtOffset(aCas, aOffset, getPreferences().getWindowSize()),
+                ps.unitCount(aCas));
     }
 
     @Override
@@ -319,37 +319,34 @@ public class AnnotatorStateImpl
         firstVisibleUnitIndex = aUnits.get(0).getIndex();
         lastVisibleUnitIndex = aUnits.get(aUnits.size() - 1).getIndex();
         focusUnitIndex = firstVisibleUnitIndex;
-        
+
         int newWindowBeginOffset = aUnits.get(0).getBegin();
         int newWindowEndOffset = aUnits.get(aUnits.size() - 1).getEnd();
-        if (
-                windowBeginOffset != newWindowBeginOffset || 
-                windowEndOffset != newWindowEndOffset
-        ) {
+        if (windowBeginOffset != newWindowBeginOffset || windowEndOffset != newWindowEndOffset) {
             windowBeginOffset = newWindowBeginOffset;
             windowEndOffset = newWindowEndOffset;
             fireViewStateChanged();
         }
     }
-    
+
     @Override
     public List<Unit> getVisibleUnits()
     {
         return visibleUnits;
     }
-    
+
     @Override
     public int getWindowBeginOffset()
     {
         return windowBeginOffset;
     }
-    
+
     @Override
     public int getWindowEndOffset()
     {
         return windowEndOffset;
     }
-    
+
     @Override
     public List<AnnotationLayer> getAnnotationLayers()
     {
@@ -360,13 +357,12 @@ public class AnnotatorStateImpl
     public void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers)
     {
         annotationLayers = unmodifiableList(new ArrayList<>(aAnnotationLayers));
-        
+
         // Make sure the currently selected layer is actually visible/exists
         if (!annotationLayers.contains(selectedAnnotationLayer)) {
             selectedAnnotationLayer = annotationLayers.stream()
-                .filter(layer -> layer.getType().equals(WebAnnoConst.SPAN_TYPE))
-                .findFirst()
-                .orElse(null);
+                    .filter(layer -> layer.getType().equals(WebAnnoConst.SPAN_TYPE)).findFirst()
+                    .orElse(null);
             defaultAnnotationLayer = selectedAnnotationLayer;
         }
     }
@@ -474,7 +470,7 @@ public class AnnotatorStateImpl
     {
         return lastVisibleUnitIndex;
     }
-    
+
     @Override
     public int getUnitCount()
     {
@@ -529,7 +525,7 @@ public class AnnotatorStateImpl
             setRememberedSpanFeatures(featureModels);
         }
     }
-    
+
     @Override
     public void clearRememberedFeatures()
     {
@@ -552,7 +548,7 @@ public class AnnotatorStateImpl
         windowBeginOffset = 0;
         windowEndOffset = 0;
         annotationDocumentTimestamp = null;
-        
+
         fireViewStateChanged();
     }
 
@@ -576,28 +572,29 @@ public class AnnotatorStateImpl
         if (armedFeatureState == null) {
             return false;
         }
-        
+
         return Objects.equals(aState.vid, armedFeatureState.vid)
                 && Objects.equals(aState.feature, armedFeatureState.feature) && aIndex == armedSlot;
     }
-    
+
     /**
-     *  Re-render all slots to de-select all slots that are not armed anymore
+     * Re-render all slots to de-select all slots that are not armed anymore
      */
-    private void rerenderSlots() {
+    private void rerenderSlots()
+    {
         RequestCycle requestCycle = RequestCycle.get();
-        
+
         if (requestCycle == null) {
             return;
         }
-        
+
         Optional<IPageRequestHandler> handler = requestCycle.find(IPageRequestHandler.class);
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();
             page.send(page, BREADTH, new RenderSlotsEvent(
                     requestCycle.find(IPartialPageRequestHandler.class).orElse(null)));
         }
-    } 
+    }
 
     @Override
     public void clearArmedSlot()
@@ -627,7 +624,7 @@ public class AnnotatorStateImpl
     {
         return armedSlot;
     }
-    
+
     @Override
     public List<FeatureState> getFeatureStates()
     {
@@ -672,8 +669,7 @@ public class AnnotatorStateImpl
     @Override
     public boolean isUserViewingOthersWork(User aCurrentUser)
     {
-        return !user.getUsername().equals(CURATION_USER) && 
-                !user.equals(aCurrentUser);
+        return !user.getUsername().equals(CURATION_USER) && !user.equals(aCurrentUser);
     }
 
     @SuppressWarnings("unchecked")
@@ -695,11 +691,11 @@ public class AnnotatorStateImpl
     private void fireViewStateChanged()
     {
         RequestCycle requestCycle = RequestCycle.get();
-        
+
         if (requestCycle == null) {
             return;
         }
-        
+
         Optional<IPageRequestHandler> handler = requestCycle.find(IPageRequestHandler.class);
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();

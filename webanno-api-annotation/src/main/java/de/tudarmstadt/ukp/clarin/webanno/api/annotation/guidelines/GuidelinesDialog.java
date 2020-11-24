@@ -32,11 +32,11 @@ public class GuidelinesDialog
     private static final long serialVersionUID = 671214149298791793L;
 
     private IModel<AnnotatorState> state;
-    
+
     public GuidelinesDialog(String id, final IModel<AnnotatorState> aModel)
     {
         super(id);
-        
+
         state = aModel;
 
         setOutputMarkupId(true);

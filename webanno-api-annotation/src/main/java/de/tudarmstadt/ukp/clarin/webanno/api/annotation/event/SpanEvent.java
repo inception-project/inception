@@ -26,7 +26,7 @@ public abstract class SpanEvent
     extends AnnotationEvent
 {
     private static final long serialVersionUID = 4408347442575210554L;
-    
+
     private final AnnotationFS annotation;
 
     public SpanEvent(Object aSource, SourceDocument aDocument, String aUser, AnnotationLayer aLayer,

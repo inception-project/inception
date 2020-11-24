@@ -40,8 +40,7 @@ public final class CasPersistenceUtils
         // No instances
     }
 
-    public static void writeSerializedCas(CAS aCas, File aFile)
-        throws IOException
+    public static void writeSerializedCas(CAS aCas, File aFile) throws IOException
     {
         FileUtils.forceMkdir(aFile.getParentFile());
 
@@ -51,8 +50,7 @@ public final class CasPersistenceUtils
         }
     }
 
-    public static void readSerializedCas(CAS aCas, File aFile)
-        throws IOException
+    public static void readSerializedCas(CAS aCas, File aFile) throws IOException
     {
         try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
             CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();

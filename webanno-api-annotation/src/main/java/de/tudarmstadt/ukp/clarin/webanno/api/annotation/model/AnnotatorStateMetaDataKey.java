@@ -38,5 +38,5 @@ public abstract class AnnotatorStateMetaDataKey<T>
     {
         return aObj != null && getClass().equals(aObj.getClass());
     }
-    
+
 }

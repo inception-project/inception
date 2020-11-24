@@ -38,7 +38,7 @@ public interface LayerBehavior
      * @return whether the given layer is provided by the current layer support.
      */
     boolean accepts(LayerSupport<?, ?> aLayerType);
-    
+
     /**
      * Check if all annotations of this layer conform with the behavior configuration. This is
      * usually called when a document is marked as finished to prevent invalid annotations ending up

@@ -45,8 +45,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- * WebAnno 3.3.0 and 3.3.1 fail to set the "attach feature" during import. This fix takes care
- * of restoring the missing information by setting the "attach feature":
+ * WebAnno 3.3.0 and 3.3.1 fail to set the "attach feature" during import. This fix takes care of
+ * restoring the missing information by setting the "attach feature":
  * 
  * <ul>
  * <li>for "Dependency" layers to the "pos" feature of the "Token" layer
@@ -109,29 +109,29 @@ public class FixAttachFeature330
     private void doMigration()
     {
         long start = System.currentTimeMillis();
-        
+
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("migrationRoot");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-        
+
         TransactionStatus status = null;
         try {
             status = txManager.getTransaction(def);
 
             for (Project project : projectService.listProjects()) {
                 try {
-                    AnnotationLayer tokenLayer = annotationSchemaService.findLayer(
-                            project, Token.class.getName());
-                    
+                    AnnotationLayer tokenLayer = annotationSchemaService.findLayer(project,
+                            Token.class.getName());
+
                     // Set attach-feature of Dependency layer to Token.pos if necessary
                     fix(project, Dependency.class, RELATION_TYPE, tokenLayer, "pos");
-    
+
                     // Set attach-feature of POS layer to Token.pos if necessary
                     fix(project, POS.class, SPAN_TYPE, tokenLayer, "pos");
-    
+
                     // Set attach-feature of Lemma layer to Token.lemma if necessary
                     fix(project, Lemma.class, SPAN_TYPE, tokenLayer, "lemma");
-    
+
                     // Set attach-feature of MorphologicalFeatures layer to Token.morph if necessary
                     fix(project, MorphologicalFeatures.class, SPAN_TYPE, tokenLayer, "morph");
                 }
@@ -142,7 +142,7 @@ public class FixAttachFeature330
                     log.warn("Project {} does not seem to include a Token layer!", project);
                 }
             }
-            
+
             txManager.commit(status);
         }
         finally {
@@ -150,11 +150,11 @@ public class FixAttachFeature330
                 txManager.rollback(status);
             }
         }
-        
+
         log.info("Migration [" + getClass().getSimpleName() + "] took {}ms",
                 System.currentTimeMillis() - start);
     }
-    
+
     private void fix(Project aProject, Class<? extends TOP> aLayer, String aLayerType,
             AnnotationLayer aTokenLayer, String aFeature)
     {
@@ -163,11 +163,11 @@ public class FixAttachFeature330
 
             if (layer.getAttachFeature() == null) {
                 layer.setAttachFeature(annotationSchemaService.getFeature(aFeature, aTokenLayer));
-                log.info("DATABASE UPGRADE PERFORMED: Fixed attach-feature of layer "
+                log.info(
+                        "DATABASE UPGRADE PERFORMED: Fixed attach-feature of layer "
                                 + "[{}] ({}) in project [{}] ({})",
                         layer.getUiName(), layer.getId(), aProject.getName(), aProject.getId());
             }
         }
     }
 }
-

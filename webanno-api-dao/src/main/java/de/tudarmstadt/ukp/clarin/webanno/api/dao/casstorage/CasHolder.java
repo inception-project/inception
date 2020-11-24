@@ -29,7 +29,7 @@ import org.apache.uima.cas.CAS;
 public class CasHolder
 {
     private final CasKey key;
-    
+
     private CAS cas;
     private Exception exception;
     private boolean typeSystemOutdated;
@@ -39,7 +39,7 @@ public class CasHolder
     {
         key = aKey;
     }
-    
+
     public CasHolder(CasKey aKey, Exception aException)
     {
         key = aKey;
@@ -53,12 +53,12 @@ public class CasHolder
         setCas(aCas);
         exception = null;
     }
-    
+
     public CasKey getKey()
     {
         return key;
     }
-    
+
     public boolean isCasSet()
     {
         return cas != null;
@@ -69,14 +69,14 @@ public class CasHolder
         if (cas == null) {
             throw new IllegalStateException("Trying to get CAS before it was set");
         }
-        
+
         return cas;
     }
 
     public void setCas(CAS aCas)
     {
         Validate.notNull(aCas, "CAS cannot be null");
-        
+
         cas = aCas;
     }
 
@@ -89,7 +89,7 @@ public class CasHolder
     {
         exception = aException;
     }
-    
+
     public synchronized boolean isTypeSystemOutdated()
     {
         return typeSystemOutdated;
@@ -100,16 +100,16 @@ public class CasHolder
         typeSystemOutdated = aTypeSystemOutdated;
     }
 
-    public synchronized  void setDeleted(boolean aDeleted)
+    public synchronized void setDeleted(boolean aDeleted)
     {
         deleted = aDeleted;
     }
-    
-    public synchronized  boolean isDeleted()
+
+    public synchronized boolean isDeleted()
     {
         return deleted;
     }
-    
+
     public static CasHolder of(CasKey aKey, SupplierThrowingException<CAS> aSupplier)
     {
         try {
@@ -119,14 +119,15 @@ public class CasHolder
             return new CasHolder(aKey, e);
         }
     }
-    
+
     @FunctionalInterface
     public static interface SupplierThrowingException<V>
     {
         V get() throws Exception;
     }
-    
-    public String getCasHashCode() {
+
+    public String getCasHashCode()
+    {
         if (cas != null) {
             return String.valueOf(cas.hashCode());
         }
@@ -142,6 +143,5 @@ public class CasHolder
                 .append("deleted", deleted).append("typeSystemOutdated", typeSystemOutdated)
                 .toString();
     }
-    
-    
+
 }

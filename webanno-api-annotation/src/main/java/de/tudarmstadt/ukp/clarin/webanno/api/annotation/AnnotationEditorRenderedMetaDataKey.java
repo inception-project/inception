@@ -25,7 +25,6 @@ public class AnnotationEditorRenderedMetaDataKey
     extends MetaDataKey<Set<String>>
 {
     private static final long serialVersionUID = 102615176759478581L;
-    
-    public final static AnnotationEditorRenderedMetaDataKey INSTANCE = 
-            new AnnotationEditorRenderedMetaDataKey();
+
+    public final static AnnotationEditorRenderedMetaDataKey INSTANCE = new AnnotationEditorRenderedMetaDataKey();
 }

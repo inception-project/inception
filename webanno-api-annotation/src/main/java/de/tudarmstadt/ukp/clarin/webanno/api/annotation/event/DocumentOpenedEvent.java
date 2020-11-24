@@ -26,14 +26,14 @@ public class DocumentOpenedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = -2739175937794842083L;
-    
+
     private final CAS cas;
     private final SourceDocument document;
     // user who owns/annotates the opened document
     private final String annotator;
     // user who opened the document
     private final String opener;
-    
+
     public DocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument,
             String aAnnotator, String aOpener)
     {
@@ -43,22 +43,22 @@ public class DocumentOpenedEvent
         annotator = aAnnotator;
         opener = aOpener;
     }
-    
+
     public CAS getCas()
     {
         return cas;
     }
-    
+
     public SourceDocument getDocument()
     {
         return document;
     }
-    
+
     public String getUser()
     {
         return opener;
     }
-    
+
     public String getAnnotator()
     {
         return annotator;

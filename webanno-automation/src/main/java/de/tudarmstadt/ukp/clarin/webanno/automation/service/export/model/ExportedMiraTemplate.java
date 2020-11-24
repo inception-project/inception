@@ -122,5 +122,4 @@ public class ExportedMiraTemplate
         this.result = result;
     }
 
-
 }

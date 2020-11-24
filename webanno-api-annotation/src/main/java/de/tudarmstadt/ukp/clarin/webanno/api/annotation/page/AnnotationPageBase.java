@@ -66,7 +66,7 @@ public abstract class AnnotationPageBase
     private @SpringBean DocumentService documentService;
     private @SpringBean UserPreferencesService userPreferenceService;
     private @SpringBean UserDao userRepository;
-    
+
     public AnnotationPageBase()
     {
         super();
@@ -133,7 +133,7 @@ public abstract class AnnotationPageBase
             return false;
         }
     }
-    
+
     /**
      * Show the next document if it exists, starting in a certain begin offset
      */
@@ -153,7 +153,7 @@ public abstract class AnnotationPageBase
             state.setFirstVisibleUnit(selectSentenceCovering(cas, aBegin));
             state.setFocusUnitIndex(getSentenceNumber(cas, aBegin));
         }
-        
+
         actionRefreshDocument(aTarget);
     }
 
@@ -169,9 +169,9 @@ public abstract class AnnotationPageBase
     public abstract List<SourceDocument> getListOfDocs();
 
     public abstract CAS getEditorCas() throws IOException;
-    
+
     public abstract void writeEditorCas(CAS aCas) throws IOException, AnnotationException;
-    
+
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
@@ -188,18 +188,18 @@ public abstract class AnnotationPageBase
 
     /**
      * Checks if all required features on all annotations are set. If a required feature value is
-     * missing, then the method scrolls to that location and schedules a re-rendering. In such
-     * a case, an {@link IllegalStateException} is thrown.
+     * missing, then the method scrolls to that location and schedules a re-rendering. In such a
+     * case, an {@link IllegalStateException} is thrown.
      */
     protected void validateRequiredFeatures(AjaxRequestTarget aTarget, CAS aCas,
             TypeAdapter aAdapter)
     {
         AnnotatorState state = getModelObject();
-        
+
         CAS editorCas = aCas;
         AnnotationLayer layer = aAdapter.getLayer();
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-        
+
         // If no feature is required, then we can skip the whole procedure
         if (features.stream().allMatch((f) -> !f.isRequired())) {
             return;
@@ -232,7 +232,7 @@ public abstract class AnnotationPageBase
             }
         }
     }
-    
+
     public void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = getModelObject();
@@ -242,52 +242,52 @@ public abstract class AnnotationPageBase
                 // about fixing annotations on disabled layers.
                 continue;
             }
-            
+
             if (ValidationMode.NEVER.equals(layer.getValidationMode())) {
                 // If validation is disabled, then skip it
                 continue;
             }
-            
+
             TypeAdapter adapter = annotationService.getAdapter(layer);
-            
+
             validateRequiredFeatures(aTarget, aCas, adapter);
-            
+
             List<Pair<LogMessage, AnnotationFS>> messages = adapter.validate(aCas);
             if (!messages.isEmpty()) {
                 LogMessage message = messages.get(0).getLeft();
                 AnnotationFS fs = messages.get(0).getRight();
-                
+
                 // Find the sentence that contains the annotation with the missing
                 // required feature value and put this sentence into the focus
                 AnnotationFS s = WebAnnoCasUtil.selectSentenceCovering(aCas, fs.getBegin());
                 state.setFirstVisibleUnit(s);
                 actionRefreshDocument(aTarget);
-                
+
                 // Inform the user
                 throw new IllegalStateException(
                         "Document cannot be marked as finished. Annotation with ID ["
-                                + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
-                                + layer.getUiName() + "] is invalid: " + message.getMessage());
+                                + WebAnnoCasUtil.getAddr(fs) + "] on layer [" + layer.getUiName()
+                                + "] is invalid: " + message.getMessage());
             }
         }
     }
-    
+
     /**
      * Load the user preferences. A side-effect of this method is that the active annotation layer
-     * is refreshed based on the visibility preferences and based on the project to which the 
+     * is refreshed based on the visibility preferences and based on the project to which the
      * document being edited belongs.
      */
     protected void loadPreferences() throws BeansException, IOException
     {
         AnnotatorState state = getModelObject();
-        PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
-                state, state.getUser().getUsername());
+        PreferencesUtil.loadPreferences(userPreferenceService, annotationService, state,
+                state.getUser().getUsername());
     }
-    
+
     public void ensureIsEditable() throws NotEditableException
     {
         AnnotatorState state = getModelObject();
-        
+
         if (state.getDocument() == null) {
             throw new NotEditableException("No document selected");
         }
@@ -295,9 +295,9 @@ public abstract class AnnotationPageBase
         if (state.getMode().equals(CURATION)) {
             if (state.getDocument().getState().equals(CURATION_FINISHED)) {
                 throw new NotEditableException("Curation is already finished. You can put it back "
-                                + "into progress via the monitoring page.");
+                        + "into progress via the monitoring page.");
             }
-            
+
             return;
         }
 
@@ -312,20 +312,20 @@ public abstract class AnnotationPageBase
                     "Viewing another users annotations - document is read-only!");
         }
     }
-    
+
     public boolean isEditable()
     {
         AnnotatorState state = getModelObject();
-        
+
         if (state.getDocument() == null) {
             return false;
         }
-        
+
         // If curating, then it is editable unless the curation is finished
         if (state.getMode().equals(CURATION)) {
             return !state.getDocument().getState().equals(CURATION_FINISHED);
         }
-        
+
         // If annotating normally, then it is editable unless marked as finished and unless
         // viewing another users annotations
         return !documentService.isAnnotationFinished(state.getDocument(), state.getUser())

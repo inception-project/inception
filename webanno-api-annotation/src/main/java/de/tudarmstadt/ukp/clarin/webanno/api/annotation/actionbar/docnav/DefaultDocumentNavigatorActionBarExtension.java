@@ -27,25 +27,26 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
 @Order(0)
 @Component
-public class DefaultDocumentNavigatorActionBarExtension implements ActionBarExtension
+public class DefaultDocumentNavigatorActionBarExtension
+    implements ActionBarExtension
 {
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
     {
         return new DocumentNavigator(aId, aPage);
     }
-    
+
     @Override
     public void onInitialize(AnnotationPageBase aPage)
     {
         ActionBarExtension.super.onInitialize(aPage);
-        
+
         aPage.getFooterItems().getObject().stream()
                 .anyMatch(component -> component instanceof OpenDocumentDialog);
-        
+
         // Open the dialog if no document has been selected.
         aPage.add(new AutoOpenDialogBehavior());
-        
+
         // We put the dialog into the page footer since this is presently the only place where we
         // can dynamically add stuff to the page. We cannot add simply to the action bar (i.e.
         // DocumentNavigator) because the action bar only shows *after* a document has been
@@ -55,7 +56,7 @@ public class DefaultDocumentNavigatorActionBarExtension implements ActionBarExte
         OpenDocumentDialog openDocumentsModal = createOpenDocumentsDialog("item", aPage);
         aPage.addToFooter(openDocumentsModal);
     }
-    
+
     protected OpenDocumentDialog createOpenDocumentsDialog(String aId, AnnotationPageBase aPage)
     {
         return new OpenDocumentDialog(aId, aPage.getModel(), aPage.getAllowedProjects(), null);

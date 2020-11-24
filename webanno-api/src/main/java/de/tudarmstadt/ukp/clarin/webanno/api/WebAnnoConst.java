@@ -40,7 +40,7 @@ public class WebAnnoConst
     public static final String COREFERENCE = "coreference";
     public static final String COREFRELTYPE = "coreference type";
     public static final String LEMMA = "lemma";
-    
+
     public static final String FEAT_REL_TARGET = "Dependent";
     public static final String FEAT_REL_SOURCE = "Governor";
 
@@ -61,11 +61,11 @@ public class WebAnnoConst
     public static final String CURATION_USER = "CURATION_USER";
     public static final String CORRECTION_USER = "CORRECTION_USER";
     public static final String INITIAL_CAS_PSEUDO_USER = "INITIAL_CAS";
-    
+
     public static final String PROJECT_TYPE_ANNOTATION = "annotation";
     public static final String PROJECT_TYPE_AUTOMATION = "automation";
     public static final String PROJECT_TYPE_CORRECTION = "correction";
-    
+
     public static final List<String> RESTRICTED_FEATURE_NAMES = new ArrayList<String>(Arrays.asList(
             "address", "begin", "end", "coveredText", "booleanValue", "doubleValue", "byteValue",
             "CAS", "CASImpl", "class", "featureValue", "floatValue", "longValue", "lowLevelCas",
@@ -73,7 +73,8 @@ public class WebAnnoConst
     {
 
         private static final long serialVersionUID = -8547798549706734147L;
-        //Implement case-insensitive string comparison
+
+        // Implement case-insensitive string comparison
         @Override
         public boolean contains(Object o)
         {

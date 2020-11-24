@@ -26,6 +26,5 @@ import org.apache.uima.cas.CAS;
 public interface CasProvider
     extends Serializable
 {
-    CAS get()
-        throws IOException;
+    CAS get() throws IOException;
 }

@@ -36,23 +36,20 @@ public class WebAnnoCasUtilTest
     public void thatCreateDocumentMetadataUpgradesExistingDocumentAnnotation() throws Exception
     {
         TypeSystemDescription tsd = createTypeSystemDescription();
-        
+
         CAS cas = getRealCas(createCas(tsd));
-        
+
         assertThat(cas.select(DocumentAnnotation.class).asList())
-                .as("CAS has no DocumentAnnotation")
-                .isEmpty();
-        
+                .as("CAS has no DocumentAnnotation").isEmpty();
+
         cas.setDocumentLanguage("en");
-        
+
         assertThat(cas.select(DocumentAnnotation.class).asList())
                 .as("CAS initialized with DocumentAnnotation")
                 .extracting(fs -> fs.getType().getName())
                 .containsExactly(TYPE_NAME_DOCUMENT_ANNOTATION);
-        assertThat(cas.select(DocumentAnnotation.class).asList())
-                .as("Language has been set")
-                .extracting(DocumentAnnotation::getLanguage)
-                .containsExactly("en");
+        assertThat(cas.select(DocumentAnnotation.class).asList()).as("Language has been set")
+                .extracting(DocumentAnnotation::getLanguage).containsExactly("en");
 
         WebAnnoCasUtil.createDocumentMetadata(cas);
 
@@ -60,9 +57,7 @@ public class WebAnnoCasUtilTest
                 .as("DocumentAnnotation has been upgraded to DocumentMetaData")
                 .extracting(fs -> fs.getType().getName())
                 .containsExactly(DocumentMetaData.class.getName());
-        assertThat(cas.select(DocumentAnnotation.class).asList())
-                .as("Language survived upgrade")
-                .extracting(DocumentAnnotation::getLanguage)
-                .containsExactly("en");
+        assertThat(cas.select(DocumentAnnotation.class).asList()).as("Language survived upgrade")
+                .extracting(DocumentAnnotation::getLanguage).containsExactly("en");
     }
 }

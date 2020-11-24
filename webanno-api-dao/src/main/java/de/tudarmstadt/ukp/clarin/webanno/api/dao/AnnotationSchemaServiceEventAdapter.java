@@ -32,13 +32,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 public class AnnotationSchemaServiceEventAdapter
 {
     private @Autowired AnnotationSchemaService service;
-    
+
     @EventListener
-    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
-        throws Exception
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws Exception
     {
         Project project = aEvent.getProject();
-        
+
         for (AnnotationFeature feature : service.listAnnotationFeature(project)) {
             service.removeAnnotationFeature(feature);
         }

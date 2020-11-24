@@ -37,27 +37,27 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 public class CasPersistenceUtilsTest
 {
     public @Rule TemporaryFolder testFolder = new TemporaryFolder();
-    
+
     {
         System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
     }
-    
+
     @Test
     public void thatDocumentAnnotationIsNotDuplicatedDuringLoad() throws Exception
     {
         CAS cas = CasFactory.createCas();
-        
+
         cas.setDocumentLanguage("en");
-        
+
         DocumentMetaData dmd = DocumentMetaData.create(cas);
         dmd.setLanguage("en");
-        
+
         File file = testFolder.newFile();
-        
+
         CasPersistenceUtils.writeSerializedCas(cas, file);
-        
+
         CAS cas2 = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        
+
         CasPersistenceUtils.readSerializedCas(cas2, file);
 
         assertThat((AnnotationFS) cas2.getDocumentAnnotation())

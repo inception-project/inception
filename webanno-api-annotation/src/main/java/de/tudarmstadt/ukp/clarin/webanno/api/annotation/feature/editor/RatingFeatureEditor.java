@@ -38,34 +38,34 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEdi
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 
 public class RatingFeatureEditor
-        extends FeatureEditor
+    extends FeatureEditor
 {
     private static final long serialVersionUID = 9112762779124263198L;
-    
+
     private final RadioGroup<Integer> field;
-    
+
     public RatingFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             List<Integer> aRange)
     {
         super(aId, aItem, aModel);
-        
+
         field = new RadioGroup<>("group", new PropertyModel<>(aModel, "value"));
         field.add(createFeaturesList(aRange));
         add(field);
     }
-    
+
     @Override
     public RadioGroup<Integer> getFocusComponent()
     {
         return field;
     }
-    
+
     private ListView<Integer> createFeaturesList(List<Integer> range)
     {
         return new ListView<Integer>("radios", range)
         {
             private static final long serialVersionUID = 6856342528153905386L;
-            
+
             @Override
             protected void populateItem(ListItem<Integer> item)
             {
@@ -75,7 +75,7 @@ public class RatingFeatureEditor
             }
         };
     }
-    
+
     @Override
     public void addFeatureUpdateBehavior()
     {

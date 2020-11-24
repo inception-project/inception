@@ -55,7 +55,7 @@ public abstract class AnnotationEditorBase
     extends Panel
 {
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationEditorBase.class);
-    
+
     private static final long serialVersionUID = 8637373389151630602L;
 
     private @SpringBean PreRenderer preRenderer;
@@ -64,18 +64,18 @@ public abstract class AnnotationEditorBase
     private final AnnotationActionHandler actionHandler;
     private final CasProvider casProvider;
     private boolean enableHighlight = true;
-    
+
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(aId, aModel);
-        
+
         Validate.notNull(aActionHandler, "Annotation action handle must be provided");
         Validate.notNull(aCasProvider, "CAS provider must be provided");
-        
+
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
-        
+
         // Allow AJAX updates.
         setOutputMarkupId(true);
 
@@ -104,21 +104,21 @@ public abstract class AnnotationEditorBase
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-    
+
     public AnnotationActionHandler getActionHandler()
     {
         return actionHandler;
     }
-    
+
     public CasProvider getCasProvider()
     {
         return casProvider;
     }
-    
+
     /**
-     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be
-     * called multiple times, even for the same annotation editor, but only resulting in a single
-     * rendering call.
+     * Schedules a rendering call via at the end of the given AJAX cycle. This method can be called
+     * multiple times, even for the same annotation editor, but only resulting in a single rendering
+     * call.
      */
     public final void requestRender(AjaxRequestTarget aTarget)
     {
@@ -131,7 +131,7 @@ public abstract class AnnotationEditorBase
             render(_target);
         }));
     }
-    
+
     /**
      * Render the contents of the annotation editor again in this present AJAX request. This
      * typically happens by sending JavaScript commands including the complete data structures as
@@ -142,19 +142,19 @@ public abstract class AnnotationEditorBase
     protected VDocument render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset)
     {
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aWindowBeginOffset, aWindowEndOffset,
-                aCas, getLayersToRender());
+        preRenderer.render(vdoc, aWindowBeginOffset, aWindowEndOffset, aCas, getLayersToRender());
 
         // Fire render event into backend
-        extensionRegistry.fireRender(aCas, getModelObject(), vdoc,
-                aWindowBeginOffset, aWindowEndOffset);
+        extensionRegistry.fireRender(aCas, getModelObject(), vdoc, aWindowBeginOffset,
+                aWindowEndOffset);
 
         // Fire render event into UI
         Page page = null;
         Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
         if (handler.isPresent()) {
             page = (Page) handler.get().getPage();
-        };
+        }
+        ;
 
         if (page == null) {
             page = getPage();
@@ -174,8 +174,8 @@ public abstract class AnnotationEditorBase
             // }
 
             if (state.getSelection().getAnnotation().isSet()) {
-                vdoc.add(new VAnnotationMarker(
-                        VMarker.FOCUS, state.getSelection().getAnnotation()));
+                vdoc.add(
+                        new VAnnotationMarker(VMarker.FOCUS, state.getSelection().getAnnotation()));
             }
         }
 
@@ -191,8 +191,8 @@ public abstract class AnnotationEditorBase
                     || layer.getName().equals(Sentence.class.getName());
             boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
                     && (state.getMode().equals(Mode.AUTOMATION)
-                    || state.getMode().equals(Mode.CORRECTION)
-                    || state.getMode().equals(Mode.CURATION));
+                            || state.getMode().equals(Mode.CORRECTION)
+                            || state.getMode().equals(Mode.CURATION));
 
             if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
                 layersToRender.add(layer);
@@ -200,15 +200,15 @@ public abstract class AnnotationEditorBase
         }
         return layersToRender;
     }
-    
+
     public void setHighlightEnabled(boolean aValue)
     {
         enableHighlight = aValue;
     }
-    
+
     public boolean isHighlightEnabled()
     {
         return enableHighlight;
     }
-    
+
 }

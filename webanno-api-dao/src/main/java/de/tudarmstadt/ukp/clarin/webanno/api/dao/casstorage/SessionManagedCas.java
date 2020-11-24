@@ -42,9 +42,9 @@ public class SessionManagedCas
     public SessionManagedCas(long aSourceDocumentId, String aUserId, CasAccessMode aMode, CAS aCas)
     {
         super();
-        
+
         Validate.notNull(aCas, "CAS cannot be null");
-        
+
         sourceDocumentId = aSourceDocumentId;
         userId = aUserId;
         mode = aMode;
@@ -56,41 +56,41 @@ public class SessionManagedCas
             CasHolder aCasHolder)
     {
         super();
-        
+
         Validate.notNull(aCasHolder, "CAS holder cannot be null");
-        
+
         sourceDocumentId = aSourceDocumentId;
         userId = aUserId;
         mode = aMode;
         cas = null;
         casHolder = aCasHolder;
     }
-    
+
     public CasHolder getCasHolder()
     {
         return casHolder;
     }
-    
+
     public long getSourceDocumentId()
     {
         return sourceDocumentId;
     }
-    
+
     public String getUserId()
     {
         return userId;
     }
-    
+
     public CasAccessMode getMode()
     {
         return mode;
     }
-    
+
     public boolean isCasSet()
     {
         return casHolder != null ? casHolder.isCasSet() : cas != null;
     }
-    
+
     public void setCas(CAS aCas)
     {
         if (casHolder != null) {
@@ -101,7 +101,7 @@ public class SessionManagedCas
                     "Managed CAS must have been borrowed in order to be replaced");
         }
     }
-    
+
     public CAS getCas()
     {
         if (cas != null) {
@@ -111,7 +111,7 @@ public class SessionManagedCas
             return casHolder.getCas();
         }
     }
-    
+
     public void incrementReadCount()
     {
         readCount++;
@@ -121,17 +121,17 @@ public class SessionManagedCas
     {
         writeCount++;
     }
-    
+
     public int getReadCount()
     {
         return readCount;
     }
-    
+
     public int getWriteCount()
     {
         return writeCount;
     }
-    
+
     /**
      * @return whether making modifications to the managed CAS is permitted.
      */
@@ -147,9 +147,8 @@ public class SessionManagedCas
             return false;
         }
         SessionManagedCas castOther = (SessionManagedCas) other;
-        return Objects.equals(sourceDocumentId, castOther.sourceDocumentId) && 
-                Objects.equals(userId, castOther.userId) && 
-                Objects.equals(mode, castOther.mode);
+        return Objects.equals(sourceDocumentId, castOther.sourceDocumentId)
+                && Objects.equals(userId, castOther.userId) && Objects.equals(mode, castOther.mode);
     }
 
     @Override
@@ -162,21 +161,16 @@ public class SessionManagedCas
     public String toString()
     {
         ToStringBuilder builder = new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE);
-        
+
         if (sourceDocumentId >= 0l) {
-            builder.append("doc", sourceDocumentId)
-                    .append("user", userId);
+            builder.append("doc", sourceDocumentId).append("user", userId);
         }
         else {
             builder.append("purpose", userId);
         }
-        
-        return builder
-                .append("cas", cas.hashCode())
-                .append("m", mode)
-                .append("r", readCount)
-                .append("w", writeCount)
-                .toString();
+
+        return builder.append("cas", cas.hashCode()).append("m", mode).append("r", readCount)
+                .append("w", writeCount).toString();
 
     }
 }

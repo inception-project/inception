@@ -28,7 +28,7 @@ public class ColoringRules
     implements Serializable
 {
     private static final long serialVersionUID = 6041625407980459920L;
-    
+
     private final List<ColoringRule> rules = new ArrayList<>();
 
     private final Map<String, String> cache = new LinkedHashMap<>();
@@ -51,14 +51,14 @@ public class ColoringRules
         if (aLabel == null) {
             return null;
         }
-        
+
         return cache.computeIfAbsent(aLabel, l -> {
             for (ColoringRule r : rules) {
                 if (r.getPattern() != null && Pattern.matches(r.getPattern(), l)) {
                     return r.getColor();
                 }
             }
-            
+
             return null;
         });
     }

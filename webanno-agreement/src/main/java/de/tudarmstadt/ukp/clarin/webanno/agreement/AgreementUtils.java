@@ -65,7 +65,7 @@ public class AgreementUtils
         return makeCodingStudy(aDiff, aCasMap.keySet(), aType, aFeature, aExcludeIncomplete, true,
                 aCasMap);
     }
-    
+
     private static CAS findSomeCas(Map<String, List<CAS>> aCasMap)
     {
         for (List<CAS> l : aCasMap.values()) {
@@ -77,17 +77,17 @@ public class AgreementUtils
                 }
             }
         }
-        
+
         return null;
     }
-    
-    private static CodingAgreementResult makeCodingStudy(CasDiff aDiff,
-            Collection<String> aUsers, String aType, String aFeature, boolean aExcludeIncomplete,
-            boolean aNullLabelsAsEmpty, Map<String, List<CAS>> aCasMap)
+
+    private static CodingAgreementResult makeCodingStudy(CasDiff aDiff, Collection<String> aUsers,
+            String aType, String aFeature, boolean aExcludeIncomplete, boolean aNullLabelsAsEmpty,
+            Map<String, List<CAS>> aCasMap)
     {
         List<String> users = new ArrayList<>(aUsers);
         Collections.sort(users);
-        
+
         List<ConfigurationSet> completeSets = new ArrayList<>();
         List<ConfigurationSet> setsWithDifferences = new ArrayList<>();
         List<ConfigurationSet> incompleteSetsByPosition = new ArrayList<>();
@@ -95,7 +95,7 @@ public class AgreementUtils
         List<ConfigurationSet> pluralitySets = new ArrayList<>();
         List<ConfigurationSet> irrelevantSets = new ArrayList<>();
         CodingAnnotationStudy study = new CodingAnnotationStudy(users.size());
-        
+
         // Check if the feature we are looking at is a primitive feature or a link feature
         // We do this by looking it up in the first available CAS. Mind that at this point all
         // CASes should have exactly the same typesystem.
@@ -104,33 +104,33 @@ public class AgreementUtils
             // Well... there is NOTHING here!
             // All positions are irrelevant
             aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurtionSet(p)));
-            
+
             return new CodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
                     completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
                     incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
         }
         TypeSystem ts = someCas.getTypeSystem();
-        
+
         // This happens in our test cases when we feed the process with uninitialized CASes.
         // We should just do the right thing here which is: do nothing
         if (ts.getType(aType) == null) {
             // All positions are irrelevant
             aDiff.getPositions().forEach(p -> irrelevantSets.add(aDiff.getConfigurtionSet(p)));
-            
+
             return new CodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
                     completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
                     incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
         }
-        
+
         // Check that the feature really exists instead of just getting a NPE later
         if (ts.getType(aType).getFeatureByBaseName(aFeature) == null) {
-            throw new IllegalArgumentException("Type [" + aType + "] has no feature called ["
-                    + aFeature + "]");
+            throw new IllegalArgumentException(
+                    "Type [" + aType + "] has no feature called [" + aFeature + "]");
         }
 
         boolean isPrimitiveFeature = ts.getType(aType).getFeatureByBaseName(aFeature).getRange()
                 .isPrimitive();
-        
+
         nextPosition: for (Position p : aDiff.getPositions()) {
             ConfigurationSet cfgSet = aDiff.getConfigurtionSet(p);
 
@@ -151,20 +151,20 @@ public class AgreementUtils
                 irrelevantSets.add(cfgSet);
                 continue;
             }
-            
-            // Check if subposition is for the feature we are looking for or for a different 
+
+            // Check if subposition is for the feature we are looking for or for a different
             // feature
             if (isSubPosition && !aFeature.equals(cfgSet.getPosition().getFeature())) {
                 irrelevantSets.add(cfgSet);
                 continue nextPosition;
             }
-            
+
             // If non of the current users has made any annotation at this position, then skip it
             if (users.stream().filter(u -> cfgSet.getCasGroupIds().contains(u)).count() == 0) {
                 irrelevantSets.add(cfgSet);
                 continue nextPosition;
             }
-            
+
             Object[] values = new Object[users.size()];
             int i = 0;
             for (String user : users) {
@@ -183,7 +183,7 @@ public class AgreementUtils
                         continue;
                     }
                 }
-                
+
                 // Make sure a single user didn't do multiple alternative annotations at a single
                 // position. So there is currently no support for calculating agreement on stacking
                 // annotations.
@@ -192,9 +192,9 @@ public class AgreementUtils
                     pluralitySets.add(cfgSet);
                     continue nextPosition;
                 }
-                
+
                 Configuration cfg = cfgs.get(0);
-                
+
                 // Check if source and/or targets of a relation are stacked
                 if (cfg.getPosition() instanceof RelationPosition) {
                     RelationPosition pos = (RelationPosition) cfg.getPosition();
@@ -212,7 +212,7 @@ public class AgreementUtils
                         pluralitySets.add(cfgSet);
                         continue nextPosition;
                     }
-                    
+
                     // Check if the target of the relation is stacked
                     AnnotationFS target = FSUtil.getFeature(arc, adapter.getTargetFeature(),
                             AnnotationFS.class);
@@ -223,19 +223,19 @@ public class AgreementUtils
                         continue nextPosition;
                     }
                 }
-                
+
                 // Only calculate agreement for the given feature
                 FeatureStructure fs = cfg.getFs(user, cfg.getPosition().getCasId(), aCasMap);
 
                 values[i] = extractValueForAgreement(fs, aFeature, cfg.getAID(user).index,
                         cfg.getPosition().getLinkCompareBehavior());
-                
+
                 // Consider empty/null feature values to be the same and do not exclude them from
                 // agreement calculation. The empty label is still a valid label.
                 if (aNullLabelsAsEmpty && values[i] == null) {
                     values[i] = "";
                 }
-                
+
                 // "null" cannot be used in agreement calculations. We treat these as incomplete
                 if (values[i] == null) {
                     incompleteSetsByLabel.add(cfgSet);
@@ -250,21 +250,21 @@ public class AgreementUtils
             if (ObjectUtils.notEqual(values[0], values[1])) {
                 setsWithDifferences.add(cfgSet);
             }
-            
+
             // If the position feature is set (subposition), then it must match the feature we
             // are calculating agreement over
             assert cfgSet.getPosition().getFeature() == null
                     || cfgSet.getPosition().getFeature().equals(aFeature);
-            
+
             completeSets.add(cfgSet);
             study.addItemAsArray(values);
         }
-        
+
         return new CodingAgreementResult(aType, aFeature, aDiff.toResult(), study, users,
                 completeSets, irrelevantSets, setsWithDifferences, incompleteSetsByPosition,
                 incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
     }
-    
+
     private static Object extractValueForAgreement(FeatureStructure aFs, String aFeature,
             int aLinkIndex, LinkCompareBehavior aLCB)
     {
@@ -279,9 +279,9 @@ public class AgreementUtils
                 .isPrimitive() == isPrimitiveFeature;
         // primitive implies not subposition - if this is primitive and subposition, we
         // should never have gotten here in the first place.
-        assert !isPrimitiveFeature || !isSubPosition; 
+        assert !isPrimitiveFeature || !isSubPosition;
         // END PARANOIA
-        
+
         if (isPrimitiveFeature && !isSubPosition) {
             // Primitive feature / primary position
             return getFeature(aFs, aFeature);
@@ -292,62 +292,57 @@ public class AgreementUtils
         }
         else {
             throw new IllegalStateException("Should never get here: primitive: "
-                    + aFs.getType().getFeatureByBaseName(aFeature).getRange()
-                            .isPrimitive() + "; subpos: " + isSubPosition);
+                    + aFs.getType().getFeatureByBaseName(aFeature).getRange().isPrimitive()
+                    + "; subpos: " + isSubPosition);
         }
     }
-    
+
     private static Object extractLinkFeatureValueForAgreement(FeatureStructure aFs, String aFeature,
             int aLinkIndex, LinkCompareBehavior aLCB)
     {
-        ArrayFS links = (ArrayFS) aFs.getFeatureValue(aFs.getType().getFeatureByBaseName(
-                aFeature));
+        ArrayFS links = (ArrayFS) aFs.getFeatureValue(aFs.getType().getFeatureByBaseName(aFeature));
         FeatureStructure link = links.get(aLinkIndex);
-        
+
         switch (aLCB) {
         case LINK_TARGET_AS_LABEL:
             // FIXME The target feature name should be obtained from the feature
             // definition!
-            AnnotationFS target = (AnnotationFS) link.getFeatureValue(link.getType()
-                    .getFeatureByBaseName("target"));
-            
-            return target.getBegin() + "-" + target.getEnd() + " ["
-                    + target.getCoveredText() + "]";
+            AnnotationFS target = (AnnotationFS) link
+                    .getFeatureValue(link.getType().getFeatureByBaseName("target"));
+
+            return target.getBegin() + "-" + target.getEnd() + " [" + target.getCoveredText() + "]";
         case LINK_ROLE_AS_LABEL:
             // FIXME The role feature name should be obtained from the feature
             // definition!
-            String role = link.getStringValue(link.getType().getFeatureByBaseName(
-                    "role"));
-            
+            String role = link.getStringValue(link.getType().getFeatureByBaseName("role"));
+
             return role;
         default:
-            throw new IllegalStateException("Unknown link target comparison mode ["
-                    + aLCB + "]");
-        }        
+            throw new IllegalStateException("Unknown link target comparison mode [" + aLCB + "]");
+        }
     }
 
-    private static void toCSV(CSVPrinter aOut, CodingAgreementResult aAgreement)
-        throws IOException
+    private static void toCSV(CSVPrinter aOut, CodingAgreementResult aAgreement) throws IOException
     {
         try {
-            aOut.printComment(String.format("Category count: %d%n", aAgreement.getStudy()
-                    .getCategoryCount()));
+            aOut.printComment(String.format("Category count: %d%n",
+                    aAgreement.getStudy().getCategoryCount()));
         }
         catch (Throwable e) {
-            aOut.printComment(String.format("Category count: %s%n",
-                    ExceptionUtils.getRootCauseMessage(e)));
+            aOut.printComment(
+                    String.format("Category count: %s%n", ExceptionUtils.getRootCauseMessage(e)));
         }
         try {
-            aOut.printComment(String.format("Item count: %d%n", aAgreement.getStudy()
-                    .getItemCount()));
+            aOut.printComment(
+                    String.format("Item count: %d%n", aAgreement.getStudy().getItemCount()));
         }
         catch (Throwable e) {
-            aOut.printComment(String.format("Item count: %s%n",
-                    ExceptionUtils.getRootCauseMessage(e)));
+            aOut.printComment(
+                    String.format("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e)));
         }
 
-        aOut.printComment(String.format("Relevant position count: %d%n",
-                aAgreement.getRelevantSetCount()));
+        aOut.printComment(
+                String.format("Relevant position count: %d%n", aAgreement.getRelevantSetCount()));
 
         // aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
         configurationSetsWithItemsToCsv(aOut, aAgreement, aAgreement.getCompleteSets());
@@ -363,8 +358,8 @@ public class AgreementUtils
         //
         // aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
         // dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
-    }    
-    
+    }
+
     public static void dumpAgreementStudy(PrintStream aOut, CodingAgreementResult aAgreement)
     {
         try {
@@ -384,7 +379,7 @@ public class AgreementUtils
 
         aOut.printf("%n== Complete sets: %d ==%n", aAgreement.getCompleteSets().size());
         dumpAgreementConfigurationSetsWithItems(aOut, aAgreement, aAgreement.getCompleteSets());
-        
+
         aOut.printf("%n== Incomplete sets (by position): %d == %n",
                 aAgreement.getIncompleteSetsByPosition().size());
         dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getIncompleteSetsByPosition());
@@ -396,7 +391,7 @@ public class AgreementUtils
         aOut.printf("%n== Plurality sets: %d ==%n", aAgreement.getPluralitySets().size());
         dumpAgreementConfigurationSets(aOut, aAgreement, aAgreement.getPluralitySets());
     }
-    
+
     private static void configurationSetsWithItemsToCsv(CSVPrinter aOut,
             AgreementResult<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
         throws IOException
@@ -405,7 +400,7 @@ public class AgreementUtils
                 asList("Type", "Collection", "Document", "Layer", "Feature", "Position"));
         headers.addAll(aAgreement.getCasGroupIds());
         aOut.printRecord(headers);
-        
+
         int i = 0;
         for (ICodingAnnotationItem item : aAgreement.getStudy().getItems()) {
             Position pos = aSets.get(i).getPosition();
@@ -422,8 +417,8 @@ public class AgreementUtils
             aOut.printRecord(values);
             i++;
         }
-    }    
-    
+    }
+
     private static void dumpAgreementConfigurationSetsWithItems(PrintStream aOut,
             AgreementResult<ICodingAnnotationStudy> aAgreement, List<ConfigurationSet> aSets)
     {
@@ -458,8 +453,7 @@ public class AgreementUtils
         }
     }
 
-    public static InputStream generateCsvReport(CodingAgreementResult aResult)
-        throws IOException
+    public static InputStream generateCsvReport(CodingAgreementResult aResult) throws IOException
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),

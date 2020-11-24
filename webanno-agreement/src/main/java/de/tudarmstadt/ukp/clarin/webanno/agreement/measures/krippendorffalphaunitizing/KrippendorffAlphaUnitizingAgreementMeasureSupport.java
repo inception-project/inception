@@ -40,20 +40,18 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class KrippendorffAlphaUnitizingAgreementMeasureSupport
-    extends AgreementMeasureSupport_ImplBase<
-            KrippendorffAlphaUnitizingAgreementTraits, 
-            PairwiseAnnotationResult<UnitizingAgreementResult>, 
-            IUnitizingAnnotationStudy>
+    extends
+    AgreementMeasureSupport_ImplBase<KrippendorffAlphaUnitizingAgreementTraits, PairwiseAnnotationResult<UnitizingAgreementResult>, IUnitizingAnnotationStudy>
 {
     private final AnnotationSchemaService annotationService;
-    
+
     public KrippendorffAlphaUnitizingAgreementMeasureSupport(
             AnnotationSchemaService aAnnotationService)
     {
         super();
         annotationService = aAnnotationService;
     }
-    
+
     @Override
     public String getName()
     {
@@ -64,11 +62,11 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     public boolean accepts(AnnotationFeature aFeature)
     {
         AnnotationLayer layer = aFeature.getLayer();
-        
+
         if (SPAN_TYPE.equals(layer.getType())) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -78,20 +76,20 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     {
         return new KrippendorffAlphaUnitizingAgreementMeasure(aFeature, aTraits, annotationService);
     }
-    
+
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
             IModel<KrippendorffAlphaUnitizingAgreementTraits> aModel)
     {
         return new KrippendorffAlphaUnitizingAgreementTraitsEditor(aId, aFeature, aModel);
     }
-    
+
     @Override
     public KrippendorffAlphaUnitizingAgreementTraits createTraits()
     {
         return new KrippendorffAlphaUnitizingAgreementTraits();
     }
-    
+
     @Override
     public Panel createResultsPanel(String aId,
             IModel<PairwiseAnnotationResult<UnitizingAgreementResult>> aResults,

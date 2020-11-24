@@ -34,12 +34,12 @@ public class VSentenceMarker
         type = aType;
         index = aIndex;
     }
-    
+
     public int getIndex()
     {
         return index;
     }
-    
+
     @Override
     public String getType()
     {

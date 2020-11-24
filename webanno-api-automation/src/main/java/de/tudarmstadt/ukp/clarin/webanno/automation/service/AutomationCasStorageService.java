@@ -27,8 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 public interface AutomationCasStorageService
 {
     String SERVICE_NAME = "automationCasStorageService";
-    
-    
+
     /**
      * Creates an annotation document for the {@link TrainingDocument}
      *
@@ -37,20 +36,17 @@ public interface AutomationCasStorageService
      * @param aCas
      *            The annotated CAS object
      */
-    void writeCas(TrainingDocument aDocument, CAS aCas)
-            throws IOException;
-    
+    void writeCas(TrainingDocument aDocument, CAS aCas) throws IOException;
+
     /**
      * For a given {@link TrainingDocument}, return the annotated CAS object
      *
      * @param aDocument
      *            the {@link TrainingDocument}
      */
-    CAS readCas(TrainingDocument aDocument)
-            throws IOException;
-        
-    File getAutomationFolder(TrainingDocument aDocument)
-        throws IOException;
+    CAS readCas(TrainingDocument aDocument) throws IOException;
+
+    File getAutomationFolder(TrainingDocument aDocument) throws IOException;
 
     void analyzeAndRepair(TrainingDocument aDocument, CAS aCas);
 }

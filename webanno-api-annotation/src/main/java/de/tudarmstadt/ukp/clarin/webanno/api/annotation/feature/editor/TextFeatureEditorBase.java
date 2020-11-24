@@ -45,7 +45,7 @@ public abstract class TextFeatureEditorBase
     private static final long serialVersionUID = -3499366171559879681L;
 
     private static final Logger LOG = LoggerFactory.getLogger(TextFeatureEditorBase.class);
-    
+
     @SuppressWarnings("rawtypes")
     private FormComponent field;
     private boolean hideUnconstrainedFeature;
@@ -55,10 +55,10 @@ public abstract class TextFeatureEditorBase
     public TextFeatureEditorBase(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-        
+
         field = createInputField();
         add(field);
-        
+
         // Checks whether hide un-constraint feature is enabled or not
         hideUnconstrainedFeature = getModelObject().feature.isHideUnconstraintFeature();
         add(createConstraintsInUseIndicatorContainer());
@@ -120,7 +120,7 @@ public abstract class TextFeatureEditorBase
     public void onConfigure()
     {
         super.onConfigure();
-        
+
         // if enabled and constraints rule execution returns anything other than green
         setVisible(!hideUnconstrainedFeature || (getModelObject().indicator.isAffected()
                 && getModelObject().indicator.getStatusColor().equals("green")));

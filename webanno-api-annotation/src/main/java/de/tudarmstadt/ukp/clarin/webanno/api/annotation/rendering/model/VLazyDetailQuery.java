@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
 /**
- * Query for a lazy detail. 
+ * Query for a lazy detail.
  * <p>
  * Some information is only to be shown when the user performs a particular "detail information"
- * action, e.g. hovering the mouse over an annotation. This class represents a query which is 
+ * action, e.g. hovering the mouse over an annotation. This class represents a query which is
  * triggered at such a time to load additional information from the server.
  * </p>
  * 
@@ -31,7 +31,7 @@ public class VLazyDetailQuery
 {
     private final String feature;
     private final String query;
-    
+
     public VLazyDetailQuery(String aFeature, String aQuery)
     {
         feature = aFeature;

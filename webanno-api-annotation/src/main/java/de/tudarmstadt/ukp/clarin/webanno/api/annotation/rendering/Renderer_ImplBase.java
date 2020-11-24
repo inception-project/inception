@@ -33,7 +33,7 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     private final T typeAdapter;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final LayerSupportRegistry layerSupportRegistry;
-    
+
     private Map<AnnotationFeature, Object> featureTraitsCache;
     private Map<AnnotationLayer, Object> layerTraitsCache;
 
@@ -50,12 +50,12 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     {
         return featureSupportRegistry;
     }
-    
+
     public T getTypeAdapter()
     {
         return typeAdapter;
     }
-    
+
     /**
      * Decodes the traits for the given feature and returns them if they implement the requested
      * interface. This method internally caches the decoded traits, so it can be called often.
@@ -66,14 +66,14 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         if (featureTraitsCache == null) {
             featureTraitsCache = new HashMap<>();
         }
-        
-        Object trait = featureTraitsCache.computeIfAbsent(aFeature, feature ->
-               featureSupportRegistry.getFeatureSupport(feature).readTraits(feature));
-        
+
+        Object trait = featureTraitsCache.computeIfAbsent(aFeature,
+                feature -> featureSupportRegistry.getFeatureSupport(feature).readTraits(feature));
+
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
         }
-        
+
         return Optional.empty();
     }
 
@@ -87,14 +87,14 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
         if (layerTraitsCache == null) {
             layerTraitsCache = new HashMap<>();
         }
-        
-        Object trait = layerTraitsCache.computeIfAbsent(aLayer, feature ->
-               layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
-        
+
+        Object trait = layerTraitsCache.computeIfAbsent(aLayer,
+                feature -> layerSupportRegistry.getLayerSupport(feature).readTraits(feature));
+
         if (trait != null && aInterface.isAssignableFrom(trait.getClass())) {
             return Optional.of((T) trait);
         }
-        
+
         return Optional.empty();
     }
 }

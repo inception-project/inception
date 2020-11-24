@@ -93,14 +93,14 @@ public class AnnotationDocumentExporter
     private static final String ANNOTATION_ORIGINAL_FOLDER = "/annotation/";
     private static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
     private static final String ANNOTATION_CAS_FOLDER = "/" + ANNOTATION_AS_SERIALISED_CAS + "/";
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final DocumentService documentService;
     private final UserDao userRepository;
     private final ImportExportService importExportService;
     private final RepositoryProperties repositoryProperties;
-    
+
     @Autowired
     public AnnotationDocumentExporter(DocumentService aDocumentService, UserDao aUserRepository,
             ImportExportService aImportExportService, RepositoryProperties aRepositoryProperties)
@@ -116,13 +116,13 @@ public class AnnotationDocumentExporter
     {
         return asList(SourceDocumentExporter.class);
     }
-    
+
     @Override
     public List<Class<? extends ProjectExporter>> getImportDependencies()
     {
         return asList(SourceDocumentExporter.class);
     }
-    
+
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
@@ -131,7 +131,7 @@ public class AnnotationDocumentExporter
         exportAnnotationDocuments(aMonitor, aRequest.getProject(), aExProject);
         exportAnnotationDocumentContents(aRequest, aMonitor, aExProject, aStage);
     }
-    
+
     private void exportAnnotationDocuments(ProjectExportTaskMonitor aMonitor, Project aProject,
             ExportedProject aExProject)
     {
@@ -158,17 +158,17 @@ public class AnnotationDocumentExporter
         throws UIMAException, ClassNotFoundException, IOException
     {
         Project project = aRequest.getProject();
-        
+
         // The export process may store project-related information in this context to ensure it
         // is looked up only once during the bulk operation and the DB is not hit too often.
         Map<Pair<Project, String>, Object> bulkOperationContext = new HashMap<>();
-        
+
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
         int i = 1;
         int initProgress = aMonitor.getProgress();
 
         // Create a map containing the annotation documents for each source document. Doing this
-        // as one DB access before the main processing to avoid hammering the DB in the loops 
+        // as one DB access before the main processing to avoid hammering the DB in the loops
         // below.
         Map<SourceDocument, List<AnnotationDocument>> srcToAnnIdx = documentService
                 .listAnnotationDocuments(project).stream()
@@ -183,96 +183,92 @@ public class AnnotationDocumentExporter
                 //
                 // Export initial CASes
                 //
-                
+
                 // The initial CAS must always be exported to ensure that the converted source
                 // document will *always* have the state it had at the time of the initial import.
                 // We we do have a reliably initial CAS and instead lazily convert whenever an
                 // annotator starts annotating, then we could end up with two annotators having two
                 // different versions of their CAS e.g. if there was a code change in the reader
                 // component that affects its output.
-    
+
                 // If the initial CAS does not exist yet, it must be created before export.
                 if (!documentService.existsInitialCas(srcDoc)) {
                     documentService.createOrReadInitialCas(srcDoc);
                 }
-                
+
                 File targetDir = new File(aStage, ANNOTATION_CAS_FOLDER + srcDoc.getName());
                 forceMkdir(targetDir);
-                
+
                 File initialCasFile = documentService.getCasFile(srcDoc, INITIAL_CAS_PSEUDO_USER);
-                
+
                 copyFileToDirectory(initialCasFile, targetDir);
-                
+
                 log.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
                         + "] for source document [" + srcDoc.getId() + "] in project ["
                         + project.getName() + "] with id [" + project.getId() + "]");
-    
+
                 //
                 // Export per-user annotation document
-                // 
-                
+                //
+
                 // Determine which format to use for export
                 String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? srcDoc.getFormat()
                         : aRequest.getFormat();
-                
+
                 FormatSupport format = importExportService.getWritableFormatById(formatId)
                         .orElseGet(() -> {
                             FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
-                            aMonitor.addMessage(LogMessage.error(this,"Annotation: [%s] No writer "
-                                    + "found for original format [%s] - exporting as [%s] "
-                                    + "instead.",
+                            aMonitor.addMessage(LogMessage.error(this,
+                                    "Annotation: [%s] No writer "
+                                            + "found for original format [%s] - exporting as [%s] "
+                                            + "instead.",
                                     srcDoc.getName(), formatId, fallbackFormat.getName()));
                             return fallbackFormat;
                         });
-    
+
                 // Export annotations from regular users
-                for (AnnotationDocument annDoc : 
-                    srcToAnnIdx.computeIfAbsent(srcDoc, key -> emptyList())) {
-                    
-                    // copy annotation document only for existing users and the state of the 
+                for (AnnotationDocument annDoc : srcToAnnIdx.computeIfAbsent(srcDoc,
+                        key -> emptyList())) {
+
+                    // copy annotation document only for existing users and the state of the
                     // annotation document is not NEW/IGNORE
-                    if (
-                            usersCache.get(annDoc.getUser()) != null && 
-                            !annDoc.getState().equals(AnnotationDocumentState.NEW) && 
-                            !annDoc.getState().equals(AnnotationDocumentState.IGNORE)
-                    ) {
-                        File annSerDir = new File(
-                                aStage.getAbsolutePath() + ANNOTATION_CAS_FOLDER
-                                        + srcDoc.getName());
+                    if (usersCache.get(annDoc.getUser()) != null
+                            && !annDoc.getState().equals(AnnotationDocumentState.NEW)
+                            && !annDoc.getState().equals(AnnotationDocumentState.IGNORE)) {
+                        File annSerDir = new File(aStage.getAbsolutePath() + ANNOTATION_CAS_FOLDER
+                                + srcDoc.getName());
                         File annDocDir = new File(aStage.getAbsolutePath()
                                 + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-    
+
                         forceMkdir(annSerDir);
                         forceMkdir(annDocDir);
-    
+
                         File annSerFile = documentService.getCasFile(srcDoc, annDoc.getUser());
-    
+
                         File annFile = null;
                         if (annSerFile.exists()) {
                             annFile = importExportService.exportAnnotationDocument(srcDoc,
                                     annDoc.getUser(), format, annDoc.getUser(), ANNOTATION, false,
                                     bulkOperationContext);
                         }
-                        
+
                         if (annSerFile.exists()) {
                             copyFileToDirectory(annSerFile, annSerDir);
                             copyFileToDirectory(annFile, annDocDir);
                             forceDelete(annFile);
                         }
-                        
+
                         log.info("Exported annotation document content for user ["
                                 + annDoc.getUser() + "] for source document [" + srcDoc.getId()
                                 + "] in project [" + project.getName() + "] with id ["
                                 + project.getId() + "]");
                     }
                 }
-                
+
                 // Special handling for the virtual CORRECTION_USER data used in automation and
                 // correction type projects.
-                if (
-                        PROJECT_TYPE_AUTOMATION.equals(project.getMode()) || 
-                        PROJECT_TYPE_CORRECTION.equals(project.getMode())
-                ) {
+                if (PROJECT_TYPE_AUTOMATION.equals(project.getMode())
+                        || PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
                     File corrSerFile = documentService.getCasFile(srcDoc, CORRECTION_USER);
                     if (corrSerFile.exists()) {
                         // Copy CAS - this is used when importing the project again
@@ -284,7 +280,7 @@ public class AnnotationDocumentExporter
                                 aStage + ANNOTATION_AS_SERIALISED_CAS + srcDoc.getName());
                         forceMkdir(curationSerDir);
                         copyFileToDirectory(corrSerFile, curationSerDir);
-    
+
                         // Copy secondary export format for convenience - not used during import
                         File curationDir = new File(
                                 aStage + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
@@ -296,23 +292,22 @@ public class AnnotationDocumentExporter
                     }
                 }
             }
-            
+
             aMonitor.setProgress(initProgress + (int) ceil(((double) i) / documents.size() * 80.0));
             i++;
         }
     }
-    
+
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
         long start = currentTimeMillis();
-        
-        Map<String, SourceDocument> nameToDoc = documentService
-                .listSourceDocuments(aProject).stream()
-                .collect(toMap(SourceDocument::getName, identity()));
-        
+
+        Map<String, SourceDocument> nameToDoc = documentService.listSourceDocuments(aProject)
+                .stream().collect(toMap(SourceDocument::getName, identity()));
+
         importAnnotationDocuments(aExProject, aProject, nameToDoc);
         importAnnotationDocumentContents(aZip, aProject, nameToDoc);
 
@@ -320,7 +315,7 @@ public class AnnotationDocumentExporter
                 aExProject.getSourceDocuments().size(), aExProject.getName(),
                 DurationFormatUtils.formatDurationWords(currentTimeMillis() - start, true, true));
     }
-    
+
     /**
      * Create {@link de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument} from exported
      * {@link ExportedAnnotationDocument}
@@ -351,7 +346,7 @@ public class AnnotationDocumentExporter
             documentService.createAnnotationDocument(annotationDocument);
         }
     }
-    
+
     /**
      * copy annotation documents (serialized CASs) from the exported project
      * 
@@ -368,22 +363,22 @@ public class AnnotationDocumentExporter
         throws IOException
     {
         int n = 0;
-        
+
         // NOTE: we resort to internal knowledge about the CasStorageService here, but
         // it makes the import quite a bit faster than using DocumentService.getCasFile(...)
-        Path docRoot = repositoryProperties.getPath().toPath().resolve(
-                PROJECT_FOLDER).resolve(aProject.getId().toString()).resolve(DOCUMENT_FOLDER);
-        
+        Path docRoot = repositoryProperties.getPath().toPath().resolve(PROJECT_FOLDER)
+                .resolve(aProject.getId().toString()).resolve(DOCUMENT_FOLDER);
+
         Set<SourceDocument> annotationFolderInitialized = new HashSet<>();
-        
+
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ProjectExporter.normalizeEntryName(entry);
 
-            if (!entryName.startsWith(ANNOTATION_AS_SERIALISED_CAS + "/") ||
-                !entryName.endsWith(".ser")) {
+            if (!entryName.startsWith(ANNOTATION_AS_SERIALISED_CAS + "/")
+                    || !entryName.endsWith(".ser")) {
                 continue;
             }
 
@@ -402,14 +397,14 @@ public class AnnotationDocumentExporter
 
             Path annFolder = docRoot.resolve(sourceDocument.getId().toString())
                     .resolve(ANNOTATION_FOLDER);
-            
+
             // Check if the annotation folder for the given source document has already been
             // created. Using the set to check here is faster than querying the file system.
             if (!annotationFolderInitialized.contains(sourceDocument)) {
                 Files.createDirectories(annFolder);
                 annotationFolderInitialized.add(sourceDocument);
             }
-            
+
             copy(zip.getInputStream(entry), annFolder.resolve(username + ".ser").toFile());
 
             n++;

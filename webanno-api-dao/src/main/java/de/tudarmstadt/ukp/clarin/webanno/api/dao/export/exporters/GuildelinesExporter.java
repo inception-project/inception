@@ -50,7 +50,7 @@ public class GuildelinesExporter
     private static final String GUIDELINES_FOLDER = "/" + GUIDELINE;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private @Autowired ProjectService projectService;
 
     /**
@@ -64,14 +64,14 @@ public class GuildelinesExporter
         File guidelineDir = new File(aStage + GUIDELINES_FOLDER);
         FileUtils.forceMkdir(guidelineDir);
         File annotationGuidlines = projectService.getGuidelinesFolder(aRequest.getProject());
-        
+
         if (annotationGuidlines.exists()) {
             for (File annotationGuideline : annotationGuidlines.listFiles()) {
                 FileUtils.copyFileToDirectory(annotationGuideline, guidelineDir);
             }
         }
     }
-    
+
     /**
      * Copy guidelines from the exported project
      * 
@@ -90,10 +90,10 @@ public class GuildelinesExporter
         for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
                 .hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            
+
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ZipUtils.normalizeEntryName(entry);
-            
+
             if (entryName.startsWith(GUIDELINE + "/")) {
                 String fileName = FilenameUtils.getName(entry.getName());
                 if (fileName.trim().isEmpty()) {
@@ -102,7 +102,7 @@ public class GuildelinesExporter
                 File guidelineDir = projectService.getGuidelinesFolder(aProject);
                 forceMkdir(guidelineDir);
                 copyInputStreamToFile(aZip.getInputStream(entry), new File(guidelineDir, fileName));
- 
+
                 log.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
                         + "] with id [" + aProject.getId() + "]");
             }

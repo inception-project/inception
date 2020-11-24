@@ -35,9 +35,9 @@ public class SegmentationTest
     public void testSplitSentences() throws Exception
     {
         JCas jcas = JCasFactory.createText("I am one. I am two.", "en");
-        
+
         ImportExportServiceImpl.splitSentences(jcas.getCas());
-        
+
         assertEquals(asList("I am one.", "I am two."), toText(select(jcas, Sentence.class)));
     }
 
@@ -45,11 +45,12 @@ public class SegmentationTest
     public void testTokenize() throws Exception
     {
         JCas jcas = JCasFactory.createText("i am one.i am two.", "en");
-        new Sentence(jcas, 0, 9).addToIndexes();;
+        new Sentence(jcas, 0, 9).addToIndexes();
+        ;
         new Sentence(jcas, 9, 18).addToIndexes();
-        
+
         ImportExportServiceImpl.tokenize(jcas.getCas());
-        
+
         assertEquals(asList("i am one.", "i am two."), toText(select(jcas, Sentence.class)));
         assertEquals(asList("i", "am", "one", ".", "i", "am", "two", "."),
                 toText(select(jcas, Token.class)));

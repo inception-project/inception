@@ -19,10 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 
 import java.io.Serializable;
 
-public class ColoringRule implements Serializable
+public class ColoringRule
+    implements Serializable
 {
     private static final long serialVersionUID = -7837910509442634732L;
-    
+
     private String color;
     private String pattern;
 
@@ -35,12 +36,12 @@ public class ColoringRule implements Serializable
     {
         color = aColor;
     }
-    
+
     public String getPattern()
     {
         return pattern;
     }
-    
+
     public void setPattern(String aValue)
     {
         pattern = aValue;

@@ -53,8 +53,7 @@ public class AutomationStatus
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "template", 
-        foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    @JoinColumn(name = "template", foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     private MiraTemplate template;
 
     @Temporal(TemporalType.TIMESTAMP)

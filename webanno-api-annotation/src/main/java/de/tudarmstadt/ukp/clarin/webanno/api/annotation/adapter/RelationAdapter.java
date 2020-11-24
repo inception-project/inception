@@ -57,7 +57,7 @@ public class RelationAdapter
     extends TypeAdapter_ImplBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     /**
      * The feature of an UIMA annotation containing the label to be used as a governor for arc
      * annotations
@@ -71,7 +71,7 @@ public class RelationAdapter
     private final String targetFeatureName;
 
     private final List<RelationLayerBehavior> behaviors;
-    
+
     public RelationAdapter(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
@@ -80,7 +80,7 @@ public class RelationAdapter
             List<RelationLayerBehavior> aBehaviors)
     {
         super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
-        
+
         if (aBehaviors == null) {
             behaviors = emptyList();
         }
@@ -89,7 +89,7 @@ public class RelationAdapter
             AnnotationAwareOrderComparator.sort(temp);
             behaviors = temp;
         }
-        
+
         sourceFeatureName = aSourceFeatureName;
         targetFeatureName = aTargetFeatureName;
     }
@@ -119,11 +119,10 @@ public class RelationAdapter
                 aTargetFs));
     }
 
-    public AnnotationFS handle(CreateRelationAnnotationRequest aRequest)
-        throws AnnotationException
+    public AnnotationFS handle(CreateRelationAnnotationRequest aRequest) throws AnnotationException
     {
         CreateRelationAnnotationRequest request = aRequest;
-        
+
         for (RelationLayerBehavior behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
@@ -167,8 +166,8 @@ public class RelationAdapter
     {
         AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
-        publishEvent(new RelationDeletedEvent(this, aDocument, aUsername, getLayer(),
-                fs, getTargetAnnotation(fs), getSourceAnnotation(fs)));
+        publishEvent(new RelationDeletedEvent(this, aDocument, aUsername, getLayer(), fs,
+                getTargetAnnotation(fs), getSourceAnnotation(fs)));
     }
 
     public AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
@@ -194,7 +193,7 @@ public class RelationAdapter
     {
         return targetFeatureName;
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
@@ -207,7 +206,7 @@ public class RelationAdapter
         }
         return messages;
     }
-    
+
     @Override
     public void select(AnnotatorState aState, AnnotationFS aAnno)
     {

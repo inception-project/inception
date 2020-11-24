@@ -34,7 +34,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-public class PreRendererImpl implements PreRenderer
+public class PreRendererImpl
+    implements PreRenderer
 {
     private final AnnotationSchemaService annotationService;
     private final LayerSupportRegistry layerSupportRegistry;
@@ -46,32 +47,31 @@ public class PreRendererImpl implements PreRenderer
         layerSupportRegistry = aLayerSupportRegistry;
         annotationService = aAnnotationService;
     }
-    
+
     @Override
     public void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
             List<AnnotationLayer> aLayers)
     {
         Validate.notNull(aCas, "CAS cannot be null");
-        
+
         if (aLayers.isEmpty()) {
             return;
         }
-        
-        // The project for all layers must be the same, so we just fetch the project from the 
+
+        // The project for all layers must be the same, so we just fetch the project from the
         // first layer
         Project project = aLayers.get(0).getProject();
-        
+
         // Listing the features once is faster than repeatedly hitting the DB to list features for
         // every layer.
         List<AnnotationFeature> allFeatures = annotationService.listSupportedFeatures(project);
-        
+
         // Render (custom) layers
         for (AnnotationLayer layer : aLayers) {
             List<AnnotationFeature> features = allFeatures.stream()
-                    .filter(feature -> feature.getLayer().equals(layer))
-                    .collect(toList());
+                    .filter(feature -> feature.getLayer().equals(layer)).collect(toList());
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
-                () -> annotationService.listAnnotationFeature(layer));
+                    () -> annotationService.listAnnotationFeature(layer));
             renderer.render(aCas, features, aResponse, windowBeginOffset, windowEndOffset);
         }
     }

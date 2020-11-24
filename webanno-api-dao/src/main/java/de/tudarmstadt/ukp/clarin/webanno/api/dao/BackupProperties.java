@@ -31,33 +31,37 @@ public class BackupProperties
     {
         interval = aInterval;
     }
-    
+
     public long getInterval()
     {
         return interval;
     }
-    
+
     public KeepOptions getKeep()
     {
         return keep;
     }
-    
+
     public static class KeepOptions
     {
         private long time;
         private int number;
+
         public long getTime()
         {
             return time;
         }
+
         public void setTime(long aTime)
         {
             time = aTime;
         }
+
         public int getNumber()
         {
             return number;
         }
+
         public void setNumber(int aNumber)
         {
             number = aNumber;

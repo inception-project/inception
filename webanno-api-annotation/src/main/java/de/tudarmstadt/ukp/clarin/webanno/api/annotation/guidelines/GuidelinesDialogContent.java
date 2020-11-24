@@ -55,7 +55,7 @@ public class GuidelinesDialogContent
         // Overall progress by Projects
         RepeatingView guidelineRepeater = new RepeatingView("guidelineRepeater");
         add(guidelineRepeater);
-        
+
         for (String guidelineFileName : projectService
                 .listGuidelines(aModel.getObject().getProject())) {
             AbstractItem item = new AbstractItem(guidelineRepeater.newChildId());
@@ -63,9 +63,8 @@ public class GuidelinesDialogContent
             guidelineRepeater.add(item);
 
             // Add a popup window link to display annotation guidelines
-            PopupSettings popupSettings = new PopupSettings(RESIZABLE | SCROLLBARS)
-                            .setHeight(500)
-                            .setWidth(700);
+            PopupSettings popupSettings = new PopupSettings(RESIZABLE | SCROLLBARS).setHeight(500)
+                    .setWidth(700);
 
             IResourceStream stream = new FileResourceStream(projectService
                     .getGuideline(aModel.getObject().getProject(), guidelineFileName));
@@ -75,7 +74,7 @@ public class GuidelinesDialogContent
             item.add(new Label("guidelineName", guidelineFileName));
             item.add(rlink);
         }
-        
+
         add(new LambdaAjaxLink("cancel", (target) -> modalWindow.close(target)));
     }
 }

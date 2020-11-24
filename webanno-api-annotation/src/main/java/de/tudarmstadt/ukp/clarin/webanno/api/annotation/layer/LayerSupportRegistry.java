@@ -51,11 +51,9 @@ public interface LayerSupportRegistry
     {
         List<LayerType> allTypes = new ArrayList<>();
 
-        for (LayerSupport<?,?> layerSupport : getLayerSupports()) {
+        for (LayerSupport<?, ?> layerSupport : getLayerSupports()) {
             List<LayerType> types = layerSupport.getSupportedLayerTypes();
-            types.stream()
-                    .filter(l -> !l.isInternal())
-                    .forEach(allTypes::add);
+            types.stream().filter(l -> !l.isInternal()).forEach(allTypes::add);
         }
 
         allTypes.sort(comparing(LayerType::getUiName));

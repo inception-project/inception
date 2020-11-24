@@ -23,6 +23,7 @@ public interface DocumentsMetrics
      * Retrieve the total number of documents
      */
     public long getDocumentsTotal();
+
     /**
      * Retrieve the total number of annotation documents
      */

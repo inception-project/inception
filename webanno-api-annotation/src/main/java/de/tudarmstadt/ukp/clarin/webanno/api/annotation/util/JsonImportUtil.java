@@ -55,8 +55,7 @@ public class JsonImportUtil
         }
     }
 
-    private static TagSet replaceTagSet(Project project,
-            ExportedTagSet importedTagSet,
+    private static TagSet replaceTagSet(Project project, ExportedTagSet importedTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
@@ -79,23 +78,22 @@ public class JsonImportUtil
             newTag.setTagSet(tagsetInUse);
             aAnnotationService.createTag(newTag);
         }
-        
+
         return tagsetInUse;
     }
-    
+
     public static TagSet importTagSetFromJson(Project project, InputStream tagInputStream,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
-    
+
         ExportedTagSet importedTagSet = JSONUtil.getObjectMapper().readValue(text,
                 ExportedTagSet.class);
         return createTagSet(project, importedTagSet, aAnnotationService);
     }
-    
-    public static TagSet createTagSet(Project project,
-            ExportedTagSet importedTagSet,
+
+    public static TagSet createTagSet(Project project, ExportedTagSet importedTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
@@ -121,7 +119,7 @@ public class JsonImportUtil
             newTag.setTagSet(newTagSet);
             aAnnotationService.createTag(newTag);
         }
-        
+
         return newTagSet;
     }
 
@@ -141,7 +139,7 @@ public class JsonImportUtil
             else {
                 return betterTagSetName;
             }
-    
+
         }
     }
 }

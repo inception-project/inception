@@ -27,7 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
 @Order(800)
 @Component
-public class GuidelinesActionBarExtension implements ActionBarExtension
+public class GuidelinesActionBarExtension
+    implements ActionBarExtension
 {
     private final ProjectService projectService;
 
@@ -36,7 +37,7 @@ public class GuidelinesActionBarExtension implements ActionBarExtension
         super();
         projectService = aProjectService;
     }
-    
+
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {

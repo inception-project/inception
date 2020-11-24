@@ -41,8 +41,8 @@ public interface AnnotationEditorExtensionRegistry
             AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
         throws IOException, AnnotationException;
 
-    void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
-            int aWindowBeginOffset, int aWindowEndOffset);
+    void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc, int aWindowBeginOffset,
+            int aWindowEndOffset);
 
     void generateContextMenuItems(List<IMenuItem> aItems);
 }

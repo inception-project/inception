@@ -25,7 +25,7 @@ public class LayerConfigurationChangedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = -6859433860519240811L;
-    
+
     private final Project project;
 
     public LayerConfigurationChangedEvent(Object aSource, Project aProject)

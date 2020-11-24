@@ -60,10 +60,7 @@ public class VComment
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this)
-                .append("vid", vid)
-                .append("commentType", commentType)
-                .append("comment", comment)
-                .toString();
+        return new ToStringBuilder(this).append("vid", vid).append("commentType", commentType)
+                .append("comment", comment).toString();
     }
 }

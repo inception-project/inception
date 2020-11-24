@@ -46,7 +46,7 @@ public class AttachedAnnotation
         endpoint = aEndpoint;
         direction = aDirection;
     }
-    
+
     public AnnotationLayer getLayer()
     {
         return layer;
@@ -56,7 +56,7 @@ public class AttachedAnnotation
     {
         return relation;
     }
-    
+
     public AnnotationFS getEndpoint()
     {
         return endpoint;

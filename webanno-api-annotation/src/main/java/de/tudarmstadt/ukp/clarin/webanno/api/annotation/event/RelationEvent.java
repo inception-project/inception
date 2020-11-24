@@ -26,7 +26,7 @@ public abstract class RelationEvent
     extends AnnotationEvent
 {
     private static final long serialVersionUID = -8621413642390759892L;
-    
+
     private final AnnotationFS relation;
     private final AnnotationFS targetAnno;
     private final AnnotationFS sourceAnno;
@@ -36,7 +36,7 @@ public abstract class RelationEvent
             AnnotationFS aSourceAnnotation)
     {
         super(aSource, aDocument, aUser, aLayer);
-        
+
         relation = aRelationFS;
         targetAnno = aTargetAnnotation;
         sourceAnno = aSourceAnnotation;
@@ -46,12 +46,12 @@ public abstract class RelationEvent
     {
         return relation;
     }
-    
+
     public AnnotationFS getTargetAnnotation()
     {
         return targetAnno;
     }
-    
+
     public AnnotationFS getSourceAnno()
     {
         return sourceAnno;
@@ -59,7 +59,7 @@ public abstract class RelationEvent
 
     @Override
     public String toString()
-    {   
+    {
         StringBuilder builder = new StringBuilder();
         builder.append(getClass().getSimpleName());
         builder.append(" [");

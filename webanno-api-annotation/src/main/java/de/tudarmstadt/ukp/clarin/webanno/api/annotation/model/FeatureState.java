@@ -52,7 +52,7 @@ public class FeatureState
             value = new ArrayList<>();
         }
     }
-    
+
     public Serializable getValue()
     {
         return value;
@@ -79,7 +79,8 @@ public class FeatureState
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -87,12 +88,12 @@ public class FeatureState
             return false;
         }
         FeatureState that = (FeatureState) o;
-        return feature.equals(that.feature) &&
-                vid.equals(that.vid);
+        return feature.equals(that.feature) && vid.equals(that.vid);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(feature, vid);
     }
 }

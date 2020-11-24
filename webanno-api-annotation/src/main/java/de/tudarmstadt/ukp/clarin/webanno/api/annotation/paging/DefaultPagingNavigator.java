@@ -36,22 +36,23 @@ import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 
-public class DefaultPagingNavigator extends Panel
+public class DefaultPagingNavigator
+    extends Panel
 {
     private static final long serialVersionUID = -6315861062996783626L;
-    
+
     private AnnotationPageBase page;
     private NumberTextField<Integer> gotoPageTextField;
     private FocusPosition defaultFocusPosition = FocusPosition.TOP;
-    
+
     public DefaultPagingNavigator(String aId, AnnotationPageBase aPage)
     {
         super(aId);
-        
+
         setOutputMarkupPlaceholderTag(true);
-        
+
         page = aPage;
-        
+
         Form<Void> form = new Form<>("form");
         gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
         // Using a LambdaModel here because the model object in the page may change and we want to
@@ -60,15 +61,16 @@ public class DefaultPagingNavigator extends Panel
                 PropertyModel.of(LambdaModel.of(() -> aPage.getModel()), "firstVisibleUnitIndex"));
         // FIXME minimum and maximum should be obtained from the annotator state
         gotoPageTextField.setMinimum(1);
-        //gotoPageTextField.setMaximum(LambdaModel.of(() -> aPage.getModelObject().getUnitCount()));
-        gotoPageTextField.setOutputMarkupId(true); 
+        // gotoPageTextField.setMaximum(LambdaModel.of(() ->
+        // aPage.getModelObject().getUnitCount()));
+        gotoPageTextField.setOutputMarkupId(true);
         form.add(gotoPageTextField);
-        LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink",
-                form, this::actionGotoPage);
+        LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink", form,
+                this::actionGotoPage);
         form.setDefaultButton(gotoPageLink);
         form.add(gotoPageLink);
         add(form);
-        
+
         form.add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
@@ -81,62 +83,57 @@ public class DefaultPagingNavigator extends Panel
         form.add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
     }
-    
+
     public AnnotatorState getModelObject()
     {
         return page.getModelObject();
     }
-    
-    protected void actionShowPreviousPage(AjaxRequestTarget aTarget)
-        throws Exception
+
+    protected void actionShowPreviousPage(AjaxRequestTarget aTarget) throws Exception
     {
         CAS cas = page.getEditorCas();
         getModelObject().moveToPreviousPage(cas, defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
     }
 
-    protected void actionShowNextPage(AjaxRequestTarget aTarget)
-        throws Exception
+    protected void actionShowNextPage(AjaxRequestTarget aTarget) throws Exception
     {
         CAS cas = page.getEditorCas();
         getModelObject().moveToNextPage(cas, defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
     }
 
-    protected void actionShowFirstPage(AjaxRequestTarget aTarget)
-        throws Exception
+    protected void actionShowFirstPage(AjaxRequestTarget aTarget) throws Exception
     {
         CAS cas = page.getEditorCas();
         getModelObject().moveToFirstPage(cas, defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
     }
 
-    protected void actionShowLastPage(AjaxRequestTarget aTarget)
-        throws Exception
+    protected void actionShowLastPage(AjaxRequestTarget aTarget) throws Exception
     {
         CAS cas = page.getEditorCas();
         getModelObject().moveToLastPage(cas, defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
     }
-    
-    private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
-        throws Exception
+
+    private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm) throws Exception
     {
         CAS cas = page.getEditorCas();
         getModelObject().moveToUnit(cas, gotoPageTextField.getModelObject(), defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
     }
-    
+
     public void setDefaultFocusPosition(FocusPosition aPos)
     {
         defaultFocusPosition = aPos;
-    }    
-    
+    }
+
     public FocusPosition getDefaultFocusPosition()
     {
         return defaultFocusPosition;
     }
-    
+
     /**
      * Re-render the current position if the position has been changed in the {@link AnnotatorState}
      */

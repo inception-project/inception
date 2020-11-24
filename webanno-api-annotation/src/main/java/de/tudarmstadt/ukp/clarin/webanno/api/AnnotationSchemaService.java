@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 public interface AnnotationSchemaService
 {
     String SERVICE_NAME = "annotationService";
-    
+
     /**
      * creates a {@link Tag} for a given {@link TagSet}. Combination of {@code tag name} and
      * {@code tagset name} should be unique
@@ -84,7 +84,6 @@ public interface AnnotationSchemaService
 
     void createFeature(AnnotationFeature feature);
 
-    
     /**
      * Get Tag by its ID
      * 
@@ -236,7 +235,7 @@ public interface AnnotationSchemaService
      * @return the layer.
      */
     AnnotationLayer findLayer(Project aProject, FeatureStructure aFS);
-    
+
     /**
      * Get a {@link AnnotationFeature} name using its ID.
      *
@@ -269,15 +268,15 @@ public interface AnnotationSchemaService
     boolean existsType(String name, String type);
 
     /**
-     * List all annotation types in a project. This includes disabled layers and layers for which
-     * no {@link LayerSupport} can be obtained via the {@link LayerSupportRegistry}.
+     * List all annotation types in a project. This includes disabled layers and layers for which no
+     * {@link LayerSupport} can be obtained via the {@link LayerSupportRegistry}.
      * 
      * @param aProject
      *            the project.
      * @return the layers.
      */
     List<AnnotationLayer> listAnnotationLayer(Project aProject);
-    
+
     /**
      * List all supported annotation layers in a project. This includes disabled layers. Supported
      * layers are such for which a {@link LayerSupport} is available in the
@@ -288,7 +287,7 @@ public interface AnnotationSchemaService
      * @return the layers.
      */
     List<AnnotationLayer> listSupportedLayers(Project aProject);
-    
+
     /**
      * List all relation layers that are attached directly or indirectly (via a attach feature) to
      * the given layer. This method is useful to identify relation layers affected by a span delete
@@ -299,7 +298,7 @@ public interface AnnotationSchemaService
      * @return the relation layers attaching directly or indirectly to the given layer.
      */
     List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer layer);
-    
+
     List<AttachedAnnotation> getAttachedRels(AnnotationLayer aLayer, AnnotationFS aFs);
 
     /**
@@ -312,9 +311,9 @@ public interface AnnotationSchemaService
      * @return the possible link features.
      */
     List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer layer);
-     
+
     List<AttachedAnnotation> getAttachedLinks(AnnotationLayer aLayer, AnnotationFS aFs);
-    
+
     /**
      * List all the features in a {@link AnnotationLayer} for this {@link Project}. This includes
      * disabled features.
@@ -336,8 +335,8 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listAnnotationFeature(Project project);
 
     /**
-     * List all supported features in the project. This includes disabled features. Supported 
-     * features are features for which a {@link FeatureSupport} is available in the 
+     * List all supported features in the project. This includes disabled features. Supported
+     * features are features for which a {@link FeatureSupport} is available in the
      * {@link FeatureSupportRegistry}.
      * 
      * @param aProject
@@ -345,10 +344,10 @@ public interface AnnotationSchemaService
      * @return the features.
      */
     List<AnnotationFeature> listSupportedFeatures(Project aProject);
-    
+
     /**
-     * List all supported features in the layer. This includes disabled features. Supported 
-     * features are features for which a {@link FeatureSupport} is available in the 
+     * List all supported features in the layer. This includes disabled features. Supported features
+     * are features for which a {@link FeatureSupport} is available in the
      * {@link FeatureSupportRegistry}.
      * 
      * @param aLayer
@@ -366,7 +365,7 @@ public interface AnnotationSchemaService
      * @return the features.
      */
     List<AnnotationFeature> listEnabledFeatures(AnnotationLayer aLayer);
-    
+
     /**
      * list all {@link Tag} in the system
      *
@@ -402,7 +401,8 @@ public interface AnnotationSchemaService
     /**
      * Removes a {@link Tag} from the database
      *
-     * @param tag the tag.
+     * @param tag
+     *            the tag.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void removeTag(Tag tag);
@@ -410,10 +410,11 @@ public interface AnnotationSchemaService
     /**
      * removes a {@link TagSet } from the database
      *
-     * @param tagset the tagset.
+     * @param tagset
+     *            the tagset.
      */
     void removeTagSet(TagSet tagset);
-    
+
     /**
      * Removes all tags linked to a tagset
      */
@@ -422,21 +423,22 @@ public interface AnnotationSchemaService
     /**
      * Should be called with care. Only when a project hosting this feature is removed
      * 
-     * @param feature the feature.
+     * @param feature
+     *            the feature.
      */
     void removeAnnotationFeature(AnnotationFeature feature);
 
     /**
      * Should be called with care. Only when a project hosting this layer is removed
      * 
-     * @param type the type.
+     * @param type
+     *            the type.
      */
     void removeAnnotationLayer(AnnotationLayer type);
 
     TagSet createTagSet(String aDescription, String aLanguage, String aTagSetName, String[] aTags,
             String[] aTagDescription, Project aProject)
-                throws IOException;
-    
+        throws IOException;
 
     /**
      * Returns a type system with all the types that should be present in an exported CAS. This
@@ -445,7 +447,7 @@ public interface AnnotationSchemaService
      * @see #getFullProjectTypeSystem(Project, boolean)
      */
     TypeSystemDescription getTypeSystemForExport(Project aProject)
-            throws ResourceInitializationException;
+        throws ResourceInitializationException;
 
     /**
      * Returns the custom types define in the project excluding built-in types.
@@ -456,7 +458,8 @@ public interface AnnotationSchemaService
 
     /**
      * Returns the custom types define in the project including built-in types.
-     * @throws ResourceInitializationException 
+     * 
+     * @throws ResourceInitializationException
      * 
      * @see #getCustomProjectTypes(Project)
      */
@@ -476,7 +479,7 @@ public interface AnnotationSchemaService
      */
     TypeSystemDescription getFullProjectTypeSystem(Project aProject, boolean aIncludeInternalTypes)
         throws ResourceInitializationException;
-    
+
     /**
      * Upgrade the CAS to the current project type system. This also compacts the CAS and removes
      * any unreachable feature structures. This should be called at key points such as when the user
@@ -485,73 +488,67 @@ public interface AnnotationSchemaService
      * will not be persisted, it is usually a better idea to use {@link #upgradeCasIfRequired}.
      */
     void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
-            throws UIMAException, IOException;
+        throws UIMAException, IOException;
 
     /**
-     * In-place upgrade of the given CAS to the target type system. It is
-     * a slow call. The CAS is not automatically persisted - the calling code
-     * needs to take care of this.
+     * In-place upgrade of the given CAS to the target type system. It is a slow call. The CAS is
+     * not automatically persisted - the calling code needs to take care of this.
      */
     void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
-            throws UIMAException, IOException;
-    
+        throws UIMAException, IOException;
+
     void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException;
-    
+
     /**
      * @see #upgradeCas(CAS, SourceDocument, String)
      */
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
-            throws UIMAException, IOException;
+        throws UIMAException, IOException;
 
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser, CasUpgradeMode aMode)
-            throws UIMAException, IOException;
-    
+        throws UIMAException, IOException;
+
     /**
      * Better call {@link #upgradeCas(CAS, SourceDocument, String)} which also logs the action
-     * nicely to the log files. This method here is rather for unconditional bulk use such as
-     * by the CAS doctor.
+     * nicely to the log files. This method here is rather for unconditional bulk use such as by the
+     * CAS doctor.
      * 
      * @see #upgradeCas(CAS, SourceDocument, String)
      */
     void upgradeCas(CAS aCas, Project aProject) throws UIMAException, IOException;
-    
+
     /**
      * Checks if the given CAS is compatible with the current type system of the project to which it
      * belongs and upgrades it if necessary. This should be preferred over the mandatory CAS upgrade
-     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. 
-     * <br>
-     * If multiple CASes need to be upgraded, use
-     * {@link #upgradeCasIfRequired(Iterable, Project)}.
+     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. <br>
+     * If multiple CASes need to be upgraded, use {@link #upgradeCasIfRequired(Iterable, Project)}.
      */
     boolean upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
-            throws UIMAException, IOException;
+        throws UIMAException, IOException;
 
     /**
-     * Checks if the given CAS is compatible with the current type system of the project to which
-     * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
-     * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.
-     * <br>
-     * If multiple CASes need to be upgraded, use
-     * {@link #upgradeCasIfRequired(Iterable, Project)}.
+     * Checks if the given CAS is compatible with the current type system of the project to which it
+     * belongs and upgrades it if necessary. This should be preferred over the mandatory CAS upgrade
+     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. <br>
+     * If multiple CASes need to be upgraded, use {@link #upgradeCasIfRequired(Iterable, Project)}.
      */
     boolean upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument)
-            throws UIMAException, IOException;
+        throws UIMAException, IOException;
 
     /**
-     * Checks if the given CAS is compatible with the current type system of the project to which
-     * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
-     * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.
-     * <br>
+     * Checks if the given CAS is compatible with the current type system of the project to which it
+     * belongs and upgrades it if necessary. This should be preferred over the mandatory CAS upgrade
+     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. <br>
      * This method can deal with null values in the iterable. It will simply skip them.
      */
     boolean upgradeCasIfRequired(Iterable<CAS> aCas, Project aProject)
         throws UIMAException, IOException;
-    
+
     TypeAdapter getAdapter(AnnotationLayer aLayer);
 
     /**
-     * Performs a CAS upgrade and removes all internal feature structures from the CAS. The 
+     * Performs a CAS upgrade and removes all internal feature structures from the CAS. The
      * resulting CAS should be <b>only</b> used for export and never be persisted within the
      * repository.
      */

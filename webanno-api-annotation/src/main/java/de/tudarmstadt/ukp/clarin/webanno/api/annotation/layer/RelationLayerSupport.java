@@ -53,7 +53,7 @@ public class RelationLayerSupport
     implements InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
@@ -124,8 +124,7 @@ public class RelationLayerSupport
         td.addFeature(FEAT_REL_SOURCE, "", attachType.getName());
 
         List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
-                .filter(feature -> aLayer.equals(feature.getLayer()))
-                .collect(toList());
+                .filter(feature -> aLayer.equals(feature.getLayer())).collect(toList());
         generateFeatures(aTsd, td, featureForLayer);
     }
 
@@ -139,14 +138,14 @@ public class RelationLayerSupport
     }
 
     @Override
-    public Panel createTraitsEditor(String aId,  IModel<AnnotationLayer> aLayerModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
     {
         AnnotationLayer layer = aLayerModel.getObject();
-        
+
         if (!accepts(layer)) {
             throw unsupportedLayerTypeException(layer);
         }
-        
+
         return new RelationLayerTraitsEditor(aId, this, aLayerModel);
     }
 

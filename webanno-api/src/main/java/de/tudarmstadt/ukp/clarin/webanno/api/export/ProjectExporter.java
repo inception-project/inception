@@ -28,14 +28,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface ProjectExporter
 {
-    default List<Class<? extends ProjectExporter>> getImportDependencies() {
+    default List<Class<? extends ProjectExporter>> getImportDependencies()
+    {
         return Collections.emptyList();
     }
 
-    default List<Class<? extends ProjectExporter>> getExportDependencies() {
+    default List<Class<? extends ProjectExporter>> getExportDependencies()
+    {
         return Collections.emptyList();
     }
-    
+
     void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
         throws Exception;
@@ -43,7 +45,7 @@ public interface ProjectExporter
     void importData(ProjectImportRequest aRequest, Project aProject, ExportedProject aExProject,
             ZipFile aZip)
         throws Exception;
-    
+
     static String normalizeEntryName(ZipEntry aEntry)
     {
         // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
@@ -51,7 +53,7 @@ public interface ProjectExporter
         if (entryName.startsWith("/")) {
             entryName = entryName.substring(1);
         }
-       
+
         return entryName;
     }
 

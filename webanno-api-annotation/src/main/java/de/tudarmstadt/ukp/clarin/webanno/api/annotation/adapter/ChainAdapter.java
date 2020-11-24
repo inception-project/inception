@@ -63,7 +63,7 @@ public class ChainAdapter
     extends TypeAdapter_ImplBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     public static final String CHAIN = "Chain";
     public static final String LINK = "Link";
     public static final String FEAT_FIRST = "first";
@@ -95,23 +95,22 @@ public class ChainAdapter
         return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aCas, aBegin, aEnd));
     }
 
-    public AnnotationFS handle(CreateSpanAnnotationRequest aRequest)
-        throws AnnotationException
+    public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
         CreateSpanAnnotationRequest request = aRequest;
-        
+
         for (SpanLayerBehavior behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
-        
+
         AnnotationFS newSpan = createChainElementAnnotation(request);
-        
+
         publishEvent(new ChainSpanCreatedEvent(this, aRequest.getDocument(), aRequest.getUsername(),
                 getLayer(), newSpan));
-        
+
         return newSpan;
     }
-    
+
     private AnnotationFS createChainElementAnnotation(CreateSpanAnnotationRequest aRequest)
     {
         // Add the link annotation on the span
@@ -122,9 +121,9 @@ public class ChainAdapter
 
         return newLink;
     }
-    
-    public int addArc(SourceDocument aDocument, String aUsername, CAS aCas,
-            AnnotationFS aOriginFs, AnnotationFS aTargetFs)
+
+    public int addArc(SourceDocument aDocument, String aUsername, CAS aCas, AnnotationFS aOriginFs,
+            AnnotationFS aTargetFs)
     {
         // Determine if the links are adjacent. If so, just update the arc label
         AnnotationFS originNext = getNextLink(aOriginFs);
@@ -215,7 +214,7 @@ public class ChainAdapter
                 }
             }
         }
-        
+
         publishEvent(new ChainLinkCreatedEvent(this, aDocument, aUsername, getLayer(), aOriginFs));
 
         // We do not actually create a new FS for the arc. Features are set on the originFS.
@@ -235,8 +234,7 @@ public class ChainAdapter
 
     private void deleteLink(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress)
     {
-        AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class,
-                aAddress);
+        AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, aAddress);
 
         // Create the tail chain
         // We know that there must be a next link, otherwise no arc would have been rendered!
@@ -244,7 +242,7 @@ public class ChainAdapter
 
         // Disconnect the tail from the head
         setNextLink(linkToDelete, null);
-        
+
         publishEvent(
                 new ChainLinkDeletedEvent(this, aDocument, aUsername, getLayer(), linkToDelete));
     }
@@ -253,8 +251,7 @@ public class ChainAdapter
     {
         Type chainType = CasUtil.getType(aCas, getChainTypeName());
 
-        AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class,
-                aAddress);
+        AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, aAddress);
 
         // case 1 "removing first link": we keep the existing chain head and just remove the
         // first element
@@ -286,8 +283,8 @@ public class ChainAdapter
 
         // Did we find the chain?!
         if (oldChainFs == null) {
-            throw new IllegalArgumentException("Chain link with address [" + aAddress
-                    + "] not found in any chain!");
+            throw new IllegalArgumentException(
+                    "Chain link with address [" + aAddress + "] not found in any chain!");
         }
 
         AnnotationFS followingLinkToDelete = getNextLink(linkToDelete);
@@ -315,7 +312,7 @@ public class ChainAdapter
 
             // Cut off from old chain
             setNextLink(prevLinkFs, null);
-            
+
             // Delete middle link
             aCas.removeFsFromIndexes(linkToDelete);
         }
@@ -323,7 +320,7 @@ public class ChainAdapter
             throw new IllegalStateException(
                     "Unexpected situation while removing link. Please contact developers.");
         }
-        
+
         publishEvent(
                 new ChainSpanDeletedEvent(this, aDocument, aUsername, getLayer(), linkToDelete));
     }
@@ -342,8 +339,10 @@ public class ChainAdapter
     /**
      * Find the chain head for the given link.
      *
-     * @param aCas the CAS.
-     * @param aLink the link to search the chain for.
+     * @param aCas
+     *            the CAS.
+     * @param aLink
+     *            the link to search the chain for.
      * @return the chain.
      */
     private FeatureStructure getChainForLink(CAS aCas, AnnotationFS aLink)
@@ -371,8 +370,8 @@ public class ChainAdapter
         List<AnnotationFS> links = new ArrayList<>();
 
         // Now we seek the link within the current chain
-        AnnotationFS linkFs = (AnnotationFS) aChain.getFeatureValue(aChain.getType()
-                .getFeatureByBaseName(getChainFirstFeatureName()));
+        AnnotationFS linkFs = (AnnotationFS) aChain
+                .getFeatureValue(aChain.getType().getFeatureByBaseName(getChainFirstFeatureName()));
         while (linkFs != null) {
             links.add(linkFs);
 
@@ -420,8 +419,8 @@ public class ChainAdapter
      */
     private AnnotationFS getFirstLink(FeatureStructure aChain)
     {
-        return (AnnotationFS) aChain.getFeatureValue(aChain.getType().getFeatureByBaseName(
-                getChainFirstFeatureName()));
+        return (AnnotationFS) aChain
+                .getFeatureValue(aChain.getType().getFeatureByBaseName(getChainFirstFeatureName()));
     }
 
     /**
@@ -454,8 +453,8 @@ public class ChainAdapter
      */
     private void setNextLink(AnnotationFS aLink, AnnotationFS aNext)
     {
-        aLink.setFeatureValue(
-                aLink.getType().getFeatureByBaseName(getLinkNextFeatureName()), aNext);
+        aLink.setFeatureValue(aLink.getType().getFeatureByBaseName(getLinkNextFeatureName()),
+                aNext);
     }
 
     /**
@@ -463,8 +462,8 @@ public class ChainAdapter
      */
     private AnnotationFS getNextLink(AnnotationFS aLink)
     {
-        return (AnnotationFS) aLink.getFeatureValue(aLink.getType().getFeatureByBaseName(
-                getLinkNextFeatureName()));
+        return (AnnotationFS) aLink
+                .getFeatureValue(aLink.getType().getFeatureByBaseName(getLinkNextFeatureName()));
     }
 
     public boolean isLinkedListBehavior()
@@ -476,12 +475,12 @@ public class ChainAdapter
     {
         return FEAT_NEXT;
     }
-    
+
     public String getChainFirstFeatureName()
     {
         return FEAT_FIRST;
     }
-    
+
     @Override
     public void initialize(AnnotationSchemaService aSchemaService)
     {
@@ -505,7 +504,7 @@ public class ChainAdapter
 
         aSchemaService.createFeature(typeFeature);
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
@@ -518,7 +517,7 @@ public class ChainAdapter
         }
         return messages;
     }
-    
+
     @Override
     public void select(AnnotatorState aState, AnnotationFS aAnno)
     {

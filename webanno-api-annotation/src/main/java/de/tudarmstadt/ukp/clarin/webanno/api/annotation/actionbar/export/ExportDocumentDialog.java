@@ -33,11 +33,11 @@ public class ExportDocumentDialog
     private static final long serialVersionUID = 671214149298791793L;
 
     private IModel<AnnotatorState> state;
-    
+
     public ExportDocumentDialog(String id, final IModel<AnnotatorState> aModel)
     {
         super(id);
-        
+
         state = aModel;
 
         setCookieName("modal-1");
@@ -50,7 +50,7 @@ public class ExportDocumentDialog
         showUnloadConfirmation(false);
         setTitle(new StringResourceModel("export"));
     }
-    
+
     @Override
     public void show(IPartialPageRequestHandler aTarget)
     {

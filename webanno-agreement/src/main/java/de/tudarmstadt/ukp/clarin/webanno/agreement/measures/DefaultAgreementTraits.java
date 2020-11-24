@@ -27,9 +27,9 @@ public class DefaultAgreementTraits
     implements Serializable
 {
     private static final long serialVersionUID = -2554578512915184789L;
-    
+
     private boolean limitToFinishedDocuments = true;
-    
+
     private LinkCompareBehavior linkCompareBehavior = LINK_TARGET_AS_LABEL;
 
     public LinkCompareBehavior getLinkCompareBehavior()

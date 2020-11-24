@@ -39,13 +39,13 @@ public abstract class AnnotationEditorFactoryImplBase
     {
         return beanName;
     }
-    
+
     @Override
     public int getOrder()
     {
         return Ordered.LOWEST_PRECEDENCE;
     }
-    
+
     @Override
     public void initState(AnnotatorState aModelObject)
     {

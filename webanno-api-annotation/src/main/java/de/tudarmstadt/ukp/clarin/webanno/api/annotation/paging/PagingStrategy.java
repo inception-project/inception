@@ -41,9 +41,9 @@ public interface PagingStrategy
      * units.
      */
     List<Unit> units(CAS aCas, int aFirstIndex, int aLastIndex);
-    
+
     Component createPositionLabel(String aId, IModel<AnnotatorState> aModel);
-    
+
     DefaultPagingNavigator createPageNavigator(String aId, AnnotationPageBase aPage);
 
     default void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, FocusPosition aPos)
@@ -55,19 +55,17 @@ public interface PagingStrategy
         }
         case CENTERED: {
             List<Unit> units = units(aCas);
-            
+
             // Find the unit containing the given offset
-            Unit unit = units.stream()
-                    .filter(u -> u.getBegin() <= aOffset && aOffset <= u.getEnd())
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "No unit contains character offset [" + aOffset + "]") );
+            Unit unit = units.stream().filter(u -> u.getBegin() <= aOffset && aOffset <= u.getEnd())
+                    .findFirst().orElseThrow(() -> new IllegalArgumentException(
+                            "No unit contains character offset [" + aOffset + "]"));
 
             // How many rows to display before the unit such that the unit is centered?
             int rowsInPageBeforeUnit = aState.getPreferences().getWindowSize() / 2;
             // The -1 below is because unit.getIndex() is 1-based
             Unit firstUnit = units.get(Math.max(0, unit.getIndex() - rowsInPageBeforeUnit - 1));
-            
+
             aState.setPageBegin(aCas, firstUnit.getBegin());
             aState.setFocusUnitIndex(unit.getIndex());
             break;
@@ -75,17 +73,18 @@ public interface PagingStrategy
         default:
             throw new IllegalArgumentException("Unknown focus positon: [" + aPos + "]");
         }
-    }    
+    }
+
     default void recalculatePage(AnnotatorViewState aState, CAS aCas)
     {
         aState.setPageBegin(aCas, aState.getWindowBeginOffset());
     }
-    
+
     default List<Unit> units(CAS aCas)
     {
         return units(aCas, 0, Integer.MAX_VALUE);
     }
-    
+
     /**
      * Returns the total number of units.
      */
@@ -93,7 +92,7 @@ public interface PagingStrategy
     {
         return units(aCas).size();
     }
-    
+
     /**
      * Get the unit with the given index. The index is 1-based. If the index is smaller than 1, the
      * first unit is returned. If the index is greater than the number of units available, the last
@@ -102,37 +101,36 @@ public interface PagingStrategy
     default Unit unitAtIndex(CAS aCas, int aIndex)
     {
         int index = aIndex;
-        
+
         if (index < 1) {
             index = 1;
         }
-        
+
         List<Unit> units = units(aCas);
-        
+
         if (index > units.size()) {
             index = units.size();
         }
-        
+
         return units.get(index - 1);
     }
-    
+
     default List<Unit> unitsStartingAtOffset(CAS aCas, int aOffset, int aCount)
     {
-        return units(aCas).stream()
-                .filter(unit -> unit.getBegin() >= aOffset)
-                .limit(aCount)
+        return units(aCas).stream().filter(unit -> unit.getBegin() >= aOffset).limit(aCount)
                 .collect(Collectors.toList());
     }
-    
+
     /**
-     * @param aIndex index of the unit to move to (1-based)
+     * @param aIndex
+     *            index of the unit to move to (1-based)
      */
     default void moveToUnit(AnnotatorViewState aState, CAS aCas, int aIndex, FocusPosition aPos)
     {
         Unit unit = unitAtIndex(aCas, aIndex);
         moveToOffset(aState, aCas, unit.getBegin(), aPos);
     }
-    
+
     default void moveToPreviousPage(AnnotatorViewState aState, CAS aCas, FocusPosition aPos)
     {
         moveToUnit(aState, aCas,
@@ -155,12 +153,12 @@ public interface PagingStrategy
         moveToUnit(aState, aCas,
                 aState.getUnitCount() - aState.getPreferences().getWindowSize() + 1, aPos);
     }
-    
+
     default void moveToSelection(AnnotatorViewState aState, CAS aCas)
     {
         moveToOffset(aState, aCas, aState.getSelection().getBegin(), CENTERED);
     }
-    
+
     default void moveForward(AnnotatorViewState aState, CAS aCas)
     {
         moveToUnit(aState, aCas, aState.getFirstVisibleUnitIndex() + 1, CENTERED);

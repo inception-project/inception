@@ -45,7 +45,7 @@ public class CasStorageSession
             .getLogger(MethodHandles.lookup().lookupClass());
 
     private static final long SPECIAL_PURPOSE = -1;
-    
+
     private static final ThreadLocal<CasStorageSession> activeSession = ThreadLocal
             .withInitial(() -> null);
 
@@ -125,6 +125,7 @@ public class CasStorageSession
 
         return session;
     }
+
     /**
      * @return the current session. Returns {@code null} if there is no current session.
      * @throws CasSessionException
@@ -162,13 +163,11 @@ public class CasStorageSession
         activeSession.set(previousSession);
 
         LOGGER.trace("CAS storage session [{}]: closing...", hashCode());
-        
-        managedCases.values()
-                .forEach(casByUser -> casByUser.values()
-                .forEach(managedCas -> {
-                    LOGGER.trace("CAS storage session [{}]: releasing {}", hashCode(), managedCas);
-                    managedCas.getCas().release();
-                }));
+
+        managedCases.values().forEach(casByUser -> casByUser.values().forEach(managedCas -> {
+            LOGGER.trace("CAS storage session [{}]: releasing {}", hashCode(), managedCas);
+            managedCas.getCas().release();
+        }));
 
         LOGGER.trace("CAS storage session [{}]: closed", hashCode());
     }
@@ -201,24 +200,23 @@ public class CasStorageSession
         SessionManagedCas managedCas = new SessionManagedCas(SPECIAL_PURPOSE, aSpecialPurpose,
                 aMode, aCas);
 
-        Map<String, SessionManagedCas> casByUser = managedCases
-                .computeIfAbsent(SPECIAL_PURPOSE, key -> new LinkedHashMap<>());
+        Map<String, SessionManagedCas> casByUser = managedCases.computeIfAbsent(SPECIAL_PURPOSE,
+                key -> new LinkedHashMap<>());
         casByUser.put(aSpecialPurpose, managedCas);
-        
+
         LOGGER.trace("CAS storage session [{}]: added {}", hashCode(), managedCas);
-        
+
         return managedCas;
     }
-    
+
     public void remove(CAS aCas)
     {
         if (aCas == null) {
             return;
         }
-        
-        managedCases.values().stream()
-                .forEach(casByUser -> casByUser.values()
-                        .removeIf(metadata -> metadata.getCas() == aCas));
+
+        managedCases.values().stream().forEach(
+                casByUser -> casByUser.values().removeIf(metadata -> metadata.getCas() == aCas));
     }
 
     /**
@@ -227,14 +225,14 @@ public class CasStorageSession
     public void remove(Long aDocumentId, String aUsername)
     {
         Map<String, SessionManagedCas> casByUser = managedCases.get(aDocumentId);
-        
+
         if (casByUser == null) {
             return;
         }
-        
+
         casByUser.remove(aUsername);
     }
-    
+
     /**
      * Register the given CAS into the session.
      * 
@@ -259,10 +257,10 @@ public class CasStorageSession
         SessionManagedCas managedCas = new SessionManagedCas(aDocumentId, aUser, aMode, aCas);
 
         add(managedCas);
-        
+
         return managedCas;
     }
-    
+
     /**
      * Register the given CAS into the session.
      * 
@@ -286,18 +284,18 @@ public class CasStorageSession
         Validate.notNull(aCasHolder, "The CAS holder cannot be null");
 
         SessionManagedCas managedCas = new SessionManagedCas(aDocumentId, aUser, aMode, aCasHolder);
-        
+
         add(managedCas);
-        
+
         return managedCas;
     }
-    
+
     private void add(SessionManagedCas aMCas)
     {
         Map<String, SessionManagedCas> casByUser = managedCases
                 .computeIfAbsent(aMCas.getSourceDocumentId(), key -> new LinkedHashMap<>());
         SessionManagedCas oldMCas = casByUser.put(aMCas.getUserId(), aMCas);
-        
+
         if (oldMCas == null) {
             LOGGER.trace("CAS storage session [{}]: added {}", hashCode(), aMCas);
         }
@@ -311,12 +309,12 @@ public class CasStorageSession
     {
         return getManagedState(aCas).isPresent();
     }
-    
+
     public List<StackTraceElement> getCreatorStack()
     {
         return unmodifiableList(asList(creatorStack));
     }
-    
+
     /**
      * Returns the managed state of the CAS for the given CAS (if any).
      * 
@@ -327,16 +325,16 @@ public class CasStorageSession
     public Optional<SessionManagedCas> getManagedState(CAS aCas)
     {
         Validate.notNull(aCas, "The CAS cannot be null");
-        
+
         Optional<SessionManagedCas> result = managedCases.values().stream()
                 .flatMap(casByUser -> casByUser.values().stream()
                         .filter(metadata -> metadata.getCas() == aCas))
                 .findFirst();
-        
+
         if (!result.isPresent() && !isolated && previousSession != null) {
             return previousSession.getManagedState(aCas);
         }
-        
+
         return result;
     }
 
@@ -353,17 +351,17 @@ public class CasStorageSession
     {
         Validate.notNull(aDocumentId, "The document ID cannot be null");
         Validate.notNull(aUsername, "The username cannot be null");
-        
+
         Optional<SessionManagedCas> result = Optional.ofNullable(managedCases.get(aDocumentId))
-            .map(casByUser -> casByUser.get(aUsername));
-        
+                .map(casByUser -> casByUser.get(aUsername));
+
         if (!result.isPresent() && !isolated && previousSession != null) {
             return previousSession.getManagedState(aDocumentId, aUsername);
         }
-        
+
         return result;
     }
-    
+
     /**
      * Checks if writing the CAS is permitted. This is the case if the CAS is in the session and if
      * it has the {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}. Any CAS used in the system must have
@@ -377,31 +375,30 @@ public class CasStorageSession
     public boolean hasExclusiveAccess(SourceDocument aDocument, String aUsername)
     {
         return getManagedState(aDocument.getId(), aUsername)
-                .map(SessionManagedCas::isWritingPermitted)
-                .orElse(false);
+                .map(SessionManagedCas::isWritingPermitted).orElse(false);
     }
-    
+
     /**
      * Checks if writing the CAS is permitted. This is the case if the CAS is in the session and if
      * it has the {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}. Any CAS used in the system must have
      * been obtained through the {@link CasStorageService} and must be in a session.
      * 
-     * @param aCas a CAS.
+     * @param aCas
+     *            a CAS.
      */
     public boolean isWritingPermitted(CAS aCas)
     {
-        return getManagedState(aCas)
-                .map(SessionManagedCas::isWritingPermitted)
-                .orElse(false);
+        return getManagedState(aCas).map(SessionManagedCas::isWritingPermitted).orElse(false);
     }
-    
+
     /**
      * Checks if writing the CAS is permitted. If writing is not permitted, a
      * {@link WriteAccessNotPermittedException} is thrown.
      * 
      * @param aCas
      *            a CAS.
-     * @throws WriteAccessNotPermittedException if writing is not permitted.
+     * @throws WriteAccessNotPermittedException
+     *             if writing is not permitted.
      */
     public void assertWritingPermitted(CAS aCas) throws WriteAccessNotPermittedException
     {
@@ -413,12 +410,11 @@ public class CasStorageSession
             throw new WriteAccessNotPermittedException(
                     "CAS [" + docTitle + "](" + docId + ") not found in current sesssion");
         }
-        
+
         if (!mCas.map(SessionManagedCas::isWritingPermitted).orElse(false)) {
-            throw new WriteAccessNotPermittedException(
-                    "Write access to CAS for user [" + mCas.get().getUserId() + "] for document ["
-                            + mCas.get().getSourceDocumentId()
-                            + "] is not permitted in the current sesssion");
+            throw new WriteAccessNotPermittedException("Write access to CAS for user ["
+                    + mCas.get().getUserId() + "] for document [" + mCas.get().getSourceDocumentId()
+                    + "] is not permitted in the current sesssion");
         }
     }
 }

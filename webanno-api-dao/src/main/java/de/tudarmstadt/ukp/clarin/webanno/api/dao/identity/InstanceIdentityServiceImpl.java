@@ -35,13 +35,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.model.InstanceIdentity;
 
 @Component
-public class InstanceIdentityServiceImpl implements InstanceIdentityService
+public class InstanceIdentityServiceImpl
+    implements InstanceIdentityService
 {
     private Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @PersistenceContext
     private EntityManager entityManager;
-    
+
     @EventListener(ApplicationReadyEvent.class)
     @Order(-10)
     @Transactional
@@ -51,14 +52,14 @@ public class InstanceIdentityServiceImpl implements InstanceIdentityService
         InstanceIdentity id = getInstanceIdentity();
         log.debug("Instance identity: {}", id.getId());
     }
-    
+
     @Override
     @Transactional
     public InstanceIdentity getInstanceIdentity()
     {
         List<InstanceIdentity> instanceIDs = entityManager
                 .createQuery("FROM InstanceIdentity", InstanceIdentity.class).getResultList();
-        
+
         InstanceIdentity identity;
         if (instanceIDs.isEmpty()) {
             identity = new InstanceIdentity();
@@ -68,7 +69,7 @@ public class InstanceIdentityServiceImpl implements InstanceIdentityService
         else {
             identity = instanceIDs.get(0);
         }
-        
+
         return identity;
     }
 }

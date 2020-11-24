@@ -45,37 +45,37 @@ public abstract class AgreementResult<T extends IAnnotationStudy>
         casGroupIds = unmodifiableList(new ArrayList<>(aCasGroupIds));
         excludeIncomplete = aExcludeIncomplete;
     }
-    
+
     public List<String> getCasGroupIds()
     {
         return casGroupIds;
     }
-    
+
     public void setAgreement(double aAgreement)
     {
         agreement = aAgreement;
     }
-    
+
     public double getAgreement()
     {
         return agreement;
     }
-    
+
     public T getStudy()
     {
         return study;
     }
-    
+
     public String getType()
     {
         return type;
     }
-    
+
     public String getFeature()
     {
         return feature;
     }
-    
+
     public boolean isExcludeIncomplete()
     {
         return excludeIncomplete;

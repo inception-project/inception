@@ -29,7 +29,7 @@ public class AnnotationException
     {
         super();
     }
-    
+
     public AnnotationException(String message)
     {
         super(message);

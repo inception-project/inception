@@ -177,29 +177,29 @@ public interface TypeAdapter
      * @return the feature value.
      */
     <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs);
-    
+
     /**
      * Initialize the layer when it is created. This can be used e.g. to add default features. This
      * is mainly called when a layer is created through the UI, in other cases (e.g. during import)
      * all necessary information should be included in the imported data.
      */
     void initialize(AnnotationSchemaService aSchemaService);
-    
+
     /**
      * Check if all annotations of this layer conform with the layer configuration. This is usually
      * called when a document is marked as finished to prevent invalid annotations ending up in the
      * finished document.
      */
     List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas);
-    
+
     /**
      * Disable the adapter from dispatching any events. This is useful for backend bulk operations
      * that should not be tracked in detail.
      */
     void silenceEvents();
-    
+
     void select(AnnotatorState aState, AnnotationFS aAnnotation);
-    
+
     /**
      * @return the encoded type name sent to the browser.
      * @see #decodeTypeName(String)
@@ -219,6 +219,6 @@ public interface TypeAdapter
     {
         return TypeUtil.getLayerId(aType);
     }
-    
+
     <T> Optional<T> getTraits(Class<T> aInterface);
 }

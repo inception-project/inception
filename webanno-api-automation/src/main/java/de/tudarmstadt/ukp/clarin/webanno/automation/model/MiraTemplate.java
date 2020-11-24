@@ -60,7 +60,7 @@ public class MiraTemplate
     @ManyToOne
     @JoinColumn(name = "trainFeature")
     private AnnotationFeature trainFeature;
-    
+
     /**
      * {@link TagSet} used as a feature for the trainFeature
      */
@@ -71,11 +71,11 @@ public class MiraTemplate
     private boolean currentLayer = false;// The current training layer for this mira template
 
     /**
-     * Repeat span annotation to the suggestions view 
+     * Repeat span annotation to the suggestions view
      */
     @Column(name = "annotateAndPredict")
     private boolean annotateAndPredict = true;
-    
+
     /**
      * Results comprising of the training accuracy and number of examples used
      */
@@ -120,6 +120,7 @@ public class MiraTemplate
     {
         this.annotateAndPredict = annotateAndRepeat;
     }
+
     public String getResult()
     {
         return result;

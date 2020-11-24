@@ -26,7 +26,7 @@ public class DocumentStateChangedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = -8212153885477218226L;
-    
+
     private SourceDocument document;
     private SourceDocumentState previousState;
     private SourceDocumentState newState;
@@ -44,12 +44,12 @@ public class DocumentStateChangedEvent
     {
         return document;
     }
-    
+
     public SourceDocumentState getPreviousState()
     {
         return previousState;
     }
-    
+
     public SourceDocumentState getNewState()
     {
         return newState;

@@ -61,7 +61,7 @@ public interface Renderer
      */
     void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             int windowBeginOffset, int windowEndOffset);
-    
+
     FeatureSupportRegistry getFeatureSupportRegistry();
 
     default Map<String, String> renderLabelFeatureValues(TypeAdapter aAdapter, FeatureStructure aFs,
@@ -75,27 +75,26 @@ public interface Renderer
                     || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
                 continue;
             }
-            
+
             String label = defaultString(
                     fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs));
-            
+
             features.put(feature.getName(), label);
         }
-        
+
         return features;
     }
-    
+
     default List<VLazyDetailQuery> getLazyDetails(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
         FeatureSupportRegistry fsr = getFeatureSupportRegistry();
-        
-        return aFeatures.stream()
-                .filter(AnnotationFeature::isEnabled)
+
+        return aFeatures.stream().filter(AnnotationFeature::isEnabled)
                 .flatMap(f -> fsr.getFeatureSupport(f).getLazyDetails(f, aFs).stream())
                 .collect(toList());
     }
-    
+
     default Map<String, String> renderHoverFeatureValues(TypeAdapter aAdapter, AnnotationFS aFs,
             List<AnnotationFeature> aFeatures)
     {
@@ -111,16 +110,16 @@ public interface Renderer
                     || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
                 continue;
             }
-            
+
             String text = defaultString(
                     fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs));
-            
+
             hoverfeatures.put(feature.getName(), text);
         }
-        
+
         return hoverfeatures;
     }
-    
+
     default void renderRequiredFeatureErrors(List<AnnotationFeature> aFeatures,
             FeatureStructure aFS, VDocument aResponse)
     {
@@ -128,7 +127,7 @@ public interface Renderer
             if (!f.isEnabled()) {
                 continue;
             }
-            
+
             if (isRequiredFeatureMissing(f, aFS)) {
                 aResponse.add(new VComment(new VID(getAddr(aFS)), VCommentType.ERROR,
                         "Required feature [" + f.getName() + "] not set."));

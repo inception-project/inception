@@ -42,9 +42,9 @@ public class DocumentNavigator
     private static final long serialVersionUID = 7061696472939390003L;
 
     private @SpringBean ProjectService projectService;
-    
+
     private AnnotationPageBase page;
-    
+
     private final ExportDocumentDialog exportDialog;
 
     public DocumentNavigator(String aId, AnnotationPageBase aPage)
@@ -69,7 +69,7 @@ public class DocumentNavigator
                             || !state.getProject().isDisableExport());
         })));
     }
-    
+
     /**
      * Show the previous document, if exist
      */
@@ -93,8 +93,7 @@ public class DocumentNavigator
         page.getModelObject().getSelection().clear();
         page.getFooterItems().getObject().stream()
                 .filter(component -> component instanceof OpenDocumentDialog)
-                .map(component -> (OpenDocumentDialog) component)
-                .findFirst()
+                .map(component -> (OpenDocumentDialog) component).findFirst()
                 .ifPresent(dialog -> dialog.show(aTarget));
     }
 }

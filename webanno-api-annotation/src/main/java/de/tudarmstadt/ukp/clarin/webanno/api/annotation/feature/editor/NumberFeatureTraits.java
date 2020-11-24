@@ -23,72 +23,73 @@ import java.io.Serializable;
  * Traits for number features.
  */
 public class NumberFeatureTraits
-        implements Serializable
+    implements Serializable
 {
     private static final long serialVersionUID = -2395185084802071593L;
-    
+
     public enum EDITOR_TYPE
     {
-        SPINNER("Spinner"),
-        RADIO_BUTTONS("Radio Buttons");
-        
+        SPINNER("Spinner"), RADIO_BUTTONS("Radio Buttons");
+
         private final String name;
-        
-        EDITOR_TYPE(String name) {
+
+        EDITOR_TYPE(String name)
+        {
             this.name = name;
         }
-        
+
         @Override
-        public String toString() {
+        public String toString()
+        {
             return name;
         }
     }
-    
+
     private boolean limited = false;
     private Number minimum = 0;
     private Number maximum = 0;
     private EDITOR_TYPE editorType = EDITOR_TYPE.SPINNER;
-    
+
     public NumberFeatureTraits()
     {
         // Nothing to do
     }
-    
+
     public boolean isLimited()
     {
         return limited;
     }
-    
+
     public void setLimited(boolean limited)
     {
         this.limited = limited;
     }
-    
+
     public Number getMinimum()
     {
         return minimum;
     }
-    
+
     public void setMinimum(Number minimum)
     {
         this.minimum = minimum;
     }
-    
+
     public Number getMaximum()
     {
         return maximum;
     }
-    
+
     public void setMaximum(Number maximum)
     {
         this.maximum = maximum;
     }
-    
+
     public EDITOR_TYPE getEditorType()
     {
         return editorType;
     }
-    
+
     public void setEditorType(EDITOR_TYPE editorType)
     {
         this.editorType = editorType;

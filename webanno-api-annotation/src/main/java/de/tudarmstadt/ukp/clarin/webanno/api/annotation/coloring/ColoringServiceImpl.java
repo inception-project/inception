@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType.DYNAMIC;
@@ -45,10 +46,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 
 @Component
-public class ColoringServiceImpl implements ColoringService
+public class ColoringServiceImpl
+    implements ColoringService
 {
     private final AnnotationSchemaService schemaService;
-    
+
     @Autowired
     public ColoringServiceImpl(AnnotationSchemaService aSchemaService)
     {
@@ -56,26 +58,24 @@ public class ColoringServiceImpl implements ColoringService
     }
 
     @Override
-    public ColoringStrategy getStrategy(
-            AnnotationLayer aLayer, AnnotationPreference aPreferences,
+    public ColoringStrategy getStrategy(AnnotationLayer aLayer, AnnotationPreference aPreferences,
             Map<String[], Queue<String>> aColorQueues)
     {
         ColoringStrategyType t = aPreferences.getColorPerLayer().get(aLayer.getId());
         ReadonlyColoringBehaviour rt = aPreferences.getReadonlyLayerColoringBehaviour();
-        
+
         if (aLayer.isReadonly() && rt != NORMAL) {
             t = rt.t;
         }
-        
+
         if (t == null || t == LEGACY) {
             t = getBestInitialStrategy(aLayer, aPreferences);
         }
-        
+
         return getStrategy(aLayer, t, aColorQueues);
     }
 
-    private ColoringStrategy getStrategy(
-            AnnotationLayer aLayer, ColoringStrategyType colortype,
+    private ColoringStrategy getStrategy(AnnotationLayer aLayer, ColoringStrategyType colortype,
             Map<String[], Queue<String>> aColorQueues)
     {
         // Decide on coloring strategy for the current layer
@@ -143,8 +143,8 @@ public class ColoringServiceImpl implements ColoringService
         return false;
     }
 
-    private String nextPaletteEntry(String[] aPalette,
-            Map<String[], Queue<String>> aPaletteCursors, int aThreshold)
+    private String nextPaletteEntry(String[] aPalette, Map<String[], Queue<String>> aPaletteCursors,
+            int aThreshold)
     {
         // Initialize the color queue if not already done so
         Queue<String> colorQueue = aPaletteCursors.get(aPalette);

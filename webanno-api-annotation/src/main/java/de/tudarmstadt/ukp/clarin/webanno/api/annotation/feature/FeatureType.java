@@ -54,12 +54,12 @@ public class FeatureType
     {
         return uiName;
     }
-    
+
     public String getFeatureSupportId()
     {
         return featureSupportId;
     }
-    
+
     /**
      * Check if the type is reserved for internal use and the user cannot create features of this
      * type.

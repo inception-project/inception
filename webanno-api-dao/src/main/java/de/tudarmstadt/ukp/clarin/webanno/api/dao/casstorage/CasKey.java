@@ -30,7 +30,7 @@ public class CasKey
     private final long projectId;
     private final long documentId;
     private final String userId;
-    
+
     // These are just for information and are not included when checking for equality or building a
     // hash. Mind that the name of a project (possibly the name of a document) might change during
     // the lifetime of the key.
@@ -52,7 +52,7 @@ public class CasKey
         documentId = aDocumentId;
         userId = aUserId;
     }
-    
+
     public long getProjectId()
     {
         return projectId;
@@ -67,7 +67,7 @@ public class CasKey
     {
         return userId;
     }
-    
+
     public String getProjectName()
     {
         return projectName;
@@ -106,16 +106,14 @@ public class CasKey
         return new HashCodeBuilder().append(projectId).append(documentId).append(userId)
                 .toHashCode();
     }
-    
+
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE)
-                .append("p", projectId)
-                .append("d", documentId)
-                .append("u", userId).toString();
+        return new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE).append("p", projectId)
+                .append("d", documentId).append("u", userId).toString();
     }
-    
+
     public static CasKey matchingAllFromProject(Project aProject)
     {
         return new CasKey(aProject.getId(), -1, null)

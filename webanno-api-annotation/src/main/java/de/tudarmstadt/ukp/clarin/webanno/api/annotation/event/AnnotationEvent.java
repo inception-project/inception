@@ -29,14 +29,13 @@ public abstract class AnnotationEvent
     implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = -7460965556870957082L;
-    
+
     private final Project project;
     private final SourceDocument document;
     private final String user;
     private final AnnotationLayer layer;
 
-    public AnnotationEvent(Object aSource, Project aProject, String aUser,
-            AnnotationLayer aLayer)
+    public AnnotationEvent(Object aSource, Project aProject, String aUser, AnnotationLayer aLayer)
     {
         this(aSource, aProject, null, aUser, aLayer);
     }
@@ -56,7 +55,7 @@ public abstract class AnnotationEvent
         user = aUser;
         layer = aLayer;
     }
-    
+
     public Project getProject()
     {
         return project;
@@ -71,7 +70,7 @@ public abstract class AnnotationEvent
     {
         return user;
     }
-    
+
     public AnnotationLayer getLayer()
     {
         return layer;
