@@ -96,15 +96,12 @@ public class UserDaoImpl
     public User get(String aUsername)
     {
         Validate.notBlank(aUsername, "User must be specified");
-        
+
         String query = "FROM " + User.class.getName() + " o WHERE o.username = :username";
-        
-        List<User> users = entityManager
-                .createQuery(query, User.class)
-                .setParameter("username", aUsername)
-                .setMaxResults(1)
-                .getResultList();
-        
+
+        List<User> users = entityManager.createQuery(query, User.class)
+                .setParameter("username", aUsername).setMaxResults(1).getResultList();
+
         if (users.isEmpty()) {
             return null;
         }
@@ -125,25 +122,19 @@ public class UserDaoImpl
     @Transactional
     public List<User> listEnabledUsers()
     {
-        String query = String.join("\n",
-                "FROM " +  User.class.getName(),
-                "WHERE enabled = :enabled");
-        
-        return entityManager.createQuery(query, User.class)
-                .setParameter("enabled", true)
+        String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
+
+        return entityManager.createQuery(query, User.class).setParameter("enabled", true)
                 .getResultList();
     }
-    
+
     @Override
     @Transactional
     public List<User> listDisabledUsers()
     {
-        String query = String.join("\n",
-                "FROM " +  User.class.getName(),
-                "WHERE enabled = :enabled");
-        
-        return entityManager.createQuery(query, User.class)
-                .setParameter("enabled", false)
+        String query = "FROM " + User.class.getName() + " WHERE enabled = :enabled";
+
+        return entityManager.createQuery(query, User.class).setParameter("enabled", false)
                 .getResultList();
     }
 
@@ -157,19 +148,16 @@ public class UserDaoImpl
         }
         return get(username);
     }
-    
+
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Authority> listAuthorities(User aUser)
     {
-        String query =
-                "FROM Authority " + 
-                "WHERE username = :username";
-        return entityManager
-                .createQuery(query, Authority.class)
-                .setParameter("username", aUser).getResultList();
+        String query = "FROM Authority " + "WHERE username = :username";
+        return entityManager.createQuery(query, Authority.class).setParameter("username", aUser)
+                .getResultList();
     }
-    
+
     /**
      * Check if the user has global administrator permissions.
      */
@@ -210,12 +198,12 @@ public class UserDaoImpl
     {
         if (aUser == null || aUser.getUsername() == null) {
             System.out.println(aUser);
-        }            
-        
+        }
+
         // When looking up roles for the user who is currently logged in, then we look in the
         // security context - otherwise we ask the database.
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        
+
         Set<String> roles = new HashSet<>();
         if (authentication != null && aUser.getUsername().equals(authentication.getName())) {
             for (GrantedAuthority ga : SecurityContextHolder.getContext().getAuthentication()
@@ -234,13 +222,12 @@ public class UserDaoImpl
     @Override
     public long countEnabledUsers()
     {
-        String query = String.join("\n",
-                "SELECT COUNT(*)",
-                "FROM " +  User.class.getName(),
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM " + User.class.getName(), //
                 "WHERE enabled = :enabled");
-        
-        return entityManager.createQuery(query, Long.class)
-                .setParameter("enabled", true)
+
+        return entityManager.createQuery(query, Long.class).setParameter("enabled", true)
                 .getSingleResult();
     }
 
