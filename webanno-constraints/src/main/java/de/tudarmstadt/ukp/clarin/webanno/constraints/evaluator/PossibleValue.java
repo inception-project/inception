@@ -26,7 +26,7 @@ public class PossibleValue
     implements Comparable<PossibleValue>, Serializable
 {
     private static final long serialVersionUID = -310345685698644725L;
-    
+
     private final String value;
     private final boolean important;
 

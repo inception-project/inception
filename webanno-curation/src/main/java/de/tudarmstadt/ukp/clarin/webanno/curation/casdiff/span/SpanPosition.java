@@ -24,18 +24,18 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position_ImplBase;
 /**
  * Represents a span position in the text.
  */
-public class SpanPosition extends Position_ImplBase
+public class SpanPosition
+    extends Position_ImplBase
 {
     private static final long serialVersionUID = 7672904919600263605L;
-    
+
     private final int begin;
     private final int end;
     private final String text;
 
     public SpanPosition(String aCollectionId, String aDocumentId, int aCasId, String aType,
-            int aBegin, int aEnd, String aText, String aFeature, String aRole,
-            int aLinkTargetBegin, int aLinkTargetEnd, String aLinkTargetText,
-            LinkCompareBehavior aLinkCompareBehavior)
+            int aBegin, int aEnd, String aText, String aFeature, String aRole, int aLinkTargetBegin,
+            int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aLinkCompareBehavior)
     {
         super(aCollectionId, aDocumentId, aCasId, aType, aFeature, aRole, aLinkTargetBegin,
                 aLinkTargetEnd, aLinkTargetText, aLinkCompareBehavior);
@@ -43,7 +43,7 @@ public class SpanPosition extends Position_ImplBase
         end = aEnd;
         text = aText;
     }
-    
+
     /**
      * @return the begin offset.
      */
@@ -110,8 +110,8 @@ public class SpanPosition extends Position_ImplBase
                         .append(']');
                 break;
             default:
-                throw new IllegalStateException("Unknown link target comparison mode ["
-                        + linkCompareBehavior + "]");
+                throw new IllegalStateException(
+                        "Unknown link target comparison mode [" + linkCompareBehavior + "]");
             }
         }
         return builder.toString();

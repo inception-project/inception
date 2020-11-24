@@ -40,8 +40,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 public class SymbolicRulesTest
 {
     @Test
-    public void testSimpleSymbolicRules()
-        throws Exception
+    public void testSimpleSymbolicRules() throws Exception
     {
         ParsedConstraints constraints = parseFile("src/test/resources/rules/symbolic1.rules");
 
@@ -49,17 +48,17 @@ public class SymbolicRulesTest
 
         CollectionReader reader = createReader(Conll2006Reader.class,
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/text/1.conll");
-        
+
         reader.getNext(jcas.getCas());
 
         POS pos = new POS(jcas, 8, 9);
         pos.setPosValue("pronoun");
         pos.addToIndexes();
-        
+
         Evaluator constraintsEvaluator = new ValuesGenerator();
 
         Lemma lemma = select(jcas, Lemma.class).iterator().next();
-        
+
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(lemma,
                 "value", constraints);
 
@@ -67,8 +66,7 @@ public class SymbolicRulesTest
     }
 
     @Test
-    public void testSimpleSymbolicRules2()
-        throws Exception
+    public void testSimpleSymbolicRules2() throws Exception
     {
         ParsedConstraints constraints = parseFile("src/test/resources/rules/symbolic2.rules");
 
@@ -76,17 +74,17 @@ public class SymbolicRulesTest
 
         CollectionReader reader = createReader(Conll2006Reader.class,
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/text/1.conll");
-        
+
         reader.getNext(jcas.getCas());
 
         POS pos = new POS(jcas, 8, 9);
         pos.setPosValue("pronoun");
         pos.addToIndexes();
-        
+
         Evaluator constraintsEvaluator = new ValuesGenerator();
 
         Lemma lemma = select(jcas, Lemma.class).iterator().next();
-        
+
         List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(lemma,
                 "value", constraints);
 

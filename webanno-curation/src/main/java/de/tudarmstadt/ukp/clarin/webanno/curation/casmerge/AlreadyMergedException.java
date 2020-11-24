@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
 /**
- * Indiates that a merge operation could not be performed because the annotation had already been 
+ * Indiates that a merge operation could not be performed because the annotation had already been
  * merged before.
  */
 public class AlreadyMergedException
@@ -46,5 +46,5 @@ public class AlreadyMergedException
     public AlreadyMergedException(Throwable aCause)
     {
         super(aCause);
-    }   
+    }
 }

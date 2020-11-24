@@ -30,12 +30,12 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ASTCondition;
 
 /**
  * Class containing object representation for Condition in a rule.
- *  */
+ */
 public class Condition
     implements Serializable
 {
     private static final long serialVersionUID = 5229065580264733470L;
-    
+
     private final String path;
     private final String value;
 

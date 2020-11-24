@@ -36,11 +36,11 @@ public class ParsedConstraints
     implements Serializable
 {
     private static final long serialVersionUID = -2401965871743170805L;
-    
+
     private final Map<String, String> imports;
     private final List<Scope> scopes;
     private Map<String, Scope> scopeMap = null;
-    //Contains possible scenarios for which rules are available.
+    // Contains possible scenarios for which rules are available.
     private Set<FSFPair> rulesSet = null;
 
     public ParsedConstraints(Map<String, String> aAliases, List<Scope> aScopes)
@@ -53,7 +53,7 @@ public class ParsedConstraints
     {
         imports = astConstraintsSet.getImports();
         scopes = new ArrayList<>();
-        
+
         for (Entry<String, List<ASTRule>> ruleGroup : astConstraintsSet.getScopes().entrySet()) {
             List<Rule> rules = new ArrayList<Rule>();
             for (ASTRule astRule : ruleGroup.getValue()) {
@@ -112,8 +112,8 @@ public class ParsedConstraints
         }
         return scopeMap.get(scopeName);
     }
-    
-    /** 
+
+    /**
      * Checks if rules exists or not
      */
     public boolean areThereRules(String featureStructure, String feature)

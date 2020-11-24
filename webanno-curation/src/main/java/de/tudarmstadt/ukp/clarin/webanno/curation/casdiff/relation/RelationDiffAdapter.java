@@ -35,21 +35,22 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBa
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
-public class RelationDiffAdapter extends DiffAdapter_ImplBase
+public class RelationDiffAdapter
+    extends DiffAdapter_ImplBase
 {
     public static final RelationDiffAdapter DEPENDENCY_DIFF_ADAPTER = new RelationDiffAdapter(
             Dependency.class.getName(), FEAT_REL_TARGET, FEAT_REL_SOURCE, "DependencyType",
             "flavor");
-    
+
     private String sourceFeature;
     private String targetFeature;
-    
+
     public RelationDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
             String... aLabelFeatures)
     {
         this(aType, aSourceFeature, aTargetFeature, new HashSet<>(asList(aLabelFeatures)));
     }
-    
+
     public RelationDiffAdapter(String aType, String aSourceFeature, String aTargetFeature,
             Set<String> aLabelFeatures)
     {
@@ -57,27 +58,27 @@ public class RelationDiffAdapter extends DiffAdapter_ImplBase
         sourceFeature = aSourceFeature;
         targetFeature = aTargetFeature;
     }
-    
+
     public String getSourceFeature()
     {
         return sourceFeature;
     }
-    
+
     public String getTargetFeature()
     {
         return targetFeature;
     }
-    
+
     @Override
     public Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
             int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
         Type type = aFS.getType();
-        AnnotationFS sourceFS = (AnnotationFS) aFS.getFeatureValue(type
-                .getFeatureByBaseName(sourceFeature));
-        AnnotationFS targetFS = (AnnotationFS) aFS.getFeatureValue(type
-                .getFeatureByBaseName(targetFeature));
-        
+        AnnotationFS sourceFS = (AnnotationFS) aFS
+                .getFeatureValue(type.getFeatureByBaseName(sourceFeature));
+        AnnotationFS targetFS = (AnnotationFS) aFS
+                .getFeatureValue(type.getFeatureByBaseName(targetFeature));
+
         String collectionId = null;
         String documentId = null;
         try {
@@ -89,21 +90,20 @@ public class RelationDiffAdapter extends DiffAdapter_ImplBase
             // We use this information only for debugging - so we can ignore if the information
             // is missing.
         }
-        
+
         String linkTargetText = null;
         if (aLinkTargetBegin != -1 && aFS.getCAS().getDocumentText() != null) {
-            linkTargetText = aFS.getCAS().getDocumentText()
-                    .substring(aLinkTargetBegin, aLinkTargetEnd);
+            linkTargetText = aFS.getCAS().getDocumentText().substring(aLinkTargetBegin,
+                    aLinkTargetEnd);
         }
-        
-        return new RelationPosition(collectionId, documentId, aCasId, getType(), 
+
+        return new RelationPosition(collectionId, documentId, aCasId, getType(),
                 sourceFS != null ? sourceFS.getBegin() : -1,
                 sourceFS != null ? sourceFS.getEnd() : -1,
                 sourceFS != null ? sourceFS.getCoveredText() : null,
                 targetFS != null ? targetFS.getBegin() : -1,
                 targetFS != null ? targetFS.getEnd() : -1,
-                targetFS != null ? targetFS.getCoveredText() : null,
-                aFeature, aRole, aLinkTargetBegin, aLinkTargetEnd, linkTargetText,
-                aLinkCompareBehavior);
+                targetFS != null ? targetFS.getCoveredText() : null, aFeature, aRole,
+                aLinkTargetBegin, aLinkTargetEnd, linkTargetText, aLinkCompareBehavior);
     }
 }

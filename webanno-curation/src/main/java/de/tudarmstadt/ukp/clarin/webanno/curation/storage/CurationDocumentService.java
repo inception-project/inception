@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public interface CurationDocumentService
 {
     String SERVICE_NAME = "curationDocumentService";
-    
+
     // --------------------------------------------------------------------------------------------
     // Methods related to curation
     // --------------------------------------------------------------------------------------------
@@ -50,9 +50,8 @@ public interface CurationDocumentService
     void writeCurationCas(CAS aCas, SourceDocument document, boolean aUpdateTimestamp)
         throws IOException;
 
-    void upgradeCurationCas(CAS aCurCas, SourceDocument document)
-            throws UIMAException, IOException;
-    
+    void upgradeCurationCas(CAS aCurCas, SourceDocument document) throws UIMAException, IOException;
+
     /**
      * Get a curation document for the given {@link SourceDocument}
      *
@@ -62,16 +61,14 @@ public interface CurationDocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    CAS readCurationCas(SourceDocument document)
-        throws IOException;
+    CAS readCurationCas(SourceDocument document) throws IOException;
 
-    void deleteCurationCas(SourceDocument document)
-            throws IOException;
-    
+    void deleteCurationCas(SourceDocument document) throws IOException;
+
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 
     Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException;
-    
+
     /**
      * List all curated source documents.
      *
@@ -85,7 +82,8 @@ public interface CurationDocumentService
 
     /**
      * Check if there already is a curation CAS for the given document
-     * @throws IOException 
+     * 
+     * @throws IOException
      */
     boolean existsCurationCas(SourceDocument aDocument) throws IOException;
 }
