@@ -35,13 +35,13 @@ public class LoadingSplashScreen
         if (GraphicsEnvironment.isHeadless()) {
             return Optional.empty();
         }
-        
+
         SplashWindow window = new SplashWindow(aImage);
         window.setVisible(true);
-        
+
         return Optional.of(window);
     }
-    
+
     private static class SplashWindow
         extends JWindow
     {
