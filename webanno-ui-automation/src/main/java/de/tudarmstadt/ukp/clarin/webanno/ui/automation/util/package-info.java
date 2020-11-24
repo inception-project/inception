@@ -17,5 +17,5 @@
  */
 /**
  * Utility classes for WebAnno Automation componet
-  */
+ */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.util;
