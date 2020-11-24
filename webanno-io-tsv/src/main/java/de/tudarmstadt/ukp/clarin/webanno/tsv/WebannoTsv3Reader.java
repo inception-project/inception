@@ -95,8 +95,7 @@ public class WebannoTsv3Reader
     private Map<Feature, Type> slotLinkTypes = new HashMap<>();
     private StringBuilder coveredText = new StringBuilder();
     // for each type, for each unit, annotations per position
-    private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = 
-            new LinkedHashMap<>();
+    private Map<Type, Map<AnnotationUnit, List<String>>> annotationsPerPostion = new LinkedHashMap<>();
 
     // For multiple span annotations and stacked annotations
     private Map<Type, Map<Integer, String>> annotationsPerTyep = new LinkedHashMap<>();
@@ -107,18 +106,15 @@ public class WebannoTsv3Reader
     private Map<AnnotationUnit, Token> units2Tokens = new HashMap<>();
 
     private Map<Integer, Type> layerMaps = new LinkedHashMap<>();
-    private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annosPerRef = 
-            new HashMap<>();
+    private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annosPerRef = new HashMap<>();
     private Map<Type, Feature> depFeatures = new HashMap<>();
     private Map<Type, Type> depTypess = new HashMap<>();
 
     // record the annotation at ref position when it is multiple token
     // annotation
-    private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annoUnitperAnnoFs = 
-            new HashMap<>();
+    private Map<Type, Map<AnnotationUnit, Map<Integer, AnnotationFS>>> annoUnitperAnnoFs = new HashMap<>();
 
-    public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding)
-        throws IOException
+    public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
 
     {
         DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
@@ -134,8 +130,7 @@ public class WebannoTsv3Reader
      * based on the position of the annotation in the line, update only the end position of the
      * annotation
      */
-    private void setAnnotations(JCas aJCas, InputStream aIs, String aEncoding)
-        throws IOException
+    private void setAnnotations(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
     {
 
         // getting header information
@@ -613,8 +608,9 @@ public class WebannoTsv3Reader
 
         return unescapeJava(aAnno);
     }
-    
-    private String unEscapeSpecial(String aText) {
+
+    private String unEscapeSpecial(String aText)
+    {
         List<String> pat = new ArrayList<>();
         List<String> esc = new ArrayList<>();
         for (int i = 0; i < 32; i++) {
@@ -643,8 +639,8 @@ public class WebannoTsv3Reader
         // backslash
         pat.add("\\");
         esc.add("\\\\");
-        return StringUtils.replaceEach(aText, 
-                esc.toArray(new String[esc.size()]), pat.toArray(new String[pat.size()]));
+        return StringUtils.replaceEach(aText, esc.toArray(new String[esc.size()]),
+                pat.toArray(new String[pat.size()]));
     }
 
     /**
@@ -797,8 +793,7 @@ public class WebannoTsv3Reader
      * @throws IOException
      *             If the type or the feature do not exist in the CAs
      */
-    private void setLayerAndFeature(JCas aJcas, String header)
-        throws IOException
+    private void setLayerAndFeature(JCas aJcas, String header) throws IOException
     {
         try {
             StringTokenizer headerTk = new StringTokenizer(header, "#");
@@ -895,8 +890,7 @@ public class WebannoTsv3Reader
     private String encoding;
 
     @Override
-    public void getNext(JCas aJCas)
-        throws IOException, CollectionException
+    public void getNext(JCas aJCas) throws IOException, CollectionException
     {
         Resource res = nextFile();
         initCas(aJCas, res);

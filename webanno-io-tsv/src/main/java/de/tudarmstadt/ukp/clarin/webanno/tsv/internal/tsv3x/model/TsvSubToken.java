@@ -14,16 +14,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
 import org.apache.commons.lang3.Validate;
 
-public class TsvSubToken extends TsvToken
+public class TsvSubToken
+    extends TsvToken
 {
     private final TsvToken token;
     private final int begin;
     private final int end;
-    
+
     public TsvSubToken(TsvToken aToken, int aBegin, int aEnd)
     {
         super(aToken.getDocument(), aToken.getSentence(), aToken.getUimaToken(),
@@ -42,24 +44,24 @@ public class TsvSubToken extends TsvToken
             Validate.isTrue(aEnd <= length, "End offset must be in document range [0-%d]): %d",
                     length, aBegin);
         }
-        
+
         token = aToken;
         begin = aBegin;
         end = aEnd;
     }
-    
+
     @Override
     public int getBegin()
     {
         return begin;
     }
-    
+
     @Override
     public int getEnd()
     {
         return end;
     }
-    
+
     @Override
     public String getId()
     {

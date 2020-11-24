@@ -32,7 +32,7 @@ public class Tsv3XSchemaAnalyzerTest
         JCas jcas = JCasFactory.createJCas();
 
         TsvSchema schema = Tsv3XCasSchemaAnalyzer.analyze(jcas.getTypeSystem());
-        
+
         for (TsvColumn col : schema.getColumns()) {
             System.out.println(col);
         }

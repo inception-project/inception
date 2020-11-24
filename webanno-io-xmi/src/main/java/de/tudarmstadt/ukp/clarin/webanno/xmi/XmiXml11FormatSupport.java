@@ -38,7 +38,7 @@ public class XmiXml11FormatSupport
 {
     public static final String ID = "xmi-xml1.1";
     public static final String NAME = "UIMA CAS XMI (XML 1.1)";
-    
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class XmiXml11FormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -67,16 +67,14 @@ public class XmiXml11FormatSupport
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(XmiReader.class,
-                XmiReader.PARAM_LENIENT, true);
+        return createReaderDescription(XmiReader.class, XmiReader.PARAM_LENIENT, true);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(XmiWriter.class, aTSD,
-                XmiWriter.PARAM_VERSION, "1.1");
+        return createEngineDescription(XmiWriter.class, aTSD, XmiWriter.PARAM_VERSION, "1.1");
     }
 }

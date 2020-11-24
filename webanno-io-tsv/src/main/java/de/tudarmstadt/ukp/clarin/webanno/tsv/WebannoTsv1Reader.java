@@ -60,9 +60,9 @@ public class WebannoTsv1Reader
     extends JCasResourceCollectionReader_ImplBase
 {
 
-    private String  fileName;
-    public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding)
-        throws IOException
+    private String fileName;
+
+    public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
 
     {
         StringBuilder text = new StringBuilder();
@@ -105,8 +105,8 @@ public class WebannoTsv1Reader
 
         for (int i = 1; i <= tokens.size(); i++) {
             tokenBeginPosition = text.indexOf(tokens.get(i), tokenBeginPosition);
-            Token outToken = new Token(aJCas, tokenBeginPosition, text.indexOf(tokens.get(i),
-                    tokenBeginPosition) + tokens.get(i).length());
+            Token outToken = new Token(aJCas, tokenBeginPosition,
+                    text.indexOf(tokens.get(i), tokenBeginPosition) + tokens.get(i).length());
             tokenEndPosition = text.indexOf(tokens.get(i), tokenBeginPosition)
                     + tokens.get(i).length();
             tokenBeginPosition = tokenEndPosition;
@@ -149,14 +149,14 @@ public class WebannoTsv1Reader
                 int begin = 0, end = 0;
                 // if not ROOT
                 if (dependencyDependent.get(i) != 0) {
-                    begin = tokensStored.get("t_" + i).getBegin() > tokensStored.get(
-                            "t_" + dependencyDependent.get(i)).getBegin() ? tokensStored.get(
-                            "t_" + dependencyDependent.get(i)).getBegin() : tokensStored.get(
-                            "t_" + i).getBegin();
-                    end = tokensStored.get("t_" + i).getEnd() < tokensStored.get(
-                            "t_" + dependencyDependent.get(i)).getEnd() ? tokensStored.get(
-                            "t_" + dependencyDependent.get(i)).getEnd() : tokensStored
-                            .get("t_" + i).getEnd();
+                    begin = tokensStored.get("t_" + i).getBegin() > tokensStored
+                            .get("t_" + dependencyDependent.get(i)).getBegin()
+                                    ? tokensStored.get("t_" + dependencyDependent.get(i)).getBegin()
+                                    : tokensStored.get("t_" + i).getBegin();
+                    end = tokensStored.get("t_" + i).getEnd() < tokensStored
+                            .get("t_" + dependencyDependent.get(i)).getEnd()
+                                    ? tokensStored.get("t_" + dependencyDependent.get(i)).getEnd()
+                                    : tokensStored.get("t_" + i).getEnd();
                 }
                 else {
                     begin = tokensStored.get("t_" + i).getBegin();
@@ -193,16 +193,16 @@ public class WebannoTsv1Reader
                 break;
             }
             if (i == firstTokenInSentence.size() - 1 && i == 0) {
-                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i))
-                        .getBegin());
+                outSentence
+                        .setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i)).getBegin());
                 outSentence.setEnd(tokensStored.get("t_" + (tokensStored.size())).getEnd());
                 outSentence.addToIndexes();
             }
             else if (i == 0) {
-                outSentence.setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i))
-                        .getBegin());
-                outSentence.setEnd(tokensStored.get("t_" + firstTokenInSentence.get(i + 1))
-                        .getEnd());
+                outSentence
+                        .setBegin(tokensStored.get("t_" + firstTokenInSentence.get(i)).getBegin());
+                outSentence
+                        .setEnd(tokensStored.get("t_" + firstTokenInSentence.get(i + 1)).getEnd());
                 outSentence.addToIndexes();
             }
             else {
@@ -310,8 +310,7 @@ public class WebannoTsv1Reader
     private String encoding;
 
     @Override
-    public void getNext(JCas aJCas)
-        throws IOException, CollectionException
+    public void getNext(JCas aJCas) throws IOException, CollectionException
     {
         Resource res = nextFile();
         initCas(aJCas, res);
@@ -346,8 +345,9 @@ public class WebannoTsv1Reader
                     index++;
                 }
                 else if (ne.startsWith("B_") || ne.startsWith("B-")) {
-                    NamedEntity outNamedEntity = new NamedEntity(aJCas, aJcasTokens.get("t_" + i)
-                            .getBegin(), aJcasTokens.get("t_" + i).getEnd());
+                    NamedEntity outNamedEntity = new NamedEntity(aJCas,
+                            aJcasTokens.get("t_" + i).getBegin(),
+                            aJcasTokens.get("t_" + i).getEnd());
                     outNamedEntity.setValue(ne.substring(2));
                     outNamedEntity.addToIndexes();
                     indexedNeAnnos.put(index, outNamedEntity);
@@ -359,11 +359,12 @@ public class WebannoTsv1Reader
                     outNamedEntity.addToIndexes();
                     index++;
                 }
-                else { 
+                else {
                     // NE is not in IOB format. store one NE per token. No way to detect multiple
                     // token NE
-                    NamedEntity outNamedEntity = new NamedEntity(aJCas, aJcasTokens.get("t_" + i)
-                            .getBegin(), aJcasTokens.get("t_" + i).getEnd());
+                    NamedEntity outNamedEntity = new NamedEntity(aJCas,
+                            aJcasTokens.get("t_" + i).getBegin(),
+                            aJcasTokens.get("t_" + i).getEnd());
                     outNamedEntity.setValue(ne);
                     outNamedEntity.addToIndexes();
                     indexedNeAnnos.put(index, outNamedEntity);

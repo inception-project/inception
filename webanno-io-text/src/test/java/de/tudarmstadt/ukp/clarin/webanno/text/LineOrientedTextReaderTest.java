@@ -32,8 +32,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class LineOrientedTextReaderTest
 {
     @Test
-    public void test()
-        throws Exception
+    public void test() throws Exception
     {
         JCas doc = JCasFactory.createJCas();
 
@@ -41,9 +40,9 @@ public class LineOrientedTextReaderTest
                 LineOrientedTextReader.PARAM_SOURCE_LOCATION, "LICENSE.txt");
 
         reader.getNext(doc.getCas());
-        
+
         // select(doc, Sentence.class).forEach(s -> System.out.println(s.getCoveredText()));
-        
+
         assertEquals(169, select(doc, Sentence.class).size());
         assertEquals(0, select(doc, Token.class).size());
     }

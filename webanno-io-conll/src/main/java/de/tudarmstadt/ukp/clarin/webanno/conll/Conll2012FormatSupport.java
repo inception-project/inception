@@ -38,7 +38,7 @@ public class Conll2012FormatSupport
 {
     public static final String ID = "conll2012";
     public static final String NAME = "CoNLL 2012";
-    
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class Conll2012FormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -72,7 +72,7 @@ public class Conll2012FormatSupport
                 // not have them triggers an NPE in DKPro Core 1.11.0
                 Conll2012Reader.PARAM_READ_CONSTITUENT, false);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

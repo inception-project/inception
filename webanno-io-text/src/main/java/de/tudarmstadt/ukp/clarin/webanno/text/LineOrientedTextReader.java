@@ -32,15 +32,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 /**
  * UIMA collection reader for plain text files, one sentence per line.
  */
-@TypeCapability(
-        outputs = {
-                "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData"})
+@TypeCapability(outputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData" })
 public class LineOrientedTextReader
     extends JCasResourceCollectionReader_ImplBase
 {
     @Override
-    public void getNext(JCas aJCas)
-        throws IOException, CollectionException
+    public void getNext(JCas aJCas) throws IOException, CollectionException
     {
         Resource res = nextFile();
         initCas(aJCas, res);
@@ -68,8 +65,7 @@ public class LineOrientedTextReader
         }
     }
 
-    protected Sentence createSentence(final JCas aJCas, final int aBegin,
-            final int aEnd)
+    protected Sentence createSentence(final JCas aJCas, final int aBegin, final int aEnd)
     {
         int[] span = new int[] { aBegin, aEnd };
         trim(aJCas.getDocumentText(), span);
@@ -82,7 +78,7 @@ public class LineOrientedTextReader
             return null;
         }
     }
-    
+
     /**
      * Remove trailing or leading whitespace from the annotation.
      * 
@@ -116,15 +112,22 @@ public class LineOrientedTextReader
     public boolean trimChar(final char aChar)
     {
         switch (aChar) {
-        case '\n':     return true; // Line break
-        case '\r':     return true; // Carriage return
-        case '\t':     return true; // Tab
-        case '\u200E': return true; // LEFT-TO-RIGHT MARK
-        case '\u200F': return true; // RIGHT-TO-LEFT MARK
-        case '\u2028': return true; // LINE SEPARATOR
-        case '\u2029': return true; // PARAGRAPH SEPARATOR
+        case '\n':
+            return true; // Line break
+        case '\r':
+            return true; // Carriage return
+        case '\t':
+            return true; // Tab
+        case '\u200E':
+            return true; // LEFT-TO-RIGHT MARK
+        case '\u200F':
+            return true; // RIGHT-TO-LEFT MARK
+        case '\u2028':
+            return true; // LINE SEPARATOR
+        case '\u2029':
+            return true; // PARAGRAPH SEPARATOR
         default:
-            return  Character.isWhitespace(aChar);
+            return Character.isWhitespace(aChar);
         }
     }
 }

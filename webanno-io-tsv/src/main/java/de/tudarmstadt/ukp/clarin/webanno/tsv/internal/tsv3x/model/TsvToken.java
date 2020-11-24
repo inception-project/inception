@@ -14,17 +14,19 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
-public class TsvToken extends TsvUnit
+public class TsvToken
+    extends TsvUnit
 {
     private List<TsvSubToken> subTokens = new ArrayList<>();
-    
+
     public TsvToken(TsvDocument aDoc, TsvSentence aSentence, Token aUimaToken, int aPosition)
     {
         super(aDoc, aSentence, aUimaToken, aPosition);
@@ -50,7 +52,7 @@ public class TsvToken extends TsvUnit
         else {
             subTokens.add(subToken);
         }
-        
+
         return subToken;
     }
 

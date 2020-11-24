@@ -46,6 +46,7 @@ public class WebAnnoTsv3XReaderWriterTest
     {
         String targetFolder = "target/test-output/" + testContext.getTestOutputFolderName();
         
+        // @formatter:off
         CollectionReader reader = CollectionReaderFactory.createReader(
                 WebannoTsv3XReader.class,
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, "src/test/resources/tsv3/",
@@ -68,6 +69,7 @@ public class WebAnnoTsv3XReaderWriterTest
                 WebannoTsv3XReader.class,
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, targetFolder,
                 WebannoTsv3XReader.PARAM_PATTERNS, "coref.tsv");
+        // @formatter:on
 
         CAS cas1 = JCasFactory.createJCas().getCas();
         reader1.getNext(cas1);
