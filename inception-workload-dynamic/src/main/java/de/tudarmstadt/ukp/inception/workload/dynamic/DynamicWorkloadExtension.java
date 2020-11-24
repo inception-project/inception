@@ -23,10 +23,10 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
-import de.tudarmstadt.ukp.inception.workload.traits.DynamicWorkloadTrait;
 
 /**
  * <p>
@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.workload.traits.DynamicWorkloadTrait;
  * </p>
  */
 public class DynamicWorkloadExtension
-    implements WorkloadManagerExtension<DynamicWorkloadTrait>
+    implements WorkloadManagerExtension<DynamicWorkloadTraits>
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -54,12 +54,12 @@ public class DynamicWorkloadExtension
     }
 
     @Override
-    public DynamicWorkloadTrait readTraits(WorkloadManager aWorkloadManager)
+    public DynamicWorkloadTraits readTraits(WorkloadManager aWorkloadManager)
     {
-        DynamicWorkloadTrait traits = null;
+        DynamicWorkloadTraits traits = null;
 
         try {
-            traits = JSONUtil.fromJsonString(DynamicWorkloadTrait.class,
+            traits = JSONUtil.fromJsonString(DynamicWorkloadTraits.class,
                     aWorkloadManager.getTraits());
         }
         catch (Exception e) {
@@ -67,7 +67,7 @@ public class DynamicWorkloadExtension
         }
 
         if (traits == null) {
-            traits = new DynamicWorkloadTrait();
+            traits = new DynamicWorkloadTraits();
         }
 
         return traits;
@@ -75,7 +75,7 @@ public class DynamicWorkloadExtension
 
     @Override
     public void writeTraits(WorkloadManagementService aWorkloadManagementService,
-            DynamicWorkloadTrait aTrait, Project aProject)
+                            DynamicWorkloadTraits aTrait, Project aProject)
     {
         try {
             WorkloadManager manager = aWorkloadManagementService

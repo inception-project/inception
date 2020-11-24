@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.workflow;
+package de.tudarmstadt.ukp.inception.workload.dynamic.workflow;
 
 import static java.util.stream.Collectors.toList;
 
@@ -26,7 +26,7 @@ import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
-import de.tudarmstadt.ukp.inception.workload.workflow.types.WorkflowType;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.WorkflowType;
 
 public class WorkflowExtensionPointImpl
     extends ExtensionPoint_ImplBase<Project, WorkflowExtension>

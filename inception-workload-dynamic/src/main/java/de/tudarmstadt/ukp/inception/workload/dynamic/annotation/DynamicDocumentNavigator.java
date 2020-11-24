@@ -18,11 +18,9 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
-import java.io.Serializable;
-
 import org.apache.wicket.markup.html.panel.Panel;
 
-public class DynamicDocumentNavigator extends Panel implements Serializable
+public class DynamicDocumentNavigator extends Panel
 {
     private static final long serialVersionUID = -8022038879911770593L;
 

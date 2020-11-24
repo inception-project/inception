@@ -19,10 +19,8 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
-import static de.tudarmstadt.ukp.inception.workload.workflow.types.RandomizedWorkflowExtension.RANDOMIZED_WORKFLOW;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav.DefaultDocumentNavigatorActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -47,6 +46,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -67,6 +69,9 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     private final WorkloadManagementService workloadManagementService;
     private final DynamicWorkloadExtension dynamicWorkloadExtension;
     private final ProjectService projectService;
+    private final WorkflowExtensionPoint workflowExtensionPoint;
+
+    private AnnotatorState annotatorState;
 
     // SpringBeans
     private @SpringBean EntityManager entityManager;
@@ -74,12 +79,14 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
             WorkloadManagementService aWorkloadManagementService,
-            DynamicWorkloadExtension aDynamicWorkloadExtension, ProjectService aProjectService)
+            DynamicWorkloadExtension aDynamicWorkloadExtension, ProjectService aProjectService,
+            WorkflowExtensionPoint aWorkflowExtensionPoint)
     {
         documentService = aDocumentService;
         workloadManagementService = aWorkloadManagementService;
         dynamicWorkloadExtension = aDynamicWorkloadExtension;
         projectService = aProjectService;
+        workflowExtensionPoint = aWorkflowExtensionPoint;
     }
 
     @Override
@@ -119,8 +126,9 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     @Override
     public void onInitialize(AnnotationPageBase aPage)
     {
-        User user = aPage.getModelObject().getUser();
-        Project project = aPage.getModelObject().getProject();
+        annotatorState = aPage.getModelObject();
+        User user = annotatorState.getUser();
+        Project project = annotatorState.getProject();
         Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
 
         // Check if there is a document in progress and return this one
@@ -132,7 +140,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         // First, check if there are other documents which have been in the state INPROGRESS
         // Load the first one found
         if (!inProgressDocuments.isEmpty()) {
-            aPage.getModelObject().setDocument(inProgressDocuments.get(0).getDocument(),
+            annotatorState.setDocument(inProgressDocuments.get(0).getDocument(),
                     documentService.listSourceDocuments(project));
             aPage.actionLoadDocument(target.orElse(null));
             return;
@@ -147,52 +155,33 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         List<SourceDocument> sourceDocuments = workloadManagementService
                 .getAnnotationDocumentListForUser(project, user);
 
-        // Switch for all workflow types which are available. If a new one is created
-        // simply add a new case here.
-        switch (dynamicWorkloadExtension.readTraits(currentWorkload).getWorkflowType()) {
-
-        // Go through all documents in a random order
-        case (RANDOMIZED_WORKFLOW):
-            // Shuffle the List then call loadNewDocument
-            Collections.shuffle(sourceDocuments);
-            loadNewDocument(sourceDocuments, project, currentWorkload, aPage, target);
-            break;
-
-        // Default workflow selected, nothing to change in the list
-        default:
-            loadNewDocument(sourceDocuments, project, currentWorkload, aPage, target);
-            break;
-        }
-    }
-
-    private void loadNewDocument(List<SourceDocument> aSourceDocuments, Project aProject,
-                                 WorkloadManager aCurrentWorkload, AnnotationPageBase aPage,
-                                 Optional<AjaxRequestTarget> aTarget)
-    {
-        // Go through all documents of the list
-        for (SourceDocument doc : aSourceDocuments) {
-            // Check if there are less annotators working on the selected document than
-            // the default number of annotation set by the project manager
-            if ((workloadManagementService.getAmountOfUsersWorkingOnADocument(doc, aProject)
-                    + 1) <= (dynamicWorkloadExtension.readTraits(aCurrentWorkload)
-                            .getDefaultNumberOfAnnotations())) {
-                // This was the case, so load the document and return
-                aPage.getModelObject().setDocument(doc,
-                        documentService.listSourceDocuments(aProject));
-                aPage.actionLoadDocument(aTarget.orElse(null));
-                return;
+        // If there are no traits set yet, use the DefaultWorkflowExtension
+        // otherwise select the current one
+        WorkflowExtension currentWorkflowExtension = new DefaultWorkflowExtension();
+        for (WorkflowExtension extension : workflowExtensionPoint.getExtensions()) {
+            if (extension.getId().equals(
+                    dynamicWorkloadExtension.readTraits(currentWorkload).getWorkflowType())) {
+                currentWorkflowExtension = extension;
+                break;
             }
         }
-        // No documents left, return to homepage and show corresponding message
-        redirectUSerToHomePage(aPage);
+        // Rearrange list of documents according to current workflow
+        sourceDocuments = currentWorkflowExtension.getNextDocument(sourceDocuments);
 
+        // Load the new document, if loadNextDocument() returns false, redirect the user to the
+        // homepage
+        if (!currentWorkflowExtension.loadNextDocument(sourceDocuments, project, currentWorkload,
+                aPage, target.orElse(null), workloadManagementService, dynamicWorkloadExtension,
+                documentService)) {
+            redirectUserToHomePage(aPage);
+        }
     }
 
-    public void redirectUSerToHomePage(ApplicationPageBase aPage)
+    public void redirectUserToHomePage(ApplicationPageBase aPage)
     {
         // Nothing left, so returning to homepage and showing hint
-        aPage.setResponsePage(aPage.getApplication().getHomePage());
         aPage.getSession().info(
                 "There are no more documents to annotate available for you. Please contact your project supervisor.");
+        aPage.setResponsePage(aPage.getApplication().getHomePage());
     }
 }

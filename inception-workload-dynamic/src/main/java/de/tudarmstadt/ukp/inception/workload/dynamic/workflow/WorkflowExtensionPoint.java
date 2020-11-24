@@ -15,19 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.workflow;
+package de.tudarmstadt.ukp.inception.workload.dynamic.workflow;
 
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
-import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
-import de.tudarmstadt.ukp.inception.workload.workflow.types.WorkflowType;
+import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.WorkflowType;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WorkloadManagementAutoConfiguration#workflowExtensionPoint}.
+ * {@link DynamicWorkloadManagerAutoConfiguration#workflowExtensionPoint}.
  * </p>
  */
 public interface WorkflowExtensionPoint

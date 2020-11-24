@@ -129,7 +129,7 @@ public class WorkloadManagementServiceImpl
      */
     @Override
     @Transactional
-    public Long getAmountOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject)
+    public Long getNumberOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject)
     {
         return entityManager
                 .createQuery(
@@ -150,7 +150,7 @@ public class WorkloadManagementServiceImpl
     {
         return entityManager.createQuery("SELECT source FROM SourceDocument source "
                 + "WHERE source.project = :project AND source.name NOT IN (SELECT anno.name FROM AnnotationDocument anno "
-                + "WHERE anno.user = :user AND (anno.state = 'INPROGRESS' OR anno.state = 'FINISHED'))",
+                + "WHERE anno.user = :user AND anno.project = :project AND (anno.state = 'INPROGRESS' OR anno.state = 'FINISHED'))",
                 SourceDocument.class).setParameter("project", aProject)
                 .setParameter("user", aUser.getUsername()).getResultList();
     }

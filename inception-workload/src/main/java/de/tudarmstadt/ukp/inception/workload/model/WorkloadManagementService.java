@@ -38,7 +38,7 @@ public interface WorkloadManagementService
     List<AnnotationDocument> getUsersForSpecificDocumentAndState(AnnotationDocumentState aState,
             SourceDocument aSourceDocumentt, Project aProject);
 
-    Long getAmountOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject);
+    Long getNumberOfUsersWorkingOnADocument(SourceDocument aDocument, Project aProject);
 
     List<SourceDocument> getAnnotationDocumentListForUser(Project aProject,
             User aUser);

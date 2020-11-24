@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.workflow.types;
+package de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types;
 
 import java.io.Serializable;
 

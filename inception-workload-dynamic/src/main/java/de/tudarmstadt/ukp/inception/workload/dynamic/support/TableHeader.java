@@ -19,17 +19,10 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 public enum TableHeader
 {
-    Document("DOCUMENT"),
-    Finished("FINISHED"),
-    Processed("PROCESSED"),
-    Annotators("ANNOTATORS"),
-    Updated("UPDATED"),
-    Actions("ACTIONS");
-
-    private final String id;
-
-    TableHeader(String aId)
-    {
-        id = aId;
-    }
+    Document,
+    Finished,
+    Processed,
+    Annotators,
+    Updated,
+    Actions;
 }

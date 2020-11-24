@@ -30,10 +30,6 @@
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
     <dependency>
@@ -61,28 +57,8 @@
       <artifactId>spring-context</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-autoconfigure</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-spring</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-extensions</artifactId>
-    </dependency>
-    <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.danekja</groupId>
-      <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>

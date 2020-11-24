@@ -91,11 +91,11 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DateSelection;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.WorkflowType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.traits.DynamicWorkloadTrait;
-import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtensionPoint;
-import de.tudarmstadt.ukp.inception.workload.workflow.types.DefaultWorkflowExtension;
-import de.tudarmstadt.ukp.inception.workload.workflow.types.WorkflowType;
 
 /**
  * The workload page. It shall give project admins a fast overview on how each annotators progress
@@ -122,7 +122,7 @@ public class DynamicWorkloadManagementPage
     private final IModel<Project> currentProject = new Model<>();
 
     // Date provider
-    AnnotationQueueOverviewDataProvider dataProvider;
+    private AnnotationQueueOverviewDataProvider dataProvider;
 
     // Input Fields
     private NumberTextField<Integer> defaultNumberDocumentsTextField;
@@ -165,9 +165,6 @@ public class DynamicWorkloadManagementPage
         getSession().error("No project selected.");
     }
 
-    /**
-     * Constructor, create the whole page
-     */
     public DynamicWorkloadManagementPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
@@ -179,9 +176,6 @@ public class DynamicWorkloadManagementPage
         commonInit();
     }
 
-    /**
-     * Initialize the whole page
-     */
     public void commonInit()
     {
         // Header of the page
@@ -292,8 +286,7 @@ public class DynamicWorkloadManagementPage
                 dateTo.setModelObject(null);
                 dateFrom.setModelObject(null);
 
-                ajaxRequestTarget.add(dateFrom);
-                ajaxRequestTarget.add(dateTo);
+                ajaxRequestTarget.add(dateFrom, dateTo);
             }
         });
 
@@ -323,10 +316,10 @@ public class DynamicWorkloadManagementPage
         // Condition for filter inputs to be enabled or disabled
         dateTo.add(enabledWhen(
             () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0).name())
-                 && !(dataProvider.getFilterState().getSelected())));
+                && !(dataProvider.getFilterState().getSelected())));
         dateFrom.add(enabledWhen(
             () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1).name())
-                 && !(dataProvider.getFilterState().getSelected())));
+                && !(dataProvider.getFilterState().getSelected())));
         dateChoices.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
         userFilterTextField.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
         documentFilterTextField
@@ -423,9 +416,7 @@ public class DynamicWorkloadManagementPage
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                aTarget.add(userSelection);
-                aTarget.add(userAssignDocumentForm);
-                aTarget.add(userResetDocumentForm);
+                aTarget.add(userSelection, userAssignDocumentForm, userResetDocumentForm);
             }
         });
 
@@ -584,7 +575,7 @@ public class DynamicWorkloadManagementPage
 
     private WorkflowType getWorkflowChoice()
     {
-        DynamicWorkloadTrait traits = dynamicWorkloadExtension.readTraits(workloadManagementService
+        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
         Extension extension = workflowExtensionPoint.getExtension(traits.getWorkflowType());
         // NP catch for older project
@@ -620,7 +611,7 @@ public class DynamicWorkloadManagementPage
 
         // Writes the new traits into the DB
         dynamicWorkloadExtension.writeTraits(workloadManagementService,
-                new DynamicWorkloadTrait(workflowChoices.getModelObject().getWorkflowExtensionId(),
+                new DynamicWorkloadTraits(workflowChoices.getModelObject().getWorkflowExtensionId(),
                         Integer.parseInt(defaultNumberDocumentsTextField.getInput())),
                 currentProject.getObject());
         success("Changes saved");
@@ -663,7 +654,7 @@ public class DynamicWorkloadManagementPage
             success("Document status changed");
         }
 
-        aAjaxRequestTarget.add(table);
+        updateTable(aAjaxRequestTarget);
     }
 
     private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget,
@@ -710,7 +701,8 @@ public class DynamicWorkloadManagementPage
                 }
             }
 
-            aAjaxRequestTarget.add(table);
+            aAjaxRequestTarget.add(userResetDocumentForm);
+            updateTable(aAjaxRequestTarget);
         }
     }
 
@@ -736,6 +728,18 @@ public class DynamicWorkloadManagementPage
 
         // Open the dialog
         infoDialog.show(aTarget);
+    }
+
+    /**
+     *
+     * @param aTarget
+     *            Updates the table with the new content, or at least refreshes it
+     */
+    private void updateTable(AjaxRequestTarget aTarget)
+    {
+        dataProvider.setAllAnnotationDocuments(
+                documentService.listAnnotationDocuments(currentProject.getObject()));
+        aTarget.add(table);
     }
 
     private Optional<Project> getProjectFromParameters(StringValue aProjectParam)

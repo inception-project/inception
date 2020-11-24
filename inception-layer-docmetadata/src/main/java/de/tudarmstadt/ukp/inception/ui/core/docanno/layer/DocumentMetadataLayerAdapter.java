@@ -134,8 +134,7 @@ public class DocumentMetadataLayerAdapter
         */
         return messages;
     }
-    
-    @Override
+
     public void select(AnnotatorState aState, AnnotationFS aAnno)
     {
         aState.getSelection().selectSpan(aAnno);

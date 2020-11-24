@@ -15,9 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.workflow.types;
+package de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types;
 
-import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
+import java.util.Collections;
+import java.util.List;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 
 /**
  * Randomized workflow extension type
@@ -37,4 +41,13 @@ public class RandomizedWorkflowExtension implements WorkflowExtension
     {
         return RANDOMIZED_WORKFLOW;
     }
+
+    @Override
+    public List<SourceDocument> getNextDocument(List<SourceDocument> aSourceDocuments)
+    {
+        //Shuffling and returning the list
+        Collections.shuffle(aSourceDocuments);
+        return aSourceDocuments;
+    }
+
 }

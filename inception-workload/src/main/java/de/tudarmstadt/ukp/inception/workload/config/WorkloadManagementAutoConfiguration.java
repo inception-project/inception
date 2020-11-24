@@ -32,12 +32,6 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
-import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
-import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtensionPoint;
-import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtensionPointImpl;
-import de.tudarmstadt.ukp.inception.workload.workflow.types.DefaultWorkflowExtension;
-import de.tudarmstadt.ukp.inception.workload.workflow.types.ExternalWorkflowExtension;
-import de.tudarmstadt.ukp.inception.workload.workflow.types.RandomizedWorkflowExtension;
 
 @Configuration
 @Order(300)
@@ -51,12 +45,6 @@ public class WorkloadManagementAutoConfiguration<T>
     }
 
     @Bean
-    public WorkflowExtensionPoint workflowExtensionPoint(List<WorkflowExtension> aWorkflowExtension)
-    {
-        return new WorkflowExtensionPointImpl(aWorkflowExtension);
-    }
-
-    @Bean
     public WorkloadManagementService workloadManagementService(EntityManager aEntityManager,
             WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
     {
@@ -67,24 +55,6 @@ public class WorkloadManagementAutoConfiguration<T>
     public WorkloadManager workloadManager()
     {
         return new WorkloadManager();
-    }
-
-    @Bean
-    public ExternalWorkflowExtension curriculumWorkflowExtension()
-    {
-        return new ExternalWorkflowExtension();
-    }
-
-    @Bean
-    public DefaultWorkflowExtension defaultWorkflowExtension()
-    {
-        return new DefaultWorkflowExtension();
-    }
-
-    @Bean
-    public RandomizedWorkflowExtension randomizedWorkflowExtension()
-    {
-        return new RandomizedWorkflowExtension();
     }
 
 }

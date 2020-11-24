@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.traits;
+package de.tudarmstadt.ukp.inception.workload.dynamic.trait;
 
 import java.io.Serializable;
 
-import de.tudarmstadt.ukp.inception.workload.workflow.types.DefaultWorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 
 /**
  * Trait class for dynamic workload
  */
-public class DynamicWorkloadTrait
+public class DynamicWorkloadTraits
     implements Serializable
 {
     private static final long serialVersionUID = 7558423338392462923L;
@@ -32,13 +32,13 @@ public class DynamicWorkloadTrait
     private String workflowType;
     private int defaultNumberOfAnnotations;
 
-    public DynamicWorkloadTrait()
+    public DynamicWorkloadTraits()
     {
         workflowType = DefaultWorkflowExtension.DEFAULT_WORKFLOW;
         defaultNumberOfAnnotations = 6;
 
     }
-    public DynamicWorkloadTrait(String aWorkflowType, int aDefaultNumberOfAnnotations)
+    public DynamicWorkloadTraits(String aWorkflowType, int aDefaultNumberOfAnnotations)
     {
         workflowType = aWorkflowType;
         defaultNumberOfAnnotations = aDefaultNumberOfAnnotations;

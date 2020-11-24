@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.settings;
+package de.tudarmstadt.ukp.inception.workload.dynamic.settings;
 
 import java.io.IOException;
 
@@ -30,7 +30,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
@@ -38,7 +37,6 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
-import de.tudarmstadt.ukp.inception.workload.traits.DynamicWorkloadTrait;
 
 /**
  * This class represents the panel "workload" shown in any projects settings. It can be used to
@@ -78,7 +76,6 @@ public class WorkloadSettingsPanel
         workloadStrategy.setNullValid(false);
         workloadStrategy.setChoices(workloadManagerExtensionPoint.getTypes());
 
-        // add them to the form
         form.add(workloadStrategy);
 
         // Finally, add the confirm button at the end
@@ -89,7 +86,7 @@ public class WorkloadSettingsPanel
     }
 
     /**
-     * This method returns the current WorkloadManagerType.
+     * @return current {@link WorkloadManager}
      */
     private WorkloadManagerType getWorkloadManager()
     {
@@ -106,21 +103,11 @@ public class WorkloadSettingsPanel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        // Either traits are already available for the project
         WorkloadManager manager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
-        if (manager != null) {
-            manager.setType(workloadStrategy.getModelObject().getWorkloadManagerExtensionId());
-            workloadManagementService.saveConfiguration(manager);
-        }
-        // or they are not available (first time after project creation or "older" projects)
-        else {
-            DynamicWorkloadTrait trait = new DynamicWorkloadTrait();
-            manager.setType(workloadStrategy.getModelObject().getWorkloadManagerExtensionId());
-            manager.setTraits(JSONUtil.toJsonString(trait));
-            workloadManagementService.saveConfiguration(manager);
-        }
-        // In both cases, get the feedback message that it is properly saved now
+        manager.setType(workloadStrategy.getModelObject().getWorkloadManagerExtensionId());
+        workloadManagementService.saveConfiguration(manager);
+
         success("Workload settings saved");
     }
 }

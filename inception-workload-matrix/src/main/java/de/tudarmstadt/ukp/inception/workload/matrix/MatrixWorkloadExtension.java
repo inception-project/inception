@@ -25,9 +25,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTrait;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
-import de.tudarmstadt.ukp.inception.workload.traits.MatrixWorkloadTrait;
 
 /**
  * <p>

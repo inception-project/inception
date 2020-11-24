@@ -15,27 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.workflow.types;
+package de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types;
 
-import de.tudarmstadt.ukp.inception.workload.workflow.WorkflowExtension;
+import java.util.List;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 
 /**
- * Curriculum workflow extension type
+ * Default workflow extension type
  */
-public class ExternalWorkflowExtension
-    implements WorkflowExtension
+public class DefaultWorkflowExtension implements WorkflowExtension
 {
-    public static final String EXTERNAL_EXTENSION = "external";
+    public static final String DEFAULT_WORKFLOW = "default";
 
     @Override
     public String getLabel()
     {
-        return "External workflow";
+        return "Default workflow";
     }
 
     @Override
     public String getId()
     {
-        return EXTERNAL_EXTENSION;
+        return DEFAULT_WORKFLOW;
     }
+
+    @Override
+    public List<SourceDocument> getNextDocument(List<SourceDocument> aSourceDocuments)
+    {
+        return aSourceDocuments;
+    }
+
 }

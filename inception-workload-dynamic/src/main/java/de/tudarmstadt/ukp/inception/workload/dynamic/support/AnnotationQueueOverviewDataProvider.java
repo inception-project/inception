@@ -53,9 +53,9 @@ public class AnnotationQueueOverviewDataProvider
     private static final long serialVersionUID = 4125678936105494485L;
 
     private final List<TableHeader> headers;
-    private final List<SourceDocument> data;
-    private final List<AnnotationDocument> allAnnotationDocuments;
-    private final List<SourceDocument> shownDocuments;
+    private List<SourceDocument> data;
+    private List<AnnotationDocument> allAnnotationDocuments;
+    private List<SourceDocument> shownDocuments;
 
     private IModel<List<SourceDocument>> model;
     private Filter filter;
@@ -317,4 +317,10 @@ public class AnnotationQueueOverviewDataProvider
     {
         return aDoc.getUpdated();
     }
+
+    public void setAllAnnotationDocuments(List<AnnotationDocument> aListOfAnnotationDocuments)
+    {
+        allAnnotationDocuments = aListOfAnnotationDocuments;
+    }
+
 }
