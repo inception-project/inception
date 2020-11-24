@@ -23,7 +23,7 @@ public class RemoteApiException
     extends Exception
 {
     private static final long serialVersionUID = 3117987891600569825L;
-    
+
     private HttpStatus status;
 
     public RemoteApiException(String aMessage, HttpStatus aStatus)
@@ -31,7 +31,7 @@ public class RemoteApiException
         super(aMessage);
         status = aStatus;
     }
-    
+
     public HttpStatus getStatus()
     {
         return status;

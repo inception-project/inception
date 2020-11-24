@@ -27,23 +27,23 @@ public class DocumentStateChangeMessage
 
     private long documentId;
     private String documentName;
-    
+
     private String documentPreviousState;
     private String documentState;
-    
+
     public DocumentStateChangeMessage()
     {
         // Nothing to do
     }
-    
+
     public DocumentStateChangeMessage(DocumentStateChangedEvent aEvent)
     {
         projectId = aEvent.getDocument().getProject().getId();
         projectName = aEvent.getDocument().getProject().getName();
-        
+
         documentId = aEvent.getDocument().getId();
         documentName = aEvent.getDocument().getName();
-        
+
         documentState = AeroRemoteApiController.sourceDocumentStateToString(aEvent.getNewState());
         documentPreviousState = AeroRemoteApiController
                 .sourceDocumentStateToString(aEvent.getPreviousState());

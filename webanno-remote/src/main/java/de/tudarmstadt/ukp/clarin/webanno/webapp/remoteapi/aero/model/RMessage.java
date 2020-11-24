@@ -21,7 +21,7 @@ public class RMessage
 {
     public RMessageLevel level;
     public String message;
-    
+
     public RMessage(RMessageLevel aLevel, String aMsg)
     {
         level = aLevel;

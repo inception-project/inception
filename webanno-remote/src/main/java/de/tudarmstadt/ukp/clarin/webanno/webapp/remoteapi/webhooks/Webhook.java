@@ -67,7 +67,7 @@ public class Webhook
     {
         topics = aTopics;
     }
-    
+
     public boolean isVerifyCertificates()
     {
         return verifyCertificates;

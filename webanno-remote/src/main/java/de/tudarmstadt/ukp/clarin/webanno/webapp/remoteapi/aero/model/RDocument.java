@@ -26,14 +26,14 @@ public class RDocument
     public long id;
     public String name;
     public String state;
-    
+
     public RDocument(SourceDocument aDocument)
     {
         id = aDocument.getId();
         name = aDocument.getName();
         state = AeroRemoteApiController.sourceDocumentStateToString(aDocument.getState());
     }
-    
+
     public RDocument(long aId, String aName, SourceDocumentState aState)
     {
         super();

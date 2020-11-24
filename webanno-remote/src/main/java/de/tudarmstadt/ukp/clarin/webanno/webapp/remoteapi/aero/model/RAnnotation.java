@@ -27,11 +27,11 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiCont
 public class RAnnotation
 {
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ssZ");
-    
+
     public String user;
     public String state;
     public String timestamp;
-    
+
     public RAnnotation(AnnotationDocument aAnnotationDocument)
     {
         user = aAnnotationDocument.getUser();
@@ -41,7 +41,7 @@ public class RAnnotation
             timestamp = FORMAT.format(aAnnotationDocument.getTimestamp());
         }
     }
-    
+
     public RAnnotation(String aUser, AnnotationDocumentState aState, Date aTimestamp)
     {
         super();

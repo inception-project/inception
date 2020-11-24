@@ -38,7 +38,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 public class SwaggerConfig
 {
     /*
-     * Just do avoid Springfox to auto-scan for all APIs 
+     * Just do avoid Springfox to auto-scan for all APIs
      */
     @ConditionalOnExpression("!(" + REMOTE_API_ENABLED_CONDITION + ")")
     @Bean
@@ -46,6 +46,7 @@ public class SwaggerConfig
     {
         ApiSelectorBuilder builder = new Docket(DocumentationType.SWAGGER_2).select();
         builder.paths(path -> false);
+        // @formatter:off
         return builder.build()
                 .groupName("Remote API disbled")
                 .apiInfo(new ApiInfoBuilder()
@@ -55,17 +56,20 @@ public class SwaggerConfig
                         .license("")
                         .licenseUrl("")
                 .build());
+        // @formatter:on
     }
-    
+
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
     public Docket legacyRemoteApiDocket()
     {
         ApiSelectorBuilder builder = new Docket(DocumentationType.SWAGGER_2).select();
         builder.paths(path -> path.matches(LegacyRemoteApiController.API_BASE + "/.*"));
+        // @formatter:off
         return builder.build()
                 .groupName("Legacy API")
                 .genericModelSubstitutes(Optional.class);
+        // @formatter:on
     }
 
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
@@ -74,6 +78,7 @@ public class SwaggerConfig
     {
         ApiSelectorBuilder builder = new Docket(DocumentationType.SWAGGER_2).select();
         builder.paths(path -> path.matches(AeroRemoteApiController.API_BASE + "/.*"));
+        // @formatter:off
         return builder.build()
                 .groupName("AERO API")
                 .apiInfo(new ApiInfoBuilder()
@@ -86,5 +91,6 @@ public class SwaggerConfig
                         .licenseUrl("https://www.apache.org/licenses/LICENSE-2.0.txt")
                         .build())
                 .genericModelSubstitutes(Optional.class);
+        // @formatter:on
     }
 }

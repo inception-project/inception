@@ -27,9 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiCont
 @Configuration
 public class RemoteApiConfig
 {
-    public static final String REMOTE_API_ENABLED_CONDITION = 
-            "${remote-api.enabled:false} || ${webanno.remote-api.enable:false}";
-    
+    public static final String REMOTE_API_ENABLED_CONDITION = "${remote-api.enabled:false} || ${webanno.remote-api.enable:false}";
+
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
     public AeroRemoteApiController aeroRemoteApiController()
