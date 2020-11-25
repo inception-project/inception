@@ -130,12 +130,13 @@ public class MtasUimaParser
                 .getIndex(jsonParserConfiguration.getLong(PARAM_PROJECT_ID));
 
         // Initialize and populate the hash maps for the layers and features
-        for (AnnotationFeature feature : index.getFeaturesToIndex()) {
-            layers.put(feature.getLayer().getName(), feature.getLayer());
+        for (Entry<AnnotationLayer, List<AnnotationFeature>> e : index.getLayersAndFeaturesToIndex()
+                .entrySet()) {
+            layers.put(e.getKey().getName(), e.getKey());
             layerFeatures
-                    .computeIfAbsent(feature.getLayer().getName(), key -> new ArrayList<>())
-                    .add(feature);
-        }        
+                    .computeIfAbsent(e.getKey().getName(), key -> new ArrayList<>())
+                    .addAll(e.getValue());
+        }
     }
     
     // This constructor is used for testing
@@ -363,23 +364,32 @@ public class MtasUimaParser
         if (features == null) {
             return mtasId;
         }
-        
+
         // Iterate over the features of this layer and index them one-by-one
         for (AnnotationFeature feature : features) {
             Optional<FeatureIndexingSupport> fis = featureIndexingSupportRegistry
                     .getIndexingSupport(feature);
             if (fis.isPresent()) {
-                MultiValuedMap<String, String> fieldsAndValues = fis.get()
-                        .indexFeatureValue(aLayer, aAnnotation, aPrefix, feature);
+                MultiValuedMap<String, String> fieldsAndValues = fis.get().indexFeatureValue(aLayer,
+                        aAnnotation, aPrefix, feature);
                 for (Entry<String, String> e : fieldsAndValues.entries()) {
-                    indexFeatureValue(e.getKey(), e.getValue(), mtasId++,
-                            aAnnotation.getBegin(), aAnnotation.getEnd(), aRange, aFSAddress);
+                    indexFeatureValue(e.getKey(), e.getValue(), mtasId++, aAnnotation.getBegin(),
+                            aAnnotation.getEnd(), aRange, aFSAddress);
                 }
-                
-                LOG.trace("FEAT[{}-{}]: {}", aRange.getBegin(), aRange.getEnd(), fieldsAndValues);
+
+                if (LOG.isTraceEnabled()) {
+                    if (fieldsAndValues.isEmpty()) {
+                        LOG.trace("FEAT[{}-{}]: [{}]: Nothing to index",
+                                aRange.getBegin(), aRange.getEnd(), feature.getName());
+                    }
+                    else {
+                        LOG.trace("FEAT[{}-{}]: [{}] = {}", aRange.getBegin(), aRange.getEnd(),
+                                feature.getName(), fieldsAndValues);
+                    }
+                }
             }
         }
-        
+
         return mtasId;
     }
 
