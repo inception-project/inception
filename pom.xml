@@ -67,7 +67,7 @@
     <wicket.version>9.1.0</wicket.version>
     <wicketstuff.version>9.1.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.0.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>5.0.2</wicket-bootstrap.version>
+    <wicket-bootstrap.version>5.0.3</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.1</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.1</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>

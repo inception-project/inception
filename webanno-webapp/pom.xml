@@ -252,21 +252,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>jakarta.validation</groupId>
-      <artifactId>jakarta.validation-api</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.tomcat.embed</groupId>
-      <artifactId>tomcat-embed-core</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-tomcat</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
@@ -435,6 +420,9 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
+            <ignoredUsedUndeclaredDependencies>
+              <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
+            </ignoredUsedUndeclaredDependencies>
             <usedDependencies combine.children="append">
               <!-- WebAnno UI Modules - they auto-register via reflection -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
@@ -472,7 +460,6 @@
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
               <!-- Spring Boot stuff - used via reflection/classpath -->
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
-              <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
               <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
