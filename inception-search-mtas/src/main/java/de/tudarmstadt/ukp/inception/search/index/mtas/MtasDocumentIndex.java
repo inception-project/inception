@@ -48,7 +48,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -177,7 +176,7 @@ public class MtasDocumentIndex
     private ReferenceManager<IndexSearcher> _searcherManager;
     private ScheduledFuture<?> _commitFuture;
 
-    private List<AnnotationFeature> features;
+    private Map<AnnotationLayer, List<AnnotationFeature>> layersAndFeatures;
 
     public MtasDocumentIndex(Project aProject, DocumentService aDocumentService,
             AnnotationSchemaService aSchemaService, String aDir,
@@ -202,11 +201,19 @@ public class MtasDocumentIndex
             OPEN_INDEXES.put(project.getId(), this);
             
             // Initialize and populate the hash maps for the layers and features
-            features = schemaService.listAnnotationFeature(project).stream()
-                    .filter(feat -> feat.getLayer().isEnabled())
-                    .filter(feat -> feat.isEnabled())
-                    .collect(Collectors.toList());
-            
+            layersAndFeatures = new LinkedHashMap<>();
+            schemaService.listAnnotationLayer(project)
+                    .forEach(layer -> layersAndFeatures.put(layer, new ArrayList<>()));
+            for (AnnotationFeature feat : schemaService.listAnnotationFeature(project)) {
+                if (!feat.getLayer().isEnabled() || !feat.isEnabled()) {
+                    continue;
+                }
+              
+                List<AnnotationFeature> feats = layersAndFeatures.computeIfAbsent(feat.getLayer(),
+                    key -> new ArrayList<>());
+                feats.add(feat);
+            }
+                        
             // Add the project id to the configuration
             JSONObject jsonParserConfiguration = new JSONObject();
             jsonParserConfiguration.put(PARAM_PROJECT_ID, project.getId());
@@ -1083,9 +1090,9 @@ public class MtasDocumentIndex
         return project;
     }
     
-    public List<AnnotationFeature> getFeaturesToIndex()
+    public Map<AnnotationLayer, List<AnnotationFeature>> getLayersAndFeaturesToIndex()
     {
-        return features;
+        return layersAndFeatures;
     }
     
     public static MtasDocumentIndex getIndex(long aProjectId)

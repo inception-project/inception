@@ -29,11 +29,9 @@ After the <<Introduction>>, _Getting Started_ leads you to using {product-name} 
 . In <<Settings and Structure of an Annotation Project>>, for a basic orientation and understanding the structure of a project will be explained.
 . You will be guided to make your first annotations in <<First Annotations with {product-name}>>.
 
+= Introduction
 
-
-== Introduction
-
-=== What can {product-name} be used for?
+== What can {product-name} be used for?
 
 For a first impression on what {product-name} is, you may want to watch our https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=1[introduction video].
 
@@ -52,7 +50,7 @@ _Getting Started_ focuses on annotating. For details on any
 other topic like Corpus Creation or the like, see the main documentation part of this User Guide: <<sect_core_funct, Core Functionalities>>.
 
 [[do_you_have_questions_or_feedback]]
-=== Do you have questions or feedback?
+== Do you have questions or feedback?
 
 {product-name} is still in developement, so you are welcome to give us feedback and tell us your wishes and requirements.
 
@@ -63,8 +61,7 @@ other topic like Corpus Creation or the like, see the main documentation part of
 * You can also open an issue on https://github.com/inception-project/inception/issues[*Github*].
 
 
-
-=== See our documentation for further reading
+== See our documentation for further reading
 Our main documentation consists of three distinct documents: 
 
 * *User Guide*: If you only _use_ {product-name} and do not develop it, the <<sect_core_funct, User Guide>> beginning right after _Getting Started_ is the one of your choice. If it does not answer your questions, don't hesitate to contact us (see <<Do you have questions or feedback?>>). 
@@ -77,14 +74,14 @@ NOTE: *User Guide-Shortcuts:* Whenever you find a *blue questionmark*-sign in th
 
 All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
 
-== Installing and starting {product-name}
+= Installing and starting {product-name}
 
-=== Installing Java
+== Installing Java
 
 In order to run {product-name}, you need to have Java installed in version 8 or higher. If you do not have Java installed yet, please install the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java] or link:https://adoptopenjdk.net[OpenJDK]. Both work perfectly fine so you can choose either of them.
 
 
-=== Download and start {product-name}
+== Download and start {product-name}
 
 In this section, we will download, open and log in to {product-name}. After, we will download and import an Example Project:
 
@@ -96,7 +93,6 @@ downloading the latest version, your previous work will not be lost: the new ver
 before without doing anything. However, please consult the release notes on this beforehand. +
 Check the website, subscribe to github notifications or the
 google group (see <<Do you have questions or feedback?>>) to be notified when a new version has been released.
-
 
 *Step 2 - Open:* There are two ways to open the application: Either by double-click or via the terminal.
 
@@ -127,15 +123,10 @@ image::getting_started_login.png[align="center"]
 
 *You have finished the installation.*
 
-
-==== Final notes
-
-** {product-name} is designed for the browsers *Chrome, Safari and Firefox*. It does work in other browsers as well but for these three, we can support you best.
-
-** For more installation details, see the https://inception-project.github.io/documentation/latest/admin-guide[Admin Guide].
+NOTE: {product-name} is designed for the browsers *Chrome, Safari and Firefox*. It does work in other browsers as well but for these three, we can support you best. For more installation details, see the https://inception-project.github.io/documentation/latest/admin-guide[Admin Guide].
 
 
-=== Download and import an Example Project
+== Download and import an Example Project
 
 In order to understand what you read in this guide, it makes sense to have an annotation project to look at and click through. We created several example projects for you to play with. You find them in the section https://inception-project.github.io/example-projects/[Example Projects] on our website.
 
