@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 public interface WorkflowExtension
     extends Extension<Project>
 {
+    @Override
     default boolean accepts(Project project)
     {
         return true;
@@ -44,21 +45,11 @@ public interface WorkflowExtension
     String getLabel();
 
     /**
-     * @param aSourceDocuments
-     * @return List<SourceDocument> changed as required by the specific workflow strategy
+     * @return List of {@link SourceDocument} changed as required by the specific workflow strategy
      */
     List<SourceDocument> getNextDocument(List<SourceDocument> aSourceDocuments);
 
     /**
-     *
-     * @param aSourceDocuments
-     * @param aProject
-     * @param aCurrentWorkload
-     * @param aPage
-     * @param aTarget
-     * @param workloadManagementService
-     * @param dynamicWorkloadExtension
-     * @param documentService
      * @return true when a new document has been loaded, otherwise false
      *
      * Next document will be loaded, same for all workflow extensions
