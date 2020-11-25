@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.swing.JWindow;
-import javax.validation.Validator;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.uima.cas.impl.CASImpl;
@@ -36,13 +35,11 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
 import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
@@ -75,13 +72,6 @@ public class WebAnno
     @Value("${server.ajp.address:127.0.0.1}")
     private String ajpAddress;
 
-    @Bean
-    @Primary
-    public Validator validator()
-    {
-        return new LocalValidatorFactoryBean();
-    }
-    
     @Bean
     public PluginManager pluginManager()
     {
