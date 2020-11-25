@@ -286,12 +286,12 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setDefaultLanguage(profile.getDefaultLanguage());
             kb_yago.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
-            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+            rootConcepts.add("http://schema.org/Thing");
             parentChildConcepts = new HashMap<String, String>();
-            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+            parentChildConcepts.put("http://schema.org/Thing",
                     "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
-                    "http://yago-knowledge.org/resource/wikicat_Alkaloids",
+                    "http://yago-knowledge.org/resource/Elvis_Presley",
                     rootConcepts, parentChildConcepts));
         }
 

@@ -42,6 +42,6 @@ public class AnnotatorJsCssResourceReference
      */
     private AnnotatorJsCssResourceReference()
     {
-        super(AnnotatorJsCssResourceReference.class, "annotator.min.css");
+        super(AnnotatorJsCssResourceReference.class, "annotator.css");
     }
 }

@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -84,6 +85,12 @@ public class CurationServiceImpl
         curationStates = new ConcurrentHashMap<>();
     }
     
+    public CurationServiceImpl(EntityManager aEntityManager)
+    {
+        this();
+        entityManager = aEntityManager;
+    }
+
     /**
      * Key to identify curation session for a specific user and project
      */
@@ -227,6 +234,44 @@ public class CurationServiceImpl
     public Optional<List<User>> listUsersSelectedForCuration(String aCurrentUser, long aProjectId)
     {
         return Optional.ofNullable(getCurationState(aCurrentUser, aProjectId).getSelectedUsers());
+    }
+    
+    @Override
+    public List<User> listUsersReadyForCuration(String aUsername, Project aProject,
+            SourceDocument aDocument)
+    {        
+        List<User> selectedUsers = getCurationState(aUsername, aProject.getId()).getSelectedUsers();
+        
+        if (selectedUsers == null || selectedUsers.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<User> finishedUsers = listFinishedUsers(aProject, aDocument);
+        finishedUsers.retainAll(selectedUsers);
+        return finishedUsers;
+    }
+    
+    @Override
+    public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument)
+    {
+        Validate.notNull(aSourceDocument, "Document must be specified");
+        Validate.notNull(aProject, "project must be specified");
+        
+        String query = String.join("\n",
+                "SELECT u FROM User u, AnnotationDocument d",
+                "WHERE u.username = d.user",
+                "  AND d.project = :project",
+                "  AND d.document = :document",
+                "  AND d.state    = :state",
+                "  ORDER BY u.username ASC");
+        
+        List<User> finishedUsers = new ArrayList<>(entityManager
+                .createQuery(query, User.class)
+                .setParameter("project", aProject)
+                .setParameter("document", aSourceDocument)
+                .setParameter("state", AnnotationDocumentState.FINISHED)
+                .getResultList());
+
+        return finishedUsers;
     }
 
     @Override
@@ -438,5 +483,4 @@ public class CurationServiceImpl
     {
         return getCurationState(aUsername, aProjectId).getMergeStrategy();
     }
-
 }

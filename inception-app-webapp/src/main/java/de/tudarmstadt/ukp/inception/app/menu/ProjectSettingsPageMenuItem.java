@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
+
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;

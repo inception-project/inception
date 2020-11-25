@@ -36,6 +36,7 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
@@ -54,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -200,7 +202,8 @@ public class RecommendationEditorExtension
         // panel
         aState.getSelection().selectSpan(new VID(address), aCas, suggestion.getBegin(),
                 suggestion.getEnd());
-        aActionHandler.actionSelect(aTarget);            
+
+        aActionHandler.actionSelect(aTarget);
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
@@ -228,6 +231,7 @@ public class RecommendationEditorExtension
      */
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
+
         throws AnnotationException, IOException
     {
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
@@ -260,7 +264,8 @@ public class RecommendationEditorExtension
                 suggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
         // Trigger a re-rendering of the document
-        aActionHandler.actionSelect(aTarget);
+        Page page = aTarget.getPage();
+        page.send(page, Broadcast.BREADTH, new SelectionChangedEvent(aTarget));
         
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, document,
@@ -268,7 +273,7 @@ public class RecommendationEditorExtension
                 suggestion.getCoveredText(), feature, suggestion.getLabel()));
 
         // Send a UI event that the suggestion has been rejected
-        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
+        page.send(page, Broadcast.BREADTH,
                 new AjaxRecommendationRejectedEvent(aTarget, aState, recommendationVID));
     }
     

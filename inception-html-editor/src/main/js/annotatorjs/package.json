@@ -1,0 +1,34 @@
+{
+  "name": "annotator",
+  "version": "1.2.10",
+  "description": "Inline annotation for the web. Select text, images, or (nearly) anything else, and add your notes.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/okfn/annotator.git"
+  },
+  "devDependencies": {
+    "chai": "1.5.0",
+    "coffee-script": "1.7.x",
+    "coffeebarx": "0.0.3",
+    "coffeescript": "^2.5.1",
+    "connect": "~2.10.1",
+    "iso8601": "",
+    "jwt-simple": "",
+    "mapcat": "0.2.0",
+    "mocha": "1.9.0",
+    "mocha-phantomjs": "2.0.1",
+    "sinon": "1.6.0",
+    "uglify-js": "2.4.24",
+    "uglifycss": "0.0.29"
+  },
+  "engines": {
+    "node": "~0.8.0"
+  },
+  "scripts": {
+    "start": "node ./tools/serve",
+    "test": "make REPORTER=spec test"
+  },
+  "dependencies": {
+    "coffee": "^5.4.0"
+  }
+}

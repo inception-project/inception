@@ -195,7 +195,7 @@ public class SearchPage extends ApplicationPageBase
 
             applicationEventPublisher.get()
                     .publishEvent(new ExternalSearchQueryEvent(this, model.repository.getProject(),
-                            userRepository.getCurrentUser().getUsername(), model.query));
+                            userRepository.getCurrentUsername(), model.query));
 
             aTarget.add(dataTableContainer);
         }
