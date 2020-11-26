@@ -19,10 +19,14 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
@@ -35,6 +39,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.RandomizedWo
 @ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkloadManagerAutoConfiguration
 {
+
     @Bean
     public DynamicWorkloadExtension dynamicWorkloadExtension()
     {
@@ -46,10 +51,12 @@ public class DynamicWorkloadManagerAutoConfiguration
     {
         return new WorkflowExtensionPointImpl(aWorkflowExtension);
     }
+
     @Bean
-    public ExternalWorkflowExtension curriculumWorkflowExtension()
+    @Autowired
+    public ExternalWorkflowExtension curriculumWorkflowExtension(UserDao aUserService, EventRepository aEventRepository, DocumentService aDocumentService)
     {
-        return new ExternalWorkflowExtension();
+        return new ExternalWorkflowExtension(aUserService, aEventRepository, aDocumentService);
     }
 
     @Bean
