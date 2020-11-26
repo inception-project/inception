@@ -51,4 +51,10 @@ public interface EventRepository
      */
     List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
             String aEventType, int aMaxSize, String aDetail);
+
+    /**
+     * Get logged events of the given type, user name, project.
+     * This is sorted ASC by time
+     */
+    List<LoggedEvent> listLoggedEventsOfType(Project aProject, String aUsername, String aEventType);
 }

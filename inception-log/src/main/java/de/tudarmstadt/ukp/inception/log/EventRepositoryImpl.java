@@ -98,6 +98,24 @@ public class EventRepositoryImpl
                 .setParameter("details", aDetail)
                 .setMaxResults(aMaxSize).getResultList();
     }
+
+    @Override
+    @Transactional
+    public List<LoggedEvent> listLoggedEventsOfType(Project aProject, String aUsername, String aEventType)
+    {
+        String query = String.join("\n",
+                "FROM LoggedEvent WHERE ",
+                "user=:user AND ",
+                "project = :project AND ",
+                "event = :event ",
+                "ORDER BY created ASC");
+
+        return entityManager.createQuery(query, LoggedEvent.class)
+                .setParameter("user", aUsername)
+                .setParameter("project", aProject.getId())
+                .setParameter("event", aEventType)
+                .getResultList();
+    }
     
     @Override
     @Transactional

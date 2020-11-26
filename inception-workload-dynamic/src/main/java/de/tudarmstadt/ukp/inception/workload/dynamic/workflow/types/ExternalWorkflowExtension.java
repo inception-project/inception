@@ -28,29 +28,40 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
+import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 
 /**
  * External workflow extension type
  */
 public class ExternalWorkflowExtension
-    implements WorkflowExtension
+    implements WorkflowExtension, IDocumentChangedEventListener
 {
     public static final String EXTERNAL_EXTENSION = "external";
+
+    private static final String EXTERNAL_URL = "http://localhost:5000";
 
     private static final Logger logger = LoggerFactory.getLogger(ExternalWorkflowExtension.class);
 
@@ -99,7 +110,7 @@ public class ExternalWorkflowExtension
         try {
             HttpClient client = HttpClient.newHttpClient();
 
-            String url = "http://localhost:5000/sort/" + user.getUsername();
+            String url = EXTERNAL_URL + "/rerank/" + user.getUsername();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .timeout(Duration.ofMinutes(1))
@@ -132,10 +143,98 @@ public class ExternalWorkflowExtension
             return result;
 
         } catch (IOException | InterruptedException e) {
-            logger.error("Error while sendind sorting request", e);
+            logger.error("Error while sending sorting request", e);
             return aSourceDocuments;
         }
     }
 
+    @EventListener
+    @Async
+    public void onDocumentStateChangedEvent(AnnotationStateChangeEvent aEvent)
+    {
+        String userName = aEvent.getAnnotationDocument().getUser();
+        logger.info("Annotation state changed for user: {}", userName);
 
+        // Obtain the annotation times
+        Project project = aEvent.getDocument().getProject();
+        List<LoggedEvent> annoChangedEvents = eventRepository.listLoggedEventsOfType(project, userName, "AnnotationStateChangeEvent");
+        List<LoggedEvent> docOpenedEvents = eventRepository.listLoggedEventsOfType(project, userName, "DocumentOpenedEvent");
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        List<String> texts = new ArrayList<>();
+        List<Long> times = new ArrayList<>();
+
+        Map<String, Long> docToStartTime = Maps.newHashMap();
+        Map<String, Long> docToEndTime = Maps.newHashMap();
+        Map<String, String> docToText = Maps.newHashMap();
+
+        try (CasStorageSession session = CasStorageSession.open()) {
+            // DocumentOpenedEvent
+            for (LoggedEvent e : docOpenedEvents) {
+                var sourceDocument = documentService.getSourceDocument(project.getId(), e.getDocument());
+                CAS cas = documentService.readAnnotationCas(sourceDocument, userName, AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+                String text = cas.getDocumentText();
+
+                String docName = sourceDocument.getName();
+                docToStartTime.put(docName, e.getCreated().getTime());
+                docToText.put(docName, text);
+            }
+
+            // AnnotationStateChangeEvent
+            for (LoggedEvent e : annoChangedEvents) {
+                Map<String, String> details = mapper.readValue(e.getDetails(), Map.class);
+
+                if (!("INPROGRESS".equals(details.get("previousState")) && "FINISHED".equals(details.get("state")))) {
+                    continue;
+                }
+
+                var sourceDocument = documentService.getSourceDocument(project.getId(), e.getDocument());
+                CAS cas = documentService.readAnnotationCas(sourceDocument, userName, AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+                String text = cas.getDocumentText();
+
+                String docName = sourceDocument.getName();
+                docToEndTime.put(docName, e.getCreated().getTime());
+                docToText.put(docName, text);
+            }
+
+            for (String docName : docToText.keySet()) {
+                if (!(docToStartTime.containsKey(docName) && docToEndTime.containsKey(docName))) {
+                    continue;
+                }
+
+                long time = docToEndTime.get(docName) - docToStartTime.get(docName);
+                String text = docToText.get(docName);
+
+                texts.add(text);
+                times.add(time);
+            }
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("texts", texts);
+            data.put("times", times);
+
+            HttpClient client = HttpClient.newHttpClient();
+
+            String url = EXTERNAL_URL + "/train/" + userName;
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofMinutes(1))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(data)))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        }
+        catch (IOException | InterruptedException e) {
+            logger.error("Error while sending training request", e);
+        }
+    }
+}
+
+interface IDocumentChangedEventListener
+{
+    @EventListener
+    @Async
+    void onDocumentStateChangedEvent(AnnotationStateChangeEvent aEvent);
 }
