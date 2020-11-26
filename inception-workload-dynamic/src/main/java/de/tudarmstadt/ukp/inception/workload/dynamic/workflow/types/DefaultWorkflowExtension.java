@@ -42,7 +42,7 @@ public class DefaultWorkflowExtension implements WorkflowExtension
     }
 
     @Override
-    public List<SourceDocument> getNextDocument(List<SourceDocument> aSourceDocuments)
+    public List<SourceDocument> rankDocuments(List<SourceDocument> aSourceDocuments)
     {
         return aSourceDocuments;
     }

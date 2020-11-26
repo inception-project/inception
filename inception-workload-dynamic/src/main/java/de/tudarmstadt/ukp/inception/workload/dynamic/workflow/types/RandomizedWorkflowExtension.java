@@ -43,7 +43,7 @@ public class RandomizedWorkflowExtension implements WorkflowExtension
     }
 
     @Override
-    public List<SourceDocument> getNextDocument(List<SourceDocument> aSourceDocuments)
+    public List<SourceDocument> rankDocuments(List<SourceDocument> aSourceDocuments)
     {
         //Shuffling and returning the list
         Collections.shuffle(aSourceDocuments);

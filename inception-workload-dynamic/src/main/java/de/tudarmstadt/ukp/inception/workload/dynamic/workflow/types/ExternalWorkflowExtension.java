@@ -43,7 +43,7 @@ public class ExternalWorkflowExtension
     }
 
     @Override
-    public List<SourceDocument> getNextDocument(List<SourceDocument> aSourceDocuments)
+    public List<SourceDocument> rankDocuments(List<SourceDocument> aSourceDocuments)
     {
         //TODO correct implementation for the external workflow
         return aSourceDocuments;

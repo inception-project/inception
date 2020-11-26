@@ -47,7 +47,7 @@ public interface WorkflowExtension
     /**
      * @return List of {@link SourceDocument} changed as required by the specific workflow strategy
      */
-    List<SourceDocument> getNextDocument(List<SourceDocument> aSourceDocuments);
+    List<SourceDocument> rankDocuments(List<SourceDocument> aSourceDocuments);
 
     /**
      * @return true when a new document has been loaded, otherwise false
