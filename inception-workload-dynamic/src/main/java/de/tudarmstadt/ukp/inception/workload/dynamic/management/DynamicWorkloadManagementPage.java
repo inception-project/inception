@@ -671,7 +671,7 @@ public class DynamicWorkloadManagementPage
             Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
             for (SourceDocument source : documentsToAssign) {
                 AnnotationDocument annotationDocument = documentService
-                        .createOrGetAnnotationDocument(source, userRepository.getCurrentUser());
+                        .createOrGetAnnotationDocument(source, userSelection.getModelObject());
 
                 // Only if the document is in state NEW we can assign it to INPROGRESS
                 if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
