@@ -166,7 +166,7 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
             }
         }
         // Rearrange list of documents according to current workflow
-        sourceDocuments = currentWorkflowExtension.getNextDocument(sourceDocuments);
+        sourceDocuments = currentWorkflowExtension.rankDocuments(sourceDocuments);
 
         // Load the new document, if loadNextDocument() returns false, redirect the user to the
         // homepage

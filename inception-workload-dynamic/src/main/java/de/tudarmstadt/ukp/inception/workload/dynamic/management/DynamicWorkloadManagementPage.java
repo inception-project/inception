@@ -670,40 +670,24 @@ public class DynamicWorkloadManagementPage
             // Documents were added to the collection of the multiselect
             Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
             for (SourceDocument source : documentsToAssign) {
-                try {
-                    AnnotationDocument annotationDocument = documentService
-                            .getAnnotationDocument(source, userSelection.getModelObject());
-                    // Only if the document is in state NEW we can assign it to INPROGRESS
-                    if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
-                        documentService.transitionAnnotationDocumentState(annotationDocument,
-                                AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
-                        success("Document(s) assigned");
-                    }
-                    else {
-                        error("Document '" + annotationDocument.getName()
-                                + "' is either already assigned or even finished.");
-                    }
-                }
-                catch (NoResultException nre) {
-                    // Important! Annotation documents may be null, however they still can be
-                    // assigned.
-                    // In that case create a new Annotation documents with state INPROGRESS
-                    AnnotationDocumentState state = AnnotationDocumentState.IN_PROGRESS;
-                    AnnotationDocument annotationDocument = new AnnotationDocument();
-                    annotationDocument.setName(source.getName());
-                    annotationDocument.setDocument(documentService.getSourceDocument(
-                            currentProject.getObject(), annotationDocument.getName()));
-                    annotationDocument.setProject(currentProject.getObject());
-                    annotationDocument.setUser(userSelection.getModelObject().getUsername());
-                    annotationDocument.setState(state);
-                    documentService.createAnnotationDocument(annotationDocument);
+                AnnotationDocument annotationDocument = documentService
+                        .createOrGetAnnotationDocument(source, userRepository.getCurrentUser());
+
+                // Only if the document is in state NEW we can assign it to INPROGRESS
+                if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
+                    documentService.transitionAnnotationDocumentState(annotationDocument,
+                            AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
                     success("Document(s) assigned");
                 }
+                else {
+                    error("Document '" + annotationDocument.getName()
+                            + "' is either already assigned or even finished.");
+                }
             }
-
-            aAjaxRequestTarget.add(userResetDocumentForm);
-            updateTable(aAjaxRequestTarget);
         }
+
+        aAjaxRequestTarget.add(userResetDocumentForm);
+        updateTable(aAjaxRequestTarget);
     }
 
     private void actionShowInfoDialog(AjaxRequestTarget aTarget, IModel<SourceDocument> aDoc)
