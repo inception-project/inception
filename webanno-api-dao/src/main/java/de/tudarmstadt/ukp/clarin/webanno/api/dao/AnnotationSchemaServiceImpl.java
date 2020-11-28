@@ -165,6 +165,15 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
+    public void createTags(Tag... aTags)
+    {
+        for (Tag tag : aTags) {
+            createTag(tag);
+        }
+    }
+
+    @Override
+    @Transactional
     public void createTagSet(TagSet aTagSet)
     {
         if (isNull(aTagSet.getId())) {
