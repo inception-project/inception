@@ -89,7 +89,7 @@ public class TagSetImportPanel
         format.setModelObject(JSON_FORMAT); // Set after adding to form to have access to for model
         format.setRequired(true);
         
-        form.add(new CheckBox("overwrite"));
+        form.add(new CheckBox("overwrite").setOutputMarkupId(true));
         
         form.add(fileUpload = new BootstrapFileInputField("content", new ListModel<>()));
         fileUpload.getConfig().showPreview(false);

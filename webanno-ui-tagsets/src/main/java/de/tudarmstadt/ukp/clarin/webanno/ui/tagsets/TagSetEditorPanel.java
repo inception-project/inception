@@ -103,7 +103,7 @@ public class TagSetEditorPanel
                 .setRequired(true));
         form.add(new TextField<String>("language"));
         form.add(new TextArea<String>("description"));
-        form.add(new CheckBox("createTag"));
+        form.add(new CheckBox("createTag").setOutputMarkupId(true));
         
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("delete", this::actionDelete)
