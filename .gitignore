@@ -12,3 +12,4 @@ webanno-doc/src/main/resources/public
 .checkstyle
 log4j2-dev.xml
 .factorypath
+.gradle
