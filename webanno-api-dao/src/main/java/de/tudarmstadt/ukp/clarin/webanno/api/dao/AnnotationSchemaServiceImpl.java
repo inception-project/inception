@@ -126,28 +126,15 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTag(Tag aTag)
     {
-        if (isNull(aTag.getId())) {
-            entityManager.persist(aTag);
-            
-            if (applicationEventPublisher != null) {
-                applicationEventPublisher.publishEvent(new TagCreatedEvent(this, aTag));
-            }
-        }
-        else {
-            entityManager.merge(aTag);
-            
-            if (applicationEventPublisher != null) {
-                applicationEventPublisher.publishEvent(new TagUpdatedEvent(this, aTag));
-            }
-        }
+        boolean created = createTagNoLog(aTag);
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aTag.getTagSet().getProject().getId()))) {
             TagSet tagset = aTag.getTagSet();
             Project project = tagset.getProject();
-            log.info("Created tag [{}]({}) in tagset [{}]({}) in project [{}]({})", aTag.getName(),
-                    aTag.getId(), tagset.getName(), tagset.getId(), project.getName(),
-                    project.getId());
+            log.info("{} tag [{}]({}) in tagset [{}]({}) in project [{}]({})",
+                    created ? "Created" : "Updated", aTag.getName(), aTag.getId(), tagset.getName(),
+                    tagset.getId(), project.getName(), project.getId());
         }
     }
 
@@ -155,8 +142,52 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void createTags(Tag... aTags)
     {
+        if (aTags == null || aTags.length == 0) {
+            return;
+        }
+
+        TagSet tagset = aTags[0].getTagSet();
+        Project project = tagset.getProject();
+
+        int createdCount = 0;
+        int updatedCount = 0;
         for (Tag tag : aTags) {
-            createTag(tag);
+            boolean created = createTagNoLog(tag);
+            if (created) {
+                createdCount++;
+            }
+            else {
+                updatedCount++;
+            }
+        }
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(project.getId()))) {
+            log.info("Created {} tags and updated {} tags in tagset [{}]({}) in project [{}]({})",
+                    createdCount, updatedCount, tagset.getName(), tagset.getId(), project.getName(),
+                    project.getId());
+        }
+    }
+
+    private boolean createTagNoLog(Tag aTag)
+    {
+        if (isNull(aTag.getId())) {
+            entityManager.persist(aTag);
+            
+            if (applicationEventPublisher != null) {
+                applicationEventPublisher.publishEvent(new TagCreatedEvent(this, aTag));
+            }
+
+            return true;
+        }
+        else {
+            entityManager.merge(aTag);
+            
+            if (applicationEventPublisher != null) {
+                applicationEventPublisher.publishEvent(new TagUpdatedEvent(this, aTag));
+            }
+
+            return false;
         }
     }
 
