@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
@@ -87,11 +89,11 @@ public class TagSetExporter
         // this is projects prior to version 2.0
         if (aExProject.getVersion() == 0) {
             importTagSetsV0(aProject, aExProject);
+            return;
         }
-        else {
-            for (ExportedTagSet exTagSet : aExProject.getTagSets()) {
-                importTagSet(new TagSet(), exTagSet, aProject);
-            }
+
+        for (ExportedTagSet exTagSet : aExProject.getTagSets()) {
+            importTagSet(new TagSet(), exTagSet, aProject);
         }
     }
 
@@ -162,16 +164,24 @@ public class TagSetExporter
         aTagSet.setProject(aProject);
         annotationService.createTagSet(aTagSet);
 
+        Set<String> existingTags = annotationService.listTags(aTagSet).stream() //
+                .map(Tag::getName) //
+                .collect(Collectors.toSet());
+
+        List<Tag> tags = new ArrayList<>();
         for (ExportedTag exTag : aExTagSet.getTags()) {
             // do not duplicate tag
-            if (annotationService.existsTag(exTag.getName(), aTagSet)) {
+            if (existingTags.contains(exTag.getName())) {
                 continue;
             }
+
             Tag tag = new Tag();
             tag.setDescription(exTag.getDescription());
             tag.setTagSet(aTagSet);
             tag.setName(exTag.getName());
-            annotationService.createTag(tag);
+            tags.add(tag);
         }
+
+        annotationService.createTags(tags.stream().toArray(Tag[]::new));
     }
 }

@@ -52,14 +52,24 @@ public interface AnnotationSchemaService
     String SERVICE_NAME = "annotationService";
 
     /**
-     * creates a {@link Tag} for a given {@link TagSet}. Combination of {@code tag name} and
-     * {@code tagset name} should be unique
+     * Creates a {@link Tag}. Combination of {@code tag name} and {@code tagset name} should be
+     * unique.
      *
      * @param tag
      *            the tag.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createTag(Tag tag);
+
+    /**
+     * Creates multiple {@link Tag tags} at once. Combination of {@code tag name} and
+     * {@code tagset name} should be unique.
+     *
+     * @param tag
+     *            the tag.
+     */
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
+    void createTags(Tag... tag);
 
     /**
      * creates a {@link TagSet} object in the database
