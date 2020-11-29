@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
@@ -435,7 +436,8 @@ public class LinkFeatureEditor
         }
     }
     
-    private void autoAddImportantTags(List<Tag> aTagset, List<PossibleValue> aPossibleValues)
+    private void autoAddImportantTags(List<ReorderableTag> aTagset,
+            List<PossibleValue> aPossibleValues)
     {
         if (aTagset == null || aTagset.isEmpty() || aPossibleValues == null
                 || aPossibleValues.isEmpty()) {
@@ -444,7 +446,7 @@ public class LinkFeatureEditor
 
         // Construct a quick index for tags
         Set<String> tagset = new HashSet<>();
-        for (Tag t : aTagset) {
+        for (ReorderableTag t : aTagset) {
             tagset.add(t.getName());
         }
 

@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 
 /**
@@ -103,7 +104,7 @@ public class KendoAutoCompleteTextFeatureEditor
     @Override
     protected AbstractTextComponent createInputField()
     {
-        return new AutoCompleteTextField<Tag>("value") {
+        return new AutoCompleteTextField<ReorderableTag>("value") {
             private static final long serialVersionUID = 311286735004237737L;
 
             @Override
@@ -127,9 +128,9 @@ public class KendoAutoCompleteTextFeatureEditor
             }
             
             @Override
-            protected List<Tag> getChoices(String aTerm)
+            protected List<ReorderableTag> getChoices(String aTerm)
             {
-                List<Tag> matches = new ArrayList<>();
+                List<ReorderableTag> matches = new ArrayList<>();
                 
                 // If adding own tags is allowed, the always return the current input as the
                 // first choice.
@@ -137,7 +138,7 @@ public class KendoAutoCompleteTextFeatureEditor
                         && KendoAutoCompleteTextFeatureEditor.this.getModelObject().feature
                                 .getTagset().isCreateTag();
                 if (inputAsFirstResult) {
-                    matches.add(new Tag(aTerm, "New unsaved tag..."));
+                    matches.add(new ReorderableTag(aTerm, "New unsaved tag..."));
                 }
                 
                 KendoAutoCompleteTextFeatureEditor.this.getModelObject().tagset.stream()

@@ -22,6 +22,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
@@ -63,6 +66,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -79,8 +85,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.TagUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.ImmutableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -100,6 +108,7 @@ public class AnnotationSchemaServiceImpl
     private final ApplicationEventPublisher applicationEventPublisher;
     private final LayerSupportRegistry layerSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
+    private final LoadingCache<TagSet, List<ImmutableTag>> immutableTagsCache;
     
     @Autowired
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
@@ -109,6 +118,11 @@ public class AnnotationSchemaServiceImpl
         layerSupportRegistry = aLayerSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;
         applicationEventPublisher = aApplicationEventPublisher;
+        
+        immutableTagsCache = Caffeine.newBuilder()
+                .expireAfterAccess(5, MINUTES)
+                .maximumSize(10 * 1024)
+                .build(this::loadImmutableTags);
     }
     
     public AnnotationSchemaServiceImpl() {
@@ -128,6 +142,8 @@ public class AnnotationSchemaServiceImpl
     {
         boolean created = createTagNoLog(aTag);
 
+        flushImmutableTagCache(aTag.getTagSet());
+        
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aTag.getTagSet().getProject().getId()))) {
             TagSet tagset = aTag.getTagSet();
@@ -552,14 +568,29 @@ public class AnnotationSchemaServiceImpl
 
         createTagSet(tagSet);
 
+        int createdCount = 0;
+        int updatedCount = 0;
         int i = 0;
         for (String tagName : aTags) {
             Tag tag = new Tag();
             tag.setTagSet(tagSet);
             tag.setDescription(aTagDescription[i]);
             tag.setName(tagName);
-            createTag(tag);
+            boolean created = createTagNoLog(tag);
+            if (created) {
+                createdCount++;
+            }
+            else {
+                updatedCount++;
+            }
             i++;
+        }
+        
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aProject.getId()))) {
+            log.info("Created {} tags and updated {} tags in tagset [{}]({}) in project [{}]({})",
+                    createdCount, updatedCount, tagSet.getName(), tagSet.getId(),
+                    aProject.getName(), aProject.getId());
         }
         
         return tagSet;
@@ -654,18 +685,36 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public List<Tag> listTags()
-    {
-        return entityManager.createQuery("From Tag ORDER BY name", Tag.class).getResultList();
-    }
-
-    @Override
-    @Transactional
     public List<Tag> listTags(TagSet aTagSet)
     {
         return entityManager
                 .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY name ASC", Tag.class)
                 .setParameter("tagSet", aTagSet).getResultList();
+    }
+
+    private List<ImmutableTag> loadImmutableTags(TagSet aTagSet)
+    {
+        return listTags(aTagSet).stream().map(ImmutableTag::new).collect(toUnmodifiableList());
+    }
+    
+    private void flushImmutableTagCache(TagSet aTagSet)
+    {
+        immutableTagsCache.asMap().keySet()
+            .removeIf(key -> Objects.equals(key.getId(), aTagSet.getId()));
+    }
+    
+    @Override
+    public List<ImmutableTag> listTagsImmutable(TagSet aTagSet)
+    {
+        return immutableTagsCache.get(aTagSet);
+    }
+
+    @Override
+    @Transactional
+    public List<ReorderableTag> listTagsReorderable(TagSet aTagSet)
+    {
+        return listTagsImmutable(aTagSet).stream().map(ReorderableTag::new)
+                .collect(toList());
     }
 
     @Override
@@ -690,7 +739,9 @@ public class AnnotationSchemaServiceImpl
     public void removeTag(Tag aTag)
     {
         entityManager.remove(entityManager.contains(aTag) ? aTag : entityManager.merge(aTag));
-        
+
+        flushImmutableTagCache(aTag.getTagSet());
+
         if (applicationEventPublisher != null) {
             applicationEventPublisher.publishEvent(new TagDeletedEvent(this, aTag));
         }
@@ -704,6 +755,8 @@ public class AnnotationSchemaServiceImpl
         for (Tag tag : listTags(aTagSet)) {
             entityManager.remove(tag);
         }
+        
+        flushImmutableTagCache(aTagSet);
         
         entityManager
                 .remove(entityManager.contains(aTagSet) ? aTagSet : entityManager.merge(aTagSet));
@@ -731,6 +784,8 @@ public class AnnotationSchemaServiceImpl
         for (Tag tag : listTags(aTagSet)) {
             entityManager.remove(tag);
         }
+        
+        flushImmutableTagCache(aTagSet);
     }
 
     @Override
