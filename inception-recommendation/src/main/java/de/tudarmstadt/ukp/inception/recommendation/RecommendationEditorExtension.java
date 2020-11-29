@@ -283,7 +283,7 @@ public class RecommendationEditorExtension
     {
         // do not show predictions during curation or when viewing others' work
         if (!aState.getMode().equals(ANNOTATION) || 
-                !aState.getUser().equals(userRegistry.getCurrentUser())) {
+                !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
             return;
         }
         
