@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-
 public interface DocumentService
 {
     String SERVICE_NAME = "documentService";
@@ -136,8 +135,7 @@ public interface DocumentService
      *             If the source document searched for deletion is not available
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
-    void removeSourceDocument(SourceDocument document)
-        throws IOException;
+    void removeSourceDocument(SourceDocument document) throws IOException;
 
     /**
      * Upload a SourceDocument, obtained as Inputstream, such as from remote API Zip folder to a
@@ -241,8 +239,7 @@ public interface DocumentService
         throws IOException;
 
     /**
-     * Resets the annotation document to its initial state by overwriting it with the initial
-     * CAS.
+     * Resets the annotation document to its initial state by overwriting it with the initial CAS.
      *
      * @param aDocument
      *            the source document.
@@ -254,8 +251,7 @@ public interface DocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void resetAnnotationCas(SourceDocument aDocument, User aUser)
-            throws UIMAException, IOException;
+    void resetAnnotationCas(SourceDocument aDocument, User aUser) throws UIMAException, IOException;
 
     /**
      * A Method that checks if there is already an annotation document created for the source
@@ -295,11 +291,9 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    boolean existsCas(SourceDocument sourceDocument, String username)
-        throws IOException;
+    boolean existsCas(SourceDocument sourceDocument, String username) throws IOException;
 
-    boolean existsAnnotationCas(AnnotationDocument annotationDocument)
-            throws IOException;
+    boolean existsAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
 
     /**
      * Export a Serialized CAS annotation document from the file system
@@ -348,8 +342,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was an I/O error.
      */
-    CAS readAnnotationCas(AnnotationDocument annotationDocument)
-        throws IOException;
+    CAS readAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
 
     /**
      * Gets the CAS for the given annotation document. Converts it form the source document if
@@ -370,8 +363,7 @@ public interface DocumentService
     CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasUpgradeMode aUpgradeMode)
         throws IOException;
 
-    void deleteAnnotationCas(AnnotationDocument annotationDocument)
-        throws IOException;
+    void deleteAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
 
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
@@ -385,8 +377,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was an I/O error.
      */
-    CAS readAnnotationCas(SourceDocument document, String userName)
-        throws IOException;
+    CAS readAnnotationCas(SourceDocument document, String userName) throws IOException;
 
     /**
      * Gets the CAS for the given source document. Converts it form the source document if
@@ -422,8 +413,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was a problem loading the CAS.
      */
-    CAS createOrReadInitialCas(SourceDocument aDocument)
-        throws IOException;
+    CAS createOrReadInitialCas(SourceDocument aDocument) throws IOException;
 
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.
@@ -511,15 +501,14 @@ public interface DocumentService
     List<AnnotationDocument> listAnnotationDocuments(SourceDocument document);
 
     /**
-     * List all the {@link AnnotationDocument annotation documents} from a project for a given
-     * user. 
+     * List all the {@link AnnotationDocument annotation documents} from a project for a given user.
      * <p>
      * Note that this method does may not return an {@link AnnotationDocument annotation document}
      * for every user in the project because they are created lazily when a user opens a document
      * for annotation the first time.
      * <p>
-     * Note that this method returns <b>ALL</b> {@link AnnotationDocument annotation
-     * document} even if the user owning the document does not actually exist in the system!
+     * Note that this method returns <b>ALL</b> {@link AnnotationDocument annotation document} even
+     * if the user owning the document does not actually exist in the system!
      * 
      * @param project
      *            the {@link SourceDocument}
@@ -577,7 +566,7 @@ public interface DocumentService
      *
      * @param document
      *            the source document.
-     * @param user
+     * @param username
      *            the user.
      * @return if the user has finished annotation.
      */
@@ -594,7 +583,7 @@ public interface DocumentService
     boolean existsFinishedAnnotation(SourceDocument document);
 
     /**
-     * If at least one {@link AnnotationDocument} is finished in this project
+     * @return if at least one {@link AnnotationDocument} is finished in this project.
      */
     boolean existsFinishedAnnotation(Project project);
 
@@ -612,11 +601,11 @@ public interface DocumentService
      * Returns the annotatable {@link SourceDocument source documents} from the given project for
      * the given user. Annotatable documents are those for which there is no corresponding
      * {@link AnnotationDocument annotation document} with the state
-     * {@link AnnotationDocumentState#IGNORE}. Mind that annotation documents are created lazily
-     * in the database, thus there may be source documents without associated annotation documents.
-     * In order to provide access to the status of a document for a given user, the results is
-     * returned as a map where the source document is the key and the annotation document is the
-     * value. The annotation document may be {@code null}.
+     * {@link AnnotationDocumentState#IGNORE}. Mind that annotation documents are created lazily in
+     * the database, thus there may be source documents without associated annotation documents. In
+     * order to provide access to the status of a document for a given user, the results is returned
+     * as a map where the source document is the key and the annotation document is the value. The
+     * annotation document may be {@code null}.
      * 
      * @param aProject
      *            the project for which annotatable documents should be returned.
@@ -641,8 +630,7 @@ public interface DocumentService
      *            the user for whom documents should be returned.
      * @return documents.
      */
-    Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject,
-            User aUser);
+    Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, User aUser);
 
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState);
