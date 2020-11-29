@@ -168,6 +168,7 @@ public class PdfAnnoRendererTest
         reader.getNext(cas);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setAllAnnotationLayers(schemaService.listAnnotationLayer(project));
         state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setProject(project);
