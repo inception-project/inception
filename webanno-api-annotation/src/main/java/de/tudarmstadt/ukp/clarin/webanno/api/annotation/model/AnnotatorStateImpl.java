@@ -127,9 +127,14 @@ public class AnnotatorStateImpl
     private ParsedConstraints constraints;
 
     /**
-     * The annotation layers available in the current project.
+     * The project annotation layers available for annotation.
      */
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
+
+    /**
+     * All project annotation layers.
+     */
+    private List<AnnotationLayer> allAnnotationLayers = new ArrayList<>();
 
     private AnnotationPreference preferences = new AnnotationPreference();
 
@@ -348,6 +353,18 @@ public class AnnotatorStateImpl
     public int getWindowEndOffset()
     {
         return windowEndOffset;
+    }
+
+    @Override
+    public List<AnnotationLayer> getAllAnnotationLayers()
+    {
+        return allAnnotationLayers;
+    }
+    
+    @Override
+    public void setAllAnnotationLayers(List<AnnotationLayer> aLayers)
+    {
+        allAnnotationLayers = unmodifiableList(new ArrayList<>(aLayers));
     }
     
     @Override
@@ -670,10 +687,10 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public boolean isUserViewingOthersWork(User aCurrentUser)
+    public boolean isUserViewingOthersWork(String aCurrentUserName)
     {
-        return !user.getUsername().equals(CURATION_USER) && 
-                !user.equals(aCurrentUser);
+        return !CURATION_USER.equals(aCurrentUserName) && 
+                !user.getUsername().equals(aCurrentUserName);
     }
 
     @SuppressWarnings("unchecked")

@@ -30,16 +30,23 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ReadonlyColoringBehaviour.NORMAL;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -49,10 +56,17 @@ public class ColoringServiceImpl implements ColoringService
 {
     private final AnnotationSchemaService schemaService;
     
+    private LoadingCache<AnnotationLayer, Boolean> hasLinkFeatureCache;
+    
     @Autowired
     public ColoringServiceImpl(AnnotationSchemaService aSchemaService)
     {
         schemaService = aSchemaService;
+        
+        hasLinkFeatureCache = Caffeine.newBuilder()
+                .expireAfterAccess(5, MINUTES)
+                .maximumSize(10 * 1024)
+                .build(this::loadHasLinkFeature);
     }
 
     @Override
@@ -96,22 +110,17 @@ public class ColoringServiceImpl implements ColoringService
             return new LabelHashBasedColoringStrategy(aPalette);
         case DYNAMIC_PASTELLE:
         case DYNAMIC:
-            String[] palette;
             if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
-                palette = PALETTE_NORMAL;
+                return new LabelHashBasedColoringStrategy(PALETTE_NORMAL);
             }
-            else {
-                // Chains and arcs contain relations that are rendered as lines on the light
-                // window background - need to make sure there is some contrast, so we cannot use
-                // the full palette.
-                palette = PALETTE_NORMAL_FILTERED;
-            }
-            final String[] aPalette1 = palette;
-            return new LabelHashBasedColoringStrategy(aPalette1);
+            
+            // Chains and arcs contain relations that are rendered as lines on the light
+            // window background - need to make sure there is some contrast, so we cannot use
+            // the full palette.
+            return new LabelHashBasedColoringStrategy(PALETTE_NORMAL_FILTERED);
         case GRAY:
         default:
-            String[] aPalette2 = { DISABLED };
-            return new LabelHashBasedColoringStrategy(aPalette2);
+            return new LabelHashBasedColoringStrategy(DISABLED);
         }
     }
 
@@ -134,6 +143,11 @@ public class ColoringServiceImpl implements ColoringService
     }
 
     private boolean hasLinkFeature(AnnotationLayer aLayer)
+    {
+        return hasLinkFeatureCache.get(aLayer);
+    }
+
+    private boolean loadHasLinkFeature(AnnotationLayer aLayer)
     {
         for (AnnotationFeature feature : schemaService.listAnnotationFeature(aLayer)) {
             if (!LinkMode.NONE.equals(feature.getLinkMode())) {
@@ -169,4 +183,10 @@ public class ColoringServiceImpl implements ColoringService
         return color;
     }
 
+    @EventListener
+    public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
+    {
+        hasLinkFeatureCache.asMap().keySet().removeIf(
+            key -> Objects.equals(key.getProject().getId(), aEvent.getProject().getId()));
+    }
 }

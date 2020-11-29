@@ -34,7 +34,7 @@ import com.github.openjson.JSONException;
 import com.github.openjson.JSONStringer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 
 /**
  * String feature editor using Select2.
@@ -107,7 +107,7 @@ public class Select2TextFeatureEditor
 //                        .filter(t -> !(inputAsFirstResult && t.getName().equals(aTerm)))
                         .skip(aPage * 10)
                         .limit(11)
-                        .map(Tag::getName)
+                        .map(ReorderableTag::getName)
                         .collect(Collectors.toList());
                 
                 aResponse.addAll(matches.subList(0, Math.min(matches.size(), 10)));

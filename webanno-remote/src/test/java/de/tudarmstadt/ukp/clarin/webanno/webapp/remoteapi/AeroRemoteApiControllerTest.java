@@ -305,9 +305,9 @@ public class AeroRemoteApiControllerTest
         @Bean
         public DocumentService documentService()
         {
-            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), importExportService(), projectService(),
-                    applicationEventPublisher, entityManager);
+            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
+                    importExportService(), projectService(), applicationEventPublisher,
+                    entityManager);
         }
         
         @Bean

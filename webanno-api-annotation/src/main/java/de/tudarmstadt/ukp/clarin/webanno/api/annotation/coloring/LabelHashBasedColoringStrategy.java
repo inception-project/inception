@@ -26,7 +26,7 @@ public class LabelHashBasedColoringStrategy
 {
     private final String[] palette;
 
-    public LabelHashBasedColoringStrategy(String[] aPalette)
+    public LabelHashBasedColoringStrategy(String... aPalette)
     {
         palette = aPalette;
     }
