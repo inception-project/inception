@@ -301,7 +301,10 @@ public abstract class AnnotationPageBase
             return;
         }
 
-        if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
+        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername())) {
+            throw new NotEditableException(
+                    "Viewing another users annotations - document is read-only!");
+        }
             throw new NotEditableException("This document is already closed for user ["
                     + state.getUser().getUsername() + "]. Please ask your "
                     + "project manager to re-open it via the monitoring page.");
@@ -328,8 +331,8 @@ public abstract class AnnotationPageBase
         
         // If annotating normally, then it is editable unless marked as finished and unless
         // viewing another users annotations
-        return !documentService.isAnnotationFinished(state.getDocument(), state.getUser())
-                && !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser());
+        return !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername()) && 
+                !isAnnotationFinished();
     }
 
     public abstract IModel<List<DecoratedObject<Project>>> getAllowedProjects();

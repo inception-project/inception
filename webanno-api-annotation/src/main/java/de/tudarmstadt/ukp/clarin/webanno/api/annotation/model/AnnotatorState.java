@@ -119,7 +119,7 @@ public interface AnnotatorState
     /**
      * User is viewing other people's work (read-only), but not as Curation User
      */
-    boolean isUserViewingOthersWork(User aCurrentUser);
+    boolean isUserViewingOthersWork(String aCurrentUserName);
 
     // ---------------------------------------------------------------------------------------------
     // Project

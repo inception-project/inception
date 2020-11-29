@@ -670,10 +670,10 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public boolean isUserViewingOthersWork(User aCurrentUser)
+    public boolean isUserViewingOthersWork(String aCurrentUserName)
     {
-        return !user.getUsername().equals(CURATION_USER) && 
-                !user.equals(aCurrentUser);
+        return !CURATION_USER.equals(aCurrentUserName) && 
+                !user.getUsername().equals(aCurrentUserName);
     }
 
     @SuppressWarnings("unchecked")
