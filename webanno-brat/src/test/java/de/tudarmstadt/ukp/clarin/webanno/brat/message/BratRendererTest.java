@@ -161,6 +161,7 @@ public class BratRendererTest
                 TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setAllAnnotationLayers(schemaService.listAnnotationLayer(project));
         state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
