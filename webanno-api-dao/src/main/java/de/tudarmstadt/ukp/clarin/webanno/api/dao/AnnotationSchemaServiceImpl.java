@@ -24,7 +24,6 @@ import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -694,7 +692,7 @@ public class AnnotationSchemaServiceImpl
 
     private List<ImmutableTag> loadImmutableTags(TagSet aTagSet)
     {
-        return listTags(aTagSet).stream().map(ImmutableTag::new).collect(toUnmodifiableList());
+        return listTags(aTagSet).stream().map(ImmutableTag::new).collect(toList());
     }
     
     private void flushImmutableTagCache(TagSet aTagSet)
