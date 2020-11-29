@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 
 public class FeatureState
     implements Serializable
@@ -34,7 +34,7 @@ public class FeatureState
     private static final long serialVersionUID = 3512979848975446735L;
     public final AnnotationFeature feature;
     public Serializable value;
-    public List<Tag> tagset;
+    public List<ReorderableTag> tagset;
     public List<PossibleValue> possibleValues;
     public RulesIndicator indicator = new RulesIndicator();
     public VID vid;

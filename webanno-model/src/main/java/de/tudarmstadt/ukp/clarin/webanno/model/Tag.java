@@ -28,7 +28,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 
 /**
  * A persistence object for a Tag
@@ -159,19 +158,4 @@ public class Tag
     {
         return name;
     }
-
-    // BEGIN HACK
-    @Transient
-    private boolean reordered;
-
-    public void setReordered(boolean aB)
-    {
-        reordered = aB;
-    }
-
-    public boolean getReordered()
-    {
-        return reordered;
-    }
-    // END HACK
 }

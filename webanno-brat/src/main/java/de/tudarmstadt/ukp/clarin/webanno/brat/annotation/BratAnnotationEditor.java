@@ -162,6 +162,7 @@ public class BratAnnotationEditor
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
 
+    private transient JsonNode lastRenederedJsonParsed;
     private String lastRenderedJson;
     private int lastRenderedWindowStart = -1;
 
@@ -560,6 +561,7 @@ public class BratAnnotationEditor
             render(response, aCas);
             json = toJson(response);
             lastRenderedJson = json;
+            lastRenederedJsonParsed = null;
         }
         else {
             json = toJson(response);
@@ -671,12 +673,15 @@ public class BratAnnotationEditor
 
         GetDocumentResponse response = new GetDocumentResponse();
         render(response, aCas);
-        String json = toJson(response);
+
+        ObjectMapper mapper = JSONUtil.getObjectMapper();
+        JsonNode current = mapper.valueToTree(response);
+        String json = toJson(current);
 
         // By default, we do a full rendering...
         RenderType renderType = FULL;
         String cmd = "renderData";
-        String data = json;
+        String responseJson = json;
         JsonNode diff;
         String diffJsonStr = null;
 
@@ -693,12 +698,14 @@ public class BratAnnotationEditor
 
         if (tryDifferentialUpdate) {
             // ... try to render diff
-            JsonNode current = null;
             JsonNode previous = null;
             try {
-                ObjectMapper mapper = JSONUtil.getObjectMapper();
-                current = mapper.readTree(json);
-                previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
+                if (lastRenederedJsonParsed != null) {
+                    previous = lastRenederedJsonParsed;
+                }
+                else {
+                    previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
+                }
             }
             catch (IOException e) {
                 LOG.error("Unable to generate diff, falling back to full render.", e);
@@ -718,7 +725,7 @@ public class BratAnnotationEditor
                     // switching pages, the patch usually ends up being twice as large as the full
                     // data.
                     cmd = "renderDataPatch";
-                    data = diffJsonStr;
+                    responseJson = diffJsonStr;
                     renderType = DIFFERENTIAL;
                 }
 
@@ -730,6 +737,7 @@ public class BratAnnotationEditor
 
         // Storing the last rendered JSON as string because JsonNodes are not serializable.
         lastRenderedJson = json;
+        lastRenederedJsonParsed = current;
         lastRenderedWindowStart = aState.getWindowBeginOffset();
 
         timer.stop();
@@ -741,7 +749,7 @@ public class BratAnnotationEditor
         }
 
         return Optional.of("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd + "', ["
-                + data + "]);");
+                + responseJson + "]);");
     }
 
     private void render(GetDocumentResponse response, CAS aCas)
@@ -906,7 +914,12 @@ public class BratAnnotationEditor
     {
         String json = "[]";
         try {
-            json = JSONUtil.toInterpretableJsonString(result);
+            if (result instanceof JsonNode) {
+                json = JSONUtil.toInterpretableJsonString((JsonNode) result);
+            }
+            else {
+                json = JSONUtil.toInterpretableJsonString(result);
+            }
         }
         catch (IOException e) {
             error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));

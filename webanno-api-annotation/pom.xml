@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>4.0.0-SNAPSHOT</version>
+    <version>webanno-4.0.0-beta-18-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-api-annotation</artifactId>
   <name>WebAnno - Core - Annotation API</name>
@@ -94,6 +94,10 @@
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->

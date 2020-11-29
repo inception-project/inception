@@ -172,6 +172,7 @@ public class AnnotationPreferencesDialogContent
             prefs.setEditor(model.editor.getKey());
             prefs.setCollapseArcs(model.collapseArcs);
 
+            state.setAllAnnotationLayers(annotationService.listAnnotationLayer(state.getProject()));
             state.setAnnotationLayers(model.annotationLayers.stream()
                     .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                     .collect(Collectors.toList()));

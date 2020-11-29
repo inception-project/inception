@@ -562,6 +562,17 @@ public interface DocumentService
     boolean isAnnotationFinished(SourceDocument document, User user);
 
     /**
+     * Check if the user finished annotating the {@link SourceDocument} in this {@link Project}
+     *
+     * @param document
+     *            the source document.
+     * @param username
+     *            the user.
+     * @return if the user has finished annotation.
+     */
+    boolean isAnnotationFinished(SourceDocument document, String username);
+
+    /**
      * Check if at least one annotation document is finished for this {@link SourceDocument} in the
      * project
      *
@@ -572,7 +583,7 @@ public interface DocumentService
     boolean existsFinishedAnnotation(SourceDocument document);
 
     /**
-     * If at least one {@link AnnotationDocument} is finished in this project
+     * @return if at least one {@link AnnotationDocument} is finished in this project.
      */
     boolean existsFinishedAnnotation(Project project);
 

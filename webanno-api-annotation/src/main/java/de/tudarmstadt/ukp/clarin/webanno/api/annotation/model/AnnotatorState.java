@@ -119,7 +119,7 @@ public interface AnnotatorState
     /**
      * User is viewing other people's work (read-only), but not as Curation User
      */
-    boolean isUserViewingOthersWork(User aCurrentUser);
+    boolean isUserViewingOthersWork(String aCurrentUserName);
 
     // ---------------------------------------------------------------------------------------------
     // Project
@@ -173,8 +173,33 @@ public interface AnnotatorState
 
     void setPreferences(AnnotationPreference aPreferences);
 
+    /**
+     * Set all layers in the project, including hidden layers, non-enabled layers, etc. This is just
+     * a convenience method to quickly access layer information and to avoid having to access the
+     * database every time during rendering to get this information.
+     * 
+     * @param aLayers
+     *            all layers.
+     */
+    void setAllAnnotationLayers(List<AnnotationLayer> aLayers);
+
+    List<AnnotationLayer> getAllAnnotationLayers();
+
+    /**
+     * Get the annotation layers which are usable by the annotator (i.e. enabled, visible according
+     * to the user preferences , etc.)
+     * 
+     * @return usable layers
+     */
     List<AnnotationLayer> getAnnotationLayers();
 
+    /**
+     * Set the annotation layers which are usable by the annotator (i.e. enabled, visible according
+     * to the user preferences , etc.)
+     * 
+     * @param aAnnotationLayers
+     *            usable layers
+     */
     void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers);
 
     // ---------------------------------------------------------------------------------------------

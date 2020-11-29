@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.io.CharacterEscapes;
 import com.fasterxml.jackson.core.io.SerializedString;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JSONUtil
@@ -111,6 +112,15 @@ public class JSONUtil
         JsonGenerator jsonGenerator = JSONUtil.getObjectMapper().getFactory().createGenerator(out);
         jsonGenerator.setCharacterEscapes(JavaScriptCharacterEscapes.get());
         jsonGenerator.writeObject(aObject);
+        return out.toString();
+    }
+
+    public static String toInterpretableJsonString(JsonNode aTree) throws IOException
+    {
+        StringWriter out = new StringWriter();
+        JsonGenerator jsonGenerator = JSONUtil.getObjectMapper().getFactory().createGenerator(out);
+        jsonGenerator.setCharacterEscapes(JavaScriptCharacterEscapes.get());
+        jsonGenerator.writeTree(aTree);
         return out.toString();
     }
 

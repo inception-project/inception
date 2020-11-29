@@ -26,6 +26,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface PreRenderer
 {
+    /**
+     * @param aLayers
+     *            the layers which should be rendered.
+     */
     void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
             List<AnnotationLayer> aLayers);
 }

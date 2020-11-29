@@ -47,14 +47,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class DocumentServiceImplTest
 {
     private DocumentService sut;
 
-    private @Mock UserDao userRepository;
     private @Mock ImportExportService importExportService;
     private @Mock ProjectService projectService;
     private @Mock ApplicationEventPublisher applicationEventPublisher;
@@ -63,7 +61,6 @@ public class DocumentServiceImplTest
     private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
     private CasStorageService storageService;
-    private CasStorageSession casStorageSession;
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
@@ -73,7 +70,7 @@ public class DocumentServiceImplTest
     {
         initMocks(this);
 
-        casStorageSession = CasStorageSession.open();
+        CasStorageSession.open();
 
         backupProperties = new BackupProperties();
 
@@ -83,8 +80,8 @@ public class DocumentServiceImplTest
         storageService = new CasStorageServiceImpl(null, null, repositoryProperties,
                 backupProperties);
 
-        sut = new DocumentServiceImpl(repositoryProperties, userRepository, storageService,
-                importExportService, projectService, applicationEventPublisher, entityManager);
+        sut = new DocumentServiceImpl(repositoryProperties, storageService, importExportService,
+                projectService, applicationEventPublisher, entityManager);
 
         when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
                 any())).thenReturn(JCasFactory.createText("Test").getCas());
@@ -114,7 +111,6 @@ public class DocumentServiceImplTest
     {
         SourceDocument sourceDocument = makeSourceDocument(1l, 1l, "test");
         User user = makeUser();
-        when(userRepository.get(user.getUsername())).thenReturn(user);
         when(entityManager.createQuery(anyString(), any())).thenThrow(NoResultException.class);
 
         JCas cas = sut.readAnnotationCas(sourceDocument, user.getUsername()).getJCas();

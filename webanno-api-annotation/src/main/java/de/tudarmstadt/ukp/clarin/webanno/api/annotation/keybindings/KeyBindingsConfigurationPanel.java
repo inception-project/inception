@@ -88,7 +88,8 @@ public class KeyBindingsConfigurationPanel
         FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
         featureState = Model.of(new FeatureState(VID.NONE_ID, feature, null));
         if (feature.getTagset() != null) {
-            featureState.getObject().tagset = schemaService.listTags(feature.getTagset());
+            featureState.getObject().tagset = schemaService
+                    .listTagsReorderable(feature.getTagset());
         }
         // We are adding only the focus component here because we do not want to display the label
         // which usually goes along with the feature editor. This assumes that there is a sensible

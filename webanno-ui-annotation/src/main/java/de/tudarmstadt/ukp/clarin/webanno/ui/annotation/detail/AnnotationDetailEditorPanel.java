@@ -107,6 +107,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -1364,7 +1365,7 @@ public abstract class AnnotationDetailEditorPanel
                     else {
                         // indicator.setRulesExist(false);
                         featureState.tagset = annotationService
-                                .listTags(featureState.feature.getTagset());
+                                .listTagsReorderable(featureState.feature.getTagset());
                     }
                 }
             }
@@ -1476,10 +1477,11 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // Fetch actual tagset
-        List<Tag> tags = annotationService.listTags(aModel.feature.getTagset());
+        List<ReorderableTag> tags = annotationService
+                .listTagsReorderable(aModel.feature.getTagset());
 
         // First add tags which are suggested by rules and exist in tagset
-        List<Tag> tagset = compareSortAndAdd(possibleValues, tags, aModel.indicator);
+        List<ReorderableTag> tagset = compareSortAndAdd(possibleValues, tags, aModel.indicator);
 
         // Record the possible values and the (re-ordered) tagset in the feature state
         aModel.possibleValues = possibleValues;
@@ -1491,10 +1493,10 @@ public abstract class AnnotationDetailEditorPanel
      * exist in tagset and is suggested by rules. The remaining values from tagset are added
      * afterwards.
      */
-    private static List<Tag> compareSortAndAdd(List<PossibleValue> aPossibleValues, List<Tag> aTags,
-            RulesIndicator aRulesIndicator)
+    private static List<ReorderableTag> compareSortAndAdd(List<PossibleValue> aPossibleValues,
+            List<ReorderableTag> aTags, RulesIndicator aRulesIndicator)
     {
-        List<Tag> returnList = new ArrayList<>();
+        List<ReorderableTag> returnList = new ArrayList<>();
 
         // if no possible values, means didn't satisfy conditions
         if (aPossibleValues.isEmpty()) {
@@ -1502,13 +1504,13 @@ public abstract class AnnotationDetailEditorPanel
             return returnList;
         }
 
-        Map<String, Tag> tagIndex = new LinkedHashMap<>();
-        for (Tag tag : aTags) {
+        Map<String, ReorderableTag> tagIndex = new LinkedHashMap<>();
+        for (ReorderableTag tag : aTags) {
             tagIndex.put(tag.getName(), tag);
         }
 
         for (PossibleValue value : aPossibleValues) {
-            Tag tag = tagIndex.get(value.getValue());
+            ReorderableTag tag = tagIndex.get(value.getValue());
             if (tag == null) {
                 continue;
             }
