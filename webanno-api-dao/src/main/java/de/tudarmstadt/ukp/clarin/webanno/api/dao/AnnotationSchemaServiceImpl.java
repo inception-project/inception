@@ -1146,8 +1146,13 @@ public class AnnotationSchemaServiceImpl
         return upgradeRequired;
     }
 
+    // NOTE: Using @Transactional here would significantly slow down things because getAdapter() is
+    // called rather often. It looks like listAnnotationFeature() works reasonably good also when
+    // not called within a transaction. Should it turn out that we would need a @Transactional here,
+    // then this should be refactored in some way. E.g. we keep the list of all project layers
+    // in the AnnotatorState now - maybe we can use it from there when calling relevant methods
+    // on the adapter.
     @Override
-    @Transactional
     public TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
         return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer,

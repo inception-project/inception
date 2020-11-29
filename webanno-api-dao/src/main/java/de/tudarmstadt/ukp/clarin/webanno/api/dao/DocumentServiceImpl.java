@@ -89,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
@@ -103,7 +102,6 @@ public class DocumentServiceImpl
     @PersistenceContext
     private EntityManager entityManager;
 
-    private final UserDao userRepository;
     private final CasStorageService casStorageService;
     private final ImportExportService importExportService;
     private final ProjectService projectService;
@@ -111,36 +109,39 @@ public class DocumentServiceImpl
     private final RepositoryProperties repositoryProperties;
 
     @Autowired
-    public DocumentServiceImpl(RepositoryProperties aRepositoryProperties, UserDao aUserRepository,
+    public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
             CasStorageService aCasStorageService, ImportExportService aImportExportService,
             ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
     {
         repositoryProperties = aRepositoryProperties;
         log.info("Document repository path: " + repositoryProperties.getPath());
-        
-        userRepository = aUserRepository;
+
         casStorageService = aCasStorageService;
         importExportService = aImportExportService;
         projectService = aProjectService;
         applicationEventPublisher = aApplicationEventPublisher;
     }
 
-    public DocumentServiceImpl(RepositoryProperties aRepositoryProperties, UserDao aUserRepository,
+    public DocumentServiceImpl(RepositoryProperties aRepositoryProperties,
             CasStorageService aCasStorageService, ImportExportService aImportExportService,
             ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher,
             EntityManager aEntityManager)
     {
-        this(aRepositoryProperties, aUserRepository, aCasStorageService,
-                aImportExportService, aProjectService, aApplicationEventPublisher);
+        this(aRepositoryProperties, aCasStorageService, aImportExportService, aProjectService,
+                aApplicationEventPublisher);
         entityManager = aEntityManager;
     }
     
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public File getDir()
     {
         return repositoryProperties.getPath();
     }
     
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public File getDocumentFolder(SourceDocument aDocument)
         throws IOException
@@ -226,16 +227,18 @@ public class DocumentServiceImpl
         }
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    @Transactional
     public boolean existsCas(SourceDocument aDocument, String aUser)
         throws IOException
     {
         return casStorageService.existsCas(aDocument, aUser);
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    @Transactional
     public boolean existsAnnotationCas(AnnotationDocument aAnnotationDocument)
         throws IOException
     {
@@ -264,6 +267,8 @@ public class DocumentServiceImpl
         return count > 0;
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public File getSourceDocumentFile(SourceDocument aDocument)
     {
@@ -276,6 +281,8 @@ public class DocumentServiceImpl
         return new File(documentUri, aDocument.getName());
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public File getCasFile(SourceDocument aDocument, String aUser) throws IOException
     {
@@ -567,6 +574,8 @@ public class DocumentServiceImpl
         }
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public CAS createOrReadInitialCas(SourceDocument aDocument)
         throws IOException
@@ -574,6 +583,8 @@ public class DocumentServiceImpl
         return createOrReadInitialCas(aDocument, NO_CAS_UPGRADE);
     }
     
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode)
             throws IOException
@@ -581,6 +592,8 @@ public class DocumentServiceImpl
         return createOrReadInitialCas(aDocument, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS, null);
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
             CasAccessMode aAccessMode)
@@ -589,6 +602,8 @@ public class DocumentServiceImpl
         return createOrReadInitialCas(aDocument, aUpgradeMode, aAccessMode, null);
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
             TypeSystemDescription aFullProjectTypeSystem)
@@ -598,13 +613,15 @@ public class DocumentServiceImpl
                 aFullProjectTypeSystem);
     }
     
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     private CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
             CasAccessMode aAccessMode, TypeSystemDescription aFullProjectTypeSystem)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
         
-        log.debug("Loading initial CAS for source document " + "[{}]({}) in project [{}]({})",
+        log.debug("Loading initial CAS for source document [{}]({}) in project [{}]({})",
                 aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
@@ -624,6 +641,8 @@ public class DocumentServiceImpl
             }, aAccessMode);
     }
     
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public boolean existsInitialCas(SourceDocument aDocument) throws IOException
     {
@@ -632,14 +651,17 @@ public class DocumentServiceImpl
         return casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER);
     }
     
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    @Transactional
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName)
             throws IOException
     {
         return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
     }
     
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasAccessMode aMode)
         throws IOException
@@ -647,6 +669,8 @@ public class DocumentServiceImpl
         return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE, aMode);
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasAccessMode aMode)
         throws IOException
@@ -655,8 +679,9 @@ public class DocumentServiceImpl
                 NO_CAS_UPGRADE, aMode);
     }
     
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    @Transactional
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
             CasUpgradeMode aUpgradeMode)
             throws IOException
@@ -664,8 +689,9 @@ public class DocumentServiceImpl
         return readAnnotationCas(aDocument, aUserName, aUpgradeMode, EXCLUSIVE_WRITE_ACCESS);
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    @Transactional
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
             CasUpgradeMode aUpgradeMode, CasAccessMode aMode)
             throws IOException
@@ -681,16 +707,18 @@ public class DocumentServiceImpl
         return cas;
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    @Transactional
     public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument)
         throws IOException
     {
         return readAnnotationCas(aAnnotationDocument, NO_CAS_UPGRADE);
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    @Transactional
     public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument,
             CasUpgradeMode aUpgradeMode)
         throws IOException
@@ -703,6 +731,8 @@ public class DocumentServiceImpl
         return readAnnotationCas(aDocument, userName, aUpgradeMode);
     }
     
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, String aUsername)
         throws IOException
@@ -753,6 +783,8 @@ public class DocumentServiceImpl
         writeAnnotationCas(aCas, annotationDocument, aUpdateTimestamp);
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public void resetAnnotationCas(SourceDocument aDocument, User aUser)
         throws UIMAException, IOException
