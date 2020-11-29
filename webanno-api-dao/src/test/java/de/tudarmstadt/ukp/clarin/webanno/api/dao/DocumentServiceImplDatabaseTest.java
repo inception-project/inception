@@ -109,8 +109,8 @@ public class DocumentServiceImplDatabaseTest
         @Bean
         public DocumentService documentService()
         {
-            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), null, null, applicationEventPublisher);
+            return new DocumentServiceImpl(repositoryProperties(), casStorageService(), null, null,
+                    applicationEventPublisher);
         }
         
         @Bean

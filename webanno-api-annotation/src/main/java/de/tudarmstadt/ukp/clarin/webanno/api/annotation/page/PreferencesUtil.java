@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -61,8 +62,10 @@ public class PreferencesUtil
         aState.setPreferences(preference);
         
         // set layers according to preferences
-        aState.setAnnotationLayers(aAnnotationService
-                .listAnnotationLayer(aState.getProject()).stream()
+        List<AnnotationLayer> allLayers = aAnnotationService
+                .listAnnotationLayer(aState.getProject());
+        aState.setAllAnnotationLayers(allLayers);
+        aState.setAnnotationLayers(allLayers.stream()
                 // Token layer cannot be selected!
                 .filter(l -> !Token.class.getName().equals(l.getName()))
                 // Only allow enabled layers

@@ -1,0 +1,753 @@
+<!--
+  Copyright 2012
+  Ubiquitous Knowledge Processing (UKP) Lab
+  Technische Universität Darmstadt
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+    <artifactId>webanno</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>webanno-webapp</artifactId>
+  <name>WebAnno - Application</name>
+  <packaging>war</packaging>
+  <properties>
+    <docker.image.name>webanno/webanno-snapshots</docker.image.name>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-automation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-automation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-doc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-menu</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-support-standalone</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-monitoring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-correction</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-tagsets</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-remote</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-manager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-api</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-telemetry</artifactId>
+    </dependency>
+
+    <!-- WICKET DEPENDENCIES -->
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-jmx</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.wicket-jquery-ui</groupId>
+      <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.googlecode.wicket-jquery-ui</groupId>
+      <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
+    </dependency>
+
+    <!-- Spring dependencies -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-orm</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-expression</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webmvc</artifactId>
+    </dependency>
+
+    <!-- SPRING SECURITY -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-config</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+    </dependency>
+
+    <!-- LOGGING DEPENDENCIES - SLF4J -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    
+    <!-- READER/WRITER DEPENDENCIES -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-io-tei</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-io-conll</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-io-tsv</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-io-text</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-io-tcf</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-io-json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-io-xmi</artifactId>
+    </dependency>
+
+    <!-- DATABASE / HIBERNATE -->
+
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-entitymanager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-dbcp2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+    </dependency>
+
+    <!-- Spring Boot dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j-to-slf4j</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
+      <artifactId>wicket-spring-boot-starter</artifactId>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <!-- 
+        This module has a slight complex setup to allow making it work in a command line build
+         as well as in an m2e build.
+        
+        The general procedure is:
+        1) generate asciidoc HTML (also PDF when on the command line)
+        2) sync generated HTML + images to a proper package under src/main/resources
+           This is the reason why src/main/resources is excluded from version control
+        3) let Maven pick up the stuff from src/main/resources and make it available to m2e 
+           workspace builds or package it into a JAR
+           
+        When running in m2e, building of PDFs is skipped.
+        Mind that rebuilding of HTML from asciidoc works in Eclipse only on an explicit project clean.
+        There is no incremental build!
+       -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>assemble-documentation</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <attach>false</attach>
+              <descriptors>
+                <descriptor>src/assembly/documentation.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.asciidoctor</groupId>
+        <artifactId>asciidoctor-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>user-guide-html</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>html5</backend>
+              <sourceDocumentName>user-guide.adoc</sourceDocumentName>
+              <imagesDir>./user-guide/images</imagesDir>
+              <attributes>
+                <toc>left</toc>
+                <include-dir>./user-guide/</include-dir>
+              </attributes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>developer-guide-html</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>html5</backend>
+              <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
+              <imagesDir>./developer-guide/images</imagesDir>
+              <attributes>
+                <toc>left</toc>
+                <include-dir>./developer-guide/</include-dir>
+              </attributes>
+            </configuration>
+          </execution>
+          <execution>
+            <id>admin-guide-html</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+              <backend>html5</backend>
+              <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
+              <attributes>
+                <toc>left</toc>
+                <include-dir>./admin-guide/</include-dir>
+              </attributes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>clean-copy-online-docs-to-classes</id>
+            <phase>clean</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <delete includeemptydirs="true" failonerror="false">
+                  <fileset dir="src/main/resources/public/doc" includes="**/*" />
+                </delete>
+              </tasks>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-online-docs-to-classes</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <tasks>
+                <mkdir dir="src/main/resources/public/doc" />
+                <!-- 
+                It is important that we SYNC here instead of delete/copy, otherwise we may run into
+                an endless build loop in Eclipse.
+                 -->
+                <sync todir="src/main/resources/public/doc">
+                  <fileset dir="target/generated-docs">
+                    <include name="**/*.html" />
+                    <include name="**/*.png" />
+                    <include name="**/*.jpg" />
+                  </fileset>
+                </sync>
+              </tasks>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.asciidoctor</groupId>
+          <artifactId>asciidoctor-maven-plugin</artifactId>
+          <configuration>
+            <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
+            <attributes>
+              <doctype>book</doctype>
+              <toclevels>8</toclevels>
+              <sectanchors>true</sectanchors>
+              <docinfo1>true</docinfo1>
+              <project-version>${project.version}</project-version>
+              <revnumber>${project.version}</revnumber>
+              <product-name>WebAnno</product-name>
+              <product-website-url>https://webanno.github.io/webanno/</product-website-url>
+              <icons>font</icons>
+            </attributes>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies combine.children="append">
+              <!-- WebAnno UI Modules - they auto-register via reflection -->
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-automation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-correction</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-tagsets</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
+              <!-- WebAnno Documentation module - needed but no Java dependency -->
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
+              <!-- WebAnno backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-automation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-telemetry</usedDependency>
+              <!-- WebAnno IO Modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tei</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tcf</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-json</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-xmi</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-conll</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-text</usedDependency>
+              <!-- JDBC drivers and database stuff - used via reflection -->
+              <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
+              <usedDependency>mysql:mysql-connector-java</usedDependency>
+              <usedDependency>org.hsqldb:hsqldb</usedDependency>
+              <usedDependency>org.liquibase:liquibase-core</usedDependency>
+              <usedDependency>org.apache.commons:commons-dbcp2</usedDependency>
+              <!-- JMX -->
+              <usedDependency>org.apache.wicket:wicket-jmx</usedDependency>
+              <!-- Themes -->
+              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
+              <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
+              <!-- Spring Boot stuff - used via reflection/classpath -->
+              <usedDependency>org.springframework:spring-webmvc</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
+              <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
+              <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
+              <!-- Spring configuration -->
+              <usedDependency>org.springframework:spring-expression</usedDependency>
+              <!-- Spring Web MVC data conversion -->
+              <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
+              <!-- Spring AOP
+                <usedDependency>org.springframework:spring-aop</usedDependency>
+                <usedDependency>org.springframework:spring-aspects</usedDependency>
+                <usedDependency>org.aspectj:aspectjrt</usedDependency>
+              -->
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+  <profiles>
+    <profile>
+      <id>m2e</id>
+      <activation>
+        <property>
+          <name>m2e.version</name>
+        </property>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <!--
+              - This plugin's configuration is used to store Eclipse m2e settings only.
+              - It has no influence on the Maven build itself.
+            -->
+            <plugin>
+              <groupId>org.eclipse.m2e</groupId>
+              <artifactId>lifecycle-mapping</artifactId>
+              <version>1.0.0</version>
+              <configuration>
+                <lifecycleMappingMetadata>
+                  <pluginExecutions>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <versionRange>[1.0,)</versionRange>
+                        <goals>
+                          <goal>single</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute />
+                      </action>
+                    </pluginExecution>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <versionRange>[1.0,)</versionRange>
+                        <goals>
+                          <goal>run</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute />
+                      </action>
+                    </pluginExecution>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <versionRange>[1.0,)</versionRange>
+                        <goals>
+                          <goal>add-resource</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute />
+                      </action>
+                    </pluginExecution>
+                    <pluginExecution>
+                      <pluginExecutionFilter>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctor-maven-plugin</artifactId>
+                        <versionRange>[1.0,)</versionRange>
+                        <goals>
+                          <goal>process-asciidoc</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute />
+                      </action>
+                    </pluginExecution>
+                  </pluginExecutions>
+                </lifecycleMappingMetadata>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>non-m2e</id>
+      <activation>
+        <property>
+          <name>!m2e.version</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <!-- 
+              This plugin must be declared before the ant-run plugin because during the package
+              phase, it creates a the files which the "copy-war-to-jar" execution of the ant-run
+              plugin running also in the package phase requires.
+            -->
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${spring.boot.version}</version>
+            <configuration>
+              <executable>true</executable>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>repackage</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <!--
+                  We want the original file to be the WAR and the repackaged all-inclusive runnable
+                  thing with the embedded Tomcat to be the JAR.
+                 -->
+                <id>copy-war-to-jar</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <move file="target/${project.artifactId}-${project.version}.war" tofile="target/webanno-standalone-${project.version}.jar" />
+                    <move file="target/${project.artifactId}-${project.version}.war.original" tofile="target/${project.artifactId}-${project.version}.war" />
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>pdf-documentation</id>
+      <activation>
+        <property>
+          <name>!m2e.version</name>
+        </property>
+        <!-- 
+         - Build PDFs currently does not work with Java 10 because of a problem parsing the
+         - version string: https://github.com/jruby/jruby-openssl/issues/157
+         -->
+        <jdk>[,10)</jdk>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctor-maven-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>user-guide-pdf</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                    <goal>process-asciidoc</goal>
+                  </goals>
+                  <configuration>
+                    <backend>pdf</backend>
+                    <sourceDocumentName>user-guide.adoc</sourceDocumentName>
+                    <imagesDir>./user-guide/images</imagesDir>
+                    <attributes>
+                      <toc>preamble</toc>
+                      <include-dir>./user-guide/</include-dir>
+                    </attributes>
+                  </configuration>
+                </execution>
+                <execution>
+                  <id>developer-guide-pdf</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                    <goal>process-asciidoc</goal>
+                  </goals>
+                  <configuration>
+                    <backend>pdf</backend>
+                    <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
+                    <imagesDir>./developer-guide/images</imagesDir>
+                    <attributes>
+                      <toc>preamble</toc>
+                      <include-dir>./developer-guide/</include-dir>
+                    </attributes>
+                  </configuration>
+                </execution>
+                <execution>
+                  <id>admin-guide-pdf</id>
+                  <phase>generate-resources</phase>
+                  <goals>
+                    <goal>process-asciidoc</goal>
+                  </goals>
+                  <configuration>
+                    <backend>pdf</backend>
+                    <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
+                    <attributes>
+                      <toc>preamble</toc>
+                      <include-dir>./admin-guide/</include-dir>
+                    </attributes>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>docker</id>
+      <activation>
+        <property>
+          <name>enable-docker</name>
+        </property>
+      </activation>
+      <properties>
+        <docker.jarfile>maven/webanno-standalone-${project.version}.jar</docker.jarfile>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <name>${docker.image.name}</name>
+                  <build>
+                    <tags>
+                      <tag>latest</tag>
+                      <tag>${project.version}</tag>
+                    </tags>
+                    <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                    <filter>@</filter>
+                    <assembly>
+                      <descriptorRef>artifact</descriptorRef>
+                      <inline>
+                        <files>
+                          <file>
+                            <source>${project.build.directory}/webanno-standalone-${project.version}.jar</source>
+                          </file>
+                        </files>
+                      </inline>
+                    </assembly>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>doc-only</id>
+      <properties>
+        <maven.install.skip>true</maven.install.skip>
+      </properties>
+    </profile>
+  </profiles>
+</project>

@@ -771,7 +771,7 @@ public class AnnotationPage
     protected void loadPreferences() throws BeansException, IOException
     {
         AnnotatorState state = getModelObject();
-        if (state.isUserViewingOthersWork(userRepository.getCurrentUser()) || 
+        if (state.isUserViewingOthersWork(userRepository.getCurrentUsername()) || 
                 state.getUser().getUsername().equals(CURATION_USER)) {
             PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
                     state, userRepository.getCurrentUser().getUsername());

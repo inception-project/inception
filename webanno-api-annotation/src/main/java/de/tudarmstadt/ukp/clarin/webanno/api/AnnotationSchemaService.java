@@ -37,7 +37,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.ImmutableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -373,13 +375,6 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listEnabledFeatures(AnnotationLayer aLayer);
     
     /**
-     * list all {@link Tag} in the system
-     *
-     * @return the tags.
-     */
-    List<Tag> listTags();
-
-    /**
      * list all {@link Tag} in a {@link TagSet}
      *
      * @param tag
@@ -387,6 +382,10 @@ public interface AnnotationSchemaService
      * @return the tags.
      */
     List<Tag> listTags(TagSet tag);
+    
+    List<ImmutableTag> listTagsImmutable(TagSet tagSet);
+
+    List<ReorderableTag> listTagsReorderable(TagSet tagSet);
 
     /**
      * list all {@link TagSet} in the system
