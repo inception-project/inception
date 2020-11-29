@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public interface DocumentService
 {
     String SERVICE_NAME = "documentService";
-    
+
     /**
      * The Directory where the {@link SourceDocument}s and {@link AnnotationDocument}s stored
      *
@@ -166,7 +166,7 @@ public interface DocumentService
      *            the source document.
      * @param aFullProjectTypeSystem
      *            the project type system. If this parameter is {@code null}, then the method will
-     *            try to resolve the type system itself. 
+     *            try to resolve the type system itself.
      * @throws IOException
      *             if an I/O error occurs.
      * @throws UIMAException
@@ -221,7 +221,7 @@ public interface DocumentService
     void writeAnnotationCas(CAS aCas, AnnotationDocument annotationDocument,
             boolean aUpdateTimestamp)
         throws IOException;
-    
+
     /**
      * Creates an annotation document. The {@link AnnotationDocument} is stored in the
      * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
@@ -368,8 +368,8 @@ public interface DocumentService
         throws IOException;
 
     CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasUpgradeMode aUpgradeMode)
-            throws IOException;
-    
+        throws IOException;
+
     void deleteAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
 
@@ -413,7 +413,7 @@ public interface DocumentService
         throws IOException;
 
     /**
-     * Read the initial CAS for the given document. If the CAS does not exist then it is created. 
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created.
      * This method does not perform an upgrade of the type system in the CAS.
      * 
      * @param aDocument
@@ -424,7 +424,7 @@ public interface DocumentService
      */
     CAS createOrReadInitialCas(SourceDocument aDocument)
         throws IOException;
-    
+
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.
      * 
@@ -455,7 +455,7 @@ public interface DocumentService
     CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
             CasAccessMode aAccessMode)
         throws IOException;
-    
+
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.
      * This method is good for bulk-importing because it accepts the project type system as a
@@ -573,6 +573,17 @@ public interface DocumentService
     boolean isAnnotationFinished(SourceDocument document, User user);
 
     /**
+     * Check if the user finished annotating the {@link SourceDocument} in this {@link Project}
+     *
+     * @param document
+     *            the source document.
+     * @param user
+     *            the user.
+     * @return if the user has finished annotation.
+     */
+    boolean isAnnotationFinished(SourceDocument document, String username);
+
+    /**
      * Check if at least one annotation document is finished for this {@link SourceDocument} in the
      * project
      *
@@ -596,7 +607,7 @@ public interface DocumentService
     void removeAnnotationDocument(AnnotationDocument annotationDocument);
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
-    
+
     /**
      * Returns the annotatable {@link SourceDocument source documents} from the given project for
      * the given user. Annotatable documents are those for which there is no corresponding
@@ -656,12 +667,12 @@ public interface DocumentService
         throws IOException;
 
     boolean existsInitialCas(SourceDocument aDocument) throws IOException;
-    
+
     /**
      * Retrieve overall number of source documents
      */
     long countSourceDocuments();
-    
+
     /**
      * Retrieve overall number of annotation documents
      */

@@ -777,6 +777,13 @@ public class DocumentServiceImpl
     @Transactional
     public boolean isAnnotationFinished(SourceDocument aDocument, User aUser)
     {
+        return isAnnotationFinished(aDocument, aUser.getUsername());
+    }
+
+    @Override
+    @Transactional
+    public boolean isAnnotationFinished(SourceDocument aDocument, String aUsername)
+    {
         String query = String.join("\n",
                 "SELECT COUNT(*) FROM AnnotationDocument",
                 "WHERE document = :document",
@@ -785,29 +792,9 @@ public class DocumentServiceImpl
         
         return entityManager.createQuery(query, Long.class)
                 .setParameter("document", aDocument)
-                .setParameter("user", aUser.getUsername())
+                .setParameter("user", aUsername)
                 .setParameter("state", AnnotationDocumentState.FINISHED)
                 .getSingleResult() > 0;
-        
-//        try {
-//            AnnotationDocument annotationDocument = entityManager
-//                    .createQuery(
-//                            "FROM AnnotationDocument WHERE document = :document AND "
-//                                    + "user =:user", AnnotationDocument.class)
-//                    .setParameter("document", aDocument)
-//                    .setParameter("user", aUser.getUsername())
-//                    .getSingleResult();
-//            if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-//                return true;
-//            }
-//            else {
-//                return false;
-//            }
-//        }
-//        // User even didn't start annotating
-//        catch (NoResultException e) {
-//            return false;
-//        }
     }
 
     @Override
