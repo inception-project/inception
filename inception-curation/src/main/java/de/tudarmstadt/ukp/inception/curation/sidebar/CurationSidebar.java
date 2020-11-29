@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
@@ -51,6 +51,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.value.AttributeMap;
 import org.apache.wicket.util.value.IValueMap;
+import org.danekja.java.util.function.serializable.SerializableBooleanSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,12 +94,13 @@ public class CurationSidebar
     private @SpringBean(name = AutomaticMergeStrategy.BEAN_NAME) MergeStrategy autoMergeStrat;
     
     private CheckGroup<User> selectedUsers;
-    private Form<List<User>> usersForm;
+    private final Form<List<User>> usersForm;
+    private final Form<Void> settingsForm;
     private BootstrapRadioChoice<String> curationTargetChoice;
     private WebMarkupContainer mainContainer;
     private ListView<User> users;
-    private Label noDocsLabel;
-    private Label finishedLabel;
+    private final Label noDocsLabel;
+    private final Label finishedLabel;
     
     private AnnotationPage annoPage;
     private final MergeDialog mergeConfirm;
@@ -111,14 +113,30 @@ public class CurationSidebar
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
         annoPage = aAnnotationPage;
         
+        // init. state with stored curation user
+        AnnotatorState state = aModel.getObject();
+        long projectid = state.getProject().getId();
+        String currentUsername = userRepository.getCurrentUsername();
+        User curationUser = curationService.retrieveCurationUser(currentUsername, 
+                projectid);
+        User initUser = state.getUser();
+        state.setUser(curationUser);
+        
+        // if curation user changed we have to reload the document
+        if (!initUser.equals(curationUser)) {
+            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+            annoPage.actionLoadDocument(target.orElseGet(null));
+        }
+        
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
         
         // Add empty space message
-        AnnotatorState state = aModel.getObject();
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
-        finishedLabel = new Label("finishedLabel", new ResourceModel("finished"));
+        finishedLabel = new Label("finishedLabel", new StringResourceModel("finished", this,
+                LoadableDetachableModel.of(state::getUser)));
+        finishedLabel.setOutputMarkupPlaceholderTag(true);
         mainContainer.add(finishedLabel);
         finishedLabel.add(visibleWhen(
             () -> documentService.isAnnotationFinished(state.getDocument(), state.getUser())));
@@ -132,7 +150,7 @@ public class CurationSidebar
         mainContainer.add(usersForm);
         
         // set up settings form for curation target
-        Form<Void> settingsForm = createSettingsForm("settingsForm");
+        settingsForm = createSettingsForm("settingsForm");
         settingsForm.setOutputMarkupId(true);
         settingsForm.setVisible(false);
         mainContainer.add(settingsForm);
@@ -145,24 +163,35 @@ public class CurationSidebar
                 documentNameModel));
         mainContainer.add(mergeConfirm);
         
-        // if curation user changed we have to reload the document
-        long projectid = state.getProject().getId();
-        String currentUsername = userRepository.getCurrentUsername();
-        User curationUser = curationService.retrieveCurationUser(currentUsername, 
-                projectid);
-        if (currentUsername != null && !currentUsername.equals(curationUser.getUsername())) {
-            state.setUser(curationUser);
-            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-            annoPage.actionLoadDocument(target.orElseGet(null));
-        }
+        // add toggle for settings
+        mainContainer.add(new AjaxLink<Void>("toggleOptionsVisibility")
+        {
+
+            private static final long serialVersionUID = -5535838955781542216L;
+
+            @Override
+            public void onClick(AjaxRequestTarget aTarget)
+            {
+                settingsForm.setVisible(!settingsForm.isVisible());
+                aTarget.add(mainContainer);
+            }
+        });
         
         // user started curating, extension can show suggestions
         state.setMetaData(CurationMetadata.CURATION_USER_PROJECT, true);
         
-        String username = state.getUser().getUsername();
-        add(enabledWhen(() -> (username.equals(currentUsername) || 
-                username.equals(CURATION_USER)) &&
-                !documentService.isAnnotationFinished(state.getDocument(), state.getUser())));
+        usersForm.add(enabledWhen(isCurationOngoing(state, currentUsername)));
+    }
+
+    private SerializableBooleanSupplier isCurationOngoing(AnnotatorState aState,
+            String aCurrentUsername)
+    {
+        String username = aState.getUser().getUsername();
+        return () -> (
+                // actual user or curation user is not finished 
+                // (exclude case that admin user is looking at other users)
+                (username.equals(aCurrentUsername) || username.equals(CURATION_USER))
+                && !documentService.isAnnotationFinished(aState.getDocument(), aState.getUser()));
     }
     
     private Form<Void> createSettingsForm(String aId)
@@ -212,18 +241,6 @@ public class CurationSidebar
         };
         settingsForm.add(curationTargetChoice);
         
-        // toggle visibility of settings form
-        usersForm.add(new AjaxButton("toggleOptionsVisibility") {
-            
-            private static final long serialVersionUID = -5535838955781542216L;
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget aTarget)
-            {
-                settingsForm.setVisible(!settingsForm.isVisible());
-                aTarget.add(mainContainer);
-            }     
-        });
         return settingsForm;
     }
 
@@ -362,7 +379,8 @@ public class CurationSidebar
         curationService.updateMergeStrategy(currentUser.getUsername(), 
                 state.getProject().getId(), manualMergeStrat);
         updateUsers(state);
-        aTarget.add(mainContainer);
+        // close settingsForm after apply was pressed
+        settingsForm.setVisible(false);
         // open curation doc
         annoPage.actionLoadDocument(aTarget);
     }

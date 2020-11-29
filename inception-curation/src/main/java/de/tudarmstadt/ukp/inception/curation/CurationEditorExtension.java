@@ -205,8 +205,7 @@ public class CurationEditorExtension
         }
         
         // check if user already finished with this document
-        User currentUser = userRepository.getCurrentUser();
-        if (documentService.isAnnotationFinished(aState.getDocument(), currentUser)) {
+        if (documentService.isAnnotationFinished(aState.getDocument(), aState.getUser())) {
             return;
         }
         
@@ -218,7 +217,7 @@ public class CurationEditorExtension
         }
             
         List<User> selectedUsers = curationService
-                .listUsersReadyForCuration(currentUser.getUsername(), 
+                .listUsersReadyForCuration(userRepository.getCurrentUser().getUsername(), 
                         aState.getProject(), aState.getDocument());
         if (selectedUsers.isEmpty()) {
             return;
