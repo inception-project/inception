@@ -32,19 +32,19 @@ public class AnnotationPreferencesDialog
     extends ModalWindow
 {
     private static final long serialVersionUID = -6911254813496835955L;
-    
+
     private boolean closeButtonClicked;
-    
+
     private IModel<AnnotatorState> state;
 
     private AjaxCallback onChangeAction;
-    
+
     public AnnotationPreferencesDialog(String id, final IModel<AnnotatorState> aModel)
     {
         super(id);
-        
+
         state = aModel;
-        
+
         // dialog window to select annotation layer preferences
         setInitialWidth(600);
         setInitialHeight(450);
@@ -58,18 +58,18 @@ public class AnnotationPreferencesDialog
             return true;
         });
     }
-    
+
     @Override
     public void show(IPartialPageRequestHandler aTarget)
     {
         closeButtonClicked = false;
-        
+
         setWindowClosedCallback((target) -> {
             if (!closeButtonClicked) {
                 onConfirmInternal(target);
             }
         });
-        
+
         setContent(new AnnotationPreferencesDialogContent(getContentId(), this, state)
         {
             private static final long serialVersionUID = -3434069761864809703L;
@@ -80,7 +80,7 @@ public class AnnotationPreferencesDialog
                 closeButtonClicked = true;
             }
         });
-        
+
         super.show(aTarget);
     }
 
@@ -97,7 +97,7 @@ public class AnnotationPreferencesDialog
     protected void onConfirmInternal(AjaxRequestTarget aTarget)
     {
         boolean closeOk = true;
-        
+
         // Invoke callback if one is defined
         if (onChangeAction != null) {
             try {
@@ -111,9 +111,9 @@ public class AnnotationPreferencesDialog
                 closeOk = false;
             }
         }
-        
+
         if (closeOk) {
             close(aTarget);
         }
-    }    
+    }
 }

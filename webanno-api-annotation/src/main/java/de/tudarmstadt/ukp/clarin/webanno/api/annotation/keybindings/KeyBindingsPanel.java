@@ -57,7 +57,7 @@ public class KeyBindingsPanel
     private final AnnotationActionHandler actionHandler;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    
+
     private boolean keyBindingsVisible = false;
     private IModel<List<KeyBinding>> keyBindings;
 
@@ -65,15 +65,16 @@ public class KeyBindingsPanel
             IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
     {
         super(aId, aModel);
-        
+
         actionHandler = aHandler;
         keyBindings = aKeyBindings;
-       
+
         add(visibleWhen(() -> keyBindings.map(List::isEmpty).getObject()));
-        
+
         WebMarkupContainer keyBindingsContainer = new WebMarkupContainer("keyBindingsContainer");
         keyBindingsContainer.setOutputMarkupId(true);
-        keyBindingsContainer.add(new ClassAttributeModifier() {
+        keyBindingsContainer.add(new ClassAttributeModifier()
+        {
             private static final long serialVersionUID = -6661003854862017619L;
 
             @Override
@@ -92,17 +93,18 @@ public class KeyBindingsPanel
         });
         showHideMessage.setOutputMarkupId(true);
 
-        LambdaAjaxLink toggleKeyBindingHints = new LambdaAjaxLink("toggleKeyBindingHints", 
-            _target -> {
-                keyBindingsVisible = !keyBindingsVisible;
-                _target.add(keyBindingsContainer, showHideMessage);
-            });
+        LambdaAjaxLink toggleKeyBindingHints = new LambdaAjaxLink("toggleKeyBindingHints",
+                _target -> {
+                    keyBindingsVisible = !keyBindingsVisible;
+                    _target.add(keyBindingsContainer, showHideMessage);
+                });
         toggleKeyBindingHints.add(showHideMessage);
         toggleKeyBindingHints
                 .add(LambdaBehavior.visibleWhen(() -> !aKeyBindings.getObject().isEmpty()));
         add(toggleKeyBindingHints);
-        
-        keyBindingsContainer.add(new ListView<KeyBinding>("keyBindings", aKeyBindings) {
+
+        keyBindingsContainer.add(new ListView<KeyBinding>("keyBindings", aKeyBindings)
+        {
             private static final long serialVersionUID = 3942714328686353093L;
 
             @Override
@@ -111,10 +113,10 @@ public class KeyBindingsPanel
                 AnnotationFeature feature = aModel.getObject().feature;
                 String value = aItem.getModelObject().getValue();
                 FeatureSupport<?> fs = featureSupportRegistry.getFeatureSupport(feature);
-                
+
                 LambdaAjaxLink link = new LambdaAjaxLink("shortcut",
-                    _target -> actionInvokeShortcut(_target, aItem.getModelObject()));
-                
+                        _target -> actionInvokeShortcut(_target, aItem.getModelObject()));
+
                 KeyType[] keyCombo = aItem.getModelObject().asKeyTypes();
                 link.add(new InputBehavior(keyCombo, EventType.click)
                 {
@@ -126,21 +128,21 @@ public class KeyBindingsPanel
                         return true;
                     }
                 });
-                
+
                 aItem.add(new Label("keyCombo", aItem.getModelObject().asHtml())
                         .setEscapeModelStrings(false));
-                
+
                 link.add(new Label("value", fs.renderFeatureValue(feature, value)));
                 aItem.add(link);
             }
         });
     }
-    
+
     public FeatureState getModelObject()
     {
         return (FeatureState) getDefaultModelObject();
     }
-    
+
     private void actionInvokeShortcut(AjaxRequestTarget aTarget, KeyBinding aKeyBinding)
         throws IOException, AnnotationException
     {

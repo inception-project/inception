@@ -42,7 +42,7 @@ public class CoreferenceLayerInitializer
     implements LayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
-    
+
     @Autowired
     public CoreferenceLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
@@ -65,13 +65,13 @@ public class CoreferenceLayerInitializer
         TagSet corefRelTagSet = JsonImportUtil.importTagSetFromJson(aProject,
                 new ClassPathResource("/tagsets/de-coref-rel-tuebadz.json").getInputStream(),
                 annotationSchemaService);
-        
+
         AnnotationLayer base = new AnnotationLayer(
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference",
                 CHAIN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         base.setCrossSentence(true);
         annotationSchemaService.createLayer(base);
-        
+
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",
                 "referenceType", CAS.TYPE_NAME_STRING, "Coreference type", corefTypeTagSet));
         annotationSchemaService.createFeature(

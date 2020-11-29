@@ -40,7 +40,7 @@ public class CodingAgreementResult
     protected final List<ConfigurationSet> incompleteSetsByPosition;
     protected final List<ConfigurationSet> incompleteSetsByLabel;
     protected final List<ConfigurationSet> pluralitySets;
-    
+
     public CodingAgreementResult(String aType, String aFeature, DiffResult aDiff,
             ICodingAnnotationStudy aStudy, List<String> aCasGroupIds,
             List<ConfigurationSet> aComplete, List<ConfigurationSet> aIrrelevantSets,
@@ -49,7 +49,7 @@ public class CodingAgreementResult
             List<ConfigurationSet> aPluralitySets, boolean aExcludeIncomplete)
     {
         super(aType, aFeature, aStudy, aCasGroupIds, aExcludeIncomplete);
-        
+
         diff = aDiff;
         setsWithDifferences = aSetsWithDifferences;
         completeSets = unmodifiableList(new ArrayList<>(aComplete));
@@ -58,12 +58,12 @@ public class CodingAgreementResult
         incompleteSetsByLabel = unmodifiableList(new ArrayList<>(aIncompleteByLabel));
         pluralitySets = unmodifiableList(new ArrayList<>(aPluralitySets));
     }
-    
+
     public boolean noPositions()
     {
         return study.getItemCount() == 0;
     }
-    
+
     /**
      * Positions that were not seen in all CAS groups.
      */
@@ -84,7 +84,7 @@ public class CodingAgreementResult
     {
         return pluralitySets;
     }
-    
+
     /**
      * @return sets differing with respect to the type and feature used to calculate agreement.
      */
@@ -92,28 +92,28 @@ public class CodingAgreementResult
     {
         return setsWithDifferences;
     }
-    
+
     public List<ConfigurationSet> getCompleteSets()
     {
         return completeSets;
     }
-    
+
     public List<ConfigurationSet> getIrrelevantSets()
     {
         return irrelevantSets;
     }
-    
+
     public int getDiffSetCount()
     {
         return setsWithDifferences.size();
     }
-    
+
     public int getUnusableSetCount()
     {
         return incompleteSetsByPosition.size() + incompleteSetsByLabel.size()
                 + pluralitySets.size();
     }
-    
+
     public Object getCompleteSetCount()
     {
         return completeSets.size();
@@ -123,22 +123,22 @@ public class CodingAgreementResult
     {
         return diff.getPositions().size();
     }
-    
+
     public int getRelevantSetCount()
     {
         return diff.getPositions().size() - irrelevantSets.size();
     }
-    
+
     public DiffResult getDiff()
     {
         return diff;
     }
-    
+
     @Override
     public String toString()
     {
         return "CodingAgreementResult [type=" + type + ", feature=" + feature + ", diffs="
-                + getDiffSetCount() + ", unusableSets=" + getUnusableSetCount()
-                + ", agreement=" + agreement + "]";
+                + getDiffSetCount() + ", unusableSets=" + getUnusableSetCount() + ", agreement="
+                + agreement + "]";
     }
 }

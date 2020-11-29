@@ -33,13 +33,13 @@ public class KrippendorffAlphaAgreementMeasureSupport
     extends AbstractCodingAgreementMeasureSupport<KrippendorffAlphaAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
-    
+
     public KrippendorffAlphaAgreementMeasureSupport(AnnotationSchemaService aAnnotationService)
     {
         super();
         annotationService = aAnnotationService;
     }
-    
+
     @Override
     public String getName()
     {
@@ -52,14 +52,14 @@ public class KrippendorffAlphaAgreementMeasureSupport
     {
         return new KrippendorffAlphaAgreementMeasure(aFeature, aTraits, annotationService);
     }
-    
+
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
             IModel<KrippendorffAlphaAgreementTraits> aModel)
     {
         return new KrippendorffAlphaAgreementTraitsEditor(aId, aFeature, aModel);
     }
-    
+
     @Override
     public KrippendorffAlphaAgreementTraits createTraits()
     {

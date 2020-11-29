@@ -34,8 +34,7 @@ public class LoggingFilter
     implements Filter
 {
     @Override
-    public void init(FilterConfig filterConfig)
-        throws ServletException
+    public void init(FilterConfig filterConfig) throws ServletException
     {
         // Do nothing
     }
@@ -63,13 +62,13 @@ public class LoggingFilter
     {
         // Do nothing
     }
-    
+
     public static void setLoggingUsername(String aUsername)
     {
         MDC.put(Logging.KEY_USERNAME, aUsername);
         MDC.put("_username", "[" + aUsername + "] ");
     }
-    
+
     public static void clearLoggingUsername()
     {
         MDC.remove("_username");

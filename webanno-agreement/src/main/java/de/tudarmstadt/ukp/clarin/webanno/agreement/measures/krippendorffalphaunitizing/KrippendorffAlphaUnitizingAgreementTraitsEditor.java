@@ -34,8 +34,7 @@ public class KrippendorffAlphaUnitizingAgreementTraitsEditor
     {
         super(aId, aFeature, aModel);
 
-        getForm().add(new CheckBox("excludeIncomplete")
-                .setOutputMarkupId(true));
+        getForm().add(new CheckBox("excludeIncomplete").setOutputMarkupId(true));
     }
 
     @Override

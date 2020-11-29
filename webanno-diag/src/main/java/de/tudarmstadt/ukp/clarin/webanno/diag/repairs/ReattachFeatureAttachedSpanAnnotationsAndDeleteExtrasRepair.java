@@ -48,8 +48,7 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(SPAN_TYPE.equals(layer.getType())
-                    && layer.getAttachFeature() != null)) {
+            if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
                 continue;
             }
 
@@ -60,7 +59,7 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
 
             // Go over the layer that has an attach feature (e.g. Token) and make sure that it is
             // filled
-            // anno   -> e.g. Lemma
+            // anno -> e.g. Lemma
             // attach -> e.g. Token
             for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
                 // Here we fetch all annotations of the layer we attach to at the relevant position,
@@ -71,10 +70,10 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
                             "There is more than one attachable annotation for [%s] on layer [%s].",
                             layer.getName(), attachType.getName()));
                 }
-                
+
                 for (AnnotationFS attach : attachables) {
                     AnnotationFS existing = getFeature(attach, attachFeature, AnnotationFS.class);
-                    
+
                     // So there is an annotation to which we could attach and it does not yet have
                     // an annotation attached, so we attach to it.
                     if (existing == null) {
@@ -88,25 +87,25 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
                 aMessages.add(LogMessage.info(this,
                         "Reattached [%d] unattached spans on layer [%s].", count, layer.getName()));
             }
-            
+
             // Go over the layer that is being attached to (e.g. Lemma) and ensure that if there
             // only exactly one annotation for each annotation in the layer that has the attach
             // feature (e.g. Token) - or short: ensure that there are not multiple Lemmas for a
             // single Token because such a thing is not valid in WebAnno. Layers that have an
             // attach feature cannot have stacking enabled!
             //
-            // attach     -> e.g. Token
+            // attach -> e.g. Token
             // candidates -> e.g. Lemma
             List<AnnotationFS> toDelete = new ArrayList<>();
             for (AnnotationFS attach : select(aCas, attachType)) {
                 List<AnnotationFS> candidates = selectCovered(getType(aCas, layer.getName()),
                         attach);
-                
+
                 if (!candidates.isEmpty()) {
                     // One of the candidates should already be attached
                     AnnotationFS attachedCandidate = getFeature(attach, attachFeature,
                             AnnotationFS.class);
-                    
+
                     for (AnnotationFS candidate : candidates) {
                         if (!candidate.equals(attachedCandidate)) {
                             toDelete.add(candidate);
@@ -114,7 +113,7 @@ public class ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair
                     }
                 }
             }
-            
+
             // Delete those the extra candidates that are not properly attached
             if (!toDelete.isEmpty()) {
                 toDelete.forEach(aCas::removeFsFromIndexes);

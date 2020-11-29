@@ -37,15 +37,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
  * @see AnnotatorState#getWindowBeginOffset()
  * @see AnnotatorState#getWindowEndOffset()
  */
-public class AnnotatorViewportChangedEvent {
+public class AnnotatorViewportChangedEvent
+{
 
     private final AjaxRequestTarget requestHandler;
 
-    public AnnotatorViewportChangedEvent(AjaxRequestTarget aRequestHandler) {
+    public AnnotatorViewportChangedEvent(AjaxRequestTarget aRequestHandler)
+    {
         requestHandler = aRequestHandler;
     }
 
-    public AjaxRequestTarget getRequestHandler() {
+    public AjaxRequestTarget getRequestHandler()
+    {
         return requestHandler;
     }
 }

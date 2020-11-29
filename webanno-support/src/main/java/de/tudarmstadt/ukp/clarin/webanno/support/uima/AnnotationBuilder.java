@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.support.uima;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.support.uima;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,13 +26,15 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 
-public class AnnotationBuilder<T extends AnnotationFS> extends FeatureStructureBuilder<T> {
+public class AnnotationBuilder<T extends AnnotationFS>
+    extends FeatureStructureBuilder<T>
+{
 
     public AnnotationBuilder(CAS aCas, Type aType)
     {
         super(aCas, aType);
     }
-    
+
     public AnnotationBuilder<T> at(int aBegin, int aEnd)
     {
         withFeature(CAS.FEATURE_BASE_NAME_BEGIN, aBegin);
@@ -61,7 +64,6 @@ public class AnnotationBuilder<T extends AnnotationFS> extends FeatureStructureB
 
     public static AnnotationBuilder<AnnotationFS> buildAnnotation(CAS aCas, String aType)
     {
-        return new AnnotationBuilder<AnnotationFS>(aCas,
-                CasUtil.getAnnotationType(aCas, aType));
+        return new AnnotationBuilder<AnnotationFS>(aCas, CasUtil.getAnnotationType(aCas, aType));
     }
 }

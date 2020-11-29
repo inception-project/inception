@@ -59,12 +59,11 @@ public abstract class BratSuggestionVisualizer
     private static final long serialVersionUID = 6653508018500736430L;
 
     private AbstractDefaultAjaxBehavior controller;
-    
+
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
 
-    public BratSuggestionVisualizer(String id,
-            IModel<UserAnnotationSegment> aModel, int aPosition)
+    public BratSuggestionVisualizer(String id, IModel<UserAnnotationSegment> aModel, int aPosition)
     {
         super(id, aModel);
         String username;
@@ -82,7 +81,7 @@ public abstract class BratSuggestionVisualizer
                 username = getModelObject().getUsername();
             }
         }
-        
+
         add(new Label("username", username));
 
         controller = new AbstractDefaultAjaxBehavior()
@@ -143,7 +142,7 @@ public abstract class BratSuggestionVisualizer
                 JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
         // aResponse.render(JavaScriptHeaderItem.forReference(
-        //     BratAnnotationLogResourceReference.get()));
+        // BratAnnotationLogResourceReference.get()));
         // aResponse.render(JavaScriptHeaderItem.forReference(BratSpinnerResourceReference.get()));
 
         // BRAT modules
@@ -155,9 +154,10 @@ public abstract class BratSuggestionVisualizer
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratCurationUiResourceReference.get()));
         // aResponse.render(
-        //     JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
+        // JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
+        // @formatter:off
         String script = 
                 "Util.embedByURL(" 
                 + "  '" + vis.getMarkupId() + "'," 
@@ -169,8 +169,9 @@ public abstract class BratSuggestionVisualizer
                 + "    var ajax = new Ajax(dispatcher);"
                 + "    var curation_mod = new CurationMod(dispatcher, '" + vis.getMarkupId() + "');"
                 + "    Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;"
-//                + "    dispatcher.post('clearSVG', []);" 
+                // + " dispatcher.post('clearSVG', []);"
                 + "  });";
+        // @formatter:on
         aResponse.render(OnLoadHeaderItem.forScript("\n" + script));
     }
 
@@ -187,6 +188,5 @@ public abstract class BratSuggestionVisualizer
         return getModelObject().getCollectionData();
     }
 
-    protected abstract void onClientEvent(AjaxRequestTarget aTarget)
-        throws Exception;
+    protected abstract void onClientEvent(AjaxRequestTarget aTarget) throws Exception;
 }

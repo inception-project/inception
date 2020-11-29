@@ -39,12 +39,12 @@ public class Normalization
     public static final String TYPE_NAME = "name";
     public static final String TYPE_ATTR = "attr";
     public static final String TYPE_INFO = "info";
-    
+
     // The UI JS code used the ID is only used to generate an error message if the target is missing
     // and otherwise this ID doesn't matter
     private String id;
-    // The type seems to be entirely unused in the JS code 
-    private String type; 
+    // The type seems to be entirely unused in the JS code
+    private String type;
     private VID target;
     private String refDb;
     private String refId;
@@ -59,7 +59,7 @@ public class Normalization
         type = TYPE_INFO;
         refText = aReftext;
     }
-    
+
     public Normalization(VID aTarget, String aRefDb, String aRefId)
     {
         id = aTarget.toString();

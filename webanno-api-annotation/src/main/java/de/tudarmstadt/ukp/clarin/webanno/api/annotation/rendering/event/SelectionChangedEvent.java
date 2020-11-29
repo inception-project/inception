@@ -24,15 +24,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 /**
  * Fired by {@link AnnotatorState} when the selection changes.
  */
-public class SelectionChangedEvent {
+public class SelectionChangedEvent
+{
 
     private final AjaxRequestTarget requestHandler;
 
-    public SelectionChangedEvent(AjaxRequestTarget aRequestHandler) {
+    public SelectionChangedEvent(AjaxRequestTarget aRequestHandler)
+    {
         requestHandler = aRequestHandler;
     }
 
-    public AjaxRequestTarget getRequestHandler() {
+    public AjaxRequestTarget getRequestHandler()
+    {
         return requestHandler;
     }
 }

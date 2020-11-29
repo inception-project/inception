@@ -33,14 +33,13 @@ public class ScriptDirectionActionBarItem
     public ScriptDirectionActionBarItem(String aId, AnnotationPageBase aPage)
     {
         super(aId);
-        
+
         page = aPage;
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
     }
 
-    private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
-            throws Exception
+    private void actionToggleScriptDirection(AjaxRequestTarget aTarget) throws Exception
     {
         page.getModelObject().toggleScriptDirection();
         page.actionRefreshDocument(aTarget);

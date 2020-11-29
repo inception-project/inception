@@ -94,14 +94,14 @@ public class WebhookServiceTest
         ann.setId(3l);
         ann.setDocument(doc);
         ann.setState(AnnotationDocumentState.FINISHED);
-        
+
         applicationEventPublisher.publishEvent(
                 new ProjectStateChangedEvent(this, project, ProjectState.CURATION_FINISHED));
-        applicationEventPublisher.publishEvent(
-                new DocumentStateChangedEvent(this, doc, SourceDocumentState.NEW));
+        applicationEventPublisher
+                .publishEvent(new DocumentStateChangedEvent(this, doc, SourceDocumentState.NEW));
         applicationEventPublisher.publishEvent(
                 new AnnotationStateChangeEvent(this, ann, AnnotationDocumentState.IN_PROGRESS));
-        
+
         assertEquals(1, testService.projectStateChangeMsgs.size());
         assertEquals(1, testService.docStateChangeMsgs.size());
         assertEquals(1, testService.annStateChangeMsgs.size());
@@ -114,25 +114,20 @@ public class WebhookServiceTest
         private List<ProjectStateChangeMessage> projectStateChangeMsgs = new ArrayList<>();
         private List<DocumentStateChangeMessage> docStateChangeMsgs = new ArrayList<>();
         private List<AnnotationStateChangeMessage> annStateChangeMsgs = new ArrayList<>();
-        
-        @RequestMapping(value = "/subscribe", 
-                method = RequestMethod.POST, 
-                headers = X_AERO_NOTIFICATION + "=" + PROJECT_STATE,
-                consumes = APPLICATION_JSON_UTF8_VALUE, 
-                produces = APPLICATION_JSON_UTF8_VALUE)
-        public ResponseEntity<Void> onProjectStateEvent(
-                @RequestBody ProjectStateChangeMessage aMsg)
+
+        @RequestMapping(value = "/subscribe", method = RequestMethod.POST, headers = X_AERO_NOTIFICATION
+                + "="
+                + PROJECT_STATE, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
+        public ResponseEntity<Void> onProjectStateEvent(@RequestBody ProjectStateChangeMessage aMsg)
             throws Exception
         {
             projectStateChangeMsgs.add(aMsg);
             return ResponseEntity.ok().build();
         }
 
-        @RequestMapping(value = "/subscribe", 
-                method = RequestMethod.POST, 
-                headers = X_AERO_NOTIFICATION + "=" + DOCUMENT_STATE,
-                consumes = APPLICATION_JSON_UTF8_VALUE, 
-                produces = APPLICATION_JSON_UTF8_VALUE)
+        @RequestMapping(value = "/subscribe", method = RequestMethod.POST, headers = X_AERO_NOTIFICATION
+                + "="
+                + DOCUMENT_STATE, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
         public ResponseEntity<Void> onDocumentStateEvent(
                 @RequestBody DocumentStateChangeMessage aMsg)
             throws Exception
@@ -141,11 +136,9 @@ public class WebhookServiceTest
             return ResponseEntity.ok().build();
         }
 
-        @RequestMapping(value = "/subscribe", 
-                method = RequestMethod.POST, 
-                headers = X_AERO_NOTIFICATION + "=" + ANNOTATION_STATE,
-                consumes = APPLICATION_JSON_UTF8_VALUE, 
-                produces = APPLICATION_JSON_UTF8_VALUE)
+        @RequestMapping(value = "/subscribe", method = RequestMethod.POST, headers = X_AERO_NOTIFICATION
+                + "="
+                + ANNOTATION_STATE, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
         public ResponseEntity<Void> onAnnotationStateEvent(
                 @RequestBody AnnotationStateChangeMessage aMsg)
             throws Exception

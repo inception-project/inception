@@ -37,28 +37,28 @@ public enum SourceDocumentStateTransition
      *             statically in the source document.
      */
     ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED,
-    
+
     /**
      * Explicit curator action
      */
     ANNOTATION_FINISHED_TO_CURATION_IN_PROGRESS,
-    
+
     /**
-     * Explicit curator action - can be used to transition a document into curation state even if
-     * it has never been opened in the curation editor.
+     * Explicit curator action - can be used to transition a document into curation state even if it
+     * has never been opened in the curation editor.
      */
     ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS,
-    
+
     /**
      * Explicit curator action
      */
     CURATION_IN_PROGRESS_TO_CURATION_FINISHED,
-    
+
     /**
      * Admin re-open curation document
      */
     CURATION_FINISHED_TO_CURATION_IN_PROGRESS,
-    
+
     /**
      * Implicit when admin re-open at least one annotation document
      * 

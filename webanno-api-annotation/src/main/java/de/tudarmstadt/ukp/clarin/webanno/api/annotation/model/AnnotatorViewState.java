@@ -38,16 +38,19 @@ public interface AnnotatorViewState
     // ---------------------------------------------------------------------------------------------
 
     PagingStrategy getPagingStrategy();
-    
+
     void setPagingStrategy(PagingStrategy aPagingStrategy);
-    
+
     /**
      * @param aUnit
      *            the first unit in the display window.
      */
     void setFirstVisibleUnit(AnnotationFS aUnit);
+
     void setPageBegin(CAS aCas, int aOffset);
+
     void setVisibleUnits(List<Unit> aUnit, int aTotalUnitCount);
+
     List<Unit> getVisibleUnits();
 
     /**
@@ -85,7 +88,7 @@ public interface AnnotatorViewState
      * @return the end character offset of the last unit in the display window.
      */
     int getWindowEndOffset();
-    
+
     // ---------------------------------------------------------------------------------------------
     // Rendering
     // - script direction can be changed by the user at will - it defaults to the direction
@@ -96,7 +99,7 @@ public interface AnnotatorViewState
     void setScriptDirection(ScriptDirection aScriptDirection);
 
     void toggleScriptDirection();
-    
+
     // ---------------------------------------------------------------------------------------------
     // Navigation within a document
     // ---------------------------------------------------------------------------------------------
@@ -124,7 +127,7 @@ public interface AnnotatorViewState
     {
         getPagingStrategy().moveToUnit(this, aCas, aIndex, aPos);
     }
-    
+
     default void moveToOffset(CAS aCas, int aOffset, FocusPosition aPos)
     {
         getPagingStrategy().moveToOffset(this, aCas, aOffset, aPos);
@@ -144,7 +147,10 @@ public interface AnnotatorViewState
     // Auxiliary methods
     // ---------------------------------------------------------------------------------------------
     Selection getSelection();
+
     SourceDocument getDocument();
+
     Project getProject();
+
     AnnotationPreference getPreferences();
 }

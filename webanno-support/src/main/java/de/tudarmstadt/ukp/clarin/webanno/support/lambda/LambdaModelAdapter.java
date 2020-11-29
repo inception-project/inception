@@ -30,13 +30,13 @@ public class LambdaModelAdapter<T>
 
     private final SerializableSupplier<T> supplier;
     private final SerializableConsumer<T> consumer;
-    
+
     public LambdaModelAdapter(SerializableSupplier<T> aSupplier, SerializableConsumer<T> aConsumer)
     {
         supplier = aSupplier;
         consumer = aConsumer;
     }
-    
+
     @Override
     public T getObject()
     {
@@ -67,23 +67,24 @@ public class LambdaModelAdapter<T>
     {
         // Nothing to do
     }
-    
-    public static class Builder<T> {
+
+    public static class Builder<T>
+    {
         private SerializableSupplier<T> supplier;
         private SerializableConsumer<T> consumer;
-        
+
         public Builder<T> getting(SerializableSupplier<T> aSupplier)
         {
             supplier = aSupplier;
             return this;
         }
-        
+
         public Builder<T> setting(SerializableConsumer<T> aConsumer)
         {
             consumer = aConsumer;
             return this;
         }
-        
+
         public LambdaModelAdapter<T> build()
         {
             return new LambdaModelAdapter<T>(supplier, consumer);

@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -28,7 +29,7 @@ public class TsvColumn
     public final Feature uimaFeature;
     public final LayerType layerType;
     public final FeatureType featureType;
-    
+
     private Type targetTypeHint;
 
     public TsvColumn(Type aUimaType, LayerType aLayerType)
@@ -59,7 +60,7 @@ public class TsvColumn
         this(aIndex, aUimaType, aLayerType, aUimaType.getFeatureByBaseName(aUimaFeatureName),
                 aFeatureType);
     }
-    
+
     public TsvColumn(int aIndex, Type aUimaType, LayerType aLayerType, Feature aUimaFeature,
             FeatureType aFeatureType)
     {
@@ -74,12 +75,12 @@ public class TsvColumn
     {
         targetTypeHint = aTargetTypeHint;
     }
-    
+
     public Type getTargetTypeHint()
     {
         return targetTypeHint;
     }
-    
+
     public int getIndex()
     {
         return index;

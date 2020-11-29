@@ -68,10 +68,10 @@ public class ProjectImportPanel
     private static final long serialVersionUID = 4612767288793876015L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectImportPanel.class);
-    
+
     private @SpringBean ProjectExportService exportService;
     private @SpringBean UserDao userRepository;
-    
+
     private IModel<Project> selectedModel;
     private IModel<Preferences> preferences;
     private BootstrapFileInputField fileUpload;
@@ -79,10 +79,10 @@ public class ProjectImportPanel
     public ProjectImportPanel(String aId, IModel<Project> aModel)
     {
         super(aId);
-        
+
         preferences = Model.of(new Preferences());
         selectedModel = aModel;
-        
+
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
 
         // Only administrators who can access user management can also use the "create missing
@@ -109,23 +109,23 @@ public class ProjectImportPanel
         fileUpload.getConfig().showUpload(false);
         fileUpload.getConfig().showRemove(false);
         fileUpload.setRequired(true);
-        
+
         form.add(new LambdaAjaxButton<>("import", this::actionImport));
-        
+
         add(form);
     }
 
     private void actionImport(AjaxRequestTarget aTarget, Form<Preferences> aForm)
     {
         List<FileUpload> exportedProjects = fileUpload.getFileUploads();
-        
+
         User currentUser = userRepository.getCurrentUser();
         boolean currentUserIsAdministrator = userRepository.isAdministrator(currentUser);
         boolean currentUserIsProjectCreator = userRepository.isProjectCreator(currentUser);
-        
+
         boolean createMissingUsers;
         boolean importPermissions;
-        
+
         // Importing of permissions is only allowed if the importing user is an administrator
         if (currentUserIsAdministrator) {
             createMissingUsers = preferences.getObject().generateUsers;
@@ -137,8 +137,7 @@ public class ProjectImportPanel
             createMissingUsers = false;
             importPermissions = false;
         }
-        
-        
+
         // If the current user is a project creator then we assume that the user is importing the
         // project for own use, so we add the user as a project manager. We do not do this if the
         // user is "just" an administrator but not a project creator.
@@ -150,19 +149,17 @@ public class ProjectImportPanel
             try {
                 // Workaround for WICKET-6425
                 File tempFile = File.createTempFile("webanno-training", null);
-                try (
-                        InputStream is = new BufferedInputStream(exportedProject.getInputStream());
-                        OutputStream os = new FileOutputStream(tempFile);
-                ) {
+                try (InputStream is = new BufferedInputStream(exportedProject.getInputStream());
+                        OutputStream os = new FileOutputStream(tempFile);) {
                     if (!ZipUtils.isZipStream(is)) {
                         throw new IOException("Invalid ZIP file");
                     }
                     IOUtils.copyLarge(is, os);
-                    
+
                     if (!ImportUtil.isZipValidWebanno(tempFile)) {
                         throw new IOException("ZIP file is not a WebAnno project archive");
                     }
-                    
+
                     ProjectImportRequest request = new ProjectImportRequest(createMissingUsers,
                             importPermissions, manager);
                     importedProject = exportService.importProject(request, new ZipFile(tempFile));
@@ -177,7 +174,7 @@ public class ProjectImportPanel
                 LOG.error("Error importing project", e);
             }
         }
-        
+
         if (importedProject != null) {
             selectedModel.setObject(importedProject);
             aTarget.add(getPage());
@@ -185,7 +182,8 @@ public class ProjectImportPanel
         }
     }
 
-    static class Preferences implements Serializable
+    static class Preferences
+        implements Serializable
     {
         private static final long serialVersionUID = 3821654370145608038L;
         boolean generateUsers;

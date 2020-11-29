@@ -51,19 +51,19 @@ public class AnnotationEditorExtensionRegistryImpl
     private final List<AnnotationEditorExtension> extensionsProxy;
 
     private List<AnnotationEditorExtension> extensions;
-    
+
     public AnnotationEditorExtensionRegistryImpl(
             @Lazy @Autowired(required = false) List<AnnotationEditorExtension> aExtensions)
     {
         extensionsProxy = aExtensions;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<AnnotationEditorExtension> exts = new ArrayList<>();
@@ -71,22 +71,22 @@ public class AnnotationEditorExtensionRegistryImpl
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
-        
+
             for (AnnotationEditorExtension fs : exts) {
                 log.info("Found annotation editor extension: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
     }
-    
+
     @Override
     public List<AnnotationEditorExtension> getExtensions()
     {
         return extensions;
     }
-    
+
     @Override
     public AnnotationEditorExtension getExtension(String aId)
     {
@@ -98,7 +98,7 @@ public class AnnotationEditorExtensionRegistryImpl
                     .orElse(null);
         }
     }
-    
+
     @Override
     public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
             AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
@@ -112,7 +112,7 @@ public class AnnotationEditorExtensionRegistryImpl
             ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction);
         }
     }
-    
+
     @Override
     public void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
             int aWindowBeginOffset, int aWindowEndOffset)

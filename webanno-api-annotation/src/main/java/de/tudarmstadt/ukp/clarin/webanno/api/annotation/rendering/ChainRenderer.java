@@ -54,12 +54,12 @@ public class ChainRenderer
     extends Renderer_ImplBase<ChainAdapter>
 {
     private final List<SpanLayerBehavior> behaviors;
-    
+
     public ChainRenderer(ChainAdapter aTypeAdapter, LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry, List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
-        
+
         if (aBehaviors == null) {
             behaviors = emptyList();
         }
@@ -84,11 +84,10 @@ public class ChainRenderer
             // CAS does not contain any instances of it
             return;
         }
-        
+
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
-                .filter(f -> f.isVisible() && f.isEnabled())
-                .collect(Collectors.toList());
-        
+                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
+
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
         AnnotationFeature spanLabelFeature = null;
@@ -103,12 +102,12 @@ public class ChainRenderer
         }
         // At this point arc and span feature labels must have been found! If not, the later code
         // will crash.
-        
+
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
         // Sorted index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
-        
+
         int colorIndex = 0;
         // Iterate over the chains
         for (FeatureStructure chainFs : selectFS(aCas, chainType)) {
@@ -128,8 +127,7 @@ public class ChainRenderer
 
                 // Is link before window? We only need links that being within the window and that
                 // end within the window
-                if (!(linkFs.getBegin() >= aPageBegin)
-                        && (linkFs.getEnd() <= aPageEnd)) {
+                if (!(linkFs.getBegin() >= aPageBegin) && (linkFs.getEnd() <= aPageEnd)) {
                     // prevLinkFs remains null until we enter the window
                     linkFs = nextLinkFs;
                     continue; // Go to next link
@@ -147,11 +145,11 @@ public class ChainRenderer
                             linkFs.getEnd() - aPageBegin);
 
                     VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
-                            colorIndex, singletonMap("label", bratLabelText), 
+                            colorIndex, singletonMap("label", bratLabelText),
                             singletonMap("label", bratHoverText));
-                    
+
                     annoToSpanIdx.put(linkFs, span);
-                    
+
                     aResponse.add(span);
                 }
 
@@ -182,13 +180,13 @@ public class ChainRenderer
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
             }
-            
+
             // The color index is updated even for chains that have no visible links in the current
             // window because we would like the chain color to be independent of visibility. In
             // particular the color of a chain should not change when switching pages/scrolling.
             colorIndex++;
         }
-        
+
         for (SpanLayerBehavior behavior : behaviors) {
             behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aPageBegin, aPageEnd);
         }

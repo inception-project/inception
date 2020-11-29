@@ -47,23 +47,24 @@ public class ChainLayerTraitsEditor
     protected void initializeForm(Form<ChainLayerTraits> aForm)
     {
         aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
-        
+
         aForm.add(new AnchoringModeSelect("anchoringMode", getLayerModel()));
-        
+
         aForm.add(new OverlapModeSelect("overlapMode", getLayerModel()));
-        
+
         CheckBox linkedListBehavior = new CheckBox("linkedListBehavior");
         linkedListBehavior.setModel(PropertyModel.of(getLayerModel(), "linkedListBehavior"));
         aForm.add(linkedListBehavior);
-        
+
         CheckBox crossSentence = new CheckBox("crossSentence");
         crossSentence.setOutputMarkupPlaceholderTag(true);
         crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
         crossSentence.add(visibleWhen(() -> !isBlank(getLayerModelObject().getType())));
         aForm.add(crossSentence);
-        
+
         TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
-        onClickJavascriptAction.setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
+        onClickJavascriptAction
+                .setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
         onClickJavascriptAction.add(new AttributeModifier("placeholder",
                 "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
                         + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));

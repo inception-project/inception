@@ -66,19 +66,19 @@ public class ImportExportServiceImplTest
     private CasStorageServiceImpl storageService;
     private CasStorageSession casStorageSession;
     private @Spy AnnotationSchemaService schemaService;
-    
+
     public @Rule TemporaryFolder testFolder = new TemporaryFolder();
-    
+
     private ImportExportServiceImpl sut;
 
     @Before
     public void setup() throws Exception
     {
         initMocks(this);
-        
-        //schemaService = mock(AnnotationSchemaServiceImpl.class);
+
+        // schemaService = mock(AnnotationSchemaServiceImpl.class);
         schemaService = Mockito.spy(new AnnotationSchemaServiceImpl());
-        
+
         backupProperties = new BackupProperties();
 
         repositoryProperties = new RepositoryProperties();
@@ -90,21 +90,21 @@ public class ImportExportServiceImplTest
         sut = new ImportExportServiceImpl(repositoryProperties, asList(new XmiFormatSupport()),
                 storageService, schemaService);
         sut.onContextRefreshedEvent();
-        
+
         doReturn(emptyList()).when(schemaService).listAnnotationLayer(any());
         doReturn(emptyList()).when(schemaService).listAnnotationFeature((Project) any());
         // The prepareCasForExport method internally calls getFullProjectTypeSystem, so we need to
-        // ensure this is actually callable and doesn't run into a mocked version which simply 
+        // ensure this is actually callable and doesn't run into a mocked version which simply
         // returns null.
         when(schemaService.getFullProjectTypeSystem(any(), anyBoolean())).thenCallRealMethod();
         when(schemaService.getTypeSystemForExport(any())).thenCallRealMethod();
         doCallRealMethod().when(schemaService).prepareCasForExport(any(), any(), any(), any());
         doCallRealMethod().when(schemaService).upgradeCas(any(), any(),
                 any(TypeSystemDescription.class));
-        
+
         casStorageSession = CasStorageSession.open();
     }
-    
+
     @After
     public void tearDown()
     {
@@ -122,7 +122,7 @@ public class ImportExportServiceImplTest
         typeSystems.add(createTypeSystemDescription());
         typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
         TypeSystemDescription ts = mergeTypeSystems(typeSystems);
-        
+
         // Prepare a test CAS with a CASMetadata annotation (DocumentMetaData is added as well
         // because the DKPro Core writers used by the ImportExportService expect it.
         JCas jcas = JCasFactory.createJCas(ts);
@@ -131,8 +131,8 @@ public class ImportExportServiceImplTest
         DocumentMetaData.create(jcas);
         CASMetadata cmd = new CASMetadata(jcas);
         cmd.addToIndexes(jcas);
-        
-        // Pass the CAS through the export mechanism. Write as XMI because that is one of the 
+
+        // Pass the CAS through the export mechanism. Write as XMI because that is one of the
         // formats which best retains the information from the CAS and is nicely human-readable
         // if the test needs to be debugged.
         File exportedXmi = sut.exportCasToFile(jcas.getCas(), sd, "testfile",
@@ -155,20 +155,20 @@ public class ImportExportServiceImplTest
         finally {
             exportedXmi.delete();
         }
-        
+
         List<CASMetadata> result = new ArrayList<>(select(jcas2, CASMetadata.class));
         assertThat(result).hasSize(0);
     }
-    
+
     private SourceDocument makeSourceDocument(long aProjectId, long aDocumentId)
     {
         Project project = new Project();
         project.setId(aProjectId);
-        
+
         SourceDocument doc = new SourceDocument();
         doc.setProject(project);
         doc.setId(aDocumentId);
-        
+
         return doc;
     }
 }

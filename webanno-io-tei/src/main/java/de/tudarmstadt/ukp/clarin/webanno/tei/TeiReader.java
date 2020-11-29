@@ -128,8 +128,7 @@ public class TeiReader
     /**
      * Location of the mapping file for part-of-speech tags to UIMA types.
      */
-    public static final String PARAM_POS_MAPPING_LOCATION = 
-            ComponentParameters.PARAM_POS_MAPPING_LOCATION;
+    public static final String PARAM_POS_MAPPING_LOCATION = ComponentParameters.PARAM_POS_MAPPING_LOCATION;
     @ConfigurationParameter(name = PARAM_POS_MAPPING_LOCATION, mandatory = false)
     protected String mappingPosLocation;
 
@@ -184,8 +183,7 @@ public class TeiReader
     private int currentTeiElementNumber;
 
     @Override
-    public void initialize(UimaContext aContext)
-        throws ResourceInitializationException
+    public void initialize(UimaContext aContext) throws ResourceInitializationException
     {
         super.initialize(aContext);
 
@@ -206,8 +204,7 @@ public class TeiReader
         }
     }
 
-    private void nextTeiElement()
-        throws CollectionException, IOException
+    private void nextTeiElement() throws CollectionException, IOException
     {
         if (teiElementIterator == null) {
             currentTeiElement = null;
@@ -260,15 +257,13 @@ public class TeiReader
     }
 
     @Override
-    public boolean hasNext()
-        throws IOException, CollectionException
+    public boolean hasNext() throws IOException, CollectionException
     {
         return teiElementIterator != null || currentTeiElement != null;
     }
 
     @Override
-    public void getNext(CAS aCAS)
-        throws IOException, CollectionException
+    public void getNext(CAS aCAS) throws IOException, CollectionException
     {
         initCas(aCAS, currentResource);
 
@@ -362,8 +357,7 @@ public class TeiReader
         private final StringBuilder buffer = new StringBuilder();
 
         @Override
-        public void endDocument()
-            throws SAXException
+        public void endDocument() throws SAXException
         {
             getJCas().setDocumentText(buffer.toString());
             // Set up language
@@ -433,8 +427,7 @@ public class TeiReader
         }
 
         @Override
-        public void endElement(String aUri, String aLocalName, String aName)
-            throws SAXException
+        public void endElement(String aUri, String aLocalName, String aName) throws SAXException
         {
             if (TAG_SUNIT.equals(aName)) {
                 if (writeSentences) {
@@ -521,8 +514,7 @@ public class TeiReader
         }
 
         @Override
-        public void characters(char[] aCh, int aStart, int aLength)
-            throws SAXException
+        public void characters(char[] aCh, int aStart, int aLength) throws SAXException
         {
             StringBuilder sb = new StringBuilder();
             sb.append(aCh, aStart, aLength);

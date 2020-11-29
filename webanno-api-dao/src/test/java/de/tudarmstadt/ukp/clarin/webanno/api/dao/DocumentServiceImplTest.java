@@ -82,9 +82,9 @@ public class DocumentServiceImplTest
 
         sut = new DocumentServiceImpl(repositoryProperties, storageService, importExportService,
                 projectService, applicationEventPublisher, entityManager);
-        
-        when(importExportService.importCasFromFile(any(File.class), any(Project.class),
-                any(), any())).thenReturn(JCasFactory.createText("Test").getCas());
+
+        when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
+                any())).thenReturn(JCasFactory.createText("Test").getCas());
     }
 
     @After
@@ -133,7 +133,8 @@ public class DocumentServiceImplTest
         return doc;
     }
 
-    private User makeUser() {
+    private User makeUser()
+    {
         User user = new User();
         user.setUsername("Test user");
         return user;

@@ -64,13 +64,13 @@ public class Tag
         tagSet = aTagSet;
         name = aName;
     }
-    
+
     public Tag(String aName, String aDescription)
     {
         name = aName;
         description = aDescription;
     }
-    
+
     public Long getId()
     {
         return id;
@@ -152,7 +152,7 @@ public class Tag
         }
         return true;
     }
-    
+
     @Override
     public String toString()
     {

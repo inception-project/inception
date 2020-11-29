@@ -61,7 +61,7 @@ public class ProjectLogExporter
             FileUtils.copyFileToDirectory(projectService.getProjectLogFile(project), logDir);
         }
     }
-    
+
     /**
      * copy project log files from the exported project
      * 

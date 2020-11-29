@@ -40,18 +40,19 @@ public class BooleanFeatureEditor
 
         BootstrapCheckBoxPickerConfig config = new BootstrapCheckBoxPickerConfig();
         config.withReverse(true);
-        field = new BootstrapCheckBoxPicker("value", config) {
+        field = new BootstrapCheckBoxPicker("value", config)
+        {
             private static final long serialVersionUID = -3413189824637877732L;
 
             @Override
             protected void onComponentTag(ComponentTag aTag)
             {
                 super.onComponentTag(aTag);
-                
+
                 aTag.put("data-group-cls", "btn-group-justified");
             }
         };
-        
+
         add(field);
     }
 

@@ -22,28 +22,29 @@ import org.apache.commons.lang3.StringUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 
-public abstract class Position_ImplBase implements Position
+public abstract class Position_ImplBase
+    implements Position
 {
     private static final long serialVersionUID = -1237180459049008357L;
-    
+
     private final String type;
     private final int casId;
     private final String feature;
 
     private final String role;
-    
+
     private final int linkTargetBegin;
     private final int linkTargetEnd;
     private final String linkTargetText;
 
     private final LinkCompareBehavior linkCompareBehavior;
-    
+
     private final String collectionId;
     private final String documentId;
 
-    public Position_ImplBase(String aCollectionId, String aDocumentId, int aCasId,
-            String aType, String aFeature, String aRole, int aLinkTargetBegin,
-            int aLinkTargetEnd, String aLinkTargetText, LinkCompareBehavior aBehavior)
+    public Position_ImplBase(String aCollectionId, String aDocumentId, int aCasId, String aType,
+            String aFeature, String aRole, int aLinkTargetBegin, int aLinkTargetEnd,
+            String aLinkTargetText, LinkCompareBehavior aBehavior)
     {
         type = aType;
         casId = aCasId;
@@ -65,66 +66,67 @@ public abstract class Position_ImplBase implements Position
     {
         return type;
     }
-    
+
     @Override
     public int getCasId()
     {
         return casId;
     }
-    
+
     @Override
     public String getFeature()
     {
         return feature;
     }
-    
+
     @Override
     public String getRole()
     {
         return role;
     }
-    
+
     @Override
     public int getLinkTargetBegin()
     {
         return linkTargetBegin;
     }
-    
+
     @Override
     public int getLinkTargetEnd()
     {
         return linkTargetEnd;
     }
-    
+
     public String getLinkTargetText()
     {
         return linkTargetText;
     }
-    
+
     @Override
     public String getCollectionId()
     {
         return collectionId;
     }
-    
+
     @Override
     public String getDocumentId()
     {
         return documentId;
     }
-    
+
     @Override
     public LinkCompareBehavior getLinkCompareBehavior()
     {
         return linkCompareBehavior;
     }
-    
+
     @Override
-    public int compareTo(Position aOther) {
+    public int compareTo(Position aOther)
+    {
         if (casId != aOther.getCasId()) {
             return casId - aOther.getCasId();
         }
-        
+
         int typeCmp = type.compareTo(aOther.getType());
         if (typeCmp != 0) {
             return typeCmp;
@@ -135,14 +137,13 @@ public abstract class Position_ImplBase implements Position
             return featureCmp;
         }
 
-        int linkCmpCmp = ObjectUtils.compare(linkCompareBehavior,
-                aOther.getLinkCompareBehavior());
+        int linkCmpCmp = ObjectUtils.compare(linkCompareBehavior, aOther.getLinkCompareBehavior());
         if (linkCmpCmp != 0) {
             // If the linkCompareBehavior is not the same, then we are dealing with different
             // positions
             return linkCmpCmp;
         }
-        
+
         // If linkCompareBehavior is equal, then we still only have to continue if it is non-
         // null.
         else if (linkCompareBehavior != null) {
@@ -158,18 +159,18 @@ public abstract class Position_ImplBase implements Position
                 if (linkTargetBegin != aOther.getLinkTargetBegin()) {
                     return linkTargetBegin - aOther.getLinkTargetBegin();
                 }
-                
+
                 return linkTargetEnd - aOther.getLinkTargetEnd();
             default:
-                throw new IllegalStateException("Unknown link target comparison mode ["
-                        + linkCompareBehavior + "]");
+                throw new IllegalStateException(
+                        "Unknown link target comparison mode [" + linkCompareBehavior + "]");
             }
         }
         else {
             return linkCmpCmp;
         }
     }
-    
+
     protected void toStringFragment(StringBuilder builder)
     {
         builder.append("cas=");

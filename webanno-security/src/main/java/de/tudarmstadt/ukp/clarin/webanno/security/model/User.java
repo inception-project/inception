@@ -50,8 +50,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
  * User entity corresponding to the Spring standard schema. Conformance to this schema is the reason
  * why a plural is used for the table name.
  *
- * @see <a
- *      href="http://static.springsource.org/spring-security/site/docs/3.0.x/reference/appendix-schema.html">Spring
+ * @see <a href=
+ *      "http://static.springsource.org/spring-security/site/docs/3.0.x/reference/appendix-schema.html">Spring
  *      standard schema</a>
  */
 @Entity
@@ -69,7 +69,7 @@ public class User
     private String password;
 
     private boolean enabled;
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date lastLogin;
@@ -96,7 +96,7 @@ public class User
     {
         // No-args constructor required for ORM.
     }
-    
+
     /**
      * This constructor is mainly intended for testing.
      */
@@ -108,7 +108,7 @@ public class User
             roles = new HashSet<>(asList(aRoles));
         }
     }
-    
+
     private String encodePassword(String aPassword)
     {
         if (passwordEncoder == null) {
@@ -166,7 +166,6 @@ public class User
         return password;
     }
 
-
     public void setPassword(String aPassword)
     {
         password = encodePassword(aPassword);
@@ -211,11 +210,11 @@ public class User
     {
         lastLogin = aLastLogin;
     }
-    
+
     @PrePersist
     protected void onCreate()
     {
-        // When we import data, we set the fields via setters and don't want these to be 
+        // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
         if (created != null) {
             created = new Date();

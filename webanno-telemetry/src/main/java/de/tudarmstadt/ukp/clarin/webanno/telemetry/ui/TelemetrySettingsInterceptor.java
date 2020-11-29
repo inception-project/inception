@@ -34,13 +34,14 @@ import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
  * before they can use the application.
  */
 @Component
-public class TelemetrySettingsInterceptor implements GlobalInterceptor
+public class TelemetrySettingsInterceptor
+    implements GlobalInterceptor
 {
     private final UserDao userService;
     private final TelemetryService telemetryService;
-    
+
     private boolean allValid = false;
-    
+
     @Autowired
     public TelemetrySettingsInterceptor(UserDao aUserService, TelemetryService aTelemetryService)
     {
@@ -57,7 +58,7 @@ public class TelemetrySettingsInterceptor implements GlobalInterceptor
         if (allValid) {
             return;
         }
-        
+
         // Do nothing if we are already on the telemetry settings page
         if (aPage instanceof TelemetrySettingsPage) {
             return;
@@ -68,19 +69,18 @@ public class TelemetrySettingsInterceptor implements GlobalInterceptor
                 .getAuthentication() instanceof AnonymousAuthenticationToken) {
             return;
         }
-        
+
         // Only direct admin users to the telemetry settings page
         if (!userService.isAdministrator(userService.getCurrentUser())) {
             return;
         }
-        
-        
+
         for (TelemetrySupport<?> support : telemetryService.getTelemetrySupports()) {
             if (!support.hasValidSettings()) {
                 throw new RestartResponseException(TelemetrySettingsPage.class);
             }
         }
-        
+
         allValid = true;
     }
 }

@@ -51,10 +51,10 @@ public class LinksReachableThroughChainsCheck
             if (!WebAnnoConst.CHAIN_TYPE.equals(layer.getType())) {
                 continue;
             }
-            
+
             Type chainType;
             Type linkType;
-            
+
             try {
                 chainType = getType(aCas, layer.getName() + "Chain");
                 linkType = getType(aCas, layer.getName() + "Link");
@@ -65,13 +65,13 @@ public class LinksReachableThroughChainsCheck
                 // check
                 continue;
             }
-            
+
             List<FeatureStructure> chains = new ArrayList<>(selectFS(aCas, chainType));
             List<AnnotationFS> links = new ArrayList<>(select(aCas, linkType));
 
             for (FeatureStructure chain : chains) {
                 AnnotationFS link = FSUtil.getFeature(chain, "first", AnnotationFS.class);
-                
+
                 while (link != null) {
                     links.remove(link);
                     link = FSUtil.getFeature(link, "next", AnnotationFS.class);
@@ -80,7 +80,7 @@ public class LinksReachableThroughChainsCheck
 
             if (!links.isEmpty()) {
                 ok = false;
-                
+
                 aMessages.add(new LogMessage(this, LogLevel.ERROR,
                         "CoreferenceLinks not reachable through chains: %d", links.size()));
                 for (AnnotationFS link : links) {
@@ -89,7 +89,7 @@ public class LinksReachableThroughChainsCheck
                 }
             }
         }
-        
+
         return ok;
     }
 }

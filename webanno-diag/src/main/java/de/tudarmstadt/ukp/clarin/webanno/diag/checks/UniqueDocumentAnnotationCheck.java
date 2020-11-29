@@ -38,7 +38,7 @@ public class UniqueDocumentAnnotationCheck
             aMessages.add(LogMessage.error(this, "There is more than one document annotation!"));
             return false;
         }
-        
+
         return true;
     }
 }

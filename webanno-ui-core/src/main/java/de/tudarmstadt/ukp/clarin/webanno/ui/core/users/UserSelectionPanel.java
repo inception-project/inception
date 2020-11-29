@@ -49,7 +49,8 @@ class UserSelectionPanel
         setOutputMarkupPlaceholderTag(true);
 
         overviewList = new OverviewListChoice<>("user");
-        overviewList.setChoiceRenderer(new ChoiceRenderer<User>() {
+        overviewList.setChoiceRenderer(new ChoiceRenderer<User>()
+        {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -79,7 +80,7 @@ class UserSelectionPanel
             return userRepository.listEnabledUsers();
         }
     }
-    
+
     private void toggleShowDisabled(AjaxRequestTarget aTarget)
     {
         aTarget.add(overviewList);

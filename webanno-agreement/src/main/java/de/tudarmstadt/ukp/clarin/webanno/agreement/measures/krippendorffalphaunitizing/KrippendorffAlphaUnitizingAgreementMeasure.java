@@ -40,9 +40,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class KrippendorffAlphaUnitizingAgreementMeasure
-    extends AggreementMeasure_ImplBase<
-        PairwiseAnnotationResult<UnitizingAgreementResult>, 
-        KrippendorffAlphaUnitizingAgreementTraits>
+    extends AggreementMeasure_ImplBase<//
+            PairwiseAnnotationResult<UnitizingAgreementResult>, //
+            KrippendorffAlphaUnitizingAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
 
@@ -75,11 +75,11 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
         }
         return result;
     }
-    
+
     public UnitizingAgreementResult calculatePairAgreement(Map<String, List<CAS>> aCasMap)
     {
         String typeName = getFeature().getLayer().getName();
-        
+
         // Calculate a character offset continuum over all CASses. We assume here that the documents
         // all have the same size - since the users cannot change the document sizes, this should be
         // an universally true assumption.
@@ -92,7 +92,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
             for (CAS cas : set.getValue()) {
                 if (cas != null) {
                     assert docSizes[i] == 0 || docSizes[i] == cas.getDocumentText().length();
-                    
+
                     docSizes[i] = cas.getDocumentText().length();
                 }
                 i++;
@@ -102,7 +102,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
 
         // Create a unitizing study for that continuum.
         UnitizingAnnotationStudy study = new UnitizingAnnotationStudy(continuumSize);
-        
+
         // For each annotator, extract the feature values from all the annotator's CASses and add
         // them to the unitizing study based on character offsets.
         for (Entry<String, List<CAS>> set : aCasMap.entrySet()) {
@@ -113,21 +113,20 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
                     // skip it.
                     continue nextCas;
                 }
-                
+
                 Type t = cas.getTypeSystem().getType(typeName);
                 Feature f = t.getFeatureByBaseName(getFeature().getName());
-                cas.select(t).map(fs -> (AnnotationFS) fs)
-                    .forEach(fs -> {
-                        study.addUnit(fs.getBegin(), fs.getEnd() - fs.getBegin(), raterIdx,
-                                FSUtil.getFeature(fs, f, Object.class));
-                    });
+                cas.select(t).map(fs -> (AnnotationFS) fs).forEach(fs -> {
+                    study.addUnit(fs.getBegin(), fs.getEnd() - fs.getBegin(), raterIdx,
+                            FSUtil.getFeature(fs, f, Object.class));
+                });
             }
         }
 
         UnitizingAgreementResult result = new UnitizingAgreementResult(typeName,
                 getFeature().getName(), study, new ArrayList<>(aCasMap.keySet()),
                 getTraits().isExcludeIncomplete());
-        
+
         IAgreementMeasure agreement = new KrippendorffAlphaUnitizingAgreement(study);
 
         if (result.getStudy().getUnitCount() > 0) {

@@ -49,18 +49,19 @@ public class LambdaModel<T>
             return (T) value;
         }
     }
-    
+
     public LambdaModel<T> autoDetaching()
     {
         autoDetach = true;
         return this;
     }
-    
+
     @Override
     protected void onAttach()
     {
         if (autoDetach) {
-            RequestCycle.get().getListeners().add(new IRequestCycleListener() {
+            RequestCycle.get().getListeners().add(new IRequestCycleListener()
+            {
                 @Override
                 public void onDetach(RequestCycle aCycle)
                 {

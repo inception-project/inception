@@ -19,10 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.metrics;
 
 public interface BratMetrics
 {
-    public static enum RenderType {
-        FULL,
-        DIFFERENTIAL,
-        SKIP;
+    public static enum RenderType
+    {
+        FULL, DIFFERENTIAL, SKIP;
     }
 
     void renderComplete(RenderType aType, long aTime, String aFull, String aDiff);

@@ -34,14 +34,14 @@ import org.springframework.stereotype.Component;
 
 /**
  * Listens to HTTP sessions being created and destroyed and (un)registers accordingly in the
- * {@link SessionRegistry}. This is mainly required when using pre-authentication since the
- * login page usually takes care of registering the session.
+ * {@link SessionRegistry}. This is mainly required when using pre-authentication since the login
+ * page usually takes care of registering the session.
  */
 @Component
 public class SessionListener
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final SessionRegistry sessionRegistry;
 
     @Autowired
@@ -51,10 +51,11 @@ public class SessionListener
     }
 
     @EventListener
-    public void onEvent(ApplicationEvent e) {
-//        log.trace(e.toString());
+    public void onEvent(ApplicationEvent e)
+    {
+        // log.trace(e.toString());
     }
-    
+
     @EventListener
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public void onSessionCreated(HttpSessionCreatedEvent aEvent)
@@ -68,7 +69,7 @@ public class SessionListener
             // session.
             return;
         }
-        
+
         String username = authentication.getName();
         log.trace("Session created for user [{}] [{}]", username, aEvent.getSession().getId());
         sessionRegistry.registerNewSession(aEvent.getSession().getId(), username);
@@ -82,11 +83,9 @@ public class SessionListener
             log.trace("Session destroyed for anonymous user [{}]", aEvent.getSession().getId());
             return;
         }
-        
-        String username = aEvent.getSecurityContexts().stream()
-                .findFirst()
-                .map(SecurityContext::getAuthentication)
-                .map(Authentication::getName)
+
+        String username = aEvent.getSecurityContexts().stream().findFirst()
+                .map(SecurityContext::getAuthentication).map(Authentication::getName)
                 .orElse("<UNKNOWN>");
         log.trace("Session destroyed for user [{}] [{}]", username, aEvent.getSession().getId());
         sessionRegistry.removeSessionInformation(aEvent.getSession().getId());

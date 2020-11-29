@@ -39,12 +39,12 @@ public class KeyBinding
     implements Serializable
 {
     private static final long serialVersionUID = 6394936950272849288L;
-    
+
     private static final Map<String, KeyType> KEY_MAP;
 
     private String keyCombo;
     private String value;
-    
+
     static {
         HashMap<String, KeyType> keyMap = new HashMap<>();
         for (KeyType type : KeyType.values()) {
@@ -57,7 +57,7 @@ public class KeyBinding
     {
         // Nothing to do here
     }
-    
+
     public KeyBinding(String aKeyCombo, String aValue)
     {
         keyCombo = aKeyCombo;
@@ -90,17 +90,17 @@ public class KeyBinding
         if (isBlank(keyCombo)) {
             return false;
         }
-        
+
         for (String key : keyCombo.split(" ")) {
             KeyType type = KEY_MAP.get(key.toUpperCase(Locale.US));
             if (type == null) {
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     @JsonIgnore
     public KeyType[] asKeyTypes()
     {
@@ -111,10 +111,10 @@ public class KeyBinding
                 combo.add(type);
             }
         }
-        
+
         return combo.toArray(new KeyType[combo.size()]);
     }
-    
+
     @JsonIgnore
     public String asHtml()
     {

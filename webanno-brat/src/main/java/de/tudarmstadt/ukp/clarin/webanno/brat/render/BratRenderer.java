@@ -91,31 +91,31 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
- * Render documents using brat. This class converts a UIMA annotation representation into the 
- * object model used by brat. The result can be converted to JSON that the browser-side brat SVG
- * renderer can then use.
+ * Render documents using brat. This class converts a UIMA annotation representation into the object
+ * model used by brat. The result can be converted to JSON that the browser-side brat SVG renderer
+ * can then use.
  */
 public class BratRenderer
 {
     private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
-    
+
     private static final boolean DEBUG = false;
-    
+
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
-    
+
     public BratRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService)
     {
         schemaService = aSchemaService;
         coloringService = aColoringService;
     }
 
-    public void render(GetDocumentResponse aResponse, AnnotatorState aState,
-            VDocument aVDoc, CAS aCas)
+    public void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
+            CAS aCas)
     {
         render(aResponse, aState, aVDoc, aCas, null);
     }
-    
+
     /**
      * Convert the visual representation to the brat representation.
      *
@@ -137,17 +137,17 @@ public class BratRenderer
         // The rows need to be rendered first because we use the row boundaries to split
         // cross-row spans into multiple ranges
         renderUnitsAsRows(aResponse, aState);
-        
+
         renderTokens(aCas, aResponse, aState);
-        
+
         Map<AnnotationFS, Integer> sentenceIndexes = null;
-        
+
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
             ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
                     : coloringService.getStrategy(layer, aState.getPreferences(), colorQueues);
-            
+
             // If the layer is not included in the rendering, then we skip here - but only after
             // we have obtained a coloring strategy for this layer and thus secured the layer
             // color. This ensures that the layer colors do not change depending on the number
@@ -157,33 +157,32 @@ public class BratRenderer
             }
 
             TypeAdapter typeAdapter = schemaService.getAdapter(layer);
-            
+
             ColoringRules coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
                     .map(ColoringRulesTrait::getColoringRules).orElse(null);
-            
+
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<Offsets> offsets = vspan.getRanges().stream()
                         .flatMap(range -> split(aResponse.getSentenceOffsets(),
-                                aCas.getDocumentText().substring(
-                                        aState.getWindowBeginOffset(),
+                                aCas.getDocumentText().substring(aState.getWindowBeginOffset(),
                                         aState.getWindowEndOffset()),
                                 range.getBegin(), range.getEnd()).stream())
                         .collect(toList());
-                
+
                 String labelText = getUiLabelText(typeAdapter, vspan);
                 String hoverText = getUiHoverText(typeAdapter, vspan.getHoverFeatures());
-                
+
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
-                
+
                 if (DEBUG) {
                     hoverText = vspan.getOffsets() + "\n" + hoverText;
                 }
-                
-                aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets,
-                        labelText, color, hoverText));
-                
+
+                aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets, labelText,
+                        color, hoverText));
+
                 vspan.getLazyDetails().stream()
-                        .map(d ->  new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))
+                        .map(d -> new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))
                         .forEach(aResponse::addNormalization);
             }
 
@@ -193,13 +192,13 @@ public class BratRenderer
 
                 aResponse.addRelation(new Relation(varc.getVid(), varc.getType(),
                         getArgument(varc.getSource(), varc.getTarget()), bratLabelText, color));
-                
+
                 varc.getLazyDetails().stream()
-                        .map(d ->  new Normalization(varc.getVid(), d.getFeature(), d.getQuery()))
+                        .map(d -> new Normalization(varc.getVid(), d.getFeature(), d.getQuery()))
                         .forEach(aResponse::addNormalization);
             }
         }
-        
+
         for (VComment vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
@@ -216,13 +215,12 @@ public class BratRenderer
                 type = AnnotationComment.ANNOTATOR_NOTES;
                 break;
             }
-            
+
             AnnotationFS fs;
-            if (
-                    !vcomment.getVid().isSynthetic() && 
-                    ((fs = selectAnnotationByAddr(aCas, vcomment.getVid().getId())) != null && 
-                            fs.getType().getName().equals(Sentence.class.getName()))
-            ) {
+
+            if (!vcomment.getVid().isSynthetic()
+                    && ((fs = selectAnnotationByAddr(aCas, vcomment.getVid().getId())) != null
+                            && fs.getType().getName().equals(Sentence.class.getName()))) {
                 // Lazily fetching the sentences because we only need them for the comments
                 if (sentenceIndexes == null) {
                     sentenceIndexes = new HashMap<>();
@@ -232,7 +230,7 @@ public class BratRenderer
                         i++;
                     }
                 }
-                
+
                 int index = sentenceIndexes.get(fs);
                 aResponse.addComment(new SentenceComment(index, type, vcomment.getComment()));
             }
@@ -241,7 +239,7 @@ public class BratRenderer
                         new AnnotationComment(vcomment.getVid(), type, vcomment.getComment()));
             }
         }
-        
+
         // Render markers
         for (VMarker vmarker : aVDoc.getMarkers()) {
             if (vmarker instanceof VAnnotationMarker) {
@@ -262,7 +260,7 @@ public class BratRenderer
             }
         }
     }
-    
+
     /**
      * Argument lists for the arc annotation
      */
@@ -296,10 +294,9 @@ public class BratRenderer
             if (fs.getBegin() == fs.getEnd()) {
                 continue;
             }
-            
+
             split(aResponse.getSentenceOffsets(), fs.getCoveredText(), fs.getBegin() - winBegin,
-                    fs.getEnd() - winBegin)                    
-                    .forEach(range -> {
+                    fs.getEnd() - winBegin).forEach(range -> {
                         aResponse.addToken(range.getBegin(), range.getEnd());
                         if (DEBUG) {
                             aResponse.addEntity(new Entity(new VID(fs), "Token",
@@ -310,7 +307,7 @@ public class BratRenderer
                     });
         }
     }
-    
+
     public static void renderUnitsAsRows(GetDocumentResponse aResponse, AnnotatorState aState)
     {
         int windowBegin = aState.getWindowBeginOffset();
@@ -332,14 +329,17 @@ public class BratRenderer
             sentIdx++;
         }
     }
-    
+
     /**
      * Calculate the ranges for the given span. A single range cannot cross row boundaries. So for
      * spans which cover multiple rows, they are split into multiple ranges.
      * 
-     * @param aRows the row offsets (window-relative positions)
-     * @param aBegin the span begin (window-relative positions) 
-     * @param aEnd (window-relative positions)
+     * @param aRows
+     *            the row offsets (window-relative positions)
+     * @param aBegin
+     *            the span begin (window-relative positions)
+     * @param aEnd
+     *            (window-relative positions)
      * @return list of ranges.
      */
     public static List<Offsets> split(List<Offsets> aRows, String aText, int aBegin, int aEnd)
@@ -348,15 +348,14 @@ public class BratRenderer
         if (aBegin == aEnd) {
             return asList(new Offsets(aBegin, aEnd));
         }
-            
+
         // If the annotation extends across the row boundaries, create multiple ranges for the
         // annotation, one for every row. Note that in UIMA annotations are
         // half-open intervals [begin,end) so that a begin offset must always be
         // smaller than the end of a covering annotation to be considered properly
         // covered.
         Offsets beginRow = aRows.stream()
-                .filter(span -> span.getBegin() <= aBegin && aBegin < span.getEnd())
-                .findFirst()
+                .filter(span -> span.getBegin() <= aBegin && aBegin < span.getEnd()).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Position [" + aBegin + "] is not in any row"));
 
@@ -365,8 +364,7 @@ public class BratRenderer
         // to be at the end of the first sentence rather than at the beginning of the
         // second sentence.
         Offsets endRow = aRows.stream()
-                .filter(span -> span.getBegin() <= aEnd && aEnd <= span.getEnd())
-                .findFirst()
+                .filter(span -> span.getBegin() <= aEnd && aEnd <= span.getEnd()).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Position [" + aEnd + "] is not in any row"));
 
@@ -374,14 +372,14 @@ public class BratRenderer
         if (beginRow == endRow) {
             return asList(new Offsets(aBegin, aEnd));
         }
-        
+
         List<Offsets> coveredRows = aRows.subList(aRows.indexOf(beginRow),
                 aRows.indexOf(endRow) + 1);
-        
+
         List<Offsets> ranges = new ArrayList<>();
         for (Offsets row : coveredRows) {
             Offsets range;
-            
+
             if (row.getBegin() <= aBegin && aBegin < row.getEnd()) {
                 range = new Offsets(aBegin, row.getEnd());
             }
@@ -391,15 +389,15 @@ public class BratRenderer
             else {
                 range = new Offsets(row.getBegin(), row.getEnd());
             }
-            
+
             trim(aText, range);
-            
+
             ranges.add(range);
         }
 
         return ranges;
     }
-    
+
     /**
      * Generates brat type definitions from the WebAnno layer definitions.
      *
@@ -411,7 +409,7 @@ public class BratRenderer
      *            the annotation service
      * @return the brat type definitions
      */
-    public static Set<EntityType> buildEntityTypes(Project aProject, 
+    public static Set<EntityType> buildEntityTypes(Project aProject,
             List<AnnotationLayer> aAnnotationLayers, AnnotationSchemaService aAnnotationService)
     {
         // Sort layers
@@ -422,14 +420,14 @@ public class BratRenderer
         Map<AnnotationLayer, List<AnnotationFeature>> layerToFeatures = aAnnotationService
                 .listSupportedFeatures(aProject).stream()
                 .collect(groupingBy(AnnotationFeature::getLayer));
-        
+
         // Now build the actual configuration
         Set<EntityType> entityTypes = new LinkedHashSet<>();
         for (AnnotationLayer layer : layers) {
             EntityType entityType = configureEntityType(layer);
 
             List<RelationType> arcs = new ArrayList<>();
-            
+
             // For link features, we also need to configure the arcs, even though there is no arc
             // layer here.
             boolean hasLinkFeatures = false;
@@ -439,7 +437,7 @@ public class BratRenderer
                     break;
                 }
             }
-            
+
             if (hasLinkFeatures) {
                 String bratTypeName = TypeUtil.getUiTypeName(layer);
                 arcs.add(new RelationType(layer.getName(), layer.getUiName(), bratTypeName,
@@ -476,8 +474,8 @@ public class BratRenderer
         // determine which layers attach to with other layers. Currently we only use attachType,
         // but do not follow attachFeature if it is set.
         if (aTarget.isBuiltIn() && aTarget.getName().equals(POS.class.getName())) {
-            attachingLayers.add(aAnnotationService.findLayer(aTarget.getProject(),
-                    Dependency.class.getName()));
+            attachingLayers.add(
+                    aAnnotationService.findLayer(aTarget.getProject(), Dependency.class.getName()));
         }
 
         // Custom layers
@@ -500,14 +498,14 @@ public class BratRenderer
             AnnotationLayer aAttachingLayer)
     {
         String attachingLayerBratTypeName = TypeUtil.getUiTypeName(aAttachingLayer);
-        
-//        // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
-//        // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
-//        // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
-//        // "Link" types is local to the ChainAdapter and not known outside it!
-//        if (aLayer.getType().equals(CHAIN_TYPE)) {
-//            attachingLayerBratTypeName += ChainAdapter.LINK;
-//        }
+
+        // // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
+        // // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
+        // // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
+        // // "Link" types is local to the ChainAdapter and not known outside it!
+        // if (aLayer.getType().equals(CHAIN_TYPE)) {
+        // attachingLayerBratTypeName += ChainAdapter.LINK;
+        // }
 
         // Handle arrow-head styles depending on linkedListBehavior
         String arrowHead;
@@ -532,19 +530,19 @@ public class BratRenderer
         return new RelationType(aAttachingLayer.getName(), aAttachingLayer.getUiName(),
                 attachingLayerBratTypeName, bratTypeName, null, arrowHead, dashArray);
     }
-    
+
     public static String abbreviate(String aName)
     {
         if (aName == null || aName.length() < 3) {
             return aName;
         }
-        
+
         StringBuilder abbr = new StringBuilder();
         int ti = 0;
         boolean capitalizeNext = true;
         for (int i = 0; i < aName.length(); i++) {
             int ch = aName.charAt(i);
-            
+
             if (Character.isWhitespace(ch)) {
                 capitalizeNext = true;
                 ti = 0;
@@ -557,19 +555,20 @@ public class BratRenderer
                     }
                     abbr.append((char) ch);
                 }
-                ti ++;
+                ti++;
             }
 
         }
-        
+
         if (abbr.length() + 3 >= aName.length()) {
             return aName;
-        } else {
+        }
+        else {
             abbr.append("...");
         }
-        return abbr.toString();    
+        return abbr.toString();
     }
-    
+
     /**
      * Remove trailing or leading whitespace from the annotation.
      * 
@@ -597,7 +596,7 @@ public class BratRenderer
         aOffsets.setBegin(begin);
         aOffsets.setEnd(end);
     }
-    
+
     private static boolean trimChar(final char aChar)
     {
         switch (aChar) {

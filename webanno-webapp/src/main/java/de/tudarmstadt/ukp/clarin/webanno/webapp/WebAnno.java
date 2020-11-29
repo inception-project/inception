@@ -59,7 +59,7 @@ public class WebAnno
     extends SpringBootServletInitializer
 {
     private static final String PROTOCOL = "AJP/1.3";
-    
+
     @Value("${server.ajp.port:-1}")
     private int ajpPort;
 
@@ -80,13 +80,13 @@ public class WebAnno
         Runtime.getRuntime().addShutdownHook(new Thread(() -> pluginManager.stopPlugins()));
         return pluginManager;
     }
-    
+
     // The WebAnno User model class picks this bean up by name!
     @Bean
     public PasswordEncoder passwordEncoder()
     {
         // Set up a DelegatingPasswordEncoder which decodes legacy passwords using the
-        // StandardPasswordEncoder but encodes passwords using the modern BCryptPasswordEncoder 
+        // StandardPasswordEncoder but encodes passwords using the modern BCryptPasswordEncoder
         String encoderForEncoding = "bcrypt";
         Map<String, PasswordEncoder> encoders = new HashMap<>();
         encoders.put(encoderForEncoding, new BCryptPasswordEncoder());
@@ -96,7 +96,7 @@ public class WebAnno
         delegatingEncoder.setDefaultPasswordEncoderForMatches(new StandardPasswordEncoder());
         return delegatingEncoder;
     }
-    
+
     @Bean
     public TomcatServletWebServerFactory servletContainer()
     {
@@ -120,32 +120,32 @@ public class WebAnno
         init(builder);
         return builder;
     }
-    
+
     private static void init(SpringApplicationBuilder aBuilder)
     {
         // WebAnno relies on FS IDs being stable, so we need to enable this
         System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
-        
+
         aBuilder.banner(new WebAnnoBanner());
         aBuilder.initializers(new WebAnnoApplicationContextInitializer());
         aBuilder.headless(false);
-        
+
         // Traditionally, the WebAnno configuration file is called settings.properties and is
         // either located in webanno.home or under the user's home directory. Make sure we pick
         // it up from there in addition to reading the built-in application.properties file.
         aBuilder.properties("spring.config.additional-location="
                 + "${webanno.home:${user.home}/.webanno}/settings.properties");
     }
-    
+
     public static void main(String[] args) throws Exception
     {
         Optional<JWindow> splash = LoadingSplashScreen
                 .setupScreen(WebAnno.class.getResource("splash.png"));
-        
+
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
         // Add the main application as the root Spring context
         builder.sources(WebAnno.class).web(SERVLET);
-        
+
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
         init(builder);

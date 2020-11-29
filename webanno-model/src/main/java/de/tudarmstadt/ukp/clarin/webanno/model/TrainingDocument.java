@@ -42,8 +42,8 @@ import org.hibernate.annotations.Type;
  * stored in the file system.
  */
 @Entity
-@Table(name = "train_document", uniqueConstraints = { @UniqueConstraint(columnNames = { "name",
-        "project" }) })
+@Table(name = "train_document", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "project" }) })
 public class TrainingDocument
     implements Serializable
 {
@@ -63,7 +63,7 @@ public class TrainingDocument
     private String format;
 
     private boolean processed = false;
-    
+
     @Column(nullable = false)
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.TrainDocumentStateType")
     private TrainDocumentState state = TrainDocumentState.NEW;
@@ -116,7 +116,7 @@ public class TrainingDocument
     {
         format = aFormat;
     }
-    
+
     public TrainDocumentState getState()
     {
         return state;
@@ -146,7 +146,7 @@ public class TrainingDocument
     {
         this.sentenceAccessed = sentenceAccessed;
     }
-    
+
     public boolean isProcessed()
     {
         return processed;

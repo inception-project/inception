@@ -44,13 +44,13 @@ public class Rule
         for (ASTCondition astCondition : aRule.getConditions().getConditions()) {
             conditions.add(new Condition(astCondition));
         }
-        
+
         restrictions = new ArrayList<>();
         for (ASTRestriction astRestriction : aRule.getRestrictions().getRestrictions()) {
             restrictions.add(new Restriction(astRestriction));
         }
     }
-    
+
     public Rule(Condition aCondition, Restriction aRestriction)
     {
         conditions = asList(aCondition);

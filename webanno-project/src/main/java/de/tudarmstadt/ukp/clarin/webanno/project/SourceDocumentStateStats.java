@@ -27,9 +27,8 @@ public final class SourceDocumentStateStats
     private final long af;
     private final long cip;
     private final long cf;
-    
-    public SourceDocumentStateStats(Long aTotal, Long aAn, Long aAip, Long aAf, Long aCip,
-            Long aCf)
+
+    public SourceDocumentStateStats(Long aTotal, Long aAn, Long aAip, Long aAf, Long aCip, Long aCf)
     {
         super();
         total = aTotal != null ? aTotal : 0l;
@@ -39,37 +38,37 @@ public final class SourceDocumentStateStats
         cip = aCip != null ? aCip : 0l;
         cf = aCf != null ? aCf : 0l;
     }
-    
+
     public long getTotal()
     {
         return total;
     }
-    
+
     public long getNewAnnotations()
     {
         return an;
     }
-    
+
     public long getAnnotationsInProgress()
     {
         return aip;
     }
-    
+
     public long getFinishedAnnotations()
     {
         return af;
     }
-    
+
     public long getCurationsInProgress()
     {
         return cip;
     }
-    
+
     public long getCurationsFinished()
     {
         return cf;
     }
-    
+
     public ProjectState getProjectState()
     {
         if (total == cf) {
@@ -112,6 +111,5 @@ public final class SourceDocumentStateStats
         builder.append("]");
         return builder.toString();
     }
-    
-    
+
 }

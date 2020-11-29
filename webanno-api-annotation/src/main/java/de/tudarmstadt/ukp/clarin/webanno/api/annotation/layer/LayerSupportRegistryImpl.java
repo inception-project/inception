@@ -43,9 +43,9 @@ public class LayerSupportRegistryImpl
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final List<LayerSupport> layerSupportsProxy;
-    
+
     private List<LayerSupport> layerSupports;
-    
+
     private final Map<Long, LayerSupport<?, ?>> supportCache = new HashMap<>();
 
     public LayerSupportRegistryImpl(
@@ -53,13 +53,13 @@ public class LayerSupportRegistryImpl
     {
         layerSupportsProxy = aLayerSupports;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     public void init()
     {
         List<LayerSupport> lsp = new ArrayList<>();
@@ -67,23 +67,23 @@ public class LayerSupportRegistryImpl
         if (layerSupportsProxy != null) {
             lsp.addAll(layerSupportsProxy);
             AnnotationAwareOrderComparator.sort(lsp);
-        
+
             for (LayerSupport<?, ?> fs : lsp) {
                 log.info("Found layer support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
                 fs.setLayerSupportRegistry(this);
             }
         }
-        
+
         layerSupports = Collections.unmodifiableList(lsp);
     }
-    
+
     @Override
     public List<LayerSupport> getLayerSupports()
     {
         return layerSupports;
     }
-    
+
     @Override
     public LayerSupport getLayerSupport(AnnotationLayer aLayer)
     {
@@ -92,11 +92,11 @@ public class LayerSupportRegistryImpl
         // this should not be a memory leak - even if we don't remove entries if annotation
         // features would be deleted from the DB.
         LayerSupport support = null;
-        
+
         if (aLayer.getId() != null) {
             support = supportCache.get(aLayer.getId());
         }
-        
+
         if (support == null) {
             for (LayerSupport<?, ?> s : getLayerSupports()) {
                 if (s.accepts(aLayer)) {
@@ -110,28 +110,28 @@ public class LayerSupportRegistryImpl
                 }
             }
         }
-        
+
         if (support == null) {
             throw new IllegalArgumentException("Unsupported layer: [" + aLayer.getName() + "]");
         }
-        
+
         return support;
     }
-    
+
     @Override
     public LayerSupport getLayerSupport(String aId)
     {
         return getLayerSupports().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
                 .orElse(null);
     }
-    
+
     @Override
     public LayerType getLayerType(AnnotationLayer aLayer)
     {
         if (aLayer.getType() == null) {
             return null;
         }
-        
+
         // Figure out which layer support provides the given type.
         // If we can find a suitable layer support, then use it to resolve the type to a LayerType
         LayerType featureType = null;

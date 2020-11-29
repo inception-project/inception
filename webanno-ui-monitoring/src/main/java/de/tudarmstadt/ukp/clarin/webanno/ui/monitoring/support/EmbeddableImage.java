@@ -35,7 +35,8 @@ public class EmbeddableImage
     public EmbeddableImage(String aComponentId, ResourceReference aResource)
     {
         super(aComponentId);
-        add(new Image("image", aResource) {
+        add(new Image("image", aResource)
+        {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -49,9 +50,10 @@ public class EmbeddableImage
     public EmbeddableImage(String aComponentId, IResource aResource)
     {
         super(aComponentId);
-        add(new Image("image", aResource) {
+        add(new Image("image", aResource)
+        {
             private static final long serialVersionUID = 1L;
-            
+
             @Override
             protected boolean shouldAddAntiCacheParameter()
             {

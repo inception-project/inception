@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -43,7 +44,7 @@ public class TsvSentence
     {
         return uimaSentence.getBegin();
     }
-    
+
     public int getEnd()
     {
         return uimaSentence.getEnd();
@@ -53,7 +54,7 @@ public class TsvSentence
     {
         return uimaSentence;
     }
-    
+
     public TsvToken createToken(Token aUimaToken)
     {
         TsvToken token = doc.createToken(this, aUimaToken, tokens.size() + 1);
@@ -61,17 +62,17 @@ public class TsvSentence
         tokens.add(token);
         return token;
     }
-    
+
     public List<TsvToken> getTokens()
     {
         return tokens;
     }
-    
+
     public int getPosition()
     {
         return position;
     }
-    
+
     @Override
     public String toString()
     {

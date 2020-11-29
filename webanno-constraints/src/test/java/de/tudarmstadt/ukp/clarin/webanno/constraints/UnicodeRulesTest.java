@@ -35,8 +35,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 
 public class UnicodeRulesTest
 {
-    private static final String[] texts = {
-            "This is a test.", // English
+    private static final String[] texts = { "This is a test.", // English
             "ይህ ፈተና ነው ፡፡", // Amharic
             "هذا اختبار.", // Arabic
             "Սա թեստ է.", // Armenian
@@ -55,57 +54,52 @@ public class UnicodeRulesTest
             "Þetta er próf.", // Icelandic
             "🤷‍♀️" // Emoji
     };
-    
+
     @Test
-    public void thatRulesMatchUnicodeCharacters()
-        throws Exception
+    public void thatRulesMatchUnicodeCharacters() throws Exception
     {
         JCas jcas = JCasFactory.createJCas();
-        
+
         for (String text : texts) {
             jcas.reset();
             jcas.setDocumentText(text);
-            
+
             ParsedConstraints constraints = parse(String.join("\n",
                     "import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;",
-                    "Lemma {",
-                    "  text() = \"" + text + "\" -> value=\"ok\";",
-                    "}"));
-            
+                    "Lemma {", "  text() = \"" + text + "\" -> value=\"ok\";", "}"));
+
             Lemma ann = new Lemma(jcas, 0, jcas.getDocumentText().length());
             ann.addToIndexes();
-            
+
             Evaluator evaluator = new ValuesGenerator();
             List<PossibleValue> candidates = evaluator.generatePossibleValues(ann, "value",
                     constraints);
-            
+
             assertThat(candidates).containsExactly(new PossibleValue("ok", false));
         }
     }
 
     @Test
-    public void thatRulesCanAlsoNotMatch()
-        throws Exception
+    public void thatRulesCanAlsoNotMatch() throws Exception
     {
         JCas jcas = JCasFactory.createJCas();
-        
+
         for (String text : texts) {
             jcas.reset();
             jcas.setDocumentText(text);
-            
+
             ParsedConstraints constraints = parse(String.join("\n",
                     "import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma as Lemma;",
-                    "Lemma {",
-                    "  text() = \"" + StringUtils.reverse(text) + "\" -> value=\"ok\";",
+                    "Lemma {", "  text() = \"" + StringUtils.reverse(text) + "\" -> value=\"ok\";",
                     "}"));
-            
+
             Lemma ann = new Lemma(jcas, 0, jcas.getDocumentText().length());
             ann.addToIndexes();
-            
+
             Evaluator evaluator = new ValuesGenerator();
             List<PossibleValue> candidates = evaluator.generatePossibleValues(ann, "value",
                     constraints);
-            
+
             assertThat(candidates).isEmpty();
         }
     }

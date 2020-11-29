@@ -36,7 +36,7 @@ public class WebAnnoTsv3FormatSupport
 {
     public static final String ID = "ctsv3";
     public static final String NAME = "WebAnno TSV v3.2 (WebAnno v3.x)";
-    
+
     @Override
     public String getId()
     {
@@ -60,14 +60,14 @@ public class WebAnnoTsv3FormatSupport
     {
         return true;
     }
-    
+
     @Override
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         return createReaderDescription(WebannoTsv3XReader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

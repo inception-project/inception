@@ -61,7 +61,7 @@ public class NoMultipleIncomingRelationsCheck
                 if (!WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
                     continue;
                 }
-                
+
                 if (!Dependency.class.getName().equals(layer.getName())) {
                     continue;
                 }
@@ -117,7 +117,7 @@ public class NoMultipleIncomingRelationsCheck
                                     source.getCoveredText(), target.getCoveredText(),
                                     existingSource.getCoveredText(), target.getCoveredText()));
                         }
-                        
+
                         // This check only logs warnings - it should not fail. Having multiple
                         // incoming edges is not a serious problem.
                         // ok = false;

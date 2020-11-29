@@ -68,17 +68,17 @@ public class RelationOverlapBehavior
         final Type type = getType(cas, layer.getName());
         final Feature targetFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
         final Feature sourceFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
-        
+
         switch (layer.getOverlapMode()) {
         case ANY_OVERLAP:
             return aRequest;
         case NO_OVERLAP: {
             boolean hasAnyOverlapping = select(cas, type).stream()
-                // Check if any of the end-points of the requested relation are already used as
-                // end-points in another relation
-                .filter(rel -> overlapping(aRequest, rel, sourceFeature, targetFeature))
-                .findAny().isPresent();
-            
+                    // Check if any of the end-points of the requested relation are already used as
+                    // end-points in another relation
+                    .filter(rel -> overlapping(aRequest, rel, sourceFeature, targetFeature))
+                    .findAny().isPresent();
+
             if (hasAnyOverlapping) {
                 throw new IllegalPlacementException("Cannot create another annotation of layer ["
                         + layer.getUiName()
@@ -88,29 +88,28 @@ public class RelationOverlapBehavior
         }
         case OVERLAP_ONLY: {
             boolean hasStacking = select(cas, type).stream()
-                // Check if the requested relation has the same end-points as an existing
-                // relation
-                .filter(rel -> stacking(aRequest, rel, sourceFeature, targetFeature))
-                .findAny().isPresent();
-            
+                    // Check if the requested relation has the same end-points as an existing
+                    // relation
+                    .filter(rel -> stacking(aRequest, rel, sourceFeature, targetFeature)).findAny()
+                    .isPresent();
+
             if (hasStacking) {
-                throw new IllegalPlacementException("Cannot create another annotation of layer ["
-                        + layer.getUiName()
-                        + "] at this location - stacking is not allowed for this layer.");
+                throw new IllegalPlacementException(
+                        "Cannot create another annotation of layer [" + layer.getUiName()
+                                + "] at this location - stacking is not allowed for this layer.");
             }
             break;
         }
         case STACKING_ONLY: {
             boolean hasOverlapping = select(cas, type).stream()
-                .filter(rel -> 
-                    overlapping(aRequest, rel, sourceFeature, targetFeature) &&
-                    !stacking(aRequest, rel, sourceFeature, targetFeature))
-                .findAny().isPresent();
-            
+                    .filter(rel -> overlapping(aRequest, rel, sourceFeature, targetFeature)
+                            && !stacking(aRequest, rel, sourceFeature, targetFeature))
+                    .findAny().isPresent();
+
             if (hasOverlapping) {
-                throw new IllegalPlacementException("Cannot create another annotation of layer ["
-                        + layer.getUiName()
-                        + "] at this location - only stacking is allowed for this layer.");
+                throw new IllegalPlacementException(
+                        "Cannot create another annotation of layer [" + layer.getUiName()
+                                + "] at this location - only stacking is allowed for this layer.");
             }
             break;
         }
@@ -118,7 +117,7 @@ public class RelationOverlapBehavior
 
         return aRequest;
     }
-    
+
     @Override
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VArc> aAnnoToArcIdx)
@@ -126,7 +125,7 @@ public class RelationOverlapBehavior
         if (aAnnoToArcIdx.isEmpty()) {
             return;
         }
-        
+
         final AnnotationLayer layer = aAdapter.getLayer();
         final RelationAdapter adapter = (RelationAdapter) aAdapter;
         final CAS cas = aAnnoToArcIdx.keySet().iterator().next().getCAS();
@@ -134,8 +133,7 @@ public class RelationOverlapBehavior
         final Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
         final Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
         AnnotationComparator cmp = new AnnotationComparator();
-        final List<AnnotationFS> sortedRelations = aAnnoToArcIdx.keySet().stream()
-                .sorted(cmp)
+        final List<AnnotationFS> sortedRelations = aAnnoToArcIdx.keySet().stream().sorted(cmp)
                 .collect(Collectors.toList());
 
         switch (layer.getOverlapMode()) {
@@ -145,13 +143,13 @@ public class RelationOverlapBehavior
         case NO_OVERLAP: {
             Set<AnnotationFS> overlapping = new HashSet<>();
             Set<AnnotationFS> stacking = new HashSet<>();
-            
-            overlappingOrStackingRelations(sortedRelations, sourceFeature, targetFeature,
-                    stacking, overlapping);
-            
+
+            overlappingOrStackingRelations(sortedRelations, sourceFeature, targetFeature, stacking,
+                    overlapping);
+
             overlapping.forEach(fs -> aResponse
                     .add(new VComment(new VID(fs), ERROR, "Overlap is not permitted.")));
-            
+
             stacking.forEach(fs -> aResponse
                     .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
             break;
@@ -166,17 +164,16 @@ public class RelationOverlapBehavior
         case OVERLAP_ONLY:
             // Here, we must find all stacked relations because they are not permitted.
             // We go through all relations based on the their offsets. Stacked relations must have
-            // the same offsets (at least if we consider relations as having a direction, i.e. 
-            // that a relation A->B does not count as stacked on a relation B->A). But since there 
-            // can be multiple relations going out from the same sourceFS, we need to consider all 
+            // the same offsets (at least if we consider relations as having a direction, i.e.
+            // that a relation A->B does not count as stacked on a relation B->A). But since there
+            // can be multiple relations going out from the same sourceFS, we need to consider all
             // of them for potential stacking.
-            stackingRelations(sortedRelations, sourceFeature, targetFeature)
-                    .forEach(fs -> aResponse
-                            .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+            stackingRelations(sortedRelations, sourceFeature, targetFeature).forEach(fs -> aResponse
+                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
@@ -185,7 +182,7 @@ public class RelationOverlapBehavior
         final Type type = getType(aCas, adapter.getAnnotationTypeName());
         final Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
         final Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
-        
+
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
 
         switch (layer.getOverlapMode()) {
@@ -194,10 +191,10 @@ public class RelationOverlapBehavior
         case NO_OVERLAP: {
             Set<AnnotationFS> overlapping = new HashSet<>();
             Set<AnnotationFS> stacking = new HashSet<>();
-            
+
             overlappingOrStackingRelations(select(aCas, type), sourceFeature, targetFeature,
                     stacking, overlapping);
-            
+
             for (AnnotationFS fs : overlapping) {
                 messages.add(Pair.of(LogMessage.error(this, "Overlapping relation at [%d-%d]",
                         fs.getBegin(), fs.getEnd()), fs));
@@ -217,9 +214,9 @@ public class RelationOverlapBehavior
         case OVERLAP_ONLY:
             // Here, we must find all stacked relations because they are not permitted.
             // We go through all relations based on the their offsets. Stacked relations must have
-            // the same offsets (at least if we consider relations as having a direction, i.e. 
-            // that a relation A->B does not count as stacked on a relation B->A). But since there 
-            // can be multiple relations going out from the same sourceFS, we need to consider all 
+            // the same offsets (at least if we consider relations as having a direction, i.e.
+            // that a relation A->B does not count as stacked on a relation B->A). But since there
+            // can be multiple relations going out from the same sourceFS, we need to consider all
             // of them for potential stacking.
             stackingRelations(select(aCas, type), sourceFeature, targetFeature)
                     .forEach(fs -> messages.add(Pair.of(LogMessage.error(this,
@@ -229,7 +226,7 @@ public class RelationOverlapBehavior
 
         return messages;
     }
-    
+
     private void overlappingOrStackingRelations(Collection<AnnotationFS> aRelations,
             Feature sourceFeature, Feature targetFeature, Collection<AnnotationFS> aStacking,
             Collection<AnnotationFS> aOverlapping)
@@ -239,7 +236,7 @@ public class RelationOverlapBehavior
                 if (rel1.equals(rel2)) {
                     continue;
                 }
-                
+
                 if (stacking(rel1, rel2, sourceFeature, targetFeature)) {
                     aStacking.add(rel1);
                     aStacking.add(rel2);
@@ -251,7 +248,7 @@ public class RelationOverlapBehavior
             }
         }
     }
-    
+
     private Set<AnnotationFS> overlappingNonStackingRelations(Collection<AnnotationFS> aRelations,
             Feature sourceFeature, Feature targetFeature)
     {
@@ -261,11 +258,9 @@ public class RelationOverlapBehavior
                 if (rel1.equals(rel2)) {
                     continue;
                 }
-                 
-                if (
-                        overlapping(rel1, rel2, sourceFeature, targetFeature) && 
-                        !stacking(rel1, rel2, sourceFeature, targetFeature)
-                ) {
+
+                if (overlapping(rel1, rel2, sourceFeature, targetFeature)
+                        && !stacking(rel1, rel2, sourceFeature, targetFeature)) {
                     overlapping.add(rel1);
                     overlapping.add(rel2);
                 }
@@ -273,37 +268,35 @@ public class RelationOverlapBehavior
         }
         return overlapping;
     }
-    
+
     private Set<AnnotationFS> stackingRelations(Collection<AnnotationFS> aRelations,
             Feature sourceFeature, Feature targetFeature)
     {
         // Here, we must find all stacked relations because they are not permitted.
         // We go through all relations based on the their offsets. Stacked relations must have
-        // the same offsets (at least if we consider relations as having a direction, i.e. 
-        // that a relation A->B does not count as stacked on a relation B->A). But since there 
-        // can be multiple relations going out from the same sourceFS, we need to consider all 
+        // the same offsets (at least if we consider relations as having a direction, i.e.
+        // that a relation A->B does not count as stacked on a relation B->A). But since there
+        // can be multiple relations going out from the same sourceFS, we need to consider all
         // of them for potential stacking.
         Set<AnnotationFS> stacking = new HashSet<>();
         List<AnnotationFS> candidates = new ArrayList<>();
         for (AnnotationFS fs : aRelations) {
             AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
             AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
-            
+
             // If there are no stacking candidates at the current position yet, collect the
             // first
             if (candidates.isEmpty()) {
                 candidates.add(fs);
             }
-            // If the current FS is at a different position from the current candidates, clear 
+            // If the current FS is at a different position from the current candidates, clear
             // the candidates list and add the current one as the first new candidate
-            else if (
-                    candidates.get(0).getBegin() != fs.getBegin() || 
-                    candidates.get(0).getEnd() != fs.getEnd()
-            ) {
+            else if (candidates.get(0).getBegin() != fs.getBegin()
+                    || candidates.get(0).getEnd() != fs.getEnd()) {
                 candidates.clear();
                 candidates.add(fs);
             }
-            // If there are already stacking candidates, check if the current FS is stacking on 
+            // If there are already stacking candidates, check if the current FS is stacking on
             // any of them. If yes, generate an error message
             else {
                 for (AnnotationFS cand : candidates) {
@@ -317,18 +310,18 @@ public class RelationOverlapBehavior
                 }
             }
         }
-        
+
         return stacking;
     }
-    
+
     public static boolean stacking(FeatureStructure aRel1Src, FeatureStructure aRel1Tgt,
             FeatureStructure aRel2Src, FeatureStructure aRel2Tgt)
     {
         return isSame(aRel1Src, aRel2Src) && isSame(aRel1Tgt, aRel2Tgt);
     }
 
-    public static boolean overlapping(AnnotationFS aRel1,
-            AnnotationFS aRel2, Feature aSrcFeat, Feature aTgtFeat)
+    public static boolean overlapping(AnnotationFS aRel1, AnnotationFS aRel2, Feature aSrcFeat,
+            Feature aTgtFeat)
     {
         return overlapping(aRel1.getFeatureValue(aSrcFeat), aRel1.getFeatureValue(aTgtFeat),
                 aRel2.getFeatureValue(aSrcFeat), aRel2.getFeatureValue(aTgtFeat));
@@ -355,11 +348,11 @@ public class RelationOverlapBehavior
     /**
      * If two relations have exactly the same end points, they are considered to be <b>stacking</b>.
      */
-    public static boolean stacking(CreateRelationAnnotationRequest aRequest,
-            AnnotationFS aRelation, Feature aSourceFeature, Feature aTargetFeature)
+    public static boolean stacking(CreateRelationAnnotationRequest aRequest, AnnotationFS aRelation,
+            Feature aSourceFeature, Feature aTargetFeature)
     {
-        return isSame(aRequest.getOriginFs(), aRelation.getFeatureValue(aSourceFeature)) &&
-                isSame(aRequest.getTargetFs(), aRelation.getFeatureValue(aTargetFeature));
+        return isSame(aRequest.getOriginFs(), aRelation.getFeatureValue(aSourceFeature))
+                && isSame(aRequest.getTargetFs(), aRelation.getFeatureValue(aTargetFeature));
     }
 
     public static boolean stacking(AnnotationFS aRel1, AnnotationFS aRel2, Feature aSrcFeat,

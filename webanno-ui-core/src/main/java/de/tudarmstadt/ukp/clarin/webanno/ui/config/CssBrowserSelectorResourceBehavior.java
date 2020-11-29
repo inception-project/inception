@@ -28,9 +28,8 @@ public class CssBrowserSelectorResourceBehavior
     extends Behavior
 {
     private static final long serialVersionUID = -6261203138272376794L;
-    
-    private static final CssBrowserSelectorResourceBehavior INSTANCE = 
-            new CssBrowserSelectorResourceBehavior();
+
+    private static final CssBrowserSelectorResourceBehavior INSTANCE = new CssBrowserSelectorResourceBehavior();
 
     public static CssBrowserSelectorResourceBehavior get()
     {
@@ -40,7 +39,7 @@ public class CssBrowserSelectorResourceBehavior
     @Override
     public void renderHead(Component aComponent, IHeaderResponse aResponse)
     {
-        aResponse.render(JavaScriptHeaderItem
-                .forReference(CssBrowserSelectorResourceReference.get()));
+        aResponse.render(
+                JavaScriptHeaderItem.forReference(CssBrowserSelectorResourceReference.get()));
     }
 }

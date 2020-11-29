@@ -29,17 +29,17 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 
 public class DynamicTextAreaFeatureEditor
-        extends TextFeatureEditorBase
+    extends TextFeatureEditorBase
 {
     private static final long serialVersionUID = -4798925191252992223L;
     private TextArea<String> textarea;
-    
+
     public DynamicTextAreaFeatureEditor(String aId, MarkupContainer aItem,
             IModel<FeatureState> aModel)
     {
         super(aId, aItem, aModel);
     }
-    
+
     @Override
     protected AbstractTextComponent createInputField()
     {
@@ -48,12 +48,13 @@ public class DynamicTextAreaFeatureEditor
         textarea.add(new AjaxPreventSubmitBehavior());
         return textarea;
     }
-    
+
     @Override
-    public void renderHead(IHeaderResponse aResponse) {
-        aResponse.render(
-                JavaScriptHeaderItem.forReference(DynamicTextAreaScriptReference.get()));
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        aResponse.render(JavaScriptHeaderItem.forReference(DynamicTextAreaScriptReference.get()));
         aResponse.render(OnDomReadyHeaderItem.forScript(
-                "window.addEventListener('load', function(){resizeDynamicTextArea(document.getElementById('" + textarea.getMarkupId() + "'));});"));
+                "window.addEventListener('load', function(){resizeDynamicTextArea(document.getElementById('"
+                        + textarea.getMarkupId() + "'));});"));
     }
 }

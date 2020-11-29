@@ -51,24 +51,21 @@ public class JSONUtil
         FileUtils.writeStringToFile(aFile, toPrettyJsonString(aMapper, aObject), "UTF-8");
     }
 
-    public static void generatePrettyJson(Object aObject, File aFile)
-        throws IOException
+    public static void generatePrettyJson(Object aObject, File aFile) throws IOException
     {
         FileUtils.writeStringToFile(aFile, toPrettyJsonString(aObject), "UTF-8");
     }
 
-    public static String toPrettyJsonString(ObjectMapper aMapper, Object aObject) 
-        throws IOException
+    public static String toPrettyJsonString(ObjectMapper aMapper, Object aObject) throws IOException
     {
         return toJsonString(aMapper, true, aObject);
     }
 
-    public static String toJsonString(Object aObject)
-        throws IOException
+    public static String toJsonString(Object aObject) throws IOException
     {
         return toJsonString(getObjectMapper(), false, aObject);
     }
-    
+
     public static String toJsonString(ObjectMapper aMapper, boolean aPretty, Object aObject)
         throws IOException
     {
@@ -84,8 +81,7 @@ public class JSONUtil
         return out.toString();
     }
 
-    public static <T> T fromJsonString(Class<T> aClass, String aJSON)
-        throws IOException
+    public static <T> T fromJsonString(Class<T> aClass, String aJSON) throws IOException
     {
         if (aJSON == null) {
             return null;
@@ -95,25 +91,22 @@ public class JSONUtil
         }
     }
 
-    public static <T> T fromJsonStream(Class<T> aClass, InputStream aSrc)
-            throws IOException
+    public static <T> T fromJsonStream(Class<T> aClass, InputStream aSrc) throws IOException
     {
         return getObjectMapper().readValue(aSrc, aClass);
     }
 
-    public static String toPrettyJsonString(Object aObject)
-        throws IOException
+    public static String toPrettyJsonString(Object aObject) throws IOException
     {
         return toPrettyJsonString(getObjectMapper(), aObject);
     }
-    
+
     public static ObjectMapper getObjectMapper()
     {
         return new ObjectMapper();
     }
-    
-    public static String toInterpretableJsonString(Object aObject)
-        throws IOException
+
+    public static String toInterpretableJsonString(Object aObject) throws IOException
     {
         StringWriter out = new StringWriter();
         JsonGenerator jsonGenerator = JSONUtil.getObjectMapper().getFactory().createGenerator(out);
@@ -131,16 +124,19 @@ public class JSONUtil
         return out.toString();
     }
 
-    private static class JavaScriptCharacterEscapes extends CharacterEscapes {
+    private static class JavaScriptCharacterEscapes
+        extends CharacterEscapes
+    {
         private static final long serialVersionUID = -2189758484099286957L;
         private final int[] asciiEscapes = standardAsciiEscapesForJSON();
-        
+
         public static final JavaScriptCharacterEscapes INSTANCE = new JavaScriptCharacterEscapes();
-        
-        public static JavaScriptCharacterEscapes get() {
+
+        public static JavaScriptCharacterEscapes get()
+        {
             return INSTANCE;
         }
-        
+
         @Override
         public SerializableString getEscapeSequence(int aCh)
         {
@@ -153,7 +149,7 @@ public class JSONUtil
                 return null;
             }
         }
-        
+
         @Override
         public int[] getEscapeCodesForAscii()
         {

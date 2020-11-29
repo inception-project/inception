@@ -26,7 +26,7 @@ public class AfterDocumentCreatedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = 2367163371168212003L;
-    
+
     private final SourceDocument document;
     private final CAS cas;
 

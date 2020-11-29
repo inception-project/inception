@@ -19,11 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 
 public enum ReadonlyColoringBehaviour
 {
-    LEGACY("legacy " + ColoringStrategyType.GRAY.getDescriptiveName(),
-            ColoringStrategyType.GRAY), 
-    NORMAL("normal", null), 
-    GRAY(ColoringStrategyType.GRAY.getDescriptiveName(), 
-            ColoringStrategyType.GRAY);
+    LEGACY("legacy " + ColoringStrategyType.GRAY.getDescriptiveName(), ColoringStrategyType.GRAY),
+    NORMAL("normal", null),
+    GRAY(ColoringStrategyType.GRAY.getDescriptiveName(), ColoringStrategyType.GRAY);
 
     private String descriptiveName;
     ColoringStrategyType t;

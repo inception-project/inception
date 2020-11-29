@@ -43,7 +43,7 @@ public class RenderAnnotationsEvent
     {
         return requestHandler;
     }
-    
+
     public CAS getCas()
     {
         return cas;

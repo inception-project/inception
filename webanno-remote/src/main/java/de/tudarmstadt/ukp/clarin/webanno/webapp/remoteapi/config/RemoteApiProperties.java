@@ -30,7 +30,7 @@ public class RemoteApiProperties
     {
         boolean enabledViaLegacySystemProperty = "true"
                 .equals(System.getProperty("webanno.remote-api.enable"));
-        
+
         return enabled || enabledViaLegacySystemProperty;
     }
 

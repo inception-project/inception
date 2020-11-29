@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,17 +62,17 @@ public class TsvChain
     {
         return id;
     }
-    
+
     public Type getHeadType()
     {
         return headType;
     }
-    
+
     public Type getElementType()
     {
         return elementType;
     }
-    
+
     public void addElement(AnnotationFS aElement)
     {
         elements.put(elements.size(), aElement);
@@ -95,7 +96,7 @@ public class TsvChain
     {
         return elements.values();
     }
-    
+
     public int indexOf(AnnotationFS aElement)
     {
         // This may be called often so we internally cache the list of elements.

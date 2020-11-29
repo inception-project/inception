@@ -33,7 +33,7 @@ public interface FeatureSupportRegistry
      * types reserved for built-in features. These are not returned.
      */
     List<FeatureType> getAllTypes(AnnotationLayer aLayer);
-    
+
     /**
      * Get the types of all features the user should be able to create. There can also be internal
      * types reserved for built-in features. These are not returned.
@@ -41,13 +41,13 @@ public interface FeatureSupportRegistry
     List<FeatureType> getUserSelectableTypes(AnnotationLayer aLayer);
 
     FeatureType getFeatureType(AnnotationFeature aFeature);
-    
+
     /**
      * @deprecated Use {@link #findExtension} instead;
      */
     @Deprecated
     <T extends FeatureSupport<?>> T getFeatureSupport(AnnotationFeature aFeature);
-    
+
     /**
      * @deprecated Use {@link #getExtension} instead;
      */

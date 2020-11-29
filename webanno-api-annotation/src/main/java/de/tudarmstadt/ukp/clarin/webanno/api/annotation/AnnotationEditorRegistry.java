@@ -22,8 +22,8 @@ import java.util.List;
 public interface AnnotationEditorRegistry
 {
     List<AnnotationEditorFactory> getEditorFactories();
-    
+
     AnnotationEditorFactory getEditorFactory(String aId);
-    
+
     AnnotationEditorFactory getDefaultEditorFactory();
 }

@@ -24,7 +24,8 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.slf4j.LoggerFactory;
 
-public class LambdaAjaxFormSubmittingBehavior extends AjaxFormSubmitBehavior
+public class LambdaAjaxFormSubmittingBehavior
+    extends AjaxFormSubmitBehavior
 {
     private static final long serialVersionUID = 3946442967075930557L;
 

@@ -33,7 +33,7 @@ public class ExportedAnnotationLayerReference
     {
         // Needed for deserialization
     }
-    
+
     public ExportedAnnotationLayerReference(String aName)
     {
         super();

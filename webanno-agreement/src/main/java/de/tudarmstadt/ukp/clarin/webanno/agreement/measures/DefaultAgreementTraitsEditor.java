@@ -41,13 +41,14 @@ public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
     private final DropDownChoice<LinkCompareBehavior> linkCompareBehaviorDropDown;
 
     private final Form<T> form;
-    
+
     public DefaultAgreementTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
             IModel<T> aModel)
     {
         super(aId, aModel);
-        
-        form = new Form<T>("form", CompoundPropertyModel.of(aModel)) {
+
+        form = new Form<T>("form", CompoundPropertyModel.of(aModel))
+        {
             private static final long serialVersionUID = -1422265935439298212L;
 
             @Override
@@ -57,27 +58,24 @@ public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
                 super.onSubmit();
             }
         };
-        
+
         linkCompareBehaviorDropDown = new BootstrapSelect<>("linkCompareBehavior",
-                asList(LinkCompareBehavior.values()),
-                new EnumChoiceRenderer<>(this));
-        linkCompareBehaviorDropDown.add(visibleWhen(() -> 
-                aFeature.map(f -> !LinkMode.NONE.equals(f.getLinkMode()))
-                .orElse(false).getObject()));
+                asList(LinkCompareBehavior.values()), new EnumChoiceRenderer<>(this));
+        linkCompareBehaviorDropDown.add(visibleWhen(() -> aFeature
+                .map(f -> !LinkMode.NONE.equals(f.getLinkMode())).orElse(false).getObject()));
         linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
         form.add(linkCompareBehaviorDropDown);
 
-        form.add(new CheckBox("limitToFinishedDocuments").
-                setOutputMarkupId(true));
-        
+        form.add(new CheckBox("limitToFinishedDocuments").setOutputMarkupId(true));
+
         add(form);
     }
-    
+
     public T getModelObject()
     {
         return (T) getDefaultModelObject();
     }
-    
+
     protected Form<T> getForm()
     {
         return form;

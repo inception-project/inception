@@ -47,7 +47,7 @@ public class SidebarPanel
     private AnnotationPage annotationPage;
     private IModel<AnnotatorState> stateModel;
     private SidebarTabbedPanel<SidebarTab> tabsPanel;
-    
+
     public SidebarPanel(String aId, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
@@ -55,48 +55,48 @@ public class SidebarPanel
         super(aId);
 
         Validate.notNull(aActionHandler, "Action handler must not be null");
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
         annotationPage = aAnnotationPage;
         stateModel = aModel;
-        
-        tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent",
-                makeTabs());
+
+        tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent", makeTabs());
         add(tabsPanel);
-        
+
         add(new AttributeAppender("class", () -> tabsPanel.isExpanded() ? "" : "collapsed", " "));
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         // Only show sidebar if a document is selected
         setVisible(stateModel.getObject() != null && stateModel.getObject().getDocument() != null);
     }
-    
-    public void refreshTabs(AjaxRequestTarget aTarget) {
+
+    public void refreshTabs(AjaxRequestTarget aTarget)
+    {
         // re-init tabs list with valid tabs
         List<SidebarTab> tabs = tabsPanel.getTabs();
         tabs.clear();
         tabs.addAll(makeTabs());
         aTarget.add(tabsPanel);
     }
-        
+
     private List<SidebarTab> makeTabs()
     {
         List<SidebarTab> tabs = new ArrayList<>();
         for (AnnotationSidebarFactory factory : sidebarRegistry.getSidebarFactories()) {
-            
+
             if (!factory.applies(stateModel.getObject())) {
                 continue;
             }
-            
+
             String factoryId = factory.getBeanName();
             SidebarTab tab = new SidebarTab(Model.of(factory.getDisplayName()), factory.getIcon())
             {

@@ -58,18 +58,18 @@ public abstract class ApplicationPageBase
 
     private static final long serialVersionUID = -1690130604031181803L;
 
-    public static final MetaDataKey<Class<? extends Component>> MENUBAR_CLASS = 
+    public static final MetaDataKey<Class<? extends Component>> MENUBAR_CLASS = //
             new MetaDataKey<Class<? extends Component>>()
-    {
-        private static final long serialVersionUID = 1L;
-    };
-    
+            {
+                private static final long serialVersionUID = 1L;
+            };
+
     private FeedbackPanel feedbackPanel;
     private WebMarkupContainer footer;
 
     private @SpringBean GlobalInterceptorsRegistry interceptorsRegistry;
     private @SpringBean FooterItemRegistry footerItemRegistry;
-    
+
     private IModel<List<Component>> footerItems;
 
     protected ApplicationPageBase()
@@ -90,19 +90,18 @@ public abstract class ApplicationPageBase
         }
 
         footerItems = new ListModel<>(new ArrayList<>());
-        
-        footerItemRegistry.getFooterItems().stream()
-                .map(c -> c.create("item"))
+
+        footerItemRegistry.getFooterItems().stream().map(c -> c.create("item"))
                 .forEach(c -> footerItems.getObject().add(c));
-        
+
         footer = new WebMarkupContainer("footer");
         footer.setOutputMarkupId(true);
         add(footer);
-        
+
         footer.add(new ListView<Component>("footerItems", footerItems)
         {
             private static final long serialVersionUID = 5912513189482015963L;
-            
+
             {
                 setReuseItems(true);
             }
@@ -114,9 +113,9 @@ public abstract class ApplicationPageBase
                 aItem.add(aItem.getModelObject());
             }
         });
-        
+
         Properties settings = SettingsUtil.getSettings();
-        
+
         // Override locale to be used by application
         String locale = settings.getProperty(SettingsUtil.CFG_LOCALE, "en");
         switch (locale) {
@@ -128,7 +127,7 @@ public abstract class ApplicationPageBase
             getSession().setLocale(Locale.forLanguageTag(locale));
             break;
         }
-        
+
         // Add menubar
         try {
             Class<? extends Component> menubarClass = getApplication().getMetaData(MENUBAR_CLASS);
@@ -185,33 +184,33 @@ public abstract class ApplicationPageBase
     {
         return feedbackPanel;
     }
-    
+
     public IModel<List<Component>> getFooterItems()
     {
         return footerItems;
     }
-    
+
     public void addToFooter(Component aComponent)
     {
         List<Component> items = footerItems.getObject();
-        
+
         if (!items.contains(aComponent)) {
             items.add(aComponent);
         }
-        
+
         RequestCycle.get().find(IPartialPageRequestHandler.class).ifPresent(handler -> {
             handler.add(footer);
-        }); 
+        });
     }
 
     public void removeFromFooter(Component aComponent)
     {
         List<Component> items = footerItems.getObject();
-        
+
         items.remove(aComponent);
-        
+
         RequestCycle.get().find(IPartialPageRequestHandler.class).ifPresent(handler -> {
             handler.add(footer);
-        }); 
+        });
     }
 }

@@ -35,6 +35,6 @@ public interface MatomoTelemetrySupport
     void onApplicationReady(ApplicationReadyEvent aEvent);
 
     void onTelemetrySettingsSaved(TelemetrySettingsSavedEvent aEvent);
-    
+
     void onSessionCreated(HttpSessionCreatedEvent aEvent);
 }

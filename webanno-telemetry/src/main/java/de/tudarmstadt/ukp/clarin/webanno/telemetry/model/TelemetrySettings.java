@@ -45,17 +45,17 @@ public class TelemetrySettings
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-    
+
     @Column(nullable = false)
     private String support;
 
     @Column(nullable = false)
     private int version;
-    
+
     @Lob
     @Column(length = 64000)
     private String traits;
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date created;
@@ -63,18 +63,17 @@ public class TelemetrySettings
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
-    
+
     public TelemetrySettings()
     {
         // For serialization and persistence
     }
-    
+
     public <T> TelemetrySettings(TelemetrySupport<T> aSupport)
     {
         support = aSupport.getId();
         version = aSupport.getVersion();
     }
-    
 
     public Long getId()
     {
@@ -119,7 +118,7 @@ public class TelemetrySettings
     @PrePersist
     protected void onCreate()
     {
-        // When we import data, we set the fields via setters and don't want these to be 
+        // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
         if (created != null) {
             created = new Date();

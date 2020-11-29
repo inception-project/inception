@@ -77,7 +77,7 @@ public class AnnotationPreferencesDialogContent
 
     private static final Logger LOG = LoggerFactory
             .getLogger(AnnotationPreferencesDialogContent.class);
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
@@ -92,10 +92,10 @@ public class AnnotationPreferencesDialogContent
             IModel<AnnotatorState> aModel)
     {
         super(aId);
-        
+
         stateModel = aModel;
         modalWindow = aModalWindow;
-        
+
         form = new Form<>("form", new CompoundPropertyModel<>(loadModel(stateModel.getObject())));
 
         NumberTextField<Integer> windowSizeField = new NumberTextField<>("windowSize");
@@ -116,8 +116,7 @@ public class AnnotationPreferencesDialogContent
         form.add(fontZoomField);
 
         List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
-                .stream()
-                .map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
+                .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
                 .collect(Collectors.toList());
         DropDownChoice<Pair<String, String>> editor = new BootstrapSelect<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
@@ -152,12 +151,12 @@ public class AnnotationPreferencesDialogContent
 
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
-        
+
         add(form);
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Preferences> aForm)
-    {        
+    {
         try {
             AnnotatorState state = stateModel.getObject();
             Preferences model = form.getModelObject();
@@ -229,7 +228,7 @@ public class AnnotationPreferencesDialogContent
 
         return model;
     }
-    
+
     private ListView<AnnotationLayer> createLayerContainer()
     {
         return new ListView<AnnotationLayer>("annotationLayers")
@@ -243,7 +242,7 @@ public class AnnotationPreferencesDialogContent
                 AnnotationLayer layer = aItem.getModelObject();
                 Set<Long> hiddenLayerIds = stateModel.getObject().getPreferences()
                         .getHiddenAnnotationLayerIds();
-                
+
                 // add visibility checkbox
                 CheckBox layerVisible = new CheckBox("annotationLayerActive",
                         Model.of(!hiddenLayerIds.contains(layer.getId())));
@@ -264,8 +263,9 @@ public class AnnotationPreferencesDialogContent
                 layerColor.setModel(Model.of(prefs.colorPerLayer.get(layer.getId())));
                 layerColor.setChoiceRenderer(new ChoiceRenderer<>("descriptiveName"));
                 layerColor.setChoices(asList(ColoringStrategyType.values()));
-                layerColor.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target ->
-                        prefs.colorPerLayer.put(layer.getId(), layerColor.getModelObject())));
+                layerColor.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                        _target -> prefs.colorPerLayer.put(layer.getId(),
+                                layerColor.getModelObject())));
                 aItem.add(layerColor);
 
                 // add label
@@ -282,7 +282,7 @@ public class AnnotationPreferencesDialogContent
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
-        
+
         private Pair<String, String> editor;
         private int windowSize;
         private int sidebarSize;

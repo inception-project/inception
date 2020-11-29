@@ -19,13 +19,17 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
-/** Implementation of {@link PersistentEnumUserType}
+/**
+ * Implementation of {@link PersistentEnumUserType}
  *
  */
-public class TrainDocumentStateType extends PersistentEnumUserType<TrainDocumentState> {
+public class TrainDocumentStateType
+    extends PersistentEnumUserType<TrainDocumentState>
+{
 
     @Override
-    public Class<TrainDocumentState> returnedClass() {
+    public Class<TrainDocumentState> returnedClass()
+    {
         return TrainDocumentState.class;
     }
 

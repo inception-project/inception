@@ -22,7 +22,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties("ui.brat")
-public class AnnotationEditorPropertiesImpl implements AnnotationEditorProperties
+public class AnnotationEditorPropertiesImpl
+    implements AnnotationEditorProperties
 {
     private boolean singleClickSelection = false;
     private int pageSize = 5;

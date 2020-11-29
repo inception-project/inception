@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 public class WebhooksConfiguration
 {
     public static final String PROPERTY_PREFIX = "webhooks";
-    
+
     private List<Webhook> globalHooks = new ArrayList<>();
 
     public List<Webhook> getGlobalHooks()

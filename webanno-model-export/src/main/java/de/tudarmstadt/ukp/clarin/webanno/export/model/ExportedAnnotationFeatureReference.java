@@ -38,13 +38,14 @@ public class ExportedAnnotationFeatureReference
     {
         // Needed for deserialization
     }
+
     public ExportedAnnotationFeatureReference(AnnotationFeature aFeature)
     {
         super();
         name = aFeature.getName();
         layer = aFeature.getLayer().getName();
     }
-    
+
     public ExportedAnnotationFeatureReference(String aLayerName, String aFeatureName)
     {
         super();

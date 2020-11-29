@@ -34,13 +34,13 @@ public class PreferencesActionBarItem
     public PreferencesActionBarItem(String aId, AnnotationPageBase aPage)
     {
         super(aId);
-        
+
         page = aPage;
 
         add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog",
                 page.getModel()));
         preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
-        
+
         add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
     }
 
@@ -48,7 +48,7 @@ public class PreferencesActionBarItem
     {
         page.actionLoadDocument(aTarget);
     }
-    
+
     private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
     {
         page.getModelObject().getSelection().clear();

@@ -61,10 +61,10 @@ public class Project
 
     // version of the project
     private int version = 1;
-    
+
     // Disable users from exporting annotation documents
     private boolean disableExport = false;
-    
+
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirectionType")
     private ScriptDirection scriptDirection;
 
@@ -75,11 +75,11 @@ public class Project
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
-    
+
     @Column(nullable = true)
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ProjectStateType")
     private ProjectState state;
-    
+
     @Column(nullable = false)
     private boolean anonymousCuration;
 
@@ -87,7 +87,7 @@ public class Project
     {
         // Nothing to do
     }
-    
+
     public Project(String aName)
     {
         super();
@@ -114,7 +114,6 @@ public class Project
     {
         name = aName;
     }
-
 
     public String getDescription()
     {
@@ -175,7 +174,7 @@ public class Project
     @PrePersist
     protected void onCreate()
     {
-        // When we import data, we set the fields via setters and don't want these to be 
+        // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
         if (created != null) {
             created = new Date();
@@ -208,7 +207,7 @@ public class Project
     {
         updated = aUpdated;
     }
-    
+
     public ProjectState getState()
     {
         return state;
@@ -218,7 +217,7 @@ public class Project
     {
         state = aState;
     }
-    
+
     public boolean isAnonymousCuration()
     {
         return anonymousCuration;

@@ -35,7 +35,7 @@ public class LoadConfResponse
     public LoadConfResponse(AnnotationEditorProperties aBratProperties)
     {
         super(COMMAND);
-        
+
         config.singleClickEdit = aBratProperties.isSingleClickSelection();
     }
 
@@ -53,7 +53,7 @@ public class LoadConfResponse
     {
         return COMMAND.equals(aCommand);
     }
-    
+
     @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY)
     public static class BratConfig
     {
@@ -63,28 +63,30 @@ public class LoadConfResponse
         public final boolean rapidModeOn = false;
         public final boolean confirmModeOn = true;
         public final boolean autorefreshOn = false;
-        
+
         /**
          * Whether annotations are selected for editing on a single click or on a double click.
          */
         public boolean singleClickEdit = true;
-        
+
         public BratVisualConfig visual = new BratVisualConfig();
     }
-    
+
     @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY)
-    public static class BratVisualConfig {
+    public static class BratVisualConfig
+    {
         public final int arcTextMargin = 1;
         public final int boxSpacing = 1;
         public final int curlyHeight = 4;
         public final int arcSpacing = 9;
         public final int arcStartHeight = 19;
-        
+
         public final BratVisualMargin margin = new BratVisualMargin();
     }
-    
+
     @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY)
-    public static class BratVisualMargin {
+    public static class BratVisualMargin
+    {
         public final int x = 2;
         public final int y = 1;
     }

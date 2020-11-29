@@ -36,20 +36,20 @@ public class BratLineOrientedAnnotationEditorFactory
     {
         return "brat (line-oriented)";
     }
-    
+
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
-    
+
     @Override
     public int getOrder()
     {
         return 1;
     }
-    
+
     @Override
     public void initState(AnnotatorState aModelObject)
     {

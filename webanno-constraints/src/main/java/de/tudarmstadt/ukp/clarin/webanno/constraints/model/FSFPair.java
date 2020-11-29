@@ -19,23 +19,26 @@ package de.tudarmstadt.ukp.clarin.webanno.constraints.model;
 
 import java.io.Serializable;
 
-public class FSFPair implements Serializable
+public class FSFPair
+    implements Serializable
 {
     /**
-     * Pair of input Feature Structure and target feature which can
-     * be affected by a Constraint rule.
+     * Pair of input Feature Structure and target feature which can be affected by a Constraint
+     * rule.
      */
     private static final long serialVersionUID = -7207254925786134633L;
     private String featureStructure;
     private String affectedFeature;
-    
+
     public FSFPair(String featureStructure, String affectedFeature)
     {
         this.featureStructure = featureStructure;
         this.affectedFeature = affectedFeature;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -48,7 +51,9 @@ public class FSFPair implements Serializable
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -86,7 +91,7 @@ public class FSFPair implements Serializable
     @Override
     public String toString()
     {
-        return "FSFPair [featureStructure=" + featureStructure +
-            ", affectedFeature=" + affectedFeature + "]";
+        return "FSFPair [featureStructure=" + featureStructure + ", affectedFeature="
+                + affectedFeature + "]";
     }
 }

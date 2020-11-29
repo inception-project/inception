@@ -32,21 +32,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 public class AutomationServiceEventAdapter
 {
     private @Autowired AutomationService service;
-    
+
     @EventListener
-    public void onBeforeProjectRemove(BeforeProjectRemovedEvent aEvent)
-        throws Exception
+    public void onBeforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws Exception
     {
         Project project = aEvent.getProject();
-        
+
         for (TrainingDocument document : service.listTrainingDocuments(project)) {
             service.removeTrainingDocument(document);
         }
         for (MiraTemplate template : service.listMiraTemplates(project)) {
-           // remove associated TRAIN and OTHER features from the Mira Template
+            // remove associated TRAIN and OTHER features from the Mira Template
             template.setTrainFeature(null);
             template.setOtherFeatures(null);
-            
+
             service.removeMiraTemplate(template);
         }
     }

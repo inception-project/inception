@@ -41,27 +41,26 @@ public class FleissKappaAgreementMeasure
     extends CodingAggreementMeasure_ImplBase<DefaultAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
-    
-    public FleissKappaAgreementMeasure(AnnotationFeature aFeature,
-            DefaultAgreementTraits aTraits, AnnotationSchemaService aAnnotationService)
+
+    public FleissKappaAgreementMeasure(AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
+            AnnotationSchemaService aAnnotationService)
     {
         super(aFeature, aTraits);
         annotationService = aAnnotationService;
     }
 
     @Override
-    public CodingAgreementResult calculatePairAgreement(
-            Map<String, List<CAS>> aCasMap)
+    public CodingAgreementResult calculatePairAgreement(Map<String, List<CAS>> aCasMap)
     {
         AnnotationFeature feature = getFeature();
         DefaultAgreementTraits traits = getTraits();
-        
+
         List<DiffAdapter> adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
 
         CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
 
-        CodingAgreementResult agreementResult = makeCodingStudy(diff,
-                feature.getLayer().getName(), feature.getName(), true, aCasMap);
+        CodingAgreementResult agreementResult = makeCodingStudy(diff, feature.getLayer().getName(),
+                feature.getName(), true, aCasMap);
 
         IAgreementMeasure agreement = new FleissKappaAgreement(agreementResult.getStudy());
 

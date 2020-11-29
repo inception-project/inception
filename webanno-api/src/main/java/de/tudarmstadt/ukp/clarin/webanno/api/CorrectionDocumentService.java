@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public interface CorrectionDocumentService
 {
     String SERVICE_NAME = "correctionDocumentService";
-    
+
     /**
      * Create an annotation document under a special user named "CORRECTION_USER"
      *
@@ -41,14 +41,12 @@ public interface CorrectionDocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeCorrectionCas(CAS aCas, SourceDocument document)
-        throws IOException;
+    void writeCorrectionCas(CAS aCas, SourceDocument document) throws IOException;
 
-    CAS readCorrectionCas(SourceDocument document)
-        throws IOException;
+    CAS readCorrectionCas(SourceDocument document) throws IOException;
 
     void upgradeCorrectionCas(CAS aCurCas, SourceDocument document)
-            throws UIMAException, IOException;
+        throws UIMAException, IOException;
 
     /**
      * A method to check if there exist a correction document already. Base correction document
@@ -58,8 +56,7 @@ public interface CorrectionDocumentService
      *            the source document.
      * @return if a correction document exists.
      */
-    boolean existsCorrectionCas(SourceDocument sourceDocument)
-        throws IOException;
+    boolean existsCorrectionCas(SourceDocument sourceDocument) throws IOException;
 
     Optional<Long> getCorrectionCasTimestamp(SourceDocument aDocument) throws IOException;
 }

@@ -70,7 +70,7 @@ public class WebAnnoSecurity
     extends GlobalAuthenticationConfigurerAdapter
 {
     private @Value("${auth.preauth.header.principal:remote_user}") String preAuthPrincipalHeader;
-    
+
     @Order(1)
     @Configuration
     public class RemoteApiSecurity
@@ -78,7 +78,7 @@ public class WebAnnoSecurity
     {
         private final PasswordEncoder passwordEncoder;
         private final UserDetailsManager userDetailsService;
-        
+
         @Autowired
         public RemoteApiSecurity(PasswordEncoder aPasswordEncoder,
                 UserDetailsManager aUserDetailsService)
@@ -86,10 +86,11 @@ public class WebAnnoSecurity
             passwordEncoder = aPasswordEncoder;
             userDetailsService = aUserDetailsService;
         }
-        
+
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
+            // @formatter:off
             aHttp
                 .antMatcher("/api/**")
                 .csrf().disable()
@@ -104,16 +105,18 @@ public class WebAnnoSecurity
                 .and()
                 .sessionManagement()
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            // @formatter:on
         }
 
-        private AuthenticationProvider remoteApiAuthenticationProvider() {
+        private AuthenticationProvider remoteApiAuthenticationProvider()
+        {
             DaoAuthenticationProvider authProvider = new WebAnnoDaoAuthenticationProvider();
             authProvider.setUserDetailsService(userDetailsService);
             authProvider.setPasswordEncoder(passwordEncoder);
             return authProvider;
         }
     }
-    
+
     @Configuration
     @Profile("auto-mode-builtin")
     public static class WebUiSecurity
@@ -128,10 +131,11 @@ public class WebAnnoSecurity
         {
             return super.authenticationManagerBean();
         }
-        
+
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
+            // @formatter:off
             aHttp
                 .rememberMe()
                 .and()
@@ -159,6 +163,7 @@ public class WebAnnoSecurity
                             new AntPathRequestMatcher("/**"))
                 .and()
                     .headers().frameOptions().sameOrigin();
+            // @formatter:on
         }
     }
 
@@ -168,13 +173,13 @@ public class WebAnnoSecurity
         extends WebSecurityConfigurerAdapter
     {
         private ShibbolethRequestHeaderAuthenticationFilter filter;
-        
+
         @Autowired
         public ShibbolethSecurity(ShibbolethRequestHeaderAuthenticationFilter aFilter)
         {
             filter = aFilter;
         }
-        
+
         // Expose the AuthenticationManager using the legacy bean name that is expected by
         // WebAnno's SpringAuthenticatedWebSession. This can be removed when the explicit bean name
         // declaration has been removed from SpringAuthenticatedWebSession.
@@ -184,10 +189,11 @@ public class WebAnnoSecurity
         {
             return super.authenticationManagerBean();
         }
-        
+
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
+            // @formatter:off
             aHttp
                 .rememberMe()
                 .and()
@@ -213,18 +219,17 @@ public class WebAnnoSecurity
                     .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
                 .and()
                     .headers().frameOptions().sameOrigin();
+            // @formatter:on
         }
     }
-    
+
     @Bean
     @Profile("auto-mode-preauth")
-    public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter(
-            UserDao aUserRepository,
+    public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter(UserDao aUserRepository,
             UserDetailsManager aUserDetailsService,
             @Lazy AuthenticationManager aAuthenticationManager)
     {
-        ShibbolethRequestHeaderAuthenticationFilter filter = 
-                new ShibbolethRequestHeaderAuthenticationFilter();
+        ShibbolethRequestHeaderAuthenticationFilter filter = new ShibbolethRequestHeaderAuthenticationFilter();
         filter.setPrincipalRequestHeader(preAuthPrincipalHeader);
         filter.setAuthenticationManager(aAuthenticationManager);
         filter.setUserDetailsManager(aUserDetailsService);
@@ -232,27 +237,25 @@ public class WebAnnoSecurity
         filter.setExceptionIfHeaderMissing(true);
         return filter;
     }
-    
+
     @Bean(name = "authenticationProvider")
     @Profile("auto-mode-builtin")
     @Autowired
     public DaoAuthenticationProvider internalAuthenticationProvider(
-            UserDetailsManager aUserDetailsService,
-            PasswordEncoder aPasswordEncoder)
+            UserDetailsManager aUserDetailsService, PasswordEncoder aPasswordEncoder)
     {
         DaoAuthenticationProvider authProvider = new WebAnnoDaoAuthenticationProvider();
         authProvider.setUserDetailsService(aUserDetailsService);
         authProvider.setPasswordEncoder(aPasswordEncoder);
         return authProvider;
     }
-    
+
     @Bean(name = "authenticationProvider")
     @Profile("auto-mode-preauth")
     public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider(
             UserDetailsManager aUserDetailsService)
     {
-        PreAuthenticatedAuthenticationProvider authProvider = 
-                new PreAuthenticatedAuthenticationProvider();
+        PreAuthenticatedAuthenticationProvider authProvider = new PreAuthenticatedAuthenticationProvider();
         authProvider.setPreAuthenticatedUserDetailsService(
                 new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(
                         aUserDetailsService));
@@ -269,7 +272,7 @@ public class WebAnnoSecurity
         manager.setAuthenticationManager(aAuthenticationManager);
         return manager;
     }
-    
+
     // This bean allows the application to access session information. We currently only use this
     // to display the number of active users in the SystemStatusDashlet. However, the LoginPage
     // also accesses this bean in order to manually register the session when the user logs in.

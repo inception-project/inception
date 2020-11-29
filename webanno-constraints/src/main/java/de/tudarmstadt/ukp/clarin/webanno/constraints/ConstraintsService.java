@@ -32,6 +32,7 @@ public interface ConstraintsService
     String SERVICE_NAME = "constraintsService";
 
     String CONSTRAINTS = "constraints";
+
     /**
      * Creates Constraint Set
      */
@@ -51,11 +52,9 @@ public interface ConstraintsService
      */
     void removeConstraintSet(ConstraintSet aSet);
 
-    String readConstrainSet(ConstraintSet aSet)
-        throws IOException;
+    String readConstrainSet(ConstraintSet aSet) throws IOException;
 
-    void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
-        throws IOException;
+    void writeConstraintSet(ConstraintSet aSet, InputStream aContent) throws IOException;
 
     /**
      * Returns Constraint as a file
@@ -64,8 +63,7 @@ public interface ConstraintsService
      *            The Constraint Set
      * @return File pointing to Constraint
      */
-    File exportConstraintAsFile(ConstraintSet aSet)
-        throws IOException;
+    File exportConstraintAsFile(ConstraintSet aSet) throws IOException;
 
     /**
      * Checks if there's a constraint set already with the name
@@ -76,6 +74,5 @@ public interface ConstraintsService
      */
     boolean existConstraintSet(String constraintSetName, Project aProject);
 
-    ParsedConstraints loadConstraints(Project aProject)
-        throws IOException, ParseException;
+    ParsedConstraints loadConstraints(Project aProject) throws IOException, ParseException;
 }

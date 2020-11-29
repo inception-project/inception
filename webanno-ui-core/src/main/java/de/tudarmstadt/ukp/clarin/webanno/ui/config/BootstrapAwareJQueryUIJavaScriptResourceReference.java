@@ -32,17 +32,17 @@ import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.core.util.Dependencies;
 
 /**
- * Customized {@link JQueryUIResourceReference} that depends on Bootstrap such that
- * bootstrap is loaded before JQuery UI. This is necessary in order for the JQuery UI tooltip
- * that we use e.g. on the annotation page to take precedence over the less powerful Bootstrap
- * tooltip (both are JQuery plugins using the same name!)
+ * Customized {@link JQueryUIResourceReference} that depends on Bootstrap such that bootstrap is
+ * loaded before JQuery UI. This is necessary in order for the JQuery UI tooltip that we use e.g. on
+ * the annotation page to take precedence over the less powerful Bootstrap tooltip (both are JQuery
+ * plugins using the same name!)
  */
 public class BootstrapAwareJQueryUIJavaScriptResourceReference
     extends JQueryPluginResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BootstrapAwareJQueryUIJavaScriptResourceReference INSTANCE = 
+    private static final BootstrapAwareJQueryUIJavaScriptResourceReference INSTANCE = //
             new BootstrapAwareJQueryUIJavaScriptResourceReference();
 
     /**

@@ -59,7 +59,6 @@ public class ConstraintsServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    
     private @PersistenceContext EntityManager entityManager;
     private @Autowired RepositoryProperties repositoryProperties;
 
@@ -74,7 +73,8 @@ public class ConstraintsServiceImpl
     {
         return entityManager
                 .createQuery("FROM ConstraintSet WHERE project = :project ORDER BY name ASC ",
-                        ConstraintSet.class).setParameter("project", aProject).getResultList();
+                        ConstraintSet.class)
+                .setParameter("project", aProject).getResultList();
     }
 
     @Override
@@ -82,18 +82,18 @@ public class ConstraintsServiceImpl
     public void createOrUpdateConstraintSet(ConstraintSet aSet)
     {
         Validate.notNull(aSet, "Constraints set must be specified");
-        
+
         if (isNull(aSet.getId())) {
             entityManager.persist(aSet);
         }
         else {
             entityManager.merge(aSet);
         }
-        
+
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aSet.getProject().getId()))) {
-            log.info("Created constraints set [{}] in project [{}]({})",
-                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+            log.info("Created constraints set [{}] in project [{}]({})", aSet.getName(),
+                    aSet.getProject().getName(), aSet.getProject().getId());
         }
     }
 
@@ -102,23 +102,22 @@ public class ConstraintsServiceImpl
     public void removeConstraintSet(ConstraintSet aSet)
     {
         entityManager.remove(entityManager.merge(aSet));
-        
+
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aSet.getProject().getId()))) {
-            log.info("Removed constraints set [{}] in project [{}]({})",
-                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+            log.info("Removed constraints set [{}] in project [{}]({})", aSet.getName(),
+                    aSet.getProject().getName(), aSet.getProject().getId());
         }
     }
 
     @Override
-    public String readConstrainSet(ConstraintSet aSet)
-        throws IOException
+    public String readConstrainSet(ConstraintSet aSet) throws IOException
     {
         String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
                 + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
                 + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
-        
+
         String data;
         try (BOMInputStream is = new BOMInputStream(
                 new FileInputStream(new File(constraintRulesPath, filename)))) {
@@ -127,16 +126,15 @@ public class ConstraintsServiceImpl
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aSet.getProject().getId()))) {
-            log.info("Read constraints set [{}] in project [{}]({})",
-                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+            log.info("Read constraints set [{}] in project [{}]({})", aSet.getName(),
+                    aSet.getProject().getName(), aSet.getProject().getId());
         }
-        
+
         return data;
     }
 
     @Override
-    public void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
-        throws IOException
+    public void writeConstraintSet(ConstraintSet aSet, InputStream aContent) throws IOException
     {
         String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
                 + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
@@ -145,14 +143,13 @@ public class ConstraintsServiceImpl
         FileUtils.forceMkdir(new File(constraintRulesPath));
         FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
 
-        
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aSet.getProject().getId()))) {
-            log.info("Saved constraints set [{}] in project [{}]({})",
-                    aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+            log.info("Saved constraints set [{}] in project [{}]({})", aSet.getName(),
+                    aSet.getProject().getName(), aSet.getProject().getId());
         }
     }
-    
+
     /**
      * Provides exporting constraints as a file.
      */
@@ -167,16 +164,16 @@ public class ConstraintsServiceImpl
         if (constraintsFile.exists()) {
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aSet.getProject().getId()))) {
-                log.info("Exported constraints set [{}] from project [{}]({})",
-                        aSet.getName(), aSet.getProject().getName(), aSet.getProject().getId());
+                log.info("Exported constraints set [{}] from project [{}]({})", aSet.getName(),
+                        aSet.getProject().getName(), aSet.getProject().getId());
             }
             return constraintsFile;
         }
         else {
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aSet.getProject().getId()))) {
-                log.info("Unable to read constraints set file [{}] in project [{}]({})",
-                        filename, aSet.getProject().getName(), aSet.getProject().getId());
+                log.info("Unable to read constraints set file [{}] in project [{}]({})", filename,
+                        aSet.getProject().getName(), aSet.getProject().getId());
             }
             return null;
         }
@@ -193,21 +190,21 @@ public class ConstraintsServiceImpl
     public boolean existConstraintSet(String constraintSetName, Project aProject)
     {
         try {
-            entityManager.createQuery("FROM ConstraintSet WHERE project = :project" 
-                            + " AND name = :name ", ConstraintSet.class)
-                    .setParameter("project", aProject).
-                    setParameter("name", constraintSetName)
+            entityManager
+                    .createQuery(
+                            "FROM ConstraintSet WHERE project = :project" + " AND name = :name ",
+                            ConstraintSet.class)
+                    .setParameter("project", aProject).setParameter("name", constraintSetName)
                     .getSingleResult();
             return true;
         }
         catch (NoResultException ex) {
             return false;
-        }        
+        }
     }
-    
+
     @Override
-    public ParsedConstraints loadConstraints(Project aProject)
-            throws IOException, ParseException
+    public ParsedConstraints loadConstraints(Project aProject) throws IOException, ParseException
     {
         ParsedConstraints merged = null;
 

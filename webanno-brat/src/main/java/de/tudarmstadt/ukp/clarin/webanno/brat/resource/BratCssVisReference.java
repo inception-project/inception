@@ -23,7 +23,7 @@ public class BratCssVisReference
     extends SassResourceReference
 {
     private static final long serialVersionUID = 5755999000175373522L;
-    
+
     private static final BratCssVisReference INSTANCE = new BratCssVisReference();
 
     /**

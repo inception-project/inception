@@ -43,8 +43,8 @@ import org.hibernate.annotations.Type;
  *
  */
 @Entity
-@Table(name = "annotation_document", uniqueConstraints = { @UniqueConstraint(columnNames = {
-        "name", "project", "user" }) })
+@Table(name = "annotation_document", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "project", "user" }) })
 public class AnnotationDocument
     implements Serializable
 {
@@ -183,11 +183,11 @@ public class AnnotationDocument
     {
         this.sentenceAccessed = sentenceAccessed;
     }
-    
+
     @PrePersist
     protected void onCreate()
     {
-        // When we import data, we set the fields via setters and don't want these to be 
+        // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
         if (created != null) {
             created = new Date();

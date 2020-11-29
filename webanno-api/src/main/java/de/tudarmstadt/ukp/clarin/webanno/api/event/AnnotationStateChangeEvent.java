@@ -27,7 +27,7 @@ public class AnnotationStateChangeEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = 2369088588078065027L;
-    
+
     private AnnotationDocument annotationDocument;
     private AnnotationDocumentState previousState;
     private AnnotationDocumentState newState;
@@ -45,7 +45,7 @@ public class AnnotationStateChangeEvent
     {
         return annotationDocument.getDocument();
     }
-    
+
     public AnnotationDocument getAnnotationDocument()
     {
         return annotationDocument;

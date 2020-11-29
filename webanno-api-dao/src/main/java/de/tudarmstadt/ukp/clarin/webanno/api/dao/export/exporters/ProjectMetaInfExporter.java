@@ -47,7 +47,7 @@ public class ProjectMetaInfExporter
     private static final String META_INF = "/" + META_INF_FOLDER;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private @Autowired ProjectService projectService;
 
     @Override
@@ -62,7 +62,7 @@ public class ProjectMetaInfExporter
             FileUtils.copyDirectory(metaInf, metaInfDir);
         }
     }
-    
+
     /**
      * Copy project META_INF from the exported project
      * 

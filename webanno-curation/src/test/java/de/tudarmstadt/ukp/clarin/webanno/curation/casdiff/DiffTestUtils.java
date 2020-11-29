@@ -57,8 +57,7 @@ public class DiffTestUtils
     public static final String HOST_TYPE = "LinkHost";
     public static final String LINK_TYPE = "LinkType";
 
-    public static Map<String, List<CAS>> load(String... aPaths)
-        throws UIMAException, IOException
+    public static Map<String, List<CAS>> load(String... aPaths) throws UIMAException, IOException
     {
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         int n = 1;
@@ -97,8 +96,7 @@ public class DiffTestUtils
         return casByUser;
     }
 
-    public static CAS read(String aPath)
-        throws UIMAException, IOException
+    public static CAS read(String aPath) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2006Reader.class,
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
@@ -156,8 +154,7 @@ public class DiffTestUtils
         return jcas;
     }
 
-    public static TypeSystemDescription createMultiLinkWithRoleTestTypeSytem()
-        throws Exception
+    public static TypeSystemDescription createMultiLinkWithRoleTestTypeSytem() throws Exception
     {
         List<TypeSystemDescription> typeSystems = new ArrayList<>();
 

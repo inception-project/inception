@@ -25,8 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 public enum ScriptDirection
     implements PersistentEnum
 {
-    LTR("ltr"),
-    RTL("rtl");
+    LTR("ltr"), RTL("rtl");
 
     private final String id;
 

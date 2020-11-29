@@ -48,6 +48,7 @@ public class VID
     private static final String LAYER = "LAYER";
     private static final String EXT_PAYLOAD = "PAYLOAD";
 
+    // @formatter:off
     public static final Pattern PATTERN_EXT = Pattern.compile(
             "(?:(?<EXT>\\w+)\\:)" + 
             "(?<ID>\\d+)" +
@@ -61,6 +62,7 @@ public class VID
             "(?:\\.(?<SLOT>\\d+))?" +
             "(@(?<LAYER>\\d+))?"
             );
+    // @formatter:on
 
     public static final int NONE = -1;
 
@@ -83,11 +85,10 @@ public class VID
     {
         this(aAnnotationID, NONE, NONE, NONE);
     }
-    
+
     public VID(int aAnnotationID, String aExtensionId, String aPayload)
     {
-        this(aExtensionId, -1l, aAnnotationID, NONE,
-                NONE, NONE, aPayload);
+        this(aExtensionId, -1l, aAnnotationID, NONE, NONE, NONE, aPayload);
     }
 
     public VID(AnnotationFS aFS, int aAttribute)
@@ -119,20 +120,18 @@ public class VID
     {
         this(aAnnotationID, aExtensionId, null);
     }
-    
-    public VID(int aAnnotationID, int aSubAnnotationId, int aAttribute,
-            int aSlot)
+
+    public VID(int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
     {
         this(null, -1l, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
     }
-    
+
     public VID(long aLayerId, int aAnnotationID, int aSubAnnotationId)
     {
         this(null, aLayerId, aAnnotationID, aSubAnnotationId, NONE, NONE, null);
     }
-    
-    public VID(long aLayerId, int aAnnotationID, int aSubAnnotationId,
-            int aAttribute, int aSlot)
+
+    public VID(long aLayerId, int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
     {
         this(null, aLayerId, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
     }
@@ -142,14 +141,14 @@ public class VID
     {
         this(aExtensionId, aLayerId, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
     }
-    
+
     public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
             String aExtensionPayload)
     {
         this(aExtensionId, aLayerId, aAnnotationID, aSubAnnotationId, NONE, NONE,
                 aExtensionPayload);
     }
-    
+
     public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
             int aAttribute, int aSlot, String aExtensionPayload)
     {
@@ -162,11 +161,12 @@ public class VID
         extensionPayload = aExtensionPayload;
     }
 
-    public static VID copyVID(VID aVID) {
+    public static VID copyVID(VID aVID)
+    {
         return new VID(aVID.getExtensionId(), aVID.getLayerId(), aVID.getId(), aVID.getSubId(),
                 aVID.getAttribute(), aVID.getSlot(), aVID.getExtensionPayload());
     }
-    
+
     public boolean isSet()
     {
         return annotationId >= 0;
@@ -238,16 +238,16 @@ public class VID
             return new VID(NONE);
         }
     }
-    
+
     public static VID parse(String aVid)
     {
         Matcher m = PATTERN_EXT.matcher(aVid);
-        
+
         if (m.matches()) {
             String extId = null;
             String extPayload = null;
             int annotationId = Integer.valueOf(m.group(ID));
-            
+
             if (m.group(EXTENSION) != null) {
                 extId = m.group(EXTENSION);
             }
@@ -256,7 +256,7 @@ public class VID
             }
             return new VID(annotationId, extId, extPayload);
         }
-        
+
         m = PATTERN_VID.matcher(aVid);
         if (m.matches()) {
             int annotationId = Integer.valueOf(m.group(ID));
@@ -321,7 +321,7 @@ public class VID
             sb.append('@');
             sb.append(layerId);
         }
-        
+
         return sb.toString();
     }
 

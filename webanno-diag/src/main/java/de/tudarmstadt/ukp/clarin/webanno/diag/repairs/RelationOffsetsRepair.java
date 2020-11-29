@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * Ensures that the offsets of relations match the target of the relation. This mirrors the DKPro
- * Core convention that the offsets of a dependency relation must match the offsets of the 
+ * Core convention that the offsets of a dependency relation must match the offsets of the
  * dependent.
  */
 @Safe(true)
@@ -67,7 +67,7 @@ public class RelationOffsetsRepair
                 // can skip checking the layer because there will be no annotations anyway.
                 continue;
             }
-            
+
             for (AnnotationFS rel : select(aCas, type)) {
                 AnnotationFS target = getFeature(rel, WebAnnoConst.FEAT_REL_TARGET,
                         AnnotationFS.class);
@@ -77,7 +77,7 @@ public class RelationOffsetsRepair
                     setFeature(rel, CAS.FEATURE_BASE_NAME_END, target.getEnd());
                 }
             }
-            
+
             // Delete those relations that pointed to deleted spans
             if (!fixedRels.isEmpty()) {
                 aMessages.add(new LogMessage(this, LogLevel.INFO,

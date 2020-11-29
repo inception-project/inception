@@ -45,5 +45,5 @@ public class CasMergeException
     public CasMergeException(Throwable aCause)
     {
         super(aCause);
-    }   
+    }
 }

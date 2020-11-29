@@ -50,7 +50,7 @@ public class WicketJQueryFocusPatch
     {
         super(WicketJQueryFocusPatch.class, "wicket-jquery-focus-patch.js");
     }
-    
+
     @Override
     public List<HeaderItem> getDependencies()
     {

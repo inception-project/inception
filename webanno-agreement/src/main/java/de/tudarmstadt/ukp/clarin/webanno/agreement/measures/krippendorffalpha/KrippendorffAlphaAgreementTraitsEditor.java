@@ -32,11 +32,10 @@ public class KrippendorffAlphaAgreementTraitsEditor
             IModel<KrippendorffAlphaAgreementTraits> aModel)
     {
         super(aId, aFeature, aModel);
-        
-        getForm().add(new CheckBox("excludeIncomplete")
-                .setOutputMarkupId(true));
+
+        getForm().add(new CheckBox("excludeIncomplete").setOutputMarkupId(true));
     }
-    
+
     @Override
     public KrippendorffAlphaAgreementTraits getModelObject()
     {

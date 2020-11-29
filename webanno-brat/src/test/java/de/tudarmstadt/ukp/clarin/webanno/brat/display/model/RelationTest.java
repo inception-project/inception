@@ -32,12 +32,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 public class RelationTest
 {
     @Test
-    public void toJsonTest()
-        throws IOException
+    public void toJsonTest() throws IOException
     {
         String json = JSONUtil.toPrettyJsonString(new Relation(new VID(1, 2), "type",
                 asList(new Argument("arg1", 1), new Argument("arg2", 2)), "label", "color"));
-        
+
         assertEquals(
                 "[ \"1.2\", \"type\", [ [ \"arg1\", \"1\" ], [ \"arg2\", \"2\" ] ], \"label\", \"color\" ]",
                 json);

@@ -21,9 +21,7 @@ import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public abstract class AggreementMeasure_ImplBase<
-        R extends Serializable,
-        T extends DefaultAgreementTraits>
+public abstract class AggreementMeasure_ImplBase<R extends Serializable, T extends DefaultAgreementTraits>
     implements AggreementMeasure<R>
 {
     private final AnnotationFeature feature;
@@ -40,7 +38,7 @@ public abstract class AggreementMeasure_ImplBase<
     {
         return feature;
     }
-    
+
     @Override
     public T getTraits()
     {

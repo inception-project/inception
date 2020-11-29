@@ -28,7 +28,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 @Order(400)
-public class ProjectPageMenuItem implements MenuItem
+public class ProjectPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -38,19 +39,19 @@ public class ProjectPageMenuItem implements MenuItem
     {
         return "/admin/project";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/setting_tools.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Projects";
     }
-    
+
     /**
      * Only admins and project managers can see this page
      */
@@ -59,7 +60,7 @@ public class ProjectPageMenuItem implements MenuItem
     {
         return projectService.managesAnyProject(userRepo.getCurrentUser());
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

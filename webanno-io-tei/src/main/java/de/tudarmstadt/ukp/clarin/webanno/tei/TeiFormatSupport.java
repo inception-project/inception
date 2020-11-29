@@ -32,7 +32,7 @@ public class TeiFormatSupport
 {
     public static final String ID = "tei";
     public static final String NAME = "WebAnno CPH TEI";
-    
+
     @Override
     public String getId()
     {

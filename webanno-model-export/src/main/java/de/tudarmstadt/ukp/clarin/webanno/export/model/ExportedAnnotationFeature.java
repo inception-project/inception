@@ -47,7 +47,7 @@ public class ExportedAnnotationFeature
 
     @JsonProperty("visible")
     private boolean visible = false;
-    
+
     @JsonProperty("include_in_hover")
     private boolean includeInHover = false;
 

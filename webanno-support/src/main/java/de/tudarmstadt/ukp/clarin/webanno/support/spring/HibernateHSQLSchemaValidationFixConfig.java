@@ -44,7 +44,7 @@ public class HibernateHSQLSchemaValidationFixConfig
             jpa.getProperties().put("hibernate.default_schema", "PUBLIC");
         }
     }
-    
+
     /**
      * Additional configuration to ensure that {@link EntityManagerFactory} beans depend-on this
      * fix.

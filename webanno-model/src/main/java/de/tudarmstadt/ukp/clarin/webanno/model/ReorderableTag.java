@@ -23,7 +23,7 @@ public class ReorderableTag
     implements Serializable
 {
     private static final long serialVersionUID = -4720695709156570355L;
-    
+
     private final ImmutableTag tag;
     private boolean reordered;
 
@@ -61,7 +61,7 @@ public class ReorderableTag
     {
         return reordered;
     }
-    
+
     @Override
     public String toString()
     {

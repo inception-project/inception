@@ -31,11 +31,12 @@ public class CasMergeOperationResult
          */
         UPDATED;
     }
-    
+
     private final ResultState state;
     private final int resultFSAddress;
-    
-    public CasMergeOperationResult(ResultState aState, int aResultAddress) {
+
+    public CasMergeOperationResult(ResultState aState, int aResultAddress)
+    {
         state = aState;
         resultFSAddress = aResultAddress;
     }

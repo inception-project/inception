@@ -23,12 +23,12 @@ import org.slf4j.LoggerFactory;
 public class DebugUtils
 {
     private static final Logger LOG = LoggerFactory.getLogger(DebugUtils.class);
-    
+
     public static void smallStack()
     {
         smallStack(0);
     }
-    
+
     public static void smallStack(int aLimit)
     {
         StringBuilder sb = new StringBuilder();

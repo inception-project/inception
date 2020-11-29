@@ -24,8 +24,7 @@ public class CssBrowserSelectorResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final CssBrowserSelectorResourceReference INSTANCE = 
-            new CssBrowserSelectorResourceReference();
+    private static final CssBrowserSelectorResourceReference INSTANCE = new CssBrowserSelectorResourceReference();
 
     /**
      * Gets the instance of the resource reference

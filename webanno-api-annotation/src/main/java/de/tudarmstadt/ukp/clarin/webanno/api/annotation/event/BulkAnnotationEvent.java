@@ -24,7 +24,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
  * Indicates that many annotations have been affected at once. This is used on bulk operations
- * instead of generating an event for every individual change. 
+ * instead of generating an event for every individual change.
  * 
  * @see TypeAdapter_ImplBase#silenceEvents()
  */
@@ -44,6 +44,5 @@ public class BulkAnnotationEvent
     {
         super(aSource, aDocument, aUser, aLayer);
     }
-    
-    
+
 }

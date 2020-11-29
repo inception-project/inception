@@ -25,6 +25,5 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 public interface AjaxPayloadCallback<T>
     extends Serializable
 {
-    void accept(AjaxRequestTarget t, T aPayload)
-        throws Exception;
+    void accept(AjaxRequestTarget t, T aPayload) throws Exception;
 }

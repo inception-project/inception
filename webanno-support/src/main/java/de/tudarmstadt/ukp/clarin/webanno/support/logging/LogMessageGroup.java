@@ -44,18 +44,18 @@ public class LogMessageGroup
     {
         return name;
     }
-    
+
     public void setMessages(List<LogMessage> aMessages)
     {
         messages = aMessages;
     }
-    
+
     public List<LogMessage> getMessages()
     {
         if (messages == null) {
             return Collections.emptyList();
         }
-        
+
         return messages;
     }
 }

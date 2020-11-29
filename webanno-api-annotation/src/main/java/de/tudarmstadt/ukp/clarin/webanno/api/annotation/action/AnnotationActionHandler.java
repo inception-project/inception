@@ -41,20 +41,17 @@ public interface AnnotationActionHandler
     /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
      */
-    void actionSelect(AjaxRequestTarget aTarget)
-        throws IOException, AnnotationException;
-    
-    void actionSelect(AjaxRequestTarget aTarget, AnnotationFS aAnnoFs)
-            throws IOException, AnnotationException;
+    void actionSelect(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
-    void actionSelect(AjaxRequestTarget aTarget, VID aVid)
-            throws IOException, AnnotationException;
+    void actionSelect(AjaxRequestTarget aTarget, AnnotationFS aAnnoFs)
+        throws IOException, AnnotationException;
+
+    void actionSelect(AjaxRequestTarget aTarget, VID aVid) throws IOException, AnnotationException;
 
     void actionSelectAndJump(AjaxRequestTarget aTarget, VID aVid)
         throws IOException, AnnotationException;
 
-    void actionJump(AjaxRequestTarget aTarget, VID aVid)
-        throws IOException, AnnotationException;
+    void actionJump(AjaxRequestTarget aTarget, VID aVid) throws IOException, AnnotationException;
 
     void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException;
@@ -65,21 +62,18 @@ public interface AnnotationActionHandler
     /**
      * Delete currently selected annotation.
      */
-    void actionDelete(AjaxRequestTarget aTarget)
-        throws IOException, AnnotationException;
+    void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
     /**
      * Clear the currently selected annotation from the editor panel.
      */
-    void actionClear(AjaxRequestTarget aTarget)
-        throws AnnotationException;
+    void actionClear(AjaxRequestTarget aTarget) throws AnnotationException;
 
     /**
      * Reverse the currently selected relation.
      */
-    void actionReverse(AjaxRequestTarget aTarget)
-        throws IOException, AnnotationException;
-    
+    void actionReverse(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
+
     /**
      * Fill the currently armed slot with the given annotation.
      * 
@@ -100,7 +94,6 @@ public interface AnnotationActionHandler
     void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
             int aSlotFillerEnd, VID aExistingSlotFillerId)
         throws IOException, AnnotationException;
-    
-    CAS getEditorCas()
-            throws IOException;
+
+    CAS getEditorCas() throws IOException;
 }

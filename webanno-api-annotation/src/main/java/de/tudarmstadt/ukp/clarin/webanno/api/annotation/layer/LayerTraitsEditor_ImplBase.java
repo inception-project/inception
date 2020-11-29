@@ -27,15 +27,13 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-public abstract class LayerTraitsEditor_ImplBase<
-        T extends Serializable, 
-        S extends LayerSupport<?, T>>
+public abstract class LayerTraitsEditor_ImplBase<T extends Serializable, S extends LayerSupport<?, T>>
     extends Panel
 {
     private static final long serialVersionUID = 1721881254495474188L;
 
     private static final String MID_FORM = "form";
-    
+
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
 
     private CompoundPropertyModel<AnnotationLayer> layerModel;
@@ -49,11 +47,11 @@ public abstract class LayerTraitsEditor_ImplBase<
         super(aId, aLayerModel);
 
         layerSupportId = aLayerSupport.getId();
-        
+
         traitsModel = CompoundPropertyModel
                 .of(getLayerSupport().readTraits(aLayerModel.getObject()));
         layerModel = CompoundPropertyModel.of(aLayerModel);
-        
+
         form = new Form<T>(MID_FORM, getTraitsModel())
         {
             private static final long serialVersionUID = -3109239605783291123L;
@@ -62,26 +60,26 @@ public abstract class LayerTraitsEditor_ImplBase<
             protected void onSubmit()
             {
                 super.onSubmit();
-                
+
                 LayerTraitsEditor_ImplBase.this.onSubmit();
 
                 getLayerSupport().writeTraits(aLayerModel.getObject(), getTraitsModelObject());
             }
         };
-        
+
         initializeForm(form);
-        
+
         form.setOutputMarkupPlaceholderTag(true);
         add(form);
     }
-    
+
     protected void onSubmit()
     {
         // Do not to anything be default
     }
-    
+
     protected abstract void initializeForm(Form<T> aForm);
-    
+
     public CompoundPropertyModel<AnnotationLayer> getLayerModel()
     {
         return layerModel;
@@ -96,7 +94,7 @@ public abstract class LayerTraitsEditor_ImplBase<
     {
         return traitsModel;
     }
-    
+
     public T getTraitsModelObject()
     {
         return traitsModel.getObject();

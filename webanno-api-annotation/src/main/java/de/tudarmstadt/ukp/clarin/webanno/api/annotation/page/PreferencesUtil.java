@@ -41,16 +41,19 @@ public class PreferencesUtil
     /**
      * Set annotation preferences of users for a given project such as window size, annotation
      * layers,... reading from the file system.
-     * @param aAnnotationService the annotation service.
+     * 
+     * @param aAnnotationService
+     *            the annotation service.
      * @param aState
-     *            The {@link AnnotatorState} that will be populated with preferences from the
-     *            file
+     *            The {@link AnnotatorState} that will be populated with preferences from the file
      * @param aUsername
      *            The {@link User} for whom we need to read the preference (preferences are stored
      *            per user)
      *
-     * @throws BeansException hum?
-     * @throws IOException hum?
+     * @throws BeansException
+     *             hum?
+     * @throws IOException
+     *             hum?
      */
     public static void loadPreferences(UserPreferencesService aPrefService,
             AnnotationSchemaService aAnnotationService, AnnotatorState aState, String aUsername)
@@ -60,7 +63,7 @@ public class PreferencesUtil
                 aUsername, aState.getMode());
 
         aState.setPreferences(preference);
-        
+
         // set layers according to preferences
         List<AnnotationLayer> allLayers = aAnnotationService
                 .listAnnotationLayer(aState.getProject());
@@ -69,10 +72,10 @@ public class PreferencesUtil
                 // Token layer cannot be selected!
                 .filter(l -> !Token.class.getName().equals(l.getName()))
                 // Only allow enabled layers
-                .filter(l -> l.isEnabled()) 
+                .filter(l -> l.isEnabled())
                 .filter(l -> !preference.getHiddenAnnotationLayerIds().contains(l.getId()))
                 .collect(Collectors.toList()));
-        
+
         // set default layer according to preferences
         Optional<AnnotationLayer> defaultLayer = aState.getAnnotationLayers().stream()
                 .filter(layer -> Objects.equals(layer.getId(), preference.getDefaultLayer()))

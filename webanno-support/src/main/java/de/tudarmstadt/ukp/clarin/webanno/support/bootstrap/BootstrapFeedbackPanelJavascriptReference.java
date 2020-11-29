@@ -30,7 +30,7 @@ public class BootstrapFeedbackPanelJavascriptReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BootstrapFeedbackPanelJavascriptReference INSTANCE = 
+    private static final BootstrapFeedbackPanelJavascriptReference INSTANCE = //
             new BootstrapFeedbackPanelJavascriptReference();
 
     /**
@@ -42,7 +42,7 @@ public class BootstrapFeedbackPanelJavascriptReference
     {
         return INSTANCE;
     }
-    
+
     @Override
     public List<HeaderItem> getDependencies()
     {

@@ -24,13 +24,14 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 /**
- * Stop watch class that can be used as a resource in try-catch blocks and logs the time used
- * when the block completes.
+ * Stop watch class that can be used as a resource in try-catch blocks and logs the time used when
+ * the block completes.
  */
-public class StopWatch implements AutoCloseable
+public class StopWatch
+    implements AutoCloseable
 {
     private static final Logger LOG = LoggerFactory.getLogger(StopWatch.class);
-    
+
     private Level level;
     private Logger log;
     private String message;
@@ -55,14 +56,14 @@ public class StopWatch implements AutoCloseable
         log = aLogger;
         level = aLevel;
         values = aValues;
-        
+
         start();
     }
 
     private String getMessage()
     {
         long duration = System.currentTimeMillis() - startTime;
-        
+
         return format("[%4dms] %s", duration, format(message, values));
     }
 
@@ -81,14 +82,14 @@ public class StopWatch implements AutoCloseable
         startTime = System.currentTimeMillis();
         running = true;
     }
-    
+
     public long stop()
     {
         long stop = getTime();
         running = false;
         return stop;
     }
-    
+
     @Override
     public void close()
     {

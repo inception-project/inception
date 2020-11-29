@@ -41,14 +41,14 @@ public class BooleanFeatureSupport
     extends UimaPrimitiveFeatureSupport_ImplBase<Void>
 {
     private List<FeatureType> primitiveTypes;
-    
+
     @Override
     public void afterPropertiesSet() throws Exception
     {
         primitiveTypes = asList(
                 new FeatureType(CAS.TYPE_NAME_BOOLEAN, "Primitive: Boolean", getId()));
     }
-    
+
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
@@ -72,10 +72,10 @@ public class BooleanFeatureSupport
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
-        
+
         return new BooleanFeatureEditor(aId, aOwner, aFeatureStateModel);
     }
-    
+
     @Override
     public void configureFeature(AnnotationFeature aFeature)
     {
@@ -89,7 +89,7 @@ public class BooleanFeatureSupport
         if (aLabel == null) {
             return renderFeatureValue(aFeature, aLabel);
         }
-        
+
         if ("true".equals(aLabel)) {
             return "+" + aFeature.getUiName();
         }

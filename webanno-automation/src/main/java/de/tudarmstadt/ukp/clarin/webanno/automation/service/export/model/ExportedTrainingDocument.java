@@ -44,7 +44,7 @@ public class ExportedTrainingDocument
 
     @JsonProperty("format")
     private String format;
-    
+
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;

@@ -21,13 +21,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
 public class DynamicTextAreaScriptReference
-        extends JavaScriptResourceReference
+    extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
-    
-    private static final DynamicTextAreaScriptReference INSTANCE =
-            new DynamicTextAreaScriptReference();
-    
+
+    private static final DynamicTextAreaScriptReference INSTANCE = new DynamicTextAreaScriptReference();
+
     /**
      * Gets the instance of the resource reference
      *
@@ -37,7 +36,7 @@ public class DynamicTextAreaScriptReference
     {
         return INSTANCE;
     }
-    
+
     /**
      * Private constructor
      */

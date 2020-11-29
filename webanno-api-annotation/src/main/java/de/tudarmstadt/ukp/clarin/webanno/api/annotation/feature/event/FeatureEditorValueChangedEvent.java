@@ -24,7 +24,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEd
 public class FeatureEditorValueChangedEvent
     extends FeatureEditorEvent
 {
-    
+
     public FeatureEditorValueChangedEvent(FeatureEditor aEditor, AjaxRequestTarget aTarget)
     {
         super(aEditor, aTarget);

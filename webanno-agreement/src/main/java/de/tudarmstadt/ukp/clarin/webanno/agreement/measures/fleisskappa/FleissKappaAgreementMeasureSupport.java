@@ -32,13 +32,13 @@ public class FleissKappaAgreementMeasureSupport
     extends AbstractCodingAgreementMeasureSupport<DefaultAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
-    
+
     public FleissKappaAgreementMeasureSupport(AnnotationSchemaService aAnnotationService)
     {
         super();
         annotationService = aAnnotationService;
     }
-    
+
     @Override
     public String getName()
     {

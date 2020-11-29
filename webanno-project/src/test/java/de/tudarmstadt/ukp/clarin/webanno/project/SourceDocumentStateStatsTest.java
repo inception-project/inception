@@ -35,8 +35,7 @@ public class SourceDocumentStateStatsTest
     @Test
     public void testGetProjectState()
     {
-        assertEquals(NEW,
-                new SourceDocumentStateStats(1l, 1l, 0l, 0l, 0l, 0l).getProjectState());
+        assertEquals(NEW, new SourceDocumentStateStats(1l, 1l, 0l, 0l, 0l, 0l).getProjectState());
         assertEquals(ANNOTATION_IN_PROGRESS,
                 new SourceDocumentStateStats(1l, 0l, 1l, 0l, 0l, 0l).getProjectState());
         assertEquals(ANNOTATION_IN_PROGRESS,
@@ -56,7 +55,7 @@ public class SourceDocumentStateStatsTest
         assertEquals(CURATION_FINISHED,
                 new SourceDocumentStateStats(1l, 0l, 0l, 0l, 0l, 1l).getProjectState());
     }
-    
+
     @Test
     public void testGetProjectStateIsDefinedSweep()
     {
@@ -66,8 +65,8 @@ public class SourceDocumentStateStatsTest
                     for (long cip = 0; cip < 3; cip++) {
                         for (long cf = 0; cf < 3; cf++) {
                             long total = an + aip + af + cip + cf;
-                            SourceDocumentStateStats stats = new SourceDocumentStateStats(
-                                    total, an, aip, af, cip, cf);
+                            SourceDocumentStateStats stats = new SourceDocumentStateStats(total, an,
+                                    aip, af, cip, cf);
                             System.out.println(stats);
                             stats.getProjectState();
                         }
@@ -81,7 +80,7 @@ public class SourceDocumentStateStatsTest
     public void testGetProjectStateIsDefinedRandom()
     {
         int limit = 100;
-        
+
         Random rnd = new Random();
 
         for (int i = 0; i < 10000; i++) {
@@ -92,8 +91,8 @@ public class SourceDocumentStateStatsTest
             long cf = rnd.nextInt(limit);
             long total = an + aip + af + cip + cf;
 
-            SourceDocumentStateStats stats = new SourceDocumentStateStats(
-                    total, an, aip, af, cip, cf);
+            SourceDocumentStateStats stats = new SourceDocumentStateStats(total, an, aip, af, cip,
+                    cf);
             System.out.println(stats);
             stats.getProjectState();
         }

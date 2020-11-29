@@ -23,7 +23,7 @@ public class AID
     implements Serializable
 {
     private static final long serialVersionUID = 2509249097545433991L;
-    
+
     public final int addr;
     public final String feature;
     public final int index;
@@ -32,7 +32,7 @@ public class AID
     {
         this(aAddr, null, -1);
     }
-    
+
     public AID(int aAddr, String aFeature, int aIndex)
     {
         addr = aAddr;

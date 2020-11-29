@@ -57,8 +57,7 @@ public class JsonImportUtil
         }
     }
 
-    private static TagSet replaceTagSet(Project project,
-            ExportedTagSet importedTagSet,
+    private static TagSet replaceTagSet(Project project, ExportedTagSet importedTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
@@ -81,21 +80,21 @@ public class JsonImportUtil
             newTag.setTagSet(tagsetInUse);
             aAnnotationService.createTag(newTag);
         }
-        
+
         return tagsetInUse;
     }
-    
+
     public static TagSet importTagSetFromJson(Project project, InputStream tagInputStream,
             AnnotationSchemaService aAnnotationService)
         throws IOException
     {
         String text = IOUtils.toString(tagInputStream, "UTF-8");
-    
+
         ExportedTagSet importedTagSet = JSONUtil.getObjectMapper().readValue(text,
                 ExportedTagSet.class);
         return createTagSet(project, importedTagSet, aAnnotationService);
     }
-    
+
     public static TagSet createTagSet(Project project, ExportedTagSet aExTagSet,
             AnnotationSchemaService aAnnotationService)
         throws IOException
@@ -104,7 +103,7 @@ public class JsonImportUtil
         if (aAnnotationService.existsTagSet(exTagSetName, project)) {
             exTagSetName = copyTagSetName(aAnnotationService, exTagSetName, project);
         }
-        
+
         TagSet newTagSet = new TagSet();
         newTagSet.setDescription(aExTagSet.getDescription());
         newTagSet.setName(exTagSetName);
@@ -112,7 +111,7 @@ public class JsonImportUtil
         newTagSet.setProject(project);
         newTagSet.setCreateTag(aExTagSet.isCreateTag());
         aAnnotationService.createTagSet(newTagSet);
-                
+
         List<Tag> tags = new ArrayList<>();
         for (ExportedTag exTag : aExTagSet.getTags()) {
             Tag tag = new Tag();
@@ -123,7 +122,7 @@ public class JsonImportUtil
         }
 
         aAnnotationService.createTags(tags.stream().toArray(Tag[]::new));
-        
+
         return newTagSet;
     }
 
@@ -143,7 +142,7 @@ public class JsonImportUtil
             else {
                 return betterTagSetName;
             }
-    
+
         }
     }
 }

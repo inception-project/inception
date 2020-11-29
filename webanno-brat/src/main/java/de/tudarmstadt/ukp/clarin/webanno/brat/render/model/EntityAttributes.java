@@ -30,11 +30,11 @@ public class EntityAttributes
     public static final String ATTR_LABEL = "l";
     public static final String ATTR_COLOR = "c";
     public static final String ATTR_HOVER_TEXT = "h";
-    
+
     private @JsonProperty(ATTR_LABEL) String labelText;
     private @JsonProperty(ATTR_COLOR) String color;
     private @JsonProperty(ATTR_HOVER_TEXT) String hoverText;
-    
+
     public void setLabelText(String aLabelText)
     {
         labelText = aLabelText;
@@ -54,7 +54,7 @@ public class EntityAttributes
     {
         color = aColor;
     }
-    
+
     public void setHoverText(String aHovertext)
     {
         hoverText = aHovertext;

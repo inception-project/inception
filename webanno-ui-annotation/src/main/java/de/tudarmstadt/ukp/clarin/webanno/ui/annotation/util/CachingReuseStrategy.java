@@ -27,14 +27,14 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.util.lang.Generics;
 
 /**
- * Reuses items not only across a single request but for as long as the RefreshingView exists.
- * This allows the view to contain Ajax behaviors.
+ * Reuses items not only across a single request but for as long as the RefreshingView exists. This
+ * allows the view to contain Ajax behaviors.
  */
 public class CachingReuseStrategy
     implements IItemReuseStrategy
 {
     private static final long serialVersionUID = -6888699389854940706L;
-    
+
     private final Map<IModel<?>, Item<?>> modelToItem = Generics.newHashMap();
 
     @Override

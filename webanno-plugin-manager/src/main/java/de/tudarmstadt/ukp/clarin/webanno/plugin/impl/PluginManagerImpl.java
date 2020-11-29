@@ -64,20 +64,20 @@ public class PluginManagerImpl
         loadPlugins();
         startPlugins();
 
-        AbstractAutowireCapableBeanFactory beanFactory = (AbstractAutowireCapableBeanFactory) 
-                applicationContext.getAutowireCapableBeanFactory();
+        AbstractAutowireCapableBeanFactory beanFactory = (AbstractAutowireCapableBeanFactory) applicationContext
+                .getAutowireCapableBeanFactory();
         ExtensionsInjector extensionsInjector = new ExtensionsInjector(this, beanFactory);
         extensionsInjector.injectExtensions();
-        
+
         // Add child application contexts for every plugin
         for (PluginWrapper plugin : getStartedPlugins()) {
             Class pluginClass = plugin.getPlugin().getClass();
             LOG.info("Found plugin: {}", plugin.getDescriptor().getPluginId());
-            
+
             // Attach the plugin application context to the main application context such that it
             // can access its beans for auto-wiring
-            GenericApplicationContext pluginContext = (GenericApplicationContext) 
-                    ((Plugin) plugin.getPlugin()).getApplicationContext();
+            GenericApplicationContext pluginContext = (GenericApplicationContext) ((Plugin) plugin
+                    .getPlugin()).getApplicationContext();
             pluginContext.setParent(applicationContext);
         }
     }

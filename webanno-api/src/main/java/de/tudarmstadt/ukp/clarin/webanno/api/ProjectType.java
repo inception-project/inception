@@ -27,5 +27,6 @@ import java.lang.annotation.Target;
 public @interface ProjectType
 {
     String id();
+
     int prio() default Integer.MAX_VALUE;
 }

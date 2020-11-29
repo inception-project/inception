@@ -22,7 +22,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 
-
 /**
  * Project permissions information to be exported/imported
  */
@@ -31,7 +30,7 @@ public class ExportedProjectPermission
 {
     @JsonProperty("level")
     private PermissionLevel level;
-    
+
     @JsonProperty("user")
     private String user;
 

@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
 /**
- * Result for a lazy detail. 
+ * Result for a lazy detail.
  * <p>
  * Some information is only to be shown when the user performs a particular "detail information"
- * action, e.g. hovering the mouse over an annotation. This class represents the result which is 
+ * action, e.g. hovering the mouse over an annotation. This class represents the result which is
  * returned by the server for a particular detail query.
  * </p>
  * 
@@ -31,7 +31,7 @@ public class VLazyDetailResult
 {
     private final String label;
     private final String value;
-    
+
     public VLazyDetailResult(String aLabel, String aValue)
     {
         label = aLabel;

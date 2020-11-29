@@ -40,7 +40,7 @@ public class ProjectSettingsExporter
     implements ProjectExporter
 {
     private @Autowired ProjectService projectService;
-    
+
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
@@ -80,7 +80,7 @@ public class ProjectSettingsExporter
         aProject.setCreated(aExProject.getCreated());
         aProject.setUpdated(aExProject.getUpdated());
         aProject.setAnonymousCuration(aExProject.isAnonymousCuration());
-        
+
         // Set default to LTR on import from old WebAnno versions
         if (aExProject.getScriptDirection() == null) {
             aProject.setScriptDirection(ScriptDirection.LTR);
@@ -88,7 +88,7 @@ public class ProjectSettingsExporter
         else {
             aProject.setScriptDirection(aExProject.getScriptDirection());
         }
-        
+
         projectService.updateProject(aProject);
     }
 }

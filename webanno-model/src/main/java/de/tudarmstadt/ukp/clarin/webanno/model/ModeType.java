@@ -19,13 +19,17 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
-/** Implementation of {@link PersistentEnumUserType}
+/**
+ * Implementation of {@link PersistentEnumUserType}
  *
  */
-public class ModeType extends PersistentEnumUserType<Mode> {
+public class ModeType
+    extends PersistentEnumUserType<Mode>
+{
 
     @Override
-    public Class<Mode> returnedClass() {
+    public Class<Mode> returnedClass()
+    {
         return Mode.class;
     }
 

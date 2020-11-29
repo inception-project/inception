@@ -36,16 +36,16 @@ public class VSpan
     extends VObject
 {
     private final List<VRange> ranges;
-    
+
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
             Map<String, String> aFeatures, Map<String, String> aHoverFeatures)
     {
-        this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures, 
-                aHoverFeatures, null);
+        this(aLayer, new VID(getAddr(aFS)), aType, asList(aOffsets), aFeatures, aHoverFeatures,
+                null);
     }
-    
+
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,
-            int aEquivalenceClass, Map<String, String> aFeatures, 
+            int aEquivalenceClass, Map<String, String> aFeatures,
             Map<String, String> aHoverFeatures)
     {
         super(aLayer, new VID(getAddr(aFS)), aType, aEquivalenceClass, aFeatures, aHoverFeatures);
@@ -57,7 +57,7 @@ public class VSpan
     {
         this(aLayer, aVid, aType, asList(aOffsets), aFeatures, aHoverFeatures, null);
     }
-    
+
     public VSpan(AnnotationLayer aLayer, VID aVid, String aType, VRange aOffsets,
             Map<String, String> aFeatures, Map<String, String> aHoverFeatures, String color)
     {
@@ -71,7 +71,7 @@ public class VSpan
     }
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, List<VRange> aOffsets,
-            int aEquivalenceClass, Map<String, String> aFeatures, 
+            int aEquivalenceClass, Map<String, String> aFeatures,
             Map<String, String> aHoverFeatures)
     {
         this(aLayer, new VID(getAddr(aFS)), aType, aOffsets, aFeatures, aHoverFeatures, null);
@@ -84,7 +84,7 @@ public class VSpan
         setColorHint(aColor);
         ranges = aOffsets != null ? aOffsets : new ArrayList<>();
     }
-    
+
     public List<VRange> getOffsets()
     {
         return ranges;

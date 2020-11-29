@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -46,17 +47,17 @@ public abstract class TsvUnit
         uimaToken = aUimaToken;
         position = aPosition;
     }
-    
+
     public int getBegin()
     {
         return uimaToken.getBegin();
     }
-    
+
     public int getEnd()
     {
         return uimaToken.getEnd();
     }
-    
+
     /**
      * Get all annotations for the current column. Mind that there can be multiple columns per
      * annotation. Also mind that in order to the get value for the column, it needs to be still
@@ -71,12 +72,12 @@ public abstract class TsvUnit
     {
         return sentence;
     }
-    
+
     public TsvDocument getDocument()
     {
         return doc;
     }
-    
+
     /**
      * Add an UIMA annotation which overlaps with the current token in any way. It could also
      * completely contain or exactly match the token boundaries.
@@ -88,7 +89,7 @@ public abstract class TsvUnit
     {
         addUimaAnnotation(aFS, false);
     }
-    
+
     /**
      * Add an UIMA annotation which overlaps with the current token in any way. It could also
      * completely contain or exactly match the token boundaries.
@@ -100,12 +101,12 @@ public abstract class TsvUnit
     {
         Type effectiveType = getDocument().getSchema().getEffectiveType(aFS);
         uimaAnnotations.putIfAbsent(effectiveType, new ArrayList<>());
-        
+
         List<AnnotationFS> annotations = uimaAnnotations.get(effectiveType);
-        
+
         // If we already have annotations of this type, then we need to add disambiguation IDs.
         boolean alreadyHaveAnnotationsOfSameType = !annotations.isEmpty();
-        
+
         // Add to the list only if necessary, i.e. only on the first column in which we encounter
         // this annotation. If it has multiple features, there may also be subsequent columns
         // for the same annotation and we do not want to add it again and again.
@@ -115,13 +116,13 @@ public abstract class TsvUnit
             annotations.add(aFS);
             hasBeenAdded = true;
         }
-                
+
         // Add disambiguation IDs if annotations are stacked
         if (aAddDisambiguationIfStacked && hasBeenAdded && alreadyHaveAnnotationsOfSameType) {
             annotations.forEach(doc::addDisambiguationId);
         }
     }
-    
+
     /**
      * @param aUimaType
      *            an UIMA annotation type.
@@ -154,17 +155,17 @@ public abstract class TsvUnit
     {
         return uimaToken;
     }
-    
+
     public int getPosition()
     {
         return position;
     }
-    
+
     public String getId()
     {
         return String.format("%d-%d", sentence.getPosition(), position);
     }
-    
+
     @Override
     public String toString()
     {

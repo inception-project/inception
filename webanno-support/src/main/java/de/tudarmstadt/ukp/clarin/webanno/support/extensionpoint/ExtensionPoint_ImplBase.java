@@ -49,7 +49,7 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     {
         init();
     }
-    
+
     public void init()
     {
         List<E> extensions = new ArrayList<>();
@@ -57,16 +57,16 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
         if (extensionsListProxy != null) {
             extensions.addAll(extensionsListProxy);
             AnnotationAwareOrderComparator.sort(extensions);
-        
+
             for (E fs : extensions) {
                 log.info("Found {} extension: {}", getClass().getSimpleName(),
                         getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensionsList = Collections.unmodifiableList(extensions);
     }
-    
+
     @Override
     public List<E> getExtensions()
     {
@@ -76,18 +76,14 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     @Override
     public List<E> getExtensions(C aContext)
     {
-        return getExtensions().stream()
-                .filter(e -> e.accepts(aContext))
-                .collect(toList());
+        return getExtensions().stream().filter(e -> e.accepts(aContext)).collect(toList());
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public <X extends E> X getExtension(String aId)
     {
-        return (X) getExtensions().stream()
-                .filter(fs -> fs.getId().equals(aId))
-                .findFirst()
+        return (X) getExtensions().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
                 .orElse(null);
     }
 }

@@ -33,8 +33,7 @@ public class BratVisualizerResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BratVisualizerResourceReference INSTANCE = 
-            new BratVisualizerResourceReference();
+    private static final BratVisualizerResourceReference INSTANCE = new BratVisualizerResourceReference();
 
     /**
      * Gets the instance of the resource reference
@@ -53,23 +52,23 @@ public class BratVisualizerResourceReference
     {
         super(BratVisualizerResourceReference.class, "visualizer.js");
     }
-    
+
     @Override
     public List<HeaderItem> getDependencies()
     {
         List<HeaderItem> dependencies = new ArrayList<>(super.getDependencies());
-        
+
         // CSS
         dependencies.add(CssHeaderItem.forReference(BratCssVisReference.get()));
         dependencies.add(CssHeaderItem.forReference(BratCssUiReference.get()));
-        
+
         // Libraries
         dependencies.add(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         dependencies.add(forReference(JQuerySvgResourceReference.get()));
         dependencies.add(forReference(JQuerySvgDomResourceReference.get()));
         dependencies.add(forReference(JQueryJsonResourceReference.get()));
         dependencies.add(forReference(JQueryScrollbarWidthReference.get()));
-        
+
         // BRAT helpers
         dependencies.add(forReference(BratConfigurationResourceReference.get()));
         dependencies.add(forReference(BratUtilResourceReference.get()));

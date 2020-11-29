@@ -29,9 +29,8 @@ public class KendoResourceBehavior
     extends Behavior
 {
     private static final long serialVersionUID = 9065700322035556746L;
-    
-    private static final KendoResourceBehavior INSTANCE = 
-            new KendoResourceBehavior();
+
+    private static final KendoResourceBehavior INSTANCE = new KendoResourceBehavior();
 
     public static KendoResourceBehavior get()
     {
@@ -47,18 +46,15 @@ public class KendoResourceBehavior
         KendoUILibrarySettings kendoCfg = KendoUILibrarySettings.get();
 
         if (kendoCfg.getCommonStyleSheetReference() != null) {
-            aResponse.render(CssHeaderItem
-                    .forReference(kendoCfg.getCommonStyleSheetReference()));
+            aResponse.render(CssHeaderItem.forReference(kendoCfg.getCommonStyleSheetReference()));
         }
 
         if (kendoCfg.getThemeStyleSheetReference() != null) {
-            aResponse.render(CssHeaderItem
-                    .forReference(kendoCfg.getThemeStyleSheetReference()));
+            aResponse.render(CssHeaderItem.forReference(kendoCfg.getThemeStyleSheetReference()));
         }
 
         if (kendoCfg.getJavaScriptReference() != null) {
-            aResponse.render(JavaScriptHeaderItem
-                    .forReference(kendoCfg.getJavaScriptReference()));
+            aResponse.render(JavaScriptHeaderItem.forReference(kendoCfg.getJavaScriptReference()));
         }
     }
 }

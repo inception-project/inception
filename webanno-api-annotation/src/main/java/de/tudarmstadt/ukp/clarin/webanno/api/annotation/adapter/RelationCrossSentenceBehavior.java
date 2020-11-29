@@ -65,7 +65,7 @@ public class RelationCrossSentenceBehavior
         if (aAdapter.getLayer().isCrossSentence()) {
             return aRequest;
         }
-        
+
         if (!isBeginEndInSameSentence(aRequest.getCas(), aRequest.getOriginFs().getBegin(),
                 aRequest.getTargetFs().getEnd())) {
             throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
@@ -74,7 +74,7 @@ public class RelationCrossSentenceBehavior
 
         return aRequest;
     }
-    
+
     @Override
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VArc> aAnnoToArcIdx)
@@ -82,20 +82,19 @@ public class RelationCrossSentenceBehavior
         if (aAdapter.getLayer().isCrossSentence()) {
             return;
         }
-        
+
         for (Entry<AnnotationFS, VArc> e : aAnnoToArcIdx.entrySet()) {
             CAS cas = e.getKey().getCAS();
-            
-            if (!isBeginInSameSentence(cas, 
+
+            if (!isBeginInSameSentence(cas,
                     selectAnnotationByAddr(cas, e.getValue().getSource().getId()).getBegin(),
-                    selectAnnotationByAddr(cas, e.getValue().getTarget().getId()).getBegin()))
-            {
+                    selectAnnotationByAddr(cas, e.getValue().getTarget().getId()).getBegin())) {
                 aResponse.add(new VComment(new VID(e.getKey()), ERROR,
                         "Crossing sentence boundaries is not permitted."));
             }
         }
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
@@ -103,12 +102,12 @@ public class RelationCrossSentenceBehavior
         if (aAdapter.getLayer().isCrossSentence()) {
             return emptyList();
         }
-        
+
         RelationAdapter adapter = (RelationAdapter) aAdapter;
         Type type = getType(aCas, aAdapter.getAnnotationTypeName());
         Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
         Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
-        
+
         // If there are no annotations on this layer, nothing to do
         Collection<AnnotationFS> annotations = select(aCas, type);
         if (annotations.isEmpty()) {
@@ -127,21 +126,21 @@ public class RelationCrossSentenceBehavior
             sentBeginIdx.put(sent.getBegin(), sent);
             sentEndIdx.put(sent.getEnd(), sent);
         }
-        
+
         for (AnnotationFS fs : annotations) {
             AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
             AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
 
             Entry<Integer, AnnotationFS> s1 = sentBeginIdx.floorEntry(sourceFs.getBegin());
             Entry<Integer, AnnotationFS> s2 = sentEndIdx.ceilingEntry(targetFs.getEnd());
-            
+
             if (s1 == null || s2 == null) {
                 messages.add(Pair.of(LogMessage.error(this,
                         "Unable to determine any sentences overlapping with [%d-%d]",
                         sourceFs.getBegin(), targetFs.getEnd()), fs));
                 continue;
             }
-            
+
             if (!WebAnnoCasUtil.isSame(s1.getValue(), s2.getValue())) {
                 messages.add(Pair.of(
                         LogMessage.error(this, "Crossing sentence boundaries is not permitted."),
@@ -150,6 +149,6 @@ public class RelationCrossSentenceBehavior
         }
 
         return messages;
-        
+
     }
 }

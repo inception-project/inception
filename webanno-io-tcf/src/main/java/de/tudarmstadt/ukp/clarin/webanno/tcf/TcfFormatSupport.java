@@ -38,7 +38,7 @@ public class TcfFormatSupport
 {
     public static final String ID = "tcf";
     public static final String NAME = "WebLicht TCF";
-    
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class TcfFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -69,7 +69,7 @@ public class TcfFormatSupport
     {
         return createReaderDescription(TcfReader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

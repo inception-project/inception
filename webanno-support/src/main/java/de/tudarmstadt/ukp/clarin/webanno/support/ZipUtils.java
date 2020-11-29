@@ -43,7 +43,8 @@ public class ZipUtils
     /**
      * check if the {@link InputStream} provided is a zip file
      * 
-     * @param in the stream.
+     * @param in
+     *            the stream.
      * @return if it is a ZIP file.
      */
     public static boolean isZipStream(InputStream in) throws IOException
@@ -73,12 +74,14 @@ public class ZipUtils
      * type system file in addition to the annotation data. This method generates a zip file if the
      * exported file do contain multiple file output
      * 
-     * @param srcFolder source folder.
-     * @param destZipFile target folder.
-     * @throws IOException if an I/O error occurs.
+     * @param srcFolder
+     *            source folder.
+     * @param destZipFile
+     *            target folder.
+     * @throws IOException
+     *             if an I/O error occurs.
      */
-    public static void zipFolder(File srcFolder, File destZipFile)
-        throws IOException
+    public static void zipFolder(File srcFolder, File destZipFile) throws IOException
     {
         ZipOutputStream zip = null;
         try {
@@ -94,8 +97,7 @@ public class ZipUtils
         }
     }
 
-    private static void addToZip(ZipOutputStream zip, File aBasePath, File aPath)
-        throws IOException
+    private static void addToZip(ZipOutputStream zip, File aBasePath, File aPath) throws IOException
     {
         if (aPath.isDirectory()) {
             for (File file : aPath.listFiles()) {
@@ -123,7 +125,7 @@ public class ZipUtils
         if (entryName.startsWith("/")) {
             entryName = entryName.substring(1);
         }
-       
+
         return entryName;
     }
 }

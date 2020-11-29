@@ -35,10 +35,10 @@ public class NopRenderer
     {
         super(aTypeAdapter, aLayerSupportRegistry, aFeatureSupportRegistry);
     }
-    
+
     @Override
-    public void render(CAS aCas, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int windowBeginOffset, int windowEndOffset)
+    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
+            int windowBeginOffset, int windowEndOffset)
     {
         // Nothing to do
     }

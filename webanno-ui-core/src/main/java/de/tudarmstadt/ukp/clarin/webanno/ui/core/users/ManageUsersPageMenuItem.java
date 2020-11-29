@@ -25,28 +25,29 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
-public class ManageUsersPageMenuItem implements MenuItem
+public class ManageUsersPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepository;
-    
+
     @Override
     public String getPath()
     {
         return "/admin/users";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/user_add.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Users";
     }
-    
+
     /**
      * Only admins and project managers can see this page.
      */
@@ -55,13 +56,13 @@ public class ManageUsersPageMenuItem implements MenuItem
     {
         return userRepository.isAdministrator(userRepository.getCurrentUser());
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {
         return ManageUsersPage.class;
     }
-    
+
     @Override
     public boolean isDirectAccessAllowed()
     {

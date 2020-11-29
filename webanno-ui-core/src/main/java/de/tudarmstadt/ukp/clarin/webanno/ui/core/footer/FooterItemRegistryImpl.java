@@ -45,13 +45,13 @@ public class FooterItemRegistryImpl
     {
         extensionsProxy = aExtensions;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<FooterItem> exts = new ArrayList<>();
@@ -59,16 +59,15 @@ public class FooterItemRegistryImpl
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
-        
+
             for (FooterItem fs : exts) {
-                log.info("Found footer item: {}",
-                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                log.info("Found footer item: {}", ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
-    }    
-    
+    }
+
     @Override
     public List<FooterItem> getFooterItems()
     {

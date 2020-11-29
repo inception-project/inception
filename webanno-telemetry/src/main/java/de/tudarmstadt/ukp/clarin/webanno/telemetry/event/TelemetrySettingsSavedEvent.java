@@ -24,8 +24,8 @@ import org.springframework.context.ApplicationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
 
 /**
- * Sent when the telemetry settings are saved by the user. This event does not indicate whether
- * any of the settings actually changed.
+ * Sent when the telemetry settings are saved by the user. This event does not indicate whether any
+ * of the settings actually changed.
  */
 public class TelemetrySettingsSavedEvent
     extends ApplicationEvent
@@ -33,13 +33,13 @@ public class TelemetrySettingsSavedEvent
     private static final long serialVersionUID = 3421993849783695318L;
 
     private final List<TelemetrySettings> settings;
-    
+
     public TelemetrySettingsSavedEvent(Object aSource, List<TelemetrySettings> aSettings)
     {
         super(aSource);
         settings = aSettings;
     }
-    
+
     public List<TelemetrySettings> getSettings()
     {
         return settings;

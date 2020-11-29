@@ -46,7 +46,8 @@ public class OverridableUserDetailsManager
             for (String role : extraRoles.split(",")) {
                 try {
                     authorities.add(new SimpleGrantedAuthority(role.trim()));
-                    log.debug("Added extra role to user [" + aUsername + "]: [" + role.trim() + "]");
+                    log.debug(
+                            "Added extra role to user [" + aUsername + "]: [" + role.trim() + "]");
                 }
                 catch (IllegalArgumentException e) {
                     log.debug("Ignoring unknown extra role [" + role + "] for user [" + aUsername

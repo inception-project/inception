@@ -94,7 +94,7 @@ public abstract class AnnotationSidebar_ImplBase
     {
         return annotationPage;
     }
-    
+
     /**
      * Show the next document if it exists, starting in a certain begin offset
      */

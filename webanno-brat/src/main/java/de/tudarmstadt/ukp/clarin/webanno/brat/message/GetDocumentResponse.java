@@ -88,9 +88,9 @@ public class GetDocumentResponse
     private List<String> equivs = new ArrayList<>();
     private List<Comment> comments = new ArrayList<>();
     private List<Normalization> normalizations = new ArrayList<>();
-    
-    private Map<String, List<Marker>> args = new HashMap<>(); 
-    
+
+    private Map<String, List<Marker>> args = new HashMap<>();
+
     public GetDocumentResponse()
     {
         super(COMMAND);
@@ -165,9 +165,10 @@ public class GetDocumentResponse
     {
         normalizations.add(aNormalization);
     }
-    
+
     /**
      * Get source files for the annotations.
+     * 
      * @return the source files.
      */
     public List<String> getSourceFiles()
@@ -177,7 +178,9 @@ public class GetDocumentResponse
 
     /**
      * Set source files for the annotations.
-     * @param aSourceFiles the source files.
+     * 
+     * @param aSourceFiles
+     *            the source files.
      */
     public void setSourceFiles(List<String> aSourceFiles)
     {
@@ -186,6 +189,7 @@ public class GetDocumentResponse
 
     /**
      * Get creation time.
+     * 
      * @return the timestamp.
      */
     public long getCtime()
@@ -334,7 +338,7 @@ public class GetDocumentResponse
     {
         fontZoom = aFontZoom;
     }
-    
+
     public void addMarker(Marker aMarker)
     {
         List<Marker> markers = args.get(aMarker.getType());
@@ -344,7 +348,7 @@ public class GetDocumentResponse
         }
         markers.add(aMarker);
     }
-    
+
     public Map<String, List<Marker>> getArgs()
     {
         return args;

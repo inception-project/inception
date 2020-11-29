@@ -43,7 +43,7 @@ public class LabelHashBasedColoringStrategy
             return PALETTE_NORMAL_FILTERED[aVObject.getEquivalenceSet()
                     % PALETTE_NORMAL_FILTERED.length];
         }
-        
+
         if (aRules != null) {
             String ruleBasedColor = aRules.findColor(aLabel);
             if (ruleBasedColor != null) {

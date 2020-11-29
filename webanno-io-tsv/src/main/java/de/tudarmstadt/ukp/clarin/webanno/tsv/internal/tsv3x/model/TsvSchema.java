@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isChainLayer;
 import static de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XCasSchemaAnalyzer.isRelationLayer;
@@ -42,7 +43,7 @@ import org.apache.uima.cas.TypeSystem;
 
 public class TsvSchema
 {
-    // Mind these here are define as the reverse of the respective contants in WebAnnoConst 
+    // Mind these here are define as the reverse of the respective contants in WebAnnoConst
     // because here we want that "TARGET" identifies the FS which should be pointed to in
     // the TSV.
     public static final String FEAT_REL_TARGET = "Dependent";
@@ -50,22 +51,22 @@ public class TsvSchema
 
     public static final String FEAT_SLOT_ROLE = "role";
     public static final String FEAT_SLOT_TARGET = "target";
-    
+
     public static final String CHAIN_FIRST_FEAT = "first";
     public static final String CHAIN_NEXT_FEAT = "next";
     public static final String COREFERENCE_RELATION_FEATURE = "referenceRelation";
     public static final String COREFERENCE_TYPE_FEATURE = "referenceType";
-    
+
     private List<TsvColumn> columns = new ArrayList<>();
     private Set<Type> chainHeadTypes = new HashSet<>();
     private Set<Type> ignoredTypes = new HashSet<>();
     private Map<Type, Type> effectiveTypes = new HashMap<>();
-    
+
     public void ignoreType(Type aType)
     {
         ignoredTypes.add(aType);
     }
-    
+
     public Set<Type> getIgnoredTypes()
     {
         return ignoredTypes;
@@ -75,16 +76,15 @@ public class TsvSchema
     {
         columns.add(aColumn);
     }
-    
+
     public List<TsvColumn> getColumns()
     {
         return columns;
     }
-    
+
     public List<TsvColumn> getColumns(Type aType)
     {
-        return getColumns().stream()
-                .filter(c -> c.uimaType.equals(aType))
+        return getColumns().stream().filter(c -> c.uimaType.equals(aType))
                 // Sort by name so we get a stable column order even if type systems are merged
                 // in different orders, e.g. in unit tests.
                 .sorted((a, b) -> compare(
@@ -92,7 +92,7 @@ public class TsvSchema
                         b.getUimaFeature() != null ? b.getUimaFeature().getShortName() : null))
                 .collect(Collectors.toList());
     }
-    
+
     /**
      * Returns the columns in the same order as they are in the TSV header.
      * 
@@ -103,9 +103,9 @@ public class TsvSchema
     public List<TsvColumn> getHeaderColumns(Collection<TsvColumn> aActiveColumns)
     {
         List<TsvColumn> cols = new ArrayList<>();
-        
+
         // COMPATIBILITY NOTE
-        // We try to maintain the same order of columns as the WebAnnoTsv3Writer because the 
+        // We try to maintain the same order of columns as the WebAnnoTsv3Writer because the
         // WebAnnoTsv3Reader needs that order. Our own reader does not rely on this order.
         // - SPAN layers without slot features
         // - SPAN layers with slot features
@@ -116,16 +116,16 @@ public class TsvSchema
         headerTypes.addAll(getUimaTypes(SPAN, true));
         headerTypes.addAll(getUimaTypes(CHAIN, false));
         headerTypes.addAll(getUimaTypes(RELATION, false));
-        
+
         for (Type type : headerTypes) {
             List<TsvColumn> typeColumns = getColumns(type);
             typeColumns.retainAll(aActiveColumns);
             if (typeColumns.isEmpty()) {
                 continue;
             }
-            
+
             // Ensure that relation source columns come last.
-            { 
+            {
                 TsvColumn relRefCol = null;
                 for (TsvColumn col : typeColumns) {
                     if (col.layerType.equals(RELATION)
@@ -133,19 +133,19 @@ public class TsvSchema
                         relRefCol = col;
                         continue;
                     }
-    
+
                     cols.add(col);
                 }
-                
+
                 if (relRefCol != null) {
                     cols.add(relRefCol);
                 }
             }
         }
-        
+
         return cols;
     }
-        
+
     public Set<Type> getUimaTypes()
     {
         Set<Type> types = new LinkedHashSet<>();
@@ -154,7 +154,7 @@ public class TsvSchema
         }
         return types;
     }
-    
+
     /**
      * @param aSlotFeatures
      *            if {@code true}, returns only types <b>with slot features</b>, otherwise returns
@@ -165,9 +165,9 @@ public class TsvSchema
         Set<Type> types = new LinkedHashSet<>();
         for (TsvColumn col : columns) {
             if (aLayerType.equals(col.layerType)) {
-                boolean hasSlotFeatures = columns.stream().anyMatch(c -> 
-                        c.uimaType.equals(col.uimaType) &&
-                        (SLOT_ROLE.equals(c.featureType) || SLOT_TARGET.equals(c.featureType)));
+                boolean hasSlotFeatures = columns.stream().anyMatch(c -> c.uimaType
+                        .equals(col.uimaType)
+                        && (SLOT_ROLE.equals(c.featureType) || SLOT_TARGET.equals(c.featureType)));
 
                 if (hasSlotFeatures == aSlotFeatures) {
                     types.add(col.uimaType);
@@ -197,7 +197,7 @@ public class TsvSchema
     {
         chainHeadTypes.add(aType);
     }
-    
+
     public Set<Type> getChainHeadTypes()
     {
         return chainHeadTypes;
@@ -215,10 +215,8 @@ public class TsvSchema
     public Type getEffectiveType(FeatureStructure aFS)
     {
         TypeSystem typeSystem = aFS.getCAS().getTypeSystem();
-        
+
         return effectiveTypes.computeIfAbsent(aFS.getType(), type -> getUimaTypes().stream()
-                .filter(t -> typeSystem.subsumes(t, type))
-                .findFirst()
-                .orElse(aFS.getType()));
+                .filter(t -> typeSystem.subsumes(t, type)).findFirst().orElse(aFS.getType()));
     }
 }

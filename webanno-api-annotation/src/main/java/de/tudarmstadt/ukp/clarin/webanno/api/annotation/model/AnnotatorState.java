@@ -37,7 +37,7 @@ public interface AnnotatorState
     extends Serializable, AnnotatorViewState, AnnotatorDocumentNavigation
 {
     void reset();
-    
+
     /**
      * Get the timestamp when the annotation document was last changed on this.
      * 
@@ -46,9 +46,9 @@ public interface AnnotatorState
     Optional<Long> getAnnotationDocumentTimestamp();
 
     /**
-     * Set the timestamp when the annotation document was last changed on this. This value must
-     * be set explicitly whenever the annotation document is loaded by the editor. It can be used
-     * to detect modifications to the file on disk which might make it incompatible with the current
+     * Set the timestamp when the annotation document was last changed on this. This value must be
+     * set explicitly whenever the annotation document is loaded by the editor. It can be used to
+     * detect modifications to the file on disk which might make it incompatible with the current
      * state of the annotation editor (in particular it might invalidate the VIDs).
      */
     void setAnnotationDocumentTimestamp(long aTimeStamp);
@@ -86,7 +86,7 @@ public interface AnnotatorState
     // REC: would be very nice if we didn't need the mode - the behaviors specific to annotation,
     // curation, automation, correction, etc. should be local to the respective modules / pages
     Mode getMode();
-    
+
     // ---------------------------------------------------------------------------------------------
     // Remembered feature values
     //
@@ -115,7 +115,7 @@ public interface AnnotatorState
     User getUser();
 
     void setUser(User aUser);
-    
+
     /**
      * User is viewing other people's work (read-only), but not as Curation User
      */
@@ -128,13 +128,13 @@ public interface AnnotatorState
     Project getProject();
 
     void setProject(Project aProject);
-    
+
     /**
-     * Set whether the user should be allowed to switch projects in the annotation editor
-     * "open documents" dialog.
+     * Set whether the user should be allowed to switch projects in the annotation editor "open
+     * documents" dialog.
      */
     void setProjectLocked(boolean aFlag);
-    
+
     boolean isProjectLocked();
 
     // REC: we cache the constraints when a document is opened because parsing them takes some time
@@ -150,7 +150,7 @@ public interface AnnotatorState
 
     /**
      * Mark a slot in the given feature state as armed. Note that this feature state does not
-     * necessarily belong to the feature states for the annotation detail panel (cf. 
+     * necessarily belong to the feature states for the annotation detail panel (cf.
      * {@link #getFeatureStates()}) but may belong to some other feature editor elsewhere in the UI.
      */
     void setArmedSlot(FeatureState aState, int aIndex);
@@ -174,16 +174,17 @@ public interface AnnotatorState
     void setPreferences(AnnotationPreference aPreferences);
 
     /**
-     * Set all layers in the project, including hidden layers, non-enabled layers, etc. This is
-     * just a convenience method to quickly access layer information and to avoid having to access
-     * the database every time during rendering to get this information.
+     * Set all layers in the project, including hidden layers, non-enabled layers, etc. This is just
+     * a convenience method to quickly access layer information and to avoid having to access the
+     * database every time during rendering to get this information.
      * 
-     * @param aLayers all layers.
+     * @param aLayers
+     *            all layers.
      */
     void setAllAnnotationLayers(List<AnnotationLayer> aLayers);
 
     List<AnnotationLayer> getAllAnnotationLayers();
-    
+
     /**
      * Get the annotation layers which are usable by the annotator (i.e. enabled, visible according
      * to the user preferences , etc.)
@@ -196,7 +197,8 @@ public interface AnnotatorState
      * Set the annotation layers which are usable by the annotator (i.e. enabled, visible according
      * to the user preferences , etc.)
      * 
-     * @param aAnnotationLayers usable layers
+     * @param aAnnotationLayers
+     *            usable layers
      */
     void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers);
 
@@ -206,12 +208,12 @@ public interface AnnotatorState
     List<FeatureState> getFeatureStates();
 
     FeatureState getFeatureState(AnnotationFeature aFeature);
-    
+
     // ---------------------------------------------------------------------------------------------
     // Meta data
     // ---------------------------------------------------------------------------------------------
-    
+
     <M extends Serializable> M getMetaData(final AnnotatorStateMetaDataKey<M> aKey);
-    
+
     <M extends Serializable> void setMetaData(final AnnotatorStateMetaDataKey<M> aKey, M aMetadata);
 }

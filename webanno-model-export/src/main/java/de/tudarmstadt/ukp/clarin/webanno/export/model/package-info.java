@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 /**
- * Provides classes for TagSet exporting data models.
- * The content of these data models are populated from the persistence data model selecting
- * only needed attributes.
+ * Provides classes for TagSet exporting data models. The content of these data models are populated
+ * from the persistence data model selecting only needed attributes.
  */
 package de.tudarmstadt.ukp.clarin.webanno.export.model;

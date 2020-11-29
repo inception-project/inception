@@ -29,12 +29,12 @@ public enum LinkMode
      * No link at all - primitive feature.
      */
     NONE("none"),
-    
+
     /**
      * Simple link.
      */
     SIMPLE("simple"),
-    
+
     /**
      * Link with role.
      */

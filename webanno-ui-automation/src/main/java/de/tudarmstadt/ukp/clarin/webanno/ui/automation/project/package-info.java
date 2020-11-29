@@ -17,5 +17,5 @@
  */
 /**
  * Detail sepec of Automation components to be pluged in the project settings page
-  */
+ */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;

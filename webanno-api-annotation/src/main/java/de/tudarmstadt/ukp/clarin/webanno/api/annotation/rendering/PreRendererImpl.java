@@ -41,7 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-public class PreRendererImpl implements PreRenderer
+public class PreRendererImpl
+    implements PreRenderer
 {
     private final AnnotationSchemaService annotationService;
     private final LayerSupportRegistry layerSupportRegistry;
@@ -55,45 +56,41 @@ public class PreRendererImpl implements PreRenderer
     {
         layerSupportRegistry = aLayerSupportRegistry;
         annotationService = aAnnotationService;
-        
-        supportedFeaturesCache = Caffeine.newBuilder()
-                .expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024)
-                .build(annotationService::listSupportedFeatures);
-        allFeaturesCache = Caffeine.newBuilder()
-                .expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024)
-                .build(annotationService::listAnnotationFeature);
+
+        supportedFeaturesCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
+                .maximumSize(10 * 1024).build(annotationService::listSupportedFeatures);
+        allFeaturesCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
+                .maximumSize(10 * 1024).build(annotationService::listAnnotationFeature);
     }
-    
+
     @Override
     public void render(VDocument aResponse, int windowBegin, int windowEnd, CAS aCas,
             List<AnnotationLayer> aLayers)
     {
         Validate.notNull(aCas, "CAS cannot be null");
-        
+
         if (aLayers.isEmpty()) {
             return;
         }
-        
-        // The project for all layers must be the same, so we just fetch the project from the 
+
+        // The project for all layers must be the same, so we just fetch the project from the
         // first layer
         Project project = aLayers.get(0).getProject();
-        
+
         // Listing the features once is faster than repeatedly hitting the DB to list features for
         // every layer.
         List<AnnotationFeature> supportedFeatures = supportedFeaturesCache.get(project);
         List<AnnotationFeature> allFeatures = allFeaturesCache.get(project);
-        
+
         // Render (custom) layers
         for (AnnotationLayer layer : aLayers) {
-            List<AnnotationFeature> layerSupportedFeatures = supportedFeatures.stream()
-                    .filter(feature -> feature.getLayer().equals(layer))
+            List<AnnotationFeature> layerSupportedFeatures = supportedFeatures.stream() //
+                    .filter(feature -> feature.getLayer().equals(layer)) //
                     .collect(toList());
-            List<AnnotationFeature> layerAllFeatures = allFeatures.stream()
-                    .filter(feature -> feature.getLayer().equals(layer))
+            List<AnnotationFeature> layerAllFeatures = allFeatures.stream() //
+                    .filter(feature -> feature.getLayer().equals(layer)) //
                     .collect(toList());
-            // We need to pass in *all* the annotation features here because we also to that in 
+            // We need to pass in *all* the annotation features here because we also to that in
             // other places where we create renderers - and the set of features must always be
             // the same because otherwise the IDs of armed slots would be inconsistent
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
@@ -105,7 +102,7 @@ public class PreRendererImpl implements PreRenderer
     @EventListener
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
     {
-        supportedFeaturesCache.asMap().keySet().removeIf(
-            key -> Objects.equals(key.getId(), aEvent.getProject().getId()));
+        supportedFeaturesCache.asMap().keySet()
+                .removeIf(key -> Objects.equals(key.getId(), aEvent.getProject().getId()));
     }
 }

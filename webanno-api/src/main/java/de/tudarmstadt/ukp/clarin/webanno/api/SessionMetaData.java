@@ -32,14 +32,14 @@ public final class SessionMetaData
     };
 
     /**
-     * Holds parameters that were supplied at login time via an URL fragment. The login page
-     * stores them here because they cannot be safely forwarded via the redirection URL.
+     * Holds parameters that were supplied at login time via an URL fragment. The login page stores
+     * them here because they cannot be safely forwarded via the redirection URL.
      */
-    public static final MetaDataKey<LinkedHashMap<String, StringValue>> LOGIN_URL_FRAGMENT_PARAMS = 
+    public static final MetaDataKey<LinkedHashMap<String, StringValue>> LOGIN_URL_FRAGMENT_PARAMS = //
             new MetaDataKey<LinkedHashMap<String, StringValue>>()
-    {
-        private static final long serialVersionUID = 1L;
-    };
+            {
+                private static final long serialVersionUID = 1L;
+            };
 
     private SessionMetaData()
     {

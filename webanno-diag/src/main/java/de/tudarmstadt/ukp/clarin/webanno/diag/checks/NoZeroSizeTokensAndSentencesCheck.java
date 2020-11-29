@@ -36,23 +36,23 @@ public class NoZeroSizeTokensAndSentencesCheck
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         boolean ok = true;
-        
+
         for (AnnotationFS t : selectTokens(aCas)) {
             if (t.getBegin() >= t.getEnd()) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                        "Token with illegal span: %s", t));
+                aMessages.add(
+                        new LogMessage(this, LogLevel.ERROR, "Token with illegal span: %s", t));
                 ok = false;
             }
         }
 
         for (AnnotationFS s : selectSentences(aCas)) {
             if (s.getBegin() >= s.getEnd()) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                        "Sentence with illegal span: %s", s));
+                aMessages.add(
+                        new LogMessage(this, LogLevel.ERROR, "Sentence with illegal span: %s", s));
                 ok = false;
             }
         }
-        
+
         return ok;
     }
 }

@@ -40,7 +40,7 @@ public class UpgradeCasRepair
     implements Repair
 {
     private Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private @Autowired AnnotationSchemaService annotationService;
 
     @Override

@@ -31,29 +31,30 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 @Order(100)
-public class AnnotationPageMenuItem implements MenuItem
+public class AnnotationPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
-    
+
     @Override
     public String getPath()
     {
         return "/annotation";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/categories.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Annotation";
     }
-    
+
     /**
      * Only project admins and annotators can see this page
      */
@@ -63,7 +64,7 @@ public class AnnotationPageMenuItem implements MenuItem
         return annotationEnabeled(projectService, userRepo.getCurrentUser(),
                 WebAnnoConst.PROJECT_TYPE_ANNOTATION);
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

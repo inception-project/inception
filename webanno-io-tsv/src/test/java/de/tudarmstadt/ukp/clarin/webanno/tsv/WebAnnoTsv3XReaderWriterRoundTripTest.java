@@ -95,20 +95,21 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
             local = TypeSystemDescriptionFactory.createTypeSystemDescriptionFromPath(
                     "src/test/resources/desc/type/webannoTestTypes.xml");
         }
-       
+
         TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
-        
+
         String targetFolder = "target/test-output/WebAnnoTsv3XReaderWriterRoundTripTest/"
                 + referenceFolder.getName();
-        
+
+        // @formatter:off
         CollectionReaderDescription reader = createReaderDescription(WebannoTsv3XReader.class,
                 merged,
                 WebannoTsv3XReader.PARAM_SOURCE_LOCATION, referenceFolder,
                 WebannoTsv3XReader.PARAM_PATTERNS, "reference.tsv");
-        
+
         AnalysisEngineDescription checker = createEngineDescription(
                 DKProCoreConventionsChecker.class);
-        
+
         AnalysisEngineDescription tsvWriter = createEngineDescription(WebannoTsv3XWriter.class,
                 merged,
                 WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
@@ -120,9 +121,10 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
                 XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
                 XmiWriter.PARAM_STRIP_EXTENSION, true,
                 XmiWriter.PARAM_OVERWRITE, true);
+        // @formatter:on
 
         SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);
-        
+
         String referenceTsv = FileUtils.readFileToString(new File(referenceFolder, "reference.tsv"),
                 "UTF-8");
 
@@ -146,7 +148,7 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
         assertEquals(referenceTsv, actualTsv);
         // assertEquals(referenceXmi, actualXmi);
     }
-    
+
     public static class DKProCoreConventionsChecker
         extends JCasAnnotator_ImplBase
     {
@@ -157,17 +159,17 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
                 Token t = selectSingleAt(aJCas, Token.class, lemma.getBegin(), lemma.getEnd());
                 assert t.getLemma() == lemma;
             }
-            
+
             for (Stem stem : select(aJCas, Stem.class)) {
                 Token t = selectSingleAt(aJCas, Token.class, stem.getBegin(), stem.getEnd());
                 assert t.getStem() == stem;
             }
-            
+
             for (MorphologicalFeatures morph : select(aJCas, MorphologicalFeatures.class)) {
                 Token t = selectSingleAt(aJCas, Token.class, morph.getBegin(), morph.getEnd());
                 assert t.getMorph() == morph;
             }
-            
+
             for (POS pos : select(aJCas, POS.class)) {
                 Token t = selectSingleAt(aJCas, Token.class, pos.getBegin(), pos.getEnd());
                 assert t.getPos() == pos;
@@ -179,7 +181,7 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
             }
         }
     }
-    
+
     @Rule
     public DkproTestContext testContext = new DkproTestContext();
 }

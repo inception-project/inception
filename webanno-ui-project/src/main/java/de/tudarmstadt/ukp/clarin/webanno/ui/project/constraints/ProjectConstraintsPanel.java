@@ -76,20 +76,20 @@ public class ProjectConstraintsPanel
 
     private SelectionForm selectionForm;
     private DetailForm detailForm;
-    
+
     private IModel<ConstraintSet> selectedConstraints;
 
     public ProjectConstraintsPanel(String id, IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
-        
+
         selectedConstraints = Model.of();
-        
+
         add(selectionForm = new SelectionForm("selectionForm", selectedConstraints));
         add(detailForm = new DetailForm("detailForm", selectedConstraints));
         add(new ImportForm("importForm"));
     }
-    
+
     @Override
     protected void onModelChanged()
     {
@@ -106,8 +106,7 @@ public class ProjectConstraintsPanel
         {
             super(aId, aModel);
 
-            LoadableDetachableModel<List<ConstraintSet>> rulesets = 
-                    new LoadableDetachableModel<List<ConstraintSet>>()
+            LoadableDetachableModel<List<ConstraintSet>> rulesets = new LoadableDetachableModel<List<ConstraintSet>>()
             {
                 private static final long serialVersionUID = 1L;
 
@@ -118,16 +117,17 @@ public class ProjectConstraintsPanel
                             .listConstraintSets(ProjectConstraintsPanel.this.getModelObject());
                 }
             };
-            
-            add(new ListChoice<ConstraintSet>("ruleset", SelectionForm.this.getModel(), rulesets) {
+
+            add(new ListChoice<ConstraintSet>("ruleset", SelectionForm.this.getModel(), rulesets)
+            {
                 private static final long serialVersionUID = 1L;
-                
+
                 {
                     setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
                     add(new FormComponentUpdatingBehavior());
                 }
-                
+
                 @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
@@ -143,21 +143,23 @@ public class ProjectConstraintsPanel
         private static final long serialVersionUID = 8696334789027911595L;
 
         private TextArea<String> script;
-        
+
         public DetailForm(String aId, IModel<ConstraintSet> aModel)
         {
             super(aId, new CompoundPropertyModel<>(aModel));
-            
+
             setOutputMarkupPlaceholderTag(true);
-            
+
             TextField<String> constraintNameTextField = new TextField<>("name");
             add(constraintNameTextField);
-            
-            add(script = new TextArea<>("script", new LoadableDetachableModel<String>() {
+
+            add(script = new TextArea<>("script", new LoadableDetachableModel<String>()
+            {
                 private static final long serialVersionUID = 1L;
 
                 @Override
-                protected String load() {
+                protected String load()
+                {
                     try {
                         return constraintsService
                                 .readConstrainSet(DetailForm.this.getModelObject());
@@ -175,7 +177,7 @@ public class ProjectConstraintsPanel
             script.setOutputMarkupId(true);
             // Script not editable - if we remove this flag, then the script area will not update
             // when switching set selection
-            // script.setEnabled(false); 
+            // script.setEnabled(false);
 
             final IModel<String> exportFilenameModel = new Model<>();
             final IModel<File> exportFileModel = new LoadableDetachableModel<File>()
@@ -189,19 +191,20 @@ public class ProjectConstraintsPanel
                         // Use the name of the constraints set instead of the ID under which the
                         // file is saved internally.
                         exportFilenameModel.setObject(DetailForm.this.getModelObject().getName());
-                        return constraintsService.exportConstraintAsFile(DetailForm.this
-                                .getModelObject());
+                        return constraintsService
+                                .exportConstraintAsFile(DetailForm.this.getModelObject());
                     }
                     catch (IOException e) {
                         throw new WicketRuntimeException(e);
                     }
                 }
-            }; 
+            };
             // The file that is returned by exportConstraintAsFile is the internal constraints
             // file - it must NOT be deleted after the export is complete!
             add(new DownloadLink("export", exportFileModel, exportFilenameModel));
-            
-            Button deleteButton = new Button("delete") {
+
+            Button deleteButton = new Button("delete")
+            {
 
                 private static final long serialVersionUID = -1195565364207114557L;
 
@@ -211,12 +214,12 @@ public class ProjectConstraintsPanel
                     constraintsService.removeConstraintSet(DetailForm.this.getModelObject());
                     DetailForm.this.setModelObject(null);
                 }
-                
+
                 @Override
                 protected void onConfigure()
                 {
                     super.onConfigure();
-                    
+
                     setVisible(DetailForm.this.getModelObject().getId() != null);
                 }
             };
@@ -225,32 +228,33 @@ public class ProjectConstraintsPanel
                     "if(!confirm('Do you really want to delete this Constraints rule?')) return false;"));
             add(deleteButton);
 
-            add(new Button("save") {
+            add(new Button("save")
+            {
                 private static final long serialVersionUID = 1L;
-                
+
                 @Override
                 public void onSubmit()
                 {
                     ConstraintSet constraintSet = DetailForm.this.getModelObject();
-                    
+
                     try {
                         ConstraintsParser.parse(script.getModelObject());
-                    }                 
+                    }
                     catch (ParseException e) {
                         error("Unable to parse constraints file [" + constraintSet.getName() + "]"
                                 + ExceptionUtils.getRootCauseMessage(e));
                         return;
                     }
-     
+
                     constraintsService.createOrUpdateConstraintSet(constraintSet);
-                    
+
                     // Persist rules
                     try (InputStream rules = toInputStream(script.getModelObject(), UTF_8)) {
                         constraintsService.writeConstraintSet(constraintSet, rules);
- 
+
                         selectionForm.setModelObject(constraintSet);
                         detailForm.setModelObject(constraintSet);
-                        
+
                         success("Successfully updated constraints file [" + constraintSet.getName()
                                 + "]");
                     }
@@ -274,16 +278,17 @@ public class ProjectConstraintsPanel
                     }
                 }
             });
-            
-            add(new Button("cancel") {
+
+            add(new Button("cancel")
+            {
                 private static final long serialVersionUID = 1L;
-                
+
                 {
                     // Avoid saving data
                     setDefaultFormProcessing(false);
                     setVisible(true);
                 }
-                
+
                 @Override
                 public void onSubmit()
                 {
@@ -291,29 +296,29 @@ public class ProjectConstraintsPanel
                 }
             });
         }
-        
+
         @Override
         protected void onConfigure()
         {
             super.onConfigure();
-            
+
             setVisible(getModelObject() != null);
         }
     }
-    
+
     public class ImportForm
         extends Form<Void>
     {
         private static final long serialVersionUID = 8121850699963791359L;
-        
+
         private BootstrapFileInputField uploads;
-        
+
         public ImportForm(String aId)
         {
             super(aId);
 
             add(new LambdaAjaxLink("create", this::createAction));
-            
+
             add(uploads = new BootstrapFileInputField("uploads"));
             uploads.getConfig().showPreview(false);
             uploads.getConfig().showUpload(false);
@@ -322,24 +327,24 @@ public class ProjectConstraintsPanel
 
             add(new LambdaAjaxButton<Void>("import", this::importAction));
         }
-        
+
         private void createAction(AjaxRequestTarget aTarget)
         {
             String constraintFilename = "New constraints set";
             String content = "/* Constraint rules set created by "
                     + userService.getCurrentUsername() + " */";
-            
+
             ConstraintSet constraintSet = createConstraintsSet(constraintFilename);
 
             aTarget.addChildren(getPage(), IFeedback.class);
             aTarget.add(selectionForm);
             aTarget.add(detailForm);
             aTarget.focusComponent(detailForm.script);
-            
+
             // Persist rules
             try (InputStream rules = toInputStream(content, UTF_8)) {
                 constraintsService.writeConstraintSet(constraintSet, rules);
-                
+
                 selectionForm.setModelObject(constraintSet);
                 detailForm.setModelObject(constraintSet);
 
@@ -351,7 +356,7 @@ public class ProjectConstraintsPanel
                         + ExceptionUtils.getRootCauseMessage(e));
             }
         }
-        
+
         private void importAction(AjaxRequestTarget aTarget, Form<Void> aForm)
         {
             Project project = ProjectConstraintsPanel.this.getModelObject();
@@ -360,7 +365,7 @@ public class ProjectConstraintsPanel
 
             selectionForm.setModelObject(null);
             detailForm.setModelObject(null);
-            
+
             aTarget.addChildren(getPage(), IFeedback.class);
             aTarget.add(selectionForm);
             aTarget.add(detailForm);
@@ -377,7 +382,7 @@ public class ProjectConstraintsPanel
 
             nextFile: for (FileUpload constraintRulesFile : uploadedFiles) {
                 String constraintFilename = constraintRulesFile.getClientFileName();
-                
+
                 // Handling Windows BOM
                 try (BOMInputStream bomInputStream = new BOMInputStream(
                         constraintRulesFile.getInputStream(), false)) {
@@ -398,12 +403,12 @@ public class ProjectConstraintsPanel
                 try (InputStream rules = new BOMInputStream(constraintRulesFile.getInputStream(),
                         false)) {
                     ConstraintSet constraintSet = createConstraintsSet(constraintFilename);
-                    
+
                     constraintsService.writeConstraintSet(constraintSet, rules);
-                    
+
                     selectionForm.setModelObject(constraintSet);
                     detailForm.setModelObject(constraintSet);
-                    
+
                     success("Successfully imported constraints file [" + constraintFilename + "]");
                 }
                 catch (IOException e) {
@@ -413,25 +418,24 @@ public class ProjectConstraintsPanel
                 }
             }
         }
-        
+
         private ConstraintSet createConstraintsSet(String constraintFilename)
         {
             Project project = ProjectConstraintsPanel.this.getModelObject();
-            
+
             ConstraintSet constraintSet = new ConstraintSet();
             constraintSet.setProject(ProjectConstraintsPanel.this.getModelObject());
 
-            //Check if ConstraintSet already exists or not
+            // Check if ConstraintSet already exists or not
             if (constraintsService.existConstraintSet(constraintFilename, project)) {
-                constraintFilename = copyConstraintName(constraintsService,
-                        constraintFilename);
+                constraintFilename = copyConstraintName(constraintsService, constraintFilename);
             }
             constraintSet.setName(constraintFilename);
             constraintsService.createOrUpdateConstraintSet(constraintSet);
-            
+
             return constraintSet;
         }
-        
+
         /**
          * Checks if name exists, if yes, creates an alternate name for ConstraintSet
          */

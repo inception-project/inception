@@ -26,7 +26,7 @@ public class RelationLayerTraits
     implements Serializable, ColoringRulesTrait
 {
     private static final long serialVersionUID = 3461537626173105320L;
-    
+
     private ColoringRules coloringRules = new ColoringRules();
 
     public RelationLayerTraits()

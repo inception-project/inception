@@ -29,12 +29,12 @@ public enum ProjectState
      * All annotations of all documents are in state new.
      */
     NEW("NEW", "black"),
-    
+
     /**
      * At least one annotation document has been created for the document
      */
     ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "black"),
-    
+
     /**
      * All annotations have marked their annotation document as finished
      * 
@@ -45,17 +45,17 @@ public enum ProjectState
      *             statically in the source document.
      */
     ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green"),
-    
+
     /**
      * All documents have been curated
      */
     CURATION_FINISHED("CURATION_FINISHED", "red"),
-    
+
     /**
      * Curation on at least one document has started.
      */
     CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue");
-    
+
     private final String id;
     private final String color;
 
@@ -64,7 +64,7 @@ public enum ProjectState
         id = aId;
         color = aColor;
     }
-    
+
     public String getName()
     {
         return getId();
@@ -75,12 +75,12 @@ public enum ProjectState
     {
         return id;
     }
-    
+
     public String getColor()
     {
         return color;
     }
-    
+
     @Override
     public String toString()
     {

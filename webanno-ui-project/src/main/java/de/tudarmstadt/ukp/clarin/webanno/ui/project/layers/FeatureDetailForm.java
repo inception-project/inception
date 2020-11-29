@@ -76,7 +76,7 @@ public class FeatureDetailForm
     private static final String MID_TRAITS = "traits";
     private static final String FIRST = "first";
     private static final String NEXT = "next";
-    
+
     private static final long serialVersionUID = -1L;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
@@ -84,7 +84,7 @@ public class FeatureDetailForm
     private @SpringBean DocumentService documentService;
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
-    
+
     private final DropDownChoice<FeatureType> featureType;
     private final CheckBox required;
     private final WebMarkupContainer traitsContainer;
@@ -96,10 +96,10 @@ public class FeatureDetailForm
         super(id, CompoundPropertyModel.of(aFeature));
 
         setOutputMarkupPlaceholderTag(true);
-        
+
         add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupId(true);
-        
+
         add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
         uiName = new TextField<>("uiName");
         uiName.setRequired(true);
@@ -110,8 +110,7 @@ public class FeatureDetailForm
         add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("hideUnconstraintFeature").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("remember").setOutputMarkupPlaceholderTag(true));
-        add(new CheckBox("includeInHover")
-                .setOutputMarkupPlaceholderTag(true)
+        add(new CheckBox("includeInHover").setOutputMarkupPlaceholderTag(true)
                 .add(LambdaBehavior.visibleWhen(() -> {
                     String layertype = FeatureDetailForm.this.getModelObject().getLayer().getType();
                     // Currently not configurable for chains or relations
@@ -130,7 +129,8 @@ public class FeatureDetailForm
         }));
         add(required);
 
-        add(featureType = new BootstrapSelect<FeatureType>("type") {
+        add(featureType = new BootstrapSelect<FeatureType>("type")
+        {
             private static final long serialVersionUID = 9029205407108101183L;
 
             @Override
@@ -138,8 +138,7 @@ public class FeatureDetailForm
             {
                 // If the feature type has changed, we need to set up a new traits editor
                 Component newTraits;
-                if (FeatureDetailForm.this.getModelObject() != null
-                        && getModelObject() != null) {
+                if (FeatureDetailForm.this.getModelObject() != null && getModelObject() != null) {
                     FeatureSupport<?> fs = featureSupportRegistry
                             .getFeatureSupport(getModelObject().getFeatureSupportId());
                     newTraits = fs.createTraitsEditor(MID_TRAITS,
@@ -155,9 +154,9 @@ public class FeatureDetailForm
         featureType.setRequired(true);
         featureType.setNullValid(false);
         featureType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-        featureType.setModel(LambdaModelAdapter.of(
-            () -> featureSupportRegistry.getFeatureType(getModelObject()), 
-            (v) -> getModelObject().setType(v.getName())));
+        featureType.setModel(
+                LambdaModelAdapter.of(() -> featureSupportRegistry.getFeatureType(getModelObject()),
+                        (v) -> getModelObject().setType(v.getName())));
         featureType.add(LambdaBehavior.onConfigure(_this -> {
             if (isNull(getModelObject().getId())) {
                 featureType.setEnabled(true);
@@ -166,8 +165,8 @@ public class FeatureDetailForm
             }
             else {
                 featureType.setEnabled(false);
-                featureType.setChoices(() -> featureSupportRegistry.getAllTypes(
-                        getModelObject().getLayer()));
+                featureType.setChoices(
+                        () -> featureSupportRegistry.getAllTypes(getModelObject().getLayer()));
             }
         }));
         featureType.add(new AjaxFormComponentUpdatingBehavior("change")
@@ -186,18 +185,18 @@ public class FeatureDetailForm
         // override onSubmit in its nested form and store the traits before
         // we clear the currently selected feature.
         add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
-        add(new LambdaAjaxButton<>("delete", this::actionDelete).add(
-                visibleWhen(() -> !isNull(getModelObject().getId()) && 
-                        !getModelObject().getLayer().isBuiltIn())));
+        add(new LambdaAjaxButton<>("delete", this::actionDelete)
+                .add(visibleWhen(() -> !isNull(getModelObject().getId())
+                        && !getModelObject().getLayer().isBuiltIn())));
         // Set default form processing to false to avoid saving data
         add(new LambdaButton("cancel", this::actionCancel).setDefaultFormProcessing(false));
-        
+
         confirmationDialog = new ConfirmationDialog("confirmationDialog");
         confirmationDialog
                 .setTitleModel(new StringResourceModel("DeleteFeatureDialog.title", this));
         add(confirmationDialog);
     }
-    
+
     public Component getInitialFocusComponent()
     {
         return uiName;
@@ -219,23 +218,22 @@ public class FeatureDetailForm
 
         setVisible(getModelObject() != null);
     }
-    
+
     private void actionCancel()
     {
         // cancel selection of feature list
         setModelObject(null);
     }
-    
+
     private void actionDelete(AjaxRequestTarget aTarget, Form aForm)
     {
-        confirmationDialog
-                .setContentModel(new StringResourceModel("DeleteFeatureDialog.text", this)
+        confirmationDialog.setContentModel(new StringResourceModel("DeleteFeatureDialog.text", this)
                 .setParameters(escapeMarkup(getModelObject().getName())));
         confirmationDialog.show(aTarget);
-        
+
         confirmationDialog.setConfirmAction((_target) -> {
             annotationService.removeAnnotationFeature(getModelObject());
-            
+
             Project project = getModelObject().getProject();
 
             setModelObject(null);
@@ -255,7 +253,7 @@ public class FeatureDetailForm
                         // If there is no CAS file, we do not have to upgrade it. Ignoring.
                     }
                 }
-                
+
                 // Also upgrade the curation CAS if it exists
                 try {
                     casStorageService.upgradeCas(doc, CURATION_USER);
@@ -268,11 +266,11 @@ public class FeatureDetailForm
             // Trigger LayerConfigurationChangedEvent
             applicationEventPublisherHolder.get()
                     .publishEvent(new LayerConfigurationChangedEvent(this, project));
-            
+
             _target.add(getPage());
         });
     }
-    
+
     private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
     {
         AnnotationFeature feature = getModelObject();
@@ -296,8 +294,7 @@ public class FeatureDetailForm
         }
         // Checking if feature name doesn't start with a number or underscore
         // And only uses alphanumeric characters
-        if (StringUtils.isNumeric(name.substring(0, 1))
-                || name.substring(0, 1).equals("_")
+        if (StringUtils.isNumeric(name.substring(0, 1)) || name.substring(0, 1).equals("_")
                 || !StringUtils.isAlphanumeric(name.replace("_", ""))) {
             error("Feature names must start with a letter and consist only of "
                     + "letters, digits, or underscores.");
@@ -307,8 +304,7 @@ public class FeatureDetailForm
             feature.setLayer(getModelObject().getLayer());
             feature.setProject(getModelObject().getLayer().getProject());
 
-            if (annotationService.existsFeature(feature.getName(),
-                    feature.getLayer())) {
+            if (annotationService.existsFeature(feature.getName(), feature.getLayer())) {
                 error("This feature is already added for this layer!");
                 return;
             }
@@ -332,15 +328,15 @@ public class FeatureDetailForm
 
         // Clear currently selected feature / feature details
         setModelObject(null);
-        
+
         success("Settings for feature [" + feature.getUiName() + "] saved.");
         aTarget.addChildren(getPage(), IFeedback.class);
-        
+
         aTarget.add(findParent(ProjectLayersPanel.class).get(MID_FEATURE_DETAIL_FORM));
         aTarget.add(findParent(ProjectLayersPanel.class).get(MID_FEATURE_SELECTION_FORM));
 
         // Trigger LayerConfigurationChangedEvent
-        applicationEventPublisherHolder.get().publishEvent(
-                new LayerConfigurationChangedEvent(this, feature.getProject()));
+        applicationEventPublisherHolder.get()
+                .publishEvent(new LayerConfigurationChangedEvent(this, feature.getProject()));
     }
 }

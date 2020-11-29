@@ -39,11 +39,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 public class ConstraintsVerifierTest
 {
     @Test
-    public void test()
-        throws Exception
+    public void test() throws Exception
     {
         ParsedConstraints constraints = parse(new File("src/test/resources/rules/6.rules"));
-        
+
         // Get imports
         Map<String, String> imports = new LinkedHashMap<>();
         imports = constraints.getImports();

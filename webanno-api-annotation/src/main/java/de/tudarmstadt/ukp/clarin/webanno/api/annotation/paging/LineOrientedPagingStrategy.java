@@ -40,31 +40,30 @@ public class LineOrientedPagingStrategy
     {
         // We need to preserve all tokens so we can add a +1 for the line breaks of empty lines.
         String[] lines = splitPreserveAllTokens(aCas.getDocumentText(), '\n');
-        
+
         List<Unit> units = new ArrayList<>();
         int beginOffset = 0;
         for (int i = 0; i < Math.min(lines.length, aLastIndex); i++) {
-            
+
             if (i >= aFirstIndex) {
                 units.add(new Unit(i + 1, beginOffset, beginOffset + lines[i].length()));
             }
-            
+
             // The +1 below accounts for the line break which is not included in the token
             beginOffset += lines[i].length() + 1;
         }
-        
+
         return units;
     }
-    
+
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
         Label label = new Label(aId, () -> {
             AnnotatorState state = aModel.getObject();
-            return String.format("%d-%d / %d lines [doc %d / %d]",
-                    state.getFirstVisibleUnitIndex(), state.getLastVisibleUnitIndex(),
-                    state.getUnitCount(), state.getDocumentIndex() + 1,
-                    state.getNumberOfDocuments());
+            return String.format("%d-%d / %d lines [doc %d / %d]", state.getFirstVisibleUnitIndex(),
+                    state.getLastVisibleUnitIndex(), state.getUnitCount(),
+                    state.getDocumentIndex() + 1, state.getNumberOfDocuments());
         });
         label.setOutputMarkupPlaceholderTag(true);
         return label;

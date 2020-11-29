@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
-public enum AgreementReportExportFormat {
-    CSV(".csv"),
-    DEBUG(".txt");
-    
+public enum AgreementReportExportFormat
+{
+    CSV(".csv"), DEBUG(".txt");
+
     private final String extension;
-    
+
     AgreementReportExportFormat(String aExtension)
     {
         extension = aExtension;

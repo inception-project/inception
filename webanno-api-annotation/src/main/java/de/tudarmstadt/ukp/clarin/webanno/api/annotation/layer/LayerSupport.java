@@ -52,11 +52,10 @@ public interface LayerSupport<A extends TypeAdapter, T>
     boolean accepts(AnnotationLayer aLayer);
 
     /**
-     * Get the layer type for the given annotation layer. If the current layer support does
-     * not provide any layer type for the given layer, an empty value is returned. As we
-     * usually use {@link LayerType} objects in layer type selection lists, this method is
-     * helpful in obtaining the selected value of such a list from the {@link AnnotationLayer}
-     * object being edited.
+     * Get the layer type for the given annotation layer. If the current layer support does not
+     * provide any layer type for the given layer, an empty value is returned. As we usually use
+     * {@link LayerType} objects in layer type selection lists, this method is helpful in obtaining
+     * the selected value of such a list from the {@link AnnotationLayer} object being edited.
      * 
      * @param aLayer
      *            a layer definition.
@@ -64,10 +63,10 @@ public interface LayerSupport<A extends TypeAdapter, T>
      */
     default Optional<LayerType> getLayerType(AnnotationLayer aLayer)
     {
-        return getSupportedLayerTypes().stream()
-                .filter(t -> t.getName().equals(aLayer.getType())).findFirst();
+        return getSupportedLayerTypes().stream().filter(t -> t.getName().equals(aLayer.getType()))
+                .findFirst();
     }
-        
+
     List<LayerType> getSupportedLayerTypes();
 
     /**
@@ -106,14 +105,13 @@ public interface LayerSupport<A extends TypeAdapter, T>
 
     Renderer createRenderer(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures);
-    
+
     /**
      * Returns a Wicket component to configure the specific traits of this layer type. Note that
-     * every {@link LayerSupport} has to return a <b>different class</b> here. So it is not
-     * possible to simple return a Wicket {@link Panel} here, but it must be a subclass of
-     * {@link Panel} used exclusively by the current {@link LayerSupport}. If this is not done,
-     * then the traits editor in the UI will not be correctly updated when switching between layer
-     * types!
+     * every {@link LayerSupport} has to return a <b>different class</b> here. So it is not possible
+     * to simple return a Wicket {@link Panel} here, but it must be a subclass of {@link Panel} used
+     * exclusively by the current {@link LayerSupport}. If this is not done, then the traits editor
+     * in the UI will not be correctly updated when switching between layer types!
      * 
      * @param aId
      *            a markup ID.
@@ -126,7 +124,7 @@ public interface LayerSupport<A extends TypeAdapter, T>
     {
         return new EmptyPanel(aId);
     }
-    
+
     default T createTraits()
     {
         return null;
@@ -135,8 +133,8 @@ public interface LayerSupport<A extends TypeAdapter, T>
     /**
      * Read the traits for the given {@link AnnotationLayer}. If traits are supported, then this
      * method must be overwritten. A typical implementation would read the traits from a JSON string
-     * stored in {@link AnnotationLayer#getTraits}, but it would also possible to load the
-     * traits from a database table.
+     * stored in {@link AnnotationLayer#getTraits}, but it would also possible to load the traits
+     * from a database table.
      * 
      * @param aLayer
      *            the layer whose traits should be obtained.
@@ -150,8 +148,8 @@ public interface LayerSupport<A extends TypeAdapter, T>
     /**
      * Write the traits for the given {@link AnnotationLayer}. If traits are supported, then this
      * method must be overwritten. A typical implementation would write the traits from to JSON
-     * string stored in {@link AnnotationLayer#setTraits}, but it would also possible to store
-     * the traits from a database table.
+     * string stored in {@link AnnotationLayer#setTraits}, but it would also possible to store the
+     * traits from a database table.
      * 
      * @param aLayer
      *            the layer whose traits should be written.
@@ -162,14 +160,14 @@ public interface LayerSupport<A extends TypeAdapter, T>
     {
         aLayer.setTraits(null);
     }
-    
+
     default IllegalArgumentException unsupportedLayerTypeException(AnnotationLayer aLayer)
     {
-        return new IllegalArgumentException("Unsupported type [" + aLayer.getType()
-                + "] on layer [" + aLayer.getName() + "]");
+        return new IllegalArgumentException(
+                "Unsupported type [" + aLayer.getType() + "] on layer [" + aLayer.getName() + "]");
     }
-    
+
     void setLayerSupportRegistry(LayerSupportRegistry aLayerSupportRegistry);
-    
+
     LayerSupportRegistry getLayerSupportRegistry();
 }

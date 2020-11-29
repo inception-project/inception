@@ -73,12 +73,12 @@ public class CreateSpanAnnotationRequest
     {
         return end;
     }
-    
+
     public Optional<CreateSpanAnnotationRequest> getOriginalRequest()
     {
         return Optional.ofNullable(originalRequest);
     }
-    
+
     public CreateSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
     {
         return new CreateSpanAnnotationRequest(this, document, username, cas, aBegin, aEnd);

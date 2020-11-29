@@ -32,7 +32,7 @@ public class WebAnnoTsv1FormatSupport
 {
     public static final String ID = "tsv";
     public static final String NAME = "WebAnno TSV v1 (WebAnno v1.x)";
-    
+
     @Override
     public String getId()
     {

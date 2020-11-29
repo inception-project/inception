@@ -44,20 +44,19 @@ public class ClassicKendoComboboxTextFeatureEditor
 {
     private static final long serialVersionUID = 8686646370500180943L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(
-            ClassicKendoComboboxTextFeatureEditor.class);
+    private static final Logger LOG = LoggerFactory
+            .getLogger(ClassicKendoComboboxTextFeatureEditor.class);
 
     /**
-     * Function to return tooltip using jquery
-     * Docs for the JQuery tooltip widget that we configure below:
-     * https://api.jqueryui.com/tooltip/
+     * Function to return tooltip using jquery Docs for the JQuery tooltip widget that we configure
+     * below: https://api.jqueryui.com/tooltip/
      */
     protected static final String FUNCTION_FOR_TOOLTIP = "function() { return "
-        + "'<div class=\"tooltip-title\">'+($(this).text() "
-        + "? $(this).text() : 'no title')+'</div>"
-        + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
-        + "? $(this).attr('title') : 'no description' )+'</div>' }";
-    
+            + "'<div class=\"tooltip-title\">'+($(this).text() "
+            + "? $(this).text() : 'no title')+'</div>"
+            + "<div class=\"tooltip-content tooltip-pre\">'+($(this).attr('title') "
+            + "? $(this).attr('title') : 'no description' )+'</div>' }";
+
     public ClassicKendoComboboxTextFeatureEditor(String aId, MarkupContainer aItem,
             IModel<FeatureState> aModel)
     {
@@ -67,8 +66,7 @@ public class ClassicKendoComboboxTextFeatureEditor
     @Override
     protected AbstractTextComponent createInputField()
     {
-        return new StyledComboBox<Tag>("value",
-                PropertyModel.of(getModel(), "tagset"))
+        return new StyledComboBox<Tag>("value", PropertyModel.of(getModel(), "tagset"))
         {
             private static final long serialVersionUID = -1735694425658462932L;
 
@@ -76,13 +74,12 @@ public class ClassicKendoComboboxTextFeatureEditor
             protected void onInitialize()
             {
                 super.onInitialize();
-                
+
                 // Ensure proper order of the initializing JS header items: first combo box
                 // behavior (in super.onInitialize()), then tooltip.
                 Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
                 options.set("content", FUNCTION_FOR_TOOLTIP);
-                add(new TooltipBehavior("#" + getMarkupId() + "_listbox *[title]",
-                        options)
+                add(new TooltipBehavior("#" + getMarkupId() + "_listbox *[title]", options)
                 {
                     private static final long serialVersionUID = 1854141593969780149L;
 
@@ -99,12 +96,12 @@ public class ClassicKendoComboboxTextFeatureEditor
                     }
                 });
             }
-            
+
             @Override
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 // Trigger a re-loading of the tagset from the server as constraints may have
                 // changed the ordering
                 Optional<AjaxRequestTarget> target = RequestCycle.get()

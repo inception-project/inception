@@ -81,13 +81,12 @@ public class LoginPage
     private LoginForm form;
     private final WebMarkupContainer tooManyUsersLabel;
     private final Button signInBtn;
-    
-    
+
     public LoginPage()
     {
         setStatelessHint(true);
         setVersioned(false);
-        
+
         add(form = new LoginForm("loginForm"));
         signInBtn = new Button("signInBtn");
         signInBtn.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
@@ -96,7 +95,7 @@ public class LoginPage
         form.add(signInBtn);
         form.add(tooManyUsersLabel);
         form.add(LambdaBehavior.enabledWhen(() -> !isTooManyUsers()));
-        
+
         redirectIfAlreadyLoggedIn();
 
         // Create admin user if there is no user yet
@@ -117,7 +116,7 @@ public class LoginPage
     }
 
     /**
-     * Check if settings property is set and there will be more users logged in (with current one) 
+     * Check if settings property is set and there will be more users logged in (with current one)
      * than max users allowed.
      */
     private boolean isTooManyUsers()
@@ -125,15 +124,15 @@ public class LoginPage
         long maxUsers = loginProperties.getMaxConcurrentSessions();
         return maxUsers > 0 && sessionRegistry.getAllPrincipals().size() >= maxUsers;
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         redirectIfAlreadyLoggedIn();
     }
-    
+
     private void redirectIfAlreadyLoggedIn()
     {
         // If we are already logged in, redirect to the welcome page. This tries to a void a
@@ -144,7 +143,7 @@ public class LoginPage
             log.debug("Already logged in, forwarding to home page");
             throw new RestartResponseException(getApplication().getHomePage());
         }
-        
+
         String redirectUrl = getRedirectUrl();
         if (redirectUrl == null) {
             log.debug("Authentication required");
@@ -171,8 +170,7 @@ public class LoginPage
             add(new HiddenField<>("urlfragment"));
             Properties settings = SettingsUtil.getSettings();
             String loginMessage = settings.getProperty(SettingsUtil.CFG_LOGIN_MESSAGE);
-            add(new Label("loginMessage", loginMessage)
-                    .setEscapeModelStrings(false)
+            add(new Label("loginMessage", loginMessage).setEscapeModelStrings(false)
                     .add(visibleWhen(() -> isNotBlank(loginMessage))));
         }
 
@@ -202,7 +200,7 @@ public class LoginPage
             // Wicket continueToOriginalDestination();
 
             String redirectUrl = getRedirectUrl();
-            
+
             if (redirectUrl == null || redirectUrl.contains(".IBehaviorListener.")
                     || redirectUrl.contains("-logoutPanel-")) {
                 log.debug("Redirecting to welcome page");
@@ -223,7 +221,7 @@ public class LoginPage
             }
         }
     }
-    
+
     private String getRedirectUrl()
     {
         String redirectUrl = null;

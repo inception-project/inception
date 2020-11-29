@@ -38,7 +38,7 @@ public class ConllCoreNlpFormatSupport
 {
     public static final String ID = "conllcorenlp";
     public static final String NAME = "CoNLL CoreNLP";
-    
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class ConllCoreNlpFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -69,7 +69,7 @@ public class ConllCoreNlpFormatSupport
     {
         return createReaderDescription(ConllCoreNlpReader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

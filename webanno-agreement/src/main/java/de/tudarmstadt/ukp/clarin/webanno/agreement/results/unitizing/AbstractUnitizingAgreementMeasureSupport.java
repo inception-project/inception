@@ -31,10 +31,8 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupp
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 
 public abstract class AbstractUnitizingAgreementMeasureSupport<T extends DefaultAgreementTraits>
-    extends AgreementMeasureSupport_ImplBase<
-            T, 
-            PairwiseAnnotationResult<UnitizingAgreementResult>, 
-            ICodingAnnotationStudy>
+    extends
+    AgreementMeasureSupport_ImplBase<T, PairwiseAnnotationResult<UnitizingAgreementResult>, ICodingAnnotationStudy>
 {
     @Override
     public Panel createResultsPanel(String aId,

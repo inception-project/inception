@@ -27,7 +27,7 @@ public abstract class ListPanel_ImplBase
     extends LambdaPanel
 {
     private static final long serialVersionUID = 414323323271754324L;
-    
+
     private AjaxCallback changeAction;
     private AjaxCallback createAction;
 

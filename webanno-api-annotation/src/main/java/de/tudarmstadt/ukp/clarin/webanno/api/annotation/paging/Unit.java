@@ -28,16 +28,19 @@ public class Unit
     implements Serializable
 {
     private static final long serialVersionUID = -8969756502471237659L;
-    
+
     private final int index;
     private final int begin;
     private final int end;
-    private final String id;    
-    
+    private final String id;
+
     /**
-     * @param aIndex index (1-based)
-     * @param aBegin begin character offset
-     * @param aEnd end character offset
+     * @param aIndex
+     *            index (1-based)
+     * @param aBegin
+     *            begin character offset
+     * @param aEnd
+     *            end character offset
      */
     public Unit(int aIndex, int aBegin, int aEnd)
     {
@@ -46,10 +49,14 @@ public class Unit
 
     /**
      * 
-     * @param aId unit ID (if any) or {@code null}
-     * @param aIndex index (1-based)
-     * @param aBegin begin character offset
-     * @param aEnd end character offset
+     * @param aId
+     *            unit ID (if any) or {@code null}
+     * @param aIndex
+     *            index (1-based)
+     * @param aBegin
+     *            begin character offset
+     * @param aEnd
+     *            end character offset
      */
     public Unit(@Nullable String aId, int aIndex, int aBegin, int aEnd)
     {
@@ -58,7 +65,7 @@ public class Unit
         begin = aBegin;
         end = aEnd;
     }
-    
+
     public int getIndex()
     {
         return index;

@@ -29,12 +29,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public interface UserDao
 {
     User getCurrentUser();
-    
+
     /**
      * Return the name of the current user
      */
     String getCurrentUsername();
-    
+
     /**
      * Create a new {@link User}
      * 

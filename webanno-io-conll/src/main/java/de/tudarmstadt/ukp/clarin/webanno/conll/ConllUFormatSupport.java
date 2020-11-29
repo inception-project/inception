@@ -38,7 +38,7 @@ public class ConllUFormatSupport
 {
     public static final String ID = "conllu";
     public static final String NAME = "CoNLL-U";
-    
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class ConllUFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -69,7 +69,7 @@ public class ConllUFormatSupport
     {
         return createReaderDescription(ConllUReader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

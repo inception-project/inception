@@ -26,14 +26,14 @@ public abstract class LinkFeatureEvent
     extends FeatureEditorEvent
 {
     private final LinkWithRoleModel linkWithRoleModel;
-    
+
     public LinkFeatureEvent(FeatureEditor aEditor, AjaxRequestTarget aTarget,
             LinkWithRoleModel aLinkWithRoleModel)
     {
         super(aEditor, aTarget);
         linkWithRoleModel = aLinkWithRoleModel;
     }
-    
+
     public LinkWithRoleModel getLinkWithRoleModel()
     {
         return linkWithRoleModel;

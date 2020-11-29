@@ -51,7 +51,7 @@ public class WebAnnoTsv3LegacyFormatSupport
 {
     public static final String ID = "ctsv3";
     public static final String NAME = "WebAnno TSV3 (WebAnno v3; deprecated implementation)";
-    
+
     private final AnnotationSchemaService annotationService;
 
     @Autowired
@@ -78,7 +78,7 @@ public class WebAnnoTsv3LegacyFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -91,7 +91,7 @@ public class WebAnnoTsv3LegacyFormatSupport
     {
         return createReaderDescription(WebannoTsv3Reader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)
@@ -106,7 +106,7 @@ public class WebAnnoTsv3LegacyFormatSupport
         Set<String> spanLayers = new HashSet<>();
         Set<String> slotLayers = new HashSet<>();
         for (AnnotationLayer layer : layers) {
-            
+
             if (layer.getType().contentEquals(WebAnnoConst.SPAN_TYPE)) {
                 // TSV will not use this
                 if (!annotationExists(aCAS, layer.getName())) {
@@ -122,10 +122,11 @@ public class WebAnnoTsv3LegacyFormatSupport
                         linkTypes.add(f.getLinkTypeName());
                     }
                 }
-                
+
                 if (isslotLayer) {
                     slotLayers.add(layer.getName());
-                } else {
+                }
+                else {
                     spanLayers.add(layer.getName());
                 }
             }
@@ -152,6 +153,7 @@ public class WebAnnoTsv3LegacyFormatSupport
             }
         }
 
+        // @formatter:off
         return createEngineDescription(WebannoTsv3Writer.class, aTSD,
                 "spanLayers", spanLayers, 
                 "slotFeatures", slotFeatures, 
@@ -159,9 +161,11 @@ public class WebAnnoTsv3LegacyFormatSupport
                 "linkTypes", linkTypes, 
                 "chainLayers", chainLayers,
                 "relationLayers", relationLayers);
+        // @formatter:on
     }
-    
-    private boolean annotationExists(CAS aCas, String aType) {
+
+    private boolean annotationExists(CAS aCas, String aType)
+    {
 
         Type type = aCas.getTypeSystem().getType(aType);
         if (CasUtil.select(aCas, type).size() == 0) {
@@ -169,8 +173,9 @@ public class WebAnnoTsv3LegacyFormatSupport
         }
         return true;
     }
-    
-    private boolean chainAnnotationExists(CAS aCas, String aType) {
+
+    private boolean chainAnnotationExists(CAS aCas, String aType)
+    {
 
         Type type = aCas.getTypeSystem().getType(aType);
         if (CasUtil.selectFS(aCas, type).size() == 0) {

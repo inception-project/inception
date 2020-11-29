@@ -22,10 +22,11 @@ import java.io.Serializable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-public class ImmutableTag implements Serializable
+public class ImmutableTag
+    implements Serializable
 {
     private static final long serialVersionUID = -8402497864975003660L;
-    
+
     private final Long id;
     private final String name;
     private final String description;
