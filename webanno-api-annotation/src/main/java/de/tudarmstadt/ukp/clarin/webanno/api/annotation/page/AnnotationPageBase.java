@@ -34,6 +34,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.LoggerFactory;
@@ -66,6 +67,9 @@ public abstract class AnnotationPageBase
     private @SpringBean DocumentService documentService;
     private @SpringBean UserPreferencesService userPreferenceService;
     private @SpringBean UserDao userRepository;
+    
+    private LoadableDetachableModel<Boolean> annotationFinished = LoadableDetachableModel
+            .of(this::loadAnnotationFinished);
     
     public AnnotationPageBase()
     {
@@ -305,14 +309,11 @@ public abstract class AnnotationPageBase
             throw new NotEditableException(
                     "Viewing another users annotations - document is read-only!");
         }
+
+        if (isAnnotationFinished()) {
             throw new NotEditableException("This document is already closed for user ["
                     + state.getUser().getUsername() + "]. Please ask your "
                     + "project manager to re-open it via the monitoring page.");
-        }
-
-        if (getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser())) {
-            throw new NotEditableException(
-                    "Viewing another users annotations - document is read-only!");
         }
     }
     
@@ -326,13 +327,29 @@ public abstract class AnnotationPageBase
         
         // If curating, then it is editable unless the curation is finished
         if (state.getMode().equals(CURATION)) {
-            return !state.getDocument().getState().equals(CURATION_FINISHED);
+            return !CURATION_FINISHED.equals(state.getDocument().getState());
         }
         
         // If annotating normally, then it is editable unless marked as finished and unless
         // viewing another users annotations
         return !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername()) && 
                 !isAnnotationFinished();
+    }
+
+    public boolean isAnnotationFinished() {
+        return annotationFinished.getObject();
+    }
+
+    private boolean loadAnnotationFinished() {
+        AnnotatorState state = getModelObject();
+        return documentService.isAnnotationFinished(state.getDocument(), state.getUser());
+    }
+    
+    @Override
+    public void detachModels()
+    {
+        super.detachModels();
+        annotationFinished.detach();
     }
 
     public abstract IModel<List<DecoratedObject<Project>>> getAllowedProjects();
