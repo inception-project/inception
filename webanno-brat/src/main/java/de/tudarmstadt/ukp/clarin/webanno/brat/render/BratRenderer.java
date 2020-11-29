@@ -140,6 +140,8 @@ public class BratRenderer
         
         renderTokens(aCas, aResponse, aState);
         
+        Map<AnnotationFS, Integer> sentenceIndexes = null;
+        
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
@@ -198,7 +200,6 @@ public class BratRenderer
             }
         }
         
-        List<AnnotationFS> sentences = new ArrayList<>(select(aCas, getType(aCas, Sentence.class)));
         for (VComment vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
@@ -222,7 +223,17 @@ public class BratRenderer
                     ((fs = selectAnnotationByAddr(aCas, vcomment.getVid().getId())) != null && 
                             fs.getType().getName().equals(Sentence.class.getName()))
             ) {
-                int index = sentences.indexOf(fs) + 1;
+                // Lazily fetching the sentences because we only need them for the comments
+                if (sentenceIndexes == null) {
+                    sentenceIndexes = new HashMap<>();
+                    int i = 1;
+                    for (AnnotationFS s : select(aCas, getType(aCas, Sentence.class))) {
+                        sentenceIndexes.put(s, i);
+                        i++;
+                    }
+                }
+                
+                int index = sentenceIndexes.get(fs);
                 aResponse.addComment(new SentenceComment(index, type, vcomment.getComment()));
             }
             else {
