@@ -77,7 +77,7 @@ public class ActiveLearningRecommendationEventAdapter
             details.recommenderId = aEvent.getCurrentRecommendation().getRecommenderId();
 
             List<String> allLabelList = aEvent.getAllRecommendations().stream()
-                .map(ao -> ao.getLabel()).collect(Collectors.toList());
+                    .map(ao -> ao.getLabel()).collect(Collectors.toList());
             details.allLabels = String.join(", ", allLabelList);
             return JSONUtil.toJsonString(details);
         }
