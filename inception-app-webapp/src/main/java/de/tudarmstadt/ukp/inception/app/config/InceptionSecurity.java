@@ -110,6 +110,8 @@ public class InceptionSecurity
         protected void configure(HttpSecurity aHttp) throws Exception
         {
             aHttp
+                 .cors()
+                 .and()
                 .antMatcher("/api/**")
                 .csrf().disable()
                 .authorizeRequests()

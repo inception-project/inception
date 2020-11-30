@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    <artifactId>inception-app</artifactId>
+    <version>0.18.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+  <artifactId>inception-api</artifactId>
+  <name>INCEpTION - API</name>
+
+  <dependencies>
+    <!-- INCEpTION -->
+
+
+    <!-- Webanno -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api-dao</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-model</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-support</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-support-standalone</artifactId>
+    </dependency>
+
+    <!-- Spring -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-orm</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-web</artifactId>
+    </dependency>
+
+
+    <!-- Spring Boot -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <!-- Database -->
+    <dependency>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-entitymanager</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Test -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.junit.vintage</groupId>
+          <artifactId>junit-vintage-engine</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+
+</project>

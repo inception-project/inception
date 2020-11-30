@@ -148,6 +148,11 @@
       <artifactId>inception-pdf-editor</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api</artifactId>
+    </dependency>
+
     <!-- READER/WRITER DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>

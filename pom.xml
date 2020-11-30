@@ -136,6 +136,8 @@
     <module>inception-workload</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-dynamic</module>
+
+    <module>inception-api</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -436,6 +438,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mtas</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-api</artifactId>
         <version>0.18.0-SNAPSHOT</version>
       </dependency>
 
