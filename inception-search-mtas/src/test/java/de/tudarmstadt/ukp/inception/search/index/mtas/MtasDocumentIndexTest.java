@@ -593,8 +593,8 @@ public class MtasDocumentIndexTest
         public DocumentService documentService(
                 @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
-            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), importExportService(), projectService(aInitializerProxy),
+            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
+                    importExportService(), projectService(aInitializerProxy),
                     applicationEventPublisher, entityManager);
         }
 
