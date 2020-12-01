@@ -165,7 +165,7 @@ public class CurationServiceImpl
         Validate.notNull(aProjectId, "project must be specified");
 
         String query = "FROM " + CurationSettings.class.getName() //
-                + " o WHERE o.username = :username "  //
+                + " o WHERE o.username = :username " //
                 + "AND o.projectId = :projectId";
 
         List<CurationSettings> settings = entityManager //

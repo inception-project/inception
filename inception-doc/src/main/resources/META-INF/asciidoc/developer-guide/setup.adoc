@@ -238,7 +238,7 @@ check the box next to the newly created configuration and apply it as well.
 
 In order to achieve the same formatting and import order as Eclipse, install the
 https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter/versions[Eclipse Code Formatter].
-Download the https://dkpro.github.io/files/DKProCoreStyle_20170725.xml[DKPro Eclipse Code Style file].
+Download the https://dkpro.github.io/files/DKProStyle_latest.xml[DKPro Eclipse Code Style file].
 In `File | Settings | Other Settings | Eclipse Code Formatter`, create a new profile using this
 file.
 
@@ -269,8 +269,8 @@ will be in `target/doc-out`.
 
 === Developing INCEpTION and webanno together
 
-INCEpTION builds on Webanno. Therefore, it can be desirable to work on Webanno and INCEpTION at the same time
-so that changes in Webanno are directly visible in your INCEpTION development. For this, check out Webanno from
+INCEpTION builds on WebAnno. Therefore, it can be desirable to work on WebAnno and INCEpTION at the same time
+so that changes in WebAnno are directly visible in your INCEpTION development. For this, check out WebAnno from
 Github. Then, import it as a Maven project: first, open the Maven sidebar on the right. Then, click on the `+`
-and select the Webanno `pom.xml` . In `File | Settings | Build, Execution, Deployment | Build Tools | Maven`,
+and select the WebAnno `pom.xml` . In `File | Settings | Build, Execution, Deployment | Build Tools | Maven`,
 make sure to check `Always update snapshots`.
