@@ -67,13 +67,13 @@ public class CurationServiceImpl
     implements CurationService
 {
     private Logger log = LoggerFactory.getLogger(getClass());
-    
+
     // stores info on which users are selected and which doc is the curation-doc
     private ConcurrentMap<CurationStateKey, CurationState> curationStates;
-    
+
     @PersistenceContext
     private EntityManager entityManager;
-    
+
     private @Autowired DocumentService documentService;
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired ProjectService projectService;
@@ -84,7 +84,7 @@ public class CurationServiceImpl
     {
         curationStates = new ConcurrentHashMap<>();
     }
-    
+
     public CurationServiceImpl(EntityManager aEntityManager)
     {
         this();
@@ -98,8 +98,9 @@ public class CurationServiceImpl
     {
         private String username;
         private long projectId;
-        
-        public CurationStateKey(String aUser, long aProject) {
+
+        public CurationStateKey(String aUser, long aProject)
+        {
             username = aUser;
             projectId = aProject;
         }
@@ -121,7 +122,7 @@ public class CurationServiceImpl
                     .append(projectId, castOther.projectId).isEquals();
         }
     }
-    
+
     private CurationState getCurationState(String aUser, long aProjectId)
     {
         if (curationStates.containsKey(new CurationStateKey(aUser, aProjectId))) {
@@ -131,12 +132,12 @@ public class CurationServiceImpl
             return getSettingsFromDB(aUser, aProjectId);
         }
     }
-    
+
     @Transactional
     private CurationState getSettingsFromDB(String aUsername, long aProjectId)
     {
         List<CurationSettings> settings = queryDBForSetting(aUsername, aProjectId);
-        
+
         CurationState state;
         if (settings.isEmpty()) {
             state = new CurationState(aUsername);
@@ -147,14 +148,13 @@ public class CurationServiceImpl
             List<User> users = new ArrayList<>();
             if (!setting.getSelectedUserNames().isEmpty()) {
                 users = setting.getSelectedUserNames().stream()
-                    .map(username -> userRegistry.get(username))
-                    .filter(user -> projectService.existsProjectPermission(user, project))
-                    .collect(Collectors.toList());
+                        .map(username -> userRegistry.get(username))
+                        .filter(user -> projectService.existsProjectPermission(user, project))
+                        .collect(Collectors.toList());
             }
-            state = new CurationState(setting.getCurationUserName(), 
-                    users);
+            state = new CurationState(setting.getCurationUserName(), users);
         }
-        
+
         curationStates.put(new CurationStateKey(aUsername, aProjectId), state);
         return state;
     }
@@ -163,16 +163,16 @@ public class CurationServiceImpl
     {
         Validate.notBlank(aUsername, "User must be specified");
         Validate.notNull(aProjectId, "project must be specified");
-        
-        String query = "FROM " + CurationSettings.class.getName() 
+
+        String query = "FROM " + CurationSettings.class.getName()
                 + " o WHERE o.username = :username " 
                 + "AND o.projectId = :projectId";
         
-        List<CurationSettings> settings = entityManager
-                .createQuery(query, CurationSettings.class)
-                .setParameter("username", aUsername)
-                .setParameter("projectId", aProjectId)
-                .setMaxResults(1)
+        List<CurationSettings> settings = entityManager //
+                .createQuery(query, CurationSettings.class) //
+                .setParameter("username", aUsername) //
+                .setParameter("projectId", aProjectId) //
+                .setMaxResults(1) //
                 .getResultList();
         return settings;
     }
@@ -184,15 +184,14 @@ public class CurationServiceImpl
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationUser;
         private MergeStrategy selectedStrategy;
-                
+
         public CurationState(String aUser)
         {
             curationUser = aUser;
             selectedStrategy = new ManualMergeStrategy();
         }
 
-        public CurationState(String aCurationUserName,
-                List<User> aSelectedUsers)
+        public CurationState(String aCurationUserName, List<User> aSelectedUsers)
         {
             curationUser = aCurationUserName;
             selectedUsers = new ArrayList<>(aSelectedUsers);
@@ -235,13 +234,13 @@ public class CurationServiceImpl
     {
         return Optional.ofNullable(getCurationState(aCurrentUser, aProjectId).getSelectedUsers());
     }
-    
+
     @Override
     public List<User> listUsersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument)
-    {        
+    {
         List<User> selectedUsers = getCurationState(aUsername, aProject.getId()).getSelectedUsers();
-        
+
         if (selectedUsers == null || selectedUsers.isEmpty()) {
             return new ArrayList<>();
         }
@@ -249,26 +248,26 @@ public class CurationServiceImpl
         finishedUsers.retainAll(selectedUsers);
         return finishedUsers;
     }
-    
+
     @Override
     public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument)
     {
         Validate.notNull(aSourceDocument, "Document must be specified");
         Validate.notNull(aProject, "project must be specified");
-        
-        String query = String.join("\n",
-                "SELECT u FROM User u, AnnotationDocument d",
-                "WHERE u.username = d.user",
-                "  AND d.project = :project",
-                "  AND d.document = :document",
-                "  AND d.state    = :state",
+
+        String query = String.join("\n", //
+                "SELECT u FROM User u, AnnotationDocument d", //
+                "WHERE u.username = d.user", //
+                "  AND d.project = :project", //
+                "  AND d.document = :document", //
+                "  AND d.state    = :state", //
                 "  ORDER BY u.username ASC");
-        
-        List<User> finishedUsers = new ArrayList<>(entityManager
-                .createQuery(query, User.class)
-                .setParameter("project", aProject)
-                .setParameter("document", aSourceDocument)
-                .setParameter("state", AnnotationDocumentState.FINISHED)
+
+        List<User> finishedUsers = new ArrayList<>(entityManager //
+                .createQuery(query, User.class) //
+                .setParameter("project", aProject) //
+                .setParameter("document", aSourceDocument) //
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
                 .getResultList());
 
         return finishedUsers;
@@ -282,11 +281,10 @@ public class CurationServiceImpl
         if (curationUser == null) {
             return Optional.empty();
         }
-        
-        return Optional.of(documentService
-                .readAnnotationCas(aDoc, curationUser));
+
+        return Optional.of(documentService.readAnnotationCas(aDoc, curationUser));
     }
-    
+
     @Override
     public synchronized void writeCurationCas(CAS aTargetCas, AnnotatorState aState,
             long aProjectId)
@@ -319,8 +317,7 @@ public class CurationServiceImpl
     public void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId,
             Collection<User> aSelectedUsers)
     {
-        synchronized (curationStates)
-        {
+        synchronized (curationStates) {
             getCurationState(aCurrentUser, aProjectId).setSelectedUsers(aSelectedUsers);
         }
     }
@@ -328,47 +325,46 @@ public class CurationServiceImpl
     @Override
     public void updateCurationName(String aCurrentUser, long aProjectId, String aUserName)
     {
-        synchronized (curationStates)
-        {
-            getCurationState(aCurrentUser, aProjectId).setCurationName(aUserName);;
+        synchronized (curationStates) {
+            getCurationState(aCurrentUser, aProjectId).setCurationName(aUserName);
+            ;
         }
     }
-    
+
     @Override
     public void updateMergeStrategy(String aCurrentUser, long aProjectId, MergeStrategy aStrategy)
     {
-        synchronized (curationStates)
-        {
-            getCurationState(aCurrentUser, aProjectId).setMergeStrategy(aStrategy);;
+        synchronized (curationStates) {
+            getCurationState(aCurrentUser, aProjectId).setMergeStrategy(aStrategy);
+            ;
         }
     }
 
     @Override
     public void removeCurrentUserInformation(String aCurrentUser, long aProjectId)
     {
-        synchronized (curationStates)
-        {
+        synchronized (curationStates) {
             curationStates.remove(new CurationStateKey(aCurrentUser, aProjectId));
         }
     }
-    
+
     @EventListener
     @Transactional
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
-        
+
         if (info == null) {
             return;
         }
-        
+
         User user = userRegistry.get((String) info.getPrincipal());
         if (user == null) {
             // This happens e.g. when a session for "anonymousUser" is destroyed or if (for some
             // reason), the user owning the session no longer exists in the system.
             return;
         }
-        
+
         storeCurationSettings(user);
         clearState(user);
     }
@@ -379,24 +375,24 @@ public class CurationServiceImpl
     private void storeCurationSettings(User aUser)
     {
         String aUsername = aUser.getUsername();
-        
+
         for (Project project : projectService.listAccessibleProjects(aUser)) {
             Long projectId = project.getId();
             Set<String> usernames = null;
             if (curationStates.containsKey(new CurationStateKey(aUsername, projectId))) {
-                
+
                 CurationState state = curationStates
                         .get(new CurationStateKey(aUsername, projectId));
                 // user does not exist anymore or is anonymous authentication
                 if (state == null) {
                     continue;
                 }
-                
+
                 if (state.getSelectedUsers() != null) {
                     usernames = state.getSelectedUsers().stream().map(User::getUsername)
                             .collect(Collectors.toSet());
                 }
-                
+
                 // get setting from context and update values if it exists, else save new setting
                 // to db
                 CurationSettings setting = entityManager.find(CurationSettings.class,
@@ -417,18 +413,16 @@ public class CurationServiceImpl
 
     private void clearState(User aUser)
     {
-        projectService.listAccessibleProjects(aUser).stream()
-            .map(Project::getId)
-            .forEach(pId -> removeCurrentUserInformation(aUser.getUsername(), pId));
+        projectService.listAccessibleProjects(aUser).stream().map(Project::getId)
+                .forEach(pId -> removeCurrentUserInformation(aUser.getUsername(), pId));
     }
 
     @Override
     public void clearUsersSelectedForCuration(String aUsername, Long aProjectId)
     {
-        synchronized (curationStates)
-        {
+        synchronized (curationStates) {
             getCurationState(aUsername, aProjectId).setSelectedUsers(new ArrayList<>());
-        }   
+        }
     }
 
     @Override
@@ -438,8 +432,7 @@ public class CurationServiceImpl
         for (User user : aUsers) {
             try {
                 String username = user.getUsername();
-                casses.put(username, documentService.readAnnotationCas(aDoc,
-                        username));
+                casses.put(username, documentService.readAnnotationCas(aDoc, username));
             }
             catch (IOException e) {
                 log.warn(String.format("Could not retrieve CAS for user %s and document %d",
@@ -460,7 +453,7 @@ public class CurationServiceImpl
         }
         return curationUser;
     }
-    
+
     @Override
     public User retrieveCurationUser(String aUser, long aProjectId)
     {
@@ -478,8 +471,7 @@ public class CurationServiceImpl
     }
 
     @Override
-    public MergeStrategy retrieveMergeStrategy(String aUsername,
-            long aProjectId)
+    public MergeStrategy retrieveMergeStrategy(String aUsername, long aProjectId)
     {
         return getCurationState(aUsername, aProjectId).getMergeStrategy();
     }

@@ -46,6 +46,7 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.After;
 import org.junit.Before;
@@ -171,13 +172,13 @@ public class NamedEntityLinkerTest
     private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
         CollectionReader reader = createReader( //
-            Conll2002Reader.class, //
-            Conll2002Reader.PARAM_PATTERNS, files, //
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
-            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(), //
-            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
-            Conll2002Reader.PARAM_HAS_HEADER, true, //
-            Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+                Conll2002Reader.class, //
+                Conll2002Reader.PARAM_PATTERNS, files, //
+                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
+                Conll2002Reader.PARAM_COLUMN_SEPARATOR, ColumnSeparators.TAB.getName(), //
+                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
+                Conll2002Reader.PARAM_HAS_HEADER, true, //
+                Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {

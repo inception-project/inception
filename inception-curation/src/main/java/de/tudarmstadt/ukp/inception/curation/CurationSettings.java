@@ -33,31 +33,32 @@ import javax.persistence.Table;
 @IdClass(CurationSettingsId.class)
 @Table(name = "curation_settings")
 public class CurationSettings
-{    
+{
     @Id
     @Column(nullable = false)
     private Long projectId;
-    
+
     @Id
     @Column(nullable = false)
     private String username;
-    
+
     @ElementCollection
     @CollectionTable(name = "curationSettings_users", joinColumns = {
             @JoinColumn(name = "settings_projectId", referencedColumnName = "projectId"),
-            @JoinColumn(name = "settings_username",  referencedColumnName = "username")
-            })
+            @JoinColumn(name = "settings_username", referencedColumnName = "username") })
     @Column(name = "selectedUsername", nullable = true, updatable = true)
     private Set<String> selectedUserNames = new HashSet<>();
-    
+
     @Column(nullable = false)
     private String curationUsername;
 
-    protected CurationSettings() {
+    protected CurationSettings()
+    {
         // constructor for JPA
     }
-    
-    public CurationSettings(String aUser, Long aProjectId, String aCurationUser) {
+
+    public CurationSettings(String aUser, Long aProjectId, String aCurationUser)
+    {
         username = aUser;
         projectId = aProjectId;
         curationUsername = aCurationUser;
