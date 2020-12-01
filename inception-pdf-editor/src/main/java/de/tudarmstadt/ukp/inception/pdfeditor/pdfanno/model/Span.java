@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
-public class Span {
+public class Span
+{
 
     private String id;
 
@@ -28,10 +29,10 @@ public class Span {
     private String color;
 
     /**
-     * This field is part of the PDFAnno Anno File format for spans.
-     * It is redundant as startPos and endPos already can be used to obtain the text.
-     * It could be left out in toAnnoFileString method as PDFAnno still can render it.
-     * However this results in missing text when export functionality in PDFAnno is used.
+     * This field is part of the PDFAnno Anno File format for spans. It is redundant as startPos and
+     * endPos already can be used to obtain the text. It could be left out in toAnnoFileString
+     * method as PDFAnno still can render it. However this results in missing text when export
+     * functionality in PDFAnno is used.
      */
     private String text;
 
@@ -46,8 +47,8 @@ public class Span {
         color = aColor;
     }
 
-    public Span(String aId, int aPage, String aLabel, String aColor, String aText,
-                int aStartPos, int aEndPos)
+    public Span(String aId, int aPage, String aLabel, String aColor, String aText, int aStartPos,
+            int aEndPos)
     {
         id = aId;
         page = aPage;
@@ -115,13 +116,12 @@ public class Span {
 
     public String toAnnoFileString()
     {
-        return "[[spans]]\n" +
-            "id = \"" + id +  "\"\n" +
-            "page = " + page + "\n" +
-            "label = \"" + label.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" +
-            "color = \"" + color + "\"\n" +
-            "text = \"" + text.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" +
+        return "[[spans]]\n" + //
+            "id = \"" + id +  "\"\n" + //
+            "page = " + page + "\n" + //
+            "label = \"" + label.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" + //
+            "color = \"" + color + "\"\n" + //
+            "text = \"" + text.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" + //
             "textrange = [" + startPos + "," + endPos + "]\n";
     }
-
 }
