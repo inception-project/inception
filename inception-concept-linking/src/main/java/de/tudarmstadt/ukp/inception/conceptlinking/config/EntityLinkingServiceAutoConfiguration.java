@@ -47,7 +47,8 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 @AutoConfigureAfter({ KnowledgeBaseServiceAutoConfiguration.class,
         RecommenderServiceAutoConfiguration.class })
 @ConditionalOnBean(KnowledgeBaseService.class)
-@ConditionalOnProperty(prefix = "knowledge-base.entity-linking", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "knowledge-base.entity-linking", //
+        name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(EntityLinkingPropertiesImpl.class)
 public class EntityLinkingServiceAutoConfiguration
 {
