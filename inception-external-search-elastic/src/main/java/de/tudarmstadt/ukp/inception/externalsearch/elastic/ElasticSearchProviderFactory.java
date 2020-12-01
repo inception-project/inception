@@ -72,7 +72,7 @@ public class ElasticSearchProviderFactory
     @Override
     public ExternalSearchProvider getNewExternalSearchProvider()
     {
-        return new ElasticSearchProvider(); 
+        return new ElasticSearchProvider();
     }
 
     @Override

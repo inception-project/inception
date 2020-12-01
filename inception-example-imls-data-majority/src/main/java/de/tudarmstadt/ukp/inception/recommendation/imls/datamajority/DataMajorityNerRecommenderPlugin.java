@@ -32,7 +32,7 @@ public class DataMajorityNerRecommenderPlugin
     {
         super(aWrapper);
     }
-    
+
     @Override
     public Set<Class<?>> getSources()
     {
