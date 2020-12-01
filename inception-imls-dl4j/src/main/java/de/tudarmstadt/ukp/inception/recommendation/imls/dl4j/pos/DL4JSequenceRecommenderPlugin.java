@@ -32,7 +32,7 @@ public class DL4JSequenceRecommenderPlugin
     {
         super(aWrapper);
     }
-    
+
     @Override
     public Set<Class<?>> getSources()
     {

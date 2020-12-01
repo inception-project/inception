@@ -40,6 +40,7 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,9 +85,8 @@ public class OpenNlpNerRecommenderTest
 
         sut.train(context, casList);
 
-        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL))
-            .as("Model has been set")
-            .isPresent();
+        assertThat(context.get(OpenNlpNerRecommender.KEY_MODEL)).as("Model has been set")
+                .isPresent();
     }
 
     @Test
@@ -94,7 +94,7 @@ public class OpenNlpNerRecommenderTest
     {
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
-        
+
         CAS cas = casList.get(0);
         try (CasStorageSession session = CasStorageSession.open()) {
             session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
@@ -107,8 +107,7 @@ public class OpenNlpNerRecommenderTest
 
         Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
 
-        assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }
 
     @Test
@@ -129,7 +128,7 @@ public class OpenNlpNerRecommenderTest
         System.out.printf("Accuracy: %f%n", accuracy);
         System.out.printf("Precision: %f%n", precision);
         System.out.printf("Recall: %f%n", recall);
-        
+
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);
         assertThat(recall).isStrictlyBetween(0.0, 1.0);
@@ -146,13 +145,13 @@ public class OpenNlpNerRecommenderTest
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
-            
+
             double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
             assertThat(score).isStrictlyBetween(0.0, 1.0);
-            
+
             i++;
         }
     }
@@ -183,16 +182,16 @@ public class OpenNlpNerRecommenderTest
         }
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(
-            Conll2002Reader.class,
-            Conll2002Reader.PARAM_PATTERNS, files, 
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
-            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
-            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, 
-            Conll2002Reader.PARAM_HAS_HEADER, true, 
-            Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+        CollectionReader reader = createReader( //
+                Conll2002Reader.class, //
+                Conll2002Reader.PARAM_PATTERNS, files, //
+                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
+                Conll2002Reader.PARAM_COLUMN_SEPARATOR, ColumnSeparators.TAB.getName(), //
+                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
+                Conll2002Reader.PARAM_HAS_HEADER, true, //
+                Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
@@ -210,7 +209,7 @@ public class OpenNlpNerRecommenderTest
 
         AnnotationFeature feature = new AnnotationFeature();
         feature.setName("value");
-        
+
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);

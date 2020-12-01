@@ -79,8 +79,8 @@ public class LappsGridRecommenderTraitsEditor
 
         traits = toolFactory.readTraits(aRecommender.getObject());
         traitsModel = CompoundPropertyModel.of(traits);
-        Form<LappsGridRecommenderTraits> form =
-                new Form<LappsGridRecommenderTraits>(MID_FORM, traitsModel)
+        Form<LappsGridRecommenderTraits> form = new Form<LappsGridRecommenderTraits>(MID_FORM,
+                traitsModel)
         {
             private static final long serialVersionUID = -3109239605742291123L;
 
@@ -123,11 +123,13 @@ public class LappsGridRecommenderTraitsEditor
 
         if (NER_LAYER.equals(layer) && NER_FEATURE.equals(feature)) {
             return predefinedServices.get("ner");
-        } else if (POS_LAYER.equals(layer) && POS_FEATURE.equals(feature)) {
+        }
+        else if (POS_LAYER.equals(layer) && POS_FEATURE.equals(feature)) {
             return predefinedServices.get("pos");
-        } else {
+        }
+        else {
             LOG.error("Wrong layer/feature configuration for LappsGridRecommender: [{}] - [{}]",
-                      layer, feature);
+                    layer, feature);
             return Collections.emptyList();
         }
     }
@@ -135,10 +137,12 @@ public class LappsGridRecommenderTraitsEditor
     private Map<String, List<LappsGridService>> loadPredefinedServicesData()
     {
         try (InputStream is = getClass().getResourceAsStream("services.json")) {
-            TypeReference<Map<String, List<LappsGridService>>> typeRef =
-                    new TypeReference<Map<String, List<LappsGridService>>>() {};
+            TypeReference<Map<String, List<LappsGridService>>> typeRef = new TypeReference<Map<String, List<LappsGridService>>>()
+            {
+            };
             return getObjectMapper().readValue(is, typeRef);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             LOG.error("Could not load predefined services file!", e);
             return Collections.emptyMap();
         }

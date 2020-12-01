@@ -38,8 +38,7 @@ public class POSSampleStream
     }
 
     @Override
-    public POSSample read()
-        throws IOException
+    public POSSample read() throws IOException
     {
         if (iterator.hasNext()) {
             return iterator.next();
@@ -48,15 +47,13 @@ public class POSSampleStream
     }
 
     @Override
-    public void reset()
-        throws IOException, UnsupportedOperationException
+    public void reset() throws IOException, UnsupportedOperationException
     {
         iterator = data.iterator();
     }
 
     @Override
-    public void close()
-        throws IOException
+    public void close() throws IOException
     {
         this.iterator = null;
         this.data = null;
