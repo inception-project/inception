@@ -46,7 +46,7 @@ public class KBInstance
     private String language;
     private static final String ENGLISH = "en";
     private KnowledgeBase kb;
-    
+
     public KBInstance()
     {
         // No-args constructor
@@ -81,7 +81,7 @@ public class KBInstance
     {
         name = aName;
     }
-    
+
     @Override
     public KnowledgeBase getKB()
     {
@@ -133,7 +133,6 @@ public class KBInstance
         language = aLanguage;
     }
 
-    
     public void write(RepositoryConnection aConn, KnowledgeBase kb)
     {
         ValueFactory vf = aConn.getValueFactory();
@@ -170,15 +169,16 @@ public class KBInstance
             else {
                 descriptionLiteral = vf.createLiteral(description, language);
             }
-            Statement descStmt = vf
-                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
+            Statement descStmt = vf.createStatement(subject, kb.getDescriptionIri(),
+                    descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
     }
-    
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -190,18 +190,16 @@ public class KBInstance
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(identifier);
     }
 
     @Override
-    public String toString() {
-        return new ToStringBuilder(this)
-            .append("identifier", identifier)
-            .append("name", name)
-            .append("description", description)
-            .append("type", type)
-            .append("originalStatements", originalStatements)
-            .toString();
+    public String toString()
+    {
+        return new ToStringBuilder(this).append("identifier", identifier).append("name", name)
+                .append("description", description).append("type", type)
+                .append("originalStatements", originalStatements).toString();
     }
 }

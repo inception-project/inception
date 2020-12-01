@@ -66,46 +66,45 @@ public class NoReification
     implements ReificationStrategy
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     public static final String VAR_SUBJECT_NAME = "subj";
     public static final String VAR_PREDICATE_NAME = "pred";
     public static final String VAR_OBJECT_NAME = "obj";
-    
+
     private static final Variable VAR_SUBJECT = var("subj");
     private static final Variable VAR_PREDICATE = var("pred");
     private static final Variable VAR_VALUE = var("obj");
-    
+
     private final InceptionValueMapper valueMapper = new InceptionValueMapper();
-    
+
     @Override
     public List<KBStatement> listStatements(RepositoryConnection aConnection, KnowledgeBase aKB,
             KBHandle aItem, boolean aAll)
     {
         long startTime = currentTimeMillis();
-        
+
         SelectQuery query = SELECT(VAR_SUBJECT, VAR_PREDICATE, VAR_VALUE);
-        query.where(
-            new ValuesPattern(VAR_SUBJECT, iri(aItem.getIdentifier())),
-            VAR_SUBJECT.has(VAR_PREDICATE, VAR_VALUE));
+        query.where(new ValuesPattern(VAR_SUBJECT, iri(aItem.getIdentifier())),
+                VAR_SUBJECT.has(VAR_PREDICATE, VAR_VALUE));
         query.limit(aKB.getMaxResults());
 
         String queryId = toHexString(query.getQueryString().hashCode());
 
         log.trace("[{}] Query: {}", queryId, query.getQueryString());
-        
+
         TupleQuery tupleQuery = aConnection.prepareTupleQuery(query.getQueryString());
-        
+
         // The only way to tell if a statement was inferred or not is by running the same query
         // twice, once with and once without inference being enabled. Those that are in the
         // first but not in the second were the inferred statements.
         List<Statement> explicitStmts = listStatements(tupleQuery, false);
         List<Statement> allStmts = listStatements(tupleQuery, true);
-        
+
         Map<String, KBProperty> propertyMap = Queries.fetchProperties(aKB, aConnection,
                 allStmts.stream().map(stmt -> stmt.getPredicate().stringValue()).collect(toList()));
         Map<String, KBHandle> labelMap = Queries.fetchLabelsForIriValues(aKB, aConnection,
                 allStmts.stream().map(Statement::getObject).collect(toList()));
-        
+
         List<KBStatement> statements = new ArrayList<>();
         for (Statement stmt : allStmts) {
             Value value = stmt.getObject();
@@ -119,30 +118,30 @@ public class NoReification
                 log.warn("Properties with blank node values are not supported");
                 continue;
             }
-            
+
             if ((!aAll && hasImplicitNamespace(aKB, stmt.getPredicate().stringValue()))) {
                 continue;
             }
 
             KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
             KBProperty predicate = propertyMap.computeIfAbsent(stmt.getPredicate().stringValue(),
-                propertyIri -> new KBProperty(propertyIri));
-            
+                    propertyIri -> new KBProperty(propertyIri));
+
             KBStatement kbStatement = new KBStatement(null, subject, predicate, value);
             if (value instanceof IRI) {
-                kbStatement.setValueLabel(labelMap.computeIfAbsent(value.stringValue(),
-                        KBHandle::new).getUiLabel());
+                kbStatement.setValueLabel(
+                        labelMap.computeIfAbsent(value.stringValue(), KBHandle::new).getUiLabel());
             }
             kbStatement.setInferred(!explicitStmts.contains(stmt));
             kbStatement.setOriginalTriples(singleton(stmt));
 
             statements.add(kbStatement);
         }
-        
+
         log.debug("[{}] Query returned {} statements in {}ms", queryId, statements.size(),
                 currentTimeMillis() - startTime);
- 
-        return statements;    
+
+        return statements;
     }
 
     @Override
@@ -192,13 +191,13 @@ public class NoReification
             KBStatement aStatement)
     {
         ValueFactory vf = aConnection.getValueFactory();
-        Set<Statement> newTriples = singleton(vf.createStatement(
-                vf.createIRI(aStatement.getInstance().getIdentifier()), 
-                vf.createIRI(aStatement.getProperty().getIdentifier()), 
-                valueMapper.mapStatementValue(aStatement, vf)));
-        
+        Set<Statement> newTriples = singleton(
+                vf.createStatement(vf.createIRI(aStatement.getInstance().getIdentifier()),
+                        vf.createIRI(aStatement.getProperty().getIdentifier()),
+                        valueMapper.mapStatementValue(aStatement, vf)));
+
         upsert(aConnection, aStatement.getOriginalTriples(), newTriples);
-       
+
         aStatement.setOriginalTriples(newTriples);
     }
 
@@ -240,56 +239,56 @@ public class NoReification
             return result.hasNext();
         }
     }
-    
+
     @Override
     public String generatePropertyIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
     {
         return generateIdentifier(aConn, aKB);
     }
-    
+
     @Override
     public String generateConceptIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
     {
         return generateIdentifier(aConn, aKB);
     }
-    
+
     @Override
     public String generateInstanceIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
     {
         return generateIdentifier(aConn, aKB);
     }
-    
+
     private String generateIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
     {
         ValueFactory vf = aConn.getValueFactory();
         // default value of basePrefix is IriConstants.INCEPTION_NAMESPACE
         return aKB.getBasePrefix() + vf.createBNode().getID();
     }
-    
+
     private List<Statement> listStatements(TupleQuery aQuery, boolean aIncludeInferred)
     {
         aQuery.setIncludeInferred(aIncludeInferred);
-        
+
         try (TupleQueryResult result = aQuery.evaluate()) {
             ValueFactory vf = SimpleValueFactory.getInstance();
-            
+
             List<Statement> statements = new ArrayList<>();
             while (result.hasNext()) {
                 BindingSet bindings = result.next();
                 if (bindings.size() == 0) {
                     continue;
                 }
-                
+
                 // LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
-                
+
                 Binding subj = bindings.getBinding(VAR_SUBJECT_NAME);
                 Binding pred = bindings.getBinding(VAR_PREDICATE_NAME);
                 Binding obj = bindings.getBinding(VAR_OBJECT_NAME);
-    
+
                 IRI subject = vf.createIRI(subj.getValue().stringValue());
                 IRI predicate = vf.createIRI(pred.getValue().stringValue());
                 Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
-                
+
                 // Avoid duplicate statements
                 if (!statements.contains(stmt)) {
                     statements.add(stmt);

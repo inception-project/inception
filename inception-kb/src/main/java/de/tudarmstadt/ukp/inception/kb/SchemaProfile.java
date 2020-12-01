@@ -126,9 +126,10 @@ public enum SchemaProfile
 
     /**
      * Check if the given profile equals one of the schema profiles defined in {@link SchemaProfile}
+     * 
      * @param aProfile
      * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
-     * the pre-defined ones
+     *         the pre-defined ones
      */
     public static SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
     {
@@ -137,9 +138,9 @@ public enum SchemaProfile
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb profile corresponds to a known schema profile
             if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
-                mapping.getTypeIri(), mapping.getSubPropertyIri(), mapping.getDescriptionIri(),
-                mapping.getLabelIri(), mapping.getPropertyTypeIri(), mapping.getPropertyLabelIri(),
-                mapping.getPropertyDescriptionIri())) {
+                    mapping.getTypeIri(), mapping.getSubPropertyIri(), mapping.getDescriptionIri(),
+                    mapping.getLabelIri(), mapping.getPropertyTypeIri(),
+                    mapping.getPropertyLabelIri(), mapping.getPropertyDescriptionIri())) {
                 return profiles[i];
             }
         }
@@ -150,9 +151,10 @@ public enum SchemaProfile
     /**
      * Check if the IRIs of the given {@link KnowledgeBase} object are equal to the IRIs of one of
      * the schema profiles defined in {@link SchemaProfile}
+     * 
      * @param aKb
      * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
-     * the pre-defined ones
+     *         the pre-defined ones
      */
     public static SchemaProfile checkSchemaProfile(KnowledgeBase aKb)
     {
@@ -160,9 +162,9 @@ public enum SchemaProfile
         for (int i = 0; i < profiles.length; i++) {
             // Check if kb has a known schema profile
             if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
-                aKb.getTypeIri(), aKb.getSubPropertyIri(), aKb.getDescriptionIri(),
-                aKb.getLabelIri(), aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
-                aKb.getPropertyDescriptionIri())) {
+                    aKb.getTypeIri(), aKb.getSubPropertyIri(), aKb.getDescriptionIri(),
+                    aKb.getLabelIri(), aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
+                    aKb.getPropertyDescriptionIri())) {
                 return profiles[i];
             }
         }
@@ -175,17 +177,17 @@ public enum SchemaProfile
      * profile
      */
     private static boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-        IRI typeIri, IRI subPropertyIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri,
-        IRI propertyLabelIri, IRI propertyDescriptionIri)
+            IRI typeIri, IRI subPropertyIri, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri,
+            IRI propertyLabelIri, IRI propertyDescriptionIri)
     {
-        return Objects.equals(profile.getClassIri(), classIri) &&
-            Objects.equals(profile.getSubclassIri(), subclassIri) &&
-            Objects.equals(profile.getTypeIri(), typeIri) &&
-            Objects.equals(profile.getSubPropertyIri(), subPropertyIri) &&
-            Objects.equals(profile.getDescriptionIri(), descriptionIri) &&
-            Objects.equals(profile.getLabelIri(), labelIri) &&
-            Objects.equals(profile.getPropertyTypeIri(), propertyTypeIri) &&
-            Objects.equals(profile.getPropertyLabelIri(), propertyLabelIri) &&
-            Objects.equals(profile.getPropertyDescriptionIri(), propertyDescriptionIri);
+        return Objects.equals(profile.getClassIri(), classIri)
+                && Objects.equals(profile.getSubclassIri(), subclassIri)
+                && Objects.equals(profile.getTypeIri(), typeIri)
+                && Objects.equals(profile.getSubPropertyIri(), subPropertyIri)
+                && Objects.equals(profile.getDescriptionIri(), descriptionIri)
+                && Objects.equals(profile.getLabelIri(), labelIri)
+                && Objects.equals(profile.getPropertyTypeIri(), propertyTypeIri)
+                && Objects.equals(profile.getPropertyLabelIri(), propertyLabelIri)
+                && Objects.equals(profile.getPropertyDescriptionIri(), propertyDescriptionIri);
     }
 }

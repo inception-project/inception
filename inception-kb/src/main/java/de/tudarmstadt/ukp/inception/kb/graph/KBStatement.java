@@ -33,7 +33,8 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 
-public class KBStatement implements Serializable
+public class KBStatement
+    implements Serializable
 {
     private static final long serialVersionUID = 6117845741665780184L;
 
@@ -47,7 +48,7 @@ public class KBStatement implements Serializable
 
     // Object
     private Object value;
-    
+
     private String valueLabel;
 
     // Language
@@ -86,7 +87,7 @@ public class KBStatement implements Serializable
         property = aProperty;
 
         setValue(aValue);
-        
+
         originalTriples = new HashSet<>();
         qualifiers = new ArrayList<>();
     }
@@ -223,7 +224,7 @@ public class KBStatement implements Serializable
     {
         qualifiers = qualifierList;
     }
-    
+
     public String getValueLabel()
     {
         return valueLabel;
@@ -238,14 +239,10 @@ public class KBStatement implements Serializable
     public String toString()
     {
         return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
-                .append("statementId", statementId)
-                .append("instance", instance)
-                .append("property", property)
-                .append("value", value)
-                .append("valueLabel", valueLabel)
-                .append("language", language)
-                .append("inferred", inferred)
-                .append("originalTriples", originalTriples)
+                .append("statementId", statementId).append("instance", instance)
+                .append("property", property).append("value", value)
+                .append("valueLabel", valueLabel).append("language", language)
+                .append("inferred", inferred).append("originalTriples", originalTriples)
                 .append("qualifiers", qualifiers).toString();
     }
 }

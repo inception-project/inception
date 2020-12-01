@@ -152,11 +152,11 @@ public class TestFixtures
     }
 
     public KBQualifier buildQualifier(KBStatement kbStatement, KBProperty propertyHandle,
-        String value)
+            String value)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
         KBQualifier qualifier = new KBQualifier(kbStatement, propertyHandle,
-            vf.createLiteral(value));
+                vf.createLiteral(value));
         return qualifier;
     }
 
@@ -170,7 +170,7 @@ public class TestFixtures
             con.setReadTimeout(2500);
             con.setRequestProperty("Content-Type", "application/sparql-query");
             int status = con.getResponseCode();
-            
+
             if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
                 String location = con.getHeaderField("Location");
                 return isReachable(location);
@@ -179,7 +179,7 @@ public class TestFixtures
         catch (Exception e) {
             return false;
         }
-        
+
         SPARQLRepository r = new SPARQLRepository(aUrl);
         r.init();
         try (RepositoryConnection conn = r.getConnection()) {
@@ -193,7 +193,7 @@ public class TestFixtures
             return false;
         }
     }
-    
+
     /**
      * Tries to connect to the given endpoint url and assumes that the connection is successful with
      * {@link org.junit.Assume#assumeTrue(String, boolean)}
