@@ -40,7 +40,7 @@ public class DynamicWorkflowActionBarExtension
 
     @Autowired
     public DynamicWorkflowActionBarExtension(EntityManager aEntityManager,
-        WorkloadManagementService aWorkloadManagementService)
+            WorkloadManagementService aWorkloadManagementService)
     {
         entityManager = aEntityManager;
         workloadManagementService = aWorkloadManagementService;
@@ -66,15 +66,15 @@ public class DynamicWorkflowActionBarExtension
             return false;
         }
 
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
-            getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
-            .getType());
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
+                .getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
+                .getType());
     }
 
     @Override
     public Panel createActionBarItem(String aID, AnnotationPageBase aAnnotationPageBase)
     {
-        return new DynamicAnnotatorWorkflowActionBarItemGroup(
-            aID, aAnnotationPageBase, entityManager);
+        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase,
+                entityManager);
     }
 }

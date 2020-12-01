@@ -22,7 +22,8 @@ import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 import org.eclipse.rdf4j.model.util.URIUtil;
 
-public class IriValidator implements IValidator<String>
+public class IriValidator
+    implements IValidator<String>
 {
     @Override
     public void validate(IValidatable<String> validatable)

@@ -30,14 +30,13 @@ public class SpanSuggestion
     private final Offset position;
     private final String coveredText;
 
-    public SpanSuggestion(int aId, long aRecommenderId, String aRecommenderName,
-        long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
-        String aCoveredText, String aLabel, String aUiLabel, double aConfidence,
-        String aConfidenceExplanation)
+    public SpanSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
+            String aFeature, String aDocumentName, int aBegin, int aEnd, String aCoveredText,
+            String aLabel, String aUiLabel, double aConfidence, String aConfidenceExplanation)
     {
         super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
                 aUiLabel, aConfidence, aConfidenceExplanation);
-        
+
         position = new Offset(aBegin, aEnd);
         coveredText = aCoveredText;
     }
@@ -51,7 +50,7 @@ public class SpanSuggestion
     public SpanSuggestion(SpanSuggestion aObject)
     {
         super(aObject);
-        
+
         position = new Offset(aObject.position.getBegin(), aObject.position.getEnd());
         coveredText = aObject.coveredText;
     }
@@ -78,7 +77,7 @@ public class SpanSuggestion
     {
         return position;
     }
-    
+
     @Override
     public String toString()
     {

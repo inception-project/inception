@@ -99,9 +99,8 @@ public class RecommendationSpanRenderer
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
-        SuggestionDocumentGroup<SpanSuggestion> groups = predictions
-                .getSpanPredictions(sourceDocumentName, aLayer,
-                        aWindowBeginOffset, aWindowEndOffset);
+        SuggestionDocumentGroup<SpanSuggestion> groups = predictions.getSpanPredictions(
+                sourceDocumentName, aLayer, aWindowBeginOffset, aWindowEndOffset);
 
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
@@ -124,11 +123,11 @@ public class RecommendationSpanRenderer
 
         for (SuggestionGroup<SpanSuggestion> suggestion : groups) {
             Map<LabelMapKey, Map<Long, SpanSuggestion>> labelMap = new HashMap<>();
- 
+
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (SpanSuggestion ao: suggestion) {
-                
+            for (SpanSuggestion ao : suggestion) {
+
                 // Skip rendering AnnotationObjects that should not be rendered
                 if (!pref.isShowAllPredictions() && !ao.isVisible()) {
                     continue;
@@ -137,10 +136,9 @@ public class RecommendationSpanRenderer
                 LabelMapKey label = new LabelMapKey(ao);
 
                 if (!labelMap.containsKey(label)
-                        || !labelMap.get(label)
-                                .containsKey(ao.getRecommenderId())
-                        || labelMap.get(label).get(ao.getRecommenderId())
-                                .getConfidence() < ao.getConfidence()) {
+                        || !labelMap.get(label).containsKey(ao.getRecommenderId())
+                        || labelMap.get(label).get(ao.getRecommenderId()).getConfidence() < ao
+                                .getConfidence()) {
 
                     Map<Long, SpanSuggestion> confidencePerClassifier;
                     if (labelMap.get(label) == null) {
@@ -159,8 +157,7 @@ public class RecommendationSpanRenderer
             Map<LabelMapKey, Double> maxConfidencePerLabel = new HashMap<>();
             for (LabelMapKey label : labelMap.keySet()) {
                 double maxConfidence = 0;
-                for (Entry<Long, SpanSuggestion> classifier : labelMap.get(label)
-                        .entrySet()) {
+                for (Entry<Long, SpanSuggestion> classifier : labelMap.get(label).entrySet()) {
                     if (classifier.getValue().getConfidence() > maxConfidence) {
                         maxConfidence = classifier.getValue().getConfidence();
                     }
@@ -173,8 +170,7 @@ public class RecommendationSpanRenderer
             // frontend (e.g. brat) which may choose to re-order them (e.g. for layout reasons).
             List<LabelMapKey> sortedAndfiltered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
-                    .limit(pref.getMaxPredictions())
-                    .map(Entry::getKey)
+                    .limit(pref.getMaxPredictions()).map(Entry::getKey)
                     .collect(Collectors.toList());
 
             // Render annotations for each label
@@ -183,8 +179,7 @@ public class RecommendationSpanRenderer
                 AnnotationSuggestion canonicalRecommendation = suggestion.stream()
                         // check for label or feature for no-label annotations as key
                         .filter(p -> label.equalsAnnotationSuggestion(p))
-                        .max(comparingInt(SpanSuggestion::getId))
-                        .orElse(null);
+                        .max(comparingInt(SpanSuggestion::getId)).orElse(null);
 
                 if (canonicalRecommendation == null) {
                     continue;
@@ -197,7 +192,7 @@ public class RecommendationSpanRenderer
                 // recommendations for that label via the lazy details
                 SpanSuggestion ao = labelMap.get(label).values().stream().findFirst().get();
                 AnnotationFeature feature = features.get(ao.getFeature());
-                
+
                 // Retrieve the UI display label for the given feature value
                 FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature);
                 String annotation = featureSupport.renderFeatureValue(feature, ao.getLabel());

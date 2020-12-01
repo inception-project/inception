@@ -29,8 +29,7 @@ import de.tudarmstadt.ukp.inception.htmleditor.LegacyHtmlFormatSupport;
  * Provides support for an HTML-oriented annotation editor.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "ui.html", name = "enabled", 
-        havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ui.html", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class HtmlAnnotationEditorSupportAutoConfiguration
 {
     @Bean
@@ -38,7 +37,7 @@ public class HtmlAnnotationEditorSupportAutoConfiguration
     {
         return new HtmlAnnotationEditorFactory();
     }
-    
+
     @Bean
     public HtmlFormatSupport htmlFormatSupport()
     {

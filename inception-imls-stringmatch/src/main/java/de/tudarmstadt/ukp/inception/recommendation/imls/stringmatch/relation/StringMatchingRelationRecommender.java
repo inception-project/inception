@@ -48,8 +48,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 public class StringMatchingRelationRecommender
     extends RecommendationEngine
 {
-    public static final Key<MultiValuedMap<Pair<String, String>, String>> KEY_MODEL =
-            new Key<>("model");
+    public static final Key<MultiValuedMap<Pair<String, String>, String>> KEY_MODEL = new Key<>(
+            "model");
 
     private static final String UNKNOWN_LABEL = "unknown";
     private static final String NO_LABEL = "O";
@@ -58,7 +58,7 @@ public class StringMatchingRelationRecommender
     private final StringMatchingRelationRecommenderTraits traits;
 
     public StringMatchingRelationRecommender(Recommender aRecommender,
-                                             StringMatchingRelationRecommenderTraits aTraits)
+            StringMatchingRelationRecommenderTraits aTraits)
     {
         super(aRecommender);
 
@@ -66,14 +66,13 @@ public class StringMatchingRelationRecommender
     }
 
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
-            throws RecommendationException
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
         MultiValuedMap<Pair<String, String>, String> model = new HashSetValuedHashMap<>();
 
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);
-            Feature dependentFeature =  predictedType.getFeatureByBaseName("Dependent");
+            Feature dependentFeature = predictedType.getFeatureByBaseName("Dependent");
             Feature governorFeature = predictedType.getFeatureByBaseName("Governor");
             Feature predictedFeature = getPredictedFeature(cas);
             Feature attachFeature = getAttachFeature(cas);
@@ -99,16 +98,15 @@ public class StringMatchingRelationRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas)
-            throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        MultiValuedMap<Pair<String, String>, String> model = aContext.get(KEY_MODEL).orElseThrow
-            (() -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+        MultiValuedMap<Pair<String, String>, String> model = aContext.get(KEY_MODEL).orElseThrow(
+                () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         Type sentenceType = getType(aCas, Sentence.class);
 
         Type predictedType = getPredictedType(aCas);
-        Feature dependentFeature =  predictedType.getFeatureByBaseName("Dependent");
+        Feature dependentFeature = predictedType.getFeatureByBaseName("Dependent");
         Feature governorFeature = predictedType.getFeatureByBaseName("Governor");
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
@@ -117,8 +115,8 @@ public class StringMatchingRelationRecommender
 
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
             Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sentence);
-            for (AnnotationFS dependent : baseAnnotations ) {
-                for (AnnotationFS governor : baseAnnotations ) {
+            for (AnnotationFS dependent : baseAnnotations) {
+                for (AnnotationFS governor : baseAnnotations) {
                     if (dependent.equals(governor)) {
                         continue;
                     }
@@ -143,7 +141,7 @@ public class StringMatchingRelationRecommender
 
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
-            throws RecommendationException
+        throws RecommendationException
     {
         return null;
     }
@@ -159,7 +157,7 @@ public class StringMatchingRelationRecommender
         Type attachType = getAttachType(aCas);
         return attachType.getFeatureByBaseName(traits.getAdjunctFeature());
     }
-    
+
     @Override
     public boolean isReadyForPrediction(RecommenderContext aContext)
     {

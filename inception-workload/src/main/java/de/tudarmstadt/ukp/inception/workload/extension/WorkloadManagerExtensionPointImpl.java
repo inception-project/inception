@@ -42,8 +42,7 @@ public class WorkloadManagerExtensionPointImpl
 {
 
     @Autowired
-    public WorkloadManagerExtensionPointImpl(
-        List<WorkloadManagerExtension> aExtensions)
+    public WorkloadManagerExtensionPointImpl(List<WorkloadManagerExtension> aExtensions)
     {
         super(aExtensions);
     }
@@ -63,7 +62,7 @@ public class WorkloadManagerExtensionPointImpl
     {
         return getExtensions().get(0);
     }
-    
+
     @Override
     public List<WorkloadManagerType> getTypes()
     {

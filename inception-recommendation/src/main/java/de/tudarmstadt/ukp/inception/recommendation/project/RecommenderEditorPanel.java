@@ -116,7 +116,7 @@ public class RecommenderEditorPanel
     private IModel<Recommender> recommenderModel;
     private boolean autoGenerateName;
     private IModel<Set<AnnotationDocumentState>> statesForTraining;
-    
+
     public RecommenderEditorPanel(String aId, IModel<Project> aProject,
             IModel<Recommender> aRecommender)
     {
@@ -129,18 +129,17 @@ public class RecommenderEditorPanel
         recommenderModel = aRecommender;
 
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
-        // Need to set this explicitly to cover the case where we might switch from a recommender 
+        // Need to set this explicitly to cover the case where we might switch from a recommender
         // which has no upload parts in its traits to one which has.
-        // See: #1552 Changing recommender type throws exception 
+        // See: #1552 Changing recommender type throws exception
         form.setMultiPart(true);
         add(form);
 
-        
         nameField = new TextField<>(MID_NAME, String.class);
         nameField.add(new RecommenderExistsValidator(projectModel, recommenderModel));
         nameField.setRequired(true);
         form.add(nameField);
-        
+
         autoGenerateNameCheckBox = new CheckBox(MID_AUTO_GENERATED_NAME,
                 PropertyModel.of(this, "autoGenerateName"));
         autoGenerateNameCheckBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
@@ -148,14 +147,14 @@ public class RecommenderEditorPanel
             t.add(autoGenerateNameCheckBox);
         }));
         form.add(autoGenerateNameCheckBox);
-        
+
         form.add(new CheckBox(MID_ENABLED));
-        
-        layerChoice = new BootstrapSelect<>(MID_LAYER,this::listLayers);
+
+        layerChoice = new BootstrapSelect<>(MID_LAYER, this::listLayers);
         layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layerChoice.setRequired(true);
         // The features and tools depend on the layer, so reload them when the layer is changed
-        layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> { 
+        layerChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             toolChoice.setModelObject(null);
             featureChoice.setModelObject(null);
             autoUpdateName(t, nameField, recommenderModel.getObject());
@@ -165,7 +164,7 @@ public class RecommenderEditorPanel
                     form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer);
         }));
         form.add(layerChoice);
-        
+
         featureChoice = new BootstrapSelect<>(MID_FEATURE, this::listFeatures);
         featureChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         featureChoice.setRequired(true);
@@ -181,18 +180,16 @@ public class RecommenderEditorPanel
             autoUpdateName(t, nameField, recommenderModel.getObject());
             // Need to add the autoGenerateNameCheckBox here otherwise it looses its form-updating
             // behavior - no idea why
-            t.add(autoGenerateNameCheckBox, form.get(MID_TOOL),
-                    form.get(MID_MAX_RECOMMENDATIONS), activationContainer, traitsContainer);
+            t.add(autoGenerateNameCheckBox, form.get(MID_TOOL), form.get(MID_MAX_RECOMMENDATIONS),
+                    activationContainer, traitsContainer);
         }));
         form.add(featureChoice);
-        
-        IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(
-            () -> {
-                String name = recommenderModel.getObject().getTool();
-                RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
-                return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
-            }, 
-            (v) -> recommenderModel.getObject().setTool(v != null ? v.getKey() : null));
+
+        IModel<Pair<String, String>> toolModel = LambdaModelAdapter.of(() -> {
+            String name = recommenderModel.getObject().getTool();
+            RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
+            return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
+        }, (v) -> recommenderModel.getObject().setTool(v != null ? v.getKey() : null));
 
         toolChoice = new BootstrapSelect<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
         {
@@ -216,7 +213,7 @@ public class RecommenderEditorPanel
                 traitsContainer.addOrReplace(newTraits);
             }
         };
-        
+
         // TODO: For a deprecated recommender, show itself in the tool dropdown but unselectable
         toolChoice.setChoiceRenderer(new ChoiceRenderer<>("value"));
         toolChoice.setRequired(true);
@@ -225,37 +222,32 @@ public class RecommenderEditorPanel
             autoUpdateName(t, nameField, recommenderModel.getObject());
             // Need to add the autoGenerateNameCheckBox here otherwise it looses its form-updating
             // behavior - no idea why
-            t.add(autoGenerateNameCheckBox, form.get(MID_MAX_RECOMMENDATIONS),
-                    activationContainer, traitsContainer);
+            t.add(autoGenerateNameCheckBox, form.get(MID_MAX_RECOMMENDATIONS), activationContainer,
+                    traitsContainer);
         }));
         form.add(toolChoice);
 
         form.add(activationContainer = new WebMarkupContainer(MID_ACTIVATION_CONTAINER));
         activationContainer.setOutputMarkupPlaceholderTag(true);
-        activationContainer.add(visibleWhen(() -> toolChoice.getModel().map(_tool ->
-                recommenderRegistry.getFactory(_tool.getKey()).isEvaluable())
+        activationContainer.add(visibleWhen(() -> toolChoice.getModel()
+                .map(_tool -> recommenderRegistry.getFactory(_tool.getKey()).isEvaluable())
                 .orElse(false).getObject()));
 
-        activationContainer.add(new CheckBox(MID_ALWAYS_SELECTED)
-                .setOutputMarkupPlaceholderTag(true)
-                .add(new LambdaAjaxFormSubmittingBehavior("change", t ->
-                    t.add(activationContainer.get(MID_THRESHOLD))
-                )));
+        activationContainer
+                .add(new CheckBox(MID_ALWAYS_SELECTED).setOutputMarkupPlaceholderTag(true)
+                        .add(new LambdaAjaxFormSubmittingBehavior("change",
+                                t -> t.add(activationContainer.get(MID_THRESHOLD)))));
 
-        activationContainer.add(new NumberTextField<>(MID_THRESHOLD, Float.class)
-                .setMinimum(0.0f)
-                .setMaximum(100.0f)
-                .setStep(0.01f)
-                .setOutputMarkupPlaceholderTag(true)
+        activationContainer.add(new NumberTextField<>(MID_THRESHOLD, Float.class).setMinimum(0.0f)
+                .setMaximum(100.0f).setStep(0.01f).setOutputMarkupPlaceholderTag(true)
                 .add(visibleWhen(() -> !recommenderModel.map(Recommender::isAlwaysSelected)
                         .orElse(false).getObject())));
 
-        form.add(new NumberTextField<>(MID_MAX_RECOMMENDATIONS, Integer.class)
-                .setMinimum(1)
-                .setMaximum(MAX_RECOMMENDATIONS_CAP)
-                .setStep(1)
-                .setOutputMarkupPlaceholderTag(true)
-                .add(visibleWhen(() -> toolChoice.getModel()
+        form.add(
+                new NumberTextField<>(MID_MAX_RECOMMENDATIONS, Integer.class).setMinimum(1)
+                        .setMaximum(MAX_RECOMMENDATIONS_CAP).setStep(1)
+                        .setOutputMarkupPlaceholderTag(true)
+                        .add(visibleWhen(() -> toolChoice.getModel()
                                 .map(_tool -> recommenderRegistry.getFactory(_tool.getKey())
                                         .isMultipleRecommendationProvider())
                                 .orElse(false).getObject())));
@@ -280,9 +272,11 @@ public class RecommenderEditorPanel
 
         // We need to invert the states in documentStates, as the recommender stores the
         // ones to ignore, not the ones to consider
-        statesForTraining = new IModel<Set<AnnotationDocumentState>>() {
+        statesForTraining = new IModel<Set<AnnotationDocumentState>>()
+        {
             @Override
-            public void setObject(Set<AnnotationDocumentState> states) {
+            public void setObject(Set<AnnotationDocumentState> states)
+            {
                 // The model can be null after save and delete
                 if (recommenderModel.getObject() != null) {
                     recommenderModel.getObject().setStatesIgnoredForTraining(invert(states));
@@ -290,14 +284,16 @@ public class RecommenderEditorPanel
             }
 
             @Override
-            public Set<AnnotationDocumentState> getObject() {
+            public Set<AnnotationDocumentState> getObject()
+            {
                 Set<AnnotationDocumentState> ignoredStates = recommenderModel.getObject()
                         .getStatesIgnoredForTraining();
 
                 return invert(ignoredStates);
             }
 
-            private Set<AnnotationDocumentState> invert(Set<AnnotationDocumentState> states) {
+            private Set<AnnotationDocumentState> invert(Set<AnnotationDocumentState> states)
+            {
                 Set<AnnotationDocumentState> result = getAllPossibleDocumentStates();
 
                 if (states == null) {
@@ -308,7 +304,7 @@ public class RecommenderEditorPanel
                 return result;
             }
         };
-        
+
         form.add(new LambdaAjaxLink(MID_DELETE, this::actionDelete)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink(MID_CANCEL, this::actionCancel));
@@ -326,12 +322,12 @@ public class RecommenderEditorPanel
         }
 
         aField.setModelObject(generateName(aRecommender));
-        
+
         if (aTarget != null) {
             aTarget.add(aField);
         }
     }
-    
+
     /**
      * Check if the selected recommender still accepts the configured layer and feature. If not show
      * an error message.
@@ -341,7 +337,7 @@ public class RecommenderEditorPanel
         if (recommenderModel.getObject() == null || aToolModel.getObject() == null) {
             return;
         }
-        
+
         Recommender recommender = recommenderModel.getObject();
         // check if recommender and layer still match
         RecommendationEngineFactory factory = recommenderRegistry
@@ -355,23 +351,23 @@ public class RecommenderEditorPanel
             }
         }
     }
-    
+
     private String generateName(Recommender aRecommender)
     {
         if (aRecommender.getFeature() == null || aRecommender.getLayer() == null
                 || aRecommender.getTool() == null) {
             return null;
         }
-        
+
         RecommendationEngineFactory factory = recommenderRegistry
                 .getFactory(aRecommender.getTool());
-        
+
         String factoryName = factory != null ? factory.getName() : "NO FACTORY!";
-        
+
         return String.format(Locale.US, "[%s@%s] %s", aRecommender.getLayer().getUiName(),
                 aRecommender.getFeature().getUiName(), factoryName);
     }
-    
+
     @Override
     protected void onConfigure()
     {
@@ -401,10 +397,8 @@ public class RecommenderEditorPanel
 
         // For new recommenders, default to auto-generation of name, for existing recommenders,
         // do not auto-generate name unless asked to
-        if (
-                recommender.getId() == null || 
-                Objects.equals(recommender.getName(), generateName(recommender))
-        ) {
+        if (recommender.getId() == null
+                || Objects.equals(recommender.getName(), generateName(recommender))) {
             autoGenerateNameCheckBox.setModelObject(true);
             autoUpdateName(null, nameField, recommenderModel.getObject());
         }
@@ -419,8 +413,8 @@ public class RecommenderEditorPanel
 
         for (AnnotationLayer layer : annotationSchemaService
                 .listAnnotationLayer(projectModel.getObject())) {
-            if ((WebAnnoConst.SPAN_TYPE.equals(layer.getType()) ||
-                 WebAnnoConst.RELATION_TYPE.equals(layer.getType()))
+            if ((WebAnnoConst.SPAN_TYPE.equals(layer.getType())
+                    || WebAnnoConst.RELATION_TYPE.equals(layer.getType()))
                     && !Token.class.getName().equals(layer.getName())) {
                 layers.add(layer);
             }
@@ -433,12 +427,11 @@ public class RecommenderEditorPanel
     {
         if (recommenderModel != null && recommenderModel.getObject().getLayer() != null) {
             return annotationSchemaService
-                    .listSupportedFeatures(recommenderModel.getObject().getLayer())
-                    .stream()
-                    .filter(feat -> feat.getType() != null)
-                    .collect(Collectors.toList());
+                    .listSupportedFeatures(recommenderModel.getObject().getLayer()).stream()
+                    .filter(feat -> feat.getType() != null).collect(Collectors.toList());
 
-        } else {
+        }
+        else {
             return Collections.emptyList();
         }
     }
@@ -449,11 +442,9 @@ public class RecommenderEditorPanel
                 && recommenderModel.getObject().getFeature() != null) {
             AnnotationLayer layer = recommenderModel.getObject().getLayer();
             AnnotationFeature feature = recommenderModel.getObject().getFeature();
-            return recommenderRegistry.getFactories(layer, feature)
-                .stream()
-                .filter(f -> !f.isDeprecated())
-                .map(f -> Pair.of(f.getId(), f.getName()))
-                .collect(Collectors.toList());
+            return recommenderRegistry.getFactories(layer, feature).stream()
+                    .filter(f -> !f.isDeprecated()).map(f -> Pair.of(f.getId(), f.getName()))
+                    .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }
@@ -468,7 +459,7 @@ public class RecommenderEditorPanel
         // Not clearing the selection / editor panel here because saving the recommender may
         // cause additional UI elements to appear (e.g. options to upload pre-trained models
         // which cannot be uploaded/saved before the recommender has been persisted).
-        
+
         // Reload whole panel because master panel also needs to be reloaded.
         aTarget.add(findParent(ProjectRecommendersPanel.class));
 
@@ -476,18 +467,20 @@ public class RecommenderEditorPanel
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget) {
+    private void actionDelete(AjaxRequestTarget aTarget)
+    {
         recommendationService.deleteRecommender(recommenderModel.getObject());
         actionCancel(aTarget);
     }
-    
-    private void actionCancel(AjaxRequestTarget aTarget) {
+
+    private void actionCancel(AjaxRequestTarget aTarget)
+    {
         recommenderModel.setObject(null);
-        
+
         // Reload whole panel because master panel also needs to be reloaded.
         aTarget.add(findParent(ProjectRecommendersPanel.class));
     }
-    
+
     private static Set<AnnotationDocumentState> getAllPossibleDocumentStates()
     {
         return new HashSet<>(asList(AnnotationDocumentState.values()));
@@ -500,14 +493,14 @@ public class RecommenderEditorPanel
 
         private IModel<Recommender> recommender;
         private IModel<Project> project;
-        
+
         public RecommenderExistsValidator(IModel<Project> aProject,
                 IModel<Recommender> aRecommender)
         {
             recommender = aRecommender;
             project = aProject;
         }
-        
+
         @Override
         public void validate(IValidatable<String> aValidatable)
         {
@@ -517,11 +510,8 @@ public class RecommenderEditorPanel
                     .getRecommender(project.getObject(), newName);
             // Either there should be no recommender with the new name already existing or it should
             // be the recommender we are currently editing (i.e. the name has not changed)
-            if (
-                    recommenderWithNewName.isPresent() &&
-                    !Objects.equals(recommenderWithNewName.get().getId(),
-                            currentRecommender.getId())
-            ) {
+            if (recommenderWithNewName.isPresent() && !Objects
+                    .equals(recommenderWithNewName.get().getId(), currentRecommender.getId())) {
                 aValidatable.error(new ValidationError(
                         "Another recommender with the same name exists. Please try a different name"));
             }

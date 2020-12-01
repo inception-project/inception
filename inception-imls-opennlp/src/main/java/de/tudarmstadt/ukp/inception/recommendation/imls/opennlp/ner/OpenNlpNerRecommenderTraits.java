@@ -31,7 +31,7 @@ public class OpenNlpNerRecommenderTraits
 
     private int trainingSetSizeLimit = Integer.MAX_VALUE;
     private int predictionLimit = Integer.MAX_VALUE;
-    
+
     private int numThreads = 1;
 
     public int getNumThreads()

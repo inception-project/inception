@@ -37,8 +37,8 @@ import org.hibernate.annotations.OnDeleteAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 @Entity
-@Table(name = "weblicht_chain", 
-        uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "recommender" }) })
+@Table(name = "weblicht_chain", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "recommender" }) })
 public class WeblichtChain
     implements Serializable
 {
@@ -60,7 +60,7 @@ public class WeblichtChain
     {
         // Required for JPA
     }
-    
+
     public WeblichtChain(String aName, Recommender aRecommender)
     {
         name = aName;

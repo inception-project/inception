@@ -60,19 +60,18 @@ public class RecommendationRenderer
         if (aCas == null) {
             return;
         }
-        
+
         for (AnnotationLayer layer : aState.getAnnotationLayers()) {
             if (layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName())
-                    || (layer.getType().equals(CHAIN_TYPE)
-                            && (aState.getMode().equals(AUTOMATION)
-                                    || aState.getMode().equals(CORRECTION)
-                                    || aState.getMode().equals(CURATION)))
+                    || (layer.getType().equals(CHAIN_TYPE) && (aState.getMode().equals(AUTOMATION)
+                            || aState.getMode().equals(CORRECTION)
+                            || aState.getMode().equals(CURATION)))
                     || !layer.isEnabled()) { /* Hide layer if not enabled */
                 continue;
             }
-            
-            TypeAdapter adapter = aAnnotationService.getAdapter(layer);      
+
+            TypeAdapter adapter = aAnnotationService.getAdapter(layer);
             RecommendationTypeRenderer renderer = getRenderer(adapter);
             if (renderer != null) {
                 renderer.render(aCas, aVdoc, aState, layer, aRecService, aLearningRecordService,
@@ -81,16 +80,18 @@ public class RecommendationRenderer
             }
         }
     }
-    
+
     /**
      * Helper method to fetch a renderer for a given type. This is indented to be a temporary
      * solution. The final solution should be able to return renderers specific to a certain
      * visualisation - one of which would be brat.
      */
-    public static RecommendationTypeRenderer getRenderer(TypeAdapter aTypeAdapter) {
+    public static RecommendationTypeRenderer getRenderer(TypeAdapter aTypeAdapter)
+    {
         if (aTypeAdapter instanceof SpanAdapter) {
             return new RecommendationSpanRenderer((SpanAdapter) aTypeAdapter);
-        } else if (aTypeAdapter instanceof RelationAdapter) {
+        }
+        else if (aTypeAdapter instanceof RelationAdapter) {
             return new RecommendationRelationRenderer((RelationAdapter) aTypeAdapter);
         }
         return null;

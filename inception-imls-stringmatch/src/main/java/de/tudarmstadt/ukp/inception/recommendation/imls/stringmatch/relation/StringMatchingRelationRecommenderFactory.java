@@ -42,13 +42,11 @@ public class StringMatchingRelationRecommenderFactory
     extends RecommendationEngineFactoryImplBase<StringMatchingRelationRecommenderTraits>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID =
-        "StringMatchingRelationRecommender";
+    public static final String ID = "StringMatchingRelationRecommender";
 
-    
     @Override
     public String getId()
     {
@@ -58,10 +56,9 @@ public class StringMatchingRelationRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        StringMatchingRelationRecommenderTraits traits
-                = new StringMatchingRelationRecommenderTraits();
-        StringMatchingRelationRecommender recommender =
-                new StringMatchingRelationRecommender(aRecommender, traits);
+        StringMatchingRelationRecommenderTraits traits = new StringMatchingRelationRecommenderTraits();
+        StringMatchingRelationRecommender recommender = new StringMatchingRelationRecommender(
+                aRecommender, traits);
 
         return recommender;
     }
@@ -80,10 +77,10 @@ public class StringMatchingRelationRecommenderFactory
         }
 
         return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-            && RELATION_TYPE.equals(aLayer.getType())
-            && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+                && RELATION_TYPE.equals(aLayer.getType())
+                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
-    
+
     @Override
     public StringMatchingRelationRecommenderTraitsEditor createTraitsEditor(String aId,
             IModel<Recommender> aModel)

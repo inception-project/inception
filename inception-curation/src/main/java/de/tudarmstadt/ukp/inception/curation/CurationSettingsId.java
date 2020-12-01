@@ -22,22 +22,24 @@ import java.io.Serializable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-public class CurationSettingsId implements Serializable
+public class CurationSettingsId
+    implements Serializable
 {
     private static final long serialVersionUID = 1L;
-    
+
     private Long projectId;
     private String username;
-    
+
     public CurationSettingsId()
     {
     }
-    
-    public CurationSettingsId(Long aProjectId, String aUsername) {
+
+    public CurationSettingsId(Long aProjectId, String aUsername)
+    {
         projectId = aProjectId;
         username = aUsername;
     }
-    
+
     @Override
     public boolean equals(final Object other)
     {

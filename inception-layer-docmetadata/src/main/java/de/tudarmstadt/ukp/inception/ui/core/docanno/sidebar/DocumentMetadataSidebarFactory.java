@@ -41,7 +41,7 @@ public class DocumentMetadataSidebarFactory
 {
     private static final ResourceReference ICON = new PackageResourceReference(
             DocumentMetadataSidebarFactory.class, "three_tags.png");
-    
+
     @Override
     public String getDisplayName()
     {
@@ -53,7 +53,7 @@ public class DocumentMetadataSidebarFactory
     {
         return ICON;
     }
-    
+
     @Override
     public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,

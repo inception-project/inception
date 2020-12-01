@@ -36,24 +36,23 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.exporter.ChainE
  * Provides support for calling out to CLARIN Weblicht for recommendations.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "recommender.weblicht", name = "enabled", havingValue = "true", 
-        matchIfMissing = true)
+@ConditionalOnProperty(prefix = "recommender.weblicht", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WeblichtRecommenderAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
-    
+
     @Bean
     public WeblichtRecommenderFactory weblichtRecommenderFactory(WeblichtChainService aChainService)
     {
         return new WeblichtRecommenderFactoryImpl(aChainService);
     }
-    
+
     @Bean
     public WeblichtChainService weblichtChainService(RepositoryProperties aRepoProperties)
     {
         return new WeblichtChainServiceImpl(aRepoProperties, entityManager);
     }
-    
+
     public ChainExporter chainExporter(RecommendationService aRecommendationService,
             WeblichtChainService aChainService)
     {

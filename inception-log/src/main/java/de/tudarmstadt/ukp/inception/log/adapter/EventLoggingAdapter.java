@@ -31,12 +31,12 @@ public interface EventLoggingAdapter<T>
     {
         return null;
     }
-    
+
     default long getProject(T aEvent)
     {
         return -1;
     }
-    
+
     default long getDocument(T aEvent)
     {
         return -1;
@@ -56,12 +56,12 @@ public interface EventLoggingAdapter<T>
             return new Date();
         }
     }
-    
+
     default String getEvent(T aEvent)
     {
         return aEvent.getClass().getSimpleName();
     }
-    
+
     default String getUser(T aEvent)
     {
         SecurityContext context = SecurityContextHolder.getContext();

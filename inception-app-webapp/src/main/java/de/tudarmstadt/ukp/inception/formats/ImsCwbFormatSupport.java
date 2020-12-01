@@ -33,7 +33,7 @@ public class ImsCwbFormatSupport
 {
     public static final String ID = "imscwb";
     public static final String NAME = "Corpus Workbench Format (aka VRT)";
-    
+
     @Override
     public String getId()
     {
@@ -51,12 +51,12 @@ public class ImsCwbFormatSupport
     {
         return true;
     }
-    
-//    @Override
-//    public boolean isWritable()
-//    {
-//        return true;
-//    }
+
+    // @Override
+    // public boolean isWritable()
+    // {
+    // return true;
+    // }
 
     @Override
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
@@ -64,11 +64,11 @@ public class ImsCwbFormatSupport
     {
         return createReaderDescription(ImsCwbReader.class, aTSD);
     }
-    
-//    @Override
-//    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
-//        throws ResourceInitializationException
-//    {
-//        return createEngineDescription(ImsCwbWriter.class);
-//    }
+
+    // @Override
+    // public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    // throws ResourceInitializationException
+    // {
+    // return createEngineDescription(ImsCwbWriter.class);
+    // }
 }

@@ -38,8 +38,8 @@ public interface ActiveLearningService
     List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer);
 
     /**
-     * Check if the suggestions from which the given record was created (or an equivalent one)
-     * is visible to the user. This is useful to check if the suggestion can be highlighted when
+     * Check if the suggestions from which the given record was created (or an equivalent one) is
+     * visible to the user. This is useful to check if the suggestion can be highlighted when
      * clicking on a history record.
      */
     boolean isSuggestionVisible(LearningRecord aRecord);

@@ -52,13 +52,13 @@ public class PrimitiveUimaIndexingSupport
     {
         return id;
     }
-    
+
     @Override
     public void setBeanName(String aBeanName)
     {
         id = aBeanName;
     }
-    
+
     @Override
     public boolean accepts(AnnotationFeature aFeature)
     {
@@ -68,7 +68,7 @@ public class PrimitiveUimaIndexingSupport
             case CAS.TYPE_NAME_INTEGER: // fallthrough
             case CAS.TYPE_NAME_FLOAT: // fallthrough
             case CAS.TYPE_NAME_BOOLEAN: // fallthrough
-            case CAS.TYPE_NAME_STRING: 
+            case CAS.TYPE_NAME_STRING:
                 return true;
             default:
                 return false;
@@ -78,7 +78,7 @@ public class PrimitiveUimaIndexingSupport
             return false;
         }
     }
-    
+
     @Override
     public MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
             AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature)
@@ -89,14 +89,13 @@ public class PrimitiveUimaIndexingSupport
         if (isEmpty(featureValue)) {
             return values;
         }
-        values.put(featureIndexName(aFieldPrefix, aFeaturePrefix, aFeature),
-                featureValue);
+        values.put(featureIndexName(aFieldPrefix, aFeaturePrefix, aFeature), featureValue);
         return values;
     }
 
     @Override
     public String featureIndexName(String aFieldPrefix, String aFeaturePrefix,
-        AnnotationFeature aFeature)
+            AnnotationFeature aFeature)
     {
         return aFieldPrefix + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName();
     }

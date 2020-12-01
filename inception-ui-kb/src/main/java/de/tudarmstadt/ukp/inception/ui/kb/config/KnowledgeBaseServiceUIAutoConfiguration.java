@@ -67,20 +67,20 @@ public class KnowledgeBaseServiceUIAutoConfiguration
     {
         return new NamedEntityIdentifierFeatureInitializer(aAnnotationSchemaService);
     }
-    
+
     @Bean
     public KnowledgeBaseProjectSettingsPanelFactory knowledgeBaseProjectSettingsPanelFactory()
     {
         return new KnowledgeBaseProjectSettingsPanelFactory();
     }
-    
+
     @Bean
     @Autowired
     public ConceptFeatureSupport conceptFeatureSupport(KnowledgeBaseService aKbService)
     {
         return new ConceptFeatureSupport(aKbService);
     }
-    
+
     @Bean
     @Autowired
     public ConceptFeatureIndexingSupport conceptFeatureIndexingSupport(
@@ -88,76 +88,75 @@ public class KnowledgeBaseServiceUIAutoConfiguration
     {
         return new ConceptFeatureIndexingSupport(aFeatureSupportRegistry, aKbService);
     }
-    
+
     @Bean
     public DefaultColoringStrategyImpl defaultColoringStrategy()
     {
         return new DefaultColoringStrategyImpl();
     }
-    
+
     @Bean
     public DescriptionColoringStrategyImpl descriptionColoringStrategy()
     {
         return new DescriptionColoringStrategyImpl();
     }
-    
+
     @Bean
     public LabelColoringStrategyImpl labelColoringStrategy()
     {
         return new LabelColoringStrategyImpl();
     }
-    
+
     @Bean
     public SubclassOfColoringStrategyImpl subclassOfColoringStrategy()
     {
         return new SubclassOfColoringStrategyImpl();
     }
-    
+
     @Bean
     public TypeColoringStrategyImpl typeColoringStrategy()
     {
         return new TypeColoringStrategyImpl();
     }
-    
+
     @Bean
     public StatementColoringRegistry statementColoringRegistry(
-            @Lazy @Autowired(required = false) List<StatementColoringStrategy> 
-                    aStatementColoringStrategies)
+            @Lazy @Autowired(required = false) List<StatementColoringStrategy> aStatementColoringStrategies)
     {
         return new StatementColoringRegistryImpl(aStatementColoringStrategies);
     }
-    
+
     @Bean
     public BooleanLiteralValueSupport booleanLiteralValueSupport()
     {
         return new BooleanLiteralValueSupport();
     }
-    
+
     @Bean
     public NumericLiteralValueSupport numericLiteralValueSupport()
     {
         return new NumericLiteralValueSupport();
     }
-    
+
     @Bean
     public StringLiteralValueSupport stringLiteralValueSupport()
     {
         return new StringLiteralValueSupport();
     }
-    
+
     @Bean
     public IriValueSupport iriValueSupport()
     {
         return new IriValueSupport();
     }
-    
+
     @Bean
     public ValueTypeSupportRegistry valueTypeSupportRegistry(
             @Lazy @Autowired(required = false) List<ValueTypeSupport> aValueTypeSupports)
     {
         return new ValueTypeSupportRegistryImpl(aValueTypeSupports);
     }
-    
+
     @Bean
     @Autowired
     public KnowledgeBasePageMenuItem knowledgeBasePageMenuItem(UserDao aUserRepo,
@@ -165,9 +164,8 @@ public class KnowledgeBaseServiceUIAutoConfiguration
     {
         return new KnowledgeBasePageMenuItem(aUserRepo, aProjectService, aKbService);
     }
-    
-    @ConditionalOnProperty(prefix = "fact-layer", name = "enabled", havingValue = "true", 
-            matchIfMissing = false)
+
+    @ConditionalOnProperty(prefix = "fact-layer", name = "enabled", havingValue = "true", matchIfMissing = false)
     @Bean
     @Autowired
     public FactLayerInitializer factLayerInitializer(

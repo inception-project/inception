@@ -35,13 +35,13 @@ public class NamedEntityLinkerTraitsEditor
     private static final String MID_FORM = "form";
 
     private @SpringBean RecommendationEngineFactory<NamedEntityLinkerTraits> toolFactory;
-    
+
     private final NamedEntityLinkerTraits traits;
 
     public NamedEntityLinkerTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-        
+
         traits = toolFactory.readTraits(aRecommender.getObject());
 
         Form<NamedEntityLinkerTraits> form = new Form<NamedEntityLinkerTraits>(MID_FORM,

@@ -66,7 +66,7 @@ public class GazeteerExporterTest
     private AnnotationLayer sourceLayer;
     private AnnotationFeature sourceFeature;
     private Recommender sourceRecommender;
-    
+
     private Project targetProject;
     private AnnotationLayer targetLayer;
     private AnnotationFeature targetFeature;
@@ -92,7 +92,7 @@ public class GazeteerExporterTest
                 CAS.TYPE_NAME_STRING);
         sourceRecommender = new Recommender("rec1", sourceLayer);
         sourceRecommender.setFeature(sourceFeature);
-        
+
         targetProject = new Project();
         targetProject.setId(2l);
         targetProject.setName("Test Project");
@@ -104,9 +104,9 @@ public class GazeteerExporterTest
                 CAS.TYPE_NAME_STRING);
         targetRecommender = new Recommender("rec1", targetLayer);
         targetRecommender.setFeature(targetFeature);
-        
+
         when(gazeteerService.listGazeteers(sourceRecommender)).thenReturn(gazeteers());
-        
+
         when(gazeteerService.getGazeteerFile(Mockito.any())).thenAnswer(invocation -> {
             Gazeteer gaz = invocation.getArgument(0);
             File gazFile = temporaryFolder.newFile(gaz.getId() + ".txt");
@@ -117,7 +117,7 @@ public class GazeteerExporterTest
 
         when(recommendationService.listRecommenders(sourceProject))
                 .thenReturn(asList(sourceRecommender));
-        
+
         when(recommendationService.getRecommender(any(), any()))
                 .thenReturn(Optional.of(targetRecommender));
 
@@ -149,7 +149,7 @@ public class GazeteerExporterTest
         assertThat(gazeteerCaptor.getAllValues())
                 .usingElementComparatorIgnoringFields("id", "project")
                 .containsExactlyInAnyOrderElementsOf(gazeteers());
-        
+
         assertThat(gazeteerFileCaptor.getAllValues())
                 .usingElementComparatorIgnoringFields("id", "project")
                 .containsExactlyInAnyOrderElementsOf(gazeteers());

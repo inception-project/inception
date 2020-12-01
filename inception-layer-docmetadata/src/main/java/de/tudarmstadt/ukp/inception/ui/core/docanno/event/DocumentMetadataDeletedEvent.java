@@ -28,7 +28,7 @@ public class DocumentMetadataDeletedEvent
     implements AnnotationDeletedEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
-    
+
     public DocumentMetadataDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationLayer aLayer, AnnotationBaseFS aAnnotation)
     {

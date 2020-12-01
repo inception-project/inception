@@ -33,7 +33,7 @@ public class ReindexTask
     extends Task
 {
     private Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private @Autowired SearchService searchService;
 
     public ReindexTask(Project aProject)
@@ -52,14 +52,14 @@ public class ReindexTask
                     getProject().getId(), e);
         }
     }
-    
+
     @Override
     public boolean matches(Task aTask)
     {
         if (!(aTask instanceof ReindexTask)) {
             return false;
         }
-        
+
         return getProject().getId() == aTask.getProject().getId();
     }
 }

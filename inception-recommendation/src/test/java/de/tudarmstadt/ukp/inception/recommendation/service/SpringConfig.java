@@ -22,16 +22,11 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 @SpringBootConfiguration
-@EntityScan(
-        basePackages = {
-            "de.tudarmstadt.ukp.inception.recommendation.api.model",
-            "de.tudarmstadt.ukp.clarin.webanno.security.model",
-            "de.tudarmstadt.ukp.clarin.webanno.model"
-})
+@EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.recommendation.api.model",
+        "de.tudarmstadt.ukp.clarin.webanno.security.model",
+        "de.tudarmstadt.ukp.clarin.webanno.model" })
 @EnableAutoConfiguration
 public class SpringConfig
 {
     // No content
 }
-
-

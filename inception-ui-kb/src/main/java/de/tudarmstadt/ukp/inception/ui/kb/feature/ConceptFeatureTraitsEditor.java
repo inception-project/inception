@@ -66,7 +66,7 @@ public class ConceptFeatureTraitsEditor
     private static final String MID_ALLOWED_VALUE_TYPE = "allowedValueType";
 
     private static final long serialVersionUID = 2129000875921279514L;
-    
+
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean KnowledgeBaseService kbService;
@@ -75,12 +75,12 @@ public class ConceptFeatureTraitsEditor
     private String featureSupportId;
     private IModel<AnnotationFeature> feature;
     private CompoundPropertyModel<Traits> traits;
-    
+
     public ConceptFeatureTraitsEditor(String aId, ConceptFeatureSupport aFS,
             IModel<AnnotationFeature> aFeatureModel)
     {
         super(aId, aFeatureModel);
-        
+
         // We cannot retain a reference to the actual ConceptFeatureSupport instance because that
         // is not serializable, but we can retain its ID and look it up again from the registry
         // when required.
@@ -99,19 +99,16 @@ public class ConceptFeatureTraitsEditor
                 writeTraits();
             }
         };
-        
-        form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
-            _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
 
-        form.add(
-            new BootstrapSelect<>(MID_KNOWLEDGE_BASE, 
-                    LambdaModel.of(this::listKnowledgeBases), 
-                    new LambdaChoiceRenderer<>(KnowledgeBase::getName))
-            .setNullValid(true)
-            .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
-        form.add(
-            new BootstrapSelect<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes))
-            .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
+        form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
+                _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
+
+        form.add(new BootstrapSelect<>(MID_KNOWLEDGE_BASE, LambdaModel.of(this::listKnowledgeBases),
+                new LambdaChoiceRenderer<>(KnowledgeBase::getName)).setNullValid(true)
+                        .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
+        form.add(new BootstrapSelect<>(MID_ALLOWED_VALUE_TYPE,
+                LambdaModel.of(this::listAllowedTypes))
+                        .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
 
         form.add(new DisabledKBWarning("disabledKBWarning", feature));
         add(form);
@@ -119,16 +116,16 @@ public class ConceptFeatureTraitsEditor
         add(new KeyBindingsConfigurationPanel("keyBindings", aFeatureModel,
                 traits.bind("keyBindings")));
     }
-    
+
     private void refresh(AjaxRequestTarget aTarget)
     {
         Traits t = traits.getObject();
-        t.setScope(loadConcept(t.getKnowledgeBase(), t.getScope() != null ? 
-                t.getScope().getIdentifier() : null));
+        t.setScope(loadConcept(t.getKnowledgeBase(),
+                t.getScope() != null ? t.getScope().getIdentifier() : null));
         aTarget.add(get(MID_FORM).get(MID_SCOPE));
-        
+
     }
-    
+
     private KBHandle loadConcept(KnowledgeBase aKB, String aIdentifier)
     {
         if (aIdentifier == null) {
@@ -147,7 +144,7 @@ public class ConceptFeatureTraitsEditor
 
         return scope.orElse(null);
     }
-    
+
     /**
      * Read traits and then transfer the values from the actual traits model
      * {{@link ConceptFeatureTraits}} to the the UI traits model ({@link Traits}).
@@ -155,7 +152,7 @@ public class ConceptFeatureTraitsEditor
     private Traits readTraits()
     {
         Project project = feature.getObject().getProject();
-        
+
         Traits result = new Traits();
 
         ConceptFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
@@ -164,7 +161,7 @@ public class ConceptFeatureTraitsEditor
             kbService.getKnowledgeBaseById(project, t.getRepositoryId())
                     .ifPresent(result::setKnowledgeBase);
         }
-        
+
         if (t.getAllowedValueType() != null) {
             result.setAllowedValueType(t.getAllowedValueType());
         }
@@ -172,14 +169,14 @@ public class ConceptFeatureTraitsEditor
             // Allow all values as default
             result.setAllowedValueType(ConceptFeatureValueType.ANY_OBJECT);
         }
-        
+
         result.setScope(loadConcept(result.getKnowledgeBase(), t.getScope()));
-        
+
         result.setKeyBindings(t.getKeyBindings());
 
         return result;
     }
-    
+
     /**
      * Transfer the values from the UI traits model ({@link Traits}) to the actual traits model
      * {{@link ConceptFeatureTraits}} and then store them.
@@ -189,33 +186,34 @@ public class ConceptFeatureTraitsEditor
         ConceptFeatureTraits t = new ConceptFeatureTraits();
         if (traits.getObject().knowledgeBase != null) {
             t.setRepositoryId(traits.getObject().knowledgeBase.getRepositoryId());
-        
+
         }
-        
+
         if (traits.getObject().scope != null) {
             t.setScope(traits.getObject().scope.getIdentifier());
         }
 
         t.setAllowedValueType(traits.getObject().allowedValueType);
         t.setKeyBindings(traits.getObject().getKeyBindings());
-        
+
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
-    
+
     private List<KnowledgeBase> listKnowledgeBases()
     {
         return kbService.getEnabledKnowledgeBases(feature.getObject().getProject());
     }
-    
-    private List<ConceptFeatureValueType> listAllowedTypes() {
+
+    private List<ConceptFeatureValueType> listAllowedTypes()
+    {
         return Arrays.asList(ConceptFeatureValueType.values());
     }
-    
+
     private ConceptFeatureSupport getFeatureSupport()
     {
         return featureSupportRegistry.getFeatureSupport(featureSupportId);
     }
-    
+
     /**
      * Search for Entities in the current knowledge base based on a typed string. Use full text
      * search if it is available. Returns a sorted/ranked list of KBHandles
@@ -225,7 +223,7 @@ public class ConceptFeatureTraitsEditor
         if (StringUtils.isBlank(aTypedString)) {
             return Collections.emptyList();
         }
-        
+
         Traits t = traits.getObject();
         return conceptLinkingService.getLinkingInstancesInKBScope(
                 t.knowledgeBase != null ? t.knowledgeBase.getRepositoryId() : null, null, aType,
@@ -237,7 +235,8 @@ public class ConceptFeatureTraitsEditor
      * actual {@link ConceptFeatureTraits} via {@link ConceptFeatureTraitsEditor#readTraits()} and
      * {@link ConceptFeatureTraitsEditor#writeTraits()}.
      */
-    private static class Traits implements Serializable
+    private static class Traits
+        implements Serializable
     {
         private static final long serialVersionUID = 5804584375190949088L;
 

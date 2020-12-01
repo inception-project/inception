@@ -27,7 +27,7 @@ public class ExportedGazeteer
 {
     @JsonProperty("id")
     private long id;
-    
+
     @JsonProperty("name")
     private String name;
 

@@ -22,26 +22,32 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class AjaxRecommendationRejectedEvent {
+public class AjaxRecommendationRejectedEvent
+{
     protected AjaxRequestTarget target;
     private AnnotatorState annotatorState;
     private VID vid;
 
     public AjaxRecommendationRejectedEvent(AjaxRequestTarget aTarget,
-                                           AnnotatorState aAnnotatorState,
-                                           VID aVid) {
+            AnnotatorState aAnnotatorState, VID aVid)
+    {
         this.target = aTarget;
         this.annotatorState = aAnnotatorState;
         this.vid = aVid;
     }
 
-    public AjaxRequestTarget getTarget() {
+    public AjaxRequestTarget getTarget()
+    {
         return target;
     }
 
-    public AnnotatorState getAnnotatorState() {
+    public AnnotatorState getAnnotatorState()
+    {
         return annotatorState;
     }
 
-    public VID getVid() { return vid; }
+    public VID getVid()
+    {
+        return vid;
+    }
 }

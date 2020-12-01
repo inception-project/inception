@@ -27,13 +27,16 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
  * Behavior which allows a component to be visible only if the given {@link KnowledgeBase} is
  * <strong>not</strong> write protected.
  */
-public class WriteProtectionBehavior extends Behavior {
+public class WriteProtectionBehavior
+    extends Behavior
+{
 
     private static final long serialVersionUID = -1872816229304015030L;
 
     private IModel<KnowledgeBase> kbModel;
 
-    public WriteProtectionBehavior(IModel<KnowledgeBase> aKbModel) {
+    public WriteProtectionBehavior(IModel<KnowledgeBase> aKbModel)
+    {
         kbModel = aKbModel;
     }
 

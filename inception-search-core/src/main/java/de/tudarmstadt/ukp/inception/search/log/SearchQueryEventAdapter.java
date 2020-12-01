@@ -56,7 +56,7 @@ public class SearchQueryEventAdapter
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getDetails(SearchQueryEvent aEvent)
     {

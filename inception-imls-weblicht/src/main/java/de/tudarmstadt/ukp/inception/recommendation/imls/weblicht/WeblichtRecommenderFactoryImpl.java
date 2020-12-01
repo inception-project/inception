@@ -48,9 +48,9 @@ public class WeblichtRecommenderFactoryImpl
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecommender";
 
     public static final String DEFAULT_WEBLICHT_URL = "https://weblicht.sfs.uni-tuebingen.de/WaaS/api/1.0/chain/process";
-    
+
     private final WeblichtChainService chainService;
-    
+
     @Autowired
     public WeblichtRecommenderFactoryImpl(WeblichtChainService aChainService)
     {
@@ -99,10 +99,10 @@ public class WeblichtRecommenderFactoryImpl
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     @Override
     public WeblichtRecommenderTraitsEditor createTraitsEditor(String aId,
             IModel<Recommender> aModel)

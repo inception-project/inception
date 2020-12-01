@@ -30,13 +30,13 @@ public class AfterDocumentCreatedEventAdapter
     {
         return aEvent instanceof AfterDocumentCreatedEvent;
     }
-    
+
     @Override
     public long getDocument(AfterDocumentCreatedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(AfterDocumentCreatedEvent aEvent)
     {

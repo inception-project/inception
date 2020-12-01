@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
 
 @Component
 public class SchedulingService
-        implements DisposableBean
+    implements DisposableBean
 {
     private static final Logger log = LoggerFactory.getLogger(SchedulingService.class);
 
@@ -47,9 +47,8 @@ public class SchedulingService
     public SchedulingService(ApplicationContext aApplicationContext, SchedulingProperties aConfig)
     {
         applicationContext = aApplicationContext;
-        executor = new InspectableThreadPoolExecutor(
-                aConfig.getNumberOfThreads(), aConfig.getQueueSize(),
-                this::beforeExecute, this::afterExecute);
+        executor = new InspectableThreadPoolExecutor(aConfig.getNumberOfThreads(),
+                aConfig.getQueueSize(), this::beforeExecute, this::afterExecute);
         runningTasks = Collections.synchronizedList(new ArrayList<>());
     }
 
@@ -104,7 +103,9 @@ public class SchedulingService
 
     /**
      * Removes all task for the user with name {@code aUsername} from the scheduler's queue.
-     * @param aUserName The name of the user whose tasks will be removed.
+     * 
+     * @param aUserName
+     *            The name of the user whose tasks will be removed.
      */
     public synchronized void stopAllTasksForUser(String aUserName)
     {
@@ -121,6 +122,5 @@ public class SchedulingService
         log.info("Shutting down scheduling service!");
         executor.shutdownNow();
     }
-
 
 }

@@ -22,16 +22,17 @@ import org.springframework.context.ApplicationEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public class RecommenderEvaluationResultEvent extends ApplicationEvent
+public class RecommenderEvaluationResultEvent
+    extends ApplicationEvent
 {
     private static final long serialVersionUID = 4618078923202025558L;
-    
+
     private final Recommender recommender;
     private final String user;
     private final EvaluationResult evalResult;
     private final long duration;
     private final boolean active;
-    
+
     public RecommenderEvaluationResultEvent(Object aSource, Recommender aRecommender, String aUser,
             EvaluationResult aResult, long aDuration, boolean aActive)
     {
@@ -48,22 +49,22 @@ public class RecommenderEvaluationResultEvent extends ApplicationEvent
     {
         return user;
     }
-    
+
     public Recommender getRecommender()
     {
         return recommender;
     }
-    
+
     public EvaluationResult getResult()
     {
         return evalResult;
     }
-    
+
     public long getDuration()
     {
         return duration;
     }
-    
+
     public boolean isActive()
     {
         return active;

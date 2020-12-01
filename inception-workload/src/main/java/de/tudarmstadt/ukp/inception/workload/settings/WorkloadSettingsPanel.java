@@ -36,7 +36,8 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
-public class WorkloadSettingsPanel extends Panel
+public class WorkloadSettingsPanel
+    extends Panel
 {
     private static final long serialVersionUID = -6220828178550562376L;
 
@@ -52,27 +53,27 @@ public class WorkloadSettingsPanel extends Panel
 
         project = aProject.getObject();
 
-        //Basic form
+        // Basic form
         Form<Void> form = new Form<>("form");
 
         workloadStrategy = new BootstrapSelect<>("workloadStrategy");
-        workloadStrategy.setChoiceRenderer(
-                new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
+        workloadStrategy
+                .setChoiceRenderer(new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
         workloadStrategy.setRequired(true);
         workloadStrategy.setNullValid(false);
         workloadStrategy.setChoices(workloadManagerExtensionPoint.getTypes());
         workloadStrategy.setModel(LoadableDetachableModel.of(this::getWorkloadManager));
 
-        //add them to the form
+        // add them to the form
         form.add(workloadStrategy);
 
-        //Finally, add the confirm button at the end
+        // Finally, add the confirm button at the end
         Button confirm = new LambdaAjaxButton<>("save", this::actionConfirm);
         form.add(confirm);
 
         add(form);
     }
-    
+
     private WorkloadManagerType getWorkloadManager()
     {
         WorkloadManager manager = workloadManagementService

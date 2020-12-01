@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 public class ConfusionMatrixTest
 {
     private List<LabelPair> instances;
-    
+
     @Before
     public void setUp()
     {
@@ -39,7 +39,7 @@ public class ConfusionMatrixTest
         String[][] instanceLabels = new String[][] { { "pos", "neg" }, { "pos", "neg" },
                 { "neg", "neg" }, { "pos", "pos" }, { "neutral", "pos" }, { "neutral", "neutral" },
                 { "neutral", "neutral" }, { "neg", "neutral" }, { "neg", "pos" }, { "pos", "pos" },
-                { "pos", "pos" }, { "neutral", "pos" }, { "neg", "pos" }, { "pos", "pos" },};
+                { "pos", "pos" }, { "neutral", "pos" }, { "neg", "pos" }, { "pos", "pos" }, };
         for (String[] labels : instanceLabels) {
             instances.add(new LabelPair(labels[0], labels[1]));
         }
@@ -55,27 +55,27 @@ public class ConfusionMatrixTest
 
         ConfusionMatrix matrix = new ConfusionMatrix();
         instances.stream().forEach(
-            pair -> matrix.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel()));
+                pair -> matrix.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel()));
 
         for (int i = 0; i < expectedKeys.length; i++) {
             assertThat(matrix.getEntryCount(expectedKeys[i][1], expectedKeys[i][0]))
                     .as("has correct value").isEqualTo(expectedCounts[i]);
         }
     }
-    
+
     @Test
     public void testContainsEntry()
     {
         ConfusionMatrix matrix = new ConfusionMatrix();
         instances.stream().forEach(
-            pair -> matrix.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel()));
+                pair -> matrix.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel()));
 
         assertThat(matrix.containsEntry("pos", "pos")).as("has entry (gold: pos , pred.: pos)")
                 .isTrue();
         assertThat(matrix.containsEntry("neutral", "pos"))
                 .as("has entry (gold: pos , pred.: neutral)").isFalse();
     }
-    
+
     @Test
     public void testAddMatrix()
     {
@@ -84,10 +84,10 @@ public class ConfusionMatrixTest
                 { "neutral", "neg" }, { "neutral", "neutral" } };
         int[] expectedCounts = { 4, 2, 0, 2, 1, 2, 3, 1, 3 };
         ConfusionMatrix matrix1 = getExampleMatrix(new String[][] { { "neg", "neutral" },
-            { "neutral", "pos" }, { "neutral", "neg" }, { "neutral", "neutral" } });
+                { "neutral", "pos" }, { "neutral", "neg" }, { "neutral", "neutral" } });
         ConfusionMatrix matrix2 = new ConfusionMatrix();
         instances.stream().forEach(
-            pair -> matrix2.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel()));
+                pair -> matrix2.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel()));
 
         matrix1.addMatrix(matrix2);
 

@@ -38,15 +38,15 @@ public class KBHandle
     private String description;
     private KnowledgeBase kb;
     private String language;
-    
+
     private int rank;
     private double score;
     private String debugInfo;
-    
+
     // domain and range for cases in which the KBHandle represents a property
     @Deprecated
     private String domain;
-    
+
     @Deprecated
     private String range;
 
@@ -151,7 +151,7 @@ public class KBHandle
     {
         name = aName;
     }
-    
+
     @Override
     public KnowledgeBase getKB()
     {
@@ -175,17 +175,17 @@ public class KBHandle
     {
         language = aLanguage;
     }
-    
+
     public void setDebugInfo(String aDebugInfo)
     {
         debugInfo = aDebugInfo;
     }
-    
+
     public String getDebugInfo()
     {
         return debugInfo;
     }
-    
+
     public int getRank()
     {
         return rank;
@@ -247,7 +247,7 @@ public class KBHandle
         }
         else {
             throw new IllegalArgumentException(
-                "Can not convert KBHandle to class " + aClass.getName());
+                    "Can not convert KBHandle to class " + aClass.getName());
         }
     }
 

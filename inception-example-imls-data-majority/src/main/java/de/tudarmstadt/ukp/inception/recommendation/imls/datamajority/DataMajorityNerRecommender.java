@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 
 // tag::classDefinition[]
 public class DataMajorityNerRecommender
-        extends RecommendationEngine
+    extends RecommendationEngine
 {
     public static final Key<DataMajorityModel> KEY_MODEL = new Key<>("model");
 
@@ -58,33 +58,32 @@ public class DataMajorityNerRecommender
     {
         super(aRecommender);
     }
-// end::classDefinition[]
+    // end::classDefinition[]
 
-// tag::train[]
+    // tag::train[]
     @Override
-    public RecommendationEngineCapability getTrainingCapability() 
+    public RecommendationEngineCapability getTrainingCapability()
     {
         return TRAINING_REQUIRED;
     }
-    
+
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
-            throws RecommendationException
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
         List<Annotation> annotations = extractAnnotations(aCasses);
 
         DataMajorityModel model = trainModel(annotations);
         aContext.put(KEY_MODEL, model);
     }
-    
+
     @Override
     public boolean isReadyForPrediction(RecommenderContext aContext)
     {
         return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
-// end::train[]
-    
-// tag::extractAnnotations[]
+    // end::train[]
+
+    // tag::extractAnnotations[]
     private List<Annotation> extractAnnotations(List<CAS> aCasses)
     {
         List<Annotation> annotations = new ArrayList<>();
@@ -103,11 +102,11 @@ public class DataMajorityNerRecommender
 
         return annotations;
     }
-// end::extractAnnotations[]
+    // end::extractAnnotations[]
 
-// tag::trainModel[]
+    // tag::trainModel[]
     private DataMajorityModel trainModel(List<Annotation> aAnnotations)
-            throws RecommendationException
+        throws RecommendationException
     {
         Map<String, Integer> model = new HashMap<>();
         for (Annotation ann : aAnnotations) {
@@ -116,10 +115,8 @@ public class DataMajorityNerRecommender
         }
 
         Map.Entry<String, Integer> entry = model.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .orElseThrow(
-                        () -> new RecommendationException("Could not obtain data majority label")
-                );
+                .max(Map.Entry.comparingByValue()).orElseThrow(
+                        () -> new RecommendationException("Could not obtain data majority label"));
 
         String majorityLabel = entry.getKey();
         int numberOfAnnotations = model.values().stream().reduce(Integer::sum).get();
@@ -127,14 +124,14 @@ public class DataMajorityNerRecommender
 
         return new DataMajorityModel(majorityLabel, confidence, numberOfAnnotations);
     }
-// end::trainModel[]
+    // end::trainModel[]
 
-// tag::predict1[]
+    // tag::predict1[]
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        DataMajorityModel model = aContext.get(KEY_MODEL).orElseThrow(() ->
-                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+        DataMajorityModel model = aContext.get(KEY_MODEL).orElseThrow(
+                () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         // Make the predictions
         Type tokenType = CasUtil.getAnnotationType(aCas, Token.class);
@@ -157,11 +154,10 @@ public class DataMajorityNerRecommender
             aCas.addFsToIndexes(annotation);
         }
     }
-// end::predict1[]
+    // end::predict1[]
 
-// tag::predict2[]
-    private List<Annotation> predict(Collection<AnnotationFS> candidates,
-                                     DataMajorityModel aModel)
+    // tag::predict2[]
+    private List<Annotation> predict(Collection<AnnotationFS> candidates, DataMajorityModel aModel)
     {
         List<Annotation> result = new ArrayList<>();
         for (AnnotationFS token : candidates) {
@@ -173,19 +169,19 @@ public class DataMajorityNerRecommender
             int begin = token.getBegin();
             int end = token.getEnd();
 
-            Annotation annotation = new Annotation(aModel.majorityLabel, aModel.confidence, 
+            Annotation annotation = new Annotation(aModel.majorityLabel, aModel.confidence,
                     aModel.numberOfAnnotations, begin, end);
             result.add(annotation);
         }
 
         return result;
     }
-// end::predict2[]
+    // end::predict2[]
 
-// tag::evaluate[]
+    // tag::evaluate[]
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
-            throws RecommendationException
+        throws RecommendationException
     {
         List<Annotation> data = extractAnnotations(aCasses);
         List<Annotation> trainingData = new ArrayList<>();
@@ -203,7 +199,7 @@ public class DataMajorityNerRecommender
                 break;
             }
         }
-        
+
         int trainingSetSize = trainingData.size();
         int testSetSize = testData.size();
         double overallTrainingSize = data.size() - testSetSize;
@@ -211,32 +207,32 @@ public class DataMajorityNerRecommender
 
         if (trainingData.size() < 1 || testData.size() < 1) {
             log.info("Not enough data to evaluate, skipping!");
-            EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize, trainRatio);
+            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
+                    trainRatio);
             result.setEvaluationSkipped(true);
             return result;
         }
-        
+
         DataMajorityModel model = trainModel(trainingData);
 
         // evaluation: collect predicted and gold labels for evaluation
         EvaluationResult result = testData.stream()
                 .map(anno -> new LabelPair(anno.label, model.majorityLabel))
                 .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio));
-        
+
         return result;
     }
-// end::evaluate[]
+    // end::evaluate[]
 
-// tag::utility[]
-    private static class DataMajorityModel 
+    // tag::utility[]
+    private static class DataMajorityModel
     {
         private final String majorityLabel;
         private final double confidence;
         private final int numberOfAnnotations;
 
-        private DataMajorityModel(String aMajorityLabel, double aConfidence, 
-                int aNumberOfAnnotations) 
+        private DataMajorityModel(String aMajorityLabel, double aConfidence,
+                int aNumberOfAnnotations)
         {
             majorityLabel = aMajorityLabel;
             confidence = aConfidence;
@@ -244,7 +240,7 @@ public class DataMajorityNerRecommender
         }
     }
 
-    private static class Annotation 
+    private static class Annotation
     {
         private final String label;
         private final double score;
@@ -256,8 +252,8 @@ public class DataMajorityNerRecommender
         {
             this(aLabel, 0, 0, aBegin, aEnd);
         }
-        
-        private Annotation(String aLabel, double aScore, int aNumberOfAnnotations, int aBegin, 
+
+        private Annotation(String aLabel, double aScore, int aNumberOfAnnotations, int aBegin,
                 int aEnd)
         {
             label = aLabel;
@@ -267,5 +263,5 @@ public class DataMajorityNerRecommender
             end = aEnd;
         }
     }
-// end::utility[]
+    // end::utility[]
 }

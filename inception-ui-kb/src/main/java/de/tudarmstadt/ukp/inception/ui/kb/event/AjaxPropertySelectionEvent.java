@@ -24,16 +24,18 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 /**
  * Event broadcast when a {@link KBProperty} is being selected.
  */
-public class AjaxPropertySelectionEvent extends AjaxSelectionEvent {
+public class AjaxPropertySelectionEvent
+    extends AjaxSelectionEvent
+{
 
     private boolean redrawConceptandPropertyListPanels;
     private KBProperty newSelection;
-    
+
     public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBProperty aNewSelection)
     {
         this(aTarget, aNewSelection, false);
     }
-    
+
     public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBProperty aNewSelection,
             boolean aRedrawConceptandPropertyListPanels)
     {
@@ -51,7 +53,7 @@ public class AjaxPropertySelectionEvent extends AjaxSelectionEvent {
     {
         redrawConceptandPropertyListPanels = aRedrawConceptandPropertyListPanels;
     }
-    
+
     public KBProperty getNewSelection()
     {
         return newSelection;

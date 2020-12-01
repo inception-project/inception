@@ -39,7 +39,7 @@ public class PdfFormatSupport
 {
     public static final String ID = "pdf";
     public static final String NAME = "PDF";
-    
+
     @Override
     public String getId()
     {
@@ -57,7 +57,7 @@ public class PdfFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException

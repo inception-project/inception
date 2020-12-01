@@ -42,8 +42,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
-    <SourceDocument, String> implements IFilterStateLocator<Filter>, Serializable
+public class AnnotationQueueOverviewDataProvider
+    extends SortableDataProvider<SourceDocument, String>
+    implements IFilterStateLocator<Filter>, Serializable
 {
     private static final long serialVersionUID = 4125678936105494485L;
 
@@ -56,25 +57,25 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     private DocumentService documentService;
     private int defaultAnnotations;
 
-    public AnnotationQueueOverviewDataProvider(
-        List<SourceDocument> aData,
-        List<String> aHeaders, List<AnnotationDocument> aAllAnnotationDocuments)
+    public AnnotationQueueOverviewDataProvider(List<SourceDocument> aData, List<String> aHeaders,
+            List<AnnotationDocument> aAllAnnotationDocuments)
     {
         data = aData;
         headers = aHeaders;
         allAnnotationDocuments = aAllAnnotationDocuments;
         shownDocuments = new ArrayList<>();
-        //TODO default value must be saved permanently, Issue #1776
+        // TODO default value must be saved permanently, Issue #1776
         defaultAnnotations = 6;
 
-        //Init filter
+        // Init filter
         filter = new Filter();
 
-        //Initial Sorting
+        // Initial Sorting
         setSort(headers.get(0), SortOrder.ASCENDING);
 
-        //Required
-        model = new LoadableDetachableModel<List<SourceDocument>>() {
+        // Required
+        model = new LoadableDetachableModel<List<SourceDocument>>()
+        {
             private static final long serialVersionUID = -3938543310389673460L;
 
             @Override
@@ -88,12 +89,11 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     @Override
     public Iterator<SourceDocument> iterator(long aFirst, long aCount)
     {
-        //Apply Filter
+        // Apply Filter
         List<SourceDocument> newList = filterTable(data);
 
-        //Apply sorting
-        newList.sort((o1, o2) ->
-        {
+        // Apply sorting
+        newList.sort((o1, o2) -> {
             int dir = getSort().isAscending() ? 1 : -1;
             if (getSort().getProperty().equals(headers.get(0))) {
                 return dir * (o1.getName().compareTo(o2.getName()));
@@ -114,25 +114,28 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
             else if (getSort().getProperty().equals(headers.get(4))) {
                 if (o1.getUpdated() == null) {
                     return dir;
-                } else if (o2.getUpdated() == null) {
+                }
+                else if (o2.getUpdated() == null) {
                     return dir * -1;
-                } else {
+                }
+                else {
                     return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
                 }
-            } else {
+            }
+            else {
                 return 0;
             }
         });
 
-        //Reset
+        // Reset
         shownDocuments.clear();
         shownDocuments.addAll(newList);
 
-        if ((int)aFirst + (int)aCount > newList.size()) {
+        if ((int) aFirst + (int) aCount > newList.size()) {
             aCount = newList.size() - aFirst;
         }
 
-        return newList.subList((int)aFirst, ((int)aFirst + (int)aCount)).iterator();
+        return newList.subList((int) aFirst, ((int) aFirst + (int) aCount)).iterator();
     }
 
     @Override
@@ -162,39 +165,39 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
         List<SourceDocument> dateList = new ArrayList<>();
         List<SourceDocument> unusedList = new ArrayList<>();
 
-        //Avoid error in one specific case
+        // Avoid error in one specific case
         if (filter.getSelected() == null) {
             filter.setSelected("false");
         }
 
-        for (SourceDocument doc: aData) {
+        for (SourceDocument doc : aData) {
             // Unused documents selected
             if (filter.getSelected().equals("true")) {
                 if ((getInProgressAmountForDocument(doc) == 0)
-                    && (getFinishedAmountForDocument(doc) == 0)) {
+                        && (getFinishedAmountForDocument(doc) == 0)) {
                     unusedList.add(doc);
                 }
             }
 
-            //Check if DocumentName was entered
+            // Check if DocumentName was entered
             if (filter.getDocumentName() != null) {
                 if (doc.getName().contains(filter.getDocumentName())) {
                     docNameList.add(doc);
                 }
             }
 
-            //Check if Username filter was entered
+            // Check if Username filter was entered
             if (filter.getUsername() != null) {
-                //Get all entered usernames
+                // Get all entered usernames
 
-                String [] usernames = filter.getUsername().split(",");
-                //Get all documents with the given user
-                for (String user: usernames) {
+                String[] usernames = filter.getUsername().split(",");
+                // Get all documents with the given user
+                for (String user : usernames) {
                     for (AnnotationDocument annotationDocument : allAnnotationDocuments) {
                         if (annotationDocument.getUser().equals(user)
-                            && annotationDocument.getName().equals(doc.getName()) &&
-                            !annotationDocument.getState().equals
-                                (AnnotationDocumentState.NEW)) {
+                                && annotationDocument.getName().equals(doc.getName())
+                                && !annotationDocument.getState()
+                                        .equals(AnnotationDocumentState.NEW)) {
                             userNameList.add(doc);
                             break;
                         }
@@ -203,31 +206,32 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
 
             }
 
-            //Check if one of the date fields are selected and the document
+            // Check if one of the date fields are selected and the document
             // has a created value
 
-            if ((filter.getFrom() != null || filter.getTo() != null)
-                && doc.getUpdated() != null) {
+            if ((filter.getFrom() != null || filter.getTo() != null) && doc.getUpdated() != null) {
 
-                //between selected
+                // between selected
                 if (filter.getFrom() != null && filter.getTo() != null) {
                     if (filter.getFrom().compareTo(filter.getTo()) >= 0) {
-                        if (doc.getUpdated().compareTo(filter.getTo()) > 0 &&
-                            doc.getUpdated().compareTo(filter.getFrom()) <= 0) {
+                        if (doc.getUpdated().compareTo(filter.getTo()) > 0
+                                && doc.getUpdated().compareTo(filter.getFrom()) <= 0) {
                             dateList.add(doc);
                         }
                     }
-                    if (doc.getUpdated().compareTo(filter.getFrom()) > 0 &&
-                        doc.getUpdated().compareTo(filter.getTo()) <= 0) {
+                    if (doc.getUpdated().compareTo(filter.getFrom()) > 0
+                            && doc.getUpdated().compareTo(filter.getTo()) <= 0) {
                         dateList.add(doc);
                     }
-                    //From selected
-                } else if (filter.getFrom() != null) {
+                    // From selected
+                }
+                else if (filter.getFrom() != null) {
                     if (doc.getUpdated().compareTo(filter.getFrom()) >= 0) {
                         dateList.add(doc);
                     }
-                } else {
-                    //Until
+                }
+                else {
+                    // Until
                     if (doc.getUpdated().compareTo(filter.getTo()) <= 0) {
                         dateList.add(doc);
                     }
@@ -235,7 +239,7 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
             }
         }
 
-        //Schnittmenge of the lists
+        // Schnittmenge of the lists
         List<List<SourceDocument>> finalList = new ArrayList<>();
         if (dateList.size() > 0 || filter.getFrom() != null || filter.getTo() != null) {
             finalList.add(dateList);
@@ -259,19 +263,18 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
 
         if (finalList.size() == 0) {
             resultList = aData;
-        } else {
+        }
+        else {
             resultList = finalList.get(0);
         }
 
         return resultList;
     }
 
-
     /**
      * Helper method, returns for a document how often it is "finished" within the project
      */
-    public long getFinishedAmountForDocument(
-        SourceDocument aDocument)
+    public long getFinishedAmountForDocument(SourceDocument aDocument)
     {
         return allAnnotationDocuments.stream()
                 .filter(d -> d.getDocument().equals(aDocument) && d.getState().equals(FINISHED))
@@ -282,12 +285,11 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
      * Helper methods, returns for a document how often it is currently "in progress" within the
      * project.
      */
-    public long getInProgressAmountForDocument(
-        SourceDocument aDocument)
+    public long getInProgressAmountForDocument(SourceDocument aDocument)
     {
         return allAnnotationDocuments.stream()
-            .filter(d -> d.getDocument().equals(aDocument) && d.getState().equals(IN_PROGRESS))
-            .count();
+                .filter(d -> d.getDocument().equals(aDocument) && d.getState().equals(IN_PROGRESS))
+                .count();
     }
 
     @Override
@@ -305,16 +307,13 @@ public class AnnotationQueueOverviewDataProvider extends SortableDataProvider
     public String getUsersWorkingOnTheDocument(SourceDocument aDocument)
     {
         return allAnnotationDocuments.stream()
-            .filter(d -> d.getDocument().equals(aDocument) &&
-                    !d.getState().equals(NEW) &&
-                    !d.getState().equals(IGNORE))
-            .map(AnnotationDocument::getUser)
-            .sorted()
-            .collect(Collectors.joining(", "));
+                .filter(d -> d.getDocument().equals(aDocument) && !d.getState().equals(NEW)
+                        && !d.getState().equals(IGNORE))
+                .map(AnnotationDocument::getUser).sorted().collect(Collectors.joining(", "));
     }
+
     public Date lastAccessTimeForDocument(SourceDocument aDoc)
     {
         return aDoc.getUpdated();
     }
 }
-

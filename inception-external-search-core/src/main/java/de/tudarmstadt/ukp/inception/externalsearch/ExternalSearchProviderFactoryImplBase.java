@@ -47,17 +47,17 @@ public abstract class ExternalSearchProviderFactoryImplBase
     {
         return Ordered.LOWEST_PRECEDENCE;
     }
-    
+
     /**
-     * Returns a Wicket component to configure the specific traits of this provider. 
-     * Every {@link ExternalSearchProviderFactory} has to return a <b>different class</b> here. 
-     * It is not possible to simple return a Wicket {@link Panel} here, but it must be a subclass 
-     * If this is not done, then the properties editor in the UI will not be correctly updated. 
+     * Returns a Wicket component to configure the specific traits of this provider. Every
+     * {@link ExternalSearchProviderFactory} has to return a <b>different class</b> here. It is not
+     * possible to simple return a Wicket {@link Panel} here, but it must be a subclass If this is
+     * not done, then the properties editor in the UI will not be correctly updated.
      * 
      * @param aId
      *            a markup ID.
      * @param aDocumentRepository
-     *            a model holding the document repository for which the properties editor should be 
+     *            a model holding the document repository for which the properties editor should be
      *            created.
      * @return the properties editor component .
      */
@@ -66,12 +66,12 @@ public abstract class ExternalSearchProviderFactoryImplBase
     {
         return new EmptyPanel(aId);
     }
-    
+
     /**
-     * Read the properties for the given {@link DocumentRepository}. If properties are 
-     * supported, then this method must be overwritten. A typical implementation would read the 
-     * traits from a JSON string stored {@link DocumentRepository#getProperties}, but it would also 
-     * be possible to load the traits from a database table.
+     * Read the properties for the given {@link DocumentRepository}. If properties are supported,
+     * then this method must be overwritten. A typical implementation would read the traits from a
+     * JSON string stored {@link DocumentRepository#getProperties}, but it would also be possible to
+     * load the traits from a database table.
      * 
      * @param aDocumentRepository
      *            the repository whose properties should be obtained.
@@ -84,8 +84,8 @@ public abstract class ExternalSearchProviderFactoryImplBase
 
     /**
      * Write the properties for the given {@link DocumentRepository}. If properties are supported,
-     * then this method must be overwritten. A typical implementation would write the properties 
-     * to the JSON string stored in {@link DocumentRepository#setProperties}, but it would also be
+     * then this method must be overwritten. A typical implementation would write the properties to
+     * the JSON string stored in {@link DocumentRepository#setProperties}, but it would also be
      * possible to store the traits into a database table.
      * 
      * @param aDocumentRepository
@@ -97,6 +97,5 @@ public abstract class ExternalSearchProviderFactoryImplBase
     {
         aDocumentRepository.setProperties(null);
     }
-
 
 }

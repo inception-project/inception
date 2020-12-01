@@ -33,7 +33,7 @@ public abstract class RecommendationEngineFactoryImplBase<T>
     implements RecommendationEngineFactory<T>
 {
     private Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    
+
     @Override
     public AbstractTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
@@ -45,7 +45,7 @@ public abstract class RecommendationEngineFactoryImplBase<T>
     {
         return null;
     }
-    
+
     @Override
     public boolean isDeprecated()
     {

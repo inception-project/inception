@@ -105,9 +105,8 @@ public class RecommendationRelationRenderer
             AnnotationFS source = WebAnnoCasUtil.selectAnnotationByAddr(aCas, position.getSource());
             AnnotationFS target = WebAnnoCasUtil.selectAnnotationByAddr(aCas, position.getTarget());
 
-            VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName,
-                    new VID(source), new VID(target),
-                   suggestion.getUiLabel(), Collections.emptyMap(), "#cccccc");
+            VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
+                    new VID(target), suggestion.getUiLabel(), Collections.emptyMap(), "#cccccc");
 
             vdoc.add(arc);
         }

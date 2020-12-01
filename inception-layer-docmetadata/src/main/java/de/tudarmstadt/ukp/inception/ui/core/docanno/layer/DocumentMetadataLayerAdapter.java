@@ -103,16 +103,16 @@ public class DocumentMetadataLayerAdapter
         throws AnnotationException
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        
+
         AnnotationBaseFS newAnnotation = aCas.createFS(type);
         aCas.addFsToIndexes(newAnnotation);
-        
+
         publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(),
                 newAnnotation));
-        
+
         return newAnnotation;
     }
-    
+
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
@@ -121,20 +121,19 @@ public class DocumentMetadataLayerAdapter
 
         publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         // There are no behaviors for document metadata annotations yet
         /*
-        for (SpanLayerBehavior behavior : behaviors) {
-            messages.addAll(behavior.onValidate(this, aJCas));
-        }
-        */
+         * for (SpanLayerBehavior behavior : behaviors) { messages.addAll(behavior.onValidate(this,
+         * aJCas)); }
+         */
         return messages;
     }
-    
+
     @Override
     public void select(AnnotatorState aState, AnnotationFS aAnno)
     {

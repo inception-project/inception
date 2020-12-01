@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
 import java.io.Serializable;
 
-public abstract class Options implements Serializable
+public abstract class Options
+    implements Serializable
 {
     private boolean visible = false;
 

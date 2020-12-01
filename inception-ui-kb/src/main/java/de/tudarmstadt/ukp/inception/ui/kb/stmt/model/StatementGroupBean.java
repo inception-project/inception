@@ -46,13 +46,13 @@ public class StatementGroupBean
      * results in every {@link StatementGroupBean} being a unique object.
      */
     private final UUID id;
-    
+
     private KnowledgeBase kb;
     private KBHandle instance;
     private KBProperty property;
     private List<KBStatement> statements;
     private StatementDetailPreference detailPreference;
-    
+
     public StatementGroupBean()
     {
         id = UUID.randomUUID();

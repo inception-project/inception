@@ -59,7 +59,7 @@ public class VisibilityCalculationTests
     private String user;
     private String neName;
     private long layerId;
-    
+
     private RecommendationServiceImpl sut;
 
     // AnnotationSuggestion
@@ -93,7 +93,7 @@ public class VisibilityCalculationTests
         featureList.add(new AnnotationFeature("value", "uima.cas.String"));
         when(annoService.listAnnotationFeature(layer)).thenReturn(featureList);
         when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
-        
+
         sut = new RecommendationServiceImpl(null, null, null, null, annoService, null,
                 recordService, (EntityManager) null);
     }
@@ -108,17 +108,15 @@ public class VisibilityCalculationTests
                 new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
         sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
 
-        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(
-                suggestions);
+        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
         List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(invisibleSuggestions).isNotEmpty();
-        //FIXME find out why suggestions are repeated/doubled
+        // FIXME find out why suggestions are repeated/doubled
         assertThat(invisibleSuggestions)
                 .as("Invisible suggestions are hidden because of overlapping")
-                .extracting(AnnotationSuggestion::getReasonForHiding)
-                .extracting(String::trim)
+                .extracting(AnnotationSuggestion::getReasonForHiding).extracting(String::trim)
                 .containsExactly("overlapping", "overlapping");
 
         // check no visible suggestions
@@ -135,8 +133,7 @@ public class VisibilityCalculationTests
                 new int[][] { { 1, 5, 10 } });
         sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
 
-        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(
-                suggestions);
+        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
         List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
@@ -160,33 +157,27 @@ public class VisibilityCalculationTests
                 new int[][] { { 1, 5, 10 } });
         sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
 
-        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(
-                suggestions);
+        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
         List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(visibleSuggestions).isEmpty();
         assertThat(invisibleSuggestions).as("Invisible suggestions are hidden because of rejection")
-                .extracting(AnnotationSuggestion::getReasonForHiding)
-                .extracting(String::trim)
+                .extracting(AnnotationSuggestion::getReasonForHiding).extracting(String::trim)
                 .containsExactly("rejected");
     }
 
     private List<AnnotationSuggestion> getInvisibleSuggestions(
             Collection<SuggestionGroup<AnnotationSuggestion>> aSuggestions)
     {
-        return aSuggestions.stream()
-                .flatMap(SuggestionGroup::stream)
-                .filter(s -> !s.isVisible())
+        return aSuggestions.stream().flatMap(SuggestionGroup::stream).filter(s -> !s.isVisible())
                 .collect(Collectors.toList());
     }
 
     private List<AnnotationSuggestion> getVisibleSuggestions(
             Collection<SuggestionGroup<AnnotationSuggestion>> aSuggestions)
     {
-        return aSuggestions.stream()
-                .flatMap(SuggestionGroup::stream)
-                .filter(s -> s.isVisible())
+        return aSuggestions.stream().flatMap(SuggestionGroup::stream).filter(s -> s.isVisible())
                 .collect(Collectors.toList());
     }
 
@@ -195,9 +186,9 @@ public class VisibilityCalculationTests
 
         List<AnnotationSuggestion> suggestions = new ArrayList<>();
         for (int[] val : vals) {
-            suggestions.add(new SpanSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
-                    layerId, FEATURE, DOC_NAME, val[1], val[2], COVERED_TEXT, null, UI_LABEL,
-                    CONFIDENCE, CONFIDENCE_EXPLANATION));
+            suggestions.add(new SpanSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME, layerId,
+                    FEATURE, DOC_NAME, val[1], val[2], COVERED_TEXT, null, UI_LABEL, CONFIDENCE,
+                    CONFIDENCE_EXPLANATION));
         }
 
         return new SuggestionDocumentGroup<>(suggestions);

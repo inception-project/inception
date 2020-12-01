@@ -34,7 +34,7 @@ public class LogDialog
     extends ModalWindow
 {
     private static final long serialVersionUID = -6911254813496835955L;
-    
+
     public LogDialog(String id, IModel<String> aTitle)
     {
         this(id, aTitle, null);
@@ -43,7 +43,7 @@ public class LogDialog
     public LogDialog(String id, IModel<String> aTitle, IModel<List<LogMessageGroup>> aModel)
     {
         super(id, aModel);
-        
+
         // dialog window to select annotation layer preferences
         setInitialWidth(600);
         setInitialHeight(450);
@@ -57,30 +57,30 @@ public class LogDialog
             return true;
         });
     }
-    
+
     public IModel<List<LogMessageGroup>> getModel()
     {
         return (IModel<List<LogMessageGroup>>) getDefaultModel();
     }
-    
+
     public MarkupContainer setModel(IModel<List<LogMessageGroup>> aModel)
     {
         return super.setDefaultModel(aModel);
     }
-    
+
     @Override
     public void show(IPartialPageRequestHandler aTarget)
     {
         IModel<List<LogMessageGroup>> model = getModel();
-        
+
         if (model == null || model.getObject() == null) {
             LogMessageGroup group = new LogMessageGroup("No recommendations");
             group.setMessages(asList(LogMessage.info("", "No recommender run has completed yet.")));
             model = new ListModel<>(asList(group));
         }
-        
+
         setContent(new LogDialogContent(getContentId(), this, model));
-        
+
         super.show(aTarget);
     }
 }

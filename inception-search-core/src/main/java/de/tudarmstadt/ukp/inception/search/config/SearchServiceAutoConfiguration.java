@@ -42,8 +42,7 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 
 @Configuration
 @EnableConfigurationProperties(SearchServicePropertiesImpl.class)
-@ConditionalOnProperty(prefix = "search", name = "enabled", havingValue = "true", 
-        matchIfMissing = true)
+@ConditionalOnProperty(prefix = "search", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SearchServiceAutoConfiguration
 {
     @Bean
@@ -51,39 +50,39 @@ public class SearchServiceAutoConfiguration
     {
         return new SearchServiceImpl();
     }
-    
+
     @Bean
-    public SearchQueryEventAdapter searchQueryEventAdapter() 
+    public SearchQueryEventAdapter searchQueryEventAdapter()
     {
         return new SearchQueryEventAdapter();
     }
-    
+
     @Bean
     public PhysicalIndexRegistry physicalIndexRegistry(
             @Lazy @Autowired(required = false) List<PhysicalIndexFactory> aExtensions)
     {
         return new PhysicalIndexRegistryImpl(aExtensions);
     }
-    
+
     @Bean
     public FeatureIndexingSupportRegistry featureIndexingSupportRegistry(
             @Lazy @Autowired(required = false) List<FeatureIndexingSupport> aIndexingSupports)
     {
         return new FeatureIndexingSupportRegistryImpl(aIndexingSupports);
     }
-    
+
     @Bean
     public SearchServiceProperties searchServiceProperties()
     {
         return new SearchServicePropertiesImpl();
     }
-    
-    @Bean 
+
+    @Bean
     public IndexScheduler indexScheduler()
     {
         return new IndexSchedulerImpl();
     }
-    
+
     @Bean
     public PrimitiveUimaIndexingSupport primitiveUimaIndexingSupport(
             @Autowired FeatureSupportRegistry aFeatureSupportRegistry)

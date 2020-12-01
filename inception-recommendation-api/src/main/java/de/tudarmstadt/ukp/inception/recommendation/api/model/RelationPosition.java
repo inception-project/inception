@@ -30,7 +30,7 @@ public class RelationPosition
 
     private final int source;
     private final int target;
-    
+
     public RelationPosition(int aSource, int aTarget)
     {
         source = aSource;
@@ -62,19 +62,19 @@ public class RelationPosition
     public boolean overlaps(final RelationPosition i)
     {
         throw new UnsupportedOperationException("Not implemented yet");
-//        // Cases:
-//        //
-//        //         start                     end
-//        //           |                        |
-//        //  1     #######                     |
-//        //  2        |                     #######
-//        //  3   ####################################
-//        //  4        |        #######         |
-//        //           |                        |
-//
-//        return (((i.getStart() <= getStart()) && (getStart() < i.getEnd())) || // Case 1-3
-//                ((i.getStart() < getEnd()) && (getEnd() <= i.getEnd())) || // Case 1-3
-//                ((getStart() <= i.getStart()) && (i.getEnd() <= getEnd()))); // Case 4
+        // // Cases:
+        // //
+        // // start end
+        // // | |
+        // // 1 ####### |
+        // // 2 | #######
+        // // 3 ####################################
+        // // 4 | ####### |
+        // // | |
+        //
+        // return (((i.getStart() <= getStart()) && (getStart() < i.getEnd())) || // Case 1-3
+        // ((i.getStart() < getEnd()) && (getEnd() <= i.getEnd())) || // Case 1-3
+        // ((getStart() <= i.getStart()) && (i.getEnd() <= getEnd()))); // Case 4
     }
 
     @Override

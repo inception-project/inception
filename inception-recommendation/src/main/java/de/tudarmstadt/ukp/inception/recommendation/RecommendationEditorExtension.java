@@ -90,7 +90,7 @@ import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer
  * <ul>
  * <li>Render annotation suggestions into the main editor area;</li>
  * <li>Intercept user actions on the annotation suggestions, in particular accepting or rejecting
- *     annotatons.</li>
+ * annotatons.</li>
  * </ul>
  * <p>
  * This class is exposed as a Spring Component via
@@ -102,9 +102,9 @@ public class RecommendationEditorExtension
     implements AnnotationEditorExtension
 {
     public static final String BEAN_NAME = AnnotationSuggestion.EXTENSION_ID;
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final AnnotationSchemaService annotationService;
     private final RecommendationService recommendationService;
     private final LearningRecordService learningRecordService;
@@ -118,7 +118,7 @@ public class RecommendationEditorExtension
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService, 
+            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService,
             UserDao aUserRegistry)
     {
         annotationService = aAnnotationService;
@@ -146,26 +146,26 @@ public class RecommendationEditorExtension
             return;
         }
         VID vid = VID.parse(aVID.getExtensionPayload());
-        VID extendedVID = new VID(aVID.getExtensionId(), vid.getLayerId(), vid.getId(), 
+        VID extendedVID = new VID(aVID.getExtensionId(), vid.getLayerId(), vid.getId(),
                 vid.getSubId(), vid.getAttribute(), vid.getSlot(), aVID.getExtensionPayload());
 
         // Create annotation
         if (SpanAnnotationResponse.is(aAction)) {
             actionAcceptSpanRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
-        } else if (ArcAnnotationResponse.is(aAction)) {
+        }
+        else if (ArcAnnotationResponse.is(aAction)) {
             actionAcceptRelationRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
         else if (DoActionResponse.is(aAction)) {
             actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
         }
     }
-    
+
     /**
      * Accept a suggestion.
      * 
      * <ul>
-     * <li>Creates a new annotation or updates an existing one with a new feature
-     * value.</li>
+     * <li>Creates a new annotation or updates an existing one with a new feature value.</li>
      * <li>Marks the suggestions as hidden (not visible).</li>
      * <li>Logs the accepting to the learning log.</li>
      * <li>Sends events to the UI and application informing other components about the action.</li>
@@ -181,11 +181,10 @@ public class RecommendationEditorExtension
         VID recommendationVid = VID.parse(aVID.getExtensionPayload());
         Optional<SpanSuggestion> prediction = predictions
                 .getPredictionByVID(document, recommendationVid)
-                .filter(f -> f instanceof SpanSuggestion)
-                .map(f -> (SpanSuggestion) f);
+                .filter(f -> f instanceof SpanSuggestion).map(f -> (SpanSuggestion) f);
 
         if (!prediction.isPresent()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document, 
+            log.error("Could not find annotation in [{}] with id [{}]", document,
                     recommendationVid);
             aTarget.getPage().error("Could not find annotation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
@@ -209,24 +208,22 @@ public class RecommendationEditorExtension
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
-        learningRecordService.logRecord(document, aState.getUser().getUsername(),
-                suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
+        learningRecordService.logRecord(document, aState.getUser().getUsername(), suggestion, layer,
+                feature, ACCEPTED, MAIN_EDITOR);
 
         acceptRecommendation(suggestion, aState, aTarget, aCas, recommendationVid, address);
     }
 
     private void actionAcceptRelationRecommendation(AnnotationActionHandler aActionHandler,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
-            throws AnnotationException, IOException
+        throws AnnotationException, IOException
     {
         SourceDocument document = aState.getDocument();
 
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<RelationSuggestion> prediction = predictions
-                .getPredictionByVID(document, aVID)
-                .filter(f -> f instanceof RelationSuggestion)
-                .map(f -> (RelationSuggestion) f);
+        Optional<RelationSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
+                .filter(f -> f instanceof RelationSuggestion).map(f -> (RelationSuggestion) f);
 
         if (!prediction.isPresent()) {
             log.error("Could not find relation in [{}] with id [{}]", document, aVID);
@@ -258,9 +255,8 @@ public class RecommendationEditorExtension
         acceptRecommendation(suggestion, aState, aTarget, aCas, aVID, address);
     }
 
-    private void acceptRecommendation(AnnotationSuggestion aSuggestion,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas,
-            VID aSuggestionVID, int aNewAnnotationAddress)
+    private void acceptRecommendation(AnnotationSuggestion aSuggestion, AnnotatorState aState,
+            AjaxRequestTarget aTarget, CAS aCas, VID aSuggestionVID, int aNewAnnotationAddress)
     {
         AnnotationLayer layer = annotationService.getLayer(aSuggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(aSuggestion.getFeature(), layer);
@@ -273,14 +269,14 @@ public class RecommendationEditorExtension
         // Send an application event that the suggestion has been accepted
         AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class,
                 aNewAnnotationAddress);
-        applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
-                document, aState.getUser().getUsername(), fs, feature, aSuggestion.getLabel()));
+        applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this, document,
+                aState.getUser().getUsername(), fs, feature, aSuggestion.getLabel()));
 
         // Send a UI event that the suggestion has been accepted
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
                 new AjaxRecommendationAcceptedEvent(aTarget, aState, aSuggestionVID));
     }
-    
+
     /**
      * Reject a suggestion.
      * 
@@ -297,14 +293,14 @@ public class RecommendationEditorExtension
     {
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        
+
         SourceDocument document = aState.getDocument();
         VID recommendationVID = VID.parse(aVID.getExtensionPayload());
-        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, 
+        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document,
                 recommendationVID);
-        
+
         if (!oPrediction.isPresent()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document, 
+            log.error("Could not find annotation in [{}] with id [{}]", document,
                     recommendationVID);
             aTarget.getPage().error("Could not find annotation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
@@ -332,37 +328,38 @@ public class RecommendationEditorExtension
                     spanSuggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
             // Send an application event that the suggestion has been rejected
-            applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(
-                    this, document, aState.getUser().getUsername(),
-                    spanSuggestion.getBegin(), spanSuggestion.getEnd(),
-                    spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
+            applicationEventPublisher.publishEvent(
+                    new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(),
+                            spanSuggestion.getBegin(), spanSuggestion.getEnd(),
+                            spanSuggestion.getCoveredText(), feature, spanSuggestion.getLabel()));
 
-        } else if (suggestion instanceof RelationSuggestion) {
+        }
+        else if (suggestion instanceof RelationSuggestion) {
             RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
             // TODO: Log rejection
             // TODO: Publish rejection event
-            
+
         }
 
         // Trigger a re-rendering of the document
         Page page = aTarget.getPage();
         page.send(page, Broadcast.BREADTH, new SelectionChangedEvent(aTarget));
-        
+
         // Send a UI event that the suggestion has been rejected
         page.send(page, Broadcast.BREADTH,
                 new AjaxRecommendationRejectedEvent(aTarget, aState, recommendationVID));
     }
 
     @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc,
-                       int aWindowBeginOffset, int aWindowEndOffset)
+    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aWindowBeginOffset,
+            int aWindowEndOffset)
     {
         // do not show predictions during curation or when viewing others' work
-        if (!aState.getMode().equals(ANNOTATION) || 
-                !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
+        if (!aState.getMode().equals(ANNOTATION)
+                || !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
             return;
         }
-        
+
         // We activate new suggestions during rendering. For one, we don't have a push mechanism
         // at the moment. For another, even if we had it, it would be quite annoying to the user
         // if the UI kept updating itself without any the user expecting an update. The user does
@@ -379,19 +376,19 @@ public class RecommendationEditorExtension
         }
 
         // Add the suggestions to the visual document
-        RecommendationRenderer.render(aVDoc, aState, aCas, annotationService,
-                recommendationService, learningRecordService, fsRegistry, documentService,
-                aWindowBeginOffset, aWindowEndOffset);
+        RecommendationRenderer.render(aVDoc, aState, aCas, annotationService, recommendationService,
+                learningRecordService, fsRegistry, documentService, aWindowBeginOffset,
+                aWindowEndOffset);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser,
-            VID aVid, AnnotationFeature aFeature, String aQuery)
+    public List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
+            AnnotationFeature aFeature, String aQuery)
     {
         Predictions predictions = recommendationService.getPredictions(aUser,
                 aDocument.getProject());
-        
+
         if (predictions == null) {
             return emptyList();
         }
@@ -404,30 +401,28 @@ public class RecommendationEditorExtension
         if (!representative.isPresent()) {
             return emptyList();
         }
-        
+
         Optional<SuggestionGroup<AnnotationSuggestion>> group = Optional.empty();
-        
+
         if (representative.get() instanceof SpanSuggestion) {
             SpanSuggestion sao = (SpanSuggestion) representative.get();
             group = predictions
-                    .getSpanPredictions(aDocument.getName(), aFeature.getLayer(), 
-                            sao.getBegin(), sao.getEnd())
-                    .stream()
-                    .filter(g -> g.contains(representative.get()))
-                    .map(g -> (SuggestionGroup<AnnotationSuggestion>) 
-                            (SuggestionGroup<? extends AnnotationSuggestion>) g)
+                    .getSpanPredictions(aDocument.getName(), aFeature.getLayer(), sao.getBegin(),
+                            sao.getEnd())
+                    .stream().filter(g -> g.contains(representative.get()))
+                    .map(g -> (SuggestionGroup<AnnotationSuggestion>) (SuggestionGroup<? extends AnnotationSuggestion>) g)
                     .findFirst();
         }
- 
+
         if (!group.isPresent()) {
             return emptyList();
         }
-         
+
         List<AnnotationSuggestion> sortedByConfidence = group.get().stream()
                 .sorted(comparing(AnnotationSuggestion::getConfidence)
                         .thenComparing(AnnotationSuggestion::getRecommenderName))
                 .collect(toList());
- 
+
         List<VLazyDetailResult> details = new ArrayList<>();
         for (AnnotationSuggestion ao : sortedByConfidence) {
             List<String> items = new ArrayList<>();
@@ -443,7 +438,7 @@ public class RecommendationEditorExtension
             details.add(new VLazyDetailResult(ao.getRecommenderName(),
                     "\n" + items.stream().collect(joining("\n"))));
         }
-        
+
         return details;
     }
 }

@@ -25,7 +25,7 @@ public class GazeteerEntry
 {
     public final String text;
     public final String label;
-    
+
     public GazeteerEntry(String aText, String aLabel)
     {
         super();
