@@ -38,7 +38,7 @@ public class ProjectWorkloadSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
     private final WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
-    
+
     @Autowired
     public ProjectWorkloadSettingsPanelFactory(
             WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
@@ -63,7 +63,7 @@ public class ProjectWorkloadSettingsPanelFactory
     {
         return workloadManagerExtensionPoint.getExtensions().size() > 1;
     }
-    
+
     @Override
     public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
     {

@@ -57,7 +57,7 @@ public class VisibilityCalculationTests
     private String user;
     private String neName;
     private long layerId;
-    
+
     private RecommendationServiceImpl sut;
 
     // AnnotationSuggestion
@@ -91,7 +91,7 @@ public class VisibilityCalculationTests
         featureList.add(new AnnotationFeature("value", "uima.cas.String"));
         when(annoService.listAnnotationFeature(layer)).thenReturn(featureList);
         when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
-        
+
         sut = new RecommendationServiceImpl(null, null, null, null, annoService, null,
                 recordService, (EntityManager) null);
     }
@@ -111,7 +111,7 @@ public class VisibilityCalculationTests
 
         // check the invisible suggestions' states
         assertThat(invisibleSuggestions).isNotEmpty();
-        //FIXME find out why suggestions are repeated/doubled
+        // FIXME find out why suggestions are repeated/doubled
         assertThat(invisibleSuggestions)
                 .as("Invisible suggestions are hidden because of overlapping")
                 .extracting(AnnotationSuggestion::getReasonForHiding).extracting(String::trim)

@@ -27,7 +27,8 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public class KnwoledgeBaseSchemaProfileTest
 {
-    @Test public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
+    @Test
+    public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
     {
         String name = "Test KB";
         String classIri = "http://www.w3.org/2002/07/owl#Class";
@@ -40,8 +41,9 @@ public class KnwoledgeBaseSchemaProfileTest
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
 
-        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri, subPropertyIri,
-            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri);
+        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
+                subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+                propertyDescriptionIri);
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);
@@ -50,8 +52,7 @@ public class KnwoledgeBaseSchemaProfileTest
         testKb.applyMapping(testMapping);
 
         assertThat(SchemaProfile.checkSchemaProfile(testProfile))
-            .isEqualTo(SchemaProfile.OWLSCHEMA);
-        assertThat(SchemaProfile.checkSchemaProfile(testKb))
-            .isEqualTo(SchemaProfile.OWLSCHEMA);
+                .isEqualTo(SchemaProfile.OWLSCHEMA);
+        assertThat(SchemaProfile.checkSchemaProfile(testKb)).isEqualTo(SchemaProfile.OWLSCHEMA);
     }
 }

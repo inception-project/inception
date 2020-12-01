@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfi
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 
 /**
- * Adds the {@code identifier} feature provided since DKPro Core 1.9.0 as a concept feature.  
+ * Adds the {@code identifier} feature provided since DKPro Core 1.9.0 as a concept feature.
  * <p>
  * This class is exposed as a Spring Component via
  * {@link KnowledgeBaseServiceUIAutoConfiguration#namedEntityIdentifierFeatureInitializer}.

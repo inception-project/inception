@@ -33,7 +33,7 @@ public class PerseusFormatSupport
 {
     public static final String ID = "perseus_2.1";
     public static final String NAME = "Perseus treebank XML (2.1)";
-    
+
     @Override
     public String getId()
     {
@@ -51,7 +51,7 @@ public class PerseusFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {

@@ -32,8 +32,8 @@ import de.tudarmstadt.ukp.inception.externalsearch.elastic.ElasticSearchProvider
  */
 @Configuration
 @AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "external-search.elastic-search", name = "enabled", 
-        havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "external-search.elastic-search", //
+        name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(ExternalSearchService.class)
 public class ElasticSearchDocumentRepositoryAutoConfiguration
 {

@@ -121,7 +121,8 @@ public abstract class AnnotationPanel
             
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             TypeAdapter adapter = annotationService.getAdapter(layer);
-            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
+            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
+                    () -> annotationService.listAnnotationFeature(layer));
             
             for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
                 Map<String, String> renderedFeatures = renderer

@@ -33,18 +33,18 @@ public class OffsetTest
         Offset o1a = new Offset(480, 486);
         Offset o2 = new Offset(480, 487);
         Offset o3 = new Offset(479, 487);
-        
+
         assertThat(o1).isEqualByComparingTo(o1);
         assertThat(o1).isEqualByComparingTo(o1a);
         assertThat(o1a).isEqualByComparingTo(o1);
         assertThat(o1).isNotEqualByComparingTo(o2);
         assertThat(o2).isNotEqualByComparingTo(o1);
-        
+
         Set<Offset> treeset = new TreeSet<>();
         treeset.add(o1);
         assertThat(treeset).doesNotContain(o2);
         assertThat(treeset).contains(o1a);
-        
+
         assertThat(o2).isLessThan(o1);
         assertThat(o1).isGreaterThan(o2);
         assertThat(o3).isLessThan(o2);

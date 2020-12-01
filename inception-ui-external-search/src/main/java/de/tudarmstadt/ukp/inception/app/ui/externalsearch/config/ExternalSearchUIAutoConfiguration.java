@@ -45,20 +45,19 @@ public class ExternalSearchUIAutoConfiguration
     {
         return new SearchPageMenuItem();
     }
-    
+
     @Bean
-    public DocumentRepositoryProjectSettingsPanelFactory 
-            documentRepositoryProjectSettingsPanelFactory()
+    public DocumentRepositoryProjectSettingsPanelFactory documentRepositoryProjectSettingsPanelFactory()
     {
         return new DocumentRepositoryProjectSettingsPanelFactory();
     }
-    
+
     @Bean
     public ExternalSearchAnnotationSidebarFactory externalSearchAnnotationSidebarFactory()
     {
         return new ExternalSearchAnnotationSidebarFactory();
     }
-    
+
     @Bean
     @Autowired
     public DocumentImporter documentImporter(DocumentService aDocumentService,

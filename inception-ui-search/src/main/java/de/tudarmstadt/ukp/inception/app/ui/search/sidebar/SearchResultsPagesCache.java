@@ -31,7 +31,7 @@ public class SearchResultsPagesCache
     implements Serializable
 {
     private static final long serialVersionUID = 2219896532886718940L;
-    
+
     private Map<PageKey, List<ResultsGroup>> pages;
 
     public SearchResultsPagesCache()
@@ -73,7 +73,7 @@ public class SearchResultsPagesCache
         implements Serializable
     {
         private static final long serialVersionUID = 9167352821262381017L;
-        
+
         private long first;
         private long count;
 

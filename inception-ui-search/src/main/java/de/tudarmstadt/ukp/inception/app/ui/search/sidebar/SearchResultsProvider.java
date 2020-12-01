@@ -75,11 +75,11 @@ public class SearchResultsProvider
             pagesCacheModel.getObject().clear();
             return IteratorUtils.emptyIterator();
         }
-        
+
         if (pagesCacheModel.getObject().containsPage(first, count)) {
             return pagesCacheModel.getObject().getPage(first, count).iterator();
         }
-        
+
         // Query if the results in the given range are not in the cache i.e. if we need to fetch
         // a new page
         try {
@@ -104,7 +104,7 @@ public class SearchResultsProvider
         if (totalResults != -1) {
             return totalResults;
         }
-        
+
         try {
             totalResults = searchService.determineNumOfQueryResults(user, project, query, document,
                     annotationLayer, annotationFeature);

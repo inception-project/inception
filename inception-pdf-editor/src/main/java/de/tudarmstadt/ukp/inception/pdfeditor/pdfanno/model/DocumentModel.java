@@ -22,10 +22,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Contains information and mappings for document text provided by INCEpTION.
- * This class is used for annotation alignment between INCEpTION and PDFAnno.
+ * Contains information and mappings for document text provided by INCEpTION. This class is used for
+ * annotation alignment between INCEpTION and PDFAnno.
  */
-public class DocumentModel implements Serializable
+public class DocumentModel
+    implements Serializable
 {
 
     private static final long serialVersionUID = 28043850700314856L;
@@ -57,8 +58,7 @@ public class DocumentModel implements Serializable
         StringBuilder sb = new StringBuilder();
         int documentTextIndex = 0;
         int whitespacelessTextIndex = 0;
-        for (char c : documentText.toCharArray())
-        {
+        for (char c : documentText.toCharArray()) {
             if (!Character.isWhitespace(c)) {
                 characterPositionMap.put(whitespacelessTextIndex, documentTextIndex);
                 sb.append(c);

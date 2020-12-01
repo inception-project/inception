@@ -20,13 +20,14 @@ package de.tudarmstadt.ukp.inception.recommendation.model;
 import java.io.Serializable;
 import java.util.Map;
 
-public class LearningCurve implements Serializable
+public class LearningCurve
+    implements Serializable
 {
     private static final long serialVersionUID = 6542281189066805238L;
-    
-    private Map<String,String> curveData;
+
+    private Map<String, String> curveData;
     private String xAxis;
-    
+
     public Map<String, String> getCurveData()
     {
         return curveData;

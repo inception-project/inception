@@ -25,19 +25,19 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEven
 public class DocumentOpenedEventAdapter
     implements EventLoggingAdapter<DocumentOpenedEvent>
 {
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof DocumentOpenedEvent;
     }
-    
+
     @Override
     public long getDocument(DocumentOpenedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(DocumentOpenedEvent aEvent)
     {

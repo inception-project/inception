@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.support.annotation;
 
 import java.io.Serializable;
 
-public class OffsetSpan implements Serializable
+public class OffsetSpan
+    implements Serializable
 {
 
     private static final long serialVersionUID = -2532025576874280981L;
@@ -28,7 +29,8 @@ public class OffsetSpan implements Serializable
 
     private final int end;
 
-    public OffsetSpan(int aBegin, int aEnd) {
+    public OffsetSpan(int aBegin, int aEnd)
+    {
         begin = aBegin;
         end = aEnd;
     }

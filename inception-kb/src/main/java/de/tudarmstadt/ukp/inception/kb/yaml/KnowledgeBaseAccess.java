@@ -26,7 +26,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class KnowledgeBaseAccess implements Serializable
+public class KnowledgeBaseAccess
+    implements Serializable
 {
     @JsonProperty("access-url")
     private String accessUrl;
@@ -34,15 +35,17 @@ public class KnowledgeBaseAccess implements Serializable
     @JsonProperty("full-text-search")
     private IRI fullTextSearchIri;
 
-    @JsonCreator public KnowledgeBaseAccess(@JsonProperty("access-url") String aAccessUrl,
-        @JsonProperty("full-text-search") String aFullTestSearchIri)
+    @JsonCreator
+    public KnowledgeBaseAccess(@JsonProperty("access-url") String aAccessUrl,
+            @JsonProperty("full-text-search") String aFullTestSearchIri)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         accessUrl = aAccessUrl;
         fullTextSearchIri = vf.createIRI(aFullTestSearchIri);
     }
 
-    public KnowledgeBaseAccess() {
+    public KnowledgeBaseAccess()
+    {
 
     }
 
@@ -66,7 +69,8 @@ public class KnowledgeBaseAccess implements Serializable
         fullTextSearchIri = aFullTextSearchIri;
     }
 
-    @Override public boolean equals(Object o)
+    @Override
+    public boolean equals(Object o)
     {
         if (this == o) {
             return true;
@@ -79,7 +83,8 @@ public class KnowledgeBaseAccess implements Serializable
                 && Objects.equals(fullTextSearchIri, that.fullTextSearchIri);
     }
 
-    @Override public int hashCode()
+    @Override
+    public int hashCode()
     {
         return Objects.hash(accessUrl, fullTextSearchIri);
     }

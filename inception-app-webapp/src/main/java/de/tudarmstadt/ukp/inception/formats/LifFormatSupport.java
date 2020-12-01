@@ -38,7 +38,7 @@ public class LifFormatSupport
 {
     public static final String ID = "lif";
     public static final String NAME = "LAPPS Interchange Format";
-    
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class LifFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -69,7 +69,7 @@ public class LifFormatSupport
     {
         return createReaderDescription(LifReader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

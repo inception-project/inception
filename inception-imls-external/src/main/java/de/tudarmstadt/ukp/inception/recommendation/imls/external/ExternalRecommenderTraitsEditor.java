@@ -41,13 +41,13 @@ public class ExternalRecommenderTraitsEditor
     private static final String MID_FORM = "form";
 
     private @SpringBean RecommendationEngineFactory<ExternalRecommenderTraits> toolFactory;
-    
+
     private final ExternalRecommenderTraits traits;
 
     public ExternalRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-        
+
         traits = toolFactory.readTraits(aRecommender.getObject());
 
         Form<ExternalRecommenderTraits> form = new Form<ExternalRecommenderTraits>(MID_FORM,
@@ -70,12 +70,12 @@ public class ExternalRecommenderTraitsEditor
 
         CheckBox trainable = new CheckBox("trainable");
         trainable.setOutputMarkupId(true);
-        trainable.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> 
-                _target.add(getTrainingStatesChoice())));
+        trainable.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                _target -> _target.add(getTrainingStatesChoice())));
         form.add(trainable);
-        
+
         getTrainingStatesChoice().add(visibleWhen(() -> trainable.getModelObject() == true));
-        
+
         add(form);
     }
 }

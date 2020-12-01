@@ -73,27 +73,26 @@ public class TrainingTask
     private final SourceDocument currentDocument;
 
     public TrainingTask(User aUser, Project aProject, String aTrigger,
-                        SourceDocument aCurrentDocument)
+            SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
         currentDocument = aCurrentDocument;
     }
-    
+
     @Override
     public void run()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             Project project = getProject();
             User user = getUser();
-    
-            log.debug("[{}][{}]: Starting training for project [{}] triggered by [{}]...",
-                    getId(), user.getUsername(),project, getTrigger());
-    
+
+            log.debug("[{}][{}]: Starting training for project [{}] triggered by [{}]...", getId(),
+                    user.getUsername(), project, getTrigger());
+
             // Read the CASes only when they are accessed the first time. This allows us to skip
             // reading the CASes in case that no layer / recommender is available or if no
             // recommender requires evaluation.
-            LazyInitializer<List<TrainingDocument>> casses =
-                    new LazyInitializer<List<TrainingDocument>>()
+            LazyInitializer<List<TrainingDocument>> casses = new LazyInitializer<List<TrainingDocument>>()
             {
                 @Override
                 protected List<TrainingDocument> initialize()
@@ -101,24 +100,24 @@ public class TrainingTask
                     return readCasses(project, user);
                 }
             };
-            
+
             boolean seenSuccessfulTraining = false;
             boolean seenNonTrainingRecommender = false;
-            
+
             for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
                 if (!layer.isEnabled()) {
                     continue;
                 }
-                
+
                 List<EvaluatedRecommender> recommenders = recommendationService
                         .getActiveRecommenders(user, layer);
-        
+
                 if (recommenders.isEmpty()) {
-                    log.trace("[{}][{}][{}]: No active recommenders, skipping training.",
-                            getId(), user.getUsername(), layer.getUiName());
+                    log.trace("[{}][{}][{}]: No active recommenders, skipping training.", getId(),
+                            user.getUsername(), layer.getUiName());
                     continue;
                 }
-                
+
                 for (EvaluatedRecommender r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
@@ -132,69 +131,68 @@ public class TrainingTask
                                 getId(), user.getUsername(), r.getRecommender().getName());
                         continue;
                     }
-                    
+
                     if (!recommender.isEnabled()) {
-                        log.debug("[{}][{}][{}]: Disabled - skipping", user.getUsername(),
-                                getId(), r.getRecommender().getName());
+                        log.debug("[{}][{}][{}]: Disabled - skipping", user.getUsername(), getId(),
+                                r.getRecommender().getName());
                         continue;
                     }
-                    
+
                     long startTime = System.currentTimeMillis();
-                    
+
                     try {
                         RecommendationEngineFactory factory = recommendationService
                                 .getRecommenderFactory(recommender);
-    
+
                         if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                            log.debug("[{}][{}][{}]: Recommender configured with invalid layer or "
+                            log.debug(
+                                    "[{}][{}][{}]: Recommender configured with invalid layer or "
                                             + "feature - skipping recommender",
                                     getId(), user.getUsername(), r.getRecommender().getName());
                             continue;
                         }
-                        
+
                         RecommendationEngine recommendationEngine = factory.build(recommender);
-                       
+
                         RecommenderContext ctx = recommendationEngine
                                 .newContext(recommendationService.getContext(user, recommender)
                                         .orElse(RecommenderContext.EMPTY_CONTEXT));
                         ctx.setUser(user);
-                        
+
                         RecommendationEngineCapability capability = recommendationEngine
                                 .getTrainingCapability();
-                        
+
                         // If engine does not support training, mark engine ready and skip to
                         // prediction
                         if (capability == TRAINING_NOT_SUPPORTED) {
                             seenNonTrainingRecommender = true;
-                            log.debug("[{}][{}][{}]: Engine does not support training",
-                                    getId(), user.getUsername(), recommender.getName());
+                            log.debug("[{}][{}][{}]: Engine does not support training", getId(),
+                                    user.getUsername(), recommender.getName());
                             ctx.close();
                             recommendationService.putContext(user, recommender, ctx);
                             continue;
                         }
-                        
-                        List<CAS> cassesForTraining = casses.get()
-                                .stream()
-                                .filter(e -> !recommender.getStatesIgnoredForTraining()
-                                        .contains(e.state))
+
+                        List<CAS> cassesForTraining = casses.get().stream().filter(
+                                e -> !recommender.getStatesIgnoredForTraining().contains(e.state))
                                 .filter(e -> containsTargetTypeAndFeature(recommender, e.cas))
-                                .map(e -> e.cas)
-                                .collect(Collectors.toList());
-    
-                        // If no data for training is available, but the engine requires training, 
+                                .map(e -> e.cas).collect(Collectors.toList());
+
+                        // If no data for training is available, but the engine requires training,
                         // do not mark as ready
                         if (cassesForTraining.isEmpty() && capability == TRAINING_REQUIRED) {
-                            log.debug("[{}][{}][{}]: There are no annotations available to train on",
+                            log.debug(
+                                    "[{}][{}][{}]: There are no annotations available to train on",
                                     getId(), user.getUsername(), recommender.getName());
                             continue;
                         }
-                        
+
                         log.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...",
                                 getId(), user.getUsername(), recommender.getName(),
                                 cassesForTraining.size(), casses.get().size());
-                        
+
                         recommendationEngine.train(ctx, cassesForTraining);
-                        
+
                         if (recommendationEngine.isReadyForPrediction(ctx)) {
                             log.debug(
                                     "[{}][{}][{}]: Training successful on [{}] out of [{}] documents ({} ms)",
@@ -210,7 +208,7 @@ public class TrainingTask
                                     cassesForTraining.size(), casses.get().size(),
                                     (System.currentTimeMillis() - startTime));
                         }
-                        
+
                         ctx.close();
                         recommendationService.putContext(user, recommender, ctx);
                     }
@@ -223,13 +221,15 @@ public class TrainingTask
                     }
                 }
             }
-    
+
             if (!seenSuccessfulTraining && !seenNonTrainingRecommender) {
-                log.debug("[{}][{}]: No recommenders trained successfully and no non-training "
-                        + "recommenders, skipping prediction.", getId(), user.getUsername());
+                log.debug(
+                        "[{}][{}]: No recommenders trained successfully and no non-training "
+                                + "recommenders, skipping prediction.",
+                        getId(), user.getUsername());
                 return;
             }
-            
+
             schedulingService.enqueue(new PredictionTask(user, getProject(),
                     String.format("TrainingTask %s complete", getId()), currentDocument));
         }
@@ -238,21 +238,23 @@ public class TrainingTask
     private List<TrainingDocument> readCasses(Project aProject, User aUser)
     {
         List<TrainingDocument> casses = new ArrayList<>();
-        Map<SourceDocument, AnnotationDocument> allDocuments =
-                documentService.listAllDocuments(aProject, aUser);
+        Map<SourceDocument, AnnotationDocument> allDocuments = documentService
+                .listAllDocuments(aProject, aUser);
         for (Map.Entry<SourceDocument, AnnotationDocument> entry : allDocuments.entrySet()) {
             try {
                 SourceDocument sourceDocument = entry.getKey();
                 AnnotationDocument annotationDocument = entry.getValue();
-                AnnotationDocumentState state = annotationDocument != null ?
-                        annotationDocument.getState() : AnnotationDocumentState.NEW;
+                AnnotationDocumentState state = annotationDocument != null
+                        ? annotationDocument.getState()
+                        : AnnotationDocumentState.NEW;
 
                 // During training, we should not have to modify the CASes... right? Fingers
                 // crossed.
                 CAS cas = documentService.readAnnotationCas(sourceDocument, aUser.getUsername(),
                         AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
                 casses.add(new TrainingDocument(cas, state));
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
             }
         }
@@ -265,18 +267,18 @@ public class TrainingTask
         try {
             type = CasUtil.getType(aCas, aRecommender.getLayer().getName());
         }
-        catch (IllegalArgumentException e ) {
+        catch (IllegalArgumentException e) {
             // If the CAS does not contain the target type at all, then it cannot contain any
             // annotations of that type.
             return false;
         }
-        
+
         if (type.getFeatureByBaseName(aRecommender.getFeature().getName()) == null) {
             // If the CAS does not contain the target feature, then there won't be any training
             // data.
-            return false;            
+            return false;
         }
-        
+
         return CasUtil.iterator(aCas, type).hasNext();
     }
 
@@ -285,7 +287,8 @@ public class TrainingTask
         private final CAS cas;
         private final AnnotationDocumentState state;
 
-        private TrainingDocument(CAS aCas, AnnotationDocumentState aState) {
+        private TrainingDocument(CAS aCas, AnnotationDocumentState aState)
+        {
             cas = aCas;
             state = aState;
         }

@@ -40,7 +40,7 @@ public class SearchAnnotationSidebarFactory
 {
     private static final ResourceReference ICON = new PackageResourceReference(
             SearchAnnotationSidebarFactory.class, "magnifier.png");
-    
+
     @Override
     public String getDisplayName()
     {
@@ -52,7 +52,7 @@ public class SearchAnnotationSidebarFactory
     {
         return ICON;
     }
-    
+
     @Override
     public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,

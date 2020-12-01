@@ -24,7 +24,8 @@ import org.apache.wicket.Component;
  * child components.
  *
  */
-public interface Focusable {
+public interface Focusable
+{
 
     /**
      * Returns the component which should receive the focus once this {@code Focusable} is rendered

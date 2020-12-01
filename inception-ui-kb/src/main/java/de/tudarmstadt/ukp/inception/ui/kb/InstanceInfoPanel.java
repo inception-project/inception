@@ -36,21 +36,25 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
-public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
+public class InstanceInfoPanel
+    extends AbstractInfoPanel<KBInstance>
+{
 
     private static final long serialVersionUID = 7894987557444275022L;
-    
-    private @SpringBean KnowledgeBaseService kbService;    
+
+    private @SpringBean KnowledgeBaseService kbService;
 
     private List<String> labelProperties;
 
     public InstanceInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBObject> selectedInstanceHandle, IModel<KBInstance> selectedInstanceModel) {
+            IModel<KBObject> selectedInstanceHandle, IModel<KBInstance> selectedInstanceModel)
+    {
         super(aId, aKbModel, selectedInstanceHandle, selectedInstanceModel);
     }
 
     @Override
-    protected void actionCreate(AjaxRequestTarget aTarget, Form<KBInstance> aForm) {
+    protected void actionCreate(AjaxRequestTarget aTarget, Form<KBInstance> aForm)
+    {
         KBInstance instance = kbObjectModel.getObject();
 
         assert isEmpty(instance.getIdentifier());
@@ -62,7 +66,8 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
     }
 
     @Override
-    protected void actionDelete(AjaxRequestTarget aTarget) {
+    protected void actionDelete(AjaxRequestTarget aTarget)
+    {
         kbService.deleteInstance(kbModel.getObject(), kbObjectModel.getObject());
         kbObjectModel.setObject(null);
 
@@ -71,25 +76,29 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
     }
 
     @Override
-    protected void actionCancel(AjaxRequestTarget aTarget) {
+    protected void actionCancel(AjaxRequestTarget aTarget)
+    {
         kbObjectModel.setObject(null);
 
         // send deselection event
         send(getPage(), Broadcast.BREADTH, new AjaxInstanceSelectionEvent(aTarget, null));
     }
-    
+
     @Override
-    protected String getTypeLabelResourceKey() {
+    protected String getTypeLabelResourceKey()
+    {
         return "instance";
     }
 
     @Override
-    protected String getNamePlaceholderResourceKey() {
+    protected String getNamePlaceholderResourceKey()
+    {
         return "instance.new.placeholder";
     }
-    
+
     @Override
-    protected StatementDetailPreference getDetailPreference() {
+    protected StatementDetailPreference getDetailPreference()
+    {
         return StatementDetailPreference.ALL;
     }
 
@@ -99,17 +108,15 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
         if (labelProperties == null) {
             labelProperties = kbService.listConceptOrInstanceLabelProperties(kbModel.getObject());
         }
-        
+
         return labelProperties;
     }
-    
-    
+
     @Override
     protected Comparator<StatementGroupBean> getStatementGroupComparator()
     {
-        return new ImportantStatementComparator<>(
-            sgb -> sgb.getProperty().getIdentifier(),
-            identifier -> kbService.isBaseProperty(identifier, kbModel.getObject())
-                    || getLabelProperties().contains(identifier));
+        return new ImportantStatementComparator<>(sgb -> sgb.getProperty().getIdentifier(),
+                identifier -> kbService.isBaseProperty(identifier, kbModel.getObject())
+                        || getLabelProperties().contains(identifier));
     }
 }

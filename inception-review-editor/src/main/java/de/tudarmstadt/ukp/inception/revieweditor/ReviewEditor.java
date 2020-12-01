@@ -99,7 +99,7 @@ public class ReviewEditor
             if (getModelObject().isSlotArmed()) {
                 getActionHandler().actionFillSlot(target, cas, begin, end, vid);
             } else {
-                getActionHandler().actionSelect(target, cas);
+                getActionHandler().actionSelect(target);
             }
         }
         catch (IOException e) {

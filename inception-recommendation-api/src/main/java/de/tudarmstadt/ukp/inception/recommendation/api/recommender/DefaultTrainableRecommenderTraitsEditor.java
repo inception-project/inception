@@ -27,19 +27,19 @@ public class DefaultTrainableRecommenderTraitsEditor
     private static final long serialVersionUID = -1255928405067038588L;
 
     private static final String MID_DOCUMENT_STATES = "statesForTraining";
-    
+
     private TrainingStatesChoice trainingStatesChoice;
 
     public DefaultTrainableRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-        
+
         trainingStatesChoice = new TrainingStatesChoice(MID_DOCUMENT_STATES, aRecommender);
         trainingStatesChoice.setOutputMarkupPlaceholderTag(true);
 
         add(trainingStatesChoice);
     }
-    
+
     public TrainingStatesChoice getTrainingStatesChoice()
     {
         return trainingStatesChoice;

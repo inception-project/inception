@@ -40,7 +40,7 @@ public class DocumentDetailsPage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = -645134257384090420L;
-    
+
     public static final String REPOSITORY_ID = "repo";
     public static final String COLLECTION_ID = "col";
     public static final String DOCUMENT_ID = "doc";
@@ -52,36 +52,33 @@ public class DocumentDetailsPage
     private DocumentRepository repo;
     private String collectionId;
     private String documentId;
-    
+
     public DocumentDetailsPage(PageParameters aParameters)
     {
         StringValue repositoryIdStringValue = aParameters.get(REPOSITORY_ID);
         StringValue collectionIdStringValue = aParameters.get(COLLECTION_ID);
         StringValue documentIdStringValue = aParameters.get(DOCUMENT_ID);
 
-        if (
-                repositoryIdStringValue == null || 
-                documentIdStringValue == null || 
-                collectionIdStringValue == null
-        ) {
+        if (repositoryIdStringValue == null || documentIdStringValue == null
+                || collectionIdStringValue == null) {
             abort();
         }
-        
+
         repo = externalSearchService.getRepository(repositoryIdStringValue.toLong());
         collectionId = collectionIdStringValue.toString();
-        documentId = documentIdStringValue.toString();        
-        
+        documentId = documentIdStringValue.toString();
+
         // Check access to project
         User currentUser = userRepository.getCurrentUser();
         if (!projectService.isAnnotator(repo.getProject(), currentUser)) {
             abort();
         }
-        
+
         add(new Label("title", LoadableDetachableModel.of(this::getDocumentResult).map(
-            r -> r.getDocumentTitle() != null ? r.getDocumentTitle() : r.getDocumentId())));
+                r -> r.getDocumentTitle() != null ? r.getDocumentTitle() : r.getDocumentId())));
         add(new Label("text", LoadableDetachableModel.of(this::getDocumentText)));
     }
-    
+
     private String getDocumentText()
     {
         try {

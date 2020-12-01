@@ -75,7 +75,7 @@ public class StatementGroupPanel
     extends Panel
 {
     private static final long serialVersionUID = 2431747012293487976L;
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(StatementGroupPanel.class);
 
     private static final String CONTENT_MARKUP_ID = "content";
@@ -91,18 +91,18 @@ public class StatementGroupPanel
         super(aId, aGroupModel);
         groupModel = aGroupModel;
         setOutputMarkupId(true);
-        
+
         if (groupModel.getObject().isNew()) {
             NewStatementGroupFragment newStatement = new NewStatementGroupFragment(
                     CONTENT_MARKUP_ID);
 
             // obtain AjaxRequestTarget and set the focus
-            RequestCycle.get()
-                    .find(AjaxRequestTarget.class)
+            RequestCycle.get().find(AjaxRequestTarget.class)
                     .ifPresent(target -> target.focusComponent(newStatement.getFocusComponent()));
 
             content = newStatement;
-        } else {
+        }
+        else {
             content = new ExistingStatementGroupFragment(CONTENT_MARKUP_ID);
         }
         add(content);
@@ -127,44 +127,44 @@ public class StatementGroupPanel
         implements Focusable
     {
         private static final long serialVersionUID = 7617846171917989652L;
-        
+
         private Component focusComponent;
-        
-        public NewStatementGroupFragment(String aId) {
+
+        public NewStatementGroupFragment(String aId)
+        {
             super(aId, "newStatementGroup", StatementGroupPanel.this, groupModel);
-                        
+
             IModel<KBProperty> property = Model.of();
-            
+
             Form<KBProperty> form = new Form<>("form", property);
             DropDownChoice<KBProperty> type = new BootstrapSelect<>("property");
             type.setModel(property);
-            type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));            
+            type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
             type.setChoices(getUnusedProperties());
             type.setRequired(true);
             type.setOutputMarkupId(true);
             form.add(type);
             focusComponent = type;
-            
+
             form.add(new LambdaAjaxButton<>("create", this::actionNewProperty));
             form.add(new LambdaAjaxLink("cancel", this::actionCancelNewProperty));
             add(form);
         }
-        
+
         /**
          * Returns the list of properties in the knowledge base for which the current instance does
          * not have statements for yet.
          */
         private List<KBProperty> getUnusedProperties()
         {
-            StatementGroupBean bean = groupModel.getObject(); 
+            StatementGroupBean bean = groupModel.getObject();
             StatementDetailPreference detailPreference = bean.getDetailPreference();
             Set<KBProperty> existingPropertyHandles = Collections.emptySet();
             try {
                 existingPropertyHandles = kbService
                         .listStatements(bean.getKb(), bean.getInstance(),
                                 detailPreference == StatementDetailPreference.ALL)
-                        .stream().map(stmt -> stmt.getProperty())
-                        .collect(Collectors.toSet());
+                        .stream().map(stmt -> stmt.getProperty()).collect(Collectors.toSet());
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list statements: " + e.getLocalizedMessage());
@@ -181,7 +181,7 @@ public class StatementGroupPanel
                 error("Unable to list properties: " + e.getLocalizedMessage());
                 LOG.error("Unable to list properties.", e);
             }
-            
+
             properties.removeAll(existingPropertyHandles);
             return KBHandle.distinctByIri(properties);
         }
@@ -192,7 +192,7 @@ public class StatementGroupPanel
 
             // replace content to show existing statement group with a new, empty statement
             ExistingStatementGroupFragment fragment = new ExistingStatementGroupFragment(
-                CONTENT_MARKUP_ID);
+                    CONTENT_MARKUP_ID);
             addStatementProto(groupModel.getObject());
             content = content.replaceWith(fragment);
 
@@ -203,22 +203,23 @@ public class StatementGroupPanel
         {
             StatementGroupBean bean = groupModel.getObject();
             send(getPage(), Broadcast.BREADTH,
-                new AjaxStatementGroupChangedEvent(target, bean, true));
+                    new AjaxStatementGroupChangedEvent(target, bean, true));
         }
-        
+
         @Override
-        public Component getFocusComponent() {
+        public Component getFocusComponent()
+        {
             return focusComponent;
         }
     }
-    
+
     public class ExistingStatementGroupFragment
         extends Fragment
     {
         private static final long serialVersionUID = 5054250870556101031L;
-        
+
         private WebMarkupContainer statementListWrapper;
-        
+
         public ExistingStatementGroupFragment(String aId)
         {
             super(aId, "existingStatementGroup", StatementGroupPanel.this, groupModel);
@@ -236,26 +237,30 @@ public class StatementGroupPanel
             IModel<KBProperty> propertyModel = Model.of(statementGroupBean.getProperty());
 
             form.add(new IriInfoBadge("statementIdtext", groupModel.bind("property.identifier")));
-                        
+
             RefreshingView<KBStatement> statementList = new RefreshingView<KBStatement>(
-                    "statementList") {
+                    "statementList")
+            {
                 private static final long serialVersionUID = 5811425707843441458L;
 
                 @Override
-                protected Iterator<IModel<KBStatement>> getItemModels() {
-                    return new ModelIteratorAdapter<KBStatement>(
-                        statementGroupBean.getStatements()) {
+                protected Iterator<IModel<KBStatement>> getItemModels()
+                {
+                    return new ModelIteratorAdapter<KBStatement>(statementGroupBean.getStatements())
+                    {
                         @Override
-                        protected IModel<KBStatement> model(KBStatement object) {
+                        protected IModel<KBStatement> model(KBStatement object)
+                        {
                             return LambdaModel.of(() -> object);
                         }
                     };
                 }
 
                 @Override
-                protected void populateItem(Item<KBStatement> aItem) {
-                    StatementEditor editor = new StatementEditor("statement",
-                            groupModel.bind("kb"), aItem.getModel(), propertyModel);
+                protected void populateItem(Item<KBStatement> aItem)
+                {
+                    StatementEditor editor = new StatementEditor("statement", groupModel.bind("kb"),
+                            aItem.getModel(), propertyModel);
                     aItem.add(editor);
                     aItem.setOutputMarkupId(true);
                 }
@@ -270,16 +275,16 @@ public class StatementGroupPanel
             statementListWrapper.add(statementList);
             form.add(statementListWrapper);
 
-            WebMarkupContainer statementGroupFooter = new WebMarkupContainer("statementGroupFooter");
+            WebMarkupContainer statementGroupFooter = new WebMarkupContainer(
+                    "statementGroupFooter");
             LambdaAjaxLink addLink = new LambdaAjaxLink("add", this::actionAddValue);
             addLink.add(new Label("label", new ResourceModel("statement.value.add")));
             addLink.add(new WriteProtectionBehavior(groupModel.bind("kb")));
             statementGroupFooter.add(addLink);
 
             AttributeAppender framehighlightAppender = new AttributeAppender("style",
-                    LoadableDetachableModel.of(() -> 
-                        "background-color:#" + getColoringStrategy().getFrameColor()
-                    ));
+                    LoadableDetachableModel.of(
+                            () -> "background-color:#" + getColoringStrategy().getFrameColor()));
             statementGroupFooter.add(framehighlightAppender);
             form.add(framehighlightAppender);
 
@@ -295,38 +300,37 @@ public class StatementGroupPanel
             add(form);
 
         }
-        
+
         public StatementGroupBean getModelObject()
         {
             return (StatementGroupBean) getDefaultModelObject();
         }
-        
+
         private StatementColoringStrategy getColoringStrategy()
         {
             AbstractInfoPanel<?> aip = findParent(AbstractInfoPanel.class);
             StatementGroupBean statementGroupBean = getModelObject();
-            return coloringRegistry
-                    .getStatementColoringStrategy(
-                            statementGroupBean.getProperty().getIdentifier(),
-                            statementGroupBean.getKb(), aip.getLabelProperties());
+            return coloringRegistry.getStatementColoringStrategy(
+                    statementGroupBean.getProperty().getIdentifier(), statementGroupBean.getKb(),
+                    aip.getLabelProperties());
         }
-        
+
         private void actionPropertyLinkClicked(AjaxRequestTarget target)
         {
             send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(target,
                     groupModel.getObject().getProperty(), true));
         }
-        
+
         @OnEvent
         public void actionStatementChanged(AjaxStatementChangedEvent event)
         {
             // event is not relevant if the statement in the event has a different property|subject
             // than the property|subject of this statement group
             KBStatement statement = event.getStatement();
-            boolean isEventForThisStatementGroup =
-                statement.getProperty().equals(groupModel.getObject().getProperty())
+            boolean isEventForThisStatementGroup = statement.getProperty()
+                    .equals(groupModel.getObject().getProperty())
                     && statement.getInstance().getIdentifier()
-                    .equals(groupModel.getObject().getInstance().getIdentifier());
+                            .equals(groupModel.getObject().getInstance().getIdentifier());
             if (!isEventForThisStatementGroup) {
                 return;
             }
@@ -347,7 +351,8 @@ public class StatementGroupPanel
                 if (bean.getStatements().isEmpty()) {
                     send(getPage(), Broadcast.BREADTH,
                             new AjaxStatementGroupChangedEvent(event.getTarget(), bean, true));
-                } else {
+                }
+                else {
                     // refresh the list wrapper (only necessary if at least one statement remains,
                     // otherwise the whole statement group is removed anyway)
                     event.getTarget().add(statementListWrapper);

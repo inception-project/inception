@@ -29,7 +29,7 @@ public abstract class Task
     implements Runnable
 {
     private final static AtomicInteger nextId = new AtomicInteger(1);
-    
+
     private final User user;
     private final Project project;
     private final String trigger;
@@ -40,7 +40,7 @@ public abstract class Task
         notNull(aUser);
         notNull(aProject);
         notNull(aTrigger);
-        
+
         user = aUser;
         project = aProject;
         trigger = aTrigger;
@@ -66,14 +66,15 @@ public abstract class Task
     {
         return getClass().getSimpleName();
     }
-    
+
     public int getId()
     {
         return id;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder sb = new StringBuilder(getName());
         sb.append('{');
         sb.append("user=").append(user.getUsername());
@@ -84,7 +85,8 @@ public abstract class Task
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -96,8 +98,9 @@ public abstract class Task
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(user, project);
     }
-    
+
 }

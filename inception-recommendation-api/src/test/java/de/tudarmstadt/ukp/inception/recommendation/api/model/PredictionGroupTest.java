@@ -54,8 +54,8 @@ public class PredictionGroupTest
         sut.add(rec2Sug2);
         assertThat(sut).hasSize(4);
         assertThat(sut).contains(rec2Sug2);
-    }    
-    
+    }
+
     @Test
     public void thatSortingWorks()
     {
@@ -69,20 +69,20 @@ public class PredictionGroupTest
                 0, 1, "d", "D", "#D", 0.3, "E3");
 
         SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
-        
+
         assertThat(sut)
                 .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
-        
+
         assertThat(sut.stream())
                 .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
-        
+
         assertThat(sut.iterator()).toIterable()
                 .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
     }
-    
+
     @Test
     public void thatTopDeltasAreCorrect()
     {
@@ -96,7 +96,7 @@ public class PredictionGroupTest
                 0, 1, "d", "D", "#D", 0.3, "E3");
 
         SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
-                
+
         // Check that the deltas are ok
         Map<Long, Delta> topDeltas = sut.getTopDeltas();
         assertThat(topDeltas).hasSize(2);

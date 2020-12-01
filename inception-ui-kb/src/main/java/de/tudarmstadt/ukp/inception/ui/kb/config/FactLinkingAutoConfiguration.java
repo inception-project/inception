@@ -36,8 +36,8 @@ import de.tudarmstadt.ukp.inception.ui.kb.initializers.FactLayerInitializer;
 @Configuration
 @AutoConfigureAfter(KnowledgeBaseServiceAutoConfiguration.class)
 @ConditionalOnBean(KnowledgeBaseService.class)
-@ConditionalOnProperty(prefix = "knowledge-base.fact-linking", name = "enabled", 
-        havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "knowledge-base.fact-linking", //
+        name = "enabled", havingValue = "true", matchIfMissing = false)
 public class FactLinkingAutoConfiguration
 {
     @Bean
@@ -46,19 +46,19 @@ public class FactLinkingAutoConfiguration
     {
         return new PropertyFeatureSupport(aKbService);
     }
-    
+
     @Bean
     public SubjectObjectFeatureSupport subjectObjectFeatureSupport()
     {
         return new SubjectObjectFeatureSupport();
     }
-    
+
     @Bean
     public FactLinkingService factLinkingService()
     {
         return new FactLinkingServiceImpl();
     }
-    
+
     @Bean
     @Autowired
     public FactLayerInitializer factLayerInitializer(

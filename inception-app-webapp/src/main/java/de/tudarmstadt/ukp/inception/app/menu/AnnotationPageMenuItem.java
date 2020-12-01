@@ -34,29 +34,30 @@ import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @Component
 @Order(100)
-public class AnnotationPageMenuItem implements MenuItem
+public class AnnotationPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
-    
+
     @Override
     public String getPath()
     {
         return "/annotation";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/categories.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Annotation";
     }
-    
+
     /**
      * Only project admins and annotators can see this page
      */
@@ -67,7 +68,7 @@ public class AnnotationPageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
-        
+
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
@@ -77,7 +78,7 @@ public class AnnotationPageMenuItem implements MenuItem
         return projectService.isAnnotator(project, user)
                 && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode());
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

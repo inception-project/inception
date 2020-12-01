@@ -66,37 +66,37 @@ public class FactLayerInitializer
     }
 
     @Override
-    public void configure(Project aProject)
-        throws IOException
+    public void configure(Project aProject) throws IOException
     {
         AnnotationLayer factLayer = new AnnotationLayer(FactLinkingConstants.FACT_LAYER, "Fact",
-            SPAN_TYPE, aProject, false, TOKENS, OverlapMode.NO_OVERLAP);
+                SPAN_TYPE, aProject, false, TOKENS, OverlapMode.NO_OVERLAP);
         factLayer.setAllowStacking(true);
         factLayer.setCrossSentence(false);
 
         annotationSchemaService.createFeature(
-            new AnnotationFeature(aProject, factLayer, "predicate", "1) Predicate",
-                PropertyFeatureSupport.PREFIX, "Predicate of a fact", null));
+                new AnnotationFeature(aProject, factLayer, "predicate", "1) Predicate",
+                        PropertyFeatureSupport.PREFIX, "Predicate of a fact", null));
 
         AnnotationFeature subjectFeature = createLinkedFeature("subject", "2) Subject",
-            "The subject of a fact.", FactLinkingConstants.SUBJECT_LINK, factLayer, aProject);
+                "The subject of a fact.", FactLinkingConstants.SUBJECT_LINK, factLayer, aProject);
         annotationSchemaService.createFeature(subjectFeature);
         annotationSchemaService.createLayer(factLayer);
 
         AnnotationFeature objectFeature = createLinkedFeature("object", "3) Object",
-            "The object of a fact.", FactLinkingConstants.OBJECT_LINK, factLayer, aProject);
+                "The object of a fact.", FactLinkingConstants.OBJECT_LINK, factLayer, aProject);
         annotationSchemaService.createFeature(objectFeature);
         annotationSchemaService.createLayer(factLayer);
 
         AnnotationFeature qualifierFeature = createLinkedFeature("qualifiers", "4) Qualifiers",
-            "The qualifier of a fact.", FactLinkingConstants.QUALIFIER_LINK, factLayer, aProject);
+                "The qualifier of a fact.", FactLinkingConstants.QUALIFIER_LINK, factLayer,
+                aProject);
         annotationSchemaService.createFeature(qualifierFeature);
         annotationSchemaService.createLayer(factLayer);
     }
 
     private AnnotationFeature createLinkedFeature(String featureName, String featureUiName,
-        String description, String linkedTypeName, AnnotationLayer aAnnotationLayer,
-        Project aProject)
+            String description, String linkedTypeName, AnnotationLayer aAnnotationLayer,
+            Project aProject)
     {
         AnnotationFeature linkedFeature = new AnnotationFeature();
         linkedFeature.setName(featureName);

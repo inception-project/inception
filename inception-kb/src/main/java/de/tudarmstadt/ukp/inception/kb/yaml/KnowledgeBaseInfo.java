@@ -22,7 +22,8 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class KnowledgeBaseInfo implements Serializable
+public class KnowledgeBaseInfo
+    implements Serializable
 {
     private static final long serialVersionUID = -2667645577002890141L;
 

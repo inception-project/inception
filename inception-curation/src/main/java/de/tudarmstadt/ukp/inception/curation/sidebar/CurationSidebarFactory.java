@@ -40,9 +40,9 @@ public class CurationSidebarFactory
 
     private static final ResourceReference ICON = new PackageResourceReference(
             CurationSidebarFactory.class, "data_table.png");
-    
+
     private @Autowired ProjectService projectService;
-    
+
     @Override
     public String getDisplayName()
     {
@@ -60,14 +60,13 @@ public class CurationSidebarFactory
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        return new CurationSidebar(aId, aModel, aActionHandler, aCasProvider,
-                aAnnotationPage);
+        return new CurationSidebar(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
     }
 
     @Override
     public boolean applies(AnnotatorState aState)
     {
-        boolean isCurator = projectService.isCurator(aState.getProject(), aState.getUser()); 
+        boolean isCurator = projectService.isCurator(aState.getProject(), aState.getUser());
         return isCurator;
     }
 

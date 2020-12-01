@@ -61,21 +61,21 @@ public interface SPARQLQuery
     {
         return !asHandles(aConnection, aAll).isEmpty();
     }
-    
+
     /**
-     * Execute the query and return a single handle. 
+     * Execute the query and return a single handle.
      * 
      * @param aConnection
      *            a connection to a triple store.
      * @param aAll
      *            if items from implicit namespaces (e.g. defined by RDF) should be included.
      * @return the matching handle (if there is one).
-     */    
+     */
     default Optional<KBHandle> asHandle(RepositoryConnection aConnection, boolean aAll)
     {
         return asHandles(aConnection, aAll).stream().findFirst();
     }
 
     // This has been moved to NoReification
-//    List<KBStatement> asStatements(RepositoryConnection aConnection, boolean aAll);
+    // List<KBStatement> asStatements(RepositoryConnection aConnection, boolean aAll);
 }
