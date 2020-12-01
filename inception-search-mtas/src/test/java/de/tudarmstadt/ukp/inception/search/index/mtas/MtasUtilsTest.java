@@ -42,7 +42,7 @@ public class MtasUtilsTest
     public void bytesToCharsRoundtripRandom() throws NoSuchAlgorithmException
     {
         byte[] input = new byte[65535];
-        
+
         Random rnd = new Random();
         rnd.nextBytes(input);
 

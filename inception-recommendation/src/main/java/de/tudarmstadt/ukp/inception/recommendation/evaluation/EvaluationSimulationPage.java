@@ -52,10 +52,9 @@ public class EvaluationSimulationPage
         projectModel = projectService.getProject(aPageParameters.get("p").toLong());
 
         selectedRecommenderModel = Model.of();
-        
+
         SimulationLearningCurvePanel evaluationSimulationPanel = new SimulationLearningCurvePanel(
-                MID_EVALUATION_SIMULATION_CONTAINER, projectModel,
-                selectedRecommenderModel);
+                MID_EVALUATION_SIMULATION_CONTAINER, projectModel, selectedRecommenderModel);
         evaluationSimulationPanel.setOutputMarkupId(true);
         add(evaluationSimulationPanel);
 

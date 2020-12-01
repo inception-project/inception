@@ -50,7 +50,7 @@ public class NamedEntityLinkerFactory
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.conceptlinking.recommender"
-        + ".NamedEntityLinkerClassificationTool";
+            + ".NamedEntityLinkerClassificationTool";
 
     private static final String PREFIX = "kb:";
 
@@ -77,11 +77,11 @@ public class NamedEntityLinkerFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         NamedEntityLinkerTraits traits = readTraits(aRecommender);
-        
+
         AnnotationFeature feature = aRecommender.getFeature();
         FeatureSupport<ConceptFeatureTraits> fs = fsRegistry.getFeatureSupport(feature);
         ConceptFeatureTraits featureTraits = fs.readTraits(feature);
-        
+
         return new NamedEntityLinker(aRecommender, traits, kbService, clService, fsRegistry,
                 featureTraits);
     }
@@ -99,8 +99,8 @@ public class NamedEntityLinkerFactory
             return false;
         }
         return asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode())
-            && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
-            && aFeature.getType().startsWith(PREFIX);
+                && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
+                && aFeature.getType().startsWith(PREFIX);
     }
 
     @Override
@@ -120,7 +120,7 @@ public class NamedEntityLinkerFactory
     {
         return false;
     }
-    
+
     @Override
     public boolean isMultipleRecommendationProvider()
     {

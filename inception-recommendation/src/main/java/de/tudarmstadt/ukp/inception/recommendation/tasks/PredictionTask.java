@@ -49,7 +49,7 @@ public class PredictionTask
     private final SourceDocument currentDocument;
 
     public PredictionTask(User aUser, Project aProject, String aTrigger,
-                          SourceDocument aCurrentDocument)
+            SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
         currentDocument = aCurrentDocument;
@@ -61,12 +61,12 @@ public class PredictionTask
         try (CasStorageSession session = CasStorageSession.open()) {
             User user = getUser();
             String username = user.getUsername();
-    
+
             Project project = getProject();
-    
+
             List<SourceDocument> docs = documentService.listSourceDocuments(project);
             List<SourceDocument> inherit = Collections.emptyList();
-            
+
             // Limit prediction to a single document and inherit the rest?
             if (!recommendationService.isPredictForAllDocuments(username, project)) {
                 inherit = docs.stream().filter(d -> !d.equals(currentDocument))
@@ -75,18 +75,19 @@ public class PredictionTask
                 log.debug("[{}][{}]: Limiting prediction to [{}]", getId(), username,
                         currentDocument.getName());
             }
-    
-            log.debug("[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
+
+            log.debug(
+                    "[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
                     getId(), username, project, docs.size(), getTrigger());
-            
+
             long startTime = System.currentTimeMillis();
-    
+
             Predictions predictions = recommendationService.computePredictions(user, project, docs,
                     inherit);
-            
+
             log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
                     (System.currentTimeMillis() - startTime));
-    
+
             recommendationService.putIncomingPredictions(user, project, predictions);
         }
     }

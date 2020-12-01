@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.inception.support.ui;
+
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -38,10 +39,10 @@ public class LinkProvider
         if (aDocService.existsSourceDocument(aProject, aDocId)) {
             docId = aDocService.getSourceDocument(aProject, aDocId).getId();
         }
-        
+
         return createDocumentPageLink(aProject, docId, aId, aLinkLabel, aPageClass);
     }
-    
+
     public static ExternalLink createDocumentPageLink(Project aProject, long aDocId, String aId,
             String aLinkLabel, Class<? extends WebPage> aPageClass)
     {
@@ -54,9 +55,9 @@ public class LinkProvider
         if (aLinkLabel == null) {
             new ExternalLink(aId, url);
         }
-        
+
         return new ExternalLink(aId, url, aLinkLabel);
-        
+
     }
 
     public static ExternalLink createDocumentPageLink(DocumentService aDocService, Project aProject,
@@ -64,9 +65,9 @@ public class LinkProvider
     {
         return createDocumentPageLink(aDocService, aProject, aDocumentId, aId, null, aClass);
     }
-    
-    public static ExternalLink createDocumentPageLink(Project aProject,
-            long aDocumentId, String aId, Class<? extends WebPage> aClass)
+
+    public static ExternalLink createDocumentPageLink(Project aProject, long aDocumentId,
+            String aId, Class<? extends WebPage> aClass)
     {
         return createDocumentPageLink(aProject, aDocumentId, aId, null, aClass);
     }

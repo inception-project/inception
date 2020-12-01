@@ -26,7 +26,7 @@ public class ExtendedId
     implements Serializable
 {
     private static final long serialVersionUID = -5214683455382881005L;
-    
+
     private final String userName;
     private final long projectId;
     private final String documentName;
@@ -82,12 +82,12 @@ public class ExtendedId
     {
         return begin;
     }
-    
+
     public int getEnd()
     {
         return end;
     }
-    
+
     public int getAnnotationId()
     {
         return annotationId;

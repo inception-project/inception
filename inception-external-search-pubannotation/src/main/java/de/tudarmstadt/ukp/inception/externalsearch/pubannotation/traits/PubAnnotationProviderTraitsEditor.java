@@ -36,8 +36,7 @@ public class PubAnnotationProviderTraitsEditor
 
     private static final String MID_FORM = "form";
 
-    private @SpringBean ExternalSearchProviderFactory<PubAnnotationProviderTraits> 
-            externalSearchProviderFactory;
+    private @SpringBean ExternalSearchProviderFactory<PubAnnotationProviderTraits> externalSearchProviderFactory;
     private final DocumentRepository documentRepository;
     private final PubAnnotationProviderTraits properties;
 
@@ -48,8 +47,8 @@ public class PubAnnotationProviderTraitsEditor
         documentRepository = aDocumentRepository.getObject();
         properties = externalSearchProviderFactory.readTraits(documentRepository);
 
-        Form<PubAnnotationProviderTraits> form = new Form<PubAnnotationProviderTraits>(
-                MID_FORM, CompoundPropertyModel.of(Model.of(properties)))
+        Form<PubAnnotationProviderTraits> form = new Form<PubAnnotationProviderTraits>(MID_FORM,
+                CompoundPropertyModel.of(Model.of(properties)))
         {
             private static final long serialVersionUID = -3109239608742291123L;
 

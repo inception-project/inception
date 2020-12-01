@@ -103,8 +103,9 @@ public class GeneralSettingsPanel
         basePrefix.setOutputMarkupId(true);
         return basePrefix;
     }
-    
-    private class KnowledgeBaseNameValidator implements IValidator<String>
+
+    private class KnowledgeBaseNameValidator
+        implements IValidator<String>
     {
         private static final long serialVersionUID = 4125256951093164889L;
 

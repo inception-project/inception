@@ -47,7 +47,7 @@ public interface SPARQLQueryPrimaryConditions
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions withIdentifier(String... aIdentifiers);
-    
+
     /**
      * Find entries where the label matches exactly one of the given values. The match is
      * case-sensitive if requested and it takes the default language of the KB into consideration.
@@ -90,7 +90,6 @@ public interface SPARQLQueryPrimaryConditions
      */
     SPARQLQueryPrimaryConditions withLabelMatchingAnyOf(String... aValues);
 
-    
     /**
      * Match all the roots of the class hierarchy.
      * <p>
@@ -148,11 +147,11 @@ public interface SPARQLQueryPrimaryConditions
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions parentsOf(String aClassIri);
-    
+
     /**
      * Limits results to properties with the given domain or without any domain. Considers the
-     * inheritance hierarchy, so if A has a property x and B is a subclass of A, then B also has
-     * the property x.
+     * inheritance hierarchy, so if A has a property x and B is a subclass of A, then B also has the
+     * property x.
      * <p>
      * <b>NOTE:</b> this method implicitly disables FTS for the query and must be called before
      * {@link #withLabelStartingWith(String)} or any other label-matching methods. Failure to do so

@@ -24,17 +24,20 @@ import org.apache.wicket.model.StringResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public class KnowledgeBaseCreationDialog extends ModalWindow {
+public class KnowledgeBaseCreationDialog
+    extends ModalWindow
+{
 
     private static final long serialVersionUID = 7446798125344480445L;
-    
+
     private IModel<Project> projectModel;
 
-    public KnowledgeBaseCreationDialog(String aId, IModel<Project> aProjectModel) {
+    public KnowledgeBaseCreationDialog(String aId, IModel<Project> aProjectModel)
+    {
         super(aId, aProjectModel);
-        
+
         setOutputMarkupPlaceholderTag(true);
-        
+
         projectModel = aProjectModel;
 
         setInitialWidth(675);
@@ -45,9 +48,10 @@ public class KnowledgeBaseCreationDialog extends ModalWindow {
         setTitle(new StringResourceModel("kb.wizard.title", this));
         setCssClassName("w_blue w_flex");
     }
-    
+
     @Override
-    public void show(IPartialPageRequestHandler target) {
+    public void show(IPartialPageRequestHandler target)
+    {
         setContent(new KnowledgeBaseCreationWizard(getContentId(), projectModel));
         super.show(target);
     }

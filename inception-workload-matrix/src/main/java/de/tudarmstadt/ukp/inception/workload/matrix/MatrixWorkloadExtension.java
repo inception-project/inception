@@ -77,11 +77,11 @@ public class MatrixWorkloadExtension
 
     @Override
     public void writeTraits(WorkloadManagementService aWorkloadManagementService,
-                            MatrixWorkloadTrait aTrait, Project aProject)
+            MatrixWorkloadTrait aTrait, Project aProject)
     {
         try {
             WorkloadManager manager = aWorkloadManagementService
-                .loadOrCreateWorkloadManagerConfiguration(aProject);
+                    .loadOrCreateWorkloadManagerConfiguration(aProject);
             manager.setTraits(JSONUtil.toJsonString(aTrait));
             aWorkloadManagementService.saveConfiguration(manager);
         }

@@ -36,8 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 
 /**
- * A persistence object for meta-data of an index. The index is
- * stored in the file system.
+ * A persistence object for meta-data of an index. The index is stored in the file system.
  */
 
 @Entity
@@ -60,9 +59,9 @@ public class Index
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date creationDate;
-    
+
     private String physicalProvider;
-    
+
     @Transient
     private PhysicalIndex physicalIndex;
 

@@ -36,7 +36,7 @@ public class FeatureChangeDetails
     {
         // Nothing to do
     }
-    
+
     public FeatureChangeDetails(FeatureStructure aFS, Object aNew, Object aOld)
     {
         ann = new AnnotationDetails(aFS);
@@ -73,7 +73,7 @@ public class FeatureChangeDetails
     {
         previousValue = sanitize(aPreviousValue);
     }
-    
+
     private Object sanitize(Object aObject)
     {
         if (aObject instanceof Collection) {

@@ -28,14 +28,14 @@ public class KnowledgeBasePropertiesImpl
     implements KnowledgeBaseProperties
 {
     public static final int HARD_MIN_RESULTS = 10;
-    
+
     private int defaultMaxResults = 1_000;
     private int hardMaxResults = 10_000;
     private long cacheSize = 100_000;
-    
+
     @DurationUnit(ChronoUnit.MINUTES)
     private Duration cacheExpireDelay = Duration.ofMinutes(15);
-    
+
     @DurationUnit(ChronoUnit.MINUTES)
     private Duration cacheRefreshDelay = Duration.ofMinutes(5);
 
@@ -66,7 +66,7 @@ public class KnowledgeBasePropertiesImpl
     {
         return cacheSize;
     }
-    
+
     public void setCacheSize(long aCacheSize)
     {
         cacheSize = aCacheSize;
@@ -77,7 +77,7 @@ public class KnowledgeBasePropertiesImpl
     {
         return cacheExpireDelay;
     }
-    
+
     public void setCacheExpireDelay(Duration aCacheExpireDelay)
     {
         cacheExpireDelay = aCacheExpireDelay;
@@ -88,7 +88,7 @@ public class KnowledgeBasePropertiesImpl
     {
         return cacheRefreshDelay;
     }
-    
+
     public void setCacheRefreshDelay(Duration aCacheRefreshDelay)
     {
         cacheRefreshDelay = aCacheRefreshDelay;

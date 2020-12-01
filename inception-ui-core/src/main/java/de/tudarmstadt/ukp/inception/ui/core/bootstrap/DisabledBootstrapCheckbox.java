@@ -27,11 +27,14 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapCheckbox;
  * Extension of {@link BootstrapCheckbox} which can be disabled in the frontend.<br>
  * The input tag of the checkbox will receive the attribute {@code disabled="disabled"}.
  */
-public class DisabledBootstrapCheckbox extends BootstrapCheckbox {
+public class DisabledBootstrapCheckbox
+    extends BootstrapCheckbox
+{
 
     private static final long serialVersionUID = -202721702026002675L;
 
-    public DisabledBootstrapCheckbox(String id, IModel<Boolean> model, IModel<?> labelModel) {
+    public DisabledBootstrapCheckbox(String id, IModel<Boolean> model, IModel<?> labelModel)
+    {
         // MB: Unfortunately, we cannot write a "disableable" checkbox: newCheckBox(...) is called
         // in super(), and at that point in time, attributes of this class (like "boolean disabled")
         // are not defined yet...
@@ -39,7 +42,8 @@ public class DisabledBootstrapCheckbox extends BootstrapCheckbox {
     }
 
     @Override
-    protected CheckBox newCheckBox(String id, IModel<Boolean> model) {
+    protected CheckBox newCheckBox(String id, IModel<Boolean> model)
+    {
         CheckBox checkBox = super.newCheckBox(id, model);
         checkBox.add(new AttributeAppender("disabled", "disabled"));
         return checkBox;

@@ -90,7 +90,7 @@ public class WeblichtRecommenderTraitsEditor
     private final WebMarkupContainer missingChainAlert;
     private final Label chainField;
     private final BootstrapFileInput uploadField;
-    
+
     private final String oldApiKey;
 
     public WeblichtRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
@@ -100,8 +100,8 @@ public class WeblichtRecommenderTraitsEditor
         traits = toolFactory.readTraits(aRecommender.getObject());
         oldApiKey = traits.getApiKey();
         traitsModel = CompoundPropertyModel.of(traits);
-        Form<WeblichtRecommenderTraits> form =
-                new Form<WeblichtRecommenderTraits>(MID_FORM, traitsModel)
+        Form<WeblichtRecommenderTraits> form = new Form<WeblichtRecommenderTraits>(MID_FORM,
+                traitsModel)
         {
             private static final long serialVersionUID = -3109239605742291123L;
 
@@ -109,7 +109,7 @@ public class WeblichtRecommenderTraitsEditor
             protected void onSubmit()
             {
                 super.onSubmit();
-                
+
                 if (traits.getApiKey() != null) {
                     if (!traits.getApiKey().equals(oldApiKey)) {
                         traits.setLastKeyUpdate(new Date());
@@ -118,7 +118,7 @@ public class WeblichtRecommenderTraitsEditor
                 else {
                     traits.setLastKeyUpdate(null);
                 }
-                
+
                 toolFactory.writeTraits(aRecommender.getObject(), traits);
             }
         };
@@ -134,7 +134,7 @@ public class WeblichtRecommenderTraitsEditor
         apiKeyField.setRequired(true);
         apiKeyField.setOutputMarkupId(true);
         form.add(apiKeyField);
-        
+
         lastKeyUpdateField = new DateTextField(MID_LAST_KEY_UPDATE);
         lastKeyUpdateField.setOutputMarkupPlaceholderTag(true);
         lastKeyUpdateField.setEnabled(false);
@@ -150,7 +150,8 @@ public class WeblichtRecommenderTraitsEditor
         config.removeIcon("<i class=\"fa fa-remove\"></i>");
         config.uploadIcon("<i class=\"fa fa-upload\"></i>");
         config.browseIcon("<i class=\"fa fa-folder-open\"></i>");
-        uploadField = new BootstrapFileInput("upload", new ListModel<>(), config) {
+        uploadField = new BootstrapFileInput("upload", new ListModel<>(), config)
+        {
             private static final long serialVersionUID = -7072183979425490246L;
 
             @Override
@@ -162,22 +163,22 @@ public class WeblichtRecommenderTraitsEditor
         uploadField.add(visibleWhen(() -> aRecommender.getObject() != null
                 && aRecommender.getObject().getId() != null));
         add(uploadField);
-        
+
         chainField = new Label(MID_CHAIN, LoadableDetachableModel.of(this::getChain));
         chainField.setOutputMarkupPlaceholderTag(true);
         chainField.add(visibleWhen(() -> getModelObject().getId() != null));
         add(chainField);
-        
+
         saveToAddChainAlert = new WebMarkupContainer("saveToAddChainAlert");
         saveToAddChainAlert.setOutputMarkupPlaceholderTag(true);
         saveToAddChainAlert.add(visibleWhen(() -> getModelObject().getId() == null));
         add(saveToAddChainAlert);
-        
+
         missingChainAlert = new WebMarkupContainer("missingChainAlert");
         missingChainAlert.setOutputMarkupPlaceholderTag(true);
         missingChainAlert.add(visibleWhen(this::isChainMissing));
         add(missingChainAlert);
-        
+
         languageField = new ComboBox<>("chainInputLanguage", asList("unknown", "de", "en"));
         languageField
                 .add(LambdaBehavior.visibleWhen(() -> TCF.equals(traits.getChainInputFormat())));
@@ -187,12 +188,12 @@ public class WeblichtRecommenderTraitsEditor
         if (languageField.getModelObject() == null) {
             languageField.setModelObject("unknown");
         }
-        
+
         formatField = new BootstrapSelect<WeblichtFormat>("chainInputFormat",
                 asList(WeblichtFormat.values()), new EnumChoiceRenderer<>(this));
         formatField.setRequired(true);
-        formatField.add(new LambdaAjaxFormComponentUpdatingBehavior("change",_target -> 
-                _target.add(languageField)));
+        formatField.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                _target -> _target.add(languageField)));
         form.add(formatField);
         if (formatField.getModelObject() == null) {
             formatField.setModelObject(PLAIN_TEXT);
@@ -204,16 +205,16 @@ public class WeblichtRecommenderTraitsEditor
     {
         return (Recommender) getDefaultModelObject();
     }
-    
+
     private boolean isChainMissing()
     {
         if (getModelObject().getId() == null) {
             return false;
         }
-        
+
         return !chainService.existsChain(getModelObject());
     }
-    
+
     private String getChain()
     {
         return chainService.getChain(getModelObject()).map(WeblichtChain::getName)
@@ -224,12 +225,12 @@ public class WeblichtRecommenderTraitsEditor
     {
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(chainField, missingChainAlert);
-        
+
         for (FileUpload importedGazeteer : uploadField.getModelObject()) {
             WeblichtChain chain = new WeblichtChain();
             chain.setName(importedGazeteer.getClientFileName());
             chain.setRecommender(getModelObject());
-            
+
             // Make sure there is only one chain ever
             Optional<WeblichtChain> optChain = chainService.getChain(getModelObject());
             if (optChain.isPresent()) {
@@ -241,7 +242,7 @@ public class WeblichtRecommenderTraitsEditor
                     error("Error removing existing chain: " + e.getMessage());
                 }
             }
-            
+
             try (InputStream is = importedGazeteer.getInputStream()) {
                 chainService.createOrUpdateChain(chain);
                 chainService.importChainFile(chain, is);

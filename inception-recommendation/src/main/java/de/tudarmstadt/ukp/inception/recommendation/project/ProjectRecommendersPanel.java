@@ -30,35 +30,35 @@ public class ProjectRecommendersPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 3042218455285633439L;
-    
+
     private static final String MID_RECOMMENDERS = "recommenders";
     private static final String MID_CREATE_BUTTON = "create";
     private static final String MID_RECOMMENDER_EDITOR = "recommenderEditor";
 
     private IModel<Project> projectModel;
     private IModel<Recommender> selectedRecommenderModel;
-    
+
     private final RecommenderEditorPanel recommenderEditorPanel;
 
     public ProjectRecommendersPanel(String aId, IModel<Project> aProject)
     {
         super(aId, aProject);
-        
+
         setOutputMarkupId(true);
 
         selectedRecommenderModel = Model.of();
         projectModel = aProject;
 
-        recommenderEditorPanel = new RecommenderEditorPanel(
-                MID_RECOMMENDER_EDITOR, projectModel, selectedRecommenderModel);
+        recommenderEditorPanel = new RecommenderEditorPanel(MID_RECOMMENDER_EDITOR, projectModel,
+                selectedRecommenderModel);
         add(recommenderEditorPanel);
 
         RecommenderListPanel recommenderListPanel = new RecommenderListPanel(MID_RECOMMENDERS,
                 projectModel, selectedRecommenderModel, true);
         recommenderListPanel.setCreateAction(_target -> {
-            Recommender recommender = new Recommender();    
-            recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT); 
-            selectedRecommenderModel.setObject(recommender);    
+            Recommender recommender = new Recommender();
+            recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
+            selectedRecommenderModel.setObject(recommender);
             recommenderEditorPanel.modelChanged();
         });
         recommenderListPanel.setChangeAction(_target -> {

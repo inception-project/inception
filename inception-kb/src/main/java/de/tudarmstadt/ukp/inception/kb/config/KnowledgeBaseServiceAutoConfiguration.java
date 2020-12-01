@@ -33,13 +33,12 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 
 @Configuration
-@ConditionalOnProperty(prefix = "knowledge-base", name = "enabled", 
-        havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "knowledge-base", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(KnowledgeBasePropertiesImpl.class)
 public class KnowledgeBaseServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
-    
+
     @Bean
     @Autowired
     public KnowledgeBaseExporter knowledgeBaseExporter(KnowledgeBaseService aKbService,
@@ -47,7 +46,7 @@ public class KnowledgeBaseServiceAutoConfiguration
     {
         return new KnowledgeBaseExporter(aKbService, aKbProperties, aSchemaService);
     }
-    
+
     @Bean
     @Autowired
     public KnowledgeBaseService knowledgeBaseService(RepositoryProperties aRepoProperties,

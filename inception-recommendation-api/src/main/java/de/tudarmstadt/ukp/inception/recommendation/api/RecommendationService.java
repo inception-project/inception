@@ -49,25 +49,25 @@ public interface RecommendationService
     String FEATURE_NAME_SCORE_SUFFIX = "_score";
     String FEATURE_NAME_SCORE_EXPLANATION_SUFFIX = "_score_explanation";
 
-    int MAX_RECOMMENDATIONS_DEFAULT = 3; 
-    int MAX_RECOMMENDATIONS_CAP = 10; 
-    
+    int MAX_RECOMMENDATIONS_DEFAULT = 3;
+    int MAX_RECOMMENDATIONS_CAP = 10;
+
     void createOrUpdateRecommender(Recommender aRecommender);
 
     void deleteRecommender(Recommender aRecommender);
-    
+
     Recommender getRecommender(long aId);
 
     Optional<Recommender> getRecommender(Project aProject, String aName);
 
     boolean existsRecommender(Project aProject, String aName);
-    
+
     List<Recommender> listRecommenders(Project aProject);
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
-    
+
     Optional<Recommender> getEnabledRecommender(long aRecommenderId);
-    
+
     List<Recommender> listEnabledRecommenders(Project aProject);
 
     /**
@@ -78,22 +78,22 @@ public interface RecommendationService
     RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender);
 
     boolean hasActiveRecommenders(String aUser, Project aProject);
-    
+
     void setActiveRecommenders(User aUser, AnnotationLayer layer,
             List<EvaluatedRecommender> selectedClassificationTools);
-    
+
     List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer);
 
     void setPreferences(User aUser, Project aProject, Preferences aPreferences);
-    
+
     Preferences getPreferences(User aUser, Project aProject);
-    
+
     Predictions getPredictions(User aUser, Project aProject);
 
     Predictions getIncomingPredictions(User aUser, Project aProject);
-    
+
     void putIncomingPredictions(User aUser, Project aProject, Predictions aPredictions);
-    
+
     boolean switchPredictions(User aUser, Project aProject);
 
     /**
@@ -118,7 +118,7 @@ public interface RecommendationService
      *            The new active context of the given recommender.
      */
     void putContext(User aUser, Recommender aRecommender, RecommenderContext aContext);
-    
+
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
@@ -129,7 +129,7 @@ public interface RecommendationService
             String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
             String aValue, int aBegin, int aEnd)
         throws AnnotationException;
-    
+
     /**
      * Compute predictions.
      * 
@@ -145,7 +145,7 @@ public interface RecommendationService
      */
     Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments,
             List<SourceDocument> aInherit);
-    
+
     void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd);
 
@@ -154,13 +154,14 @@ public interface RecommendationService
     void clearState(String aUsername);
 
     void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
-                                          SourceDocument aCurrentDocument);
+            SourceDocument aCurrentDocument);
 
     boolean isPredictForAllDocuments(String aUser, Project aProject);
+
     void setPredictForAllDocuments(String aUser, Project aProject, boolean aPredictForAllDocuments);
 
     List<LogMessageGroup> getLog(String aUser, Project aProject);
-    
+
     /**
      * Retrieve the total amount of enabled recommenders
      */

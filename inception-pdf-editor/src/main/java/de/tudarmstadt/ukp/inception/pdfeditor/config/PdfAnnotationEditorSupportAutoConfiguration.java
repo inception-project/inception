@@ -28,8 +28,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor.PdfFormatSupport;
  * Provides support for an PDF-oriented annotation editor.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "ui.pdf", name = "enabled", 
-        havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ui.pdf", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class PdfAnnotationEditorSupportAutoConfiguration
 {
     @Bean
@@ -37,7 +36,7 @@ public class PdfAnnotationEditorSupportAutoConfiguration
     {
         return new PdfAnnotationEditorFactory();
     }
-    
+
     @Bean
     public PdfFormatSupport pdfFormatSupport()
     {

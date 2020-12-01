@@ -36,39 +36,39 @@ public class LoggedEvent
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(nullable = false)
     private String event;
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false)
     private Date created;
 
     /**
-     * The user who triggered the event. Can be different from the annotator to whom the 
-     * related annotation document does belong.
+     * The user who triggered the event. Can be different from the annotator to whom the related
+     * annotation document does belong.
      */
     @Column(nullable = false)
     private String user;
-    
+
     /**
      * If the event does not belong to a project, then the project ID should be -1.
      */
     @Column(nullable = false)
     private long project;
-    
+
     /**
      * If the event does not belong to a source document, then the document ID should be -1.
      */
     @Column(nullable = false)
     private long document;
-    
+
     /**
      * If the event does not belong to an annotation document, then the annotator ID should be null.
      */
     @Column(nullable = true)
     private String annotator;
-    
+
     @Lob
     @Column(length = 64000, nullable = true)
     private String details;

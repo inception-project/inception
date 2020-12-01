@@ -47,32 +47,37 @@ public abstract class RecommendationEngine
         featureName = aRecommender.getFeature().getName();
         maxRecommendations = aRecommender.getMaxRecommendations();
     }
-    
+
     public Recommender getRecommender()
     {
         return recommender;
     }
 
-// tag::methodDefinition[]
+    // tag::methodDefinition[]
     /**
-     * Given training data in {@code aCasses}, train a model. In order to save data between
-     * runs, the {@code aContext} can be used.
-     * This method must not mutate {@code aCasses} in any way.
-     * @param aContext The context of the recommender
-     * @param aCasses The training data
+     * Given training data in {@code aCasses}, train a model. In order to save data between runs,
+     * the {@code aContext} can be used. This method must not mutate {@code aCasses} in any way.
+     * 
+     * @param aContext
+     *            The context of the recommender
+     * @param aCasses
+     *            The training data
      */
     public abstract void train(RecommenderContext aContext, List<CAS> aCasses)
-            throws RecommendationException;
+        throws RecommendationException;
 
     /**
      * Given text in {@code aCas}, predict target annotations. These should be written into
-     * {@code aCas}. In order to restore data from e.g. previous training, the {@code aContext}
-     * can be used.
-     * @param aContext The context of the recommender
-     * @param aCas The training data
+     * {@code aCas}. In order to restore data from e.g. previous training, the {@code aContext} can
+     * be used.
+     * 
+     * @param aContext
+     *            The context of the recommender
+     * @param aCas
+     *            The training data
      */
     public abstract void predict(RecommenderContext aContext, CAS aCas)
-            throws RecommendationException;
+        throws RecommendationException;
 
     /**
      * Evaluates the performance of a recommender by splitting the data given in {@code aCasses} in
@@ -84,12 +89,12 @@ public abstract class RecommendationEngine
      *            The CASses containing target annotations
      * @param aDataSplitter
      *            The splitter which determines which annotations belong to which set
-     * @return Scores available through an EvaluationResult object measuring the performance
-     *         of predicting on the test set
+     * @return Scores available through an EvaluationResult object measuring the performance of
+     *         predicting on the test set
      */
     public abstract EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException;
-// end::methodDefinition[]
+    // end::methodDefinition[]
 
     /**
      * This method should be called before attempting to call {@link #predict} to ensure that the
@@ -103,21 +108,20 @@ public abstract class RecommendationEngine
      *         model, e.g. using some kind of fall back mechanism.
      */
     public abstract boolean isReadyForPrediction(RecommenderContext aContext);
-    
-    /** 
-     * Returns which training capabilities this engine has.
-     * If training is not supported, the call to {@link #train} should be skipped and 
-     * {@link #predict} should be called immediately.   
-     * Note that the engine cannot expect a model to be present in the {@link RecommenderContext} if
+
+    /**
+     * Returns which training capabilities this engine has. If training is not supported, the call
+     * to {@link #train} should be skipped and {@link #predict} should be called immediately. Note
+     * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
      * training is skipped or fails - this is meant only for engines that use pre-trained models.
      */
     public RecommendationEngineCapability getTrainingCapability()
     {
         return RecommendationEngineCapability.TRAINING_SUPPORTED;
     }
-    
+
     /**
-     * Create a new context given the previous context. This allows incrementally training 
+     * Create a new context given the previous context. This allows incrementally training
      * recommenders to salvage information from the current context for a new iteration. By default,
      * no information is copy and simply new context is created.
      */
@@ -141,8 +145,8 @@ public abstract class RecommendationEngine
         String scoreFeatureName = featureName + FEATURE_NAME_SCORE_SUFFIX;
         return getPredictedType(aCas).getFeatureByBaseName(scoreFeatureName);
     }
-    
-    protected Feature getScoreExplanationFeature(CAS aCas) 
+
+    protected Feature getScoreExplanationFeature(CAS aCas)
     {
         String scoreExplanationFeature = featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
         return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);

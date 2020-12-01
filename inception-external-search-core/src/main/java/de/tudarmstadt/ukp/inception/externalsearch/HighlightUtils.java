@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 public class HighlightUtils
 {
     private static final Logger LOG = LoggerFactory.getLogger(HighlightUtils.class);
-    
+
     private static final String HIGHLIGHT_START_TAG = "<em>";
 
     private static final String HIGHLIGHT_END_TAG = "</em>";

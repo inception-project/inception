@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.ui.core.footer.resources;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class TutorialJavascriptReference  extends JavaScriptResourceReference
+public class TutorialJavascriptReference
+    extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 

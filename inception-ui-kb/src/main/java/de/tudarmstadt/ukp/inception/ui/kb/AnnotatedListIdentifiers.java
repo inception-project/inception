@@ -78,7 +78,7 @@ public class AnnotatedListIdentifiers
         kbModel = aKbModel;
         conceptModel = aConcept;
         currentUser = userRepository.getCurrentUser();
-        
+
         String queryIri = flagInstanceSelect ? aInstance.getObject().getIdentifier()
                 : aConcept.getObject().getIdentifier();
         // MTAS internally escapes certain characters, so we need to escape them here as well.
@@ -86,18 +86,19 @@ public class AnnotatedListIdentifiers
         queryIri = queryIri.replaceAll("([\\\"\\)\\(\\<\\>\\.\\@\\#\\]\\[\\{\\}])", "\\\\$1");
         targetQuery = Model.of(
                 String.format("<%s=\"%s\"/>", ConceptFeatureIndexingSupport.KB_ENTITY, queryIri));
-        
+
         LoadableDetachableModel<List<SearchResult>> searchResults = LoadableDetachableModel
                 .of(this::getSearchResults);
-        LOG.trace("SearchResult count : {}" , searchResults.getObject().size());
+        LOG.trace("SearchResult count : {}", searchResults.getObject().size());
         ListView<String> overviewList = new ListView<String>("searchResultGroups")
         {
             private static final long serialVersionUID = -122960232588575731L;
 
-            @Override protected void onConfigure()
+            @Override
+            protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 setVisible(!searchResults.getObject().isEmpty());
             }
 
@@ -110,10 +111,9 @@ public class AnnotatedListIdentifiers
                                 searchResults, aItem.getModelObject())));
             }
         };
-        overviewList.setList(
-            searchResults.getObject().stream().map(res -> res.getDocumentTitle()).distinct()
-                .collect(Collectors.toList()));
-        
+        overviewList.setList(searchResults.getObject().stream().map(res -> res.getDocumentTitle())
+                .distinct().collect(Collectors.toList()));
+
         add(overviewList);
         add(new Label("count", LambdaModel.of(() -> searchResults.getObject().size())));
     }
@@ -138,7 +138,7 @@ public class AnnotatedListIdentifiers
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         setVisible(conceptModel.getObject() != null
                 && isNotEmpty(conceptModel.getObject().getIdentifier()));
     }
@@ -150,8 +150,7 @@ public class AnnotatedListIdentifiers
         }
         try {
             currentProject = kbModel.getObject().getProject();
-            return searchService
-                .query(currentUser, currentProject, targetQuery.getObject());
+            return searchService.query(currentUser, currentProject, targetQuery.getObject());
         }
         catch (Exception e) {
             LOG.debug("Error in the query.", e);
@@ -166,7 +165,7 @@ public class AnnotatedListIdentifiers
         private static final long serialVersionUID = 3540041356505975132L;
 
         public SearchResultGroup(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
-            List<String> aResultList)
+                List<String> aResultList)
         {
             super(aId, aMarkupId, aMarkupProvider);
 
@@ -174,10 +173,10 @@ public class AnnotatedListIdentifiers
             {
                 private static final long serialVersionUID = 5811425707843441458L;
 
-                @Override protected void populateItem(ListItem<String> aItem)
+                @Override
+                protected void populateItem(ListItem<String> aItem)
                 {
-                    aItem.add(
-                        new Label("sentence", aItem.getModelObject())
+                    aItem.add(new Label("sentence", aItem.getModelObject())
                             .setEscapeModelStrings(false));
                 }
             };

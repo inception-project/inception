@@ -31,7 +31,7 @@ public class AbstractTraitsEditor
     {
         super(aId, aRecommender);
     }
-    
+
     public Recommender getModelObject()
     {
         return (Recommender) getDefaultModelObject();

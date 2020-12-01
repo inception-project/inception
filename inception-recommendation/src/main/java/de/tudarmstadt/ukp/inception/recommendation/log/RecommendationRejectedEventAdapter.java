@@ -39,31 +39,31 @@ public class RecommendationRejectedEventAdapter
     implements EventLoggingAdapter<RecommendationRejectedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof RecommendationRejectedEvent;
     }
-    
+
     @Override
     public long getDocument(RecommendationRejectedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(RecommendationRejectedEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(RecommendationRejectedEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getDetails(RecommendationRejectedEvent aEvent)
     {
@@ -73,11 +73,11 @@ public class RecommendationRejectedEventAdapter
             annotation.setEnd(aEvent.getEnd());
             annotation.setText(aEvent.getText());
             annotation.setType(aEvent.getFeature().getLayer().getName());
-            
+
             FeatureChangeDetails details = new FeatureChangeDetails();
             details.setAnnotation(annotation);
             details.setValue(aEvent.getRecommendedValue());
-            
+
             return JSONUtil.toJsonString(details);
         }
         catch (IOException e) {

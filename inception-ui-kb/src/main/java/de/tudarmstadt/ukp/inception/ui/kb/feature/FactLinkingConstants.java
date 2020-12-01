@@ -28,6 +28,6 @@ public final class FactLinkingConstants
 
     public static final String FACT_LAYER = "de.tudarmstadt.ukp.inception.api.kb.type.Fact";
 
-    //identifier here is a feature of the NamedEntity layer
+    // identifier here is a feature of the NamedEntity layer
     public static final String LINKED_LAYER_FEATURE = "identifier";
 }

@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
-public class Relation {
+public class Relation
+{
 
     private String id;
 
@@ -65,12 +66,12 @@ public class Relation {
 
     public String toAnnoFileString()
     {
-        return "[[relations]]\n" +
-            "id = \"" + id + "\"\n" +
-            "head = \"" + head +  "\"\n" +
-            "tail = \"" + tail + "\"\n" +
-            "label = \"" + label + "\"\n" +
-            "color = \"" + color + "\"\n";
+        return "[[relations]]\n" + //
+                "id = \"" + id + "\"\n" + //
+                "head = \"" + head + "\"\n" + //
+                "tail = \"" + tail + "\"\n" + //
+                "label = \"" + label + "\"\n" + //
+                "color = \"" + color + "\"\n";
     }
 
 }

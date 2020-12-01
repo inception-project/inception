@@ -23,15 +23,15 @@ public class CurationVID
     extends VID
 {
     private static final long serialVersionUID = -4052847275637346338L;
-    
+
     private final String username;
-    
+
     public CurationVID(String aExtId, String aUsername, VID aVID)
     {
         super(aExtId, aVID.getLayerId(), aVID.getId(), aVID.getSubId(), aVID.getAttribute(),
                 aVID.getSlot(), aUsername + ":" + aVID.toString());
         username = aUsername;
-    } 
+    }
 
     public CurationVID(String aExtId, String aUsername, VID aVID, String aExtensionPayload)
     {
@@ -44,7 +44,7 @@ public class CurationVID
     {
         return username;
     }
-    
+
     @Override
     public int hashCode()
     {
@@ -56,5 +56,5 @@ public class CurationVID
     {
         return super.equals(aObj) && ((CurationVID) aObj).getUsername().equals(username);
     }
-  
+
 }

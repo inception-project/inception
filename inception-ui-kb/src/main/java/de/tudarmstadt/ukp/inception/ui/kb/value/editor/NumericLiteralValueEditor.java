@@ -31,12 +31,12 @@ public class NumericLiteralValueEditor
     private static final long serialVersionUID = 6935837930064826698L;
 
     private NumberTextField<Double> value;
-    
+
     public NumericLiteralValueEditor(String aId, IModel<KBStatement> aModel)
     {
         super(aId, CompoundPropertyModel.of(aModel));
         // Clear the value if it is not an instance of number
-        if (! (aModel.getObject().getValue() instanceof Number)) {
+        if (!(aModel.getObject().getValue() instanceof Number)) {
             aModel.getObject().setValue(0);
         }
         value = new NumberTextField<>("value", Double.class);
@@ -45,7 +45,7 @@ public class NumericLiteralValueEditor
         add(value);
 
     }
-    
+
     @Override
     public Component getFocusComponent()
     {
