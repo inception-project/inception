@@ -28,7 +28,7 @@ public class SearchQueryEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = 5672246678417774137L;
-    
+
     private final Project project;
     private final String user;
     private final String query;
@@ -66,7 +66,7 @@ public class SearchQueryEvent
     {
         return user;
     }
-    
+
     public Project getProject()
     {
         return project;
@@ -76,9 +76,10 @@ public class SearchQueryEvent
     {
         return query;
     }
-    
+
     /**
      * Query is limited to the given document.
+     * 
      * @return the source document if it exists or empty optional
      */
     public Optional<SourceDocument> getSourceDocument()

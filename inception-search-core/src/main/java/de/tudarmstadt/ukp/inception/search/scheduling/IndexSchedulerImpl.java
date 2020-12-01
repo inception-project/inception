@@ -87,8 +87,8 @@ public class IndexSchedulerImpl
             enqueue(new IndexSourceDocumentTask(aSourceDocument, casToByteArray(aCas)));
         }
         catch (IOException e) {
-            log.error("Unable to enqueue document [{}]({}) for indexing",
-                    aSourceDocument.getName(), aSourceDocument.getId(), e);
+            log.error("Unable to enqueue document [{}]({}) for indexing", aSourceDocument.getName(),
+                    aSourceDocument.getId(), e);
         }
     }
 
@@ -103,21 +103,23 @@ public class IndexSchedulerImpl
                     aAnnotationDocument.getName(), aAnnotationDocument.getId(), e);
         }
     }
-    
+
     /**
      * Put a new indexing task in the queue.
      * Indexing tasks can be of three types:
-     *  - Indexing of a whole project
-     *  - Indexing of a source document
-     *  - Indexing of an annotation document for a given user
-     *  
+     * <ul>
+     * <li>Indexing of a whole project</li>
+     * <li>Indexing of a source document</li>
+     * <li>Indexing of an annotation document for a given user</li>
+     * </ul>
+     * 
      * @param aRunnable
-     *          The indexing task
+     *            The indexing task
      */
     public synchronized void enqueue(Task aRunnable)
     {
         Optional<Task> alreadyScheduledTask = findAlreadyScheduled(aRunnable);
-        
+
         // Project indexing task
         if (aRunnable instanceof ReindexTask) {
             if (alreadyScheduledTask.isPresent()) {
@@ -143,7 +145,7 @@ public class IndexSchedulerImpl
         }
         // Annotation document indexing task
         else if (aRunnable instanceof IndexAnnotationDocumentTask) {
-            // Try to update the document CAS in the task currently enqueued for the same 
+            // Try to update the document CAS in the task currently enqueued for the same
             // annotation document/user (if there is an enqueued task).
             // This must be done so that the task will take into account the
             // latest changes to the annotation document.
@@ -175,11 +177,11 @@ public class IndexSchedulerImpl
     public boolean isIndexInProgress(Project aProject)
     {
         Validate.notNull(aProject, "Project cannot be null");
-        
-        return queue.stream().anyMatch(task -> aProject.equals(task.getProject())) ||
-                consumer.getActiveTask().map(t -> aProject.equals(t.getProject())).orElse(false);
+
+        return queue.stream().anyMatch(task -> aProject.equals(task.getProject()))
+                || consumer.getActiveTask().map(t -> aProject.equals(t.getProject())).orElse(false);
     }
-    
+
     private Optional<Task> findAlreadyScheduled(Task aTask)
     {
         return queue.stream().filter(aTask::matches).findAny();

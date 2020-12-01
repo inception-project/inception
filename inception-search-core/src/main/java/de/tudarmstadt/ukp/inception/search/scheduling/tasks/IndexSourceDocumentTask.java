@@ -31,7 +31,7 @@ public class IndexSourceDocumentTask
     extends Task
 {
     private @Autowired SearchService searchService;
-    
+
     public IndexSourceDocumentTask(SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
         super(aSourceDocument, aBinaryCas);
@@ -49,14 +49,14 @@ public class IndexSourceDocumentTask
             searchService.indexDocument(super.getSourceDocument(), super.getBinaryCas());
         }
     }
-    
+
     @Override
     public boolean matches(Task aTask)
     {
         if (!(aTask instanceof IndexSourceDocumentTask)) {
             return false;
         }
-        
+
         return getSourceDocument().getId() == aTask.getSourceDocument().getId();
     }
 }
