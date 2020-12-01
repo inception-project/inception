@@ -33,7 +33,8 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionP
  * {@link WorkloadManagementAutoConfiguration#workloadManagementService}
  * </p>
  */
-public class WorkloadManagementServiceImplBase implements WorkloadManagementService
+public class WorkloadManagementServiceImplBase
+    implements WorkloadManagementService
 {
     private final EntityManager entityManager;
     private final WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
@@ -69,31 +70,29 @@ public class WorkloadManagementServiceImplBase implements WorkloadManagementServ
                     workloadManagerExtensionPoint.getDefault().getId(), null);
             entityManager.persist(result);
         }
-        
+
         return result;
-    }
-    
-    @Override
-    @Transactional
-    public void setWorkloadManagerConfiguration(String aExtensionPointID, Project aProject) {
-        entityManager.createQuery(
-            "UPDATE WorkloadManager " +
-                "SET workloadType = :extensionPointID " +
-                "WHERE project = :projectID")
-            .setParameter("extensionPointID", aExtensionPointID)
-            .setParameter("projectID", aProject)
-            .executeUpdate();
     }
 
     @Override
     @Transactional
-    public void setTraits(String aTraits, Project aProject) {
-        entityManager.createQuery(
-            "UPDATE WorkloadManager " +
-                "SET traits = :traits " +
-                "WHERE project = :projectID")
-            .setParameter("traits", aTraits)
-            .setParameter("projectID", aProject)
-            .executeUpdate();
+    public void setWorkloadManagerConfiguration(String aExtensionPointID, Project aProject)
+    {
+        entityManager
+                .createQuery("UPDATE WorkloadManager " + "SET workloadType = :extensionPointID "
+                        + "WHERE project = :projectID")
+                .setParameter("extensionPointID", aExtensionPointID)
+                .setParameter("projectID", aProject).executeUpdate();
+    }
+
+    @Override
+    @Transactional
+    public void setTraits(String aTraits, Project aProject)
+    {
+        entityManager
+                .createQuery("UPDATE WorkloadManager " + "SET traits = :traits "
+                        + "WHERE project = :projectID")
+                .setParameter("traits", aTraits).setParameter("projectID", aProject)
+                .executeUpdate();
     }
 }

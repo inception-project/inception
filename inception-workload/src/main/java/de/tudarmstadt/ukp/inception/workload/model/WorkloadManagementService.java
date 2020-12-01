@@ -24,5 +24,6 @@ public interface WorkloadManagementService
     WorkloadManager getOrCreateWorkloadManagerConfiguration(Project aProject);
 
     void setWorkloadManagerConfiguration(String workloadType, Project aProject);
+
     void setTraits(String aTraits, Project aProject);
 }

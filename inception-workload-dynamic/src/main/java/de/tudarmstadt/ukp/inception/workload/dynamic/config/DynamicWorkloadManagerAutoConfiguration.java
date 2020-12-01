@@ -24,8 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 
 @Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true",
-    matchIfMissing = false)
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean
