@@ -164,10 +164,10 @@ public class CurationServiceImpl
         Validate.notBlank(aUsername, "User must be specified");
         Validate.notNull(aProjectId, "project must be specified");
 
-        String query = "FROM " + CurationSettings.class.getName()
-                + " o WHERE o.username = :username " 
+        String query = "FROM " + CurationSettings.class.getName() //
+                + " o WHERE o.username = :username "  //
                 + "AND o.projectId = :projectId";
-        
+
         List<CurationSettings> settings = entityManager //
                 .createQuery(query, CurationSettings.class) //
                 .setParameter("username", aUsername) //
@@ -258,10 +258,10 @@ public class CurationServiceImpl
         String query = String.join("\n", //
                 "SELECT u FROM User u, AnnotationDocument d", //
                 "WHERE u.username = d.user", //
-                "  AND d.project = :project", //
-                "  AND d.document = :document", //
-                "  AND d.state    = :state", //
-                "  ORDER BY u.username ASC");
+                "AND d.project    = :project", //
+                "AND d.document   = :document", //
+                "AND d.state      = :state", //
+                "ORDER BY u.username ASC");
 
         List<User> finishedUsers = new ArrayList<>(entityManager //
                 .createQuery(query, User.class) //

@@ -52,35 +52,36 @@ public class LearningRecordServiceImpl
     {
         entityManager = aEntityManager;
     }
-    
+
     @Transactional
     @EventListener
-    public void afterDocumentReset(AfterDocumentResetEvent aEvent) {
+    public void afterDocumentReset(AfterDocumentResetEvent aEvent)
+    {
         SourceDocument currentDocument = aEvent.getDocument().getDocument();
         String currentUser = aEvent.getDocument().getUser();
         deleteRecords(currentDocument, currentUser);
     }
-    
+
     @Transactional
     @Override
     public void logRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, AnnotationLayer aLayer, AnnotationFeature aFeature,
             LearningRecordType aUserAction, LearningRecordChangeLocation aLocation)
     {
-        logRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer,
-                aFeature, aUserAction, aLocation);
+        logRecord(aDocument, aUsername, aSuggestion, aSuggestion.getLabel(), aLayer, aFeature,
+                aUserAction, aLocation);
     }
-    
+
     @Transactional
     @Override
     public void logRecord(SourceDocument aDocument, String aUsername,
             AnnotationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
-            AnnotationFeature aFeature, LearningRecordType aUserAction, 
+            AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation)
     {
         // It doesn't make any sense at all to have duplicate entries in the learning history,
         // so when adding a new entry, we dump any existing entries which basically are the
-        // same as the one added. Mind that the actual action performed by the user does not 
+        // same as the one added. Mind that the actual action performed by the user does not
         // matter since there should basically be only one action in the log for any suggestion,
         // irrespective of what that action is.
         String query = String.join("\n", //
@@ -101,7 +102,7 @@ public class LearningRecordServiceImpl
                 .setParameter("annotationFeature", aFeature) //
                 .setParameter("annotation", aAlternativeLabel) //
                 .executeUpdate();
-        
+
         LearningRecord record = new LearningRecord();
         record.setUser(aUsername);
         record.setSourceDocument(aDocument);
@@ -121,8 +122,7 @@ public class LearningRecordServiceImpl
 
     @Transactional
     @Override
-    public List<LearningRecord> listRecords(
-            String aUsername, AnnotationLayer aLayer, int aLimit)
+    public List<LearningRecord> listRecords(String aUsername, AnnotationLayer aLayer, int aLimit)
     {
         String sql = String.join("\n", //
                 "FROM LearningRecord l WHERE", //
@@ -139,66 +139,71 @@ public class LearningRecordServiceImpl
         }
         return query.getResultList();
     }
-    
+
     @Transactional
     @Override
-    public List<LearningRecord> listRecords(
-            String aUsername, AnnotationLayer aLayer)
+    public List<LearningRecord> listRecords(String aUsername, AnnotationLayer aLayer)
     {
         return listRecords(aUsername, aLayer, 0);
     }
 
     @Transactional
     @Override
-    public LearningRecord getRecordById(long recordId) {
+    public LearningRecord getRecordById(long recordId)
+    {
         String sql = "FROM LearningRecord l where l.id = :id";
         LearningRecord learningRecord = entityManager.createQuery(sql, LearningRecord.class) //
-                .setParameter("id",recordId) //
+                .setParameter("id", recordId) //
                 .getSingleResult();
         return learningRecord;
     }
 
     @Transactional
     @Override
-    public void deleteRecords(SourceDocument document, String user) {
-        String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user " +
-            "= :user";
+    public void deleteRecords(SourceDocument document, String user)
+    {
+        String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user "
+                + "= :user";
         entityManager.createQuery(sql) //
-            .setParameter("document", document) //
-            .setParameter("user",user) //
-            .executeUpdate();
+                .setParameter("document", document) //
+                .setParameter("user", user) //
+                .executeUpdate();
     }
 
     @Override
     @Transactional
-    public void create(LearningRecord learningRecord) {
+    public void create(LearningRecord learningRecord)
+    {
         entityManager.persist(learningRecord);
         entityManager.flush();
     }
 
     @Override
     @Transactional
-    public void update(LearningRecord learningRecord) {
+    public void update(LearningRecord learningRecord)
+    {
         entityManager.merge(learningRecord);
         entityManager.flush();
     }
 
     @Override
     @Transactional
-    public void delete(LearningRecord learningRecord) {
-        entityManager.remove(entityManager.contains(learningRecord) ? learningRecord :
-            entityManager.merge(learningRecord));
+    public void delete(LearningRecord learningRecord)
+    {
+        entityManager.remove(entityManager.contains(learningRecord) ? learningRecord
+                : entityManager.merge(learningRecord));
     }
 
     @Override
     @Transactional
-    public void deleteById(long recordId) {
+    public void deleteById(long recordId)
+    {
         LearningRecord learningRecord = this.getRecordById(recordId);
         if (learningRecord != null) {
             this.delete(learningRecord);
         }
     }
-    
+
     @Override
     @Transactional
     public boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer)
@@ -215,7 +220,7 @@ public class LearningRecordServiceImpl
                 .getSingleResult();
         return count > 0;
     }
-    
+
     @Override
     @Transactional
     public void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer)

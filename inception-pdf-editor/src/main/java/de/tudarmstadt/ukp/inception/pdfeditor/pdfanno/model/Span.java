@@ -117,11 +117,11 @@ public class Span
     public String toAnnoFileString()
     {
         return "[[spans]]\n" + //
-            "id = \"" + id +  "\"\n" + //
-            "page = " + page + "\n" + //
-            "label = \"" + label.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" + //
-            "color = \"" + color + "\"\n" + //
-            "text = \"" + text.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" + //
-            "textrange = [" + startPos + "," + endPos + "]\n";
+                "id = \"" + id + "\"\n" + //
+                "page = " + page + "\n" + //
+                "label = \"" + label.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" + //
+                "color = \"" + color + "\"\n" + //
+                "text = \"" + text.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" + //
+                "textrange = [" + startPos + "," + endPos + "]\n";
     }
 }

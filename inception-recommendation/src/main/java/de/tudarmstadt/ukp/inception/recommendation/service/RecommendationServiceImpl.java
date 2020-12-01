@@ -329,11 +329,11 @@ public class RecommendationServiceImpl
     @Override
     public List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject)
     {
-        String query =  //
+        String query = //
                 "SELECT DISTINCT r.layer " //
-                + "FROM Recommender r " //
-                + "WHERE r.project = :project AND r.enabled = :enabled " //
-                + "ORDER BY r.layer.name ASC";
+                        + "FROM Recommender r " //
+                        + "WHERE r.project = :project AND r.enabled = :enabled " //
+                        + "ORDER BY r.layer.name ASC";
 
         return entityManager.createQuery(query, AnnotationLayer.class)
                 .setParameter("project", aProject).setParameter("enabled", true).getResultList();
@@ -418,8 +418,8 @@ public class RecommendationServiceImpl
     @Transactional
     public List<Recommender> listEnabledRecommenders(Project aProject)
     {
-        String query = String.join("\n",  //
-                "FROM Recommender WHERE",  //
+        String query = String.join("\n", //
+                "FROM Recommender WHERE", //
                 "project = :project AND", //
                 "enabled = :enabled", "ORDER BY name ASC");
 
@@ -433,8 +433,8 @@ public class RecommendationServiceImpl
     @Transactional
     public List<Recommender> listRecommenders(AnnotationLayer aLayer)
     {
-        String query = String.join("\n",  //
-                "FROM Recommender WHERE ",  //
+        String query = String.join("\n", //
+                "FROM Recommender WHERE ", //
                 "layer = :layer", //
                 "ORDER BY name ASC");
 
