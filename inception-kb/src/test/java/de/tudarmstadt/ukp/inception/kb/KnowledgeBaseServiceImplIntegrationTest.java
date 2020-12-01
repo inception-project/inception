@@ -59,15 +59,19 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -80,7 +84,6 @@ import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
-@ContextConfiguration(classes =  SpringConfig.class)
 @Transactional
 @DataJpaTest
 public class KnowledgeBaseServiceImplIntegrationTest  {
@@ -127,9 +130,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void setUp() throws Exception {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
+        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
     }
@@ -155,6 +159,24 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasFieldOrPropertyWithValue("name", KB_NAME)
             .hasFieldOrPropertyWithValue("project", project)
             .extracting("repositoryId").isNotNull();
+    }
+
+    @Test
+    public void getKnowledgeBaseByName_IfExists_ShouldReturnKnowledgeBase() {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        Optional<KnowledgeBase> result = sut.getKnowledgeBaseByName(project, kb.getName());
+
+        assertThat(result).isEqualTo(result);
+    }
+
+    @Test
+    public void getKnowledgeBaseByName_IfAbsent_ShouldReturnNone() {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        Optional<KnowledgeBase> result = sut.getKnowledgeBaseByName(project, "Absent KB");
+
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -1176,9 +1198,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.createProperty(kb, property);
         KBStatement statement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
 
-        assertThatCode(() -> {
-            sut.deleteStatement(kb, statement);
-        }).doesNotThrowAnyException();
+        assertThatCode(() -> 
+            sut.deleteStatement(kb, statement)
+        ).doesNotThrowAnyException();
     }
 
     @Test
@@ -1527,9 +1549,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
 
         assertThat(profiles)
-            .allSatisfy((key, profile) -> {
-                assertThat(key).isNotNull();
-            });
+            .allSatisfy((key, profile) -> 
+                assertThat(key).isNotNull()
+            );
 
     }
 
@@ -1652,5 +1674,16 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         kb.setLabelIri(labelIri);
         kb.setPropertyTypeIri(propertyTypeIri);
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration 
+    @EntityScan(
+            basePackages = {
+                "de.tudarmstadt.ukp.inception.kb.model",
+                "de.tudarmstadt.ukp.clarin.webanno.model"
+    })
+    public static class SpringConfig {
+        // No content
     }
 }

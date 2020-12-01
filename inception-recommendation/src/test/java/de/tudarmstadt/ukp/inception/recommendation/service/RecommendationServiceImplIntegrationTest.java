@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static java.util.Arrays.asList;
+import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
@@ -37,7 +38,6 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.TypeSystemUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,7 +53,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -132,6 +134,23 @@ public class RecommendationServiceImplIntegrationTest
     }
     
     @Test
+    public void getNumOfEnabledRecommenders_WithOneEnabledRecommender() {
+        sut.createOrUpdateRecommender(rec);
+        
+        long numOfRecommenders = sut.countEnabledRecommenders();
+        assertThat(numOfRecommenders).isEqualTo(1);
+    }
+    
+    @Test
+    public void getNumOfEnabledRecommenders_WithNoEnabledRecommender() {
+        rec.setEnabled(false);
+        testEntityManager.persist(rec);
+        
+        long numOfRecommenders = sut.countEnabledRecommenders();
+        assertThat(numOfRecommenders).isEqualTo(0);
+    }
+    
+    @Test
     public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
         Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());
@@ -168,25 +187,29 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void monkeyPatchTypeSystem_WithNer_CreatesScoreFeatures() throws Exception
     {
-        JCas jCas = JCasFactory.createText("I am text CAS", "de");
-        when(annoService.getFullProjectTypeSystem(project))
-                .thenReturn(TypeSystemUtil.typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
-        when(annoService.listAnnotationLayer(project))
-                .thenReturn(asList(layer));
-        doCallRealMethod().when(annoService)
-                .upgradeCas(any(CAS.class), any(TypeSystemDescription.class));
-        doCallRealMethod().when(annoService)
-                .upgradeCas(any(CAS.class), any(CAS.class), any(TypeSystemDescription.class));
-
-        sut.cloneAndMonkeyPatchCAS(project, jCas.getCas(), jCas.getCas());
-
-        Type type = CasUtil.getType(jCas.getCas(), layer.getName());
-
-        assertThat(type.getFeatures())
-                .extracting(Feature::getShortName)
-                .contains(feature.getName() + FEATURE_NAME_SCORE_SUFFIX)
-                .contains(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX)
-                .contains(FEATURE_NAME_IS_PREDICTION);
+        try (CasStorageSession session = CasStorageSession.open()) {
+            JCas jCas = JCasFactory.createText("I am text CAS", "de");
+            session.add("jCas", CasAccessMode.EXCLUSIVE_WRITE_ACCESS, jCas.getCas());
+            
+            when(annoService.getFullProjectTypeSystem(project))
+                    .thenReturn(typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
+            when(annoService.listAnnotationLayer(project))
+                    .thenReturn(asList(layer));
+            doCallRealMethod().when(annoService)
+                    .upgradeCas(any(CAS.class), any(TypeSystemDescription.class));
+            doCallRealMethod().when(annoService)
+                    .upgradeCas(any(CAS.class), any(CAS.class), any(TypeSystemDescription.class));
+    
+            sut.cloneAndMonkeyPatchCAS(project, jCas.getCas(), jCas.getCas());
+    
+            Type type = CasUtil.getType(jCas.getCas(), layer.getName());
+    
+            assertThat(type.getFeatures())
+                    .extracting(Feature::getShortName)
+                    .contains(feature.getName() + FEATURE_NAME_SCORE_SUFFIX)
+                    .contains(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX)
+                    .contains(FEATURE_NAME_IS_PREDICTION);
+        }
     }
 
     // Helper

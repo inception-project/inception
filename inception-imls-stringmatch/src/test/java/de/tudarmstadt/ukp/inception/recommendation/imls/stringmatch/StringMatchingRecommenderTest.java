@@ -17,14 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,16 +41,18 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.testing.DkproTestContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -68,12 +75,19 @@ public class StringMatchingRecommenderTest
     private RecommenderContext context;
     private Recommender recommender;
     private StringMatchingRecommenderTraits traits;
+    private CasStorageSession casStorageSession;
 
     @Before
     public void setUp() {
+        casStorageSession = CasStorageSession.open();
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new StringMatchingRecommenderTraits();
+    }
+    
+    @After
+    public void tearDown() {
+        casStorageSession.close();
     }
 
     @Test
@@ -135,16 +149,80 @@ public class StringMatchingRecommenderTest
                 .containsOnlyNulls();
     }
 
+    @Test
+    public void thatPredictionForCharacterLevelLayerWorks() throws Exception
+    {
+        recommender.getLayer().setAnchoringMode(CHARACTERS);
+        
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        
+        JCas jcas = JCasFactory.createJCas();
+        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "John Smith. Peter Johnheim .");
+        CAS cas = jcas.getCas();
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
+        
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("John Smith", "ORG"));
+        gazeteer.add(new GazeteerEntry("Peter John", "LOC"));
+
+        sut.pretrain(gazeteer, context);
+
+        sut.predict(context, cas);
+
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions).extracting(NamedEntity::getCoveredText)
+                .contains("John Smith", "Peter John");
+    }
+
+    @Test
+    public void thatPredictionForCrossSentenceLayerWorks() throws Exception
+    {
+        recommender.getLayer().setCrossSentence(true);
+        
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        
+        JCas jcas = JCasFactory.createJCas();
+        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "John Smith .\nPeter Johnheim .");
+        CAS cas = jcas.getCas();
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
+        
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("Smith . Peter", "ORG"));
+
+        sut.pretrain(gazeteer, context);
+
+        sut.predict(context, cas);
+
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions).extracting(NamedEntity::getCoveredText)
+                .contains("Smith .\nPeter");
+    }
+
     private CAS getTestCasNoLabelLabels() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
-        Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
-        Feature valFeature = neType.getFeatureByBaseName("value");
-        JCasUtil.select(cas.getJCas(), NamedEntity.class)
-                .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
-
-        return cas;
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
+            Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
+            Feature valFeature = neType.getFeatureByBaseName("value");
+            select(cas.getJCas(), NamedEntity.class)
+                    .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
+    
+            return cas;
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     @Test
@@ -302,14 +380,28 @@ public class StringMatchingRecommenderTest
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDataFiles());
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            return loadData(ds, ds.getDataFiles());
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
     private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
@@ -323,11 +415,14 @@ public class StringMatchingRecommenderTest
             Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
+        int n = 1;
         while (reader.hasNext()) {
             JCas cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
             casList.add(cas.getCas());
+            casStorageSession.add("testDataCas" + n, EXCLUSIVE_WRITE_ACCESS, cas.getCas());
         }
+        
         return casList;
     }
 

@@ -19,11 +19,15 @@ package de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring;
 
 import java.util.List;
 
-import org.springframework.stereotype.Component;
-
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#descriptionColoringStrategy}.
+ * </p>
+ */
 public class DescriptionColoringStrategyImpl
     implements StatementColoringStrategy
 {

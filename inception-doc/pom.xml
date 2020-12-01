@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.14.0-SNAPSHOT</version>
+    <version>0.18.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-doc</artifactId>
   <packaging>jar</packaging>
@@ -35,24 +35,33 @@
 
     <dependency>
       <groupId>org.asciidoctor</groupId>
+      <artifactId>asciidoctorj-api</artifactId>
+      <version>${asciidoctor.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.asciidoctor</groupId>
       <artifactId>asciidoctorj</artifactId>
-      <version>1.5.8.1</version>
+      <version>${asciidoctor.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.asciidoctor</groupId>
       <artifactId>asciidoctorj-diagram</artifactId>
-      <version>1.5.12</version>
+      <version>${asciidoctor-diagram.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>jquery.tocify.js</artifactId>
       <version>1.9.0</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>jquery-migrate</artifactId>
       <version>3.0.0</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
@@ -66,6 +75,7 @@
               <!--
                 - Maven doesn't detect that we tell asciidoctor to use the diagram module
               -->
+              <usedDependency>org.asciidoctor:asciidoctorj</usedDependency>
               <usedDependency>org.asciidoctor:asciidoctorj-diagram</usedDependency>
               <!--
                 - Maven doesn't detect JS dependencies. We use this in docinfo.html

@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
-import org.apache.uima.cas.CAS;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -28,44 +26,49 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 /**
  * Abstract search task
  */
-
 public abstract class Task
     implements Runnable
 {
     private final Project project;
     private final String user;
-    private SourceDocument sourceDocument;
-    private AnnotationDocument annotationDocument;
-    private CAS cas;
+    private final SourceDocument sourceDocument;
+    private final AnnotationDocument annotationDocument;
+    
+    private byte[] binaryCas;
 
     public Task(Project aProject, String aUser)
     {
         // notNull(aUser);
         notNull(aProject);
 
-        project = aProject;
         user = aUser;
+        project = aProject;
+        sourceDocument = null;
+        annotationDocument = null;
+        binaryCas = null;
     }
 
-    public Task(SourceDocument aSourceDocument, CAS aCas)
+    public Task(SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
         notNull(aSourceDocument);
 
+        user = null;
         project = aSourceDocument.getProject();
         sourceDocument = aSourceDocument;
-        cas = aCas;
-        user = null;
+        annotationDocument = null;
+        binaryCas = aBinaryCas;
     }
 
-    public Task(AnnotationDocument aAnnotationDocument, CAS aCas)
+    public Task(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
     {
         notNull(aAnnotationDocument);
-        notNull(aCas);
+        notNull(aBinaryCas);
 
-        project = aAnnotationDocument.getProject();
-        annotationDocument = aAnnotationDocument;
-        cas = aCas;
         user = aAnnotationDocument.getUser();
+        project = aAnnotationDocument.getProject();
+        sourceDocument = null;
+        annotationDocument = aAnnotationDocument;
+        binaryCas = aBinaryCas;
     }
 
     public String getUser()
@@ -88,14 +91,14 @@ public abstract class Task
         return annotationDocument;
     }
 
-    public void setCas(CAS aCas)
+    public byte[] getBinaryCas()
     {
-        cas = aCas;
+        return binaryCas;
     }
-
-    public CAS getCas()
+    
+    public void setBinaryCas(byte[] aBinaryCas)
     {
-        return cas;
+        binaryCas = aBinaryCas;
     }
 
     @Override
@@ -118,6 +121,10 @@ public abstract class Task
     /**
      * Used to avoid scheduling duplicate tasks. Returns true if the current task is a duplicate of
      * the given task.
+     * 
+     * @param aTask
+     *            the given scheduling task
+     * @return whether the given task matches this one
      */
     public abstract boolean matches(Task aTask);
 

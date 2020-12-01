@@ -44,10 +44,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
@@ -89,18 +92,22 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -110,14 +117,19 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.Path;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
-
-@Component(KnowledgeBaseService.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceAutoConfiguration#knowledgeBaseService}.
+ * </p>
+ */
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
 {
@@ -131,9 +143,24 @@ public class KnowledgeBaseServiceImpl
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
+    private final LoadingCache<QueryKey, List<KBHandle>> queryCache;
+    
     @Autowired
-    public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties)
+    public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
+            KnowledgeBaseProperties aKBProperties)
     {
+        Caffeine<QueryKey, List<KBHandle>> cacheBuilder = Caffeine.newBuilder()
+                .maximumWeight(aKBProperties.getCacheSize())
+                .expireAfterAccess(aKBProperties.getCacheExpireDelay())
+                .refreshAfterWrite(aKBProperties.getCacheRefreshDelay())
+                .weigher((QueryKey key, List<KBHandle> value) -> value.size());
+        
+        if (log.isTraceEnabled()) {
+            cacheBuilder.recordStats();
+        }
+        
+        queryCache = cacheBuilder.build(this::runQuery);
+        
         kbRepositoriesRoot = new File(aRepoProperties.getPath(), "kb");
         
         // Originally, the KBs were stored next to the repository folder - but they should be
@@ -166,9 +193,9 @@ public class KnowledgeBaseServiceImpl
     }
     
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
-            EntityManager entityManager)
+            KnowledgeBaseProperties aKBProperties, EntityManager entityManager)
     {
-        this(aRepoProperties);
+        this(aRepoProperties, aKBProperties);
         this.entityManager = entityManager;
     }
 
@@ -276,6 +303,22 @@ public class KnowledgeBaseServiceImpl
     public Optional<KnowledgeBase> getKnowledgeBaseById(Project aProject, String aId)
     {
         return Optional.ofNullable(entityManager.find(KnowledgeBase.class, aId));
+    }
+
+    @Transactional
+    @Override
+    public Optional<KnowledgeBase> getKnowledgeBaseByName(Project aProject, String aName)
+    {
+        TypedQuery<KnowledgeBase> query = entityManager.createNamedQuery("KnowledgeBase.getByName",
+            KnowledgeBase.class);
+        query.setParameter("project", aProject);
+        query.setParameter("name", aName);
+
+        try {
+            return Optional.of(query.getSingleResult());
+        } catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 
     @Transactional
@@ -455,14 +498,23 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "readConcept(%s)", aIdentifier)) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forClasses(aKB)
                     .withIdentifier(aIdentifier)
                     .excludeInferred()
                     .retrieveLabel()
-                    .retrieveDescription()
-                    .asHandle(conn, aAll)
-                    .map(handle -> KBHandle.convertTo(KBConcept.class, handle)));
+                    .retrieveDescription();
+            
+            Optional<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = fetchHandleCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandle(conn, aAll));
+            }
+            
+            return result
+                    .map(handle -> KBHandle.convertTo(KBConcept.class, handle));
         }
     }
     
@@ -495,9 +547,9 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteConcept(KnowledgeBase aKB, KBConcept aConcept)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteConcept(conn, aKB, aConcept);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteConcept(conn, aKB, aConcept)
+        );
     }
 
     @Override
@@ -505,11 +557,20 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "listAllConcepts()")) {
-            return read(aKB, conn -> SPARQLQueryBuilder.forClasses(aKB)
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB)
                     .retrieveLabel()
                     .retrieveDescription()
-                    .excludeInferred()
-                    .asHandles(conn, aAll));
+                    .excludeInferred();
+            
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+
+            return result;
         }
     }
     
@@ -531,14 +592,23 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBProperty> readProperty(KnowledgeBase aKB, String aIdentifier)
     {
         try (StopWatch watch = new StopWatch(log, "readProperty(%s)", aIdentifier)) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forProperties(aKB)
                     .withIdentifier(aIdentifier)
                     .retrieveDescription()
                     .retrieveLabel()
                     .retrieveDomainAndRange()
-                    .excludeInferred()
-                    .asHandle(conn, true))
+                    .excludeInferred();
+            
+            Optional<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = fetchHandleCaching(aKB, query, true);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandle(conn, true));
+            }
+            
+            return result
                     .map(handle -> KBHandle.convertTo(KBProperty.class, handle));
         }
     }
@@ -559,9 +629,9 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteProperty(KnowledgeBase aKB, KBProperty aType)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteProperty(conn, aKB, aType);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteProperty(conn, aKB, aType)
+        );
     }
 
     @Override
@@ -577,13 +647,22 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "listProperties()")) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forProperties(aKB)
                     .retrieveLabel()
                     .retrieveDescription()
                     .retrieveDomainAndRange()
-                    .includeInferred(aIncludeInferred)
-                    .asHandles(conn, aAll));
+                    .includeInferred(aIncludeInferred);
+            
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+            
+            return result;
         }
     }
     
@@ -606,13 +685,22 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "readInstance(%s)", aIdentifier)) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forInstances(aKB)
                     .withIdentifier(aIdentifier)
                     .retrieveDescription()
                     .retrieveLabel()
-                    .excludeInferred()
-                    .asHandle(conn, true))
+                    .excludeInferred();
+            
+            Optional<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = fetchHandleCaching(aKB, query, true);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandle(conn, true));
+            }
+            
+            return result
                     .map(handle -> KBHandle.convertTo(KBInstance.class, handle));
         }
     }
@@ -646,21 +734,30 @@ public class KnowledgeBaseServiceImpl
     @Override
     public void deleteInstance(KnowledgeBase aKB, KBInstance aInstance)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteInstance(conn, aKB, aInstance);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteInstance(conn, aKB, aInstance)
+        );
     }
 
     @Override
     public List<KBHandle> listInstances(KnowledgeBase aKB, String aConceptIri, boolean aAll)
     {
         try (StopWatch watch = new StopWatch(log, "readInstance(%s)", aConceptIri)) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forInstances(aKB)
                     .childrenOf(aConceptIri)
                     .retrieveLabel()
-                    .retrieveDescription()
-                    .asHandles(conn, aAll));
+                    .retrieveDescription();
+            
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+
+            return result;
         }
     }
 
@@ -670,18 +767,18 @@ public class KnowledgeBaseServiceImpl
     public void upsertStatement(KnowledgeBase aKB, KBStatement aStatement)
         throws RepositoryException
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).upsertStatement(conn, aKB, aStatement);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).upsertStatement(conn, aKB, aStatement)
+        );
     }
 
     @Override
     public void deleteStatement(KnowledgeBase aKB, KBStatement aStatement)
         throws RepositoryException
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteStatement(conn, aKB, aStatement);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteStatement(conn, aKB, aStatement)
+        );
     }
 
     @Override
@@ -760,15 +857,23 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "listDomainProperties(%s)", aDomain)) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forProperties(aKB)
                     .matchingDomain(aDomain)
                     .retrieveLabel()
                     .retrieveDescription()
                     .retrieveDomainAndRange()
-                    .includeInferred(aIncludeInferred)
-                    .asHandles(conn, aAll))
-                    .stream()
+                    .includeInferred(aIncludeInferred);
+            
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+            
+            return result.stream()
                     .map(handle -> KBHandle.convertTo(KBProperty.class, handle))
                     .collect(Collectors.toList());
         }
@@ -779,12 +884,21 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "listRootConcepts()")) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forClasses(aKB)
                     .roots()
                     .retrieveLabel()
-                    .retrieveDescription()
-                    .asHandles(conn, aAll));
+                    .retrieveDescription();
+            
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+            
+            return result;
         }
     }
     
@@ -813,12 +927,21 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "getConceptForInstance(%s)", aIdentifier)) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forClasses(aKB)
                     .parentsOf(aIdentifier)
                     .retrieveLabel()
-                    .retrieveDescription()
-                    .asHandles(conn, aAll));
+                    .retrieveDescription();
+            
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+            
+            return result;
         }
     }
     
@@ -827,12 +950,21 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "getParentConceptList(%s)", aIdentifier)) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forClasses(aKB)
                     .ancestorsOf(aIdentifier)
                     .retrieveLabel()
-                    .retrieveDescription()
-                    .asHandles(conn, aAll));
+                    .retrieveDescription();
+            
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+            
+            return result;
         }
     }
     
@@ -842,13 +974,22 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "listChildConcepts(%s)", aParentIdentifier)) {
-            return read(aKB, conn -> SPARQLQueryBuilder
+            SPARQLQuery query = SPARQLQueryBuilder
                     .forClasses(aKB)
                     .childrenOf(aParentIdentifier)
                     .retrieveLabel()
                     .retrieveDescription()
-                    .limit(aLimit)
-                    .asHandles(conn, aAll));
+                    .limit(aLimit);
+                    
+            List<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = listHandlesCaching(aKB, query, aAll);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandles(conn, aAll));
+            }
+
+            return result;
         }
     }
     
@@ -873,33 +1014,33 @@ public class KnowledgeBaseServiceImpl
      */
     public void createBaseProperty(KnowledgeBase akb, KBProperty aProperty)
     {
-        update(akb, (conn) -> {
-            aProperty.write(conn, akb);
-        });
+        update(akb, (conn) -> 
+            aProperty.write(conn, akb)
+        );
     }
     
     @Override
     public void addQualifier(KnowledgeBase aKB, KBQualifier newQualifier)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).upsertQualifier(conn, aKB, newQualifier);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).upsertQualifier(conn, aKB, newQualifier)
+        );
     }
 
     @Override
     public void deleteQualifier(KnowledgeBase aKB, KBQualifier oldQualifier)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).deleteQualifier(conn, aKB, oldQualifier);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).deleteQualifier(conn, aKB, oldQualifier)
+        );
     }
 
     @Override
     public void upsertQualifier(KnowledgeBase aKB, KBQualifier aQualifier)
     {
-        update(aKB, conn -> {
-            getReificationStrategy(aKB).upsertQualifier(conn, aKB, aQualifier);
-        });
+        update(aKB, conn -> 
+            getReificationStrategy(aKB).upsertQualifier(conn, aKB, aQualifier)
+        );
     }
 
     @Override
@@ -973,12 +1114,19 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier)
     {
         try (StopWatch watch = new StopWatch(log, "readHandle(%s)", aIdentifier)) {
-            return read(aKB, conn -> { 
-                return SPARQLQueryBuilder.forItems(aKB)
+            SPARQLQuery query = SPARQLQueryBuilder.forItems(aKB)
                     .withIdentifier(aIdentifier)
-                    .retrieveLabel()
-                    .asHandle(conn, true);
-            });
+                    .retrieveLabel();
+            
+            Optional<KBHandle> result;
+            if (aKB.isReadOnly()) {
+                result = fetchHandleCaching(aKB, query, true);
+            }
+            else {
+                result = read(aKB, conn -> query.asHandle(conn, true));
+            }
+            
+            return result;
         }
     }
     
@@ -1152,12 +1300,95 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public  boolean isKnowledgeBaseEnabled(Project aProject, String aRepositoryId) {
+    public boolean isKnowledgeBaseEnabled(Project aProject, String aRepositoryId)
+    {
         Optional<KnowledgeBase> kb = Optional.empty();
         String repositoryId = aRepositoryId;
         if (repositoryId != null) {
             kb = getKnowledgeBaseById(aProject, aRepositoryId);
         }
         return kb.isPresent() && kb.get().isEnabled();
+    }
+    
+    @Override
+    public List<KBHandle> listHandlesCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll)
+    {
+        List<KBHandle> results = queryCache.get(QueryKey.of(aKB, aQuery, aAll));
+        if (log.isTraceEnabled()) {
+            log.trace("KB cache stats: {}", queryCache.stats());
+        }
+        return results;
+    }
+
+    @Override
+    public Optional<KBHandle> fetchHandleCaching(KnowledgeBase aKB, SPARQLQuery aQuery,
+            boolean aAll)
+    {
+        Optional<KBHandle> result = queryCache.get(QueryKey.of(aKB, aQuery, aAll)).stream()
+                .findFirst();
+        if (log.isTraceEnabled()) {
+            log.trace("KB cache stats: {}", queryCache.stats());
+        }
+        return result;
+    }
+
+    private List<KBHandle> runQuery(QueryKey aKey)
+    {
+        return read(aKey.kb, conn -> aKey.query.asHandles(conn, true));
+    }
+    
+    /**
+     * If the KB configuration of a project is changed, clear the caches of any KBs of that project.
+     * 
+     * @param aEvent
+     *            The event containing the project
+     */
+    @EventListener
+    public void onKnowledgeBaseConfigurationChangedEvent(
+            KnowledgeBaseConfigurationChangedEvent aEvent)
+    {
+        queryCache.asMap().keySet().stream()
+            .filter(key -> key.kb.getProject().equals(aEvent.getProject()))
+            .forEach(key -> queryCache.invalidate(key));
+    }
+    
+    private static final class QueryKey
+    {
+        private final KnowledgeBase kb;
+        private final SPARQLQuery query;
+        private final boolean all;
+
+        public static QueryKey of(KnowledgeBase aKb, SPARQLQuery aQuery, boolean aAll)
+        {
+            return new QueryKey(aKb, aQuery, aAll);
+        }
+        
+        public QueryKey(KnowledgeBase aKb, SPARQLQuery aQuery, boolean aAll)
+        {
+            kb = aKb;
+            query = aQuery;
+            all = aAll;
+        }
+
+        @Override
+        public boolean equals(final Object other)
+        {
+            if (!(other instanceof QueryKey)) {
+                return false;
+            }
+            
+            QueryKey castOther = (QueryKey) other;
+            return new EqualsBuilder()
+                    .append(kb, castOther.kb)
+                    .append(all, castOther.all)
+                    .append(query, castOther.query)
+                    .isEquals();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return new HashCodeBuilder().append(kb).append(query).append(all).toHashCode();
+        }
     }
 }

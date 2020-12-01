@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,11 +47,13 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
 import org.dkpro.core.testing.DkproTestContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -72,11 +77,18 @@ public class NamedEntityLinkerTest
 
     private RecommenderContext context;
     private Recommender recommender;
+    private CasStorageSession casStorageSession;
 
     @Before
     public void setUp() {
+        casStorageSession = CasStorageSession.open();
         context = new RecommenderContext();
         recommender = buildRecommender();
+    }
+    
+    @After
+    public void tearDown() {
+        CasStorageSession.get().close();
     }
 
     @Test
@@ -128,6 +140,7 @@ public class NamedEntityLinkerTest
 
         List<CAS> casList = loadDevelopmentData();
         CAS cas = casList.get(0);
+        casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
         
         sut.train(context, Collections.singletonList(cas));
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
@@ -142,13 +155,24 @@ public class NamedEntityLinkerTest
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
+        Dataset ds = null;
+        
+        try {
+            ds = loader.load("germeval2014-de", CONTINUE);
+        }
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
+        
         return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
     }
 
     private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2002Reader.class,
+        CollectionReader reader = createReader(
+            Conll2002Reader.class,
             Conll2002Reader.PARAM_PATTERNS, files, 
             Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
             Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),

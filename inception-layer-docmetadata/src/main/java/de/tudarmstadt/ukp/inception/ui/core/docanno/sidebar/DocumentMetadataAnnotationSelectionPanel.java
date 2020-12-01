@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
@@ -27,11 +28,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -86,6 +91,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private static final String CID_CREATE = "create";
     private static final String CID_ANNOTATIONS_CONTAINER = "annotationsContainer";
     private static final String CID_ANNOTATION_DETAILS = "annotationDetails";
+    private static final String CID_DELETE = "delete";
     
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -154,6 +160,34 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         aTarget.add(this);
     }
     
+    private void actionDelete(AjaxRequestTarget aTarget,
+            DocumentMetadataAnnotationDetailPanel aDetailPanel)
+    {
+        try {
+            // Load the boiler-plate
+            CAS cas = jcasProvider.get();
+            FeatureStructure fs = selectFsByAddr(cas, aDetailPanel.getModelObject().getId());
+            AnnotationLayer layer = annotationService.findLayer(project.getObject(), fs);
+            TypeAdapter adapter = annotationService.getAdapter(layer);
+            
+            // Perform actual actions
+            adapter.delete(sourceDocument.getObject(), username.getObject(), cas, new VID(fs));
+            
+            // persist changes
+            annotationPage.writeEditorCas(cas);
+            
+            if (selectedDetailPanel == aDetailPanel) {
+                selectedAnnotation = null;
+                selectedDetailPanel = null;
+            }
+            remove(aDetailPanel);
+            aTarget.add(this);
+        }
+        catch (Exception e) {
+            handleException(this, aTarget, e);
+        }
+    }
+    
     private void actionSelect(AjaxRequestTarget aTarget, WebMarkupContainer container,
         DocumentMetadataAnnotationDetailPanel detailPanel)
     {
@@ -182,17 +216,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         aTarget.add(container);
         aTarget.add(detailPanel);
     }
-    
-    void actionDelete(AjaxRequestTarget aTarget, DocumentMetadataAnnotationDetailPanel detailPanel)
-    {
-        if (selectedDetailPanel == detailPanel) {
-            selectedAnnotation = null;
-            selectedDetailPanel = null;
-        }
-        remove(detailPanel);
-        aTarget.add(this);
-    }
-    
+        
     private ListView<AnnotationListItem> createAnnotationList()
     {
         DocumentMetadataAnnotationSelectionPanel selectionPanel = this;
@@ -253,7 +277,10 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 container.add(new Label(CID_TYPE, aItem.getModelObject().layer.getUiName()));
                 container.add(new Label(CID_LABEL));
                 container.setOutputMarkupId(true);
-    
+
+                aItem.add(new LambdaAjaxLink(CID_DELETE,
+                    _target -> actionDelete(_target, detailPanel)));
+
                 aItem.setOutputMarkupId(true);
             }
         };
@@ -280,12 +307,14 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         
         List<AnnotationListItem> items = new ArrayList<>();
         for (AnnotationLayer layer : listMetadataLayers()) {            
-            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
             TypeAdapter adapter = annotationService.getAdapter(layer);
-            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
+            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
+                () -> annotationService.listAnnotationFeature(layer));
             
             for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
-                Map<String, String> renderedFeatures = renderer.getFeatures(adapter, fs, features);
+                Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
+                        fs, features);
                 String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
                 items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText, layer));
             }
@@ -304,6 +333,30 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         }
         if (selectedDetailPanel != null) {
             aEvent.getRequestTarget().add(selectedDetailPanel);
+        }
+    }
+    
+    protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
+            Exception aException)
+    {
+        if (aTarget != null) {
+            aTarget.addChildren(aComponent.getPage(), IFeedback.class);
+        }
+        
+        try {
+            throw aException;
+        }
+        catch (AnnotationException e) {
+            aComponent.error("Error: " + e.getMessage());
+            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
+        }
+        catch (UIMAException e) {
+            aComponent.error("Error: " + ExceptionUtils.getRootCauseMessage(e));
+            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
+        }
+        catch (Exception e) {
+            aComponent.error("Error: " + e.getMessage());
+            LOG.error("Error: " + e.getMessage(), e);
         }
     }
     

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.menubar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData.CURRENT_PROJECT;
 
 import org.apache.wicket.Session;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
@@ -28,7 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
-import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 public class MenuBar
     extends de.tudarmstadt.ukp.clarin.webanno.ui.core.page.MenuBar
@@ -45,14 +45,13 @@ public class MenuBar
         add(new BookmarkablePageLink<>("homeLink", getApplication().getHomePage()));
 
         add(new BookmarkablePageLink<>("dashboardLink", ProjectDashboardPage.class)
-                .add(visibleWhen(() -> 
-                        Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT) != null)));
+                .add(visibleWhen(() ->  Session.get().getMetaData(CURRENT_PROJECT) != null)));
 
         add(new BookmarkablePageLink<>("projectsLink", ProjectsOverviewPage.class)
                 .add(visibleWhen(() -> userRepository.getCurrentUser() != null)));
 
         add(new BookmarkablePageLink<>("adminLink", AdminDashboardPage.class)
-                .add(visibleWhen(this::adminAreaAccessRequired)));
+                .add(visibleWhen(this::adminAreaAccessRequired))); 
     }
     
     private boolean adminAreaAccessRequired()

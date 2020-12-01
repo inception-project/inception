@@ -88,8 +88,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
@@ -202,8 +202,9 @@ public class ActiveLearningSidebar
         // Set up the AL state in the page if it is not already there or if for some reason the
         // suggestions have completely disappeared (e.g. after a system restart)
         AnnotatorState state = getModelObject();
-        Predictions predictions = recommendationService.getPredictions(state.getUser(),
-                state.getProject());
+        Predictions predictions = state.getProject() != null
+                ? recommendationService.getPredictions(state.getUser(), state.getProject())
+                : null;
         if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null || predictions == null) {
             ActiveLearningUserState alState = new ActiveLearningUserState();
             alState.setStrategy(new UncertaintySamplingStrategy());
@@ -536,8 +537,8 @@ public class ActiveLearningSidebar
             feat, (Serializable) wrappedFeatureValue);
         
         // Populate the tagset moving the tags with recommended labels to the top 
-        List<Tag> tagList = annotationService.listTags(feat.getTagset());
-        List<Tag> reorderedTagList = new ArrayList<>();
+        List<ReorderableTag> tagList = annotationService.listTagsReorderable(feat.getTagset());
+        List<ReorderableTag> reorderedTagList = new ArrayList<>();
         if (tagList.size() > 0) {
             Predictions predictions = recommendationService.getPredictions(state.getUser(),
                     state.getProject());
@@ -554,7 +555,7 @@ public class ActiveLearningSidebar
                     .map(ao -> ao.getLabel())
                     .collect(Collectors.toList());
             
-            for (Tag tag : tagList) {
+            for (ReorderableTag tag : tagList) {
                 // add the tags which contain the prediction-labels to the beginning of a tagset
                 if (allRecommendationLabels.contains(tag.getName())) {
                     tag.setReordered(true);

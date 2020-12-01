@@ -22,7 +22,7 @@ This section covers setting up a development environment.
 == Source code management
 
 We use git as our source code management system and collaborate via the {product-name}
-repository on Github.
+repository on https://github.com/inception-project/inception[Github].
 
 === Development workflow
 
@@ -100,7 +100,7 @@ Here is a brief summary of the formatting rules:
 This is a guide to setting up a development environment using Eclipse on Mac OS X. The 
 procedure should be similar for other operation systems.  
 
-First, you need to follow some steps of the user [InstallationGuide installation guide]. 
+First, you need to follow some steps of the <<admin-guide.adoc#sect_installation,Administrator Installation Guide>>. 
 It is recommended to configure a MySQL-server.
 
 We recommend you start from a *Eclipse IDE for Java Developers* package.
@@ -129,14 +129,14 @@ C:/Program Files/Java/jdk1.8.0_144/jre/bin/server/jvm.dll
   New Software*, select "--All available sites--" and choose *Collaboration -> m2e - Maven Integration
   for Eclipse*
 
-* *Apache UIMA tools:* Update site: `http://www.apache.org/dist/uima/eclipse-update-site/`
+* *Apache UIMA tools:* go to *Help->Install New Software*, select "Add..." and add the update site: `http://www.apache.org/dist/uima/eclipse-update-site/` as a location. Install the *Apache UIMA Eclipse tooling and runtime support*.
 
 * *Eclipse Web Development Tooling:* go to *Help->Install New Software*, select "--All available
   sites--" and select the following plug-ins for installation from the section *Web, XML, Java EE
   and OSGi Enterprise Development*:
 ** Eclipse Java Web Developer Tools
 ** Eclipse Web Developer Tools
-** Eclipse XML Editors and Tools
+** Eclipse XML Editors and Tools: already comes pre-installed in newer eclipse versions
 ** JST Server Adapters
 ** JST Server Adapters Extensions
 ** JST Server UI
@@ -163,12 +163,12 @@ you have cloned {product-name}. Eclipse should automatically detect all modules.
 
 === Eclipse Tomcat Integration
 
-Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 8.5). Then, you need to
+Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 9.0). Then, you need to
 add the Tomcat server to your runtime configuration. Go to preferences and go to
 *Servers -> Runtime environments*:
 
 When prompted for an installation path, specify the folder where you extracted (or installed) Apache
-Tomcat v8.5 into. 
+Tomcat v9.0 into. 
 
 Change the runtime configuration for the project. On the left side of the dialog, you should now be
 able to select Apache Tomcat. Change its VM arguments and include the definition 
@@ -203,8 +203,8 @@ Second, install the Checkstyle plugin for Eclipse as well as the Maven Checkstyl
 These plugins make Eclipse automatically pick up the checkstyle configuration from the Maven project
 and highlight formatting problems directly in the source code editor.
 
-* Install *Checkstyle Eclipse plugin* from here: `http://eclipse-cs.sourceforge.net`
-* Install the *Checkstyle configuration plugin for M2Eclipse* from here: `http://m2e-code-quality.github.com/m2e-code-quality/site/latest/`
+* Install *Checkstyle Eclipse plugin*: `https://checkstyle.org/eclipse-cs/#!/install` e.g. via the update site: `https://checkstyle.org/eclipse-cs/update`.
+* Install the *Checkstyle configuration plugin for M2Eclipse*: via the update site `http://m2e-code-quality.github.com/m2e-code-quality/site/latest/`
 * Select all {product-name} projects, right click and do a *Maven -> Update project*
 
 NOTE: Should the steps mentioned above not have been sufficient, close all the {product-name} projects

@@ -20,29 +20,27 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
 <wicket:panel>
-  <form wicket:id="form" class="flex-content panel panel-default panel-flex">
-    <div class="panel-heading flex-h-container">
+  <form wicket:id="form" class="flex-content card">
+    <div class="card-header">
       <wicket:container wicket:id="title"></wicket:container>
     </div>
 
-    <div class="scrolling panel-body form-horizontal">
-      <div class="col-sm-12">
-        <wicket:container wicket:id="content"></wicket:container>
-      </div>
+    <div class="scrolling card-body">
+      <wicket:container wicket:id="content"></wicket:container>
     </div>
 
-    <div class="panel-footer">
-      <div class="pull-left">
+    <div class="card-footer">
+      <div class="float-left">
         <a wicket:id="reindex" class="btn btn-danger" href="#" role="button">
-          <!-- <i class="fa fa-trash"></i> -->
+          <!-- <i class="fas fa-trash"></i> -->
           <wicket:message key="kb.reindex"/>
         </a>
         <a wicket:id="delete" class="btn btn-danger" href="#" role="button">
-          <!-- <i class="fa fa-trash"></i> -->
+          <!-- <i class="fas fa-trash"></i> -->
           <wicket:message key="kb.delete"/>
         </a>
       </div>
-      <div class="pull-right">
+      <div class="float-right">
         <input type="submit" wicket:id="save" class="btn btn-primary"
                wicket:message="value:kb.save"/>
       </div>
@@ -52,7 +50,7 @@
 </wicket:panel>
 
 <wicket:fragment wicket:id="kbSettingsTitle">
-  <input class="flex-content" type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder"/>
+  <input class="form-control" type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder"/>
 </wicket:fragment>
 
 <wicket:fragment wicket:id="kbSettingsContent">

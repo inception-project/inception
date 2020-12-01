@@ -34,6 +34,21 @@
   font-weight: bolder;
 }
 
+.k-item .item-title .badge {
+  font-size: 8px;
+/*  background-color: #eeeeee; */
+}
+
+.k-list-container > .k-footer {
+  background-color: #eeeeee;
+  border-top: 1px solid #bbb;
+  padding: 3px 10px;
+}
+
+.k-item .item-rank {
+  font-weight: lighter;
+}
+
 .k-item .item-identifier {
   font-size: 85%;
   line-height: normal; 

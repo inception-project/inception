@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.14.0-SNAPSHOT</version>
+    <version>0.18.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -30,13 +30,6 @@
     <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
   </properties>
   <dependencies>
-  <!--  
-    <dependency>
-      <groupId>xml-apis</groupId>
-      <artifactId>xml-apis</artifactId>
-    </dependency>
-    -->
-  
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -166,6 +159,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-io-text</artifactId>
     </dependency>
     <dependency>
@@ -199,6 +196,10 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-xml-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-imscwb-asl</artifactId>
     </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
@@ -239,10 +240,6 @@
           <artifactId>slf4j-log4j12</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-project</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -308,6 +305,15 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-htmlcompressor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mozilla</groupId>
+      <artifactId>rhino-runtime</artifactId>
+      <version>1.7.12</version>
     </dependency>
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
@@ -419,11 +425,6 @@
     </dependency>
 
     <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
@@ -492,6 +493,34 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-native-websocket-javax</artifactId>
     </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
+      <artifactId>enjoyhint</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>kinetic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>jquery.scrollTo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-matrix</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-dynamic</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -540,7 +569,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
               <imagesDir>./user-guide/images</imagesDir>
               <attributes>
@@ -558,7 +586,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
               <imagesDir>./developer-guide/images</imagesDir>
               <attributes>
@@ -576,7 +603,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
               <attributes>
                 <toc>left</toc>
@@ -646,6 +672,7 @@
         <plugin>
           <groupId>org.asciidoctor</groupId>
           <artifactId>asciidoctor-maven-plugin</artifactId>
+          <version>${asciidoctor.plugin.version}</version>
           <configuration>
             <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
             <attributes>
@@ -666,8 +693,13 @@
           <dependencies>
             <dependency>
               <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctorj</artifactId>
+              <version>${asciidoctor.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.asciidoctor</groupId>
               <artifactId>asciidoctorj-diagram</artifactId>
-              <version>1.5.12</version>
+              <version>${asciidoctor-diagram.version}</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -698,6 +730,10 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
@@ -741,6 +777,9 @@
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
+              <!-- Wicket plugins -->
+              <usedDependency>org.wicketstuff:wicketstuff-htmlcompressor</usedDependency>
+              <usedDependency>org.mozilla:rhino-runtime</usedDependency>
               <!-- JavaMelody - used via web.xml -->
               <!--
               <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>
@@ -752,7 +791,6 @@
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
-              <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
               <!-- Spring AOP
                 <usedDependency>org.springframework:spring-aop</usedDependency>
@@ -760,6 +798,10 @@
                 <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
               <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
+              <!-- Tutorial Js dependencies -->
+              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
+              <usedDependency>org.webjars.npm:kinetic</usedDependency>
+              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -930,7 +972,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
                     <imagesDir>./user-guide/images</imagesDir>
                     <attributes>
@@ -948,7 +989,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
                     <imagesDir>./developer-guide/images</imagesDir>
                     <attributes>
@@ -966,7 +1006,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
                     <attributes>
                       <toc>preamble</toc>

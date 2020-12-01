@@ -17,18 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -46,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -68,6 +74,7 @@ public class RecommendationSidebar
     private StringResourceModel tipModel;
     private Form<Preferences> form;
     private RecommenderInfoPanel recommenderInfos;
+    private LogDialog logDialog;
     
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -89,6 +96,19 @@ public class RecommendationSidebar
         tip.setOption("width", Options.asString("300px"));
         warning.add(tip);
         
+        Label noRecommendersLabel = new Label("noRecommendersLabel",
+                new StringResourceModel("noRecommenders"));
+        List<Recommender> recommenders = recommendationService
+                .listEnabledRecommenders(aModel.getObject().getProject());
+        noRecommendersLabel.add(visibleWhen(() -> recommenders.isEmpty()));
+        add(noRecommendersLabel);
+        
+        add(new LambdaAjaxLink("showLog", this::actionShowLog)
+                .add(visibleWhen(() -> !recommenders.isEmpty())));
+
+        add(new LambdaAjaxLink("retrain", this::actionRetrain)
+                .add(visibleWhen(() -> !recommenders.isEmpty())));
+        
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class)
@@ -96,19 +116,24 @@ public class RecommendationSidebar
                 .setMaximum(10)
                 .setStep(1));
 
-        form.add(new CheckBox("showAllPredictions"));
-
-        form.add(new LambdaAjaxLink("retrain", this::actionRetrain));
+        form.add(new CheckBox("showAllPredictions").setOutputMarkupId(true));
 
         form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
                 aAnnotationPage.actionRefreshDocument(_target)));
-
+        form.add(visibleWhen(() -> !recommenders.isEmpty()));
+        
         add(form);
 
-        add(new LearningCurveChartPanel(LEARNING_CURVE, aModel));
+        add(new LearningCurveChartPanel(LEARNING_CURVE, aModel)
+                .add(visibleWhen(() -> !recommenders.isEmpty())));
         
         recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
+        recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
         add(recommenderInfos);
+        
+        logDialog = new LogDialog("logDialog", Model.of("Recommender Log"));
+        add(logDialog);
+        
     }
 
     @Override
@@ -143,6 +168,14 @@ public class RecommendationSidebar
         aEvent.getRequestHandler().add(warning);
     }
 
+    private void actionShowLog(AjaxRequestTarget aTarget)
+    {
+        List<LogMessageGroup> messages = recommendationService
+                .getLog(getModelObject().getUser().getUsername(), getModelObject().getProject());
+        logDialog.setModel(new ListModel<LogMessageGroup>(messages));
+        logDialog.show(aTarget);
+    }
+    
     private void actionRetrain(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
@@ -163,6 +196,13 @@ public class RecommendationSidebar
                     .listEnabledRecommenders(layer)) {
                 RecommendationEngineFactory<?> factory = recommendationService
                         .getRecommenderFactory(recommender);
+                
+                // E.g. if the module providing a configured recommender has been disabled but the
+                // recommender is still configured.
+                if (factory == null) {
+                    continue;
+                }
+                
                 if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                     mismatchedRecommenderNames.add(recommender.getName());
                 }

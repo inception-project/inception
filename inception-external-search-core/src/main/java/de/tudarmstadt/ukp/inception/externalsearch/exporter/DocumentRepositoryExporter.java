@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -34,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.log.exporter.LoggedEventExporter;
 
 /**
  * <p>
@@ -46,7 +46,7 @@ public class DocumentRepositoryExporter
     implements ProjectExporter
 {
     private static final String KEY = "external_search";
-    private static final Logger LOG = LoggerFactory.getLogger(LoggedEventExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DocumentRepositoryExporter.class);
     
     private final ExternalSearchService externalSearchService;
     
@@ -57,7 +57,8 @@ public class DocumentRepositoryExporter
     }
     
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aFile)
     {
         Project project = aRequest.getProject();
         List<ExportedDocumentRepository> exportedDocumentRepositories = new ArrayList<>();

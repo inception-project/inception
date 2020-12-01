@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.log.exporter;
 
 import static java.util.Arrays.asList;
+import static java.util.function.Function.identity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -43,12 +45,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.SourceDocumentExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -81,7 +82,8 @@ public class LoggedEventExporter implements ProjectExporter
     }
     
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aFile)
         throws Exception
     {
         Project project = aRequest.getProject();
@@ -93,9 +95,9 @@ public class LoggedEventExporter implements ProjectExporter
         // Set up a map of document IDs to document names because we export by name and not
         // by ID.
         Map<Long, String> documentNameIndex = new HashMap<>();
-        documentService.listSourceDocuments(project).forEach(doc -> {
-            documentNameIndex.put(doc.getId(), doc.getName());
-        });
+        documentService.listSourceDocuments(project).forEach(doc -> 
+            documentNameIndex.put(doc.getId(), doc.getName())
+        );
         
         File eventLog = new File(aFile, EVENT_LOG);
         eventLog.createNewFile();
@@ -166,12 +168,10 @@ public class LoggedEventExporter implements ProjectExporter
             return;
         }
 
-        LoadingCache<String, SourceDocument> documentCache = Caffeine.newBuilder()
-                .maximumSize(10_000)
-                .build(documentName -> documentService
-                        .getSourceDocument(aProject, documentName));
+        // Query once for all the documents to avoid hitting the DB in the loop below
+        Map<String, SourceDocument> docs = documentService.listSourceDocuments(aProject).stream()
+                .collect(Collectors.toMap(SourceDocument::getName, identity()));
 
-        
         try (JsonParser jParser = new ObjectMapper().getFactory()
                 .createParser(aZip.getInputStream(entry))) {
 
@@ -181,7 +181,7 @@ public class LoggedEventExporter implements ProjectExporter
             Iterator<ExportedLoggedEvent> i = jParser.readValuesAs(ExportedLoggedEvent.class);
             while (i.hasNext()) {
                 // Flush events
-                if (batch.size() >= 25_000) {
+                if (batch.size() >= 50_000) {
                     eventRepository.create(batch.stream().toArray(LoggedEvent[]::new));
                     batch.clear();
                     LOG.trace("... {} events imported ...", eventCount);
@@ -199,7 +199,7 @@ public class LoggedEventExporter implements ProjectExporter
 
                 // If an event is not associated with a document, then the default ID -1 is used
                 if (exportedEvent.getDocumentName() != null) {
-                    event.setDocument(documentCache.get(exportedEvent.getDocumentName()).getId());
+                    event.setDocument(docs.get(exportedEvent.getDocumentName()).getId());
                 }
                 else {
                     event.setDocument(-1);

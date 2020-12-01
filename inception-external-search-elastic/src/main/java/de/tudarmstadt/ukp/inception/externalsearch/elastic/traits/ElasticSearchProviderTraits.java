@@ -32,7 +32,7 @@ public class ElasticSearchProviderTraits
     
     private String searchPath = "_search";
     
-    private String objectType = "texts";
+    private String objectType = "_doc";
     
     private String defaultField = "doc.text";
     

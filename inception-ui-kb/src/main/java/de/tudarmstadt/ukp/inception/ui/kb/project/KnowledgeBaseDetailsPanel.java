@@ -288,7 +288,6 @@ public class KnowledgeBaseDetailsPanel
 
             Component schemaMapping = new KnowledgeBaseIriPanel("schemaMapping", kbwModel);
             add(schemaMapping);
-            schemaMapping.get("reification").setEnabled(false);
 
             Component rootConcepts = new RootConceptsPanel("rootConcepts", kbwModel);
             add(rootConcepts);

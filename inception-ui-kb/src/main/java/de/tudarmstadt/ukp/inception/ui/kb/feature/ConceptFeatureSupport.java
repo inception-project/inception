@@ -40,7 +40,6 @@ import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -61,11 +60,15 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBErrorHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
 /**
  * Extension providing knowledge-base-related features for annotations.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#conceptFeatureSupport}.
+ * </p>
  */
-@Component
 public class ConceptFeatureSupport
     implements FeatureSupport<ConceptFeatureTraits>
 {
@@ -81,7 +84,7 @@ public class ConceptFeatureSupport
     
     private LoadingCache<Key, KBHandle> labelCache = Caffeine.newBuilder()
         .maximumSize(10_000)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
         .refreshAfterWrite(1, TimeUnit.MINUTES)
         .build(key -> loadLabelValue(key));
     
@@ -122,7 +125,8 @@ public class ConceptFeatureSupport
     {
         // We just start with no specific scope at all (ANY) and let the user refine this via
         // the traits editor
-        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Concept/Instance", featureSupportId));
+        return asList(new FeatureType(TYPE_ANY_OBJECT, "KB: Concept/Instance/Property",
+                featureSupportId));
     }
 
     @Override
@@ -138,11 +142,11 @@ public class ConceptFeatureSupport
     }
 
     @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
+    public String renderFeatureValue(AnnotationFeature aFeature, String aIdentifier)
     {
         String renderValue = null;
-        if (aLabel != null) {
-            return labelCache.get(new Key(aFeature, aLabel)).getUiLabel();
+        if (aIdentifier != null) {
+            return labelCache.get(new Key(aFeature, aIdentifier)).getUiLabel();
         }
         return renderValue;
     }
@@ -202,7 +206,10 @@ public class ConceptFeatureSupport
     {
         if (aValue instanceof String) {
             String identifier = (String) aValue;
-            return new KBHandle(identifier, renderFeatureValue(aFeature, identifier));
+            String label = renderFeatureValue(aFeature, identifier);
+            String description = labelCache.get(new Key(aFeature, identifier)).getDescription();
+            
+            return new KBHandle(identifier, label, description);
         }
         else if (aValue instanceof KBHandle) {
             return (KBHandle) aValue;

@@ -23,52 +23,61 @@
       <div class="flex-h-container flex-gutter">
         <div>
           <input wicket:id="newProject" type="button" class="btn btn-primary" wicket:message="value:newProject"/> 
+          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button wicket:id="importProjectBtn" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" name="projectImport">
+            </button>
+            <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu">
+              <wicket:container wicket:id="importProjectPanel" />
+            </div>
+          </span>
+          <button wicket:id="startTutorial" class="btn btn-outline-primary">
+            <i class="fa fa-lightbulb"></i>&nbsp;
+            Start Tutorial
+          </button>
         </div>
         <div class="flex-content"></div>
-        <div style="flex-basis: 30%; min-width: 20em;">
-          <form wicket:id="importProjectForm">
-            <input type="file" wicket:id="projectArchiveUpload" multiple="multiple"/>
-          </form>
-        </div>
-      </div>
-      <div class="flex-static-item flex-h-container flex-gutter">
-        <div class="flex-content"></div>
-        <div style="flex-basis: 0%;">
+      <div class="flex-h-container flex-gutter justify-content-end">
+        <div>
           <div wicket:id="roleFilters" class="input-group">
-            <span class="input-group-addon">
-              <i class="fa fa-filter"></i>
-            </span>
-            <span class="input-group-btn">
+            <div class="input-group-prepend">
+              <div class="input-group-text">
+                <i class="fas fa-filter"></i>
+              </div>
+            </div>
+            <div class="input-group-append" role="group">
               <wicket:container wicket:id="roleFilter">
-                <button type="button" class="btn btn-default" wicket:id="roleFilterLink"><wicket:container wicket:id="label"/></button>
+                <button type="button" class="btn btn-outline-secondary" wicket:id="roleFilterLink">
+                  <wicket:container wicket:id="label"/>
+                  </button>
               </wicket:container>
-            </span>
+            </div>
           </div>
         </div>
       </div>
+      </div>
       <div class="scrolling flex-content flex-h-container flex-gutter">
         <div wicket:id="projects" class="flex-content list-group">
+        <div wicket:id="emptyListLabel"  style="position: absolute; top: 50%; left: 30%; right: 30%; color:#aaa; font-size: x-large;  transform: translate(0, -50%)"></div>
           <div wicket:id="project" class="list-group-item">
             <div class="flex-h-container flex-gutter flex-only-internal-gutter">
               <div class="flex-content">
-                <div class="pull-right">
-                  <span wicket:id="role" class="badge" style="margin-left: 5px;"><wicket:container wicket:id="label"/></span>
+                <div class="float-right">
+                  <span wicket:id="role" class="badge badge-secondary" style="margin-left: 5px;"><wicket:container wicket:id="label"/></span>
                 </div>
-                <h4 class="list-group-item-heading">
                   <a wicket:id="projectLink"><wicket:container wicket:id="name"/></a>
-                </h4>
                 <div class="list-group-item-text">
                   <div class="text-right">
-                    <i wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></i>
+                    <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
+                    <small class="text-muted" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
                   </div>
                 </div>
               </div>
               <div wicket:id="actionDropdown" class="flex-h-container">
                 <div class="dropdown flex-content flex-h-container">
-                  <button class="btn btn-default dropdown-toggle flex-content" type="button" data-toggle="dropdown">
-                    <span class="fa fa-ellipsis-v"></span>
+                  <button class="btn dropdown-toggle flex-content" type="button" data-toggle="dropdown">
+                    <i class="fas fa-ellipsis-v"></i>
                   </button>
-                  <ul class="dropdown-menu pull-right" role="menu">
+                  <ul class="dropdown-menu float-right" role="menu">
                     <li role="presentation"><a role="menuitem" tabindex="-1" wicket:id="leaveProject"><wicket:message key="leaveDialog.title"/></a></li>
                   </ul>
                 </div>

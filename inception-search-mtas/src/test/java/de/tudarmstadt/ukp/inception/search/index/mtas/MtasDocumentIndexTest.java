@@ -24,12 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
+import javax.persistence.EntityManager;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -42,6 +41,8 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -63,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
@@ -78,9 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.NamedEntityLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.PartOfSpeechLayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.conll.Conll2002FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
@@ -88,6 +86,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -98,6 +100,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
@@ -109,6 +113,7 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
+import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
@@ -123,12 +128,13 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @Transactional(propagation = Propagation.NEVER)
 public class MtasDocumentIndexTest
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
-    private @Autowired AnnotationSchemaService annotationSchemaService;
-
+    
     @Rule
     public TestWatcher watcher = new TestWatcher()
     {
@@ -147,11 +153,11 @@ public class MtasDocumentIndexTest
             userRepository.create(new User("admin", Role.ROLE_ADMIN));
         }
     }
-
+    
     private void createProject(Project aProject) throws Exception
     {
         projectService.createProject(aProject);
-        annotationSchemaService.initializeProject(aProject);
+        projectService.initializeProject(aProject);
     }
 
     @SafeVarargs
@@ -159,26 +165,33 @@ public class MtasDocumentIndexTest
         throws Exception
     {
         Project project = null;
-        for (Pair<SourceDocument, String> doc : aDocuments) {
-            project = doc.getLeft().getProject();
-            
-            try (InputStream fileStream = new ByteArrayInputStream(
-                    doc.getRight().getBytes(UTF_8))) {
-                documentService.uploadSourceDocument(fileStream, doc.getLeft());
+        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+            for (Pair<SourceDocument, String> doc : aDocuments) {
+                log.info("Uploading document via documentService.uploadSourceDocument: {}", doc);
+                project = doc.getLeft().getProject();
+                
+                try (InputStream fileStream = new ByteArrayInputStream(
+                        doc.getRight().getBytes(UTF_8))) {
+                    documentService.uploadSourceDocument(fileStream, doc.getLeft());
+                }
             }
         }
         
         // Avoid the compiler complaining about project not being an effectively final variable
+        log.info("Waiting for uploaded documents to be indexed...");
         Project p = project;
         await("Waiting for indexing process to complete")
                 .atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> searchService.isIndexValid(p) && !searchService.isIndexInProgress(p));
+        log.info("Indexing complete!");
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
         throws Exception
     {
+        log.info("Preparing annotated document....");
+        
         // Manually build annotated CAS
         JCas jCas = JCasFactory.createJCas();
         
@@ -214,13 +227,18 @@ public class MtasDocumentIndexTest
                 .createOrGetAnnotationDocument(aSourceDocument, aUser);
 
         // Write annotated CAS to annotated document
-        documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+            log.info("Writing annotated document using documentService.writeAnnotationCas");
+            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+        }
 
+        log.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete")
                 .atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> searchService.isIndexValid(aProject)
                         && !searchService.isIndexInProgress(aProject));
+        log.info("Indexing complete!");
     }
 
     @Test
@@ -467,60 +485,38 @@ public class MtasDocumentIndexTest
     @Configuration
     public static class TestContext
     {
-        @Autowired
-        ApplicationEventPublisher applicationEventPublisher;
-
-        private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
-        private final File temporaryFolder;
+        private @Autowired ApplicationEventPublisher applicationEventPublisher;
+        private @Autowired EntityManager entityManager;
 
         @Rule TemporaryFolder folder;
         
-        public TestContext()
-        {
-            try {
-                FileUtils.deleteDirectory(new File(temporaryFolderPath));
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-            temporaryFolder = new File(temporaryFolderPath);
-        }
-        
         @Bean
-        public ProjectService projectService()
+        public ProjectService projectService(
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
-            return new ProjectServiceImpl();
+            return new ProjectServiceImpl(userRepository(), applicationEventPublisher,
+                    repositoryProperties(), aInitializerProxy);
         }
 
         @Bean
-        public PhysicalIndexFactory mtasDocumentIndexFactory()
+        public PhysicalIndexFactory mtasDocumentIndexFactory(DocumentService aDocumentService,
+                AnnotationSchemaService aSchemaService,
+                RepositoryProperties aRepositoryProperties,
+                FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
+                FeatureSupportRegistry aFeatureSupportRegistry)
         {
-            return new MtasDocumentIndexFactory();
+            return new MtasDocumentIndexFactory(aSchemaService, aDocumentService,
+                    aRepositoryProperties, aFeatureIndexingSupportRegistry,
+                    aFeatureSupportRegistry);
         }
 
         @Bean
-        public StringFeatureSupport stringFeatureSupport()
+        public FeatureSupportRegistry featureSupportRegistry()
         {
-            return new StringFeatureSupport();
-        }
-
-        @Bean
-        public BooleanFeatureSupport booleanFeatureSupport()
-        {
-            return new BooleanFeatureSupport();
-        }
-
-        @Bean
-        public NumberFeatureSupport numberFeatureSupport()
-        {
-            return new NumberFeatureSupport();
-        }
-
-        @Bean
-        public FeatureSupportRegistry featureSupportRegistry(
-                @Lazy @Autowired List<FeatureSupport> aFeatureSupports)
-        {
-            return new FeatureSupportRegistryImpl(aFeatureSupports);
+            return new FeatureSupportRegistryImpl(asList(
+                    new NumberFeatureSupport(),
+                    new BooleanFeatureSupport(), 
+                    new StringFeatureSupport()));
         }
 
         @Bean
@@ -584,27 +580,29 @@ public class MtasDocumentIndexTest
         @Bean
         public KnowledgeBaseService knowledgeBaseService()
         {
-            return new KnowledgeBaseServiceImpl(repositoryProperties());
+            return new KnowledgeBaseServiceImpl(repositoryProperties(), knowledgeBaseProperties());
         }
 
         @Bean
         public IndexScheduler indexScheduler()
         {
-            return new IndexScheduler();
+            return new IndexSchedulerImpl();
         }
 
         @Bean
-        public DocumentService documentService()
+        public DocumentService documentService(
+                @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
-            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), importExportService(), projectService(),
-                    applicationEventPublisher);
+            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
+                    importExportService(), projectService(aInitializerProxy),
+                    applicationEventPublisher, entityManager);
         }
 
         @Bean
         public AnnotationSchemaService annotationSchemaService()
         {
-            return new AnnotationSchemaServiceImpl();
+            return new AnnotationSchemaServiceImpl(layerSupportRegistry(), featureSupportRegistry(),
+                    entityManager);
         }
 
         @Bean
@@ -635,6 +633,12 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
+        public KnowledgeBaseProperties knowledgeBaseProperties()
+        {
+            return new KnowledgeBasePropertiesImpl();
+        }
+
+        @Bean
         public BackupProperties backupProperties()
         {
             return new BackupProperties();
@@ -647,16 +651,14 @@ public class MtasDocumentIndexTest
         }
         
         @Bean
-        public LayerSupportRegistry layerSupportRegistry(
-                @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
+        public LayerSupportRegistry layerSupportRegistry()
         {
+            FeatureSupportRegistry fsr = featureSupportRegistry();
+            
             return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService(),
-                            null),
-                    new RelationLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService(), null),
-                    new ChainLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService(), null)));
+                    new SpanLayerSupport(fsr, null, null),
+                    new RelationLayerSupport(fsr, null, null),
+                    new ChainLayerSupport(fsr, null, null)));
         }
     }
 }

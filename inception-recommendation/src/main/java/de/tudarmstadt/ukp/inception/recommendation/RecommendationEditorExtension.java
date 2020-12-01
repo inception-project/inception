@@ -17,17 +17,26 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
+import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
@@ -36,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -47,20 +55,25 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
@@ -76,8 +89,11 @@ import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer
  * <li>Intercept user actions on the annotation suggestions, in particular accepting or rejecting
  *     annotatons.</li>
  * </ul>
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationEditorExtension}.
+ * </p>
  */
-@Component(RecommendationEditorExtension.BEAN_NAME)
 public class RecommendationEditorExtension
     extends AnnotationEditorExtensionImplBase
     implements AnnotationEditorExtension
@@ -122,6 +138,13 @@ public class RecommendationEditorExtension
             AjaxRequestTarget aTarget, CAS aCas, VID aVID, String aAction)
         throws IOException, AnnotationException
     {
+        // only process actions relevant to recommendation
+        if (!aVID.getExtensionId().equals(BEAN_NAME)) {
+            return;
+        }
+        VID vid = VID.parse(aVID.getExtensionPayload());
+        VID extendedVID = new VID(aVID.getExtensionId(), vid.getLayerId(), vid.getId(), 
+                vid.getSubId(), vid.getAttribute(), vid.getSlot(), aVID.getExtensionPayload());
         // Create annotation
         if (SpanAnnotationResponse.is(aAction)) {
             actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
@@ -150,10 +173,13 @@ public class RecommendationEditorExtension
         SourceDocument document = aState.getDocument();
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(document, aVID);
+        VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+        Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(document, 
+                recommendationVid);
 
         if (!prediction.isPresent()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            log.error("Could not find annotation in [{}] with id [{}]", document, 
+                    recommendationVid);
             aTarget.getPage().error("Could not find annotation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;
@@ -176,7 +202,8 @@ public class RecommendationEditorExtension
         // panel
         aState.getSelection().selectSpan(new VID(address), aCas, suggestion.getBegin(),
                 suggestion.getEnd());
-        aActionHandler.actionSelect(aTarget, aCas);            
+
+        aActionHandler.actionSelect(aTarget);
         aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
@@ -190,7 +217,7 @@ public class RecommendationEditorExtension
 
         // Send a UI event that the suggestion has been accepted
         aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-                new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));
+                new AjaxRecommendationAcceptedEvent(aTarget, aState, recommendationVid));
     }
     
     /**
@@ -204,24 +231,28 @@ public class RecommendationEditorExtension
      */
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
             AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
-        throws AnnotationException
+
+        throws AnnotationException, IOException
     {
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         
         SourceDocument document = aState.getDocument();
-        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID);
+        VID recommendationVID = VID.parse(aVID.getExtensionPayload());
+        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, 
+                recommendationVID);
         
         if (!oPrediction.isPresent()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
+            log.error("Could not find annotation in [{}] with id [{}]", document, 
+                    recommendationVID);
             aTarget.getPage().error("Could not find annotation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;
         }
 
         AnnotationSuggestion suggestion = oPrediction.get();
-        Recommender recommender = recommendationService.getRecommender(aVID.getId());
-        AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
+        Recommender recommender = recommendationService.getRecommender(recommendationVID.getId());
+        AnnotationLayer layer = annotationService.getLayer(recommendationVID.getLayerId());
         AnnotationFeature feature = recommender.getFeature();
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
@@ -233,7 +264,8 @@ public class RecommendationEditorExtension
                 suggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
         // Trigger a re-rendering of the document
-        aActionHandler.actionSelect(aTarget, aCas);
+        Page page = aTarget.getPage();
+        page.send(page, Broadcast.BREADTH, new SelectionChangedEvent(aTarget));
         
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(new RecommendationRejectedEvent(this, document,
@@ -241,8 +273,8 @@ public class RecommendationEditorExtension
                 suggestion.getCoveredText(), feature, suggestion.getLabel()));
 
         // Send a UI event that the suggestion has been rejected
-        aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-                new AjaxRecommendationRejectedEvent(aTarget, aState, aVID));
+        page.send(page, Broadcast.BREADTH,
+                new AjaxRecommendationRejectedEvent(aTarget, aState, recommendationVID));
     }
     
     @Override
@@ -250,8 +282,8 @@ public class RecommendationEditorExtension
                        int aWindowBeginOffset, int aWindowEndOffset)
     {
         // do not show predictions during curation or when viewing others' work
-        if (!aState.getMode().equals(Mode.ANNOTATION) || 
-                !aState.getUser().equals(userRegistry.getCurrentUser())) {
+        if (!aState.getMode().equals(ANNOTATION) || 
+                !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
             return;
         }
         
@@ -266,8 +298,7 @@ public class RecommendationEditorExtension
         // also update their state to remain in sync with the new predictions
         if (switched) {
             RequestCycle.get().find(AjaxRequestTarget.class)
-                    .ifPresent(_target -> _target.getPage().send(_target.getPage(),
-                            Broadcast.BREADTH,
+                    .ifPresent(_target -> _target.getPage().send(_target.getPage(), BREADTH,
                             new PredictionsSwitchedEvent(_target, aCas, aState, aVDoc)));
         }
 
@@ -275,5 +306,59 @@ public class RecommendationEditorExtension
         RecommendationRenderer.render(aVDoc, aState, aCas, annotationService,
                 recommendationService, learningRecordService, fsRegistry, documentService,
                 aWindowBeginOffset, aWindowEndOffset);
+    }
+
+    @Override
+    public List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser,
+            VID aVid, AnnotationFeature aFeature, String aQuery)
+    {
+        Predictions predictions = recommendationService.getPredictions(aUser,
+                aDocument.getProject());
+        
+        if (predictions == null) {
+            return emptyList();
+        }
+
+        Preferences pref = recommendationService.getPreferences(aUser, aDocument.getProject());
+
+        VID vid = VID.parse(aVid.getExtensionPayload());
+        Optional<AnnotationSuggestion> representative = predictions.getPredictionByVID(aDocument,
+                vid);
+        if (!representative.isPresent()) {
+            return emptyList();
+        }
+ 
+        Optional<SuggestionGroup> group = predictions.getPredictions(aDocument.getName(),
+                aFeature.getLayer(), representative.get().getBegin(), representative.get().getEnd())
+                .stream()
+                .filter(g -> g.contains(representative.get()))
+                .findFirst();
+ 
+        if (!group.isPresent()) {
+            return emptyList();
+        }
+         
+        List<AnnotationSuggestion> sortedByConfidence = group.get().stream()
+                .sorted(comparing(AnnotationSuggestion::getConfidence)
+                        .thenComparing(AnnotationSuggestion::getRecommenderName))
+                .collect(toList());
+ 
+        List<VLazyDetailResult> details = new ArrayList<>();
+        for (AnnotationSuggestion ao : sortedByConfidence) {
+            List<String> items = new ArrayList<>();
+            if (ao.getConfidence() != -1) {
+                items.add(String.format("Confidence: %.2f", ao.getConfidence()));
+            }
+            if (ao.getConfidenceExplanation().isPresent()) {
+                items.add("Explanation: " + ao.getConfidenceExplanation().get());
+            }
+            if (pref.isShowAllPredictions() && !ao.isVisible()) {
+                items.add("Hidden: " + ao.getReasonForHiding());
+            }
+            details.add(new VLazyDetailResult(ao.getRecommenderName(),
+                    "\n" + items.stream().collect(joining("\n"))));
+        }
+        
+        return details;
     }
 }

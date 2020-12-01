@@ -4,7 +4,7 @@
 
 When releasing and publishing the resulting artifact, make sure that you actually have the rights
 to publish new artifacts to the target repository. See e.g.
-https://maven.apache.org/settings.html#Servers[the Maven documentationon authentication] 
+https://maven.apache.org/settings.html#Servers[the Maven documentation authentication] 
 for more information on how to do this. Additionally, this documentation assumes that you have write permissions
 to the protected `master` branch and to the protected maintenance branches.
 
@@ -36,9 +36,15 @@ changes or incompatible changes. This is done only very rarely (maybe once every
 
 == Release steps
 
-For these steps, we assume push permissions to the master branch. If these are not given, pull
-requests have to be used for the relevant steps. For the sake of this guide, we assume that `0.8.x`
+For the sake of this guide, we assume that `0.8.x`
 is the most recent maintenance branch.
+
+For these steps, we assume push permissions to the master branch. If these are not given, pull
+requests have to be used for the relevant steps. For pull requests the target branch will need to be branched first 
+and then other branches can be merged into it. E.g. for a bugfix release as a first step the bugfix branch needs to be merged into master
+to transfer bugfixes to the development version. In this case, you need to create a new branch from the `master` branch, then merge branch `0.8.x`
+into this new branch and finally create the pull request to merge this new branch into master.
+
 
 == Bugfix release preparations
 
@@ -59,6 +65,7 @@ Do this when you want to do a feature release.
 
 == Running the release process
 
+. Check that the release branch depends on the right webanno release or update it in the most high-level `pom.xml` (properties -> `webanno.version`).
 . Run `mvn release:prepare`; this step will ask you for the release version (e.g. `0.9.0`) for the tag to be created (e.g. `inception-app-0.9.0`), and for the new development version (e.g. `0.10.0-SNAPSHOT`). After that, it will update the version (push), build the code, and create a tag (push).
 . Run `mvn release:perform`; this will check out the created tag into the folder `target/checkout` and build the release artifacts there.
 . Immediately after the release, again merge the released branch into the
@@ -83,7 +90,8 @@ After the release you will need to close the respective milestone on Github to p
 == Deploy the new release
 
 In order to deploy the new version, see the <<admin-guide.adoc#sect_upgrade,upgrade process>> 
-in the Administrator Guide.
+in the Administrator Guide. After the new version was successfully deployed, the footer on the webpage 
+of the running inception instance will show the release version.
 
 == Updating documentation
 
@@ -110,7 +118,7 @@ Make sure that you configured your docker user in your maven settings:
 ----
 
 Also, your user needs to have push rights to the `inceptionproject` Dockerhub group.
-Check out the release tag, make sure that in the master pom, the version is set to
+Check out the release tag e.g. via `git checkout tags/inception-app-0.8.3`. Make sure that in the master pom, the version is set to
 a release version (no snapshot suffix). Then run
 
 [source,xml]
@@ -118,6 +126,8 @@ a release version (no snapshot suffix). Then run
 mvn -Pdocker clean install docker:build -Ddocker.image.name="inceptionproject/inception"
 mvn -Pdocker clean install docker:push -Ddocker.image.name="inceptionproject/inception"
 ----
+
+After successfully publishing to docker hub, the docker hub repository will show your released version as the latest version.
 
 == Aborting and re-running a release
 

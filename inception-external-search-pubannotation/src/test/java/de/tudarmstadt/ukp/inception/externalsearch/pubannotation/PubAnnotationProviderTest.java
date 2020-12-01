@@ -23,12 +23,15 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 public class PubAnnotationProviderTest
 {
     private PubAnnotationProvider sut;
@@ -50,7 +53,7 @@ public class PubAnnotationProviderTest
     {
         List<PubAnnotationDocumentHandle> results = sut.query(traits, "binding");
         
-        System.out.println(results);
+//        System.out.println(results);
         
         assertThat(results).isNotEmpty();
     }
@@ -60,7 +63,7 @@ public class PubAnnotationProviderTest
     {
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, "binding");
         
-        System.out.println(results);
+//        System.out.println(results);
         
         assertThat(results).isNotEmpty();
     }
@@ -70,7 +73,7 @@ public class PubAnnotationProviderTest
     {
         String text = sut.getDocumentText(repo, traits, "PMC", "1064873");
         
-        System.out.println(text);
+//        System.out.println(text);
         
         assertThat(text).isNotEmpty();
     }

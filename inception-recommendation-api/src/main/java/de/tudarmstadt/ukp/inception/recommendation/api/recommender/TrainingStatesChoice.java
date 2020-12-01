@@ -26,6 +26,8 @@ import org.apache.wicket.markup.html.form.AbstractChoice;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.util.value.AttributeMap;
+import org.apache.wicket.util.value.IValueMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -74,13 +76,29 @@ public class TrainingStatesChoice
         };
         setModel((IModel) model);
         setChoices(asList(AnnotationDocumentState.values()));
-        setPrefix("<div class=\"checkbox\">");
+        setPrefix("<div class=\"form-check\">");
         setSuffix("</div>");
-        setLabelPosition(AbstractChoice.LabelPosition.WRAP_AFTER);
+        setLabelPosition(AbstractChoice.LabelPosition.AFTER);
         setChoices(asList(AnnotationDocumentState.values()));
         setChoiceRenderer(new EnumChoiceRenderer<>(this));
     }
 
+    @Override
+    protected IValueMap getAdditionalAttributesForLabel(int aIndex, AnnotationDocumentState aChoice)
+    {
+        AttributeMap attributes = new AttributeMap();
+        attributes.put("class", "form-check-label");
+        return attributes;
+    }
+    
+    @Override
+    protected IValueMap getAdditionalAttributes(int aIndex, AnnotationDocumentState aChoice)
+    {
+        AttributeMap attributes = new AttributeMap();
+        attributes.put("class", "form-check-input");
+        return attributes;
+    }
+    
     private static Set<AnnotationDocumentState> getAllPossibleDocumentStates()
     {
         return new HashSet<>(asList(AnnotationDocumentState.values()));
