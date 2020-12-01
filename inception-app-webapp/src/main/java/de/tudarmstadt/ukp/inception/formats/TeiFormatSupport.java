@@ -38,7 +38,7 @@ public class TeiFormatSupport
 {
     public static final String ID = "dkpro-core-tei";
     public static final String NAME = "TEI";
-    
+
     @Override
     public String getId()
     {
@@ -56,20 +56,20 @@ public class TeiFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
         return true;
     }
-    
+
     @Override
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
         return createReaderDescription(TeiReader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

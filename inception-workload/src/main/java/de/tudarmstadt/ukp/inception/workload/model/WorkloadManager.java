@@ -37,14 +37,15 @@ import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfig
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WorkloadManagementAutoConfiguration#workloadManager}.
- * A persistence object for the workflow and workload properties of each project
+ * {@link WorkloadManagementAutoConfiguration#workloadManager}. A persistence object for the
+ * workflow and workload properties of each project
  * </p>
  */
 @Entity
-@Table(name = "workload_manager", uniqueConstraints = { @UniqueConstraint(columnNames = {
-    "project", "workloadType" }) })
-public class WorkloadManager implements Serializable
+@Table(name = "workload_manager", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "project", "workloadType" }) })
+public class WorkloadManager
+    implements Serializable
 {
     private static final long serialVersionUID = -3289504168531309833L;
 
@@ -95,11 +96,13 @@ public class WorkloadManager implements Serializable
         project = aProject;
     }
 
-    public String getType() {
+    public String getType()
+    {
         return workloadType;
     }
 
-    public void setType(String aWorkloadType) {
+    public void setType(String aWorkloadType)
+    {
         workloadType = aWorkloadType;
     }
 
@@ -121,7 +124,7 @@ public class WorkloadManager implements Serializable
         }
         WorkloadManager castOther = (WorkloadManager) other;
         return Objects.equals(project, castOther.project)
-            && Objects.equals(workloadType, castOther.workloadType);
+                && Objects.equals(workloadType, castOther.workloadType);
     }
 
     @Override

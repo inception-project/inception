@@ -26,7 +26,7 @@ public class WorkloadManagerType
     implements Serializable
 {
     private static final long serialVersionUID = 6963958947605837721L;
-    
+
     private final String uiName;
     private final String workloadManagerExtensionId;
 
@@ -40,7 +40,7 @@ public class WorkloadManagerType
     {
         return uiName;
     }
-    
+
     public String getWorkloadManagerExtensionId()
     {
         return workloadManagerExtensionId;

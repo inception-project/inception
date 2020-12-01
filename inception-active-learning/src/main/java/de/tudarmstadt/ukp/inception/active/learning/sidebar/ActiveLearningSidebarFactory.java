@@ -35,25 +35,29 @@ import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoCon
  * {@link ActiveLearningAutoConfiguration#activeLearningSidebarFactory}.
  * </p>
  */
-public class ActiveLearningSidebarFactory extends AnnotationSidebarFactory_ImplBase {
-    private static final ResourceReference ICON =
-        new PackageResourceReference(ActiveLearningSidebarFactory.class, "active_learning.png");
+public class ActiveLearningSidebarFactory
+    extends AnnotationSidebarFactory_ImplBase
+{
+    private static final ResourceReference ICON = new PackageResourceReference(
+            ActiveLearningSidebarFactory.class, "active_learning.png");
 
     @Override
-    public String getDisplayName() {
+    public String getDisplayName()
+    {
         return "Active Learning";
     }
 
     @Override
-    public ResourceReference getIcon() {
+    public ResourceReference getIcon()
+    {
         return ICON;
     }
 
     @Override
     public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
-                                             AnnotationActionHandler aActionHandler, CasProvider
-                                                     aCasProvider,
-                                             AnnotationPage aAnnotationPage) {
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
+            AnnotationPage aAnnotationPage)
+    {
         return new ActiveLearningSidebar(aId, aModel, aActionHandler, aCasProvider,
                 aAnnotationPage);
     }

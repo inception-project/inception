@@ -66,7 +66,8 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @RunWith(SpringRunner.class)
 @Transactional
 @DataJpaTest
-public class KnowledgeBaseServiceImplImportExportIntegrationTest {
+public class KnowledgeBaseServiceImplImportExportIntegrationTest
+{
 
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
@@ -83,12 +84,14 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     private KnowledgeBase kb;
 
     @BeforeClass
-    public static void setUpOnce() {
+    public static void setUpOnce()
+    {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
         KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
@@ -100,69 +103,75 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws Exception
+    {
         testEntityManager.clear();
         sut.destroy();
     }
 
     @Test
-    public void thatApplicationContextStarts() {
+    public void thatApplicationContextStarts()
+    {
     }
 
     @Test
-    public void importData_WithExistingTtl_ShouldImportTriples() throws Exception {
+    public void importData_WithExistingTtl_ShouldImportTriples() throws Exception
+    {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
-        assertThat(conceptLabels)
-            .as("Check that concepts all have been imported")
-            .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog");
-        assertThat(propertyLabels)
-            .as("Check that properties all have been imported")
-            .containsExactlyInAnyOrder("Loves", "Hates", "Has Character", "Year Of Birth");
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream()
+                .map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream()
+                .map(KBObject::getName);
+        assertThat(conceptLabels).as("Check that concepts all have been imported")
+                .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog");
+        assertThat(propertyLabels).as("Check that properties all have been imported")
+                .containsExactlyInAnyOrder("Loves", "Hates", "Has Character", "Year Of Birth");
     }
 
     @Test
-    public void importData_WithReadOnlyKb_ShouldDoNothing() throws Exception {
+    public void importData_WithReadOnlyKb_ShouldDoNothing() throws Exception
+    {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         kb.setReadOnly(true);
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
-        assertThat(conceptLabels)
-            .as("Check that no concepts have been imported")
-            .isEmpty();
-        assertThat(propertyLabels)
-            .as("Check that no properties have been imported")
-            .isEmpty();
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream()
+                .map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream()
+                .map(KBObject::getName);
+        assertThat(conceptLabels).as("Check that no concepts have been imported").isEmpty();
+        assertThat(propertyLabels).as("Check that no properties have been imported").isEmpty();
     }
 
     @Test
-    public void importData_WithTwoFilesAndOneKnowledgeBase_ShouldImportAllTriples() throws Exception {
+    public void importData_WithTwoFilesAndOneKnowledgeBase_ShouldImportAllTriples() throws Exception
+    {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        String[] resourceNames = {"data/pets.ttl", "data/more_pets.ttl"};
+        String[] resourceNames = { "data/pets.ttl", "data/more_pets.ttl" };
         for (String resourceName : resourceNames) {
             importKnowledgeBase(resourceName);
         }
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream()
+                .map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream()
+                .map(KBObject::getName);
 
-        assertThat(conceptLabels)
-            .as("Check that concepts all have been imported")
-            .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog", "Manatee", "Turtle", "Biological class");
-        assertThat(propertyLabels)
-            .as("Check that properties all have been imported")
-            .containsExactlyInAnyOrder("Loves", "Hates", "Has Character", "Year Of Birth", "Has biological class");
+        assertThat(conceptLabels).as("Check that concepts all have been imported")
+                .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog", "Manatee", "Turtle",
+                        "Biological class");
+        assertThat(propertyLabels).as("Check that properties all have been imported")
+                .containsExactlyInAnyOrder("Loves", "Hates", "Has Character", "Year Of Birth",
+                        "Has biological class");
     }
 
     @Test
-    public void importData_WithMisTypedStatements_ShouldImportWithoutError() throws Exception {
+    public void importData_WithMisTypedStatements_ShouldImportWithoutError() throws Exception
+    {
         ClassLoader classLoader = getClass().getClassLoader();
         String resourceName = "turtle/mismatching_literal_statement.ttl";
         String fileName = classLoader.getResource(resourceName).getFile();
@@ -173,24 +182,23 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         }
 
         KBInstance kahmi = sut.readInstance(kb, "http://mbugert.de/pets#kahmi").get();
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
-        Stream<Object> kahmiValues = sut.listStatements(kb, kahmi, false)
-            .stream()
-            .map(KBStatement::getValue);
-        assertThat(conceptLabels)
-            .as("Check that all concepts have been imported")
-            .containsExactlyInAnyOrder("Cat", "Character");
-        assertThat(propertyLabels)
-            .as("Check that all properties have been imported")
-            .containsExactlyInAnyOrder("Has Character");
-        assertThat(kahmiValues)
-            .as("Check that statements with wrong types have been imported")
-            .containsExactlyInAnyOrder(666);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream()
+                .map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream()
+                .map(KBObject::getName);
+        Stream<Object> kahmiValues = sut.listStatements(kb, kahmi, false).stream()
+                .map(KBStatement::getValue);
+        assertThat(conceptLabels).as("Check that all concepts have been imported")
+                .containsExactlyInAnyOrder("Cat", "Character");
+        assertThat(propertyLabels).as("Check that all properties have been imported")
+                .containsExactlyInAnyOrder("Has Character");
+        assertThat(kahmiValues).as("Check that statements with wrong types have been imported")
+                .containsExactlyInAnyOrder(666);
     }
 
     @Test
-    public void exportData_WithLocalKnowledgeBase_ShouldExportKnowledgeBase() throws Exception {
+    public void exportData_WithLocalKnowledgeBase_ShouldExportKnowledgeBase() throws Exception
+    {
         KBConcept concept = new KBConcept();
         concept.setName("TestConcept");
         KBProperty property = new KBProperty();
@@ -209,52 +217,49 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         try (InputStream is = new FileInputStream(kbFile)) {
             sut.importData(importedKb, kbFile.getAbsolutePath(), is);
         }
-        List<String> conceptLabels = sut.listAllConcepts(importedKb, false)
-            .stream()
-            .map(KBObject::getName)
-            .collect(Collectors.toList());
-        List<String> propertyLabels = sut.listProperties(importedKb, false)
-            .stream()
-            .map(KBObject::getName)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
-        assertThat(conceptLabels)
-            .as("Check that concepts all have been exported")
-            .containsExactlyInAnyOrder("TestConcept");
-        assertThat(propertyLabels)
-            .as("Check that properties all have been exported")
-            .containsExactlyInAnyOrder("TestProperty");
+        List<String> conceptLabels = sut.listAllConcepts(importedKb, false).stream()
+                .map(KBObject::getName).collect(Collectors.toList());
+        List<String> propertyLabels = sut.listProperties(importedKb, false).stream()
+                .map(KBObject::getName).filter(Objects::nonNull).collect(Collectors.toList());
+        assertThat(conceptLabels).as("Check that concepts all have been exported")
+                .containsExactlyInAnyOrder("TestConcept");
+        assertThat(propertyLabels).as("Check that properties all have been exported")
+                .containsExactlyInAnyOrder("TestProperty");
     }
 
     @Test
-    public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception {
+    public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception
+    {
         File outputFile = temporaryFolder.newFile();
         kb.setType(RepositoryType.REMOTE);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile
+                .readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
 
         try (OutputStream os = new FileOutputStream(outputFile)) {
             sut.exportData(kb, RDFFormat.TURTLE, os);
         }
 
-        assertThat(outputFile)
-            .as("Check that file has not been written to")
-            .matches(f -> outputFile.length() == 0);
+        assertThat(outputFile).as("Check that file has not been written to")
+                .matches(f -> outputFile.length() == 0);
     }
 
     // Helper
 
-    private Project createProject(String name) {
+    private Project createProject(String name)
+    {
         Project p = new Project();
         p.setName(name);
         p.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         return testEntityManager.persist(p);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name) {
+    private KnowledgeBase buildKnowledgeBase(Project project, String name)
+    {
         return testFixtures.buildKnowledgeBase(project, name, Reification.NONE);
     }
 
-    private void importKnowledgeBase(String resourceName) throws Exception {
+    private void importKnowledgeBase(String resourceName) throws Exception
+    {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
@@ -263,13 +268,11 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration 
-    @EntityScan(
-            basePackages = {
-                "de.tudarmstadt.ukp.inception.kb.model",
-                "de.tudarmstadt.ukp.clarin.webanno.model"
-    })
-    public static class SpringConfig {
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    public static class SpringConfig
+    {
         // No content
     }
 }

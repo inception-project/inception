@@ -40,7 +40,7 @@ public class InstancePanel
     private IModel<KnowledgeBase> kbModel;
     private IModel<KBObject> selectedInstanceHandle;
     private IModel<KBObject> selectedConceptHandle;
-    
+
     public InstancePanel(String aId, IModel<KnowledgeBase> aKbModel,
             IModel<KBObject> aSelectedConceptHandle, IModel<KBObject> aSelectedInstanceHandle,
             IModel<KBInstance> aSelectedInstanceModel)
@@ -50,17 +50,17 @@ public class InstancePanel
         kbModel = aKbModel;
         selectedInstanceHandle = aSelectedInstanceHandle;
         selectedConceptHandle = aSelectedConceptHandle;
-        
+
         addOrReplace(new InstanceInfoPanel("instanceinfo", aKbModel, selectedInstanceHandle,
                 aSelectedInstanceModel));
 
         add(new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs()));
     }
-    
+
     private List<ITab> makeTabs()
     {
         List<ITab> tabs = new ArrayList<>();
-                
+
         tabs.add(new AbstractTab(Model.of("Mentions"))
         {
             private static final long serialVersionUID = 6703144434578403272L;
@@ -76,7 +76,7 @@ public class InstancePanel
                     return new EmptyPanel(panelId);
                 }
             }
-        });        
+        });
         return tabs;
     }
 }

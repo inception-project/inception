@@ -35,17 +35,17 @@ public class OpenNlpPosRecommenderTraitsEditor
     private static final String MID_FORM = "form";
 
     private @SpringBean RecommendationEngineFactory<OpenNlpPosRecommenderTraits> toolFactory;
-    
+
     private final OpenNlpPosRecommenderTraits traits;
 
     public OpenNlpPosRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-        
+
         traits = toolFactory.readTraits(aRecommender.getObject());
 
-        Form<OpenNlpPosRecommenderTraits> form = new Form<OpenNlpPosRecommenderTraits>(
-                MID_FORM, new CompoundPropertyModel<>(traits))
+        Form<OpenNlpPosRecommenderTraits> form = new Form<OpenNlpPosRecommenderTraits>(MID_FORM,
+                new CompoundPropertyModel<>(traits))
         {
             private static final long serialVersionUID = -3109239605742291123L;
 

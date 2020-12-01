@@ -39,14 +39,14 @@ public class WorkloadManagementAutoConfiguration
 {
     @Bean
     public WorkloadManagerExtensionPoint workloadExtensionPoint(
-        List<WorkloadManagerExtension> aWorkloadExtensions)
+            List<WorkloadManagerExtension> aWorkloadExtensions)
     {
         return new WorkloadManagerExtensionPointImpl(aWorkloadExtensions);
     }
 
     @Bean
-    public WorkloadManagementService workloadManagementService(
-        EntityManager aEntityManager, WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+    public WorkloadManagementService workloadManagementService(EntityManager aEntityManager,
+            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
     {
         return new WorkloadManagementServiceImplBase(aEntityManager,
                 aWorkloadManagerExtensionPoint);

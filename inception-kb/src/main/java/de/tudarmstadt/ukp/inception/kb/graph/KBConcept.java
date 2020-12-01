@@ -43,21 +43,25 @@ public class KBConcept
     private String language;
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     private static final IRI CLOSED;
     private boolean closed;
 
     private static final IRI ABSTRACT;
     private boolean abstractClass;
+    // @formatter:on
     */
 
     private List<Statement> originalStatements = new ArrayList<>();
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     static {
         ValueFactory factory = SimpleValueFactory.getInstance();
         CLOSED = factory.createIRI(IriConstants.INCEPTION_SCHEMA_NAMESPACE, "closed");
         ABSTRACT = factory.createIRI(IriConstants.INCEPTION_SCHEMA_NAMESPACE, "abstract");
     }
+    // @formatter:on
     */
 
     public KBConcept()
@@ -108,10 +112,12 @@ public class KBConcept
     }
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     public void setAbstract(boolean aValue)
     {
         abstractClass = aValue;
     }
+    // @formatter:on
     */
 
     /**
@@ -119,34 +125,42 @@ public class KBConcept
      * hierarchical resource should not have instances.
      */
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     public boolean isAbstract()
     {
         return abstractClass;
     }
+    // @formatter:on
     */
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     public boolean isClosed()
     {
         return closed;
     }
+    // @formatter:on
     */
 
     /* Commented out until the functionality which uses them is actually implemented
+    // @formatter:off
     public void setClosed(boolean aClosed)
     {
         closed = aClosed;
     }
+    // @formatter:on
     */
-    
+
     /**
      * @return Gives description for the concept
      */
+    @Override
     public String getDescription()
     {
         return description;
     }
 
+    @Override
     public void setDescription(String aDescription)
     {
         description = aDescription;
@@ -203,13 +217,14 @@ public class KBConcept
             else {
                 descriptionLiteral = vf.createLiteral(description, language);
             }
-            Statement descStmt = vf
-                .createStatement(subject, kb.getDescriptionIri(), descriptionLiteral);
+            Statement descStmt = vf.createStatement(subject, kb.getDescriptionIri(),
+                    descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }
 
         /* Commented out until the functionality which uses them is actually implemented
+        // @formatter:off
         Statement closedStmt = vf.createStatement(subject, CLOSED, vf.createLiteral(closed));
         originalStatements.add(closedStmt);
         aConn.add(closedStmt);
@@ -218,9 +233,10 @@ public class KBConcept
             .createStatement(subject, ABSTRACT, vf.createLiteral(abstractClass));
         originalStatements.add(abstractStmt);
         aConn.add(abstractStmt);
+    // @formatter:on
         */
     }
-    
+
     @Override
     public String toString()
     {

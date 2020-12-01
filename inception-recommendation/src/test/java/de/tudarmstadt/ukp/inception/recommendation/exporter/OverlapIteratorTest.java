@@ -257,11 +257,9 @@ public class OverlapIteratorTest
         List<Offset> r1 = overlappingRef(a, b);
         List<Offset> r2 = overlapping(a, b, debug, false);
 
-        r1 = r1.stream()
-                .sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
+        r1 = r1.stream().sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
                 .distinct().collect(toList());
-        r2 = r2.stream()
-                .sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
+        r2 = r2.stream().sorted(comparing(Offset::getBegin).thenComparing(Offset::getEnd))
                 .distinct().collect(toList());
 
         if (!r1.equals(r2)) {

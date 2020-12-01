@@ -32,31 +32,31 @@ public class FeatureValueUpdatedEventAdapter
     implements EventLoggingAdapter<FeatureValueUpdatedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof FeatureValueUpdatedEvent;
     }
-    
+
     @Override
     public long getDocument(FeatureValueUpdatedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(FeatureValueUpdatedEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(FeatureValueUpdatedEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getDetails(FeatureValueUpdatedEvent aEvent)
     {

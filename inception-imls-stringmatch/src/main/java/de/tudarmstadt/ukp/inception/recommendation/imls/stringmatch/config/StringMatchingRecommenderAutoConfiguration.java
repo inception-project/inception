@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.pos.StringMa
 public class StringMatchingRecommenderAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
-    
+
     @Bean
     @Autowired
     public GazeteerExporter gazeteerExporter(RecommendationService aRecommendationService,
@@ -47,26 +47,26 @@ public class StringMatchingRecommenderAutoConfiguration
     {
         return new GazeteerExporter(aRecommendationService, aGazeteerService);
     }
-    
+
     @Bean
     @Autowired
     public GazeteerService gazeteerService(RepositoryProperties aRepositoryProperties)
     {
         return new GazeteerServiceImpl(aRepositoryProperties, entityManager);
     }
-    
+
     @Bean
     public StringMatchingNerClassificationToolFactory stringMatchingNerClassificationToolFactory()
     {
         return new StringMatchingNerClassificationToolFactory();
     }
-    
+
     @Bean
     public StringMatchingPosClassificationToolFactory stringMatchingPosClassificationToolFactory()
     {
         return new StringMatchingPosClassificationToolFactory();
     }
-    
+
     @Bean
     @Autowired
     public StringMatchingRecommenderFactory stringMatchingRecommenderFactory(

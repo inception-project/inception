@@ -23,10 +23,12 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-public class LearningRecordTest {
+public class LearningRecordTest
+{
 
     @Test
-    public void thatTokenTextIsTruncated() {
+    public void thatTokenTextIsTruncated()
+    {
         char[] charArray = new char[300];
         Arrays.fill(charArray, 'X');
         String longTokenText = new String(charArray);
@@ -34,8 +36,6 @@ public class LearningRecordTest {
         LearningRecord sut = new LearningRecord();
         sut.setTokenText(longTokenText);
 
-        assertThat(sut.getTokenText())
-            .as("TokenText has been truncated")
-            .hasSize(255);
+        assertThat(sut.getTokenText()).as("TokenText has been truncated").hasSize(255);
     }
 }

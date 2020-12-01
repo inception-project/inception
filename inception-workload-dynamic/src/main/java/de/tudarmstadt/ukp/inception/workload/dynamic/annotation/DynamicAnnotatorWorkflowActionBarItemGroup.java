@@ -45,7 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
-public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
+public class DynamicAnnotatorWorkflowActionBarItemGroup
+    extends Panel
 {
     private static final long serialVersionUID = -292514874000914541L;
 
@@ -56,25 +57,25 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
     private final LambdaAjaxLink finishDocumentLink;
     protected final ConfirmationDialog finishDocumentDialog;
 
-    public DynamicAnnotatorWorkflowActionBarItemGroup(
-        String aId, AnnotationPageBase aPage, EntityManager aEntityManager)
+    public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage,
+            EntityManager aEntityManager)
     {
         super(aId);
 
-        //Same as for the default
+        // Same as for the default
         page = aPage;
         entityManager = aEntityManager;
 
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-            new StringResourceModel("FinishDocumentDialog.title", this, null),
-            new StringResourceModel("FinishDocumentDialog.text", this, null)));
+                new StringResourceModel("FinishDocumentDialog.title", this, null),
+                new StringResourceModel("FinishDocumentDialog.text", this, null)));
 
         add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-            this::actionFinishDocument));
+                this::actionFinishDocument));
         finishDocumentLink.setOutputMarkupId(true);
         finishDocumentLink.add(enabledWhen(() -> page.isEditable()));
         finishDocumentLink.add(new Label("state")
-            .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
+                .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
     }
 
     protected AnnotationPageBase getAnnotationPage()
@@ -89,8 +90,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
 
     protected void actionFinishDocument(AjaxRequestTarget aTarget)
     {
-        finishDocumentDialog.setConfirmAction((_target) ->
-        {
+        finishDocumentDialog.setConfirmAction((_target) -> {
             page.actionValidateDocument(_target, page.getEditorCas());
 
             AnnotatorState state = page.getModelObject();
@@ -98,37 +98,37 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup extends Panel
             Project project = state.getProject();
             SourceDocument document = state.getDocument();
 
-            AnnotationDocument annotationDocument = documentService
-                .getAnnotationDocument(document, user);
+            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(document,
+                    user);
 
             documentService.transitionAnnotationDocumentState(annotationDocument,
-                ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
 
-            //Go through all documents in a random order and check if there is a Annotation document
-            //with the state NEW
-            String query =  "FROM SourceDocument " +
-                            "WHERE project = :project " +
-                            "ORDER BY rand()";
-            for (SourceDocument doc: entityManager.createQuery(query,SourceDocument.class)
-                .setParameter("project", project).getResultList()) {
-                //Check if it even exists or is state NEW
-                if (documentService.listAnnotatableDocuments(project,user).get(doc) == null ||
-                    documentService.listAnnotatableDocuments(project,user).get(doc).
-                        getState().equals(NEW)) {
-                    getAnnotationPage().getModelObject().setDocument(doc, documentService.
-                        listSourceDocuments(project));
-                    //This document had the state NEW, load it
+            // Go through all documents in a random order and check if there is a Annotation
+            // document
+            // with the state NEW
+            String query = "FROM SourceDocument " + "WHERE project = :project " + "ORDER BY rand()";
+            for (SourceDocument doc : entityManager.createQuery(query, SourceDocument.class)
+                    .setParameter("project", project).getResultList()) {
+                // Check if it even exists or is state NEW
+                if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
+                        || documentService.listAnnotatableDocuments(project, user).get(doc)
+                                .getState().equals(NEW)) {
+                    getAnnotationPage().getModelObject().setDocument(doc,
+                            documentService.listSourceDocuments(project));
+                    // This document had the state NEW, load it
                     getAnnotationPage().actionLoadDocument(_target);
                     _target.add(page);
                     return;
                 }
             }
 
-            //Check if no new document has been selected, return to homepage
+            // Check if no new document has been selected, return to homepage
             if (getAnnotationPage().getModelObject().getDocument().equals(document)) {
-                getAnnotationPage().setResponsePage(getAnnotationPage().getApplication().
-                    getHomePage());
-                getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");
+                getAnnotationPage()
+                        .setResponsePage(getAnnotationPage().getApplication().getHomePage());
+                getSession().info(
+                        "There are no more documents to annotate available for you. Please contact your project supervisor.");
             }
         });
         finishDocumentDialog.show(aTarget);

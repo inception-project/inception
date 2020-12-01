@@ -36,7 +36,8 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Order(300)
 @Component
-public class WorkloadPageMenuItem implements MenuItem
+public class WorkloadPageMenuItem
+    implements MenuItem
 {
     private final UserDao userRepo;
     private final ProjectService projectService;
@@ -44,7 +45,7 @@ public class WorkloadPageMenuItem implements MenuItem
 
     @Autowired
     public WorkloadPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
-        WorkloadManagementService aWorkloadManagementService)
+            WorkloadManagementService aWorkloadManagementService)
     {
         userRepo = aUserRepo;
         projectService = aProjectService;
@@ -88,11 +89,10 @@ public class WorkloadPageMenuItem implements MenuItem
         User user = userRepo.getCurrentUser();
 
         return (projectService.isCurator(sessionProject, user)
-            || projectService.isProjectAdmin(sessionProject, user))
-            && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
-            && DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
-            getOrCreateWorkloadManagerConfiguration(sessionProject).
-            getType());
+                || projectService.isProjectAdmin(sessionProject, user))
+                && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(sessionProject.getMode())
+                && DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
+                        .getOrCreateWorkloadManagerConfiguration(sessionProject).getType());
     }
 
     @Override

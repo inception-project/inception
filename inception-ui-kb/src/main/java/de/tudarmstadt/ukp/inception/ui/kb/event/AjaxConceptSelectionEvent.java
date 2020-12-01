@@ -21,14 +21,17 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
-public class AjaxConceptSelectionEvent extends AjaxSelectionEvent {
+public class AjaxConceptSelectionEvent
+    extends AjaxSelectionEvent
+{
 
     boolean redrawConceptandPropertyListPanels;
-    
-    public AjaxConceptSelectionEvent(AjaxRequestTarget aTarget, KBHandle newSelection) {
+
+    public AjaxConceptSelectionEvent(AjaxRequestTarget aTarget, KBHandle newSelection)
+    {
         this(aTarget, newSelection, false);
     }
-    
+
     public AjaxConceptSelectionEvent(AjaxRequestTarget aTarget, KBHandle newSelection,
             boolean aRedrawConceptandPropertyListPanels)
     {
@@ -45,9 +48,5 @@ public class AjaxConceptSelectionEvent extends AjaxSelectionEvent {
     {
         redrawConceptandPropertyListPanels = aRedrawConceptandPropertyListPanels;
     }
-
-    
-
-    
 
 }

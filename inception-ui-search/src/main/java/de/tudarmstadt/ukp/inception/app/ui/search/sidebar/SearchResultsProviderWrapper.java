@@ -57,7 +57,7 @@ public class SearchResultsProviderWrapper
         // members of a group might me scattered over multiple pages. (Grouping by document is an
         // exception because the query iterates over documents. So results from the same document
         // appear in a sequence)
-        // 
+        //
         // If the grouping is not activated (defaults to grouping by document) we can apply paging
         // at query level. So we fetch them directly from the searchResultsProvider.
         if (applyLowLevelPaging()) {

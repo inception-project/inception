@@ -42,7 +42,7 @@ public class KBQualifier
     private KBProperty property;
 
     private Object value;
-    
+
     private String valueLabel;
 
     private Set<Statement> originalTriples;

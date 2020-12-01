@@ -29,7 +29,7 @@ public class Range
     {
         // For Jackson deserialization
     }
-    
+
     public Range(int aStartOffset, int aEndOffset)
     {
         startOffset = aStartOffset;

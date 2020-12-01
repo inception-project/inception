@@ -55,7 +55,8 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.support.ui.LinkProvider;
 
-public class ActivitiesDashlet extends Dashlet_ImplBase
+public class ActivitiesDashlet
+    extends Dashlet_ImplBase
 {
     // annotation events
     public static final String SPAN_CREATED_EVENT = "SpanCreatedEvent";
@@ -65,9 +66,9 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     private static final int MAX_NUM_ACTIVITIES = 2;
 
     private static final long serialVersionUID = -2010294259619748756L;
-    
+
     private static final Logger log = LoggerFactory.getLogger(ActivitiesDashlet.class);
-    
+
     private @SpringBean EventRepository eventRepository;
     private @SpringBean UserDao userRepository;
     private @SpringBean DocumentService documentService;
@@ -79,21 +80,21 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     public ActivitiesDashlet(String aId, IModel<Project> aCurrentProject)
     {
         super(aId);
-        
+
         projectModel = aCurrentProject;
-        
+
         if (aCurrentProject == null || aCurrentProject.getObject() == null) {
             return;
         }
-        
+
         annotationEvents = new HashSet<>();
-        Collections.addAll(annotationEvents, SPAN_CREATED_EVENT, FEATURE_UPDATED_EVENT, 
+        Collections.addAll(annotationEvents, SPAN_CREATED_EVENT, FEATURE_UPDATED_EVENT,
                 RELATION_CREATED_EVENT);
-        
+
         WebMarkupContainer activitiesList = new WebMarkupContainer("activities",
                 new StringResourceModel("activitiesHeading", this));
         activitiesList.setOutputMarkupPlaceholderTag(true);
-        
+
         ListView<LoggedEvent> listView = new ListView<LoggedEvent>("activity",
                 LoadableDetachableModel.of(this::listActivities))
         {
@@ -114,7 +115,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         activitiesList.add(listView);
         add(activitiesList);
     }
-   
+
     /**
      * Check that user still has the rights to access the document from the given event
      */
@@ -125,15 +126,15 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         if (aDocument == null || project == null) {
             return false;
         }
-        
+
         User user = userRepository.getCurrentUser();
-        
+
         // the document is in curation and the user is a curator
-        if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState()) 
+        if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState())
                 && projectService.isCurator(project, user)) {
             return true;
         }
-        
+
         return isAnnotationStillPossible(project, aDocument, user);
     }
 
@@ -142,25 +143,27 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
      */
     private boolean isAnnotationStillPossible(Project project, SourceDocument aDocument, User user)
     {
-        if (!documentService.existsAnnotationDocument(aDocument, user) 
+        if (!documentService.existsAnnotationDocument(aDocument, user)
                 || !projectService.isAnnotator(project, user)) {
             return false;
         }
-        
+
         AnnotationDocument annoDocument = documentService.getAnnotationDocument(aDocument, user);
         AnnotationDocumentState annoDocState = annoDocument.getState();
 
         // check that anno doc exists and user has not finished annotating it
         if (!IN_PROGRESS.equals(annoDocState)) {
-            log.debug("Annotation document [{}]({}) in project [{}]({}) is locked for user [{}]. "
-                    + "Skipping...", aDocument.getName(), aDocument.getId(), project.getName(), 
-                    project.getId(), user.getUsername());
+            log.debug(
+                    "Annotation document [{}]({}) in project [{}]({}) is locked for user [{}]. "
+                            + "Skipping...",
+                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId(),
+                    user.getUsername());
             return false;
         }
-        
+
         return true;
     }
-    
+
     private SourceDocument getSourceDocument(LoggedEvent aEvent)
     {
         if (aEvent == null) {
@@ -193,20 +196,20 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         }
         return eventDate;
     }
-    
+
     private ExternalLink createLastActivityLink(String aId, LoggedEvent aEvent,
             SourceDocument aDocument)
     {
         if (aEvent == null || aDocument == null) {
             return getDummyLink(aId);
         }
-        
+
         String eventName = aEvent.getEvent();
         if (!annotationEvents.contains(eventName)) {
             log.info("Unknown last activities event: {}", eventName);
             return getDummyLink(aId);
-        }        
-       
+        }
+
         Project project = projectModel.getObject();
         Long docId = aDocument.getId();
         String documentName = aDocument.getName();

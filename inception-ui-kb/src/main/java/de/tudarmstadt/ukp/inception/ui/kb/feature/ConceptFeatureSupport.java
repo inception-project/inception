@@ -77,17 +77,14 @@ public class ConceptFeatureSupport
     public static final String ANY_OBJECT = "<ANY>";
     public static final String TYPE_ANY_OBJECT = PREFIX + ANY_OBJECT;
 
-    
     private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureSupport.class);
 
     private final KnowledgeBaseService kbService;
-    
-    private LoadingCache<Key, KBHandle> labelCache = Caffeine.newBuilder()
-        .maximumSize(10_000)
-        .expireAfterWrite(10, TimeUnit.MINUTES)
-        .refreshAfterWrite(1, TimeUnit.MINUTES)
-        .build(key -> loadLabelValue(key));
-    
+
+    private LoadingCache<Key, KBHandle> labelCache = Caffeine.newBuilder().maximumSize(10_000)
+            .expireAfterWrite(10, TimeUnit.MINUTES).refreshAfterWrite(1, TimeUnit.MINUTES)
+            .build(key -> loadLabelValue(key));
+
     private String featureSupportId;
 
     @Autowired
@@ -95,7 +92,7 @@ public class ConceptFeatureSupport
     {
         kbService = aKbService;
     }
-    
+
     @Override
     public String getId()
     {
@@ -107,7 +104,7 @@ public class ConceptFeatureSupport
     {
         featureSupportId = aBeanName;
     }
-    
+
     @Override
     public Optional<FeatureType> getFeatureType(AnnotationFeature aFeature)
     {
@@ -150,12 +147,12 @@ public class ConceptFeatureSupport
         }
         return renderValue;
     }
-    
+
     private KBHandle loadLabelValue(Key aKey)
     {
         try {
             ConceptFeatureTraits t = readTraits(aKey.getAnnotationFeature());
-    
+
             // Use the concept from a particular knowledge base
             Optional<KBObject> kbObject;
             if (t.getRepositoryId() != null) {
@@ -164,7 +161,7 @@ public class ConceptFeatureSupport
                                 t.getRepositoryId())
                         .flatMap(kb -> kbService.readItem(kb, aKey.getLabel()));
             }
-            
+
             // Use the concept from any knowledge base (leave KB unselected)
             else {
                 kbObject = kbService.readItem(aKey.getAnnotationFeature().getProject(),
@@ -208,13 +205,13 @@ public class ConceptFeatureSupport
             String identifier = (String) aValue;
             String label = renderFeatureValue(aFeature, identifier);
             String description = labelCache.get(new Key(aFeature, identifier)).getDescription();
-            
+
             return new KBHandle(identifier, label, description);
         }
         else if (aValue instanceof KBHandle) {
             return (KBHandle) aValue;
         }
-        else if (aValue == null ) {
+        else if (aValue == null) {
             return null;
         }
         else {
@@ -222,13 +219,13 @@ public class ConceptFeatureSupport
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
     }
-    
+
     @Override
     public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         return new ConceptFeatureTraitsEditor(aId, this, aFeatureModel);
     }
-    
+
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
@@ -241,7 +238,7 @@ public class ConceptFeatureSupport
         case NONE:
             if (feature.getType().startsWith("kb:")) {
                 editor = new ConceptFeatureEditor(aId, aOwner, aFeatureStateModel, aStateModel,
-                    aHandler);
+                        aHandler);
             }
             else {
                 throw unsupportedMultiValueModeException(feature);
@@ -260,26 +257,25 @@ public class ConceptFeatureSupport
     {
         ConceptFeatureTraits traits = null;
         try {
-            traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class,
-                    aFeature.getTraits());
+            traits = JSONUtil.fromJsonString(ConceptFeatureTraits.class, aFeature.getTraits());
         }
         catch (IOException e) {
             LOG.error("Unable to read traits", e);
         }
-        
+
         if (traits == null) {
             traits = new ConceptFeatureTraits();
         }
-        
+
         // If there is no scope set in the trait, see if once can be extracted from the legacy
         // location which is the feature type.
         if (traits.getScope() == null && !TYPE_ANY_OBJECT.equals(aFeature.getType())) {
             traits.setScope(aFeature.getType().substring(PREFIX.length()));
         }
-        
+
         return traits;
     }
-    
+
     @Override
     public void writeTraits(AnnotationFeature aFeature, ConceptFeatureTraits aTraits)
     {
@@ -290,7 +286,7 @@ public class ConceptFeatureSupport
         else {
             aFeature.setType(TYPE_ANY_OBJECT);
         }
-        
+
         try {
             aFeature.setTraits(JSONUtil.toJsonString(aTraits));
         }
@@ -298,29 +294,29 @@ public class ConceptFeatureSupport
             LOG.error("Unable to write traits", e);
         }
     }
-    
+
     @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
-    
+
     @Override
     public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
     {
         if (StringUtils.isEmpty(aLabel)) {
             return Collections.emptyList();
         }
-        
+
         return asList(new VLazyDetailQuery(aFeature.getName(), aLabel));
     }
-    
+
     @Override
     public List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
     {
         List<VLazyDetailResult> result = new ArrayList<>();
-        
+
         KBHandle handle = labelCache.get(new Key(aFeature, aQuery));
 
         result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
@@ -328,10 +324,10 @@ public class ConceptFeatureSupport
         if (isNotBlank(handle.getDescription())) {
             result.add(new VLazyDetailResult("Description", handle.getDescription()));
         }
-        
+
         return result;
     }
-    
+
     @Override
     public boolean suppressAutoFocus(AnnotationFeature aFeature)
     {
@@ -343,24 +339,24 @@ public class ConceptFeatureSupport
     {
         private final AnnotationFeature feature;
         private final String label;
-        
+
         public Key(AnnotationFeature aFeature, String aLabel)
         {
             super();
             feature = aFeature;
             label = aLabel;
         }
-        
+
         public String getLabel()
         {
             return label;
         }
-        
+
         public AnnotationFeature getAnnotationFeature()
         {
             return feature;
         }
-        
+
         @Override
         public boolean equals(final Object other)
         {

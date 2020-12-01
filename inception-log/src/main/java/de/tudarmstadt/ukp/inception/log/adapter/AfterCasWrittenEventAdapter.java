@@ -30,19 +30,19 @@ public class AfterCasWrittenEventAdapter
     {
         return aEvent instanceof AfterCasWrittenEvent;
     }
-    
+
     @Override
     public long getDocument(AfterCasWrittenEvent aEvent)
     {
         return aEvent.getDocument().getDocument().getId();
     }
-    
+
     @Override
     public long getProject(AfterCasWrittenEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(AfterCasWrittenEvent aEvent)
     {

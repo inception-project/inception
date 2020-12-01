@@ -41,12 +41,12 @@ public class CandidateEntity
      * The query entered by the user.
      */
     public static final Key<String> KEY_QUERY = new Key<>("query");
-    
+
     /**
      * The mention in the text which is to be linked.
      */
     public static final Key<String> KEY_MENTION = new Key<>("mention");
-    
+
     /**
      * The context of the mention.
      */
@@ -94,9 +94,8 @@ public class CandidateEntity
     public static final Key<Integer> KEY_NUM_RELATIONS = new Key<>("numRelatedRelations", 0);
 
     /**
-     * number of related entities whose entity label occurs in <i>content tokens</i>
-     * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
-     * adjectives
+     * number of related entities whose entity label occurs in <i>content tokens</i> <i>Content
+     * tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or adjectives
      */
     public static final Key<Integer> KEY_SIGNATURE_OVERLAP_SCORE = new Key<>(
             "signatureOverlapScore", 0);
@@ -114,11 +113,11 @@ public class CandidateEntity
     private final KBHandle handle;
     private final ConcurrentHashMap<String, Object> features = new ConcurrentHashMap<>();
     private Locale locale;
-    
+
     public CandidateEntity(KBHandle aHandle)
     {
         handle = aHandle;
-        
+
         if (aHandle.getKB() == null || aHandle.getKB().getDefaultLanguage() == null) {
             locale = Locale.ENGLISH;
         }
@@ -131,12 +130,12 @@ public class CandidateEntity
             }
         }
     }
-    
+
     public KBHandle getHandle()
     {
         return handle;
     }
-    
+
     public Locale getLocale()
     {
         return locale;
@@ -184,7 +183,7 @@ public class CandidateEntity
         put(aKey, aValue);
         return this;
     }
-    
+
     @SuppressWarnings("unchecked")
     public <T> T put(Key<T> aKey, T aValue)
     {
@@ -195,7 +194,7 @@ public class CandidateEntity
             return (T) features.remove(aKey.name);
         }
     }
-    
+
     public Map<String, Object> getFeatures()
     {
         return unmodifiableMap(features);
@@ -210,13 +209,13 @@ public class CandidateEntity
         {
             this(aName, null);
         }
-        
+
         public Key(String aName, T aDefaultValue)
         {
             name = aName;
             defaultValue = aDefaultValue;
         }
-        
+
         public T getDefaultValue()
         {
             return defaultValue;

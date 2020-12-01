@@ -53,13 +53,13 @@ public class PhysicalIndexRegistryImpl
     {
         extensionsProxy = aExtensions;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<PhysicalIndexFactory> exts = new ArrayList<>();
@@ -67,16 +67,16 @@ public class PhysicalIndexRegistryImpl
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
-        
+
             for (PhysicalIndexFactory fs : exts) {
                 log.info("Found index extension: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
     }
-    
+
     @Override
     public List<PhysicalIndexFactory> getIndexFactories()
     {
@@ -90,9 +90,7 @@ public class PhysicalIndexRegistryImpl
             return null;
         }
         else {
-            return extensions.stream()
-                    .filter(f -> aId.equals(f.getBeanName()))
-                    .findFirst()
+            return extensions.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
                     .orElse(null);
         }
     }

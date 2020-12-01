@@ -19,12 +19,13 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
-public class LearningRecordChangeLocationType extends
-    PersistentEnumUserType<LearningRecordChangeLocation> {
+public class LearningRecordChangeLocationType
+    extends PersistentEnumUserType<LearningRecordChangeLocation>
+{
 
     @Override
-    public Class<LearningRecordChangeLocation> returnedClass() {
-        return
-            LearningRecordChangeLocation.class;
+    public Class<LearningRecordChangeLocation> returnedClass()
+    {
+        return LearningRecordChangeLocation.class;
     }
 }

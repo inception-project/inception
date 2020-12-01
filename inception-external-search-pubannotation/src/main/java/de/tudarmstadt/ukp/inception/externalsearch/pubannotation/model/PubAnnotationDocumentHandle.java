@@ -35,7 +35,7 @@ public class PubAnnotationDocumentHandle
 
     @JsonProperty("url")
     private String url;
-    
+
     @JsonProperty("text")
     private List<String> highlights;
 

@@ -28,7 +28,7 @@ public class DocumentMetadataCreatedEvent
     implements AnnotationCreatedEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
-    
+
     public DocumentMetadataCreatedEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationLayer aLayer, AnnotationBaseFS aAnnotation)
     {

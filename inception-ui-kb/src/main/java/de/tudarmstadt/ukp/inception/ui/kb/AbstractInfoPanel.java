@@ -64,31 +64,33 @@ import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
  *            the type of {@link KBObject} this {@code AbstractInfoPanel} specializes on
  *            (properties, concepts, instances, ...)
  */
-public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
+public abstract class AbstractInfoPanel<T extends KBObject>
+    extends Panel
+{
 
     private static final long serialVersionUID = -1413622323011843523L;
 
     private static final String CONTENT_MARKUP_ID = "content";
 
     private @SpringBean KnowledgeBaseService kbService;
-    
+
     protected IModel<T> kbObjectModel;
     protected IModel<? extends KBObject> handleModel;
     protected IModel<KnowledgeBase> kbModel;
-    
+
     private ConfirmationDialog confirmationDialog;
     private ModalWindow modal;
-    
 
     public AbstractInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<? extends KBObject> aHandleModel, IModel<T> aKbObjectModel) {
+            IModel<? extends KBObject> aHandleModel, IModel<T> aKbObjectModel)
+    {
         super(aId, aHandleModel);
         kbModel = aKbModel;
         handleModel = aHandleModel;
         kbObjectModel = aKbObjectModel;
 
         setOutputMarkupId(true);
-        
+
         // when creating a new KBObject, activate the form and obtain the AjaxRequestTarget to set
         // the focus to the name field
         Component content;
@@ -102,29 +104,33 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
                     CompoundPropertyModel.of(kbObjectModel));
 
             // obtain AjaxRequestTarget and set the focus
-            RequestCycle.get()
-                    .find(AjaxRequestTarget.class)
+            RequestCycle.get().find(AjaxRequestTarget.class)
                     .ifPresent(target -> target.focusComponent(editMode.getFocusComponent()));
             content = editMode;
-        } else {
+        }
+        else {
             content = new ViewMode(CONTENT_MARKUP_ID, CompoundPropertyModel.of(handleModel),
-                     getDetailPreference());
+                    getDetailPreference());
         }
         add(content);
-        
+
         confirmationDialog = new ConfirmationDialog("confirmationDialog");
         add(confirmationDialog);
     }
-    
-    protected class EditMode extends Fragment implements Focusable {
+
+    protected class EditMode
+        extends Fragment
+        implements Focusable
+    {
 
         private static final long serialVersionUID = -4136771477011400690L;
-        
+
         private Component focusComponent;
 
-        public EditMode(String id, CompoundPropertyModel<T> compoundModel) {
+        public EditMode(String id, CompoundPropertyModel<T> compoundModel)
+        {
             super(id, "editMode", AbstractInfoPanel.this);
-            
+
             // set up form components
             TextField<String> name = new TextField<>("name", compoundModel.bind("name"));
             name.add(AttributeModifier.append("placeholder",
@@ -151,24 +157,28 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             form.setDefaultButton(createButton);
             add(form);
         }
-        
+
         @Override
-        public Component getFocusComponent() {
+        public Component getFocusComponent()
+        {
             return focusComponent;
         }
     }
-    
-    protected class ViewMode extends Fragment {
+
+    protected class ViewMode
+        extends Fragment
+    {
 
         private static final long serialVersionUID = -7974486904999393082L;
 
         public ViewMode(String id, CompoundPropertyModel<? extends KBObject> compoundModel,
-                StatementDetailPreference aDetailPreference) {
+                StatementDetailPreference aDetailPreference)
+        {
             super(id, "viewMode", AbstractInfoPanel.this);
             Label uiLabel = new Label("uiLabel", compoundModel.bind("uiLabel"));
             add(uiLabel);
             add(new Label("typeLabel", new ResourceModel(getTypeLabelResourceKey())));
-            Label identifier = new Label("idtext"); 
+            Label identifier = new Label("idtext");
             TooltipBehavior tip = new TooltipBehavior();
             tip.setOption("autoHide", false);
             tip.setOption("content",
@@ -176,24 +186,22 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             tip.setOption("showOn", Options.asString("click"));
             identifier.add(tip);
             add(identifier);
-            
+
             // button for deleting the KBObject
             LambdaAjaxLink deleteButton = new LambdaAjaxLink("delete",
-                    AbstractInfoPanel.this::confirmActionDelete).onConfigure((_this) -> 
-                        _this.setVisible(kbObjectModel.getObject() != null
-                                && isNotEmpty(kbObjectModel.getObject().getIdentifier()))
-                    );
+                    AbstractInfoPanel.this::confirmActionDelete).onConfigure(
+                            (_this) -> _this.setVisible(kbObjectModel.getObject() != null
+                                    && isNotEmpty(kbObjectModel.getObject().getIdentifier())));
             deleteButton.add(new Label("label", new ResourceModel(getDeleteButtonResourceKey())));
             deleteButton.add(new WriteProtectionBehavior(kbModel));
             add(deleteButton);
-            
-            // button for creating a new subclass that is only visible for concepts  
+
+            // button for creating a new subclass that is only visible for concepts
             LambdaAjaxLink createSubclassButton = new LambdaAjaxLink("createSubclass",
-                    AbstractInfoPanel.this::actionCreateSubclass).onConfigure((_this) -> 
-                        _this.setVisible(kbObjectModel.getObject() != null
-                                && isNotEmpty(kbObjectModel.getObject().getIdentifier())
-                                && kbObjectModel.getObject() instanceof KBConcept)
-                    );
+                    AbstractInfoPanel.this::actionCreateSubclass).onConfigure(
+                            (_this) -> _this.setVisible(kbObjectModel.getObject() != null
+                                    && isNotEmpty(kbObjectModel.getObject().getIdentifier())
+                                    && kbObjectModel.getObject() instanceof KBConcept));
             createSubclassButton.add(new Label("subclassLabel",
                     new ResourceModel(getCreateSubclassButtonResourceKey())));
             createSubclassButton.add(new WriteProtectionBehavior(kbModel));
@@ -214,52 +222,59 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
     {
         return null;
     }
-    
+
     public String getCreateSubclassButtonResourceKey()
     {
         return "createSubclass";
     }
 
-    protected String getCreateButtonResourceKey() {
+    protected String getCreateButtonResourceKey()
+    {
         return "create";
     }
-    
-    protected String getCancelButtonResourceKey() {
+
+    protected String getCancelButtonResourceKey()
+    {
         return "cancel";
     }
-    
-    protected String getDeleteButtonResourceKey() {
+
+    protected String getDeleteButtonResourceKey()
+    {
         return "delete";
     }
-    
-    protected String getNamePlaceholderResourceKey() {
+
+    protected String getNamePlaceholderResourceKey()
+    {
         return "placeholder";
     }
-    
+
     protected abstract String getTypeLabelResourceKey();
 
     public abstract List<String> getLabelProperties();
 
     /**
      * Returns the {@link StatementDetailPreference} for the included {@link StatementsPanel}. If
-     * this method returns {@code null}, the {@code StatementDetailPreference} can be defined by
-     * the user via a selector in the UI. The default implementation returns {@code null}.
+     * this method returns {@code null}, the {@code StatementDetailPreference} can be defined by the
+     * user via a selector in the UI. The default implementation returns {@code null}.
+     * 
      * @return
      */
-    protected StatementDetailPreference getDetailPreference() {
+    protected StatementDetailPreference getDetailPreference()
+    {
         return null;
     }
-    
+
     protected abstract void actionCreate(AjaxRequestTarget aTarget, Form<T> aForm);
-    
+
     /**
      * Shows confirmation dialog. If the user accepts, calls
      * {@link AbstractInfoPanel#actionDelete(AjaxRequestTarget)}.
      */
-    private void confirmActionDelete(AjaxRequestTarget aTarget) {
-        confirmationDialog.setTitleModel(
-                new StringResourceModel("kbobject.delete.confirmation.title", this));
-        
+    private void confirmActionDelete(AjaxRequestTarget aTarget)
+    {
+        confirmationDialog
+                .setTitleModel(new StringResourceModel("kbobject.delete.confirmation.title", this));
+
         // find out whether there are statements that reference the object
         List<Statement> statementsWithReference = kbService
                 .listStatementsWithPredicateOrObjectReference(kbModel.getObject(),
@@ -278,12 +293,13 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
         confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction(this::actionDelete);
     }
-    
-    private void actionCreateSubclass(AjaxRequestTarget aTarget) {
+
+    private void actionCreateSubclass(AjaxRequestTarget aTarget)
+    {
         modal.show(aTarget);
     }
-    
+
     protected abstract void actionDelete(AjaxRequestTarget aTarget);
-    
+
     protected abstract void actionCancel(AjaxRequestTarget aTarget);
 }

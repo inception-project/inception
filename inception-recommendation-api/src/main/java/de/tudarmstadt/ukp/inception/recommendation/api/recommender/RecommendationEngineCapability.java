@@ -17,12 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-public enum RecommendationEngineCapability 
+public enum RecommendationEngineCapability
 {
     /**
-     * {@link RecommendationEngine} does not support training. Calling 
-     * {@link RecommendationEngine#train} may be a no-op at
-     * best or result in an exception at worst.
+     * {@link RecommendationEngine} does not support training. Calling
+     * {@link RecommendationEngine#train} may be a no-op at best or result in an exception at worst.
      */
     TRAINING_NOT_SUPPORTED,
 
@@ -33,10 +32,10 @@ public enum RecommendationEngineCapability
      * {@link RecommendationEngine#train} has not been called before.
      */
     TRAINING_SUPPORTED,
-    
+
     /**
-     * {@link RecommendationEngine} requires training. {@link RecommendationEngine#train} must
-     * be called to initialize a context before {@link RecommendationEngine#predict} can be used.
+     * {@link RecommendationEngine} requires training. {@link RecommendationEngine#train} must be
+     * called to initialize a context before {@link RecommendationEngine#predict} can be used.
      */
     TRAINING_REQUIRED
 }
