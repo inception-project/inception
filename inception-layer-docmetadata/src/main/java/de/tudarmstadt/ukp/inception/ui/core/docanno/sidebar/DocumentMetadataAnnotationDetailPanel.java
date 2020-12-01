@@ -239,7 +239,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             FeatureState featureState = new FeatureState(vid, feature, value);
             featureStates.add(featureState);
             featureState.tagset = annotationService
-                    .listTagsReorderable(featureState.feature.getTagset());
+                    .listTags(featureState.feature.getTagset());
         }
 
         return featureStates;

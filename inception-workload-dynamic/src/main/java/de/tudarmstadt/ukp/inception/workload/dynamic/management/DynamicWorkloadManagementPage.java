@@ -134,6 +134,7 @@ public class DynamicWorkloadManagementPage
     private BootstrapRadioChoice<DateSelection> dateChoices;
     private DropDownChoice<WorkflowType> workflowChoices;
     private DropDownChoice<User> userSelection;
+    private DropDownChoice<AnnotationDocument> unassignDocument;
     private DropDownChoice<AnnotationDocument> resetDocument;
     private DropDownChoice<AnnotationDocumentState> documentState;
     private MultiSelect<SourceDocument> documentsToAdd;
@@ -216,9 +217,9 @@ public class DynamicWorkloadManagementPage
                     IModel<SourceDocument> rowModel)
             {
                 Fragment fragment = new Fragment(componentId, "infoColumn",
-                    DynamicWorkloadManagementPage.this);
+                        DynamicWorkloadManagementPage.this);
                 fragment.add(new LambdaAjaxLink("showInfoDialog",
-                    _target -> actionShowInfoDialog(_target, rowModel)));
+                        _target -> actionShowInfoDialog(_target, rowModel)));
                 aItem.add(fragment);
             }
         });
@@ -315,11 +316,11 @@ public class DynamicWorkloadManagementPage
 
         // Condition for filter inputs to be enabled or disabled
         dateTo.add(enabledWhen(
-            () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0).name())
-                && !(dataProvider.getFilterState().getSelected())));
+                () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0).name())
+                        && !(dataProvider.getFilterState().getSelected())));
         dateFrom.add(enabledWhen(
-            () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1).name())
-                && !(dataProvider.getFilterState().getSelected())));
+                () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1).name())
+                        && !(dataProvider.getFilterState().getSelected())));
         dateChoices.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
         userFilterTextField.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
         documentFilterTextField
@@ -496,8 +497,16 @@ public class DynamicWorkloadManagementPage
         documentsToAdd.setOutputMarkupId(true);
         userAssignDocumentForm.add(documentsToAdd);
 
-        // Add the "Assign" button
-        userAssignDocumentForm.add(new LambdaAjaxButton<>("assign", this::actionAssignDocument));
+        // Dropdown for all annotation documents for the user that exist in the DB
+        unassignDocument = new DropDownChoice<>("unassignDocument");
+        unassignDocument.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocument::getName));
+        unassignDocument.setChoices(this::getCreatedDocumentsForSelectedUser);
+        unassignDocument.setModel(LoadableDetachableModel.of(this::getSelectedAnnotationDocument));
+        unassignDocument.setOutputMarkupId(true);
+        userAssignDocumentForm.add(unassignDocument);
+
+        // Add the "Confirm" button
+        userAssignDocumentForm.add(new LambdaAjaxButton<>("confirm", this::actionAssignDocument));
         return userAssignDocumentForm;
     }
 
@@ -637,8 +646,7 @@ public class DynamicWorkloadManagementPage
                                         currentProject.getObject(),
                                         resetDocument.getModelObject().getName()),
                                 userSelection.getModelObject()),
-                        AnnotationDocumentStateTransition.
-                            ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
+                        AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
             }
             else {
                 // OR INPROGRESS to FINSIHED
@@ -648,8 +656,7 @@ public class DynamicWorkloadManagementPage
                                         currentProject.getObject(),
                                         resetDocument.getModelObject().getName()),
                                 userSelection.getModelObject()),
-                        AnnotationDocumentStateTransition.
-                            ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+                        AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
             }
             success("Document status changed");
         }
@@ -662,31 +669,34 @@ public class DynamicWorkloadManagementPage
     {
         aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
 
-        // First check if a document has been selected
-        if (aForm.getModelObject().isEmpty()) {
-            error("Please add documents you want to assign.");
-        }
-        else {
-            // Documents were added to the collection of the multiselect
-            Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
-            for (SourceDocument source : documentsToAssign) {
-                AnnotationDocument annotationDocument = documentService
-                        .createOrGetAnnotationDocument(source, userSelection.getModelObject());
+        // First check if there are documents to assign
+        Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
+        for (SourceDocument source : documentsToAssign) {
+            AnnotationDocument annotationDocument = documentService
+                    .createOrGetAnnotationDocument(source, userSelection.getModelObject());
 
-                // Only if the document is in state NEW we can assign it to INPROGRESS
-                if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
-                    documentService.transitionAnnotationDocumentState(annotationDocument,
-                            AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
-                    success("Document(s) assigned");
-                }
-                else {
-                    error("Document '" + annotationDocument.getName()
-                            + "' is either already assigned or even finished.");
-                }
+            // Only if the document is in state NEW we can assign it to INPROGRESS
+            if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
+                documentService.transitionAnnotationDocumentState(annotationDocument,
+                        AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+                success("Document(s) assigned");
+            }
+            else {
+                error("Document '" + annotationDocument.getName()
+                        + "' is either already assigned or even finished.");
             }
         }
 
-        aAjaxRequestTarget.add(userResetDocumentForm);
+        // Now check if a document needs to be unassigned
+        AnnotationDocument documentToDelete = unassignDocument.getModelObject();
+        if (documentToDelete != null) {
+            documentService.removeAnnotationDocument(documentToDelete);
+            success("Document " + documentToDelete.getName() + " for user "
+                    + documentToDelete.getUser() + " has been unassigned");
+        }
+
+        aAjaxRequestTarget.add(userAssignDocumentForm, userResetDocumentForm);
+
         updateTable(aAjaxRequestTarget);
     }
 

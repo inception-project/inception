@@ -470,7 +470,7 @@ public class HtmlAnnotationEditor
 
             // Render visible (custom) layers
             Map<String[], Queue<String>> colorQueues = new HashMap<>();
-            for (AnnotationLayer layer : state.getAllAnnotationLayers()) {
+            for (AnnotationLayer layer : state.getAnnotationLayers()) {
                 ColoringStrategy coloringStrategy = coloringService.getStrategy(layer,
                         state.getPreferences(), colorQueues);
                 

@@ -39,6 +39,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.*;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -85,11 +86,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
@@ -537,8 +533,8 @@ public class ActiveLearningSidebar
             feat, (Serializable) wrappedFeatureValue);
         
         // Populate the tagset moving the tags with recommended labels to the top 
-        List<ReorderableTag> tagList = annotationService.listTagsReorderable(feat.getTagset());
-        List<ReorderableTag> reorderedTagList = new ArrayList<>();
+        List<Tag> tagList = annotationService.listTags(feat.getTagset());
+        List<Tag> reorderedTagList = new ArrayList<>();
         if (tagList.size() > 0) {
             Predictions predictions = recommendationService.getPredictions(state.getUser(),
                     state.getProject());
@@ -555,7 +551,7 @@ public class ActiveLearningSidebar
                     .map(ao -> ao.getLabel())
                     .collect(Collectors.toList());
             
-            for (ReorderableTag tag : tagList) {
+            for (Tag tag : tagList) {
                 // add the tags which contain the prediction-labels to the beginning of a tagset
                 if (allRecommendationLabels.contains(tag.getName())) {
                     tag.setReordered(true);

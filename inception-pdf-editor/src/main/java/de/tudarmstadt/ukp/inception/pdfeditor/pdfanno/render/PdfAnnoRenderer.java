@@ -70,7 +70,7 @@ public class PdfAnnoRenderer
 
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
+        for (AnnotationLayer layer : aState.getAnnotationLayers()) {
             ColoringStrategy coloringStrategy = coloringService.getStrategy(layer,
                     aState.getPreferences(), colorQueues);
 

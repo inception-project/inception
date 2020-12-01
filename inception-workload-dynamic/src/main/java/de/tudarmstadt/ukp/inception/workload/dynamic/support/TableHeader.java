@@ -21,7 +21,7 @@ public enum TableHeader
 {
     Document,
     Finished,
-    Processed,
+    InProgress,
     Annotators,
     Updated,
     Actions;

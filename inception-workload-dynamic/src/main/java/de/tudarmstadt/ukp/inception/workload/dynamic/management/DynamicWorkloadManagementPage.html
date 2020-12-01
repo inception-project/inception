@@ -31,7 +31,25 @@
             background-color: burlywood;
         }
 
+        .form-control.k-widget {
+            display: inline-block;
+            height: 100px;
+            overflow-y: scroll;
+        }
+
+        .k-input {
+            height: 100px;
+        }
+
     </style>
+
+    <script type="text/javascript">
+        $('div.k-widget.k-multiselect.form-control.k-multiselect-clearable').on('click', function (e) {
+            console.log("T");
+            $(this).next('.dropdown-menu').toggle();
+            e.stopPropagation();
+        });
+    </script>
 </wicket:head>
 <body>
 <wicket:extend>
@@ -52,7 +70,7 @@
                 <i class="fas fa-filter"></i>&nbsp;
                 <wicket:message key="Filter"/>
               </button>
-              <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 800px;">
+              <span class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 800px;">
                 <form wicket:id="searchForm">
                   <div class="card-header">
                     <wicket:message key="filterHeader"/>
@@ -108,7 +126,7 @@
                       </button>
                     </div>
                   </form>
-                </div>
+                </span>
               </span>
               <span class="dropdown" aria-haspopup="true" aria-expanded="false">
                 <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
@@ -117,8 +135,8 @@
                   <wicket:message key="Annotators"/>
                 </button>
                 <form wicket:id="userForm" class="dropdown-menu shadow-lg pt-0 pb-0" role="menu"
-                  style="min-width: 800px; min-height: 350px;">
-                  <form wicket:id="userSelectionForm" style="min-height: 150px;">
+                  style="width: 1000px; height: 435px;">
+                  <form wicket:id="userSelectionForm" style="height: 150px;">
                     <div class="card-header">
                       <wicket:message key="userSelection"/>
                     </div>
@@ -126,35 +144,53 @@
                       <label class="col-form-label col-sm-3">
                         <wicket:message key="userSelect"/>
                       </label>
-                      <select wicket:id="userSelection" class="form-control col-sm-6" onclick="notClosing()"
-                       data-container="body"></select>
+                      <select wicket:id="userSelection" class="form col-sm-6" data-container="body"></select>
                     </div>
                   </form>
                   <div class="row-cols-2 form-row">
                     <div>
-                      <form wicket:id="userAssignDocumentForm" class="form">
+                      <form wicket:id="userAssignDocumentForm" class="form dropdown-toggle">
                         <div class="card-header">
                           <wicket:message key="userSettings"/>
                         </div>
-                        <div class="card-body" style="min-height: 120px;">
-                          <wicket:message key="assignDocument"/>
-                          <select wicket:id="documentsToAdd" class="flex-content" data-container="body"></select>
+                        <div class="card-body" style="height: 200px">
+                          <div>
+                            <div class="col-sm-5" style="display: inline-block; height: 80px">
+                              <wicket:message key="assignDocument"/>
+                            </div>
+                            <select wicket:id="documentsToAdd" class="form-control col-sm-7" data-container="body" style="display: inline-block"></select>
+                          </div>
+                          <div class="form-group form-row">
+                            <label class="col-form-label col-sm-5">
+                              <wicket:message key="unassignDocument"/>
+                            </label>
+                            <select wicket:id="unassignDocument" class="form-control col-sm-7 block" data-container="body"></select>
+                          </div>
                         </div>
                         <div class="card-footer">
-                          <button class="btn btn-primary" wicket:id="assign">
-                            <wicket:message key="assign"/>
+                          <button class="btn btn-primary" wicket:id="confirm">
+                            <wicket:message key="confirm"/>
                           </button>
                         </div>
                       </form>
                     </div>
                     <div>
-                      <form wicket:id="userResetDocumentForm">
+                      <form wicket:id="userResetDocumentForm" class="form">
                         <div class="card-header">
                           <wicket:message key="resetDocument"/>
                         </div>
-                        <div class="card-body" style="min-height: 120px;">
-                          <select wicket:id="resetDocument" class="form-control" data-container="body"></select>
-                          <select wicket:id="documentState" class="form-control" data-container="body"></select>
+                        <div class="card-body" style="height: 200px">
+                          <div>
+                          <label class="col-form-label col-sm-8">
+                            <select wicket:id="resetDocument" class="form-control" data-container="body"></select>
+                          </label>
+                          </div>
+                          <div>
+                          <label class="col-form-label col-sm-8">
+                            <select wicket:id="documentState" class="form-control" data-container="body"></select>
+                          </label>
+                          </div>
+
                         </div>
                         <div class="card-footer">
                           <button class="btn btn-primary" wicket:id="set">
