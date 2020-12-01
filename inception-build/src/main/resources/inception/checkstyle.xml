@@ -70,6 +70,8 @@
       <message key="name.invalidPattern"
                value="Interface type name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    
+    <!--
     <module name="GenericWhitespace">
       <message key="ws.followed"
                value="GenericWhitespace ''{0}'' is followed by whitespace."/>
@@ -80,6 +82,7 @@
       <message key="ws.notPreceded"
                value="GenericWhitespace ''{0}'' is not preceded with whitespace."/>
     </module>
+    -->
     
     <!--
     <module name="Indentation">

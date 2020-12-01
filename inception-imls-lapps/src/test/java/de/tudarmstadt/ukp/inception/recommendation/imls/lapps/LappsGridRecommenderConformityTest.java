@@ -171,9 +171,10 @@ public class LappsGridRecommenderConformityTest
     {
         try (InputStream is = LappsGridRecommenderTraitsEditor.class
                 .getResourceAsStream("services.json")) {
-            TypeReference<Map<String, List<LappsGridService>>> typeRef = new TypeReference<Map<String, List<LappsGridService>>>()
-            {
-            };
+            TypeReference<Map<String, List<LappsGridService>>> typeRef = //
+                    new TypeReference<Map<String, List<LappsGridService>>>()
+                    {
+                    };
             return getObjectMapper().readValue(is, typeRef);
         }
     }

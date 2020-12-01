@@ -137,9 +137,10 @@ public class LappsGridRecommenderTraitsEditor
     private Map<String, List<LappsGridService>> loadPredefinedServicesData()
     {
         try (InputStream is = getClass().getResourceAsStream("services.json")) {
-            TypeReference<Map<String, List<LappsGridService>>> typeRef = new TypeReference<Map<String, List<LappsGridService>>>()
-            {
-            };
+            TypeReference<Map<String, List<LappsGridService>>> typeRef = //
+                    new TypeReference<Map<String, List<LappsGridService>>>()
+                    {
+                    };
             return getObjectMapper().readValue(is, typeRef);
         }
         catch (IOException e) {
