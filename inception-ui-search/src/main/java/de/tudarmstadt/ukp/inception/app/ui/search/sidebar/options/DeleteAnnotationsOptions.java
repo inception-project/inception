@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
-public class DeleteAnnotationsOptions extends Options
+public class DeleteAnnotationsOptions
+    extends Options
 {
     private boolean deleteOnlyMatchingFeatureValues = true;
 

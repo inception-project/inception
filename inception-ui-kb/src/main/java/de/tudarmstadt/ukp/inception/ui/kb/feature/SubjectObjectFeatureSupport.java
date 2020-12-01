@@ -108,8 +108,8 @@ public class SubjectObjectFeatureSupport
 
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
-        AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
-        IModel<FeatureState> aFeatureStateModel)
+            AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
+            IModel<FeatureState> aFeatureStateModel)
     {
 
         FeatureState featureState = aFeatureStateModel.getObject();
@@ -122,15 +122,15 @@ public class SubjectObjectFeatureSupport
                 switch (featureState.feature.getLinkTypeName()) {
                 case SUBJECT_LINK:
                     editor = new SubjectObjectFeatureEditor(aId, aOwner, aHandler, aStateModel,
-                        aFeatureStateModel, SUBJECT_ROLE);
+                            aFeatureStateModel, SUBJECT_ROLE);
                     break;
                 case OBJECT_LINK:
                     editor = new SubjectObjectFeatureEditor(aId, aOwner, aHandler, aStateModel,
-                        aFeatureStateModel, OBJECT_ROLE);
+                            aFeatureStateModel, OBJECT_ROLE);
                     break;
                 case QUALIFIER_LINK:
                     editor = new QualifierFeatureEditor(aId, aOwner, aHandler, aStateModel,
-                        aFeatureStateModel);
+                            aFeatureStateModel);
                     break;
                 default:
                     throw unsupportedLinkModeException(featureState.feature);
@@ -150,17 +150,15 @@ public class SubjectObjectFeatureSupport
 
     @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
-        AnnotationFeature aFeature)
+            AnnotationFeature aFeature)
     {
         // Link type
-        TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "",
-            CAS.TYPE_NAME_TOP);
+        TypeDescription linkTD = aTSD.addType(aFeature.getLinkTypeName(), "", CAS.TYPE_NAME_TOP);
         linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
         linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
-        
+
         // Link feature
-        aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(),
-            false);
+        aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(), false);
     }
 
     @Override
@@ -169,7 +167,7 @@ public class SubjectObjectFeatureSupport
         Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
     }
-    
+
     @Override
     public List<LinkWithRoleModel> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
             Object aValue)
@@ -188,7 +186,7 @@ public class SubjectObjectFeatureSupport
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
     }
-    
+
     @Override
     public ArrayList<LinkWithRoleModel> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS,
             Object aValue)
@@ -206,14 +204,13 @@ public class SubjectObjectFeatureSupport
                 LinkWithRoleModel m = new LinkWithRoleModel();
                 m.role = link.getStringValue(roleFeat);
                 m.targetAddr = WebAnnoCasUtil.getAddr(link.getFeatureValue(targetFeat));
-                m.label = ((AnnotationFS) link.getFeatureValue(targetFeat))
-                    .getCoveredText();
+                m.label = ((AnnotationFS) link.getFeatureValue(targetFeat)).getCoveredText();
                 links.add(m);
             }
-            
+
             return links;
         }
-        else if (aValue == null ) {
+        else if (aValue == null) {
             return new ArrayList<>();
         }
         else {

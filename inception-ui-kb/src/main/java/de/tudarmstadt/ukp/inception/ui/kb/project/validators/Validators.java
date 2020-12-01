@@ -25,6 +25,6 @@ public class Validators
     public static final IValidator<String> IRI_VALIDATOR = new IriValidator();
 
     public static final UrlValidator URL_VALIDATOR = new UrlValidator(
-        new String[] { "http", "https" });
+            new String[] { "http", "https" });
 
 }

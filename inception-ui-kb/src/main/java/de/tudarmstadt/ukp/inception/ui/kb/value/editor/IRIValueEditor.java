@@ -54,12 +54,12 @@ public class IRIValueEditor
     extends ValueEditor
 {
     private static final Logger LOG = LoggerFactory.getLogger(IRIValueEditor.class);
-    
+
     private static final long serialVersionUID = -1646737090861147804L;
-    
+
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean ConceptLinkingService clService;
-    
+
     private KnowledgeBaseItemAutoCompleteField value;
     private IModel<KBStatement> statement;
     private IModel<KBProperty> property;
@@ -67,12 +67,12 @@ public class IRIValueEditor
 
     public IRIValueEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aProperty,
             IModel<KnowledgeBase> aKB)
-    {   
+    {
         super(aId, CompoundPropertyModel.of(aModel));
         statement = aModel;
         property = aProperty;
         kb = aKB;
-        
+
         ITextRenderer<KBHandle> renderer = new TextRenderer<KBHandle>("uiLabel")
         {
             private static final long serialVersionUID = 6523122841966543569L;
@@ -85,11 +85,11 @@ public class IRIValueEditor
                 if (aObject != null && StringUtils.isBlank(aObject.getName())) {
                     return aObject.getIdentifier();
                 }
-                
+
                 return super.getText(aObject);
             }
         };
-        
+
         value = new KnowledgeBaseItemAutoCompleteField("value", this::listChoices, renderer);
         // Explicitly constructing this as a LambdaModelAdapter<Object> is necessary to avoid
         // a ClassCastException when the AutoCompleteField sends a String value which it (for
@@ -102,17 +102,17 @@ public class IRIValueEditor
         value.setRequired(true);
         add(value);
     }
-    
+
     private List<KBHandle> listChoices(String aInput)
     {
         if (aInput == null) {
             return emptyList();
         }
-        
+
         List<KBHandle> choices;
         try {
             KnowledgeBase kbase = kb.getObject();
-            
+
             choices = clService.getLinkingInstancesInKBScope(kbase.getRepositoryId(),
                     property.getObject().getRange(), ConceptFeatureValueType.ANY_OBJECT, aInput,
                     null, -1, null, kbase.getProject());
@@ -121,11 +121,10 @@ public class IRIValueEditor
             choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));
             error("An error occurred while retrieving entity candidates: " + e.getMessage());
             LOG.error("An error occurred while retrieving entity candidates", e);
-            RequestCycle.get()
-                .find(IPartialPageRequestHandler.class)
-                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+            RequestCycle.get().find(IPartialPageRequestHandler.class)
+                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
-        
+
         // In case the user is entering a IRI, add that as the first choice - maybe the user wants
         // to manually enter an IRI
         try {
@@ -136,8 +135,7 @@ public class IRIValueEditor
         catch (IllegalArgumentException e) {
             // Ignore
         }
-        
-        
+
         return choices;
     }
 
@@ -149,15 +147,15 @@ public class IRIValueEditor
 
     private void setKBHandleModel(Object aValue)
     {
-        if (aValue == null ) {
+        if (aValue == null) {
             statement.getObject().setValue(null);
             return;
         }
-        
+
         if (!(aValue instanceof KBHandle)) {
             return;
         }
-        
+
         KBHandle handle = (KBHandle) aValue;
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         statement.getObject().setValue(vf.createIRI(handle.getIdentifier()));
@@ -168,12 +166,11 @@ public class IRIValueEditor
         Object statementValue = statement.getObject().getValue();
         if (statementValue instanceof IRI) {
             String iri = ((IRI) statementValue).stringValue();
-            return kbService.read(kb.getObject(), conn -> 
-                SPARQLQueryBuilder.forItems(kb.getObject())
-                        .withIdentifier(iri)
-                        .retrieveLabel()
-                        .asHandle(conn, false)
-            ).orElse(new KBHandle(iri));
+            return kbService
+                    .read(kb.getObject(),
+                            conn -> SPARQLQueryBuilder.forItems(kb.getObject()).withIdentifier(iri)
+                                    .retrieveLabel().asHandle(conn, false))
+                    .orElse(new KBHandle(iri));
         }
         return null;
     }

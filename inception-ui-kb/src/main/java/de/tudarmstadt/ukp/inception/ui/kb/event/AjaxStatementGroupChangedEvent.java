@@ -22,24 +22,29 @@ import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
-public class AjaxStatementGroupChangedEvent extends AbstractAjaxAwareEvent {
-    
+public class AjaxStatementGroupChangedEvent
+    extends AbstractAjaxAwareEvent
+{
+
     private boolean deleted;
-    
+
     private StatementGroupBean bean;
-    
+
     public AjaxStatementGroupChangedEvent(AjaxRequestTarget target, StatementGroupBean bean,
-            boolean deleted) {
+            boolean deleted)
+    {
         super(target);
         this.bean = bean;
         this.deleted = deleted;
     }
 
-    public boolean isDeleted() {
+    public boolean isDeleted()
+    {
         return deleted;
     }
-    
-    public StatementGroupBean getBean() {
+
+    public StatementGroupBean getBean()
+    {
         return bean;
     }
 

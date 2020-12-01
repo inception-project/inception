@@ -105,8 +105,7 @@ public class IndexSchedulerImpl
     }
 
     /**
-     * Put a new indexing task in the queue.
-     * Indexing tasks can be of three types:
+     * Put a new indexing task in the queue. Indexing tasks can be of three types:
      * <ul>
      * <li>Indexing of a whole project</li>
      * <li>Indexing of a source document</li>

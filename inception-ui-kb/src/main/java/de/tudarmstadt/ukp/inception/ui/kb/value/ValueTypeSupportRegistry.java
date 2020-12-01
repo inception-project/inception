@@ -42,7 +42,7 @@ public interface ValueTypeSupportRegistry
 
         return allTypes;
     }
-    
+
     default List<ValueType> getRangeTypes(String range, Optional<KBObject> rangeKbObject)
     {
         List<ValueType> rangeTypes = new ArrayList<>();
@@ -56,14 +56,13 @@ public interface ValueTypeSupportRegistry
         rangeTypes.sort(comparing(ValueType::getUiName));
         return rangeTypes;
     }
-    
+
     ValueType getValueType(KBStatement aStatement, KBProperty aProperty);
-    
+
     List<ValueTypeSupport> getValueSupports();
 
     ValueTypeSupport getValueSupport(KBStatement aStatement, KBProperty aProperty);
-    
-    ValueTypeSupport getValueSupport(ValueType type);
 
+    ValueTypeSupport getValueSupport(ValueType type);
 
 }

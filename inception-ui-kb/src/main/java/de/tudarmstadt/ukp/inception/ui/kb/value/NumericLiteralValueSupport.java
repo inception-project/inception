@@ -64,27 +64,27 @@ public class NumericLiteralValueSupport
     private static final List<IRI> NUMERIC_TYPES = asList(INTEGER, INT, NON_NEGATIVE_INTEGER,
             NON_POSITIVE_INTEGER, LONG, FLOAT, NEGATIVE_INTEGER, POSITIVE_INTEGER, UNSIGNED_INT,
             UNSIGNED_LONG, UNSIGNED_SHORT, SHORT, DOUBLE, DECIMAL);
-    
+
     private String valueTypeSupportId;
-    
+
     @Override
     public String getId()
     {
         return valueTypeSupportId;
     }
-    
+
     @Override
     public void setBeanName(String aBeanName)
     {
         valueTypeSupportId = aBeanName;
     }
-    
+
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
         return asList(new ValueType(XMLSchema.DOUBLE.stringValue(), "Number", valueTypeSupportId));
     }
-    
+
     @Override
     public boolean accepts(KBStatement aStatement, KBProperty aProperty)
     {
@@ -94,7 +94,7 @@ public class NumericLiteralValueSupport
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
         return NUMERIC_TYPES.contains(iri);
     }
-    
+
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {

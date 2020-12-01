@@ -49,8 +49,8 @@ public class ExternalResultDataProvider
 
     public ExternalResultDataProvider(ExternalSearchService aExternalSearchService, User aUser)
     {
-//        // Set default sort
-//        setSort("documentTitle", SortOrder.ASCENDING);
+        // // Set default sort
+        // setSort("documentTitle", SortOrder.ASCENDING);
 
         // Set external search service
         externalSearchService = aExternalSearchService;
@@ -58,7 +58,7 @@ public class ExternalResultDataProvider
         // Set user
         user = aUser;
     }
-    
+
     @Override
     public Iterator<ExternalSearchResult> iterator(long first, long count)
     {
@@ -96,7 +96,7 @@ public class ExternalResultDataProvider
     public void searchDocuments(DocumentRepository aRepository, String aQuery) throws IOException
     {
         results.clear();
-        
+
         // No query, no results
         if (StringUtils.isBlank(aQuery)) {
             return;
