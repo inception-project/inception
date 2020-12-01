@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGR
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -231,7 +232,8 @@ public class SearchAnnotationSidebar
         Label numberOfResults = new Label("numberOfResults");
         numberOfResults.setDefaultModel(LoadableDetachableModel.of(() -> String.format("%d-%d / %d",
                 searchResultGroups.getFirstItemOffset() + 1,
-                searchResultGroups.getFirstItemOffset() + searchResultGroups.getItemsPerPage(), 
+                min(searchResultGroups.getFirstItemOffset() + searchResultGroups.getItemsPerPage(),
+                        searchResultGroups.getItemCount()),
                 searchResultGroups.getItemCount())));
         numberOfResults.add(visibleWhen(() -> groupedSearchResults.getObject() != null 
                 && !groupedSearchResults.getObject().isEmpty()));
@@ -295,7 +297,7 @@ public class SearchAnnotationSidebar
         super.onConfigure();
         
         setChangeAnnotationsElementsEnabled(
-                !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUser()));
+                !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername()));
     }
 
 

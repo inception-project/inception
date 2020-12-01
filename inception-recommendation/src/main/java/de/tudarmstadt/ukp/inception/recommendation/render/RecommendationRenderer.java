@@ -18,6 +18,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.AUTOMATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 
 import org.apache.uima.cas.CAS;
 
@@ -30,7 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -63,9 +65,9 @@ public class RecommendationRenderer
             if (layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName())
                     || (layer.getType().equals(CHAIN_TYPE)
-                            && (aState.getMode().equals(Mode.AUTOMATION)
-                                    || aState.getMode().equals(Mode.CORRECTION)
-                                    || aState.getMode().equals(Mode.CURATION)))
+                            && (aState.getMode().equals(AUTOMATION)
+                                    || aState.getMode().equals(CORRECTION)
+                                    || aState.getMode().equals(CURATION)))
                     || !layer.isEnabled()) { /* Hide layer if not enabled */
                 continue;
             }
