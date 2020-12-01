@@ -83,23 +83,23 @@ public class LearningRecordServiceImpl
         // same as the one added. Mind that the actual action performed by the user does not 
         // matter since there should basically be only one action in the log for any suggestion,
         // irrespective of what that action is.
-        String query = String.join("\n",
-                "DELETE FROM LearningRecord WHERE",
-                "user = :user AND",
-                "sourceDocument = :sourceDocument AND",
-                "offsetCharacterBegin = :offsetCharacterBegin AND",
-                "offsetCharacterEnd = :offsetCharacterEnd AND",
-                "layer = :layer AND",
-                "annotationFeature = :annotationFeature AND",
+        String query = String.join("\n", //
+                "DELETE FROM LearningRecord WHERE", //
+                "user = :user AND", //
+                "sourceDocument = :sourceDocument AND", //
+                "offsetCharacterBegin = :offsetCharacterBegin AND", //
+                "offsetCharacterEnd = :offsetCharacterEnd AND", //
+                "layer = :layer AND", //
+                "annotationFeature = :annotationFeature AND", //
                 "annotation = :annotation");
-        entityManager.createQuery(query)
-                .setParameter("user", aUsername)
-                .setParameter("sourceDocument", aDocument)
-                .setParameter("offsetCharacterBegin", aSuggestion.getBegin())
-                .setParameter("offsetCharacterEnd", aSuggestion.getEnd())
-                .setParameter("layer", aLayer)
-                .setParameter("annotationFeature", aFeature)
-                .setParameter("annotation", aAlternativeLabel)
+        entityManager.createQuery(query) //
+                .setParameter("user", aUsername) //
+                .setParameter("sourceDocument", aDocument) //
+                .setParameter("offsetCharacterBegin", aSuggestion.getBegin()) //
+                .setParameter("offsetCharacterEnd", aSuggestion.getEnd()) //
+                .setParameter("layer", aLayer) //
+                .setParameter("annotationFeature", aFeature) //
+                .setParameter("annotation", aAlternativeLabel) //
                 .executeUpdate();
         
         LearningRecord record = new LearningRecord();
@@ -124,15 +124,15 @@ public class LearningRecordServiceImpl
     public List<LearningRecord> listRecords(
             String aUsername, AnnotationLayer aLayer, int aLimit)
     {
-        String sql = String.join("\n",
-                "FROM LearningRecord l WHERE",
-                "l.user = :user AND",
-                "l.layer = :layer AND",
-                "l.userAction != :action",
+        String sql = String.join("\n", //
+                "FROM LearningRecord l WHERE", //
+                "l.user = :user AND", //
+                "l.layer = :layer AND", //
+                "l.userAction != :action", //
                 "ORDER BY l.id desc");
-        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class)
-                .setParameter("user", aUsername)
-                .setParameter("layer", aLayer)
+        TypedQuery<LearningRecord> query = entityManager.createQuery(sql, LearningRecord.class) //
+                .setParameter("user", aUsername) //
+                .setParameter("layer", aLayer) //
                 .setParameter("action", LearningRecordType.SHOWN); // SHOWN records NOT returned
         if (aLimit > 0) {
             query = query.setMaxResults(aLimit);
@@ -152,8 +152,8 @@ public class LearningRecordServiceImpl
     @Override
     public LearningRecord getRecordById(long recordId) {
         String sql = "FROM LearningRecord l where l.id = :id";
-        LearningRecord learningRecord = entityManager.createQuery(sql, LearningRecord.class)
-                .setParameter("id",recordId)
+        LearningRecord learningRecord = entityManager.createQuery(sql, LearningRecord.class) //
+                .setParameter("id",recordId) //
                 .getSingleResult();
         return learningRecord;
     }
@@ -163,9 +163,9 @@ public class LearningRecordServiceImpl
     public void deleteRecords(SourceDocument document, String user) {
         String sql = "DELETE FROM LearningRecord l where l.sourceDocument = :document and l.user " +
             "= :user";
-        entityManager.createQuery(sql)
-            .setParameter("document", document)
-            .setParameter("user",user)
+        entityManager.createQuery(sql) //
+            .setParameter("document", document) //
+            .setParameter("user",user) //
             .executeUpdate();
     }
 
@@ -203,15 +203,15 @@ public class LearningRecordServiceImpl
     @Transactional
     public boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer)
     {
-        String sql = String.join("\n",
-                "SELECT COUNT(*) FROM LearningRecord WHERE",
-                "user = :user AND",
-                "layer = :layer AND",
+        String sql = String.join("\n", //
+                "SELECT COUNT(*) FROM LearningRecord WHERE", //
+                "user = :user AND", //
+                "layer = :layer AND", //
                 "userAction = :action");
-        long count = entityManager.createQuery(sql, Long.class)
-                .setParameter("user", aUser.getUsername())
-                .setParameter("layer", aLayer)
-                .setParameter("action", LearningRecordType.SKIPPED)
+        long count = entityManager.createQuery(sql, Long.class) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("layer", aLayer) //
+                .setParameter("action", LearningRecordType.SKIPPED) //
                 .getSingleResult();
         return count > 0;
     }
@@ -220,15 +220,15 @@ public class LearningRecordServiceImpl
     @Transactional
     public void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer)
     {
-        String sql = String.join("\n",
-                "DELETE FROM LearningRecord WHERE",
-                "user = :user AND",
-                "layer = :layer AND",
+        String sql = String.join("\n", //
+                "DELETE FROM LearningRecord WHERE", //
+                "user = :user AND", //
+                "layer = :layer AND", //
                 "userAction = :action");
-        entityManager.createQuery(sql)
-                .setParameter("user", aUser.getUsername())
-                .setParameter("layer", aLayer)
-                .setParameter("action", LearningRecordType.SKIPPED)
+        entityManager.createQuery(sql) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("layer", aLayer) //
+                .setParameter("action", LearningRecordType.SKIPPED) //
                 .executeUpdate();
     }
 }

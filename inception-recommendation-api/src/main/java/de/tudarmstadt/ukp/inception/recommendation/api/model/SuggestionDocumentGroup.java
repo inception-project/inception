@@ -28,42 +28,42 @@ import java.util.List;
 import org.apache.commons.lang3.Validate;
 
 /**
- * Container for {@link SuggestionGroup suggestion groups} all coming from a single document.
- * No guarantees about layers and features though.
+ * Container for {@link SuggestionGroup suggestion groups} all coming from a single document. No
+ * guarantees about layers and features though.
  */
 public class SuggestionDocumentGroup
     extends AbstractCollection<SuggestionGroup>
 {
     private Collection<SuggestionGroup> groups;
     private String documentName;
-    
+
     public SuggestionDocumentGroup()
     {
         groups = new ArrayList<>();
     }
-    
+
     public SuggestionDocumentGroup(List<AnnotationSuggestion> aSuggestions)
     {
         this();
         SuggestionGroup.group(aSuggestions).stream().forEachOrdered(this::add);
     }
-    
+
     @Override
     public boolean add(SuggestionGroup aGroup)
     {
         boolean empty = isEmpty();
-        
+
         if (!empty) {
             Validate.isTrue(documentName.equals(aGroup.getDocumentName()),
                     "All suggestions in a group must come from the same document: expected [%s] but got [%s]",
                     documentName, aGroup.getDocumentName());
         }
-        
+
         // Cache information that must be consistent in the group when the first item is added
         if (empty) {
             documentName = aGroup.getDocumentName();
         }
-        
+
         return groups.add(aGroup);
     }
 
@@ -78,12 +78,12 @@ public class SuggestionDocumentGroup
     {
         return groups.size();
     }
-    
+
     public String getDocumentName()
     {
         return documentName;
     }
-    
+
     @Override
     public boolean isEmpty()
     {

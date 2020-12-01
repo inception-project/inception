@@ -34,7 +34,7 @@ public class RecommendationMetricsImpl
     implements RecommendationMetrics
 {
     private final RecommendationService recService;
-    
+
     @Autowired
     public RecommendationMetricsImpl(RecommendationService aRecService)
     {
@@ -47,5 +47,5 @@ public class RecommendationMetricsImpl
     {
         return recService.countEnabledRecommenders();
     }
-    
+
 }
