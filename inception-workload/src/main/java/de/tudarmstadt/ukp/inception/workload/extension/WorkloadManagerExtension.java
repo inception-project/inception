@@ -20,13 +20,14 @@ package de.tudarmstadt.ukp.inception.workload.extension;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 
-public interface WorkloadManagerExtension extends Extension<Project>
+public interface WorkloadManagerExtension
+    extends Extension<Project>
 {
     @Override
     default boolean accepts(Project project)
     {
         return true;
     }
-    
+
     String getLabel();
 }

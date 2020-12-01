@@ -27,7 +27,9 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
  * An {@code AjaxStatementChangedEvent} serves as an event object sent around whenever a statement
  * is saved/deleted.
  */
-public class AjaxStatementChangedEvent extends AbstractAjaxAwareEvent {
+public class AjaxStatementChangedEvent
+    extends AbstractAjaxAwareEvent
+{
 
     /**
      * Statement editor component of the changed statement.
@@ -49,23 +51,26 @@ public class AjaxStatementChangedEvent extends AbstractAjaxAwareEvent {
      */
     private boolean deleted;
 
-    public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement) {
+    public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement)
+    {
         this(target, statement, null, false);
     }
 
     public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement,
-        KBStatement statementBeforeChange)
+            KBStatement statementBeforeChange)
     {
         this(target, statement, null, false, statementBeforeChange);
     }
 
     public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement,
-            Component component, boolean deleted) {
+            Component component, boolean deleted)
+    {
         this(target, statement, component, deleted, null);
     }
 
     public AjaxStatementChangedEvent(AjaxRequestTarget target, KBStatement statement,
-        Component component, boolean deleted, KBStatement statementBeforeChange) {
+            Component component, boolean deleted, KBStatement statementBeforeChange)
+    {
         super(target);
         this.statement = statement;
         this.component = component;
@@ -73,14 +78,16 @@ public class AjaxStatementChangedEvent extends AbstractAjaxAwareEvent {
         this.statementBeforeChange = statementBeforeChange;
     }
 
-    public KBStatement getStatement() {
+    public KBStatement getStatement()
+    {
         return statement;
     }
 
     /**
      * Returns the statement editor component of the changed statement.
      */
-    public Component getComponent() {
+    public Component getComponent()
+    {
         return component;
     }
 
@@ -88,7 +95,8 @@ public class AjaxStatementChangedEvent extends AbstractAjaxAwareEvent {
      * {@code True} if the statement being changed was deleted. If {@code false}, there were only
      * value updates in the statement.
      */
-    public boolean isDeleted() {
+    public boolean isDeleted()
+    {
         return deleted;
     }
 

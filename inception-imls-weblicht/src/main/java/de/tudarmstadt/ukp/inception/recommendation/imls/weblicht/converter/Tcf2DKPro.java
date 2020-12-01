@@ -51,11 +51,11 @@ import eu.clarin.weblicht.wlfxb.tc.api.TextCorpus;
 public class Tcf2DKPro
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     public void convert(TextCorpus aCorpusData, JCas aJCas)
     {
         convertText(aJCas, aCorpusData);
-        
+
         Map<String, Token> tokens = convertTokens(aJCas, aCorpusData);
         if (tokens.size() > 0) {
 
@@ -93,11 +93,11 @@ public class Tcf2DKPro
     {
         if (aJCas.getDocumentText() == null) {
             StringBuilder text = new StringBuilder();
-    
+
             for (int i = 0; i < aCorpusData.getTokensLayer().size(); i++) {
                 eu.clarin.weblicht.wlfxb.tc.api.Token token = aCorpusData.getTokensLayer()
                         .getToken(i);
-                
+
                 if (token.getStart() != null && token.getEnd() != null) {
                     // Assuming all of the tokens have offset information...
                     while (text.length() < token.getStart()) {
@@ -110,12 +110,12 @@ public class Tcf2DKPro
                         text.append(" ");
                     }
                 }
-                
+
                 text.append(token.getString());
             }
             aJCas.setDocumentText(text.toString());
         }
-        
+
         aJCas.setDocumentLanguage(aCorpusData.getLanguage());
     }
 
@@ -157,7 +157,7 @@ public class Tcf2DKPro
                 tokenEndPosition = text.indexOf(token.getString(), tokenBeginPosition)
                         + token.getString().length();
             }
-            
+
             outToken = new Token(aJCas, tokenBeginPosition, tokenEndPosition);
             if (token.getID() != null) {
                 outToken.setId(token.getID());
@@ -221,7 +221,7 @@ public class Tcf2DKPro
         if (aCorpusData.getOrthographyLayer() == null) {
             return;
         }
-        
+
         for (int i = 0; i < aCorpusData.getOrthographyLayer().size(); i++) {
             eu.clarin.weblicht.wlfxb.tc.api.Token[] orthoTokens = aCorpusData.getOrthographyLayer()
                     .getTokens(aCorpusData.getOrthographyLayer().getCorrection(i));
@@ -239,8 +239,7 @@ public class Tcf2DKPro
         }
     }
 
-    public void convertSentences(JCas aJCas, TextCorpus aCorpusData,
-            Map<String, Token> aTokens)
+    public void convertSentences(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
     {
         if (aCorpusData.getSentencesLayer() == null) {
             // No layer to read from.
@@ -254,14 +253,13 @@ public class Tcf2DKPro
             Sentence outSentence = new Sentence(aJCas);
 
             outSentence.setBegin(aTokens.get(sentencesTokens[0].getID()).getBegin());
-            outSentence.setEnd(aTokens.get(sentencesTokens[sentencesTokens.length - 1].getID())
-                    .getEnd());
+            outSentence.setEnd(
+                    aTokens.get(sentencesTokens[sentencesTokens.length - 1].getID()).getEnd());
             outSentence.addToIndexes();
         }
     }
 
-    public void convertDependencies(JCas aJCas, TextCorpus aCorpusData,
-            Map<String, Token> aTokens)
+    public void convertDependencies(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
     {
         DependencyParsingLayer depLayer = aCorpusData.getDependencyParsingLayer();
 
@@ -269,7 +267,7 @@ public class Tcf2DKPro
             // No layer to read from.
             return;
         }
-        
+
         for (int i = 0; i < depLayer.size(); i++) {
             DependencyParse dependencyParse = depLayer.getParse(i);
             for (eu.clarin.weblicht.wlfxb.tc.api.Dependency dependency : dependencyParse
@@ -293,7 +291,7 @@ public class Tcf2DKPro
                     dependentPos.addToIndexes();
                     aTokens.get(dependentTokens[0].getID()).setPos(dependentPos);
                 }
-                
+
                 if (governorTokens != null) {
                     POS governerPos = aTokens.get(governorTokens[0].getID()).getPos();
                     if (governerPos == null) {
@@ -314,7 +312,7 @@ public class Tcf2DKPro
                 else {
                     governorTokens = dependentTokens;
                 }
-                
+
                 // We set governorTokens = dependentTokens above for root nodes
                 if (governorTokens == dependentTokens) {
                     Dependency outDependency = new ROOT(aJCas);
@@ -323,10 +321,11 @@ public class Tcf2DKPro
                     outDependency.setDependent(aTokens.get(dependentTokens[0].getID()));
                     outDependency.setBegin(outDependency.getDependent().getBegin());
                     outDependency.setEnd(outDependency.getDependent().getEnd());
-                    outDependency.setFlavor(depLayer.hasMultipleGovernors()
-                            ? DependencyFlavor.ENHANCED : DependencyFlavor.BASIC);
+                    outDependency
+                            .setFlavor(depLayer.hasMultipleGovernors() ? DependencyFlavor.ENHANCED
+                                    : DependencyFlavor.BASIC);
                     outDependency.addToIndexes();
-                    
+
                 }
                 else {
                     Dependency outDependency = new Dependency(aJCas);
@@ -335,16 +334,16 @@ public class Tcf2DKPro
                     outDependency.setDependent(aTokens.get(dependentTokens[0].getID()));
                     outDependency.setBegin(outDependency.getDependent().getBegin());
                     outDependency.setEnd(outDependency.getDependent().getEnd());
-                    outDependency.setFlavor(depLayer.hasMultipleGovernors()
-                            ? DependencyFlavor.ENHANCED : DependencyFlavor.BASIC);
+                    outDependency
+                            .setFlavor(depLayer.hasMultipleGovernors() ? DependencyFlavor.ENHANCED
+                                    : DependencyFlavor.BASIC);
                     outDependency.addToIndexes();
                 }
             }
         }
     }
 
-    public void convertNamedEntities(JCas aJCas, TextCorpus aCorpusData,
-            Map<String, Token> aTokens)
+    public void convertNamedEntities(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
     {
         if (aCorpusData.getNamedEntitiesLayer() == null) {
             // No layer to read from.
@@ -353,8 +352,8 @@ public class Tcf2DKPro
 
         for (int i = 0; i < aCorpusData.getNamedEntitiesLayer().size(); i++) {
             // get the named entity
-            eu.clarin.weblicht.wlfxb.tc.api.NamedEntity entity = aCorpusData
-                    .getNamedEntitiesLayer().getEntity(i);
+            eu.clarin.weblicht.wlfxb.tc.api.NamedEntity entity = aCorpusData.getNamedEntitiesLayer()
+                    .getEntity(i);
 
             eu.clarin.weblicht.wlfxb.tc.api.Token[] namedEntityTokens = aCorpusData
                     .getNamedEntitiesLayer().getTokens(entity);
@@ -390,8 +389,7 @@ public class Tcf2DKPro
      * @param aTokens
      *            id/token map.
      */
-    public void convertCoreference(JCas aJCas, TextCorpus aCorpusData,
-            Map<String, Token> aTokens)
+    public void convertCoreference(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
     {
         if (aCorpusData.getReferencesLayer() == null) {
             // No layer to read from.

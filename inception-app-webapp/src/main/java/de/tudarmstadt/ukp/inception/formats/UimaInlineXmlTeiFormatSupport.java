@@ -35,7 +35,7 @@ public class UimaInlineXmlTeiFormatSupport
 {
     public static final String ID = "dkpro-core-uima-inline-xml";
     public static final String NAME = "Inline XML";
-    
+
     @Override
     public String getId()
     {

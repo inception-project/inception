@@ -100,8 +100,8 @@ public class SubjectObjectFeatureEditor
     private AnnotationFeature linkedAnnotationFeature;
 
     public SubjectObjectFeatureEditor(String aId, MarkupContainer aOwner,
-        AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
-        final IModel<FeatureState> aFeatureStateModel, String role)
+            AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
+            final IModel<FeatureState> aFeatureStateModel, String role)
     {
         super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
 
@@ -116,7 +116,7 @@ public class SubjectObjectFeatureEditor
         add(content);
 
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) SubjectObjectFeatureEditor.this
-            .getModelObject().value;
+                .getModelObject().value;
 
         roleModel = new LinkWithRoleModel();
         roleModel.role = role;
@@ -128,12 +128,12 @@ public class SubjectObjectFeatureEditor
         content.add(createRemoveLabelIcon());
         content.add(focusComponent = createAutoCompleteTextField());
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        
+
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
@@ -155,7 +155,8 @@ public class SubjectObjectFeatureEditor
         {
             private static final long serialVersionUID = 1L;
 
-            @Override public String getObject()
+            @Override
+            public String getObject()
             {
                 if (roleLabelSlotIsSelected()) {
                     return "; background: orange";
@@ -248,7 +249,7 @@ public class SubjectObjectFeatureEditor
     public void onConfigure()
     {
         super.onConfigure();
-        
+
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
         if (links.size() == 0) {
             String role = roleModel.role;
@@ -265,13 +266,14 @@ public class SubjectObjectFeatureEditor
     private AutoCompleteTextField<KBHandle> createAutoCompleteTextField()
     {
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
-            LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
-            new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
+                LambdaModelAdapter.of(this::getSelectedKBItem, this::setSelectedKBItem),
+                new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
         {
 
             private static final long serialVersionUID = 5683897252648514996L;
 
-            @Override protected List<KBHandle> getChoices(String input)
+            @Override
+            protected List<KBHandle> getChoices(String input)
             {
                 return listInstances(actionHandler, input);
             }
@@ -280,7 +282,7 @@ public class SubjectObjectFeatureEditor
             public void onConfigure(JQueryBehavior behavior)
             {
                 super.onConfigure(behavior);
-                
+
                 behavior.setOption("autoWidth", true);
             }
 
@@ -300,13 +302,13 @@ public class SubjectObjectFeatureEditor
         if (value instanceof KBErrorHandle) {
             return;
         }
-        
+
         if (roleLabelIsFilled()) {
             try {
                 CAS cas = actionHandler.getEditorCas();
                 FeatureStructure selectedFS = selectFsByAddr(cas, roleModel.targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
-                    value != null ? value.getIdentifier() : value);
+                        value != null ? value.getIdentifier() : value);
             }
             catch (Exception e) {
                 error("Error: " + e.getMessage());
@@ -320,7 +322,7 @@ public class SubjectObjectFeatureEditor
         KBHandle selectedKBHandleItem = null;
         if (roleLabelIsFilled()) {
             String selectedKBItemIdentifier;
-            
+
             try {
                 CAS cas = actionHandler.getEditorCas();
                 FeatureStructure selectedFS = selectFsByAddr(cas, roleModel.targetAddr);
@@ -334,7 +336,7 @@ public class SubjectObjectFeatureEditor
                 // error on to the user.
                 return new KBErrorHandle("Error loading CAS: " + e.getMessage(), e);
             }
-            
+
             if (selectedKBItemIdentifier != null) {
                 try {
                     ConceptFeatureTraits traits = factService.getFeatureTraits(project);
@@ -379,23 +381,25 @@ public class SubjectObjectFeatureEditor
             LOG.error("An error occurred while retrieving entity candidates.", e);
             error("An error occurred while retrieving entity candidates: " + e.getMessage());
             RequestCycle.get().find(IPartialPageRequestHandler.class)
-                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
         return handles;
     }
 
-    private AnnotationFeature getLinkedAnnotationFeature() {
+    private AnnotationFeature getLinkedAnnotationFeature()
+    {
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService
-            .findLayer(this.stateModel.getObject().getProject(), linkedType);
+                .findLayer(this.stateModel.getObject().getProject(), linkedType);
         AnnotationFeature linkedAnnotationFeature = annotationService
-            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+                .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         return linkedAnnotationFeature;
     }
 
-    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature) {
+    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
+    {
         FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-            .getFeatureSupport(aAnnotationFeature);
+                .getFeatureSupport(aAnnotationFeature);
         ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
         return traits;
     }
@@ -406,7 +410,7 @@ public class SubjectObjectFeatureEditor
     }
 
     public static void handleException(Component aComponent, AjaxRequestTarget aTarget,
-        Exception aException)
+            Exception aException)
     {
         try {
             throw aException;

@@ -34,9 +34,9 @@ public interface SearchService
         throws IOException, ExecutionException;
 
     /**
-     * Receive the search results un-grouped as a list. 
-     * See{@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, 
-     * long, long)}
+     * Receive the search results un-grouped as a list.
+     * See{@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, long, long)}
+     * 
      * @param aUser
      *            the current user
      * @param aProject
@@ -88,8 +88,9 @@ public interface SearchService
     /**
      * This method is only for testing. It allows waiting until the indexing process has completed
      * before issuing a query.
+     * 
      * @param aProject
-     *           the project
+     *            the project
      * @return whether the index is flagged as valid
      */
     boolean isIndexValid(Project aProject);

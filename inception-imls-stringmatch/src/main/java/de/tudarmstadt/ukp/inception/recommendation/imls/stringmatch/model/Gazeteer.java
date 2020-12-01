@@ -37,8 +37,8 @@ import org.hibernate.annotations.OnDeleteAction;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 @Entity
-@Table(name = "gazeteer", 
-        uniqueConstraints = { @UniqueConstraint(columnNames = { "name", "recommender" }) })
+@Table(name = "gazeteer", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "recommender" }) })
 public class Gazeteer
     implements Serializable
 {
@@ -60,7 +60,7 @@ public class Gazeteer
     {
         // Required for JPA
     }
-    
+
     public Gazeteer(String aName, Recommender aRecommender)
     {
         name = aName;

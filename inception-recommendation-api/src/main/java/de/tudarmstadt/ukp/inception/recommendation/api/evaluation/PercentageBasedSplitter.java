@@ -28,14 +28,14 @@ public class PercentageBasedSplitter
     private final int trainBatchSize;
     private final int testBatchSize;
     private final int lowSampleThreshold;
-    
+
     private int trainCount;
     private int testCount;
 
     public PercentageBasedSplitter(double aTrainPercentage, int aLowSampleThreshold)
     {
         Validate.inclusiveBetween(0, 1, aTrainPercentage, "Percentage has to be in (0,1)");
-        
+
         trainBatchSize = (int) Math.round(10 * aTrainPercentage);
         testBatchSize = 10 - trainBatchSize;
         lowSampleThreshold = aLowSampleThreshold;
@@ -53,7 +53,7 @@ public class PercentageBasedSplitter
     {
         int module = trainBatchSize + testBatchSize;
         int count = trainCount + testCount;
-        
+
         TargetSet target;
         // Low sample count behavior
         if (count < lowSampleThreshold) {
@@ -69,7 +69,7 @@ public class PercentageBasedSplitter
         else {
             target = count % module < trainBatchSize ? TRAIN : TEST;
         }
-        
+
         switch (target) {
         case TRAIN:
             trainCount++;
@@ -80,7 +80,7 @@ public class PercentageBasedSplitter
         default:
             throw new IllegalStateException("Invalid target set [" + target + "]");
         }
-        
+
         return target;
     }
 }

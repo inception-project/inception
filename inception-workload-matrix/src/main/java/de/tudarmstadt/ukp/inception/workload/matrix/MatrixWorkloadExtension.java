@@ -29,16 +29,17 @@ import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManager
  * </p>
  */
 @Order(-10)
-public class MatrixWorkloadExtension implements WorkloadManagerExtension
+public class MatrixWorkloadExtension
+    implements WorkloadManagerExtension
 {
     public static final String MATRIX_WORKLOAD_MANAGER_EXTENSION_ID = "matrix";
-    
+
     @Override
     public String getId()
     {
         return MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
     }
-    
+
     @Override
     public String getLabel()
     {

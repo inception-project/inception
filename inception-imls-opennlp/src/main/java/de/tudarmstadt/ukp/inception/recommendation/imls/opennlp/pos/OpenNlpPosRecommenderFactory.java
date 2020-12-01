@@ -37,8 +37,7 @@ public class OpenNlpPosRecommenderFactory
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = 
-            "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos.OpenNlpPosClassificationTool";
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos.OpenNlpPosClassificationTool";
 
     @Override
     public String getId()
@@ -64,7 +63,7 @@ public class OpenNlpPosRecommenderFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-        
+
         return SINGLE_TOKEN.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
                 && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
@@ -74,13 +73,13 @@ public class OpenNlpPosRecommenderFactory
     {
         return new OpenNlpPosRecommenderTraitsEditor(aId, aModel);
     }
-    
+
     @Override
     public OpenNlpPosRecommenderTraits createTraits()
     {
         return new OpenNlpPosRecommenderTraits();
     }
-    
+
     @Override
     public boolean isMultipleRecommendationProvider()
     {

@@ -86,16 +86,15 @@ public class ExportedKnowledgeBase
 
     @JsonProperty("default_dataset_iri")
     private String defaultDatasetIri;
-    
+
     @JsonProperty("max_results")
     private int maxResults;
-    
+
     /**
-     *  The IRI for a property describing B being a subproperty of A
+     * The IRI for a property describing B being a subproperty of A
      */
     @JsonProperty("sub_Property_IRI")
     private String subPropertyIri;
-
 
     // set to null for local knowledge bases
     @JsonProperty("remote_url")
@@ -252,12 +251,14 @@ public class ExportedKnowledgeBase
     }
 
     @Deprecated
-    public void setSupportConceptLinking(boolean aSupportConceptLinking) {
+    public void setSupportConceptLinking(boolean aSupportConceptLinking)
+    {
         supportConceptLinking = aSupportConceptLinking;
     }
 
     @Deprecated
-    public boolean isSupportConceptLinking() {
+    public boolean isSupportConceptLinking()
+    {
         return supportConceptLinking;
     }
 

@@ -32,31 +32,31 @@ public class SpanCreatedEventAdapter
     implements EventLoggingAdapter<SpanCreatedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof SpanCreatedEvent;
     }
-    
+
     @Override
     public long getDocument(SpanCreatedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(SpanCreatedEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(SpanCreatedEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getDetails(SpanCreatedEvent aEvent)
     {

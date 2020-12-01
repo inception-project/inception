@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-public class RecommendationException extends Exception
+public class RecommendationException
+    extends Exception
 {
     public RecommendationException(String aMessage)
     {

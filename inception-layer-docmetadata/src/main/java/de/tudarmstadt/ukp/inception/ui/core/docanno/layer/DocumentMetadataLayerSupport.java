@@ -53,7 +53,7 @@ public class DocumentMetadataLayerSupport
     implements InitializingBean
 {
     public static final String TYPE = "document-metadata";
-    
+
     private final ApplicationEventPublisher eventPublisher;
     private final DocumentMetadataLayerSupportProperties properties;
 
@@ -81,26 +81,26 @@ public class DocumentMetadataLayerSupport
     {
         layerSupportId = aBeanName;
     }
-    
+
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(TYPE, "Document metadata", layerSupportId, 
-                !properties.isEnabled()));
+        types = asList(
+                new LayerType(TYPE, "Document metadata", layerSupportId, !properties.isEnabled()));
     }
-    
+
     @Override
     public List<LayerType> getSupportedLayerTypes()
     {
         return types;
     }
-    
+
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
         return TYPE.equals(aLayer.getType());
     }
-    
+
     @Override
     public DocumentMetadataLayerAdapter createAdapter(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)
@@ -111,19 +111,18 @@ public class DocumentMetadataLayerSupport
 
         return adapter;
     }
-    
+
     @Override
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
             List<AnnotationFeature> aAllFeaturesInProject)
     {
         TypeDescription td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION_BASE);
-        
+
         List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
-                .filter(feature -> aLayer.equals(feature.getLayer()))
-                .collect(toList());
+                .filter(feature -> aLayer.equals(feature.getLayer())).collect(toList());
         generateFeatures(aTsd, td, featureForLayer);
     }
-    
+
     @Override
     public Renderer createRenderer(AnnotationLayer aLayer,
             Supplier<Collection<AnnotationFeature>> aFeatures)

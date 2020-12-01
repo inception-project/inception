@@ -23,7 +23,8 @@ import org.apache.wicket.markup.html.panel.Panel;
 public class WrongFileFormatPanel
     extends Panel
 {
-    public WrongFileFormatPanel(String id, String format) {
+    public WrongFileFormatPanel(String id, String format)
+    {
         super(id);
         add(new Label("format", format));
     }

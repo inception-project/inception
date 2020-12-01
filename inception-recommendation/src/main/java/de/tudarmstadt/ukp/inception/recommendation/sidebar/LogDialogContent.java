@@ -36,14 +36,14 @@ public class LogDialogContent
     extends Panel
 {
     private static final long serialVersionUID = -5003560112554715634L;
-    
+
     private final ModalWindow modalWindow;
-    
+
     public LogDialogContent(String aId, final ModalWindow aModalWindow,
             IModel<List<LogMessageGroup>> aModel)
     {
         super(aId, aModel);
-        
+
         setOutputMarkupId(true);
 
         modalWindow = aModalWindow;
@@ -51,7 +51,7 @@ public class LogDialogContent
         add(createMessageSetsView(getModel()));
         add(new LambdaAjaxLink("close", this::actionCancel));
     }
-    
+
     public IModel<List<LogMessageGroup>> getModel()
     {
         return (IModel<List<LogMessageGroup>>) getDefaultModel();
@@ -72,7 +72,7 @@ public class LogDialogContent
             }
         };
     }
-    
+
     private ListView<LogMessage> createMessagesView(IModel<LogMessageGroup> aModel)
     {
         return new ListView<LogMessage>("messages", PropertyModel.of(aModel, "messages"))
@@ -89,6 +89,7 @@ public class LogDialogContent
             }
         };
     }
+
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         modalWindow.close(aTarget);

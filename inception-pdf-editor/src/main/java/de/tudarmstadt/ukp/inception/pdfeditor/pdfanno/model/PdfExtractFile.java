@@ -29,12 +29,12 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
 /**
- * Represents a PDFExtract file.
- * This file contains information about the content of a PDF document.
- * This includes characters and their order and position but also about
- * draw operations and their positions.
+ * Represents a PDFExtract file. This file contains information about the content of a PDF document.
+ * This includes characters and their order and position but also about draw operations and their
+ * positions.
  */
-public class PdfExtractFile implements Serializable
+public class PdfExtractFile
+    implements Serializable
 {
 
     private static final long serialVersionUID = -8596941152876909935L;
@@ -55,8 +55,8 @@ public class PdfExtractFile implements Serializable
     private String stringContent;
 
     /**
-     * Contains PDFExtract string content without draw operations
-     * and is sanitized with the help of substitutionTable.xml
+     * Contains PDFExtract string content without draw operations and is sanitized with the help of
+     * substitutionTable.xml
      */
     private String sanitizedContent;
 
@@ -81,14 +81,14 @@ public class PdfExtractFile implements Serializable
     private Int2IntMap sanitizedToString;
 
     /**
-     * Mapping for characters from stringContent to sanitizedContent where a character
-     * is mapped to a character sequence instead of a single character
+     * Mapping for characters from stringContent to sanitizedContent where a character is mapped to
+     * a character sequence instead of a single character
      */
     private Map<Integer, Offset> stringToSanitizedSequence;
 
     /**
-     * Mapping for characters from sanitizedContent to stringContent where a character
-     * is mapped to a character sequence instead of a single character
+     * Mapping for characters from sanitizedContent to stringContent where a character is mapped to
+     * a character sequence instead of a single character
      */
     private Map<Integer, Offset> sanitizedToStringSequence;
 
@@ -148,9 +148,10 @@ public class PdfExtractFile implements Serializable
                 for (int i = 0; i < stringLen; i++) {
                     if (sanitizedLen == 1) {
                         stringToSanitized.put(stringIndex + i, sanitizedIndex);
-                    } else {
+                    }
+                    else {
                         stringToSanitizedSequence.put(stringIndex + i,
-                            new Offset(sanitizedIndex, sanitizedIndex + sanitizedLen - 1));
+                                new Offset(sanitizedIndex, sanitizedIndex + sanitizedLen - 1));
                     }
                 }
 
@@ -159,15 +160,17 @@ public class PdfExtractFile implements Serializable
                     sb.append(sanitized.charAt(i));
                     if (stringLen == 1) {
                         sanitizedToString.put(sanitizedIndex + i, stringIndex);
-                    } else {
+                    }
+                    else {
                         sanitizedToStringSequence.put(sanitizedIndex + i,
-                            new Offset(stringIndex, stringIndex + stringLen - 1));
+                                new Offset(stringIndex, stringIndex + stringLen - 1));
                     }
                 }
 
                 stringIndex += stringLen;
                 sanitizedIndex += sanitizedLen;
-            } else {
+            }
+            else {
                 sb.append(c);
                 sanitizedToString.put(sanitizedIndex, stringIndex);
                 stringToSanitized.put(stringIndex, sanitizedIndex);
@@ -198,8 +201,7 @@ public class PdfExtractFile implements Serializable
         int lastPage = 1;
         int pageBeginIndex = 1;
 
-        for (String line : lines)
-        {
+        for (String line : lines) {
             PdfExtractLine extractLine = new PdfExtractLine();
             String[] columns = line.split("\t");
             int page = Integer.parseInt(columns[0].trim());
@@ -221,8 +223,7 @@ public class PdfExtractFile implements Serializable
             // if value of PdfExtractLine is in brackets it is a draw operation and is ignored
             // if value is "NO_UNICODE" also skip, unicode mapping is unavailable for this character
             if (!extractLine.getValue().matches("^\\[.*\\]$")
-                && !extractLine.getValue().equals("NO_UNICODE"))
-            {
+                    && !extractLine.getValue().equals("NO_UNICODE")) {
                 sb.append(extractLine.getValue());
                 strContentIndex++;
             }
@@ -266,9 +267,10 @@ public class PdfExtractFile implements Serializable
     {
         if (sanitizedToStringSequence.containsKey(aSanitizedIndex)) {
             Offset offset = sanitizedToStringSequence.get(aSanitizedIndex);
-            return new Offset(
-                stringToExtract.get(offset.getBegin()), stringToExtract.get(offset.getEnd()));
-        } else {
+            return new Offset(stringToExtract.get(offset.getBegin()),
+                    stringToExtract.get(offset.getEnd()));
+        }
+        else {
             int extractIndex = stringToExtract.get(sanitizedToString.get(aSanitizedIndex));
             return new Offset(extractIndex, extractIndex);
         }
@@ -280,9 +282,10 @@ public class PdfExtractFile implements Serializable
     public Offset getStringIndex(int aExtractIndex)
     {
         int stringIndex = extractToString.get(aExtractIndex);
-        if (stringToSanitizedSequence.containsKey(stringIndex) ) {
+        if (stringToSanitizedSequence.containsKey(stringIndex)) {
             return stringToSanitizedSequence.get(stringIndex);
-        } else {
+        }
+        else {
             int sanitizedIndex = stringToSanitized.get(stringIndex);
             return new Offset(sanitizedIndex, sanitizedIndex);
         }

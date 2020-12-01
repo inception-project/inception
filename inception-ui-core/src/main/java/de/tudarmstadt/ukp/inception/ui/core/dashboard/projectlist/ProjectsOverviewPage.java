@@ -94,7 +94,7 @@ public class ProjectsOverviewPage
     private static final long serialVersionUID = -2159246322262294746L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectsOverviewPage.class);
-    
+
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectExportService exportService;
@@ -103,62 +103,60 @@ public class ProjectsOverviewPage
     private WebMarkupContainer roleFilters;
     private IModel<Set<PermissionLevel>> activeRoleFilters;
     private ConfirmationDialog confirmLeaveDialog;
-    
+
     private Label emptyListLabel;
-    
+
     public ProjectsOverviewPage()
     {
         add(projectListContainer = createProjectList());
-        
-        //add tutorial
+
+        // add tutorial
         add(createNewProjectLink());
         add(createStartTutorialLink());
-        
-        //add project import
-        Label importProjectLabel = new Label(MID_IMPORT_PROJECT_BUTTON, 
+
+        // add project import
+        Label importProjectLabel = new Label(MID_IMPORT_PROJECT_BUTTON,
                 new StringResourceModel("importProject"));
         ProjectImportPanel projectImport = new ProjectImportPanel(MID_IMPORT_PROJECT_PANEL,
                 Model.of());
-        authorize(projectImport, RENDER,
-              join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
+        authorize(projectImport, RENDER, join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
         authorize(importProjectLabel, RENDER,
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
         add(projectImport);
         add(importProjectLabel);
-        
+
         add(roleFilters = createRoleFilters());
         add(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
                 new StringResourceModel("leaveDialog.title", this),
                 new StringResourceModel("leaveDialog.text", this)));
         activeRoleFilters = Model.ofSet(new HashSet<>());
-        
+
         emptyListLabel = new Label(MID_EMPTY_LIST_LABEL, new ResourceModel("noProjects"));
         projectListContainer.add(emptyListLabel);
     }
-    
+
     private LambdaAjaxLink createNewProjectLink()
     {
         LambdaAjaxLink newProjectLink = new LambdaAjaxLink(MID_NEW_PROJECT,
                 this::actionCreateProject);
-        
+
         add(newProjectLink);
-        
+
         authorize(newProjectLink, RENDER,
                 join(",", ROLE_ADMIN.name(), ROLE_PROJECT_CREATOR.name()));
-        
+
         return newProjectLink;
     }
-    
+
     private LambdaAjaxLink createStartTutorialLink()
     {
         LambdaAjaxLink startTutorialLink = new LambdaAjaxLink(MID_START_TUTORIAL,
                 this::startTutorial);
-        startTutorialLink.add(visibleWhen(
-            () -> {
-                User currentUser = userRepository.getCurrentUser();
-                return userRepository.isAdministrator(currentUser) ||
-                        userRepository.isProjectCreator(currentUser);
-            }));
+        startTutorialLink.add(visibleWhen(() -> {
+            User currentUser = userRepository.getCurrentUser();
+            return userRepository.isAdministrator(currentUser)
+                    || userRepository.isProjectCreator(currentUser);
+        }));
 
         add(startTutorialLink);
 
@@ -169,7 +167,7 @@ public class ProjectsOverviewPage
     {
         aTarget.appendJavaScript(" startTutorial(); ");
     }
-    
+
     private WebMarkupContainer createProjectList()
     {
         ListView<Project> listview = new ListView<Project>(MID_PROJECT,
@@ -186,15 +184,15 @@ public class ProjectsOverviewPage
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
                 DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
-                    () -> aItem.getModelObject().getCreated(), "yyyy-MM-dd");
+                        () -> aItem.getModelObject().getCreated(), "yyyy-MM-dd");
                 addActionsDropdown(aItem);
                 aItem.add(projectLink);
                 createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
                 aItem.add(createdLabel);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
                 Label projectId = new Label(MID_ID, () -> aItem.getModelObject().getId());
-                projectId.add(visibleWhen(() -> 
-                        DEVELOPMENT.equals(getApplication().getConfigurationType())));
+                projectId.add(visibleWhen(
+                        () -> DEVELOPMENT.equals(getApplication().getConfigurationType())));
                 aItem.add(projectId);
             }
 
@@ -212,40 +210,40 @@ public class ProjectsOverviewPage
                 }
             }
         };
-        
+
         WebMarkupContainer projectList = new WebMarkupContainer(MID_PROJECTS);
         projectList.setOutputMarkupPlaceholderTag(true);
         projectList.add(listview);
-        
+
         return projectList;
     }
-    
+
     private void addActionsDropdown(ListItem<Project> aItem)
     {
         User user = userRepository.getCurrentUser();
         Project currentProject = aItem.getModelObject();
 
         WebMarkupContainer container = new WebMarkupContainer("actionDropdown");
-        
+
         LambdaAjaxLink leaveProjectLink = new LambdaAjaxLink(MID_LEAVE_PROJECT,
-            _target -> actionConfirmLeaveProject(_target, aItem));
+                _target -> actionConfirmLeaveProject(_target, aItem));
         boolean hasProjectPermissions = !projectService
                 .listProjectPermissionLevel(user, currentProject).isEmpty();
 
-        leaveProjectLink.add(LambdaBehavior.visibleWhen(() -> 
-                hasProjectPermissions && !projectService.isAdmin(currentProject, user)));
+        leaveProjectLink.add(LambdaBehavior.visibleWhen(
+                () -> hasProjectPermissions && !projectService.isAdmin(currentProject, user)));
 
         container.add(leaveProjectLink);
-        
+
         // If there are no active items in the dropdown, then do not show the dropdown. However,
         // to still make it take up the usual space and keep the overview nicely aligned, we use
         // the "invisible" CSS class here instead of telling Wicket to not render the dropdown
-        container.add(new CssClassNameAppender(LoadableDetachableModel.of(() -> 
-                container.streamChildren().anyMatch(Component::isVisible) ? "" : "invisible")));
-        
+        container.add(new CssClassNameAppender(LoadableDetachableModel
+                .of(() -> container.streamChildren().anyMatch(Component::isVisible) ? ""
+                        : "invisible")));
+
         aItem.add(container);
     }
-
 
     private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, ListItem<Project> aItem)
     {
@@ -272,13 +270,15 @@ public class ProjectsOverviewPage
             protected void populateItem(ListItem<PermissionLevel> aItem)
             {
                 PermissionLevel level = aItem.getModelObject();
-                LambdaAjaxLink link = new LambdaAjaxLink("roleFilterLink", _target -> 
-                        actionApplyRoleFilter(_target, aItem.getModelObject()));
+                LambdaAjaxLink link = new LambdaAjaxLink("roleFilterLink",
+                        _target -> actionApplyRoleFilter(_target, aItem.getModelObject()));
                 link.add(new Label(MID_LABEL, getString(
                         Classes.simpleName(level.getDeclaringClass()) + '.' + level.toString())));
-                link.add(new AttributeAppender("class", () -> 
-                        activeRoleFilters.getObject().contains(aItem.getModelObject())
-                        ? "active" : "", " "));
+                link.add(new AttributeAppender("class",
+                        () -> activeRoleFilters.getObject().contains(aItem.getModelObject())
+                                ? "active"
+                                : "",
+                        " "));
                 aItem.add(link);
             }
         };
@@ -306,7 +306,7 @@ public class ProjectsOverviewPage
             }
         };
     }
-    
+
     private void actionApplyRoleFilter(AjaxRequestTarget aTarget, PermissionLevel aPermission)
     {
         Set<PermissionLevel> activeRoles = activeRoleFilters.getObject();
@@ -316,31 +316,28 @@ public class ProjectsOverviewPage
         else {
             activeRoles.add(aPermission);
         }
-        
+
         aTarget.add(projectListContainer, roleFilters);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
-    
+
     private List<Project> listProjects()
     {
         User currentUser = userRepository.getCurrentUser();
-        
-        return projectService.listAccessibleProjects(currentUser)
-                .stream()
-                .filter(proj -> 
-                        // If no filters are selected, all projects are listed
-                        activeRoleFilters.getObject().isEmpty() ||
-                        // ... otherwise only those projects are listed that match the filter
-                        projectService.getProjectPermissionLevels(currentUser, proj)
-                                .stream()
-                                .anyMatch(activeRoleFilters.getObject()::contains))
+
+        return projectService.listAccessibleProjects(currentUser).stream().filter(proj ->
+        // If no filters are selected, all projects are listed
+        activeRoleFilters.getObject().isEmpty() ||
+        // ... otherwise only those projects are listed that match the filter
+                projectService.getProjectPermissionLevels(currentUser, proj).stream()
+                        .anyMatch(activeRoleFilters.getObject()::contains))
                 .collect(toList());
     }
-    
+
     private void actionCreateProject(AjaxRequestTarget aTarget)
     {
         PageParameters params = new PageParameters();
         params.set(PAGE_PARAM_PROJECT_ID, NEW_PROJECT_ID);
-        setResponsePage(ProjectPage.class, params);        
+        setResponsePage(ProjectPage.class, params);
     }
 }

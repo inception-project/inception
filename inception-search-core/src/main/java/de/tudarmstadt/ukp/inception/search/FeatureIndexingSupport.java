@@ -28,7 +28,7 @@ public interface FeatureIndexingSupport
 {
     public static final String ATTRIBUTE_SEP = ".";
     public static final String SPECIAL_SEP = "-";
-    
+
     String getId();
 
     boolean accepts(AnnotationFeature aFeature);
@@ -49,16 +49,18 @@ public interface FeatureIndexingSupport
      *            the feature from which to extract the values.
      * @return key/value pairs as a map
      */
-    MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
-            AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature);
+    MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix, AnnotationFS aAnnotation,
+            String aFeaturePrefix, AnnotationFeature aFeature);
 
     /**
      * Get the name of the feature how it is used in the index
-     * @param aFieldPrefix 
+     * 
+     * @param aFieldPrefix
      *            the layer name
-     * @param aFeaturePrefix possible prefix to the feature name, 
-     *            currently for source and target of relation annotations
-     * @param aFeature 
+     * @param aFeaturePrefix
+     *            possible prefix to the feature name, currently for source and target of relation
+     *            annotations
+     * @param aFeature
      *            the feature
      * @return index feature name
      */

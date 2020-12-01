@@ -119,7 +119,7 @@ public class RecommendationServiceImplIntegrationTest
     public void thatApplicationContextStarts()
     {
     }
-    
+
     @Test
     public void listRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
@@ -127,37 +127,36 @@ public class RecommendationServiceImplIntegrationTest
 
         List<Recommender> enabledRecommenders = sut.listEnabledRecommenders(rec.getLayer());
 
-        assertThat(enabledRecommenders)
-        .as("Check that the previously created recommender is found")
-                .hasSize(1)
-                .contains(rec);
+        assertThat(enabledRecommenders).as("Check that the previously created recommender is found")
+                .hasSize(1).contains(rec);
     }
-    
+
     @Test
-    public void getNumOfEnabledRecommenders_WithOneEnabledRecommender() {
+    public void getNumOfEnabledRecommenders_WithOneEnabledRecommender()
+    {
         sut.createOrUpdateRecommender(rec);
-        
+
         long numOfRecommenders = sut.countEnabledRecommenders();
         assertThat(numOfRecommenders).isEqualTo(1);
     }
-    
+
     @Test
-    public void getNumOfEnabledRecommenders_WithNoEnabledRecommender() {
+    public void getNumOfEnabledRecommenders_WithNoEnabledRecommender()
+    {
         rec.setEnabled(false);
         testEntityManager.persist(rec);
-        
+
         long numOfRecommenders = sut.countEnabledRecommenders();
         assertThat(numOfRecommenders).isEqualTo(0);
     }
-    
+
     @Test
     public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
         Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());
 
         assertThat(enabledRecommenders)
-                .as("Check that only the previously created recommender is found")
-                .isPresent()
+                .as("Check that only the previously created recommender is found").isPresent()
                 .contains(rec);
     }
 
@@ -177,11 +176,9 @@ public class RecommendationServiceImplIntegrationTest
     {
 
         long otherId = 9999L;
-        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(otherId );
+        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(otherId);
 
-        assertThat(enabledRecommenders)
-                .as("Check that no recommender is found")
-                .isEmpty();
+        assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();
     }
 
     @Test
@@ -190,22 +187,20 @@ public class RecommendationServiceImplIntegrationTest
         try (CasStorageSession session = CasStorageSession.open()) {
             JCas jCas = JCasFactory.createText("I am text CAS", "de");
             session.add("jCas", CasAccessMode.EXCLUSIVE_WRITE_ACCESS, jCas.getCas());
-            
+
             when(annoService.getFullProjectTypeSystem(project))
                     .thenReturn(typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
-            when(annoService.listAnnotationLayer(project))
-                    .thenReturn(asList(layer));
-            doCallRealMethod().when(annoService)
-                    .upgradeCas(any(CAS.class), any(TypeSystemDescription.class));
-            doCallRealMethod().when(annoService)
-                    .upgradeCas(any(CAS.class), any(CAS.class), any(TypeSystemDescription.class));
-    
+            when(annoService.listAnnotationLayer(project)).thenReturn(asList(layer));
+            doCallRealMethod().when(annoService).upgradeCas(any(CAS.class),
+                    any(TypeSystemDescription.class));
+            doCallRealMethod().when(annoService).upgradeCas(any(CAS.class), any(CAS.class),
+                    any(TypeSystemDescription.class));
+
             sut.cloneAndMonkeyPatchCAS(project, jCas.getCas(), jCas.getCas());
-    
+
             Type type = CasUtil.getType(jCas.getCas(), layer.getName());
-    
-            assertThat(type.getFeatures())
-                    .extracting(Feature::getShortName)
+
+            assertThat(type.getFeatures()).extracting(Feature::getShortName)
                     .contains(feature.getName() + FEATURE_NAME_SCORE_SUFFIX)
                     .contains(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX)
                     .contains(FEATURE_NAME_IS_PREDICTION);
@@ -231,7 +226,7 @@ public class RecommendationServiceImplIntegrationTest
         layer.setType(NamedEntity.class.getName());
         layer.setUiName("test ui name");
         layer.setAnchoringMode(false, false);
-       
+
         return testEntityManager.persist(layer);
     }
 
@@ -262,7 +257,7 @@ public class RecommendationServiceImplIntegrationTest
         feature.setName(aName);
         feature.setUiName(aName);
         feature.setType(CAS.TYPE_NAME_STRING);
-               
+
         return testEntityManager.persist(feature);
     }
 }

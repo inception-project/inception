@@ -23,19 +23,19 @@ public class EvaluatedRecommender
 {
     private final Recommender recommender;
     private final EvaluationResult evaluationResult;
-    
+
     public EvaluatedRecommender(Recommender aRecommender, EvaluationResult aEvaluationResult)
     {
         super();
         recommender = aRecommender;
         evaluationResult = aEvaluationResult;
     }
-    
+
     public Recommender getRecommender()
     {
         return recommender;
     }
-    
+
     public EvaluationResult getEvaluationResult()
     {
         return evaluationResult;

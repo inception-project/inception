@@ -39,12 +39,12 @@ public class SystemStatusDashlet
         add(new Label("activeUsers",
                 LoadableDetachableModel.of(() -> sessionRegistry.getAllPrincipals().size())));
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         setVisible(userRepository.isAdministrator(userRepository.getCurrentUser()));
     }
 }

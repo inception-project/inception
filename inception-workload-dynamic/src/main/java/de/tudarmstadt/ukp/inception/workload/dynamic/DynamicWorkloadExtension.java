@@ -26,7 +26,8 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
  * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadExtension()}
  * </p>
  */
-public class DynamicWorkloadExtension implements WorkloadManagerExtension
+public class DynamicWorkloadExtension
+    implements WorkloadManagerExtension
 {
     public static final String DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID = "dynamic";
 

@@ -20,8 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 
 public enum LearningRecordChangeLocation
-    implements
-    PersistentEnum
+    implements PersistentEnum
 {
 
     /**

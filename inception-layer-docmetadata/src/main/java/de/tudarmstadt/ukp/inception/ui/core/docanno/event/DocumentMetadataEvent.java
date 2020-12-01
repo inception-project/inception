@@ -27,17 +27,17 @@ public class DocumentMetadataEvent
     extends AnnotationEvent
 {
     private static final long serialVersionUID = -3581426461056757004L;
-    
+
     private final AnnotationBaseFS annotation;
 
     public DocumentMetadataEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationLayer aLayer, AnnotationBaseFS aAnnotation)
     {
         super(aSource, aDocument, aUser, aLayer);
-        
+
         annotation = aAnnotation;
     }
-    
+
     public AnnotationBaseFS getAnnotation()
     {
         return annotation;

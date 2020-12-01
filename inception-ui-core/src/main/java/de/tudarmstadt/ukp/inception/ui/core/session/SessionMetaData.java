@@ -27,7 +27,7 @@ public final class SessionMetaData
     {
         private static final long serialVersionUID = 1L;
     };
-    
+
     private SessionMetaData()
     {
         // No instances

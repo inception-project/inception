@@ -68,7 +68,7 @@ public class ExternalRecommender
     extends RecommendationEngine
 {
     public static final Key<Boolean> KEY_TRAINING_COMPLETE = new Key<>("training_complete");
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
     private static final MediaType JSON = MediaType.parse("application/json");
 
@@ -88,11 +88,9 @@ public class ExternalRecommender
 
         recommender = aRecommender;
         traits = aTraits;
-        client = new OkHttpClient.Builder()
-                .connectTimeout(CONNECT_TIMEOUT,TimeUnit.SECONDS)
+        client = new OkHttpClient.Builder().connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
                 .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
-                .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
-                .build();
+                .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS).build();
     }
 
     @Override
@@ -100,14 +98,14 @@ public class ExternalRecommender
     {
         if (traits.isTrainable()) {
             return aContext.get(KEY_TRAINING_COMPLETE).orElse(false);
-        } else {
+        }
+        else {
             return true;
         }
     }
-    
+
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
-        throws RecommendationException
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
         TrainingRequest trainingRequest = new TrainingRequest();
         List<Document> documents = new ArrayList<>();
@@ -131,9 +129,8 @@ public class ExternalRecommender
 
         trainingRequest.setDocuments(documents);
 
-        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder()
-            .addPathSegment("train")
-            .build();
+        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder().addPathSegment("train")
+                .build();
         RequestBody body = RequestBody.create(JSON, toJson(trainingRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
@@ -149,7 +146,7 @@ public class ExternalRecommender
                 String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
                 throw new RecommendationException(msg);
             }
-            
+
             aContext.put(KEY_TRAINING_COMPLETE, true);
         }
     }
@@ -166,9 +163,8 @@ public class ExternalRecommender
         // Fill in metadata
         predictionRequest.setMetadata(buildMetadata(aCas));
 
-        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder()
-            .addPathSegment("predict")
-            .build();
+        HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder().addPathSegment("predict")
+                .build();
         RequestBody body = RequestBody.create(JSON, toJson(predictionRequest));
         Request request = new Request.Builder().url(url).post(body).build();
 
@@ -181,9 +177,9 @@ public class ExternalRecommender
                 String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
                 throw new RecommendationException(msg);
             }
-    
+
             PredictionResponse predictionResponse = deserializePredictionResponse(response);
-    
+
             try (InputStream is = IOUtils.toInputStream(predictionResponse.getDocument(), UTF_8)) {
                 XmiCasDeserializer.deserialize(is, WebAnnoCasUtil.getRealCas(aCas), true);
             }
@@ -207,7 +203,7 @@ public class ExternalRecommender
     private String serializeCas(CAS aCas) throws RecommendationException
     {
         try (StringWriter out = new StringWriter()) {
-            // Passing "null" as the type system to the XmiCasSerializer means that we want 
+            // Passing "null" as the type system to the XmiCasSerializer means that we want
             // to serialize all types (i.e. no filtering for a specific target type system).
             XmiCasSerializer xmiCasSerializer = new XmiCasSerializer(null);
             XMLSerializer sax2xml = new XMLSerializer(out, true);
@@ -234,7 +230,8 @@ public class ExternalRecommender
     {
         try {
             return JCasUtil.selectSingle(aCas.getJCas(), CASMetadata.class);
-        } catch (CASException | IllegalArgumentException e) {
+        }
+        catch (CASException | IllegalArgumentException e) {
             throw new RecommendationException("Error while reading CAS metadata!", e);
         }
     }
@@ -242,22 +239,20 @@ public class ExternalRecommender
     private Metadata buildMetadata(CAS aCas) throws RecommendationException
     {
         CASMetadata casMetadata = getCasMetadata(aCas);
-        AnnotationLayer layer =  recommender.getLayer();
-        return new Metadata(
-            layer.getName(),
-            recommender.getFeature().getName(),
-            casMetadata.getProjectId(),
-            layer.getAnchoringMode().getId(),
-            layer.isCrossSentence()
-        );
+        AnnotationLayer layer = recommender.getLayer();
+        return new Metadata(layer.getName(), recommender.getFeature().getName(),
+                casMetadata.getProjectId(), layer.getAnchoringMode().getId(),
+                layer.isCrossSentence());
     }
 
     private PredictionResponse deserializePredictionResponse(Response response)
-        throws RecommendationException {
+        throws RecommendationException
+    {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             return objectMapper.readValue(response.body().byteStream(), PredictionResponse.class);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RecommendationException("Error while deserializing prediction response!", e);
         }
     }
@@ -287,10 +282,12 @@ public class ExternalRecommender
         try {
             if (response.body() != null) {
                 return response.body().string();
-            } else {
+            }
+            else {
                 return "";
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RecommendationException("Error while reading response body!", e);
         }
     }
@@ -305,14 +302,15 @@ public class ExternalRecommender
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability() 
+    public RecommendationEngineCapability getTrainingCapability()
     {
         if (traits.isTrainable()) {
-            // 
+            //
             // return TRAINING_SUPPORTED;
             // We need to get at least one training CAS because we need to extract the type system
             return TRAINING_REQUIRED;
-        } else {
+        }
+        else {
             return TRAINING_NOT_SUPPORTED;
         }
     }

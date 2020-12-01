@@ -22,64 +22,76 @@ import java.io.Serializable;
 import java.util.Date;
 
 //Helper class for the Filter
-public class Filter implements Serializable
+public class Filter
+    implements Serializable
 {
 
     private static final long serialVersionUID = 256259364194000084L;
 
-    //Input fields appended value
+    // Input fields appended value
     private String username;
     private String documentName;
 
-    //Checkbox
+    // Checkbox
     private String selected;
 
-    //dates
+    // dates
     private Date from;
     private Date to;
 
-    //Default constructor
-    public Filter() {
+    // Default constructor
+    public Filter()
+    {
         this.selected = "false";
     }
 
-    public String getUsername() {
+    public String getUsername()
+    {
         return username;
     }
 
-    public String getDocumentName() {
+    public String getDocumentName()
+    {
         return documentName;
     }
 
-    public String getSelected() {
+    public String getSelected()
+    {
         return selected;
     }
 
-    public Date getFrom() {
+    public Date getFrom()
+    {
         return from;
     }
 
-    public Date getTo() {
+    public Date getTo()
+    {
         return to;
     }
 
-    public void setUsername(String aUsername) {
+    public void setUsername(String aUsername)
+    {
         this.username = aUsername;
     }
 
-    public void setDocumentName(String aDocumentName) {
+    public void setDocumentName(String aDocumentName)
+    {
         this.documentName = aDocumentName;
     }
 
-    public void setSelected(String aSelected) {
+    public void setSelected(String aSelected)
+    {
         this.selected = aSelected;
     }
 
-    public void setFrom(Date aFrom) {
+    public void setFrom(Date aFrom)
+    {
         this.from = aFrom;
     }
 
-    public void setTo(Date aTo) {
+    public void setTo(Date aTo)
+    {
         this.to = aTo;
     }
 }

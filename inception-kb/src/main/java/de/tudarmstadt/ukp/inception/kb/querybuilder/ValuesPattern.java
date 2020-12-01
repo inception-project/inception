@@ -27,7 +27,8 @@ import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue;
 
-public class ValuesPattern implements GraphPattern
+public class ValuesPattern
+    implements GraphPattern
 {
     private final Variable variable;
     private final List<RdfValue> values;
@@ -43,7 +44,7 @@ public class ValuesPattern implements GraphPattern
         variable = aVariable;
         values = asList(aValues);
     }
-    
+
     @Override
     public String getQueryString()
     {
@@ -58,9 +59,9 @@ public class ValuesPattern implements GraphPattern
             sb.append(") ");
         }
         sb.append("} ");
-        return sb.toString();    
+        return sb.toString();
     }
-    
+
     @Override
     public boolean isEmpty()
     {

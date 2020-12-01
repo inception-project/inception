@@ -30,7 +30,7 @@ public class ProjectImportEventAdapter
     {
         return aEvent instanceof ProjectImportEvent;
     }
-    
+
     @Override
     public long getProject(ProjectImportEvent aEvent)
     {

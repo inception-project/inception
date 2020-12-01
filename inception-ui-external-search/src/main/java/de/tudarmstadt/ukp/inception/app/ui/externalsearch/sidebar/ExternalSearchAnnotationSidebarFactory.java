@@ -41,7 +41,7 @@ public class ExternalSearchAnnotationSidebarFactory
 {
     private static final ResourceReference ICON = new PackageResourceReference(
             ExternalSearchAnnotationSidebarFactory.class, "world_go.png");
-    
+
     @Override
     public String getDisplayName()
     {
@@ -53,7 +53,7 @@ public class ExternalSearchAnnotationSidebarFactory
     {
         return ICON;
     }
-    
+
     @Override
     public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,

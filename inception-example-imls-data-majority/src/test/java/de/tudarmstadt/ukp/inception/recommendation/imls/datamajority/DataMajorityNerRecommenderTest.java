@@ -46,6 +46,7 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +72,8 @@ public class DataMajorityNerRecommenderTest
     private Recommender recommender;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         context = new RecommenderContext();
         recommender = buildRecommender();
     }
@@ -84,9 +86,8 @@ public class DataMajorityNerRecommenderTest
 
         sut.train(context, casList);
 
-        assertThat(context.get(DataMajorityNerRecommender.KEY_MODEL))
-            .as("Model has been set")
-            .isNotNull();
+        assertThat(context.get(DataMajorityNerRecommender.KEY_MODEL)).as("Model has been set")
+                .isNotNull();
     }
 
     @Test
@@ -94,27 +95,26 @@ public class DataMajorityNerRecommenderTest
     {
         DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
         List<CAS> casList = loadDevelopmentData();
-        
+
         CAS cas = casList.get(0);
         try (CasStorageSession session = CasStorageSession.open()) {
             session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
             addScoreFeature(cas, NamedEntity.class.getName(), "value");
         }
-        
+
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
         Collection<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
-        
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
+
         assertThat(predictions).as("Score is positive")
-            .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0 );
+                .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0);
 
         assertThat(predictions).as("Some score is not perfect")
-            .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
+                .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0);
     }
 
     @Test
@@ -134,13 +134,13 @@ public class DataMajorityNerRecommenderTest
         System.out.printf("Accuracy: %f%n", accuracy);
         System.out.printf("Precision: %f%n", precision);
         System.out.printf("Recall: %f%n", recall);
-        
+
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);
         assertThat(recall).isStrictlyBetween(0.0, 1.0);
         assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
-    
+
     @Test
     public void thatEvaluationProducesSpecificResults() throws Exception
     {
@@ -167,9 +167,9 @@ public class DataMajorityNerRecommenderTest
         assertThat(result.computeAccuracyScore()).as("correct accuracy").isEqualTo(1.0 / 3);
         assertThat(result.computePrecisionScore()).as("correct precision").isEqualTo(1.0 / 9);
         assertThat(result.computeRecallScore()).as("correct recall").isEqualTo(1.0 / 3);
-        assertThat(result.computeF1Score()).as("correct f1").isEqualTo( (2.0 / 27) / (4.0 / 9));
+        assertThat(result.computeF1Score()).as("correct f1").isEqualTo((2.0 / 27) / (4.0 / 9));
     }
-    
+
     @Test
     public void thatEvaluationWithNoClassesWorks() throws Exception
     {
@@ -181,7 +181,7 @@ public class DataMajorityNerRecommenderTest
         double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
-        
+
         assertThat(score).isBetween(0.0, 1.0);
     }
 
@@ -194,7 +194,7 @@ public class DataMajorityNerRecommenderTest
             Feature valFeature = neType.getFeatureByBaseName("value");
             select(cas.getJCas(), NamedEntity.class)
                     .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
-    
+
             return cas;
         }
         catch (Exception e) {
@@ -204,6 +204,7 @@ public class DataMajorityNerRecommenderTest
         }
 
     }
+
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
@@ -214,13 +215,13 @@ public class DataMajorityNerRecommenderTest
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
-            
+
             double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
             assertThat(score).isStrictlyBetween(0.0, 1.0);
-            
+
             i++;
         }
     }
@@ -267,15 +268,15 @@ public class DataMajorityNerRecommenderTest
         }
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2002Reader.class,
-            Conll2002Reader.PARAM_PATTERNS, files, 
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
-            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
-            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, 
-            Conll2002Reader.PARAM_HAS_HEADER, true, 
-            Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+        CollectionReader reader = createReader(Conll2002Reader.class, //
+                Conll2002Reader.PARAM_PATTERNS, files, //
+                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
+                Conll2002Reader.PARAM_COLUMN_SEPARATOR, ColumnSeparators.TAB.getName(), //
+                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
+                Conll2002Reader.PARAM_HAS_HEADER, true, //
+                Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
@@ -306,6 +307,4 @@ public class DataMajorityNerRecommenderTest
     {
         return RecommenderTestHelper.getScore(aAnnotationFS, "value");
     }
-
-
 }

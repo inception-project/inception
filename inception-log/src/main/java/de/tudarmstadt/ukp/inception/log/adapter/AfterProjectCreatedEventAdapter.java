@@ -30,7 +30,7 @@ public class AfterProjectCreatedEventAdapter
     {
         return aEvent instanceof AfterProjectCreatedEvent;
     }
-    
+
     @Override
     public long getProject(AfterProjectCreatedEvent aEvent)
     {

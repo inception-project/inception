@@ -32,8 +32,7 @@ public class Path
 {
     public static RdfPredicate of(QueryElement... aElements)
     {
-        return () -> Arrays.stream(aElements)
-                .map(QueryElement::getQueryString)
+        return () -> Arrays.stream(aElements).map(QueryElement::getQueryString)
                 .collect(joining("/"));
     }
 

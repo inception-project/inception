@@ -30,13 +30,13 @@ public class BeforeDocumentRemovedEventAdapter
     {
         return aEvent instanceof BeforeDocumentRemovedEvent;
     }
-    
+
     @Override
     public long getDocument(BeforeDocumentRemovedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(BeforeDocumentRemovedEvent aEvent)
     {

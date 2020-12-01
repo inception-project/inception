@@ -49,17 +49,18 @@ public class ProjectKnowledgeBasePanel
 
         selectedKnowledgeBaseModel = Model.of();
         KnowledgeBaseListPanel listPanel = new KnowledgeBaseListPanel("list", projectModel,
-            selectedKnowledgeBaseModel);
+                selectedKnowledgeBaseModel);
         listPanel.setChangeAction(t -> {
             addOrReplace(detailsPanel);
-            detailsPanel.replaceWith(
-                new KnowledgeBaseDetailsPanel(DETAILS_PANEL_MARKUP_ID, selectedKnowledgeBaseModel));
+            detailsPanel.replaceWith(new KnowledgeBaseDetailsPanel(DETAILS_PANEL_MARKUP_ID,
+                    selectedKnowledgeBaseModel));
             t.add(this);
         });
         add(listPanel);
     }
 
-    @Override protected void onModelChanged()
+    @Override
+    protected void onModelChanged()
     {
         super.onModelChanged();
         selectedKnowledgeBaseModel.setObject(null);
