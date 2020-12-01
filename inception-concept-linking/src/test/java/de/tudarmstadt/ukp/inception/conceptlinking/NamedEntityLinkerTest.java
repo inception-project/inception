@@ -80,14 +80,16 @@ public class NamedEntityLinkerTest
     private CasStorageSession casStorageSession;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         casStorageSession = CasStorageSession.open();
         context = new RecommenderContext();
         recommender = buildRecommender();
     }
-    
+
     @After
-    public void tearDown() {
+    public void tearDown()
+    {
         CasStorageSession.get().close();
     }
 
@@ -102,22 +104,20 @@ public class NamedEntityLinkerTest
 
         sut.train(context, casList);
 
-        assertThat(context.get(NamedEntityLinker.KEY_MODEL))
-            .as("Model has been set")
-            .isNotNull();
+        assertThat(context.get(NamedEntityLinker.KEY_MODEL)).as("Model has been set").isNotNull();
     }
+
     @Test
     public void thatPredictionWorks() throws Exception
     {
         List<KBHandle> mockResult = asList(
-            new KBHandle("https://www.wikidata.org/wiki/Q76", "Barack Obama",
-                "44th President of the United States of America"),
-            new KBHandle("https://www.wikidata.org/wiki/Q26446735", "Obama",
-                "Japanese Family Name"),
-            new KBHandle("https://www.wikidata.org/wiki/Q18355807", "Obama",
-                "genus of worms"),
-            new KBHandle("https://www.wikidata.org/wiki/Q41773", "Obama",
-                "city in Fukui prefecture, Japan"));
+                new KBHandle("https://www.wikidata.org/wiki/Q76", "Barack Obama",
+                        "44th President of the United States of America"),
+                new KBHandle("https://www.wikidata.org/wiki/Q26446735", "Obama",
+                        "Japanese Family Name"),
+                new KBHandle("https://www.wikidata.org/wiki/Q18355807", "Obama", "genus of worms"),
+                new KBHandle("https://www.wikidata.org/wiki/Q41773", "Obama",
+                        "city in Fukui prefecture, Japan"));
 
         KnowledgeBaseService kbService = mock(KnowledgeBaseService.class);
         KnowledgeBase kb = new KnowledgeBase();
@@ -141,7 +141,7 @@ public class NamedEntityLinkerTest
         List<CAS> casList = loadDevelopmentData();
         CAS cas = casList.get(0);
         casStorageSession.add("cas", EXCLUSIVE_WRITE_ACCESS, cas);
-        
+
         sut.train(context, Collections.singletonList(cas));
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
@@ -149,14 +149,13 @@ public class NamedEntityLinkerTest
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
         Dataset ds = null;
-        
+
         try {
             ds = loader.load("germeval2014-de", CONTINUE);
         }
@@ -165,19 +164,19 @@ public class NamedEntityLinkerTest
             assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
             throw e;
         }
-        
+
         return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(
-            Conll2002Reader.class,
-            Conll2002Reader.PARAM_PATTERNS, files, 
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
-            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
-            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, 
-            Conll2002Reader.PARAM_HAS_HEADER, true, 
+        CollectionReader reader = createReader( //
+            Conll2002Reader.class, //
+            Conll2002Reader.PARAM_PATTERNS, files, //
+            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
+            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(), //
+            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
+            Conll2002Reader.PARAM_HAS_HEADER, true, //
             Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
@@ -196,7 +195,7 @@ public class NamedEntityLinkerTest
 
         AnnotationFeature feature = new AnnotationFeature();
         feature.setName("identifier");
-        
+
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);
@@ -205,4 +204,3 @@ public class NamedEntityLinkerTest
         return recommender;
     }
 }
-

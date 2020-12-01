@@ -47,35 +47,32 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 @AutoConfigureAfter({ KnowledgeBaseServiceAutoConfiguration.class,
         RecommenderServiceAutoConfiguration.class })
 @ConditionalOnBean(KnowledgeBaseService.class)
-@ConditionalOnProperty(prefix = "knowledge-base.entity-linking", name = "enabled", 
-        havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "knowledge-base.entity-linking", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(EntityLinkingPropertiesImpl.class)
 public class EntityLinkingServiceAutoConfiguration
 {
     @Bean
     @Autowired
     public ConceptLinkingService conceptLinkingService(KnowledgeBaseService aKbService,
-            EntityLinkingPropertiesImpl aProperties,
-            RepositoryProperties aRepoProperties,
-            @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> 
-                    aFeatureGenerators)
+            EntityLinkingPropertiesImpl aProperties, RepositoryProperties aRepoProperties,
+            @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> aFeatureGenerators)
     {
         return new ConceptLinkingServiceImpl(aKbService, aProperties, aRepoProperties,
                 aFeatureGenerators);
     }
-    
+
     @Bean
     public EntityLinkingProperties entityLinkingProperties()
     {
         return new EntityLinkingPropertiesImpl();
     }
-    
+
     @Bean
     public LevenshteinFeatureGenerator levenshteinFeatureGenerator()
     {
         return new LevenshteinFeatureGenerator();
     }
-    
+
     @Bean
     @Autowired
     public WikidataIdRankFeatureGenerator wikidataIdRankFeatureGenerator(
@@ -83,7 +80,7 @@ public class EntityLinkingServiceAutoConfiguration
     {
         return new WikidataIdRankFeatureGenerator(aKbService);
     }
-    
+
     @ConditionalOnBean(RecommendationService.class)
     @Bean
     @Autowired
@@ -92,16 +89,16 @@ public class EntityLinkingServiceAutoConfiguration
     {
         return new NamedEntityLinkerFactory(aKbService, aClService, aFsRegistry);
     }
-    
-//    @Bean
-//    @Autowired
+
+    // @Bean
+    // @Autowired
     public FrequencyFeatureGenerator frequencyFeatureGenerator(RepositoryProperties aRepoProperties)
     {
         return new FrequencyFeatureGenerator(aRepoProperties);
     }
-    
-//  @Bean
-//  @Autowired
+
+    // @Bean
+    // @Autowired
     public SemanticSignatureFeatureGenerator semanticSignatureFeatureGenerator(
             KnowledgeBaseService aKbService, RepositoryProperties aRepoProperties,
             EntityLinkingProperties aProperties)
