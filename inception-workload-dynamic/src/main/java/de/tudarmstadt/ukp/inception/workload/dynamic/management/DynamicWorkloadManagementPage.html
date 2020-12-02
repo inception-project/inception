@@ -37,19 +37,31 @@
             overflow-y: scroll;
         }
 
-        .k-input {
-            height: 100px;
+        .k-floatwrap {
+            height: 1000px;
+        }
+
+        .ddform {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            z-index: 1000;
+            display: none;
+            float: left;
+            min-width: 10rem;
+            padding: 0.5rem 0;
+            margin: 0.125rem 0 0;
+            font-size: 1rem;
+            color: #212529;
+            text-align: left;
+            list-style: none;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 0.25rem;
         }
 
     </style>
-
-    <script type="text/javascript">
-        $('div.k-widget.k-multiselect.form-control.k-multiselect-clearable').on('click', function (e) {
-            console.log("T");
-            $(this).next('.dropdown-menu').toggle();
-            e.stopPropagation();
-        });
-    </script>
 </wicket:head>
 <body>
 <wicket:extend>
@@ -129,12 +141,30 @@
                 </span>
               </span>
               <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-                <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
-                  type="button" data-toggle="dropdown">
+                <button class="btn btn-action btn-secondary dropdown-toggle flex-content dd-toggle"
+                  type="button">
                   <i class="fas fa-user"></i>&nbsp;
                   <wicket:message key="Annotators"/>
                 </button>
-                <form wicket:id="userForm" class="dropdown-menu shadow-lg pt-0 pb-0" role="menu"
+                  <script>
+                      let dropDownMenuButton = $('button.dd-toggle');
+
+                      dropDownMenuButton.on('click', function () {
+                          $('form.ddform').show();
+                      });
+
+                      $('body').on('click', function (e) {
+                          if (!dropDownMenuButton.is(e.target)
+                              && !$('form.ddform').is(e.target)
+                              && !$('li').is(e.target)
+                              && dropDownMenuButton.has(e.target).length === 0
+                              && $('form.ddform').has(e.target).length === 0
+                              && $('.open').has(e.target).length === 0) {
+                              $('form.ddform').hide();
+                          }
+                      });
+                  </script>
+                <form wicket:id="userForm" class="shadow-lg pt-0 pb-0 ddform" role="menu"
                   style="width: 1000px; height: 435px;">
                   <form wicket:id="userSelectionForm" style="height: 150px;">
                     <div class="card-header">
@@ -149,7 +179,7 @@
                   </form>
                   <div class="row-cols-2 form-row">
                     <div>
-                      <form wicket:id="userAssignDocumentForm" class="form dropdown-toggle">
+                      <form wicket:id="userAssignDocumentForm" class="form">
                         <div class="card-header">
                           <wicket:message key="userSettings"/>
                         </div>
@@ -158,13 +188,13 @@
                             <div class="col-sm-5" style="display: inline-block; height: 80px">
                               <wicket:message key="assignDocument"/>
                             </div>
-                            <select wicket:id="documentsToAdd" class="form-control col-sm-7" data-container="body" style="display: inline-block"></select>
+                            <select wicket:id="documentsToAdd" class="form-control col-sm-6" data-container="body" style="display: inline-block"></select>
                           </div>
                           <div class="form-group form-row">
                             <label class="col-form-label col-sm-5">
                               <wicket:message key="unassignDocument"/>
                             </label>
-                            <select wicket:id="unassignDocument" class="form-control col-sm-7 block" data-container="body"></select>
+                            <select wicket:id="unassignDocument" class="form-control col-sm-6" data-container="body"></select>
                           </div>
                         </div>
                         <div class="card-footer">

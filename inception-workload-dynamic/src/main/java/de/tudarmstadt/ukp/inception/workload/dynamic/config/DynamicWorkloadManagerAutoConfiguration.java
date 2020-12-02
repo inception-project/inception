@@ -28,7 +28,6 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
-import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.ExternalWorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.RandomizedWorkflowExtension;
 
 @Configuration
@@ -45,11 +44,6 @@ public class DynamicWorkloadManagerAutoConfiguration
     public WorkflowExtensionPoint workflowExtensionPoint(List<WorkflowExtension> aWorkflowExtension)
     {
         return new WorkflowExtensionPointImpl(aWorkflowExtension);
-    }
-    @Bean
-    public ExternalWorkflowExtension curriculumWorkflowExtension()
-    {
-        return new ExternalWorkflowExtension();
     }
 
     @Bean
