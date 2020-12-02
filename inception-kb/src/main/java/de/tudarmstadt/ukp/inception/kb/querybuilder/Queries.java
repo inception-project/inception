@@ -36,42 +36,30 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class Queries
 {
     private final static Logger LOG = LoggerFactory.getLogger(Queries.class);
-    
+
     public static Map<String, KBProperty> fetchProperties(KnowledgeBase aKB,
             RepositoryConnection aConn, Collection<String> aStmts)
     {
         try (StopWatch watch = new StopWatch(LOG, "fetchProperties(%d)", aStmts.size())) {
-            String[] propertyIris = aStmts.stream()
-                    .distinct()
-                    .toArray(String[]::new);
-                
-            return SPARQLQueryBuilder.forProperties(aKB)
-                    .withIdentifier(propertyIris)
-                    .retrieveLabel()
-                    .retrieveDescription()
-                    .retrieveDomainAndRange()
-                    .asHandles(aConn, true)
-                    .stream()
+            String[] propertyIris = aStmts.stream().distinct().toArray(String[]::new);
+
+            return SPARQLQueryBuilder.forProperties(aKB).withIdentifier(propertyIris)
+                    .retrieveLabel().retrieveDescription().retrieveDomainAndRange()
+                    .asHandles(aConn, true).stream()
                     .map(handle -> KBHandle.convertTo(KBProperty.class, handle))
                     .collect(Collectors.toMap(KBObject::getIdentifier, Function.identity()));
         }
     }
-    
+
     public static Map<String, KBHandle> fetchLabelsForIriValues(KnowledgeBase aKB,
             RepositoryConnection aConn, Collection<Object> aStmts)
     {
         try (StopWatch watch = new StopWatch(LOG, "fetchLabelsForIriValues(%d)", aStmts.size())) {
-            String[] iriValues = aStmts.stream()
-                    .filter(v -> v instanceof IRI)
-                    .map(v -> ((IRI) v).stringValue())
-                    .distinct()
-                    .toArray(String[]::new);
-                
-            return SPARQLQueryBuilder.forItems(aKB)
-                    .withIdentifier(iriValues)
-                    .retrieveLabel()
-                    .asHandles(aConn, true)
-                    .stream()
+            String[] iriValues = aStmts.stream().filter(v -> v instanceof IRI)
+                    .map(v -> ((IRI) v).stringValue()).distinct().toArray(String[]::new);
+
+            return SPARQLQueryBuilder.forItems(aKB).withIdentifier(iriValues).retrieveLabel()
+                    .asHandles(aConn, true).stream()
                     .collect(Collectors.toMap(KBObject::getIdentifier, Function.identity()));
         }
     }

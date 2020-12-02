@@ -36,13 +36,12 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSide
 public class DocumentMetadataLayerSupportAutoConfiguration
 {
     @Bean
-    @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", 
-            havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", matchIfMissing = true)
     public DocumentMetadataSidebarFactory documentMetadataSidebarFactory()
     {
         return new DocumentMetadataSidebarFactory();
     }
-    
+
     /**
      * This bean remains enabled so we don't break existing projects when disabling metadata
      * support. Instead we return {@code true} from {@link LayerType#isInternal()} to prevent the

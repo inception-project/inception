@@ -44,8 +44,8 @@ public class CasAssert
 
         Type type = CasUtil.getType(actual, TYPE_NE);
         for (AnnotationFS annotation : CasUtil.select(actual, type)) {
-            if (annotation.getCoveredText().equals(text) &&
-                FSUtil.getFeature(annotation, "value", String.class).equals(value)) {
+            if (annotation.getCoveredText().equals(text)
+                    && FSUtil.getFeature(annotation, "value", String.class).equals(value)) {
                 return this;
             }
         }
@@ -56,23 +56,16 @@ public class CasAssert
     }
 
     /*
-    public CasAssert containsPrediction(String text, String label)
-    {
-        isNotNull();
-
-        Type type = CasUtil.getType(actual, PredictedSpan.class);
-        for (AnnotationFS annotation : CasUtil.select(actual, type)) {
-            if (annotation.getCoveredText().equals(text) &&
-                FSUtil.getFeature(annotation, "label", String.class).equals(label)) {
-                return this;
-            }
-        }
-
-        failWithMessage("No named entity with text <%s> and label <%s> found", text, label);
-
-        return this;
-    }
-    */
+     * public CasAssert containsPrediction(String text, String label) { isNotNull();
+     * 
+     * Type type = CasUtil.getType(actual, PredictedSpan.class); for (AnnotationFS annotation :
+     * CasUtil.select(actual, type)) { if (annotation.getCoveredText().equals(text) &&
+     * FSUtil.getFeature(annotation, "label", String.class).equals(label)) { return this; } }
+     * 
+     * failWithMessage("No named entity with text <%s> and label <%s> found", text, label);
+     * 
+     * return this; }
+     */
 
     public ListAssert<AnnotationFS> extractNamedEntities()
     {

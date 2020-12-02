@@ -76,14 +76,14 @@ public class PdfAnnotationEditor
 {
     private static final long serialVersionUID = -3358207848681467993L;
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
-    
+
     private static final String CREATE_SPAN = "createSpan";
     private static final String SELECT_SPAN = "selectSpan";
     private static final String CREATE_RELATION = "createRelation";
     private static final String SELECT_RELATION = "selectRelation";
     private static final String DELETE_RECOMMENDATION = "deleteRecommendation";
     private static final String GET_ANNOTATIONS = "getAnnotations";
-    
+
     private static final String VIS = "vis";
 
     private PdfExtractFile pdfExtractFile;
@@ -101,10 +101,11 @@ public class PdfAnnotationEditor
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-        String format = aModel.getObject().getDocument().getFormat(); 
+        String format = aModel.getObject().getDocument().getFormat();
         if (format.equals(PdfFormatSupport.ID)) {
             add(new PdfAnnoPanel(VIS, aModel, this));
-        } else {
+        }
+        else {
             add(new WrongFileFormatPanel(VIS, format));
         }
     }
@@ -121,9 +122,9 @@ public class PdfAnnotationEditor
         Selection selection = getModelObject().getSelection();
         renderPdfAnnoModel(aTarget);
         if (selection.getAnnotation() != null) {
-            aTarget.appendJavaScript("var anno = pdfanno.contentWindow.annoPage.findAnnotationById('"
-                + selection.getAnnotation() + "');"
-                + "anno && anno.select();");
+            aTarget.appendJavaScript(
+                    "var anno = pdfanno.contentWindow.annoPage.findAnnotationById('"
+                            + selection.getAnnotation() + "');" + "anno && anno.select();");
         }
     }
 
@@ -140,8 +141,7 @@ public class PdfAnnotationEditor
     }
 
     /**
-     * Renders the PdfAnnoModel.
-     * This includes the anno file and the color map.
+     * Renders the PdfAnnoModel. This includes the anno file and the color map.
      */
     public void renderPdfAnnoModel(AjaxRequestTarget aTarget)
     {
@@ -149,8 +149,7 @@ public class PdfAnnotationEditor
             return;
         }
 
-        try
-        {
+        try {
             CAS cas = getCasProvider().get();
             // get sentences in which page begin and end offsets are and use those to compute
             // the new page begin and end offsets. required because annotation rendering will
@@ -162,36 +161,37 @@ public class PdfAnnotationEditor
 
             VDocument vdoc = render(cas, begin, end);
             PdfAnnoRenderer renderer = new PdfAnnoRenderer(annotationService, coloringService);
-            PdfAnnoModel pdfAnnoModel = renderer.render(getModelObject(),
-                vdoc, cas.getDocumentText(), pdfExtractFile, begin);
+            PdfAnnoModel pdfAnnoModel = renderer.render(getModelObject(), vdoc,
+                    cas.getDocumentText(), pdfExtractFile, begin);
             // show unmatched spans to user
             if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
                 String annotations = pdfAnnoModel.getUnmatchedSpans().stream()
-                    .map(span -> "(id: " + span.getId() + ", text: \"" + span.getText() + "\")")
-                    .collect(Collectors.joining(", "));
-                handleError("Could not find a match for the following annotations: "
-                    + annotations, aTarget);
+                        .map(span -> "(id: " + span.getId() + ", text: \"" + span.getText() + "\")")
+                        .collect(Collectors.joining(", "));
+                handleError("Could not find a match for the following annotations: " + annotations,
+                        aTarget);
             }
             String script = getAnnotationsJS(pdfAnnoModel);
             aTarget.appendJavaScript(script);
         }
-        catch (IOException e)
-        {
+        catch (IOException e) {
             handleError("Unable to load data", e, aTarget);
         }
     }
 
-    public void createSpanAnnotation(
-        AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
+    public void createSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+            CAS aCas)
     {
         if (pdfExtractFile == null && documentModel == null) {
             // in this case the user probably changed the document and accidentally
             // marked text in the old document. so do not create any annotation here.
-            handleError("Unable to create span annotation: " 
-                + "Did you accidentally marked text when switching documents?", aTarget);
+            handleError(
+                    "Unable to create span annotation: "
+                            + "Did you accidentally marked text when switching documents?",
+                    aTarget);
             return;
         }
-        
+
         try {
             Offset offset = new Offset(aParams);
             Offset docOffset = convertToDocumentOffset(offset, documentModel, pdfExtractFile);
@@ -217,21 +217,20 @@ public class PdfAnnotationEditor
             handleError("Unable to create span annotation", e, aTarget);
         }
     }
-    
-    private void selectSpanAnnotation(
-        AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
+
+    private void selectSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+            CAS aCas)
     {
         VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
         selectSpanAnnotation(aTarget, paramId, aCas);
     }
-    
-    private void selectSpanAnnotation(
-        AjaxRequestTarget aTarget, VID paramId, CAS aCas)
+
+    private void selectSpanAnnotation(AjaxRequestTarget aTarget, VID paramId, CAS aCas)
     {
         try {
             if (paramId.isSynthetic()) {
-                extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
-                        aCas, paramId, "spanOpenDialog");
+                extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget, aCas,
+                        paramId, "spanOpenDialog");
                 return;
             }
 
@@ -290,12 +289,10 @@ public class PdfAnnotationEditor
                 getActionHandler().actionCreateOrUpdate(aTarget, aCas);
             }
         }
-        catch (AnnotationException | CASRuntimeException e)
-        {
+        catch (AnnotationException | CASRuntimeException e) {
             handleError("Unable to create relation annotation", e, aTarget);
         }
-        finally
-        {
+        finally {
             // workaround to enable further creation of relations in PDFAnno
             // if existing annotations are not re-rendered after an attempt to create a relation.
             // it can happen that mouse will hang when leaving annotation knob while dragging
@@ -303,8 +300,8 @@ public class PdfAnnotationEditor
         }
     }
 
-    private void selectRelationAnnotation(
-        AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
+    private void selectRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+            CAS aCas)
     {
         try {
             AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class,
@@ -335,26 +332,26 @@ public class PdfAnnotationEditor
         }
     }
 
-    private void deleteRecommendation(
-        AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
+    private void deleteRecommendation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+            CAS aCas)
     {
         try {
             VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
             if (paramId.isSynthetic()) {
                 getModelObject().clearArmedSlot();
                 Offset offset = new Offset(aParams);
-                Offset docOffset =
-                    PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, pdfExtractFile);
+                Offset docOffset = PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel,
+                        pdfExtractFile);
                 if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
-                        aCas, paramId, "doAction");
-                } else {
+                            aCas, paramId, "doAction");
+                }
+                else {
                     handleError("Unable to delete recommendation: No match was found", aTarget);
                 }
             }
         }
-        catch (AnnotationException | IOException e)
-        {
+        catch (AnnotationException | IOException e) {
             handleError("Unable to delete recommendation", e, aTarget);
         }
     }
@@ -364,16 +361,18 @@ public class PdfAnnotationEditor
         page = aParams.getParameterValue("page").toInt();
         if (pageOffsetCache.containsKey(page)) {
             pageOffset = pageOffsetCache.get(page);
-        } else {
+        }
+        else {
             // get page offsets, if possible for the from previous to next page
             int begin = pdfExtractFile.getPageOffset(page > 1 ? page - 1 : page).getBegin();
-            int end = pdfExtractFile.getPageOffset(page < pdfExtractFile.getMaxPageNumber()
-                ? page + 1 : page).getEnd();
+            int end = pdfExtractFile
+                    .getPageOffset(page < pdfExtractFile.getMaxPageNumber() ? page + 1 : page)
+                    .getEnd();
             List<Offset> offsets = new ArrayList<>();
             offsets.add(new Offset(begin, begin));
             offsets.add(new Offset(end + 1, end + 1));
-            offsets =
-                PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
+            offsets = PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel,
+                    pdfExtractFile);
             int newBegin = offsets.stream().mapToInt(Offset::getBegin).min().getAsInt();
             int newEnd = offsets.stream().mapToInt(Offset::getEnd).max().getAsInt();
             pageOffset = new Offset(newBegin, newEnd);
@@ -384,16 +383,14 @@ public class PdfAnnotationEditor
 
     public void handleAPIRequest(AjaxRequestTarget aTarget, IRequestParameters aParams)
     {
-        try
-        {
+        try {
             CAS cas = getCasProvider().get();
             String action = aParams.getParameterValue("action").toString();
-    
+
             // Doing anything but selecting or creating a span annotation when a
             // slot is armed will unarm it
-            if (getModelObject().isSlotArmed()
-                && !(action.equals(SELECT_SPAN) || action.equals(CREATE_SPAN)
-                   || action.equals(DELETE_RECOMMENDATION))) {
+            if (getModelObject().isSlotArmed() && !(action.equals(SELECT_SPAN)
+                    || action.equals(CREATE_SPAN) || action.equals(DELETE_RECOMMENDATION))) {
                 getModelObject().clearArmedSlot();
             }
 
@@ -420,8 +417,7 @@ public class PdfAnnotationEditor
                 handleError("Unkown action: " + action, aTarget);
             }
         }
-        catch (IOException e)
-        {
+        catch (IOException e) {
             handleError("Unable to load data", e, aTarget);
         }
     }
@@ -431,18 +427,13 @@ public class PdfAnnotationEditor
      */
     private String getAnnotationsJS(PdfAnnoModel aPdfAnnoModel)
     {
-        return String.join("",
-            "var annoFile = `\n",
-            aPdfAnnoModel.getAnnoFileContent(),
-            "`;",
-            // FIXME: "pdfanno" below is a hard-coded HTML element ID from PdfAnnoPanel.html!
-            // This should be replaced by a HTML element ID generated by Wicket for the PdfAnnoPanel
-            // instance used by this editor.
-            "pdfanno.contentWindow.annoPage.importAnnotation({",
-            "'primary': true,",
-            "'colorMap': {},",
-            "'annotations':[annoFile]}, true);"
-        );
+        return String.join("", "var annoFile = `\n", aPdfAnnoModel.getAnnoFileContent(), "`;",
+                // FIXME: "pdfanno" below is a hard-coded HTML element ID from PdfAnnoPanel.html!
+                // This should be replaced by a HTML element ID generated by Wicket for the
+                // PdfAnnoPanel
+                // instance used by this editor.
+                "pdfanno.contentWindow.annoPage.importAnnotation({", "'primary': true,",
+                "'colorMap': {},", "'annotations':[annoFile]}, true);");
     }
 
     public PdfExtractFile getPdfExtractFile()
@@ -451,9 +442,9 @@ public class PdfAnnotationEditor
     }
 
     public static Map<String, String> getSubstitutionTable()
-        throws IOException, ParserConfigurationException, SAXException {
-        String substitutionTable =
-            "classpath:/de/tudarmstadt/ukp/dkpro/core/io/pdf/substitutionTable.xml";
+        throws IOException, ParserConfigurationException, SAXException
+    {
+        String substitutionTable = "classpath:/de/tudarmstadt/ukp/dkpro/core/io/pdf/substitutionTable.xml";
         URL url = ResourceUtils.resolveLocation(substitutionTable);
         try (InputStream is = url.openStream()) {
             SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -468,7 +459,8 @@ public class PdfAnnotationEditor
     {
         try {
             documentModel = new DocumentModel(getCasProvider().get().getDocumentText());
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             handleError("Unable to load data", e, aTarget);
         }
 
@@ -477,9 +469,10 @@ public class PdfAnnotationEditor
         try {
             String pdfText = PDFExtractor.processFileToString(pdfFile, false);
             pdfExtractFile = new PdfExtractFile(pdfText, getSubstitutionTable());
-        } catch (IOException | SAXException | ParserConfigurationException e) {
+        }
+        catch (IOException | SAXException | ParserConfigurationException e) {
             handleError("Unable to create PdfExtractFile for [" + pdfFile.getName() + "]"
-                + "with PDFExtractor.", e, aTarget);
+                    + "with PDFExtractor.", e, aTarget);
         }
 
         pageOffsetCache = new HashMap<>();

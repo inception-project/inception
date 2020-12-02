@@ -51,14 +51,14 @@ public class IRIValuePresenter
     public IRIValuePresenter(String id, IModel<KBStatement> aModel, IModel<KnowledgeBase> aKBModel)
     {
         super(id, aModel);
-        
+
         kbModel = aKBModel;
 
         add(new IriInfoBadge("iriInfoBadge", LoadableDetachableModel
                 .of(() -> ((IRI) getModelObject().getValue()).stringValue())));
-        
+
         LambdaAjaxLink link = new LambdaAjaxLink("link",
-            t -> actionIRILinkClicked(t, (IRI) aModel.getObject().getValue()));
+                t -> actionIRILinkClicked(t, (IRI) aModel.getObject().getValue()));
         link.add(
                 new Label("label", LoadableDetachableModel.of(() -> getLabel(aModel.getObject()))));
         add(link);
@@ -69,36 +69,36 @@ public class IRIValuePresenter
         if (aStatement == null) {
             return null;
         }
-        
+
         if (aStatement != null && aStatement.getValueLabel() != null) {
             return aStatement.getValueLabel();
         }
-        
+
         return ((IRI) aStatement.getValue()).getLocalName();
     }
 
     private void actionIRILinkClicked(AjaxRequestTarget aTarget, IRI aIdentifier)
     {
-        KBObject item =  kbService.readItem(kbModel.getObject(), aIdentifier.stringValue())
+        KBObject item = kbService.readItem(kbModel.getObject(), aIdentifier.stringValue())
                 .orElse(null);
-        
+
         if (item != null) {
             if (item instanceof KBConcept) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxConceptSelectionEvent(aTarget, KBHandle.of(item), true));
+                        new AjaxConceptSelectionEvent(aTarget, KBHandle.of(item), true));
             }
             else if (item instanceof KBInstance) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(item)));
+                        new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(item)));
             }
             else if (item instanceof KBProperty) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxPropertySelectionEvent(aTarget, (KBProperty) item, true));
+                        new AjaxPropertySelectionEvent(aTarget, (KBProperty) item, true));
             }
             else {
                 throw new IllegalArgumentException(String.format(
-                    "KBObject must be an instance of one of the following types: [KBConcept, KBInstance, KBProperty], not [%s]",
-                    item.getClass().getSimpleName()));
+                        "KBObject must be an instance of one of the following types: [KBConcept, KBInstance, KBProperty], not [%s]",
+                        item.getClass().getSimpleName()));
             }
         }
         else {
@@ -106,7 +106,7 @@ public class IRIValuePresenter
             KBStatement stmt = getModelObject();
             KBHandle selectedConcept = new KBHandle(((IRI) stmt.getValue()).toString());
             send(getPage(), Broadcast.BREADTH,
-                new AjaxConceptSelectionEvent(aTarget, selectedConcept, true));
+                    new AjaxConceptSelectionEvent(aTarget, selectedConcept, true));
         }
 
     }

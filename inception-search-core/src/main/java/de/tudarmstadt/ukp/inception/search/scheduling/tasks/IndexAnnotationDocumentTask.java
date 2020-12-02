@@ -30,7 +30,7 @@ public class IndexAnnotationDocumentTask
     extends Task
 {
     private @Autowired SearchService searchService;
-    
+
     public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas)
     {
         super(aAnnotationDocument, aBinaryCas);
@@ -43,14 +43,14 @@ public class IndexAnnotationDocumentTask
             searchService.indexDocument(super.getAnnotationDocument(), super.getBinaryCas());
         }
     }
-    
+
     @Override
     public boolean matches(Task aTask)
     {
         if (!(aTask instanceof IndexAnnotationDocumentTask)) {
             return false;
         }
-        
+
         return getAnnotationDocument().getId() == aTask.getAnnotationDocument().getId();
     }
 

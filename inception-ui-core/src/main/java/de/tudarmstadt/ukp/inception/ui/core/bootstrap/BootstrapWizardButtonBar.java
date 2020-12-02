@@ -20,11 +20,14 @@ package de.tudarmstadt.ukp.inception.ui.core.bootstrap;
 import org.apache.wicket.extensions.wizard.AjaxWizardButtonBar;
 import org.apache.wicket.extensions.wizard.Wizard;
 
-public class BootstrapWizardButtonBar extends AjaxWizardButtonBar {
+public class BootstrapWizardButtonBar
+    extends AjaxWizardButtonBar
+{
 
     private static final long serialVersionUID = 7136194479524182883L;
 
-    public BootstrapWizardButtonBar(String id, Wizard wizard) {
+    public BootstrapWizardButtonBar(String id, Wizard wizard)
+    {
         super(id, wizard);
     }
 }

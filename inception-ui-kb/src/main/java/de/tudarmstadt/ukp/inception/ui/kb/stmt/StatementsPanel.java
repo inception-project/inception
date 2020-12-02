@@ -76,9 +76,9 @@ public class StatementsPanel
     private IModel<StatementDetailPreference> detailPreference;
     private WebMarkupContainer statementGroupListWrapper;
     private IModel<Comparator<StatementGroupBean>> statementGroupComparator;
-    
+
     private IModel<List<StatementGroupBean>> statementGroups;
-    
+
     /**
      * {@code StatementsPanel} creator.
      * 
@@ -100,7 +100,7 @@ public class StatementsPanel
         // default ordering for statement groups: lexical ordering by UI label
         statementGroupComparator = LambdaModel
                 .of(() -> comparing(sgb -> sgb.getProperty().getUiLabel()));
-        
+
         setUpDetailPreference(aDetailPreference);
 
         // We must use a LambdaModel here to delay the fetching of the beans until rendering such
@@ -109,14 +109,18 @@ public class StatementsPanel
         statementGroups = LambdaModel.of(this::getStatementGroupBeans);
 
         RefreshingView<StatementGroupBean> groupList = new RefreshingView<StatementGroupBean>(
-                "statementGroupListView") {
+                "statementGroupListView")
+        {
             private static final long serialVersionUID = 5811425707843441458L;
 
             @Override
-            protected Iterator<IModel<StatementGroupBean>> getItemModels() {
-                return new ModelIteratorAdapter<StatementGroupBean>(statementGroups.getObject()) {
+            protected Iterator<IModel<StatementGroupBean>> getItemModels()
+            {
+                return new ModelIteratorAdapter<StatementGroupBean>(statementGroups.getObject())
+                {
                     @Override
-                    protected IModel<StatementGroupBean> model(StatementGroupBean object) {
+                    protected IModel<StatementGroupBean> model(StatementGroupBean object)
+                    {
                         return LambdaModel.of(() -> object);
                     }
                 };
@@ -126,7 +130,7 @@ public class StatementsPanel
             protected void populateItem(Item<StatementGroupBean> aItem)
             {
                 CompoundPropertyModel<StatementGroupBean> groupModel = new CompoundPropertyModel<>(
-                    LambdaModel.of(() -> aItem.getModelObject()));
+                        LambdaModel.of(() -> aItem.getModelObject()));
 
                 StatementGroupPanel panel = new StatementGroupPanel("statementGroup", groupModel);
                 aItem.add(panel);
@@ -140,24 +144,25 @@ public class StatementsPanel
         statementGroupListWrapper.add(groupList);
         add(statementGroupListWrapper);
 
-        add(new Label("noStatementsNotice", new ResourceModel("noStatementsNotice")) {
+        add(new Label("noStatementsNotice", new ResourceModel("noStatementsNotice"))
+        {
             private static final long serialVersionUID = 2252854898212441711L;
 
             @Override
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 setVisible(statementGroups.getObject().isEmpty());
             }
-        });       
-        
+        });
+
         LambdaAjaxLink addLink = new LambdaAjaxLink("add", this::actionAdd);
         addLink.add(new Label("label", new ResourceModel("statement.add")));
         addLink.add(new WriteProtectionBehavior(kbModel));
         add(addLink);
     }
-    
+
     @OnEvent
     public void actionStatementGroupChanged(AjaxStatementGroupChangedEvent event)
     {
@@ -167,7 +172,7 @@ public class StatementsPanel
         if (!isEventForThisStatementsPanel) {
             return;
         }
-        
+
         // if the statement group should be deleted, find and remove the matching bean from the list
         // of statement groups
         if (event.isDeleted()) {
@@ -175,15 +180,15 @@ public class StatementsPanel
         }
         event.getTarget().add(this);
     }
-    
+
     private void setUpDetailPreference(StatementDetailPreference aDetailPreference)
     {
         StatementDetailPreference defaultPreference = StatementDetailPreference.BASIC;
-        
+
         boolean isDetailPreferenceUserDefinable = aDetailPreference == null;
-        detailPreference = Model.of(isDetailPreferenceUserDefinable
-                ? defaultPreference : aDetailPreference);        
-        
+        detailPreference = Model
+                .of(isDetailPreferenceUserDefinable ? defaultPreference : aDetailPreference);
+
         // the form for setting the detail preference (and its radio group) is only shown if the
         // detail preference is user-definable
         Form<StatementDetailPreference> form = new Form<StatementDetailPreference>(
@@ -191,7 +196,7 @@ public class StatementsPanel
         form.add(LambdaBehavior
                 .onConfigure(_this -> _this.setVisible(isDetailPreferenceUserDefinable)));
         add(form);
-        
+
         // radio choice for statement detail preference
         BootstrapRadioGroup<StatementDetailPreference> choice = new BootstrapRadioGroup<>(
                 "detailPreferenceChoice", Arrays.asList(StatementDetailPreference.values()));
@@ -201,7 +206,7 @@ public class StatementsPanel
                 this::actionStatementDetailPreferencesChanged));
         form.add(choice);
     }
-    
+
     /**
      * Reload the statement group model if the detail preferences change.
      */
@@ -223,7 +228,7 @@ public class StatementsPanel
         proto.setStatements(new ArrayList<>());
         proto.setDetailPreference(detailPreference.getObject());
         statementGroups.getObject().add(proto);
-        
+
         target.add(this);
     }
 
@@ -254,16 +259,16 @@ public class StatementsPanel
             error("Unable to list statements: " + e.getLocalizedMessage());
             LOG.error("Unable to list statements.", e);
         }
-        
+
         if (prefs == StatementDetailPreference.BASIC) {
             statements.removeIf((s) -> s.isInferred());
         }
-        
+
         // group statements by property
         Map<KBProperty, List<KBStatement>> groupedStatements = statements.stream()
                 .collect(Collectors.groupingBy(KBStatement::getProperty));
-        
-        // for each property and associated statements, create one StatementGroupBean 
+
+        // for each property and associated statements, create one StatementGroupBean
         List<StatementGroupBean> beans = groupedStatements.entrySet().stream().map(entry -> {
             StatementGroupBean bean = new StatementGroupBean();
             bean.setKb(kbModel.getObject());
@@ -272,8 +277,8 @@ public class StatementsPanel
             bean.setStatements(entry.getValue());
             return bean;
         }).collect(Collectors.toList());
-        
-        Collections.sort(beans, statementGroupComparator.getObject());        
+
+        Collections.sort(beans, statementGroupComparator.getObject());
         return beans;
     }
 }

@@ -44,7 +44,7 @@ public class DocumentMetadataSidebar
                 .of(() -> aModel.getObject().getDocument());
         IModel<String> username = LoadableDetachableModel
                 .of(() -> aModel.getObject().getUser().getUsername());
-        
+
         add(new DocumentMetadataAnnotationSelectionPanel("annotations", project, sourceDocument,
                 username, aCasProvider, aAnnotationPage, aActionHandler, getModelObject()));
     }

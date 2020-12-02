@@ -17,15 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.curation;
 
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateMetaDataKey;
 
 public final class CurationMetadata
 {
-    public static final AnnotatorStateMetaDataKey<Boolean>
-        CURATION_USER_PROJECT = new AnnotatorStateMetaDataKey<Boolean>()
-        {
-            private static final long serialVersionUID = 1L;
-        };
+    public static final AnnotatorStateMetaDataKey<Boolean> CURATION_USER_PROJECT = //
+            new AnnotatorStateMetaDataKey<Boolean>()
+            {
+                private static final long serialVersionUID = 1L;
+            };
 
 }

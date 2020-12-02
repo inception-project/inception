@@ -34,7 +34,8 @@ import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @Component
 @Order(200)
-public class CurationPageMenuItem implements MenuItem
+public class CurationPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -44,19 +45,19 @@ public class CurationPageMenuItem implements MenuItem
     {
         return "/curation";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/data_table.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Curation";
     }
-    
+
     /**
      * Only project admins and curators can see this page
      */
@@ -67,7 +68,7 @@ public class CurationPageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
-        
+
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
@@ -77,7 +78,7 @@ public class CurationPageMenuItem implements MenuItem
         return projectService.isCurator(project, user)
                 && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode());
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

@@ -28,7 +28,8 @@ import org.eclipse.rdf4j.model.util.URIUtil;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
-public class InceptionValueMapper {
+public class InceptionValueMapper
+{
 
     public Value mapStatementValue(KBStatement aStatement, ValueFactory vf)
     {

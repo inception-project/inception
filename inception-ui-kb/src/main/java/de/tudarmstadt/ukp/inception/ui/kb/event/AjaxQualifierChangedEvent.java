@@ -31,7 +31,7 @@ public class AjaxQualifierChangedEvent
     private boolean deleted;
 
     public AjaxQualifierChangedEvent(AjaxRequestTarget target, KBQualifier aQualifier,
-        Component aComponent, boolean isDeleted)
+            Component aComponent, boolean isDeleted)
     {
         super(target);
         qualifier = aQualifier;
@@ -39,15 +39,23 @@ public class AjaxQualifierChangedEvent
         deleted = isDeleted;
     }
 
-    public AjaxQualifierChangedEvent(AjaxRequestTarget target, KBQualifier aQualifier) {
+    public AjaxQualifierChangedEvent(AjaxRequestTarget target, KBQualifier aQualifier)
+    {
         this(target, aQualifier, null, false);
     }
 
-    public KBQualifier getQualifier() { return qualifier; }
+    public KBQualifier getQualifier()
+    {
+        return qualifier;
+    }
 
-    public Component getComponent() {
+    public Component getComponent()
+    {
         return component;
     }
 
-    public boolean isDeleted() { return deleted; }
+    public boolean isDeleted()
+    {
+        return deleted;
+    }
 }

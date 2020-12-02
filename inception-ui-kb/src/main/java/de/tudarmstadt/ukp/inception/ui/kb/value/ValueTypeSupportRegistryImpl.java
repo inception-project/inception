@@ -51,23 +51,23 @@ public class ValueTypeSupportRegistryImpl
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final List<ValueTypeSupport> valueSupportsProxy;
-    
+
     private List<ValueTypeSupport> valueSupports;
-    
+
     private final Map<String, ValueTypeSupport> supportCache = new HashMap<>();
-    
+
     public ValueTypeSupportRegistryImpl(
             @Lazy @Autowired(required = false) List<ValueTypeSupport> aValueTypeSupports)
     {
         valueSupportsProxy = aValueTypeSupports;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     public void init()
     {
         List<ValueTypeSupport> fsp = new ArrayList<>();
@@ -75,38 +75,38 @@ public class ValueTypeSupportRegistryImpl
         if (valueSupportsProxy != null) {
             fsp.addAll(valueSupportsProxy);
             AnnotationAwareOrderComparator.sort(fsp);
-        
+
             for (ValueTypeSupport fs : fsp) {
                 log.info("Found value type support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         valueSupports = Collections.unmodifiableList(fsp);
     }
-    
+
     @Override
     public ValueType getValueType(KBStatement aStatement, KBProperty aProperty)
     {
         try {
             return getValueSupport(aStatement, aProperty).getSupportedValueTypes().stream()
-                .findFirst().orElse(null);
+                    .findFirst().orElse(null);
         }
         catch (IllegalArgumentException e) {
             return null;
         }
     }
-    
+
     @Override
     public List<ValueTypeSupport> getValueSupports()
     {
         return valueSupports;
     }
-    
+
     private String getDataType(KBStatement aStatement, KBProperty aProperty)
     {
         String datatype = null;
-        
+
         if (aStatement.getValue() != null) {
             Class<?> clazz = aStatement.getValue().getClass();
             IRI type = DefaultDatatypeMapper.getDatatypeURI(clazz);
@@ -118,24 +118,25 @@ public class ValueTypeSupportRegistryImpl
             }
             datatype = type != null ? type.stringValue() : null;
         }
-        
+
         if (datatype == null && aProperty != null && aProperty.getRange() != null) {
             return aProperty.getRange();
         }
-        
+
         if (datatype == null) {
             datatype = XMLSchema.STRING.stringValue();
         }
-        
+
         return datatype;
     }
-    
+
     @Override
     public ValueTypeSupport getValueSupport(KBStatement aStatement, KBProperty aProperty)
     {
         // Determine the data type
         String datatype = getDataType(aStatement, aProperty);
-        String range = null;;
+        String range = null;
+        ;
         if (aProperty != null) {
             range = aProperty.getRange();
         }
@@ -147,11 +148,11 @@ public class ValueTypeSupportRegistryImpl
                 break;
             }
         }
-        
+
         if (support == null) {
             throw new IllegalArgumentException("Unsupported value type: [" + datatype + "]");
         }
-        
+
         return support;
     }
 
@@ -159,19 +160,19 @@ public class ValueTypeSupportRegistryImpl
     public ValueTypeSupport getValueSupport(ValueType type)
     {
         ValueTypeSupport support = null;
-                
+
         for (ValueTypeSupport s : getValueSupports()) {
             if (s.getSupportedValueTypes().contains(type)) {
                 support = s;
                 break;
             }
         }
-        
+
         if (support == null) {
             throw new IllegalArgumentException(
                     "Unsupported value type: [" + type.getUiName() + "]");
         }
-        
+
         return support;
     }
 

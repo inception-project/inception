@@ -33,13 +33,13 @@ public interface FactLinkingService
     List<KBProperty> listProperties(Project aProject, ConceptFeatureTraits traits);
 
     KBHandle getKBHandleFromCasByAddr(CAS aCas, int targetAddr, Project aProject,
-        ConceptFeatureTraits traits);
+            ConceptFeatureTraits traits);
 
     KnowledgeBase findKnowledgeBaseContainingProperty(KBProperty aProperty, Project aProject,
-        ConceptFeatureTraits traits);
+            ConceptFeatureTraits traits);
 
     ConceptFeatureTraits getFeatureTraits(Project aProject);
 
     KBHandle getKBInstancesByIdentifierAndTraits(String kbHandleIdentifier, Project aProject,
-        ConceptFeatureTraits traits);
+            ConceptFeatureTraits traits);
 }

@@ -51,7 +51,7 @@ public class WicketApplication
     {
         return "/de/tudarmstadt/ukp/inception/app/logo/ukp-logo.png";
     }
-    
+
     @Override
     protected void initWebFrameworks()
     {
@@ -59,7 +59,7 @@ public class WicketApplication
 
         initInceptionResources();
     }
-    
+
     protected void initInceptionResources()
     {
         getComponentInstantiationListeners().add(component -> {
@@ -68,12 +68,12 @@ public class WicketApplication
             }
         });
     }
-    
+
     @Override
     protected void initDefaultPageMounts()
     {
         super.initDefaultPageMounts();
-        
+
         // We don't want the project dashboard to be linked as "welcome.html" but rather only under
         // its default URL as defined in the ProjectDashboard class
         unmount("/welcome.html");

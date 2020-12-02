@@ -30,19 +30,19 @@ public class CurrentProjectDashlet
     extends Dashlet_ImplBase
 {
     private static final long serialVersionUID = 7732921923832675326L;
-    
+
     private final IModel<Project> projectModel;
-    
+
     public CurrentProjectDashlet(String aId, IModel<Project> aCurrentProject)
     {
         super(aId);
         projectModel = aCurrentProject;
         add(new Label("name", LoadableDetachableModel.of(this::getProjectName)));
-        
+
         add(new Label("description", LoadableDetachableModel.of(this::getProjectDescription))
                 .setEscapeModelStrings(false));
     }
-    
+
     private String getProjectName()
     {
         Project project = projectModel.getObject();
@@ -53,7 +53,7 @@ public class CurrentProjectDashlet
             return "No project selected";
         }
     }
-    
+
     private String getProjectDescription()
     {
         Project project = projectModel.getObject();

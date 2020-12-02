@@ -23,9 +23,9 @@ import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl;
 
 public final class ActiveLearningUserStateMetaData
 {
-    public static final MetaDataKey<ActiveLearningServiceImpl.ActiveLearningUserState>
-        CURRENT_AL_USER_STATE = new MetaDataKey<ActiveLearningServiceImpl.ActiveLearningUserState>()
-        {
-            private static final long serialVersionUID = 1L;
-        };
+    public static final MetaDataKey<ActiveLearningServiceImpl.ActiveLearningUserState> //
+    CURRENT_AL_USER_STATE = new MetaDataKey<ActiveLearningServiceImpl.ActiveLearningUserState>()
+    {
+        private static final long serialVersionUID = 1L;
+    };
 }

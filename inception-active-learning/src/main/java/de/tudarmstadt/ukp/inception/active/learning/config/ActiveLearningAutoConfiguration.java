@@ -37,11 +37,8 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 @Configuration
 @AutoConfigureAfter(RecommenderServiceAutoConfiguration.class)
 @ConditionalOnBean(RecommendationService.class)
-@ConditionalOnProperty(
-    prefix = "recommender.active-learning", 
-    name = "enabled", 
-    havingValue = "true",
-    matchIfMissing = true)
+@ConditionalOnProperty(prefix = "recommender.active-learning", //
+        name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ActiveLearningAutoConfiguration
 {
     @Bean
@@ -52,19 +49,19 @@ public class ActiveLearningAutoConfiguration
         return new ActiveLearningServiceImpl(aDocumentService, aRecommendationService, aUserDao,
                 aLearningHistoryService);
     }
-    
+
     @Bean
     public ActiveLearningRecommendationEventAdapter activeLearningRecommendationEventAdapter()
     {
         return new ActiveLearningRecommendationEventAdapter();
     }
-    
+
     @Bean
     public ActiveLearningSuggestionOfferedAdapter activeLearningSuggestionOfferedAdapter()
     {
         return new ActiveLearningSuggestionOfferedAdapter();
     }
-    
+
     @Bean
     public ActiveLearningSidebarFactory activeLearningSidebarFactory()
     {

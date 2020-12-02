@@ -61,7 +61,7 @@ public class RecommenderExporter
 
     @Autowired
     public RecommenderExporter(AnnotationSchemaService aAnnotationService,
-                               RecommendationService aRecommendationService)
+            RecommendationService aRecommendationService)
     {
         annotationService = aAnnotationService;
         recommendationService = aRecommendationService;
@@ -97,8 +97,8 @@ public class RecommenderExporter
             exportedRecommender.setTool(recommender.getTool());
             exportedRecommender.setSkipEvaluation(recommender.isSkipEvaluation());
             exportedRecommender.setMaxRecommendations(recommender.getMaxRecommendations());
-            exportedRecommender.setStatesIgnoredForTraining(
-                    recommender.getStatesIgnoredForTraining());
+            exportedRecommender
+                    .setStatesIgnoredForTraining(recommender.getStatesIgnoredForTraining());
             exportedRecommender.setTraits(recommender.getTraits());
             exportedRecommenders.add(exportedRecommender);
         }
@@ -110,9 +110,10 @@ public class RecommenderExporter
 
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
-                           ExportedProject aExProject, ZipFile aZip) {
-        ExportedRecommender[] recommenders = aExProject
-                .getArrayProperty(KEY, ExportedRecommender.class);
+            ExportedProject aExProject, ZipFile aZip)
+    {
+        ExportedRecommender[] recommenders = aExProject.getArrayProperty(KEY,
+                ExportedRecommender.class);
 
         for (ExportedRecommender exportedRecommender : recommenders) {
             Recommender recommender = new Recommender();
@@ -123,8 +124,8 @@ public class RecommenderExporter
             recommender.setTool(exportedRecommender.getTool());
             recommender.setSkipEvaluation(exportedRecommender.isSkipEvaluation());
             recommender.setMaxRecommendations(exportedRecommender.getMaxRecommendations());
-            recommender.setStatesIgnoredForTraining(
-                    exportedRecommender.getStatesIgnoredForTraining());
+            recommender
+                    .setStatesIgnoredForTraining(exportedRecommender.getStatesIgnoredForTraining());
             recommender.setTraits(exportedRecommender.getTraits());
 
             // The value for max recommendations must be between 1 and 100

@@ -39,7 +39,7 @@ public class HtmlFormatSupport
 {
     public static final String ID = "htmldoc";
     public static final String NAME = "HTML";
-    
+
     @Override
     public String getId()
     {
@@ -57,7 +57,7 @@ public class HtmlFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException

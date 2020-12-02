@@ -19,15 +19,16 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Document {
+public class Document
+{
 
     private final String xmi;
     private final long documentId;
     private final String userId;
 
     public Document(@JsonProperty(value = "xmi", required = true) String aXmi,
-                    @JsonProperty(value = "documentId", required = true) long aDocumentId,
-                    @JsonProperty(value = "userId", required = true) String aUserId)
+            @JsonProperty(value = "documentId", required = true) long aDocumentId,
+            @JsonProperty(value = "userId", required = true) String aUserId)
     {
         xmi = aXmi;
         documentId = aDocumentId;

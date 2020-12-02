@@ -78,25 +78,23 @@ public class SemanticSignatureFeatureGenerator
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String SPARQL_PREFIX = String.join("\n",
-            "PREFIX rdf: <" + RDF.NAMESPACE + ">",
-            "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
-            "PREFIX owl: <" + OWL.NAMESPACE + ">",
-            "PREFIX skos:<" + SKOS.NAMESPACE + ">",
+            "PREFIX rdf: <" + RDF.NAMESPACE + ">", "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
+            "PREFIX owl: <" + OWL.NAMESPACE + ">", "PREFIX skos:<" + SKOS.NAMESPACE + ">",
             "PREFIX e:<http://www.wikidata.org/entity/>",
             "PREFIX base:<http://www.wikidata.org/ontology#>",
             "PREFIX search: <http://www.openrdf.org/contrib/lucenesail#>");
 
     private final Map<String, Property> propertyWithLabels;
     private final Set<String> propertyBlacklist;
-    private final Set<String> typeBlacklist = new HashSet<>(Arrays
-            .asList("commonsmedia", "external-id", "globe-coordinate", "math", "monolingualtext",
-                "quantity", "string", "url", "wikibase-property"));
-    
+    private final Set<String> typeBlacklist = new HashSet<>(
+            Arrays.asList("commonsmedia", "external-id", "globe-coordinate", "math",
+                    "monolingualtext", "quantity", "string", "url", "wikibase-property"));
+
     private final LoadingCache<SemanticSignatureCacheKey, SemanticSignature> semanticSignatureCache;
 
     private final EntityLinkingProperties properties;
     private final KnowledgeBaseService kbService;
-    
+
     @Autowired
     public SemanticSignatureFeatureGenerator(KnowledgeBaseService aKbService,
             RepositoryProperties aRepoProperties, EntityLinkingProperties aProperties)
@@ -104,27 +102,26 @@ public class SemanticSignatureFeatureGenerator
         kbService = aKbService;
         properties = aProperties;
 
-        semanticSignatureCache = Caffeine.newBuilder()
-                .maximumSize(properties.getCacheSize())
+        semanticSignatureCache = Caffeine.newBuilder().maximumSize(properties.getCacheSize())
                 .build(key -> loadSemanticSignature(key));
-        
+
         propertyBlacklist = FileUtils.loadPropertyBlacklist(
                 new File(aRepoProperties.getPath(), "/resources/property_blacklist.txt"));
         propertyWithLabels = FileUtils.loadPropertyLabels(
                 new File(aRepoProperties.getPath(), "/resources/properties_with_labels.txt"));
     }
-    
+
     @Override
     public void apply(CandidateEntity aCandidate)
     {
         Optional<List<String>> optMentionContext = aCandidate.get(KEY_MENTION_CONTEXT);
-        
+
         if (!optMentionContext.isPresent()) {
             return;
         }
-        
+
         Set<String> mentionContext = new HashSet<>(optMentionContext.get());
-        
+
         SemanticSignature sig = getSemanticSignature(aCandidate.getHandle().getKB(),
                 aCandidate.getIRI());
         Set<String> relatedEntities = sig.getRelatedEntities();
@@ -137,21 +134,22 @@ public class SemanticSignatureFeatureGenerator
                 }
             }
         }
-        
+
         aCandidate.put(KEY_SIGNATURE_OVERLAP, signatureOverlap);
         aCandidate.put(KEY_SIGNATURE_OVERLAP_SCORE, signatureOverlap.size());
         aCandidate.put(KEY_NUM_RELATIONS,
                 (sig.getRelatedRelations() != null) ? sig.getRelatedRelations().size() : 0);
     }
-    
+
     /**
      * Remove all cache entries of a specific project
+     * 
      * @param aEvent
      *            The event containing the project
      */
     @EventListener
     public void onKnowledgeBaseConfigurationChangedEvent(
-        KnowledgeBaseConfigurationChangedEvent aEvent)
+            KnowledgeBaseConfigurationChangedEvent aEvent)
     {
         // FIXME instead of maintaining one global cache, we might maintain a cascaded cache
         // where the top level is the project and then for each project we have sub-caches.
@@ -161,6 +159,7 @@ public class SemanticSignatureFeatureGenerator
         // invalidate all.
         semanticSignatureCache.invalidateAll();
     }
+
     /**
      * Retrieves the semantic signature of an entity. See documentation of SemanticSignature class.
      */
@@ -174,8 +173,8 @@ public class SemanticSignatureFeatureGenerator
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
-            TupleQuery query = generateSemanticSignatureQuery(conn,
-                    aKey.getQuery(), properties.getSignatureQueryLimit(), aKey.getKnowledgeBase());
+            TupleQuery query = generateSemanticSignatureQuery(conn, aKey.getQuery(),
+                    properties.getSignatureQueryLimit(), aKey.getKnowledgeBase());
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
                     BindingSet sol = result.next();
@@ -184,12 +183,12 @@ public class SemanticSignatureFeatureGenerator
                     if (propertyWithLabels != null) {
                         Property property = propertyWithLabels.get(labelString);
                         int frequencyThreshold = 0;
-                        boolean isBlacklisted =
-                            (propertyBlacklist != null && propertyBlacklist.contains(propertyString)
-                            || (property != null && (typeBlacklist != null
-                                && typeBlacklist.contains(property.getType()))));
+                        boolean isBlacklisted = (propertyBlacklist != null
+                                && propertyBlacklist.contains(propertyString)
+                                || (property != null && (typeBlacklist != null
+                                        && typeBlacklist.contains(property.getType()))));
                         boolean isUnfrequent = property != null
-                            && property.getFreq() < frequencyThreshold;
+                                && property.getFreq() < frequencyThreshold;
                         if (isBlacklisted || isUnfrequent) {
                             continue;
                         }
@@ -253,7 +252,7 @@ public class SemanticSignatureFeatureGenerator
             return new HashCodeBuilder().append(knowledgeBase).append(query).toHashCode();
         }
     }
-    
+
     /**
      *
      * @param aIri
@@ -268,14 +267,9 @@ public class SemanticSignatureFeatureGenerator
             int aLimit, KnowledgeBase aKb)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        String query = String.join("\n", 
-                SPARQL_PREFIX, 
-                "SELECT DISTINCT ?label ?p WHERE ", 
-                "  {",
-                "    { ?e1  ?rd ?m . ?m ?p ?e2 . }", 
-                "    UNION",
-                "    { ?e2 ?p ?m . ?m ?rr ?e1 . }", 
-                "    ?e1 ?labelIri ?label. ", "  }",
+        String query = String.join("\n", SPARQL_PREFIX, "SELECT DISTINCT ?label ?p WHERE ", "  {",
+                "    { ?e1  ?rd ?m . ?m ?p ?e2 . }", "    UNION",
+                "    { ?e2 ?p ?m . ?m ?rr ?e1 . }", "    ?e1 ?labelIri ?label. ", "  }",
                 " LIMIT " + aLimit);
 
         TupleQuery tupleQuery = aConn.prepareTupleQuery(QueryLanguage.SPARQL, query);

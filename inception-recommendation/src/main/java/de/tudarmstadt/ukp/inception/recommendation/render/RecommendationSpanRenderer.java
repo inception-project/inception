@@ -169,8 +169,7 @@ public class RecommendationSpanRenderer
             // frontend (e.g. brat) which may choose to re-order them (e.g. for layout reasons).
             List<LabelMapKey> sortedAndfiltered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
-                    .limit(pref.getMaxPredictions())
-                    .map(Entry::getKey)
+                    .limit(pref.getMaxPredictions()).map(Entry::getKey)
                     .collect(Collectors.toList());
 
             // Render annotations for each label
@@ -179,8 +178,7 @@ public class RecommendationSpanRenderer
                 AnnotationSuggestion canonicalRecommendation = suggestion.stream()
                         // check for label or feature for no-label annotations as key
                         .filter(p -> label.equalsAnnotationSuggestion(p))
-                        .max(comparingInt(AnnotationSuggestion::getId))
-                        .orElse(null);
+                        .max(comparingInt(AnnotationSuggestion::getId)).orElse(null);
 
                 if (canonicalRecommendation == null) {
                     continue;
@@ -193,7 +191,7 @@ public class RecommendationSpanRenderer
                 // recommendations for that label via the lazy details
                 AnnotationSuggestion ao = labelMap.get(label).values().stream().findFirst().get();
                 AnnotationFeature feature = features.get(ao.getFeature());
-                
+
                 // Retrieve the UI display label for the given feature value
                 FeatureSupport<?> featureSupport = aFsRegistry.findExtension(feature);
                 String annotation = featureSupport.renderFeatureValue(feature, ao.getLabel());

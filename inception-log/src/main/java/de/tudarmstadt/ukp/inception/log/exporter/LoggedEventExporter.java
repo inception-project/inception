@@ -59,7 +59,8 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 @Component
-public class LoggedEventExporter implements ProjectExporter
+public class LoggedEventExporter
+    implements ProjectExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(LoggedEventExporter.class);
 
@@ -80,32 +81,31 @@ public class LoggedEventExporter implements ProjectExporter
     {
         return asList(SourceDocumentExporter.class);
     }
-    
+
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aFile)
         throws Exception
     {
         Project project = aRequest.getProject();
-        
+
         AtomicInteger eventCount = new AtomicInteger(0);
         Set<Long> missingDocuments = new HashSet<>();
         AtomicInteger droppedEvents = new AtomicInteger(0);
-        
+
         // Set up a map of document IDs to document names because we export by name and not
         // by ID.
         Map<Long, String> documentNameIndex = new HashMap<>();
-        documentService.listSourceDocuments(project).forEach(doc -> 
-            documentNameIndex.put(doc.getId(), doc.getName())
-        );
-        
+        documentService.listSourceDocuments(project)
+                .forEach(doc -> documentNameIndex.put(doc.getId(), doc.getName()));
+
         File eventLog = new File(aFile, EVENT_LOG);
         eventLog.createNewFile();
         try (JsonGenerator jGenerator = new ObjectMapper().getFactory()
                 .createGenerator(new FileOutputStream(eventLog), JsonEncoding.UTF8)) {
 
             jGenerator.setPrettyPrinter(new MinimalPrettyPrinter("\n"));
-            
+
             // Stream data
             eventRepository.forEachLoggedEvent(project, event -> {
                 String documentName = null;
@@ -133,7 +133,7 @@ public class LoggedEventExporter implements ProjectExporter
                 exportedEvent.setAnnotator(event.getAnnotator());
                 exportedEvent.setUser(event.getUser());
                 exportedEvent.setDetails(event.getDetails());
-                
+
                 // Write DTO
                 try {
                     jGenerator.writeObject(exportedEvent);
@@ -141,11 +141,11 @@ public class LoggedEventExporter implements ProjectExporter
                 catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                
+
                 eventCount.incrementAndGet();
             });
         }
-        
+
         LOG.info("Exported [{}] logged events for project [{}]", eventCount.get(),
                 project.getName());
         if (!missingDocuments.isEmpty()) {
@@ -153,16 +153,16 @@ public class LoggedEventExporter implements ProjectExporter
                     droppedEvents.get(), missingDocuments.size());
         }
     }
-    
+
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
-        ExportedProject aExProject, ZipFile aZip)
+            ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
         int eventCount = 0;
-        
+
         ZipEntry entry = aZip.getEntry(EVENT_LOG);
-        
+
         if (entry == null) {
             LOG.info("No event log available for import in project [{}]", aProject.getName());
             return;
@@ -186,9 +186,9 @@ public class LoggedEventExporter implements ProjectExporter
                     batch.clear();
                     LOG.trace("... {} events imported ...", eventCount);
                 }
-                
+
                 ExportedLoggedEvent exportedEvent = i.next();
-                
+
                 LoggedEvent event = new LoggedEvent();
                 event.setProject(aProject.getId());
                 event.setUser(exportedEvent.getUser());
@@ -204,7 +204,7 @@ public class LoggedEventExporter implements ProjectExporter
                 else {
                     event.setDocument(-1);
                 }
-                
+
                 batch.add(event);
 
                 eventCount++;
@@ -214,7 +214,7 @@ public class LoggedEventExporter implements ProjectExporter
             eventRepository.create(batch.stream().toArray(LoggedEvent[]::new));
 
         }
-        
+
         LOG.info("Imported [{}] logged events for project [{}]", eventCount, aProject.getName());
     }
 }

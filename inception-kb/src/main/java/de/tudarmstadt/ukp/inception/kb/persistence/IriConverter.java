@@ -36,7 +36,7 @@ public class IriConverter
         if (aIri == null) {
             return null;
         }
-        
+
         return aIri.stringValue();
     }
 
@@ -46,7 +46,7 @@ public class IriConverter
         if (iriString == null || iriString.length() == 0) {
             return null;
         }
-        
+
         ValueFactory factory = SimpleValueFactory.getInstance();
         return factory.createIRI(iriString);
     }

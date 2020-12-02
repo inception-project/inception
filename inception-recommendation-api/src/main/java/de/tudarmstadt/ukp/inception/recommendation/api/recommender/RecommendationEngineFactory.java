@@ -34,12 +34,12 @@ public interface RecommendationEngineFactory<T>
      *         based on this factory
      */
     boolean isDeprecated();
-    
+
     default boolean isEvaluable()
     {
         return true;
     }
-    
+
     default boolean isMultipleRecommendationProvider()
     {
         return true;

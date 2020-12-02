@@ -27,26 +27,15 @@ import org.springframework.context.annotation.FilterType;
 import de.tudarmstadt.ukp.inception.log.exporter.LoggedEventExporter;
 
 @SpringBootConfiguration
-@ComponentScan(
-        basePackages = {
-            "de.tudarmstadt.ukp.clarin.webanno.webapp",
-            "de.tudarmstadt.ukp.inception"
-        },
-        excludeFilters = {
-                @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
-                        LoggedEventExporter.class
-                })
-        })
-@EntityScan(
-        basePackages = {
-            "de.tudarmstadt.ukp.inception.log.model",
-            "de.tudarmstadt.ukp.clarin.webanno.security.model",
-            "de.tudarmstadt.ukp.clarin.webanno.model"
-})
+@ComponentScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.webapp",
+        "de.tudarmstadt.ukp.inception" }, excludeFilters = {
+                @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
+                        LoggedEventExporter.class }) })
+@EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.log.model",
+        "de.tudarmstadt.ukp.clarin.webanno.security.model",
+        "de.tudarmstadt.ukp.clarin.webanno.model" })
 @EnableAutoConfiguration
 public class SpringConfig
 {
     // No content
 }
-
-

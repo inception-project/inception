@@ -121,10 +121,8 @@ public class ExternalRecommenderIntegrationTest
     public void thatTrainingWorks() throws Exception
     {
         List<CAS> data = loadDevelopmentData();
-        
-        assertThatCode(() ->
-            sut.train(context, data)
-        ).doesNotThrowAnyException();
+
+        assertThatCode(() -> sut.train(context, data)).doesNotThrowAnyException();
     }
 
     @Test
@@ -139,13 +137,12 @@ public class ExternalRecommenderIntegrationTest
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).as("Predictions are not empty")
-                .isNotEmpty();
+        assertThat(predictions).as("Predictions are not empty").isNotEmpty();
 
-        assertThat(cas).as("Predictions are correct")
-            .containsNamedEntity("Ecce homo", "OTH")
-            .containsNamedEntity("The Lindsey School Lindsey School & Community Arts College", "ORG")
-            .containsNamedEntity("Lido delle Nazioni", "LOC");
+        assertThat(cas).as("Predictions are correct").containsNamedEntity("Ecce homo", "OTH")
+                .containsNamedEntity("The Lindsey School Lindsey School & Community Arts College",
+                        "ORG")
+                .containsNamedEntity("Lido delle Nazioni", "LOC");
     }
 
     @Test
@@ -157,18 +154,16 @@ public class ExternalRecommenderIntegrationTest
         TrainingRequest request = fromJsonString(TrainingRequest.class, requestBodies.get(0));
 
         assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
-            .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
-            .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
-            .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
-            .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
-            .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
-
+                .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
+                .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
+                .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
+                .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
+                .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
 
         for (int i = 0; i < request.getDocuments().size(); i++) {
             Document doc = request.getDocuments().get(i);
-            assertThat(doc)
-                .hasFieldOrPropertyWithValue("documentId", (long) i)
-                .hasFieldOrPropertyWithValue("userId", USER_NAME);
+            assertThat(doc).hasFieldOrPropertyWithValue("documentId", (long) i)
+                    .hasFieldOrPropertyWithValue("userId", USER_NAME);
         }
     }
 
@@ -184,14 +179,13 @@ public class ExternalRecommenderIntegrationTest
         PredictionRequest request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
 
         assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
-            .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
-            .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
-            .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
-            .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
-            .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
-        assertThat(request.getDocument())
-            .hasFieldOrPropertyWithValue("userId", USER_NAME)
-            .hasFieldOrPropertyWithValue("documentId", 0L);
+                .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
+                .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
+                .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
+                .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
+                .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
+        assertThat(request.getDocument()).hasFieldOrPropertyWithValue("userId", USER_NAME)
+                .hasFieldOrPropertyWithValue("documentId", 0L);
     }
 
     private List<CAS> loadDevelopmentData() throws Exception
@@ -199,7 +193,7 @@ public class ExternalRecommenderIntegrationTest
         try {
             Dataset ds = loader.load("germeval2014-de", CONTINUE);
             List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
-    
+
             for (int i = 0; i < data.size(); i++) {
                 CAS cas = data.get(i);
                 addCasMetadata(cas.getJCas(), i);
@@ -214,15 +208,14 @@ public class ExternalRecommenderIntegrationTest
         }
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2002Reader.class,
-            Conll2002Reader.PARAM_PATTERNS, files,
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(),
-            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
-            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true,
-            Conll2002Reader.PARAM_HAS_HEADER, true,
-            Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+                Conll2002Reader.PARAM_PATTERNS, files, Conll2002Reader.PARAM_LANGUAGE,
+                ds.getLanguage(), Conll2002Reader.PARAM_COLUMN_SEPARATOR,
+                Conll2002Reader.ColumnSeparators.TAB.getName(),
+                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, Conll2002Reader.PARAM_HAS_HEADER,
+                true, Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
@@ -246,20 +239,22 @@ public class ExternalRecommenderIntegrationTest
 
         AnnotationFeature feature = new AnnotationFeature();
         feature.setName("value");
-        
+
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);
-        
+
         return recommender;
     }
 
     private Dispatcher buildDispatcher()
     {
-        return new Dispatcher() {
+        return new Dispatcher()
+        {
             @Override
-            public MockResponse dispatch(RecordedRequest request) {
+            public MockResponse dispatch(RecordedRequest request)
+            {
                 try {
                     String body = request.getBody().readUtf8();
                     requestBodies.add(body);
@@ -267,11 +262,13 @@ public class ExternalRecommenderIntegrationTest
                     if (request.getPath().equals("/train")) {
                         remoteRecommender.train(body);
                         return new MockResponse().setResponseCode(204);
-                    } else if (request.getPath().equals("/predict")) {
+                    }
+                    else if (request.getPath().equals("/predict")) {
                         String response = remoteRecommender.predict(body);
                         return new MockResponse().setResponseCode(200).setBody(response);
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     throw new RuntimeException(e);
                 }
 

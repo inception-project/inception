@@ -68,7 +68,7 @@ public class IriConstants
      * http://www.wikidata.org/prop/direct/P31
      */
     public static final IRI WIKIDATA_TYPE;
-    
+
     /**
      * http://www.wikidata.org/entity/Q18616576
      */
@@ -103,14 +103,14 @@ public class IriConstants
 
     static {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        
+
         WIKIDATA_CLASS = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q35120");
         WIKIDATA_SUBCLASS = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P279");
         WIKIDATA_TYPE = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P31");
-        WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
+        WIKIDATA_PROPERTY_TYPE = vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
         WIKIDATA_SUBPROPERTY = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P1647");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
-        
+
         FTS_FUSEKI = vf.createIRI("text:query");
         FTS_VIRTUOSO = vf.createIRI("bif:contains");
         FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
@@ -128,17 +128,17 @@ public class IriConstants
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         FTS_IRIS = asList(FTS_FUSEKI, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_LUCENE);
     }
-    
+
     public static boolean hasImplicitNamespace(KnowledgeBase kb, String s)
     {
-        // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not 
+        // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not
         // want to filter it out just because we consider the OWL namespace to be implicit.
         Set<String> rootConceptsAsStrings = kb.getRootConcepts().stream().map(IRI::stringValue)
                 .collect(Collectors.toSet());
         if (rootConceptsAsStrings.contains(s)) {
             return false;
         }
-        
+
         for (String ns : IMPLICIT_NAMESPACES) {
             if (s.startsWith(ns)) {
                 return true;
@@ -147,8 +147,8 @@ public class IriConstants
         return false;
     }
 
-    public static boolean isFromImplicitNamespace(KBObject handle) {
-        return IMPLICIT_NAMESPACES.stream()
-                .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
+    public static boolean isFromImplicitNamespace(KBObject handle)
+    {
+        return IMPLICIT_NAMESPACES.stream().anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 }

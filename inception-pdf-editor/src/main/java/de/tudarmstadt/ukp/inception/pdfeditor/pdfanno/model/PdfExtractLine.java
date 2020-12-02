@@ -23,7 +23,8 @@ import java.util.Objects;
 /**
  * Represents a line within a PDFExtract file.
  */
-public class PdfExtractLine implements Serializable
+public class PdfExtractLine
+    implements Serializable
 {
 
     private static final long serialVersionUID = -246112751706793932L;
@@ -89,18 +90,20 @@ public class PdfExtractLine implements Serializable
     }
 
     @Override
-    public boolean equals(Object aObject) {
-        if (this == aObject) return true;
-        if (aObject == null || getClass() != aObject.getClass()) return false;
+    public boolean equals(Object aObject)
+    {
+        if (this == aObject)
+            return true;
+        if (aObject == null || getClass() != aObject.getClass())
+            return false;
         PdfExtractLine that = (PdfExtractLine) aObject;
-        return page == that.page &&
-            position == that.position &&
-            Objects.equals(value, that.value) &&
-            Objects.equals(displayPositions, that.displayPositions);
+        return page == that.page && position == that.position && Objects.equals(value, that.value)
+                && Objects.equals(displayPositions, that.displayPositions);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(page, position, value, displayPositions);
     }
 }

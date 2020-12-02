@@ -71,13 +71,13 @@ public class InceptionSecurity
     extends GlobalAuthenticationConfigurerAdapter
 {
     private @Value("${auth.preauth.header.principal:remote_user}") String preAuthPrincipalHeader;
-    
+
     private final DataSource dataSource;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationProvider authenticationProvider;
     private final UserDao userRepository;
-    
+
     // The AuthenticationManager is created by this configuration, yet we also need to access it
     // when constructing the OverridableUserDetailsManager - to break the cyclic dependency, we
     // lazily inject it here.
@@ -100,7 +100,7 @@ public class InceptionSecurity
         auth.authenticationProvider(authenticationProvider);
         auth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
     }
-    
+
     @Order(1)
     @Configuration
     public static class RemoteApiSecurity
@@ -109,19 +109,12 @@ public class InceptionSecurity
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
-            aHttp
-                .antMatcher("/api/**")
-                .csrf().disable()
-                .authorizeRequests()
-                    .anyRequest().access("hasAnyRole('ROLE_REMOTE')")
-                .and()
-                .httpBasic()
-                .and()
-                .sessionManagement()
+            aHttp.antMatcher("/api/**").csrf().disable().authorizeRequests().anyRequest()
+                    .access("hasAnyRole('ROLE_REMOTE')").and().httpBasic().and().sessionManagement()
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         }
     }
-    
+
     @Configuration
     @Profile("auto-mode-builtin")
     public static class WebUiSecurity
@@ -136,37 +129,27 @@ public class InceptionSecurity
         {
             return super.authenticationManagerBean();
         }
-        
+
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
-            aHttp
-                .rememberMe()
-                .and()
-                .csrf().disable()
-                .authorizeRequests()
+            aHttp.rememberMe().and().csrf().disable().authorizeRequests()
                     .antMatchers("/login.html*").permitAll()
                     // Resources need to be publicly accessible so they don't trigger the login
                     // page. Otherwise it could happen that the user is redirected to a resource
                     // upon login instead of being forwarded to a proper application page.
-                    .antMatchers("/favicon.ico").permitAll()
-                    .antMatchers("/favicon.png").permitAll()
-                    .antMatchers("/assets/**").permitAll()
-                    .antMatchers("/images/**").permitAll()
-                    .antMatchers("/resources/**").permitAll()
-                    .antMatchers("/wicket/resource/**").permitAll()
-                    .antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')")
+                    .antMatchers("/favicon.ico").permitAll().antMatchers("/favicon.png").permitAll()
+                    .antMatchers("/assets/**").permitAll().antMatchers("/images/**").permitAll()
+                    .antMatchers("/resources/**").permitAll().antMatchers("/wicket/resource/**")
+                    .permitAll().antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')")
                     .antMatchers("/admin/**").access("hasAnyRole('ROLE_ADMIN')")
                     .antMatchers("/doc/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-                    .antMatchers("/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-                    .anyRequest().denyAll()
-                .and()
-                .exceptionHandling()
+                    .antMatchers("/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')").anyRequest()
+                    .denyAll().and().exceptionHandling()
                     .defaultAuthenticationEntryPointFor(
-                            new LoginUrlAuthenticationEntryPoint("/login.html"), 
+                            new LoginUrlAuthenticationEntryPoint("/login.html"),
                             new AntPathRequestMatcher("/**"))
-                .and()
-                    .headers().frameOptions().sameOrigin();
+                    .and().headers().frameOptions().sameOrigin();
         }
     }
 
@@ -184,44 +167,34 @@ public class InceptionSecurity
         {
             return super.authenticationManagerBean();
         }
-        
+
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
-            aHttp
-                .rememberMe()
-                .and()
-                .csrf().disable()
-                .addFilterBefore(preAuthFilter(), RequestHeaderAuthenticationFilter.class)
-                .authorizeRequests()
+            aHttp.rememberMe().and().csrf().disable()
+                    .addFilterBefore(preAuthFilter(), RequestHeaderAuthenticationFilter.class)
+                    .authorizeRequests()
                     // Resources need to be publicly accessible so they don't trigger the login
                     // page. Otherwise it could happen that the user is redirected to a resource
                     // upon login instead of being forwarded to a proper application page.
-                    .antMatchers("/favicon.ico").permitAll()
-                    .antMatchers("/favicon.png").permitAll()
-                    .antMatchers("/assets/**").permitAll()
-                    .antMatchers("/images/**").permitAll()
-                    .antMatchers("/resources/**").permitAll()
-                    .antMatchers("/wicket/resource/**").permitAll()
-                    .antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')")
+                    .antMatchers("/favicon.ico").permitAll().antMatchers("/favicon.png").permitAll()
+                    .antMatchers("/assets/**").permitAll().antMatchers("/images/**").permitAll()
+                    .antMatchers("/resources/**").permitAll().antMatchers("/wicket/resource/**")
+                    .permitAll().antMatchers("/swagger-ui.html").access("hasAnyRole('ROLE_REMOTE')")
                     .antMatchers("/admin/**").access("hasAnyRole('ROLE_ADMIN')")
                     .antMatchers("/doc/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-                    .antMatchers("/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')")
-                    .anyRequest().denyAll()
-                .and()
-                .exceptionHandling()
-                    .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
-                .and()
-                    .headers().frameOptions().sameOrigin();
+                    .antMatchers("/**").access("hasAnyRole('ROLE_ADMIN', 'ROLE_USER')").anyRequest()
+                    .denyAll().and().exceptionHandling()
+                    .authenticationEntryPoint(new Http403ForbiddenEntryPoint()).and().headers()
+                    .frameOptions().sameOrigin();
         }
     }
-    
+
     @Bean
     @Profile("auto-mode-preauth")
     public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter()
     {
-        ShibbolethRequestHeaderAuthenticationFilter filter = 
-                new ShibbolethRequestHeaderAuthenticationFilter();
+        ShibbolethRequestHeaderAuthenticationFilter filter = new ShibbolethRequestHeaderAuthenticationFilter();
         filter.setPrincipalRequestHeader(preAuthPrincipalHeader);
         filter.setAuthenticationManager(authenticationManager);
         filter.setUserDetailsManager(userDetailsService());
@@ -229,7 +202,7 @@ public class InceptionSecurity
         filter.setExceptionIfHeaderMissing(true);
         return filter;
     }
-    
+
     @Bean(name = "authenticationProvider")
     @Profile("auto-mode-builtin")
     public DaoAuthenticationProvider internalAuthenticationProvider()
@@ -244,8 +217,7 @@ public class InceptionSecurity
     @Profile("auto-mode-preauth")
     public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider()
     {
-        PreAuthenticatedAuthenticationProvider authProvider = 
-                new PreAuthenticatedAuthenticationProvider();
+        PreAuthenticatedAuthenticationProvider authProvider = new PreAuthenticatedAuthenticationProvider();
         authProvider.setPreAuthenticatedUserDetailsService(
                 new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(
                         userDetailsService()));
@@ -260,7 +232,7 @@ public class InceptionSecurity
         manager.setAuthenticationManager(authenticationManager);
         return manager;
     }
-    
+
     // This bean allows the application to access session information. We currently only use this
     // to display the number of active users in the SystemStatusDashlet. However, the LoginPage
     // also accesses this bean in order to manually register the session when the user logs in.

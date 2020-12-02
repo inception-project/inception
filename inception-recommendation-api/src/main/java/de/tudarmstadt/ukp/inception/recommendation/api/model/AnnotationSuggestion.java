@@ -31,7 +31,7 @@ public class AnnotationSuggestion
     implements Serializable
 {
     public static final String EXTENSION_ID = "rec";
-    
+
     private static final long serialVersionUID = -1904645143661843249L;
 
     /**
@@ -61,11 +61,10 @@ public class AnnotationSuggestion
      * the visbility state)
      */
     public static final int FLAG_TRANSIENT_CORRECTED = 1 << 5;
-    
+
     public static final int FLAG_ALL = FLAG_OVERLAP | FLAG_SKIPPED | FLAG_REJECTED
             | FLAG_TRANSIENT_ACCEPTED | FLAG_TRANSIENT_REJECTED | FLAG_TRANSIENT_CORRECTED;
-    
-    
+
     private final int id;
 
     private final long recommenderId;
@@ -87,9 +86,9 @@ public class AnnotationSuggestion
     private int hidingFlags = 0;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
-        long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
-        String aCoveredText, String aLabel, String aUiLabel, double aConfidence,
-        String aConfidenceExplanation)
+            long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
+            String aCoveredText, String aLabel, String aUiLabel, double aConfidence,
+            String aConfidenceExplanation)
     {
         label = aLabel;
         uiLabel = aUiLabel;
@@ -172,7 +171,7 @@ public class AnnotationSuggestion
     {
         return layerId;
     }
-    
+
     public String getFeature()
     {
         return feature;
@@ -187,8 +186,8 @@ public class AnnotationSuggestion
     {
         return confidence;
     }
-    
-    public Optional<String> getConfidenceExplanation() 
+
+    public Optional<String> getConfidenceExplanation()
     {
         return Optional.ofNullable(confidenceExplanation);
     }
@@ -216,12 +215,12 @@ public class AnnotationSuggestion
     {
         hidingFlags |= aFlags;
     }
-    
+
     public void show(int aFlags)
     {
         hidingFlags &= ~aFlags;
     }
-    
+
     public String getReasonForHiding()
     {
         StringBuilder sb = new StringBuilder();
@@ -242,7 +241,7 @@ public class AnnotationSuggestion
         }
         return sb.toString();
     }
-    
+
     public boolean isVisible()
     {
         return hidingFlags == 0;
@@ -251,8 +250,7 @@ public class AnnotationSuggestion
     public VID getVID()
     {
         String payload = new VID(layerId, (int) recommenderId, id).toString();
-        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id,
-                payload);
+        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, payload);
     }
 
     @Override
@@ -285,12 +283,11 @@ public class AnnotationSuggestion
         return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
                 .append("recommenderName", recommenderName).append("layerId", layerId)
                 .append("feature", feature).append("documentName", documentName)
-                .append("begin", begin).append("end", end)
-                .append("coveredText", coveredText).append("label", label)
-                .append("uiLabel", uiLabel).append("confidence", confidence)
+                .append("begin", begin).append("end", end).append("coveredText", coveredText)
+                .append("label", label).append("uiLabel", uiLabel).append("confidence", confidence)
                 .append("confindenceExplanation", confidenceExplanation)
-                .append("visible", isVisible())
-                .append("reasonForHiding", getReasonForHiding()).toString();
+                .append("visible", isVisible()).append("reasonForHiding", getReasonForHiding())
+                .toString();
     }
 
     /**

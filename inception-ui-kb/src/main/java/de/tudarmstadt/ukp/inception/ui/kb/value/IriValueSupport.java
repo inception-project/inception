@@ -46,24 +46,24 @@ public class IriValueSupport
     implements ValueTypeSupport
 {
     private String valueTypeSupportId;
-    
+
     @Override
     public String getId()
     {
         return valueTypeSupportId;
     }
-    
+
     @Override
     public void setBeanName(String aBeanName)
     {
         valueTypeSupportId = aBeanName;
     }
-    
+
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
         return asList(
-            new ValueType(XMLSchema.ANYURI.stringValue(), "Resource", valueTypeSupportId));
+                new ValueType(XMLSchema.ANYURI.stringValue(), "Resource", valueTypeSupportId));
     }
 
     @Override
@@ -82,12 +82,11 @@ public class IriValueSupport
         return false;
     }
 
-    
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
             IModel<KBProperty> aProperty, IModel<KnowledgeBase> aKbModel)
     {
-        return new IRIValueEditor(aId, aStatement,aProperty, aKbModel);
+        return new IRIValueEditor(aId, aStatement, aProperty, aKbModel);
     }
 
     @Override

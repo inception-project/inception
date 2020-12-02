@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Metadata {
+public class Metadata
+{
 
     private final String layer;
     private final String feature;
@@ -28,10 +29,10 @@ public class Metadata {
     private final boolean crossSentence;
 
     public Metadata(@JsonProperty(value = "layer", required = true) String aLayer,
-                    @JsonProperty(value = "feature", required = true) String aFeature,
-                    @JsonProperty(value = "projectId", required = true) long aProjectId,
-                    @JsonProperty(value = "anchoringMode", required = true) String aAnchoringMode,
-                    @JsonProperty(value = "crossSentence", required = true) boolean aCrossSentence)
+            @JsonProperty(value = "feature", required = true) String aFeature,
+            @JsonProperty(value = "projectId", required = true) long aProjectId,
+            @JsonProperty(value = "anchoringMode", required = true) String aAnchoringMode,
+            @JsonProperty(value = "crossSentence", required = true) boolean aCrossSentence)
     {
         layer = aLayer;
         feature = aFeature;

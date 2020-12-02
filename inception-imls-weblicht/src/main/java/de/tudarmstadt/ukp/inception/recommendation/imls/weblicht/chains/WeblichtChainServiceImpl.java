@@ -51,17 +51,17 @@ public class WeblichtChainServiceImpl
     implements WeblichtChainService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @PersistenceContext
     private EntityManager entityManager;
-    
+
     private final RepositoryProperties repositoryProperties;
-    
+
     @Autowired
     public WeblichtChainServiceImpl(RepositoryProperties aRepositoryProperties)
     {
         repositoryProperties = aRepositoryProperties;
-    }    
+    }
 
     public WeblichtChainServiceImpl(RepositoryProperties aRepositoryProperties,
             EntityManager aEntityManager)
@@ -69,20 +69,16 @@ public class WeblichtChainServiceImpl
         this(aRepositoryProperties);
         entityManager = aEntityManager;
     }
-    
+
     @Override
     @Transactional
     public Optional<WeblichtChain> getChain(Recommender aRecommender)
     {
-        String query = String.join("\n", 
-                "FROM WeblichtChain",
-                "WHERE recommender = :recommender ",
+        String query = String.join("\n", "FROM WeblichtChain", "WHERE recommender = :recommender ",
                 "ORDER BY name ASC");
-        
-        return entityManager
-                .createQuery(query, WeblichtChain.class)
-                .setParameter("recommender", aRecommender)
-                .getResultList().stream().findFirst();
+
+        return entityManager.createQuery(query, WeblichtChain.class)
+                .setParameter("recommender", aRecommender).getResultList().stream().findFirst();
     }
 
     @Override
@@ -91,7 +87,7 @@ public class WeblichtChainServiceImpl
     {
         if (aGazeteer.getId() == null) {
             entityManager.persist(aGazeteer);
-            
+
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
                 log.info("Created chain [{}] for recommender [{}]({}) in project [{}]({})",
@@ -103,7 +99,7 @@ public class WeblichtChainServiceImpl
         }
         else {
             entityManager.merge(aGazeteer);
-            
+
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
                 log.info("Updated chain [{}] for recommender [{}]({}) in project [{}]({})",
@@ -120,11 +116,11 @@ public class WeblichtChainServiceImpl
     public void importChainFile(WeblichtChain aGazeteer, InputStream aStream) throws IOException
     {
         File gazFile = getChainFile(aGazeteer);
-        
+
         if (!gazFile.getParentFile().exists()) {
             gazFile.getParentFile().mkdirs();
         }
-        
+
         try (OutputStream os = new FileOutputStream(gazFile)) {
             IOUtils.copyLarge(aStream, os);
         }
@@ -133,50 +129,42 @@ public class WeblichtChainServiceImpl
     @Override
     public File getChainFile(WeblichtChain aChain) throws IOException
     {
-        return repositoryProperties.getPath().toPath()
-                .resolve("project")
+        return repositoryProperties.getPath().toPath().resolve("project")
                 .resolve(String.valueOf(aChain.getRecommender().getProject().getId()))
-                .resolve("weblicht_chains")
-                .resolve(aChain.getId() + ".xml")
-                .toFile();
+                .resolve("weblicht_chains").resolve(aChain.getId() + ".xml").toFile();
     }
 
     @Override
     @Transactional
     public void deleteChain(WeblichtChain aChain) throws IOException
     {
-        entityManager.remove(
-                entityManager.contains(aChain) ? aChain : entityManager.merge(aChain));
-        
+        entityManager.remove(entityManager.contains(aChain) ? aChain : entityManager.merge(aChain));
+
         File gaz = getChainFile(aChain);
         if (gaz.exists()) {
             gaz.delete();
         }
-        
+
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aChain.getRecommender().getProject().getId()))) {
             log.info("Removed chain [{}] from recommender [{}]({}) in project [{}]({})",
                     aChain.getName(), aChain.getRecommender().getName(),
-                    aChain.getRecommender().getId(),
-                    aChain.getRecommender().getProject().getName(),
+                    aChain.getRecommender().getId(), aChain.getRecommender().getProject().getName(),
                     aChain.getRecommender().getProject().getId());
         }
     }
-    
+
     @Override
     @Transactional
     public boolean existsChain(Recommender aRecommender)
     {
         Validate.notNull(aRecommender, "Recommender must be specified");
-        
-        String query = 
-                "SELECT COUNT(*) " +
-                "FROM WeblichtChain " + 
-                "WHERE recommender = :recommender";
-        
+
+        String query = "SELECT COUNT(*) " + "FROM WeblichtChain "
+                + "WHERE recommender = :recommender";
+
         long count = entityManager.createQuery(query, Long.class)
-            .setParameter("recommender", aRecommender)
-            .getSingleResult();
+                .setParameter("recommender", aRecommender).getSingleResult();
 
         return count > 0;
     }

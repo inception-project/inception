@@ -39,7 +39,7 @@ public class LegacyHtmlFormatSupport
 {
     public static final String ID = "html";
     public static final String NAME = "HTML (legacy)";
-    
+
     @Override
     public String getId()
     {
@@ -57,7 +57,7 @@ public class LegacyHtmlFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException

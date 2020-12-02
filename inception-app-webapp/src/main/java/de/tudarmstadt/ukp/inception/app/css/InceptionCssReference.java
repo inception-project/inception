@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.app.css;
 
 import org.apache.wicket.request.resource.CssResourceReference;
 
-public class InceptionCssReference extends CssResourceReference
+public class InceptionCssReference
+    extends CssResourceReference
 {
     private static final long serialVersionUID = 1L;
 

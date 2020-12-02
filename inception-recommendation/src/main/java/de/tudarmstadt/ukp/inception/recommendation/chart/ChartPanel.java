@@ -67,7 +67,7 @@ public class ChartPanel
         chartAjaxBejavior = new ChartAjaxBejavior();
         add(chartAjaxBejavior);
     }
-    
+
     public LearningCurve getModelObject()
     {
         return (LearningCurve) getDefaultModelObject();
@@ -92,19 +92,13 @@ public class ChartPanel
                 getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
 
         aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
-        
-        String chartTriggerJavascript = String.join("\n",
-                "$(document).ready(function(){", 
+
+        String chartTriggerJavascript = String.join("\n", "$(document).ready(function(){",
                 "   $.ajax({",
                 "       url:'" + chartAjaxBejavior.getCallbackUrl().toString() + "',",
-                "       type:'post',",
-                "       contentType:'application/json',",
-                "       dataType:'json',",
-                "       success : function(result){",
-                "           updateLearningCurveDiagram(result)",
-                "       }",
-                "   })",
-                "})");
+                "       type:'post',", "       contentType:'application/json',",
+                "       dataType:'json',", "       success : function(result){",
+                "           updateLearningCurveDiagram(result)", "       }", "   })", "})");
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
     }

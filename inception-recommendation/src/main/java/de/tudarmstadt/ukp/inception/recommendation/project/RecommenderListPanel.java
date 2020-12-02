@@ -41,16 +41,16 @@ public class RecommenderListPanel
 
     private IModel<Project> projectModel;
     private IModel<Recommender> selectedRecommender;
-    
+
     private OverviewListChoice<Recommender> overviewList;
-    
+
     public RecommenderListPanel(String id, IModel<Project> aProject,
             IModel<Recommender> aRecommender, boolean showCreateButton)
     {
         super(id);
-        
+
         setOutputMarkupId(true);
-        
+
         projectModel = aProject;
         selectedRecommender = aRecommender;
 
@@ -60,15 +60,15 @@ public class RecommenderListPanel
         overviewList.setChoices(LambdaModel.of(this::listRecommenders));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
-        
+
         LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink("create", this::actionCreate);
-        add(lambdaAjaxLink);  
-        
-        if (!showCreateButton)        {
+        add(lambdaAjaxLink);
+
+        if (!showCreateButton) {
             lambdaAjaxLink.setVisible(false);
         }
     }
-    
+
     private List<Recommender> listRecommenders()
     {
         return recommendationService.listRecommenders(projectModel.getObject());

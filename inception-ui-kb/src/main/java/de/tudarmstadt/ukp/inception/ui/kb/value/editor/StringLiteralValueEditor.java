@@ -31,7 +31,7 @@ public class StringLiteralValueEditor
     private static final long serialVersionUID = 6935837930064826698L;
 
     private TextArea<String> value;
-    
+
     public StringLiteralValueEditor(String aId, IModel<KBStatement> aModel)
     {
         super(aId, CompoundPropertyModel.of(aModel));
@@ -45,7 +45,7 @@ public class StringLiteralValueEditor
 
         add(new TextField<>("language"));
     }
-    
+
     @Override
     public Component getFocusComponent()
     {

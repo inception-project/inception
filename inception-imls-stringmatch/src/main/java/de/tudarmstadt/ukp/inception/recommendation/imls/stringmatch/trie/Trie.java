@@ -93,11 +93,11 @@ public class Trie<V>
     public V put(final CharSequence aKey, final V value)
     {
         CharSequence key = aKey;
-        
+
         if (sanitizerFactory != null) {
             key = sanitizerFactory.create().sanitize(key);
         }
-        
+
         if (key.length() == 0) {
             throw new IllegalArgumentException("Zero-length keys are illegal");
         }
@@ -236,7 +236,7 @@ public class Trie<V>
                     continue;
                 }
             }
-            
+
             final Node cur = last.children.get(k);
             if (cur == null) {
                 break;

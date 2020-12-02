@@ -77,68 +77,48 @@ public class EventRepositoryImpl
 
         return listLoggedEventsForDetail(aProject, aUsername, aEventType, aMaxSize, detailStr);
     }
-    
+
     @Override
     @Transactional
     public List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
             String aEventType, int aMaxSize, String aDetail)
     {
-        String query = String.join("\n", 
-                "FROM LoggedEvent WHERE ", 
-                "user=:user AND ",
-                "project = :project AND ", 
-                "event = :event AND ", 
-                "details LIKE :details ",
+        String query = String.join("\n", "FROM LoggedEvent WHERE ", "user=:user AND ",
+                "project = :project AND ", "event = :event AND ", "details LIKE :details ",
                 "ORDER BY created DESC");
 
-        return entityManager.createQuery(query, LoggedEvent.class)
-                .setParameter("user", aUsername)
-                .setParameter("project", aProject.getId())
-                .setParameter("event", aEventType)
-                .setParameter("details", aDetail)
-                .setMaxResults(aMaxSize).getResultList();
+        return entityManager.createQuery(query, LoggedEvent.class).setParameter("user", aUsername)
+                .setParameter("project", aProject.getId()).setParameter("event", aEventType)
+                .setParameter("details", aDetail).setMaxResults(aMaxSize).getResultList();
     }
-    
+
     @Override
     @Transactional
     public List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String[] aEventTypes, int aMaxSize)
     {
-        String query = String.join("\n", 
-                "FROM LoggedEvent WHERE",
-                "id IN",
+        String query = String.join("\n", "FROM LoggedEvent WHERE", "id IN",
                 // select one event when time-stamps are the same per document
-                "   (SELECT max(id)",
-                "   FROM LoggedEvent WHERE",
-                "   user=:user AND",
-                "   project=:project AND",
-                "   event in (:eventTypes)",
-                "   AND created in",
+                "   (SELECT max(id)", "   FROM LoggedEvent WHERE", "   user=:user AND",
+                "   project=:project AND", "   event in (:eventTypes)", "   AND created in",
                 // select last created events per document
-                "       (SELECT max(created) ",
-                "       FROM LoggedEvent WHERE",
-                "       user=:user AND",
-                "       project=:project AND",
-                "       event in (:eventTypes)",
-                "       GROUP BY document)",
-                "   GROUP BY document)",
-                "ORDER BY created DESC");
+                "       (SELECT max(created) ", "       FROM LoggedEvent WHERE",
+                "       user=:user AND", "       project=:project AND",
+                "       event in (:eventTypes)", "       GROUP BY document)",
+                "   GROUP BY document)", "ORDER BY created DESC");
 
         TypedQuery<LoggedEvent> typedQuery = entityManager.createQuery(query, LoggedEvent.class)
-                .setParameter("user", aUsername)
-                .setParameter("project", aProject.getId())
+                .setParameter("user", aUsername).setParameter("project", aProject.getId())
                 .setParameter("eventTypes", Arrays.asList(aEventTypes));
         return typedQuery.setMaxResults(aMaxSize).getResultList();
     }
-    
+
     @Override
     @Transactional
     public void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer)
     {
         // Set up data source
-        String query = String.join("\n",
-                "FROM LoggedEvent WHERE ",
-                "project = :project ",
+        String query = String.join("\n", "FROM LoggedEvent WHERE ", "project = :project ",
                 "ORDER BY id");
         TypedQuery<LoggedEvent> typedQuery = entityManager.createQuery(query, LoggedEvent.class)
                 .setParameter("project", aProject.getId());

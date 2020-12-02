@@ -118,8 +118,8 @@ public class ImageExtractor
         addOperator(new SetMatrix());
     }
 
-    @Override protected void processOperator(Operator operator, List<COSBase> operands)
-        throws IOException
+    @Override
+    protected void processOperator(Operator operator, List<COSBase> operands) throws IOException
     {
         String operation = operator.getName();
         if ("Do".equals(operation)) {

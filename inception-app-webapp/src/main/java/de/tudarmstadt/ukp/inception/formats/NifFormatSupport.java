@@ -38,7 +38,7 @@ public class NifFormatSupport
 {
     public static final String ID = "nif";
     public static final String NAME = "NLP Interchange Format (NIF)";
-    
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class NifFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -69,7 +69,7 @@ public class NifFormatSupport
     {
         return createReaderDescription(NifReader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

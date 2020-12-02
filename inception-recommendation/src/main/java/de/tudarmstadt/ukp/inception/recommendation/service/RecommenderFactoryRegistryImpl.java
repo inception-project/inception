@@ -55,7 +55,7 @@ public class RecommenderFactoryRegistryImpl
     private Map<String, RecommendationEngineFactory> extensions;
 
     public RecommenderFactoryRegistryImpl(
-        @Lazy @Autowired(required = false) List<RecommendationEngineFactory> aExtensions)
+            @Lazy @Autowired(required = false) List<RecommendationEngineFactory> aExtensions)
     {
         extensionsProxy = aExtensions;
     }
@@ -73,7 +73,7 @@ public class RecommenderFactoryRegistryImpl
         if (extensionsProxy != null) {
             for (RecommendationEngineFactory ext : extensionsProxy) {
                 log.info("Found recommendation engine: {}",
-                    ClassUtils.getAbbreviatedName(ext.getClass(), 20));
+                        ClassUtils.getAbbreviatedName(ext.getClass(), 20));
                 exts.put(ext.getId(), ext);
             }
         }
@@ -82,7 +82,8 @@ public class RecommenderFactoryRegistryImpl
     }
 
     @Override
-    public List<RecommendationEngineFactory> getAllFactories() {
+    public List<RecommendationEngineFactory> getAllFactories()
+    {
         List<RecommendationEngineFactory> factories = new ArrayList<>();
         factories.addAll(extensions.values());
         return Collections.unmodifiableList(factories);
@@ -90,15 +91,16 @@ public class RecommenderFactoryRegistryImpl
 
     @Override
     public List<RecommendationEngineFactory> getFactories(AnnotationLayer aLayer,
-                                                          AnnotationFeature aFeature) {
-        return extensions.values().stream()
-            .filter(factory -> factory.accepts(aLayer, aFeature))
-            .sorted(Comparator.comparing(RecommendationEngineFactory::getName))
-            .collect(Collectors.toList());
+            AnnotationFeature aFeature)
+    {
+        return extensions.values().stream().filter(factory -> factory.accepts(aLayer, aFeature))
+                .sorted(Comparator.comparing(RecommendationEngineFactory::getName))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public RecommendationEngineFactory getFactory(String aId) {
+    public RecommendationEngineFactory getFactory(String aId)
+    {
         return extensions.get(aId);
     }
 }
