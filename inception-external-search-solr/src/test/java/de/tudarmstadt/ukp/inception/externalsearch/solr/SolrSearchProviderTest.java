@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.externalsearch.solr;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -26,17 +28,17 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.externalsearch.solr.SolrSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProviderTraits;
 
 /**
  * The test class SolrSearchProviderTest is used to test functionalities. By default this class use
- * the collection given in the first Solr tutorial : techproducts
- * In order to test your own collection, setup the name of the collection, names of the fields
- * and provide an existing id for the method 'thatDocumentTextCanBeRetrieved()'
+ * the collection given in the first Solr tutorial : techproducts In order to test your own
+ * collection, setup the name of the collection, names of the fields and provide an existing id for
+ * the method 'thatDocumentTextCanBeRetrieved()'
  */
 @Ignore("Server not publicly accessible")
-public class SolrSearchProviderTest {
+public class SolrSearchProviderTest
+{
     private SolrSearchProvider sut;
     private DocumentRepository repo;
     private SolrSearchProviderTraits traits;
@@ -63,7 +65,7 @@ public class SolrSearchProviderTest {
 
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
 
-        //System.out.println(results.get(0).getDocumentTitle());
+        // System.out.println(results.get(0).getDocumentTitle());
 
         assertThat(results).isNotEmpty();
     }
@@ -71,9 +73,8 @@ public class SolrSearchProviderTest {
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
-        String documentText = sut.getDocumentText(repo, traits,
-            traits.getIndexName(), "SP2514N");
-        //System.out.println(documentText);
+        String documentText = sut.getDocumentText(repo, traits, traits.getIndexName(), "SP2514N");
+        // System.out.println(documentText);
         assertThat(documentText).isNotNull();
     }
 
@@ -85,12 +86,12 @@ public class SolrSearchProviderTest {
 
         traits.setSeed(2);
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
-        //System.out.println(results.get(0).getDocumentTitle());
+        // System.out.println(results.get(0).getDocumentTitle());
         String result1 = results.get(0).getDocumentTitle();
 
         traits.setSeed(3);
         results = sut.executeQuery(repo, traits, query);
-        //System.out.println(results.get(0).getDocumentTitle());
+        // System.out.println(results.get(0).getDocumentTitle());
         String result2 = results.get(0).getDocumentTitle();
 
         assertThat(result1).isNotEqualTo(result2);
@@ -104,7 +105,7 @@ public class SolrSearchProviderTest {
         traits.setResultSize(5);
 
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, query);
-       // System.out.println(results.get(0).getHighlights().get(0).getHighlight());
+        // System.out.println(results.get(0).getHighlights().get(0).getHighlight());
 
         assertThat(results.get(0).getHighlights().get(0).getHighlight()).isNotNull();
     }

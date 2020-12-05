@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProviderTraits;
 
 public class SolrSearchProvider
-        implements ExternalSearchProvider<SolrSearchProviderTraits>
+    implements ExternalSearchProvider<SolrSearchProviderTraits>
 {
     private static final String DOC_ID_KEY = "id";
     private static final String DOC_NAME_KEY = "name";
@@ -60,25 +60,30 @@ public class SolrSearchProvider
 
     /**
      * Search documents in a Solr repository
-     * @param aRepository Solr repository
-     * @param aTraits Param for client connection
-     * @param aQuery The query that we retrieve from the search bar
+     * 
+     * @param aRepository
+     *            Solr repository
+     * @param aTraits
+     *            Param for client connection
+     * @param aQuery
+     *            The query that we retrieve from the search bar
      * @return A list of results that Inception can read and display
-     * @throws IOException Connection timeout, wrong URL and query exception
+     * @throws IOException
+     *             Connection timeout, wrong URL and query exception
      */
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
-                                                   SolrSearchProviderTraits aTraits, String aQuery)
-            throws IOException
+            SolrSearchProviderTraits aTraits, String aQuery)
+        throws IOException
     {
         List<ExternalSearchResult> results = new ArrayList<>();
-        //build client
+        // build client
         HttpSolrClient solrClient = makeClient(aTraits);
         try {
             try {
                 SolrQuery query = new SolrQuery();
-                //query = new SolrQuery();
+                // query = new SolrQuery();
                 query.setParam("qt", aTraits.getSearchPath());
-                //solrClient.query(aTraits.getIndexName(), query);
+                // solrClient.query(aTraits.getIndexName(), query);
 
                 if (aQuery.isEmpty() | aQuery.equals("*:*"))
                     aQuery = "*:*";
@@ -88,7 +93,7 @@ public class SolrSearchProvider
 
                 query.setQuery(aQuery);
 
-                //RANDOM ORDER
+                // RANDOM ORDER
                 if (aTraits.isRandomOrder()) {
                     query.setSort("random_" + aTraits.getSeed(), SolrQuery.ORDER.asc);
                 }
@@ -102,17 +107,16 @@ public class SolrSearchProvider
                 query.setRows(aTraits.getResultSize());
                 query.setParam("collection", aTraits.getIndexName());
 
-
-                //RESPONSE
-                QueryResponse response ;//= new QueryResponse();
+                // RESPONSE
+                QueryResponse response;// = new QueryResponse();
                 try {
                     response = solrClient.query(aTraits.getIndexName(), query);
                     SolrDocumentList documents = response.getResults();
 
                     for (SolrDocument document : documents) {
                         ExternalSearchResult result = new ExternalSearchResult(aRepository,
-                                aTraits.getIndexName(), (String) document
-                                .getFirstValue(DOC_ID_KEY));
+                                aTraits.getIndexName(),
+                                (String) document.getFirstValue(DOC_ID_KEY));
 
                         if (!aTraits.isRandomOrder()) {
                             final double d = (float) document.getFirstValue(DOC_SCORE_KEY);
@@ -123,8 +127,8 @@ public class SolrSearchProvider
 
                         if (response.getHighlighting().size() != 0) {
                             List<ExternalSearchHighlight> highlights = new ArrayList<>();
-                            Map<String, Map<String, List<String>>> idHighlight =
-                                    response.getHighlighting();
+                            Map<String, Map<String, List<String>>> idHighlight = response
+                                    .getHighlighting();
 
                             if (idHighlight.get(document.getFirstValue(DOC_ID_KEY))
                                     .get(aTraits.getDefaultField()) != null) {
@@ -143,40 +147,42 @@ public class SolrSearchProvider
                 catch (BaseHttpSolrClient.RemoteSolrException e) {
                     throw new IOException("Unable to get result : " + e.getMessage());
                 }
-            } catch (BaseHttpSolrClient.RemoteSolrException e) {
-                throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() +
-                        aTraits.getIndexName() + aTraits.getSearchPath()
-                        + " : Search path does not exist. \n"
-                        + e.getMessage());
+            }
+            catch (BaseHttpSolrClient.RemoteSolrException e) {
+                throw new IOException("Unable to connect to " + aTraits.getRemoteUrl()
+                        + aTraits.getIndexName() + aTraits.getSearchPath()
+                        + " : Search path does not exist. \n" + e.getMessage());
             }
         }
-        catch (BaseHttpSolrClient.RemoteSolrException e)
-        {
-            throw new IOException("HTTP ERROR 404 Not Found, incorrect URL : "
-                    + aTraits.getRemoteUrl()
-                    + " : Are you sure both the host and collection name are correct ? \n"
-                    + e.getMessage());
+        catch (BaseHttpSolrClient.RemoteSolrException e) {
+            throw new IOException(
+                    "HTTP ERROR 404 Not Found, incorrect URL : " + aTraits.getRemoteUrl()
+                            + " : Are you sure both the host and collection name are correct ? \n"
+                            + e.getMessage());
         }
-        catch (HttpHostConnectException e)
-        {
+        catch (HttpHostConnectException e) {
             throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : "
-                    + " : The server is not responding \n"
-                    + e.getMessage(), e);
+                    + " : The server is not responding \n" + e.getMessage(), e);
         }
         catch (SolrServerException e) {
-            throw new IOException("Unable to connect to " + aTraits.getRemoteUrl() + " : "
-                    + e.getMessage(), e);
+            throw new IOException(
+                    "Unable to connect to " + aTraits.getRemoteUrl() + " : " + e.getMessage(), e);
         }
         return results;
     }
+
     /**
      * Convert data from SolrDocument to ExternalSearchResult
-     * @param result result has just the id complete before the methode
-     * @param document contain all the information about the document
-     * @param aTraits request parameters
+     * 
+     * @param result
+     *            result has just the id complete before the methode
+     * @param document
+     *            contain all the information about the document
+     * @param aTraits
+     *            request parameters
      */
     private void fillResultWithMetadata(ExternalSearchResult result, SolrDocument document,
-                                        SolrSearchProviderTraits aTraits)
+            SolrSearchProviderTraits aTraits)
     {
         if (isNotBlank((String) document.getFirstValue(DOC_NAME_KEY))) {
             result.setDocumentTitle((String) document.getFirstValue(DOC_NAME_KEY));
@@ -209,23 +215,28 @@ public class SolrSearchProvider
         result.setOriginalSource((String) document.getFirstValue(aTraits.getTextField()));
     }
 
-
     /**
      * Search a Solrdocument by id and return an ExternalSearchResult.
-     * @param aRepository Solr repository
-     * @param aTraits request parameters
-     * @param aCollectionId the name of the collection
-     * @param aDocumentId the id of the document
+     * 
+     * @param aRepository
+     *            Solr repository
+     * @param aTraits
+     *            request parameters
+     * @param aCollectionId
+     *            the name of the collection
+     * @param aDocumentId
+     *            the id of the document
      * @return is used by the module external search core in order to get a preview of the document
-     * @throws IllegalArgumentException inconsistent collection names
-     * @throws IOException issues in communication with Solr server
+     * @throws IllegalArgumentException
+     *             inconsistent collection names
+     * @throws IOException
+     *             issues in communication with Solr server
      */
     @Override
     public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
-                                                  SolrSearchProviderTraits aTraits,
-                                                  String aCollectionId,
-                                                  String aDocumentId)
-            throws IOException {
+            SolrSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
+        throws IOException
+    {
         if (!aCollectionId.equals(aTraits.getIndexName())) {
             throw new IllegalArgumentException(
                     "Requested collection name does not match connection collection name");
@@ -243,7 +254,8 @@ public class SolrSearchProvider
             SolrDocumentList documents = response.getResults();
             SolrDocument document = documents.get(0);
             fillResultWithMetadata(result, document, aTraits);
-        } catch (SolrServerException e) {
+        }
+        catch (SolrServerException e) {
             throw new IOException("Unable to get the document result : " + e.getMessage(), e);
         }
         return result;
@@ -251,21 +263,25 @@ public class SolrSearchProvider
 
     /**
      * Search a Solrdocument by id and return the text
-     * @param aRepository Solr repository
-     * @param aTraits Request parameters
-     * @param aCollectionId Name of the collection / index
-     * @param aDocumentId unique id of the document
+     * 
+     * @param aRepository
+     *            Solr repository
+     * @param aTraits
+     *            Request parameters
+     * @param aCollectionId
+     *            Name of the collection / index
+     * @param aDocumentId
+     *            unique id of the document
      * @return the text of the document
-     * @throws SolrException wrong id or connection issues
+     * @throws SolrException
+     *             wrong id or connection issues
      */
     @Override
-    public String getDocumentText(DocumentRepository aRepository,
-                                  SolrSearchProviderTraits aTraits,
-                                  String aCollectionId, String aDocumentId)
-            throws IOException
+    public String getDocumentText(DocumentRepository aRepository, SolrSearchProviderTraits aTraits,
+            String aCollectionId, String aDocumentId)
+        throws IOException
     {
-        if (!aCollectionId.equals(aTraits.getIndexName()))
-        {
+        if (!aCollectionId.equals(aTraits.getIndexName())) {
             throw new IllegalArgumentException(
                     "Requested collection name does not match connection collection name");
         }
@@ -288,48 +304,48 @@ public class SolrSearchProvider
             response = client.query(aTraits.getIndexName(), getQuery);
             documents = response.getResults();
             document = documents.get(0);
-        } catch (SolrException | SolrServerException e) {
-            throw new IOException("Unable to retrieve document : " + e.getMessage(),e);
+        }
+        catch (SolrException | SolrServerException e) {
+            throw new IOException("Unable to retrieve document : " + e.getMessage(), e);
         }
         return (String) document.getFirstValue(aTraits.getTextField());
     }
 
-
     @Override
     public InputStream getDocumentAsStream(DocumentRepository aRepository,
-                                           SolrSearchProviderTraits aTraits,
-                                           String aCollectionId, String aDocumentId)
-            throws IOException {
+            SolrSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
+        throws IOException
+    {
         return IOUtils.toInputStream(
                 getDocumentText(aRepository, aTraits, aCollectionId, aDocumentId), UTF_8);
     }
 
     @Override
     public String getDocumentFormat(DocumentRepository aRepository,
-                                    SolrSearchProviderTraits aTraits,
-                                    String aCollectionId, String aDocumentId)
+            SolrSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
         return TextFormatSupport.ID;
     }
 
     /**
      * Create a Solr client
-     * @param aTraits parameters for the client
+     * 
+     * @param aTraits
+     *            parameters for the client
      * @return client object
      */
     private HttpSolrClient makeClient(SolrSearchProviderTraits aTraits)
     {
-        return new HttpSolrClient.Builder(aTraits.getRemoteUrl())
-                .withConnectionTimeout(10000)
-                .withSocketTimeout(60000)
-                .build();
+        return new HttpSolrClient.Builder(aTraits.getRemoteUrl()).withConnectionTimeout(10000)
+                .withSocketTimeout(60000).build();
     }
 
-
     /**
-     * Escape special characters for standard query parser. Usefull when retrieving document with
-     * an id that contain such of those characters
-     * @param query : String with special characters
+     * Escape special characters for standard query parser. Usefull when retrieving document with an
+     * id that contain such of those characters
+     * 
+     * @param query
+     *            : String with special characters
      * @return String query without special character
      */
     private String escapeSolrSpecialCharacters(String query)
@@ -338,8 +354,7 @@ public class SolrSearchProvider
         char c;
         int length = query.length();
         int currentIndex = 0;
-        for (int i = 0; i < length; i++)
-        {
+        for (int i = 0; i < length; i++) {
             c = query.charAt(i);
             switch (c) {
             case ':':
@@ -364,8 +379,7 @@ public class SolrSearchProvider
 
             case '&':
             case '|':
-                if (i + 1 < length && query.charAt(i + 1) == c)
-                {
+                if (i + 1 < length && query.charAt(i + 1) == c) {
                     queryCharArray[currentIndex++] = '\\';
                     queryCharArray[currentIndex++] = c;
                     queryCharArray[currentIndex++] = c;
@@ -376,6 +390,6 @@ public class SolrSearchProvider
                 queryCharArray[currentIndex++] = c;
             }
         }
-        return new String(queryCharArray,0,currentIndex);
+        return new String(queryCharArray, 0, currentIndex);
     }
 }

@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.externalsearch.solr.traits;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -42,20 +41,19 @@ public class SolrSearchProviderTraitsEditor
 {
     private static final long serialVersionUID = 1677442652521110324L;
     private static final String MID_FORM = "form";
-    private @SpringBean ExternalSearchProviderFactory<SolrSearchProviderTraits>
-        externalSearchProviderFactory;
+    private @SpringBean ExternalSearchProviderFactory<SolrSearchProviderTraits> externalSearchProviderFactory;
     private final DocumentRepository documentRepository;
     private final SolrSearchProviderTraits properties;
 
     public SolrSearchProviderTraitsEditor(String aId,
-                                             IModel<DocumentRepository> aDocumentRepository)
+            IModel<DocumentRepository> aDocumentRepository)
     {
         super(aId, aDocumentRepository);
         documentRepository = aDocumentRepository.getObject();
         properties = externalSearchProviderFactory.readTraits(documentRepository);
 
-        Form<SolrSearchProviderTraits> form = new Form<SolrSearchProviderTraits>(
-            MID_FORM, CompoundPropertyModel.of(Model.of(properties)))
+        Form<SolrSearchProviderTraits> form = new Form<SolrSearchProviderTraits>(MID_FORM,
+                CompoundPropertyModel.of(Model.of(properties)))
         {
             private static final long serialVersionUID = -3109239608742291123L;
 
@@ -88,8 +86,7 @@ public class SolrSearchProviderTraitsEditor
         textField.setRequired(true);
         form.add(textField);
 
-        NumberTextField<Integer> resultSize =
-            new NumberTextField<>("resultSize", Integer.class);
+        NumberTextField<Integer> resultSize = new NumberTextField<>("resultSize", Integer.class);
         resultSize.setMinimum(1);
         resultSize.setMaximum(10000);
         resultSize.setRequired(true);
@@ -106,8 +103,8 @@ public class SolrSearchProviderTraitsEditor
         form.add(seed);
 
         CheckBox randomOrder = new CheckBox("randomOrder");
-        randomOrder.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t ->
-            t.add(seed, randomOrder)));
+        randomOrder.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                t -> t.add(seed, randomOrder)));
         form.add(randomOrder);
 
         add(form);
