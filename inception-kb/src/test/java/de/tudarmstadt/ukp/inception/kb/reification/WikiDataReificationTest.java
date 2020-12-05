@@ -50,25 +50,34 @@ public class WikiDataReificationTest
     private Repository rdf4jLocalRepo;
     private WikiDataReification sut;
 
-    private static final String TURTLE_PREFIX = String.join("\n",
-            "@prefix wd:  <http://www.wikidata.org/entity/> .",
-            "@prefix wds: <http://www.wikidata.org/entity/statement/> .",
-            "@prefix p:   <http://www.wikidata.org/prop/> .",
-            "@prefix ps:  <http://www.wikidata.org/prop/statement/> .",
+    private static final String TURTLE_PREFIX = String.join("\n", //
+            "@prefix wd:  <http://www.wikidata.org/entity/> .", //
+            "@prefix wds: <http://www.wikidata.org/entity/statement/> .", //
+            "@prefix p:   <http://www.wikidata.org/prop/> .", //
+            "@prefix ps:  <http://www.wikidata.org/prop/statement/> .", //
             "@prefix pq:  <http://www.wikidata.org/prop/qualifier/> .");
 
-    private static final String DATA_MONA_LISA = String.join("\n", "wd:Q12418",
+    private static final String DATA_MONA_LISA = String.join("\n", //
+            "wd:Q12418", //
             "    p:P186  wds:statement1 ;", // Mona Lisa: material used : ?statement1
             "    p:P186  wds:statement2 ;", // Mona Lisa: material used : ?statement2
             "    p:P186  wds:statement3 ;", // Mona Lisa: material used : ?statement3
             "    p:P373  wds:statement4 .", // Mona Lisa: commons category: ?statement4
-            "", "wds:statement1", "    ps:P186 wd:Q296955 .", // value: oil paint
-            "", "wds:statement2", "    ps:P186 wd:Q291034 ;", // value: poplar wood
+            "", //
+            "wds:statement1", //
+            "    ps:P186 wd:Q296955 .", // value: oil paint
+            "", //
+            "wds:statement2", //
+            "    ps:P186 wd:Q291034 ;", // value: poplar wood
             "    pq:P518 wd:Q861259 .", // qualifier: applies to part: painting surface
-            "", "wds:statement3", "    ps:P186 wd:Q287 ;", // value: wood
+            "", //
+            "wds:statement3", //
+            "    ps:P186 wd:Q287 ;", // value: wood
             "    pq:P518 wd:Q1737943 ;", // qualifier: applies to part: stretcher bar
             "    pq:P580 1951 .", // qualifier: start time: 1951 (pseudo-syntax)
-            "", "wds:statement4", "    ps:P373 'Mona Lisa' ."); // value: 'Mona Lisa'
+            "", //
+            "wds:statement4", //
+            "    ps:P373 'Mona Lisa' ."); // value: 'Mona Lisa'
 
     @Before
     public void setUp()

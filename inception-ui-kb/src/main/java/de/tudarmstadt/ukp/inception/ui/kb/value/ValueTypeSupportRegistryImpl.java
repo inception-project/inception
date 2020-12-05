@@ -136,7 +136,6 @@ public class ValueTypeSupportRegistryImpl
         // Determine the data type
         String datatype = getDataType(aStatement, aProperty);
         String range = null;
-        ;
         if (aProperty != null) {
             range = aProperty.getRange();
         }

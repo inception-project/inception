@@ -105,9 +105,12 @@ public class IndexSchedulerImpl
     }
 
     /**
-     * Put a new indexing task in the queue. Indexing tasks can be of three types: - Indexing of a
-     * whole project - Indexing of a source document - Indexing of an annotation document for a
-     * given user
+     * Put a new indexing task in the queue. Indexing tasks can be of three types:
+     * <ul>
+     * <li>Indexing of a whole project</li>
+     * <li>Indexing of a source document</li>
+     * <li>Indexing of an annotation document for a given user</li>
+     * </ul>
      * 
      * @param aRunnable
      *            The indexing task

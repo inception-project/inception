@@ -41,6 +41,7 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2000Reader;
 import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.After;
 import org.junit.Before;
@@ -440,13 +441,14 @@ public class DL4JSequenceRecommenderTest
     {
         Dataset ds = loader.load("germeval2014-de", CONTINUE);
 
-        CollectionReader reader = createReader(Conll2002Reader.class,
-                Conll2002Reader.PARAM_PATTERNS, ds.getDefaultSplit().getDevelopmentFiles(),
-                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(),
-                Conll2002Reader.PARAM_COLUMN_SEPARATOR,
-                Conll2002Reader.ColumnSeparators.TAB.getName(),
-                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, Conll2002Reader.PARAM_HAS_HEADER,
-                true, Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+        CollectionReader reader = createReader( //
+                Conll2002Reader.class, //
+                Conll2002Reader.PARAM_PATTERNS, ds.getDefaultSplit().getDevelopmentFiles(), //
+                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
+                Conll2002Reader.PARAM_COLUMN_SEPARATOR, ColumnSeparators.TAB.getName(),
+                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
+                Conll2002Reader.PARAM_HAS_HEADER, true, //
+                Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         JCas jcas = JCasFactory.createJCas();
         CAS cas = jcas.getCas();

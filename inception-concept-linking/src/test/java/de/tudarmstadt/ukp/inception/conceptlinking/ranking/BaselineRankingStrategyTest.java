@@ -37,10 +37,14 @@ public class BaselineRankingStrategyTest
     {
         String query = "cand2";
 
-        CandidateEntity cand1 = new CandidateEntity(new KBHandle("cand1")).with(KEY_QUERY, query)
-                .with(KEY_LEVENSHTEIN_QUERY, 0).with(KEY_LEVENSHTEIN_MENTION, 0);
-        CandidateEntity cand2 = new CandidateEntity(new KBHandle("cand2")).with(KEY_QUERY, query)
-                .with(KEY_LEVENSHTEIN_QUERY, 5).with(KEY_LEVENSHTEIN_MENTION, 8);
+        CandidateEntity cand1 = new CandidateEntity(new KBHandle("cand1")) //
+                .with(KEY_QUERY, query) //
+                .with(KEY_LEVENSHTEIN_QUERY, 0) //
+                .with(KEY_LEVENSHTEIN_MENTION, 0);
+        CandidateEntity cand2 = new CandidateEntity(new KBHandle("cand2")) //
+                .with(KEY_QUERY, query) //
+                .with(KEY_LEVENSHTEIN_QUERY, 5) //
+                .with(KEY_LEVENSHTEIN_MENTION, 8);
 
         List<CandidateEntity> candidates = new ArrayList<>();
         candidates.add(cand1);

@@ -355,8 +355,12 @@ public class KnowledgeBaseServiceImpl
     @Transactional
     public List<KnowledgeBase> listKnowledgeBases()
     {
-        String query = "FROM KnowledgeBase " + "ORDER BY name ASC";
-        return entityManager.createQuery(query, KnowledgeBase.class).getResultList();
+        String query = //
+                "FROM KnowledgeBase " + //
+                        "ORDER BY name ASC";
+        return entityManager //
+                .createQuery(query, KnowledgeBase.class) //
+                .getResultList();
     }
 
     @SuppressWarnings("unchecked")
@@ -496,8 +500,11 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "readConcept(%s)", aIdentifier)) {
-            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB).withIdentifier(aIdentifier)
-                    .excludeInferred().retrieveLabel().retrieveDescription();
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .withIdentifier(aIdentifier) //
+                    .excludeInferred() //
+                    .retrieveLabel() //
+                    .retrieveDescription();
 
             Optional<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -548,8 +555,10 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "listAllConcepts()")) {
-            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB).retrieveLabel()
-                    .retrieveDescription().excludeInferred();
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .retrieveLabel() //
+                    .retrieveDescription() //
+                    .excludeInferred();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -581,8 +590,11 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBProperty> readProperty(KnowledgeBase aKB, String aIdentifier)
     {
         try (StopWatch watch = new StopWatch(log, "readProperty(%s)", aIdentifier)) {
-            SPARQLQuery query = SPARQLQueryBuilder.forProperties(aKB).withIdentifier(aIdentifier)
-                    .retrieveDescription().retrieveLabel().retrieveDomainAndRange()
+            SPARQLQuery query = SPARQLQueryBuilder.forProperties(aKB) //
+                    .withIdentifier(aIdentifier) //
+                    .retrieveDescription() //
+                    .retrieveLabel() //
+                    .retrieveDomainAndRange() //
                     .excludeInferred();
 
             Optional<KBHandle> result;
@@ -628,8 +640,10 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "listProperties()")) {
-            SPARQLQuery query = SPARQLQueryBuilder.forProperties(aKB).retrieveLabel()
-                    .retrieveDescription().retrieveDomainAndRange()
+            SPARQLQuery query = SPARQLQueryBuilder.forProperties(aKB) //
+                    .retrieveLabel() //
+                    .retrieveDescription() //
+                    .retrieveDomainAndRange() //
                     .includeInferred(aIncludeInferred);
 
             List<KBHandle> result;
@@ -663,8 +677,11 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "readInstance(%s)", aIdentifier)) {
-            SPARQLQuery query = SPARQLQueryBuilder.forInstances(aKB).withIdentifier(aIdentifier)
-                    .retrieveDescription().retrieveLabel().excludeInferred();
+            SPARQLQuery query = SPARQLQueryBuilder.forInstances(aKB) //
+                    .withIdentifier(aIdentifier) //
+                    .retrieveDescription() //
+                    .retrieveLabel() //
+                    .excludeInferred();
 
             Optional<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -714,8 +731,10 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listInstances(KnowledgeBase aKB, String aConceptIri, boolean aAll)
     {
         try (StopWatch watch = new StopWatch(log, "readInstance(%s)", aConceptIri)) {
-            SPARQLQuery query = SPARQLQueryBuilder.forInstances(aKB).childrenOf(aConceptIri)
-                    .retrieveLabel().retrieveDescription();
+            SPARQLQuery query = SPARQLQueryBuilder.forInstances(aKB) //
+                    .childrenOf(aConceptIri) //
+                    .retrieveLabel() //
+                    .retrieveDescription();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -880,8 +899,10 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "getConceptForInstance(%s)", aIdentifier)) {
-            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB).parentsOf(aIdentifier)
-                    .retrieveLabel().retrieveDescription();
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .parentsOf(aIdentifier) //
+                    .retrieveLabel() //
+                    .retrieveDescription();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -900,8 +921,10 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "getParentConceptList(%s)", aIdentifier)) {
-            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB).ancestorsOf(aIdentifier)
-                    .retrieveLabel().retrieveDescription();
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .ancestorsOf(aIdentifier) //
+                    .retrieveLabel() //
+                    .retrieveDescription();
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -921,8 +944,11 @@ public class KnowledgeBaseServiceImpl
         throws QueryEvaluationException
     {
         try (StopWatch watch = new StopWatch(log, "listChildConcepts(%s)", aParentIdentifier)) {
-            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB).childrenOf(aParentIdentifier)
-                    .retrieveLabel().retrieveDescription().limit(aLimit);
+            SPARQLQuery query = SPARQLQueryBuilder.forClasses(aKB) //
+                    .childrenOf(aParentIdentifier) //
+                    .retrieveLabel() //
+                    .retrieveDescription() //
+                    .limit(aLimit);
 
             List<KBHandle> result;
             if (aKB.isReadOnly()) {
@@ -1171,12 +1197,17 @@ public class KnowledgeBaseServiceImpl
     private void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
     {
         /*
-         * log.info("Forcing update of configuration for {}", aKB); Model model = new TreeModel();
-         * ValueFactory vf = SimpleValueFactory.getInstance(); IRI root = vf
-         * .createIRI("http://inception-project.github.io/kbexport#" + aKB.getRepositoryId());
-         * repoManager.getRepositoryConfig(aKB.getRepositoryId()).export(model, root); StringWriter
-         * out = new StringWriter(); Rio.write(model, out, RDFFormat.TURTLE);
-         * log.info("Current configuration: {}", out.toString());
+        // @formatter:off
+        log.info("Forcing update of configuration for {}", aKB);
+        Model model = new TreeModel();
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        IRI root = vf
+                .createIRI("http://inception-project.github.io/kbexport#" + aKB.getRepositoryId());
+        repoManager.getRepositoryConfig(aKB.getRepositoryId()).export(model, root);
+        StringWriter out = new StringWriter();
+        Rio.write(model, out, RDFFormat.TURTLE);
+        log.info("Current configuration: {}", out.toString());
+        // @formatter:on
          */
 
         RepositoryImplConfig config = getNativeConfig();

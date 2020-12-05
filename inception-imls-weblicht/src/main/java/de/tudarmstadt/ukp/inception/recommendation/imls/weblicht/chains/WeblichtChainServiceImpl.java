@@ -74,11 +74,14 @@ public class WeblichtChainServiceImpl
     @Transactional
     public Optional<WeblichtChain> getChain(Recommender aRecommender)
     {
-        String query = String.join("\n", "FROM WeblichtChain", "WHERE recommender = :recommender ",
+        String query = String.join("\n", //
+                "FROM WeblichtChain", //
+                "WHERE recommender = :recommender ", //
                 "ORDER BY name ASC");
 
-        return entityManager.createQuery(query, WeblichtChain.class)
-                .setParameter("recommender", aRecommender).getResultList().stream().findFirst();
+        return entityManager.createQuery(query, WeblichtChain.class) //
+                .setParameter("recommender", aRecommender) //
+                .getResultList().stream().findFirst();
     }
 
     @Override
@@ -129,9 +132,12 @@ public class WeblichtChainServiceImpl
     @Override
     public File getChainFile(WeblichtChain aChain) throws IOException
     {
-        return repositoryProperties.getPath().toPath().resolve("project")
-                .resolve(String.valueOf(aChain.getRecommender().getProject().getId()))
-                .resolve("weblicht_chains").resolve(aChain.getId() + ".xml").toFile();
+        return repositoryProperties.getPath().toPath() //
+                .resolve("project") //
+                .resolve(String.valueOf(aChain.getRecommender().getProject().getId())) //
+                .resolve("weblicht_chains") //
+                .resolve(aChain.getId() + ".xml") //
+                .toFile();
     }
 
     @Override
@@ -160,8 +166,10 @@ public class WeblichtChainServiceImpl
     {
         Validate.notNull(aRecommender, "Recommender must be specified");
 
-        String query = "SELECT COUNT(*) " + "FROM WeblichtChain "
-                + "WHERE recommender = :recommender";
+        String query = //
+                "SELECT COUNT(*) " + //
+                        "FROM WeblichtChain " + //
+                        "WHERE recommender = :recommender";
 
         long count = entityManager.createQuery(query, Long.class)
                 .setParameter("recommender", aRecommender).getSingleResult();

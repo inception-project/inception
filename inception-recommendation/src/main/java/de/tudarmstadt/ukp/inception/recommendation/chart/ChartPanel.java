@@ -93,12 +93,18 @@ public class ChartPanel
 
         aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
 
-        String chartTriggerJavascript = String.join("\n", "$(document).ready(function(){",
-                "   $.ajax({",
-                "       url:'" + chartAjaxBejavior.getCallbackUrl().toString() + "',",
-                "       type:'post',", "       contentType:'application/json',",
-                "       dataType:'json',", "       success : function(result){",
-                "           updateLearningCurveDiagram(result)", "       }", "   })", "})");
+        String chartTriggerJavascript = String.join("\n", //
+                "$(document).ready(function(){", //
+                "   $.ajax({", //
+                "       url:'" + chartAjaxBejavior.getCallbackUrl().toString() + "',", //
+                "       type:'post',", //
+                "       contentType:'application/json',", //
+                "       dataType:'json',", //
+                "       success : function(result){", //
+                "           updateLearningCurveDiagram(result)", //
+                "       }", //
+                "   })", //
+                "})");
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
     }

@@ -81,8 +81,15 @@ public class PercentageBasedSplitterTest
         public static Collection<Object[]> data()
         {
             // k, trainingSetSize, testSetSize
-            return Arrays.asList(new Object[][] { { 0.1, 2, 8 }, { 0.2, 2, 8 }, { 0.3, 3, 7 },
-                    { 0.4, 4, 6 }, { 0.5, 5, 5 }, { 0.6, 6, 4 }, { 0.7, 7, 3 }, { 0.8, 8, 2 },
+            return Arrays.asList(new Object[][] { //
+                    { 0.1, 2, 8 }, //
+                    { 0.2, 2, 8 }, //
+                    { 0.3, 3, 7 }, //
+                    { 0.4, 4, 6 }, //
+                    { 0.5, 5, 5 }, //
+                    { 0.6, 6, 4 }, //
+                    { 0.7, 7, 3 }, //
+                    { 0.8, 8, 2 }, //
                     { 0.9, 8, 2 } });
         }
     }

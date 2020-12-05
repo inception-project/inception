@@ -74,7 +74,9 @@ public class GazeteerServiceImpl
     @Transactional
     public List<Gazeteer> listGazeteers(Recommender aRecommender)
     {
-        String query = String.join("\n", "FROM Gazeteer", "WHERE recommender = :recommender ",
+        String query = String.join("\n", //
+                "FROM Gazeteer", //
+                "WHERE recommender = :recommender ", //
                 "ORDER BY name ASC");
 
         return entityManager.createQuery(query, Gazeteer.class)
@@ -206,8 +208,9 @@ public class GazeteerServiceImpl
         Validate.notNull(aRecommender, "Recommender must be specified");
         Validate.notNull(aName, "Gazeteer name must be specified");
 
-        String query = "SELECT COUNT(*) " + "FROM Gazeteer "
-                + "WHERE recommender = :recommender AND name = :name";
+        String query = "SELECT COUNT(*) " + //
+                "FROM Gazeteer " + //
+                "WHERE recommender = :recommender AND name = :name";
 
         long count = entityManager.createQuery(query, Long.class)
                 .setParameter("recommender", aRecommender).setParameter("name", aName)

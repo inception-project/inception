@@ -70,30 +70,39 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
 /**
  * Boots INCEpTION in standalone JAR or WAR modes.
  */
+// @formatter:off
 @SpringBootApplication
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-@ComponentScan(basePackages = { "de.tudarmstadt.ukp.inception",
-        "de.tudarmstadt.ukp.clarin.webanno" }, excludeFilters = {
-                @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
-                @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
-                @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
-                @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-                        // The INCEpTION dashboard uses a per-project view while WebAnno uses a
-                        // global
-                        // activation strategies for menu items. Thus, we need to re-implement the
-                        // menu
-                        // items for INCEpTION.
-                        AnnotationPageMenuItem.class, MonitoringPageMenuItem.class,
-                        AgreementPageMenuItem.class,
+@ComponentScan(
+    basePackages = { 
+            "de.tudarmstadt.ukp.inception",  
+            "de.tudarmstadt.ukp.clarin.webanno" },
+    excludeFilters = {
+        @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
+        @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+        @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
+        @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
+            // The INCEpTION dashboard uses a per-project view while WebAnno uses a global
+            // activation strategies for menu items. Thus, we need to re-implement the menu
+            // items for INCEpTION.
+            AnnotationPageMenuItem.class,
+            MonitoringPageMenuItem.class,
+            AgreementPageMenuItem.class,
 
-                        // INCEpTION uses its recommenders, not the WebAnno automation code
-                        AutomationService.class, AutomationMiraTemplateExporter.class,
-                        CurationPageMenuItem.class, AutomationTrainingDocumentExporter.class }) })
+            // INCEpTION uses its recommenders, not the WebAnno automation code
+            AutomationService.class, 
+            AutomationMiraTemplateExporter.class,
+            CurationPageMenuItem.class,
+            AutomationTrainingDocumentExporter.class
+    })})
 @EntityScan(basePackages = {
-        // Include WebAnno entity packages separately so we can skip the automation entities!
-        "de.tudarmstadt.ukp.clarin.webanno.model", "de.tudarmstadt.ukp.clarin.webanno.security",
-        "de.tudarmstadt.ukp.clarin.webanno.telemetry", "de.tudarmstadt.ukp.inception" })
+    // Include WebAnno entity packages separately so we can skip the automation entities!
+    "de.tudarmstadt.ukp.clarin.webanno.model",
+    "de.tudarmstadt.ukp.clarin.webanno.security", 
+    "de.tudarmstadt.ukp.clarin.webanno.telemetry",
+    "de.tudarmstadt.ukp.inception" })
 @EnableAsync
+//@formatter:on
 public class INCEpTION
     extends SpringBootServletInitializer
 {

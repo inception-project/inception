@@ -77,11 +77,13 @@ public class SemanticSignatureFeatureGenerator
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String SPARQL_PREFIX = String.join("\n",
-            "PREFIX rdf: <" + RDF.NAMESPACE + ">", "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
-            "PREFIX owl: <" + OWL.NAMESPACE + ">", "PREFIX skos:<" + SKOS.NAMESPACE + ">",
-            "PREFIX e:<http://www.wikidata.org/entity/>",
-            "PREFIX base:<http://www.wikidata.org/ontology#>",
+    public static final String SPARQL_PREFIX = String.join("\n", //
+            "PREFIX rdf: <" + RDF.NAMESPACE + ">", //
+            "PREFIX rdfs: <" + RDFS.NAMESPACE + ">", //
+            "PREFIX owl: <" + OWL.NAMESPACE + ">", //
+            "PREFIX skos:<" + SKOS.NAMESPACE + ">", //
+            "PREFIX e:<http://www.wikidata.org/entity/>", //
+            "PREFIX base:<http://www.wikidata.org/ontology#>", //
             "PREFIX search: <http://www.openrdf.org/contrib/lucenesail#>");
 
     private final Map<String, Property> propertyWithLabels;
@@ -267,9 +269,14 @@ public class SemanticSignatureFeatureGenerator
             int aLimit, KnowledgeBase aKb)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        String query = String.join("\n", SPARQL_PREFIX, "SELECT DISTINCT ?label ?p WHERE ", "  {",
-                "    { ?e1  ?rd ?m . ?m ?p ?e2 . }", "    UNION",
-                "    { ?e2 ?p ?m . ?m ?rr ?e1 . }", "    ?e1 ?labelIri ?label. ", "  }",
+        String query = String.join("\n", //
+                SPARQL_PREFIX, //
+                "SELECT DISTINCT ?label ?p WHERE ", //
+                "  {", //
+                "    { ?e1  ?rd ?m . ?m ?p ?e2 . }", //
+                "    UNION", //
+                "    { ?e2 ?p ?m . ?m ?rr ?e1 . }", //
+                "    ?e1 ?labelIri ?label. ", "  }", //
                 " LIMIT " + aLimit);
 
         TupleQuery tupleQuery = aConn.prepareTupleQuery(QueryLanguage.SPARQL, query);

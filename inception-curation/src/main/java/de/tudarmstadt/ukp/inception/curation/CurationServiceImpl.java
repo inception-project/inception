@@ -164,12 +164,16 @@ public class CurationServiceImpl
         Validate.notBlank(aUsername, "User must be specified");
         Validate.notNull(aProjectId, "project must be specified");
 
-        String query = "FROM " + CurationSettings.class.getName()
-                + " o WHERE o.username = :username " + "AND o.projectId = :projectId";
+        String query = "FROM " + CurationSettings.class.getName() //
+                + " o WHERE o.username = :username " //
+                + "AND o.projectId = :projectId";
 
-        List<CurationSettings> settings = entityManager.createQuery(query, CurationSettings.class)
-                .setParameter("username", aUsername).setParameter("projectId", aProjectId)
-                .setMaxResults(1).getResultList();
+        List<CurationSettings> settings = entityManager //
+                .createQuery(query, CurationSettings.class) //
+                .setParameter("username", aUsername) //
+                .setParameter("projectId", aProjectId) //
+                .setMaxResults(1) //
+                .getResultList();
         return settings;
     }
 
@@ -251,14 +255,20 @@ public class CurationServiceImpl
         Validate.notNull(aSourceDocument, "Document must be specified");
         Validate.notNull(aProject, "project must be specified");
 
-        String query = String.join("\n", "SELECT u FROM User u, AnnotationDocument d",
-                "WHERE u.username = d.user", "  AND d.project = :project",
-                "  AND d.document = :document", "  AND d.state    = :state",
-                "  ORDER BY u.username ASC");
+        String query = String.join("\n", //
+                "SELECT u FROM User u, AnnotationDocument d", //
+                "WHERE u.username = d.user", //
+                "AND d.project    = :project", //
+                "AND d.document   = :document", //
+                "AND d.state      = :state", //
+                "ORDER BY u.username ASC");
 
-        List<User> finishedUsers = new ArrayList<>(entityManager.createQuery(query, User.class)
-                .setParameter("project", aProject).setParameter("document", aSourceDocument)
-                .setParameter("state", AnnotationDocumentState.FINISHED).getResultList());
+        List<User> finishedUsers = new ArrayList<>(entityManager //
+                .createQuery(query, User.class) //
+                .setParameter("project", aProject) //
+                .setParameter("document", aSourceDocument) //
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .getResultList());
 
         return finishedUsers;
     }

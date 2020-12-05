@@ -577,7 +577,7 @@ public class MtasDocumentIndexTest
         {
             return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
                     importExportService(), projectService(aInitializerProxy),
-                    applicationEventPublisher);
+                    applicationEventPublisher, entityManager);
         }
 
         @Bean

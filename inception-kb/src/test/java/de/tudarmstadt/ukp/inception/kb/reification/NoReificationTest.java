@@ -47,21 +47,31 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class NoReificationTest
 {
-    private static final String TURTLE_PREFIX = String.join("\n", "@base <http://example.org/> .",
-            "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
-            "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .",
-            "@prefix so: <http://schema.org/> .",
+    private static final String TURTLE_PREFIX = String.join("\n", //
+            "@base <http://example.org/> .", //
+            "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .", //
+            "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .", //
+            "@prefix so: <http://schema.org/> .", //
             "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .");
 
-    private static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = String.join("\n",
-            "<#green-goblin>", "    rdfs:label 'Green Goblin' ;",
-            "    rdfs:label 'Green Goblin'@en ;", "    rdfs:label 'Grüner Goblin'@de ;",
-            "    rdfs:label 'Goblin vert'@fr ;", "    rdfs:comment 'Little green monster' ;",
-            "    rdfs:comment 'Little green monster'@en ;",
-            "    rdfs:comment 'Kleines grünes Monster'@de .", "", "<#lucky-green>",
-            "    rdfs:label 'Lucky Green' ;", "    rdfs:label 'Lucky Green'@en ;",
-            "    rdfs:comment 'Lucky Irish charm' ;", "    rdfs:comment 'Lucky Irish charm'@en .",
-            "", "<#red-goblin>", "    rdfs:label 'Red Goblin' ;",
+    private static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = String.join("\n", //
+            "<#green-goblin>", //
+            "    rdfs:label 'Green Goblin' ;", //
+            "    rdfs:label 'Green Goblin'@en ;", //
+            "    rdfs:label 'Grüner Goblin'@de ;", //
+            "    rdfs:label 'Goblin vert'@fr ;", //
+            "    rdfs:comment 'Little green monster' ;", //
+            "    rdfs:comment 'Little green monster'@en ;", //
+            "    rdfs:comment 'Kleines grünes Monster'@de .", //
+            "", //
+            "<#lucky-green>", //
+            "    rdfs:label 'Lucky Green' ;", //
+            "    rdfs:label 'Lucky Green'@en ;", //
+            "    rdfs:comment 'Lucky Irish charm' ;", //
+            "    rdfs:comment 'Lucky Irish charm'@en .", //
+            "", //
+            "<#red-goblin>", //
+            "    rdfs:label 'Red Goblin' ;", //
             "    rdfs:comment 'Little red monster' .");
 
     private KnowledgeBase kb;
@@ -100,7 +110,8 @@ public class NoReificationTest
         List<KBStatement> result = listStatements(rdf4jLocalRepo,
                 new KBHandle("http://example.org/#green-goblin"));
 
-        assertThat(result).extracting(stmt -> stmt.getInstance().getIdentifier())
+        assertThat(result) //
+                .extracting(stmt -> stmt.getInstance().getIdentifier()) //
                 .allMatch(id -> id.equals("http://example.org/#green-goblin"));
         assertThat(result).hasSize(7);
     }

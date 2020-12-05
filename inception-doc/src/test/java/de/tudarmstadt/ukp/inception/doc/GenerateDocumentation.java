@@ -41,9 +41,11 @@ public class GenerateDocumentation
 
     private static List<Path> getAsciiDocs(Path dir) throws IOException
     {
-        return Files.list(dir).filter(Files::isDirectory)
-                .filter(p -> Files.exists(p.resolve("pom.xml"))).map(p -> p.resolve(asciiDocPath))
-                .filter(Files::isDirectory).collect(Collectors.toList());
+        return Files.list(dir).filter(Files::isDirectory) //
+                .filter(p -> Files.exists(p.resolve("pom.xml"))) //
+                .map(p -> p.resolve(asciiDocPath)) //
+                .filter(Files::isDirectory) //
+                .collect(Collectors.toList());
     }
 
     private static void buildDoc(String type, Path outputDir)
@@ -55,12 +57,15 @@ public class GenerateDocumentation
                 .attribute("imagesdir",
                         outputDir.resolve("asciidoc").resolve(type).resolve("images").toString()
                                 + "/")
-                .attribute("doctype", "book").attribute("toclevels", "8")
-                .attribute("sectanchors", "true").attribute("docinfo1", "true")
-                .attribute("project-version", "DEVELOPER BUILD")
-                .attribute("revnumber", "DEVELOPER BUILD").attribute("product-name", "INCEpTION")
-                .attribute("product-website-url", "https://inception-project.github.io")
-                .attribute("icons", "font").attribute("toc", "left").get();
+                .attribute("doctype", "book") //
+                .attribute("toclevels", "8") //
+                .attribute("sectanchors", "true") //
+                .attribute("docinfo1", "true") //
+                .attribute("project-version", "DEVELOPER BUILD") //
+                .attribute("revnumber", "DEVELOPER BUILD").attribute("product-name", "INCEpTION") //
+                .attribute("product-website-url", "https://inception-project.github.io") //
+                .attribute("icons", "font") //
+                .attribute("toc", "left").get();
         OptionsBuilder options = OptionsBuilder.options().toDir(outputDir.toFile())
                 .safe(SafeMode.UNSAFE).attributes(attributes);
         Asciidoctor asciidoctor = Asciidoctor.Factory.create();

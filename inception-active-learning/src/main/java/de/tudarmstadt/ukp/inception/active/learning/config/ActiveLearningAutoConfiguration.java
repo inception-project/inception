@@ -37,8 +37,11 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 @Configuration
 @AutoConfigureAfter(RecommenderServiceAutoConfiguration.class)
 @ConditionalOnBean(RecommendationService.class)
-@ConditionalOnProperty(prefix = "recommender.active-learning", //
-        name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty( //
+        prefix = "recommender.active-learning", //
+        name = "enabled", //
+        havingValue = "true", //
+        matchIfMissing = true)
 public class ActiveLearningAutoConfiguration
 {
     @Bean

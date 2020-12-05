@@ -568,23 +568,28 @@ public class DL4JSequenceRecommender
         long start = System.currentTimeMillis();
 
         // Set up network configuration
-        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-                .optimizationAlgo(aTraits.getOptimizationAlgorithm())
-                .updater(new Nesterovs(new StepSchedule(ScheduleType.ITERATION, 1e-2, 0.1, 100000),
-                        0.9))
-                .biasUpdater(new Nesterovs(
-                        new StepSchedule(ScheduleType.ITERATION, 2e-2, 0.1, 100000), 0.9))
-                .l2(aTraits.getL2()).weightInit(aTraits.getWeightInit())
-                .gradientNormalization(aTraits.getGradientNormalization())
-                .gradientNormalizationThreshold(aTraits.getGradientNormalizationThreshold()).list()
-                .layer(0,
-                        new Bidirectional(Bidirectional.Mode.ADD,
-                                new LSTM.Builder().nIn(aEmbeddingsDim).nOut(200)
-                                        .activation(aTraits.getActivationL0()).build()))
-                .layer(1,
-                        new RnnOutputLayer.Builder().nIn(200).nOut(aTraits.getMaxTagsetSize())
-                                .activation(aTraits.getActivationL1())
-                                .lossFunction(aTraits.getLossFunction()).build())
+        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder() //
+                .optimizationAlgo(aTraits.getOptimizationAlgorithm()) //
+                .updater(new Nesterovs( //
+                        new StepSchedule(ScheduleType.ITERATION, 1e-2, 0.1, 100000), 0.9)) //
+                .biasUpdater(new Nesterovs( //
+                        new StepSchedule(ScheduleType.ITERATION, 2e-2, 0.1, 100000), 0.9)) //
+                .l2(aTraits.getL2()) //
+                .weightInit(aTraits.getWeightInit()) //
+                .gradientNormalization(aTraits.getGradientNormalization()) //
+                .gradientNormalizationThreshold(aTraits.getGradientNormalizationThreshold()) //
+                .list() //
+                .layer(0, new Bidirectional(Bidirectional.Mode.ADD, new LSTM.Builder() //
+                        .nIn(aEmbeddingsDim) //
+                        .nOut(200) //
+                        .activation(aTraits.getActivationL0()) //
+                        .build())) //
+                .layer(1, new RnnOutputLayer.Builder() //
+                        .nIn(200) //
+                        .nOut(aTraits.getMaxTagsetSize()) //
+                        .activation(aTraits.getActivationL1()) //
+                        .lossFunction(aTraits.getLossFunction()) //
+                        .build()) //
                 .build();
 
         // log.info("Network configuration: {}", conf.toYaml());

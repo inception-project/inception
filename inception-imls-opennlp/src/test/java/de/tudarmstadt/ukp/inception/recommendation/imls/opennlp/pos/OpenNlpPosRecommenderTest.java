@@ -162,9 +162,10 @@ public class OpenNlpPosRecommenderTest
 
     private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2006Reader.class,
-                Conll2006Reader.PARAM_PATTERNS, files, Conll2006Reader.PARAM_LANGUAGE,
-                ds.getLanguage());
+        CollectionReader reader = createReader( //
+                Conll2006Reader.class, //
+                Conll2006Reader.PARAM_PATTERNS, files, //
+                Conll2006Reader.PARAM_LANGUAGE, ds.getLanguage());
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {

@@ -212,8 +212,7 @@ public class CurationEditorExtension
 
         // Check if user already finished with this document
         String currentUsername = userRepository.getCurrentUsername();
-        if (documentService.isAnnotationFinished(aState.getDocument(),
-                userRepository.getCurrentUser())) {
+        if (documentService.isAnnotationFinished(aState.getDocument(), currentUsername)) {
             return;
         }
 

@@ -329,9 +329,11 @@ public class RecommendationServiceImpl
     @Override
     public List<AnnotationLayer> listLayersWithEnabledRecommenders(Project aProject)
     {
-        String query = "SELECT DISTINCT r.layer " + "FROM Recommender r "
-                + "WHERE r.project = :project AND r.enabled = :enabled "
-                + "ORDER BY r.layer.name ASC";
+        String query = //
+                "SELECT DISTINCT r.layer " //
+                        + "FROM Recommender r " //
+                        + "WHERE r.project = :project AND r.enabled = :enabled " //
+                        + "ORDER BY r.layer.name ASC";
 
         return entityManager.createQuery(query, AnnotationLayer.class)
                 .setParameter("project", aProject).setParameter("enabled", true).getResultList();
@@ -348,11 +350,16 @@ public class RecommendationServiceImpl
     @Transactional
     public boolean existsRecommender(Project aProject, String aName)
     {
-        String query = String.join("\n", "SELECT COUNT(*)", "FROM Recommender ",
-                "WHERE name = :name ", "AND project = :project");
+        String query = String.join("\n", //
+                "SELECT COUNT(*)", //
+                "FROM Recommender ", //
+                "WHERE name = :name ", //
+                "AND project = :project");
 
-        long count = entityManager.createQuery(query, Long.class).setParameter("name", aName)
-                .setParameter("project", aProject).getSingleResult();
+        long count = entityManager.createQuery(query, Long.class) //
+                .setParameter("name", aName) //
+                .setParameter("project", aProject) //
+                .getSingleResult();
 
         return count > 0;
     }
@@ -361,22 +368,31 @@ public class RecommendationServiceImpl
     @Transactional
     public Optional<Recommender> getRecommender(Project aProject, String aName)
     {
-        String query = String.join("\n", "FROM Recommender ", "WHERE name = :name ",
+        String query = String.join("\n", //
+                "FROM Recommender ", //
+                "WHERE name = :name ", //
                 "AND project = :project");
 
-        return entityManager.createQuery(query, Recommender.class).setParameter("name", aName)
-                .setParameter("project", aProject).getResultStream().findFirst();
+        return entityManager.createQuery(query, Recommender.class) //
+                .setParameter("name", aName) //
+                .setParameter("project", aProject) //
+                .getResultStream() //
+                .findFirst();
     }
 
     @Override
     @Transactional
     public Optional<Recommender> getEnabledRecommender(long aRecommenderId)
     {
-        String query = String.join("\n", "FROM Recommender WHERE ", "id = :id AND ",
+        String query = String.join("\n", //
+                "FROM Recommender WHERE ", //
+                "id = :id AND ", //
                 "enabled = :enabled");
 
-        return entityManager.createQuery(query, Recommender.class)
-                .setParameter("id", aRecommenderId).setParameter("enabled", true).getResultStream()
+        return entityManager.createQuery(query, Recommender.class) //
+                .setParameter("id", aRecommenderId) //
+                .setParameter("enabled", true) //
+                .getResultStream() //
                 .findFirst();
     }
 
@@ -384,30 +400,42 @@ public class RecommendationServiceImpl
     @Transactional
     public List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer)
     {
-        String query = String.join("\n", "FROM Recommender WHERE ", "project = :project AND",
-                "layer = :layer AND", "enabled = :enabled", "ORDER BY name ASC");
+        String query = String.join("\n", //
+                "FROM Recommender WHERE ", //
+                "project = :project AND", //
+                "layer = :layer AND", //
+                "enabled = :enabled", //
+                "ORDER BY name ASC");
 
-        return entityManager.createQuery(query, Recommender.class)
-                .setParameter("project", aLayer.getProject()).setParameter("layer", aLayer)
-                .setParameter("enabled", true).getResultList();
+        return entityManager.createQuery(query, Recommender.class) //
+                .setParameter("project", aLayer.getProject()) //
+                .setParameter("layer", aLayer) //
+                .setParameter("enabled", true) //
+                .getResultList();
     }
 
     @Override
     @Transactional
     public List<Recommender> listEnabledRecommenders(Project aProject)
     {
-        String query = String.join("\n", "FROM Recommender WHERE", "project = :project AND",
+        String query = String.join("\n", //
+                "FROM Recommender WHERE", //
+                "project = :project AND", //
                 "enabled = :enabled", "ORDER BY name ASC");
 
-        return entityManager.createQuery(query, Recommender.class).setParameter("project", aProject)
-                .setParameter("enabled", true).getResultList();
+        return entityManager.createQuery(query, Recommender.class) //
+                .setParameter("project", aProject) //
+                .setParameter("enabled", true) //
+                .getResultList();
     }
 
     @Override
     @Transactional
     public List<Recommender> listRecommenders(AnnotationLayer aLayer)
     {
-        String query = String.join("\n", "FROM Recommender WHERE ", "layer = :layer",
+        String query = String.join("\n", //
+                "FROM Recommender WHERE ", //
+                "layer = :layer", //
                 "ORDER BY name ASC");
 
         return entityManager.createQuery(query, Recommender.class).setParameter("layer", aLayer)

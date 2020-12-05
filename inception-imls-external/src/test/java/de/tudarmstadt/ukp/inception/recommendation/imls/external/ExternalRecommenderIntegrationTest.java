@@ -48,6 +48,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.After;
 import org.junit.Before;
@@ -139,9 +140,10 @@ public class ExternalRecommenderIntegrationTest
 
         assertThat(predictions).as("Predictions are not empty").isNotEmpty();
 
-        assertThat(cas).as("Predictions are correct").containsNamedEntity("Ecce homo", "OTH")
+        assertThat(cas).as("Predictions are correct") //
+                .containsNamedEntity("Ecce homo", "OTH") //
                 .containsNamedEntity("The Lindsey School Lindsey School & Community Arts College",
-                        "ORG")
+                        "ORG") //
                 .containsNamedEntity("Lido delle Nazioni", "LOC");
     }
 
@@ -153,7 +155,8 @@ public class ExternalRecommenderIntegrationTest
 
         TrainingRequest request = fromJsonString(TrainingRequest.class, requestBodies.get(0));
 
-        assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
+        assertThat(request.getMetadata()) //
+                .hasNoNullFieldsOrProperties() //
                 .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
                 .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
                 .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
@@ -178,7 +181,8 @@ public class ExternalRecommenderIntegrationTest
 
         PredictionRequest request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
 
-        assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
+        assertThat(request.getMetadata()) //
+                .hasNoNullFieldsOrProperties() //
                 .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
                 .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
                 .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
@@ -210,12 +214,14 @@ public class ExternalRecommenderIntegrationTest
 
     private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2002Reader.class,
-                Conll2002Reader.PARAM_PATTERNS, files, Conll2002Reader.PARAM_LANGUAGE,
-                ds.getLanguage(), Conll2002Reader.PARAM_COLUMN_SEPARATOR,
-                Conll2002Reader.ColumnSeparators.TAB.getName(),
-                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, Conll2002Reader.PARAM_HAS_HEADER,
-                true, Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+        CollectionReader reader = createReader( //
+                Conll2002Reader.class, //
+                Conll2002Reader.PARAM_PATTERNS, files, //
+                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
+                Conll2002Reader.PARAM_COLUMN_SEPARATOR, ColumnSeparators.TAB.getName(), //
+                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
+                Conll2002Reader.PARAM_HAS_HEADER, true, //
+                Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {

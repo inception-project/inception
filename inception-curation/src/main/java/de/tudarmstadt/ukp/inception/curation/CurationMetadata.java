@@ -26,5 +26,4 @@ public final class CurationMetadata
             {
                 private static final long serialVersionUID = 1L;
             };
-
 }

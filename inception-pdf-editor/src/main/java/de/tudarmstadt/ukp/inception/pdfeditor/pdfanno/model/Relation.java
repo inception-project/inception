@@ -66,9 +66,12 @@ public class Relation
 
     public String toAnnoFileString()
     {
-        return "[[relations]]\n" + "id = \"" + id + "\"\n" + "head = \"" + head + "\"\n"
-                + "tail = \"" + tail + "\"\n" + "label = \"" + label + "\"\n" + "color = \"" + color
-                + "\"\n";
+        return "[[relations]]\n" + //
+                "id = \"" + id + "\"\n" + //
+                "head = \"" + head + "\"\n" + //
+                "tail = \"" + tail + "\"\n" + //
+                "label = \"" + label + "\"\n" + //
+                "color = \"" + color + "\"\n";
     }
 
 }

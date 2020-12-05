@@ -78,16 +78,19 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.Queries;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.ValuesPattern;
 
 /**
- * wd:Q12418 p:P186 ?statement1. # Mona Lisa: material used: ?statement1 ?statement1 ps:P186
- * wd:Q296955. # value: oil paint
+ * <pre>
+ * wd:Q12418 p:P186 ?statement1.    # Mona Lisa: material used: ?statement1
+ * ?statement1 ps:P186 wd:Q296955.  # value: oil paint
  *
- * wd:Q12418 p:P186 ?statement2. # Mona Lisa: material used: ?statement2 ?statement2 ps:P186
- * wd:Q291034. # value: poplar wood ?statement2 pq:P518 wd:Q861259. # qualifier: applies to part:
- * painting surface
+ * wd:Q12418 p:P186 ?statement2.    # Mona Lisa: material used: ?statement2
+ * ?statement2 ps:P186 wd:Q291034.  # value: poplar wood
+ * ?statement2 pq:P518 wd:Q861259.  # qualifier: applies to part: painting surface
  *
- * wd:Q12418 p:P186 ?statement3. # Mona Lisa: material used: ?statement3 ?statement3 ps:P186
- * wd:Q287. # value: wood ?statement3 pq:P518 wd:Q1737943. # qualifier: applies to part: stretcher
- * bar ?statement3 pq:P580 1951. # qualifier: start time: 1951 (pseudo-syntax)
+ * wd:Q12418 p:P186 ?statement3.    # Mona Lisa: material used: ?statement3
+ * ?statement3 ps:P186 wd:Q287.     # value: wood
+ * ?statement3 pq:P518 wd:Q1737943. # qualifier: applies to part: stretcher bar
+ * ?statement3 pq:P580 1951.        # qualifier: start time: 1951 (pseudo-syntax)
+ * </pre>
  */
 public class WikiDataReification
     implements ReificationStrategy
@@ -202,12 +205,17 @@ public class WikiDataReification
         // For all values of KBStatements and KBQualifiers that are IRIs, collect the IRIs so we
         // can resolve them to their label
         Set<Object> iriValues = new HashSet<>();
-        statements.values().stream().map(stmt -> stmt.getValue())
-                .filter(value -> value instanceof IRI).map(value -> (IRI) value)
+        statements.values().stream() //
+                .map(stmt -> stmt.getValue()) //
+                .filter(value -> value instanceof IRI) //
+                .map(value -> (IRI) value) //
                 .forEach(iriValues::add);
-        statements.values().stream().flatMap(stmt -> stmt.getQualifiers().stream())
-                .map(KBQualifier::getValue).filter(value -> value instanceof IRI)
-                .map(value -> (IRI) value).forEach(iriValues::add);
+        statements.values().stream() //
+                .flatMap(stmt -> stmt.getQualifiers().stream()) //
+                .map(KBQualifier::getValue) //
+                .filter(value -> value instanceof IRI) //
+                .map(value -> (IRI) value) //
+                .forEach(iriValues::add);
 
         Map<String, KBHandle> labelMap = Queries.fetchLabelsForIriValues(aKB, aConnection,
                 iriValues);
@@ -253,8 +261,13 @@ public class WikiDataReification
     {
         ValueFactory vf = aConnection.getValueFactory();
 
-        String QUERY = String.join("\n", "SELECT DISTINCT ?s ?p ?ps ?o WHERE {", "  ?s  ?p  ?id .",
-                "  ?id ?ps ?o .", "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))", "}", "LIMIT 10");
+        String QUERY = String.join("\n", //
+                "SELECT DISTINCT ?s ?p ?ps ?o WHERE {", //
+                "  ?s  ?p  ?id .", //
+                "  ?id ?ps ?o .", //
+                "  FILTER(STRSTARTS(STR(?ps), STR(?ps_ns)))", //
+                "}", //
+                "LIMIT 10");
         Resource id = vf.createBNode(aStatementId);
         TupleQuery tupleQuery = aConnection.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
         tupleQuery.setBinding("id", id);
@@ -297,7 +310,10 @@ public class WikiDataReification
     {
         ValueFactory vf = aConnection.getValueFactory();
 
-        String QUERY = String.join("\n", "SELECT DISTINCT ?p ?o WHERE {", "  ?id ?p ?o .", "}",
+        String QUERY = String.join("\n", //
+                "SELECT DISTINCT ?p ?o WHERE {", //
+                "  ?id ?p ?o .", //
+                "}", //
                 "LIMIT " + kb.getMaxResults());
         Resource id = vf.createBNode(aStatementId);
         TupleQuery tupleQuery = aConnection.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
@@ -545,8 +561,10 @@ public class WikiDataReification
         RdfObject value = object(
                 valueMapper.mapStatementValue(aStatement, SimpleValueFactory.getInstance()));
 
-        String query = String.join("\n", "SELECT * { BIND ( EXISTS {",
-                subject.has(pred1, stmt).getQueryString(), stmt.has(pred2, value).getQueryString(),
+        String query = String.join("\n", //
+                "SELECT * { BIND ( EXISTS {", //
+                subject.has(pred1, stmt).getQueryString(), //
+                stmt.has(pred2, value).getQueryString(), //
                 "} AS ?result ) }");
 
         TupleQuery tupleQuery = aConnection.prepareTupleQuery(SPARQL, query);

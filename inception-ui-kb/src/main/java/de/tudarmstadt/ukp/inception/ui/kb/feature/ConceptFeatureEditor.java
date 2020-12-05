@@ -144,15 +144,21 @@ public class ConceptFeatureEditor
 
     private String descriptionValue()
     {
-        return getModel().map(FeatureState::getValue).map(value -> (KBHandle) value)
-                .map(KBHandle::getDescription).map(value -> StringUtils.abbreviate(value, 130))
-                .orElse("no description").getObject();
+        return getModel().map(FeatureState::getValue)//
+                .map(value -> (KBHandle) value)//
+                .map(KBHandle::getDescription)//
+                .map(value -> StringUtils.abbreviate(value, 130))//
+                .orElse("no description")//
+                .getObject();
     }
 
     private String iriTooltipValue()
     {
-        return getModel().map(FeatureState::getValue).map(value -> (KBHandle) value)
-                .map(KBHandle::getIdentifier).orElse("").getObject();
+        return getModel().map(FeatureState::getValue)//
+                .map(value -> (KBHandle) value)//
+                .map(KBHandle::getIdentifier)//
+                .orElse("")//
+                .getObject();
     }
 
     private List<KBHandle> getCandidates(IModel<AnnotatorState> aStateModel,
@@ -305,8 +311,10 @@ public class ConceptFeatureEditor
             // Using the default select behavior of AutoCompleteTextField which is coupled to the
             // onSelected(AjaxRequestTarget aTarget) callback does unfortunatle not work well
             // because onSelected does not tell us when the auto-complete field is CLEARED!
-            aBehavior.setOption("select", String.join(" ", "function (e) {",
-                    "  e.sender.element.trigger('change');", "}"));
+            aBehavior.setOption("select", String.join(" ", //
+                    "function (e) {", //
+                    "  e.sender.element.trigger('change');", //
+                    "}"));
         }
 
         @Override
@@ -343,12 +351,15 @@ public class ConceptFeatureEditor
          */
         public String getIdentifierDynamicAttributeScript()
         {
-            return String.join(" ",
-                    "var item = $(attrs.event.target).data('kendoAutoComplete').dataItem();",
-                    "if (item) {", "  return [{",
-                    "    'name': '" + getInputName() + ":identifier', ",
-                    "    'value': $(attrs.event.target).data('kendoAutoComplete').dataItem().identifier",
-                    "  }]", "}", "return [];");
+            return String.join(" ", //
+                    "var item = $(attrs.event.target).data('kendoAutoComplete').dataItem();", //
+                    "if (item) {", //
+                    "  return [{", //
+                    "    'name': '" + getInputName() + ":identifier', ", //
+                    "    'value': $(attrs.event.target).data('kendoAutoComplete').dataItem().identifier", //
+                    "  }]", //
+                    "}", //
+                    "return [];");
         }
 
         @Override
@@ -404,12 +415,14 @@ public class ConceptFeatureEditor
                         }
                     }
 
-                    // // Check labels if there was no match on the identifier
-                    // for (KBHandle handle : choices) {
-                    // if (value.equals(getRenderer().getText(handle))) {
-                    // return handle;
-                    // }
-                    // }
+                    // @formatter:off
+//                    // Check labels if there was no match on the identifier
+//                    for (KBHandle handle : choices) {
+//                        if (value.equals(getRenderer().getText(handle))) {
+//                            return handle;
+//                        }
+//                    }
+                    // @formatter:on
 
                     // If there was no match at all, return null
                     return null;

@@ -188,28 +188,30 @@ public class KnowledgeBaseExporter
             kb.setType(RepositoryType.valueOf(exportedKB.getType()));
             // set default value for IRIs if no value is present in
             // order to support import of older projects
-            kb.setClassIri(exportedKB.getClassIri() != null ? vf.createIRI(exportedKB.getClassIri())
+            kb.setClassIri(exportedKB.getClassIri() != null //
+                    ? vf.createIRI(exportedKB.getClassIri())
                     : DEFAULTPROFILE.getClassIri());
-            kb.setSubclassIri(
-                    exportedKB.getSubclassIri() != null ? vf.createIRI(exportedKB.getSubclassIri())
-                            : DEFAULTPROFILE.getSubclassIri());
-            kb.setTypeIri(exportedKB.getTypeIri() != null ? vf.createIRI(exportedKB.getTypeIri())
+            kb.setSubclassIri(exportedKB.getSubclassIri() != null //
+                    ? vf.createIRI(exportedKB.getSubclassIri())
+                    : DEFAULTPROFILE.getSubclassIri());
+            kb.setTypeIri(exportedKB.getTypeIri() != null //
+                    ? vf.createIRI(exportedKB.getTypeIri())
                     : DEFAULTPROFILE.getTypeIri());
-            kb.setDescriptionIri(exportedKB.getDescriptionIri() != null
+            kb.setDescriptionIri(exportedKB.getDescriptionIri() != null //
                     ? vf.createIRI(exportedKB.getDescriptionIri())
                     : DEFAULTPROFILE.getDescriptionIri());
             kb.setLabelIri(exportedKB.getLabelIri() != null ? vf.createIRI(exportedKB.getLabelIri())
                     : DEFAULTPROFILE.getLabelIri());
-            kb.setPropertyTypeIri(exportedKB.getPropertyTypeIri() != null
+            kb.setPropertyTypeIri(exportedKB.getPropertyTypeIri() != null //
                     ? vf.createIRI(exportedKB.getPropertyTypeIri())
                     : DEFAULTPROFILE.getPropertyTypeIri());
-            kb.setPropertyLabelIri(exportedKB.getPropertyLabelIri() != null
+            kb.setPropertyLabelIri(exportedKB.getPropertyLabelIri() != null //
                     ? vf.createIRI(exportedKB.getPropertyLabelIri())
                     : DEFAULTPROFILE.getPropertyLabelIri());
-            kb.setPropertyDescriptionIri(exportedKB.getPropertyDescriptionIri() != null
+            kb.setPropertyDescriptionIri(exportedKB.getPropertyDescriptionIri() != null //
                     ? vf.createIRI(exportedKB.getPropertyDescriptionIri())
                     : DEFAULTPROFILE.getPropertyDescriptionIri());
-            kb.setSubPropertyIri(exportedKB.getSubPropertyIri() != null
+            kb.setSubPropertyIri(exportedKB.getSubPropertyIri() != null //
                     ? vf.createIRI(exportedKB.getSubPropertyIri())
                     : DEFAULTPROFILE.getSubPropertyIri());
             // The imported project may date from a time where we did not yet have the FTS IRI.

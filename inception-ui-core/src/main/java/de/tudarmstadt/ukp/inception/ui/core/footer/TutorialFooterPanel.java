@@ -65,8 +65,11 @@ public class TutorialFooterPanel
 
         aResponse.render(JavaScriptHeaderItem.forReference(TutorialJavascriptReference.get()));
         // add top-margin to next button to fix label and buttons overlapping
-        aResponse.render(CssHeaderItem
-                .forCSS(".enjoyhint_next_btn{\n" + "  margin-top: 8px;\n" + "}", "enjoyhint"));
+        aResponse.render(CssHeaderItem.forCSS(//
+                ".enjoyhint_next_btn{\n" + //
+                        "  margin-top: 8px;\n" + //
+                        "}", //
+                "enjoyhint"));
         // check if the tutorial will need to be run
         aResponse.render(OnLoadHeaderItem.forScript(
                 "setContextPath('" + context.getContextPath() + "');\n" + "runRoutines();"));
