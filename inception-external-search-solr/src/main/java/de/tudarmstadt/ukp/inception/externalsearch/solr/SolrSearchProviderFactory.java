@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.solr.traits.SolrSearchProviderTraitsEditor;
 
-
 @Order(101)
 public class SolrSearchProviderFactory
     implements BeanNameAware, ExternalSearchProviderFactory<SolrSearchProviderTraits>
@@ -63,7 +62,7 @@ public class SolrSearchProviderFactory
     }
 
     @Override
-    public ExternalSearchProvider getNewExternalSearchProvider()
+    public ExternalSearchProvider<SolrSearchProviderTraits> getNewExternalSearchProvider()
     {
         return new SolrSearchProvider();
     }
@@ -80,7 +79,7 @@ public class SolrSearchProviderFactory
         SolrSearchProviderTraits traits = null;
         try {
             traits = fromJsonString(SolrSearchProviderTraits.class,
-                aDocumentRepository.getProperties());
+                    aDocumentRepository.getProperties());
         }
         catch (IOException e) {
             log.error("Error while reading traits", e);
@@ -95,7 +94,7 @@ public class SolrSearchProviderFactory
 
     @Override
     public void writeTraits(DocumentRepository aDocumentRepository,
-                            SolrSearchProviderTraits aProperties)
+            SolrSearchProviderTraits aProperties)
     {
         try {
             String json = toJsonString(aProperties);

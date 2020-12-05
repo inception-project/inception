@@ -32,10 +32,10 @@ import de.tudarmstadt.ukp.inception.externalsearch.solr.SolrSearchProviderFactor
  */
 @Configuration
 @AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "external-search.solr", name = "enabled",
-        havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "external-search.solr", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(ExternalSearchService.class)
-public class SolrSearchDocumentRepositoryAutoConfiguration {
+public class SolrSearchDocumentRepositoryAutoConfiguration
+{
 
     @Bean
     public SolrSearchProviderFactory solrSearchProviderFactory()
