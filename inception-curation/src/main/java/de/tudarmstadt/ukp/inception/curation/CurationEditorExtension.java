@@ -212,14 +212,13 @@ public class CurationEditorExtension
             return;
         }
 
-        // Check if user already finished with this document
         // check if user already finished with this document
         if (documentService.isAnnotationFinished(aState.getDocument(), aState.getUser())) {
             return;
         }
             
         List<User> selectedUsers = curationService
-                .listUsersReadyForCuration(userRepository.getCurrentUser().getUsername(), 
+                .listUsersReadyForCuration(userRepository.getCurrentUsername(), 
                         aState.getProject(), aState.getDocument());
         if (selectedUsers.isEmpty()) {
             return;
