@@ -25,7 +25,8 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 /**
  * Default workflow extension type
  */
-public class DefaultWorkflowExtension implements WorkflowExtension
+public class DefaultWorkflowExtension
+    implements WorkflowExtension
 {
     public static final String DEFAULT_WORKFLOW = "default";
 

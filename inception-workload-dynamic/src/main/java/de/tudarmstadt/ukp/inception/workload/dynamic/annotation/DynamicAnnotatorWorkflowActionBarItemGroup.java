@@ -70,7 +70,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private final AnnotatorState annotatorState;
     private final LambdaAjaxLink finishDocumentLink;
 
-
     // SpringBeans
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;

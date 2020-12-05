@@ -52,11 +52,10 @@ public interface WorkflowExtension
     /**
      * @return true when a new document has been loaded, otherwise false
      *
-     * Next document will be loaded, same for all workflow extensions
+     *         Next document will be loaded, same for all workflow extensions
      */
     default boolean loadNextDocument(List<SourceDocument> aSourceDocuments, Project aProject,
-            WorkloadManager aCurrentWorkload, AnnotationPageBase aPage,
-            AjaxRequestTarget aTarget,
+            WorkloadManager aCurrentWorkload, AnnotationPageBase aPage, AjaxRequestTarget aTarget,
             WorkloadManagementService workloadManagementService,
             DynamicWorkloadExtension dynamicWorkloadExtension, DocumentService documentService)
     {

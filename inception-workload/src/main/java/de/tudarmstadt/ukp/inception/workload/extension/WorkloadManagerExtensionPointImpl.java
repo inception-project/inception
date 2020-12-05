@@ -35,8 +35,7 @@ public class WorkloadManagerExtensionPointImpl<T>
 {
 
     @Autowired
-    public WorkloadManagerExtensionPointImpl(
-            List<WorkloadManagerExtension<T>> aExtensions)
+    public WorkloadManagerExtensionPointImpl(List<WorkloadManagerExtension<T>> aExtensions)
     {
         super(aExtensions);
     }
@@ -45,8 +44,7 @@ public class WorkloadManagerExtensionPointImpl<T>
     public List<WorkloadManagerExtension<T>> getExtensions(Project aContext)
     {
         Map<String, WorkloadManagerExtension<T>> byRole = new LinkedHashMap<>();
-        for (WorkloadManagerExtension<T> extension : super.getExtensions(
-                aContext)) {
+        for (WorkloadManagerExtension<T> extension : super.getExtensions(aContext)) {
             byRole.put(extension.getId(), extension);
         }
         return new ArrayList<>(byRole.values());

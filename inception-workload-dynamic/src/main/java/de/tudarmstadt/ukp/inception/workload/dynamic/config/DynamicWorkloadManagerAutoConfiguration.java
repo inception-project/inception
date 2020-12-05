@@ -58,5 +58,4 @@ public class DynamicWorkloadManagerAutoConfiguration
         return new RandomizedWorkflowExtension();
     }
 
-
 }

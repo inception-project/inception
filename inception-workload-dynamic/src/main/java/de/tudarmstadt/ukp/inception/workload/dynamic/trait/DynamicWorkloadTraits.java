@@ -38,6 +38,7 @@ public class DynamicWorkloadTraits
         defaultNumberOfAnnotations = 6;
 
     }
+
     public DynamicWorkloadTraits(String aWorkflowType, int aDefaultNumberOfAnnotations)
     {
         workflowType = aWorkflowType;
@@ -54,11 +55,13 @@ public class DynamicWorkloadTraits
         this.defaultNumberOfAnnotations = defaultNumberOfAnnotations;
     }
 
-    public String getWorkflowType() {
+    public String getWorkflowType()
+    {
         return workflowType;
     }
 
-    public void setWorkflowType(String workflowType) {
+    public void setWorkflowType(String workflowType)
+    {
         this.workflowType = workflowType;
     }
 }

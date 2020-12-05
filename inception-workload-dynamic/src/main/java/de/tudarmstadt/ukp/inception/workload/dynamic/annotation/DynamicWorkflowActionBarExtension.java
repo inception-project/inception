@@ -39,8 +39,8 @@ public class DynamicWorkflowActionBarExtension
     private final ProjectService projectService;
 
     @Autowired
-    public DynamicWorkflowActionBarExtension(
-        WorkloadManagementService aWorkloadManagementService, ProjectService aProjectService)
+    public DynamicWorkflowActionBarExtension(WorkloadManagementService aWorkloadManagementService,
+            ProjectService aProjectService)
     {
         workloadManagementService = aWorkloadManagementService;
         projectService = aProjectService;
@@ -66,11 +66,12 @@ public class DynamicWorkflowActionBarExtension
             return false;
         }
 
-        //Curator are excluded from the feature
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
-            loadOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
-            .getType()) && !projectService.isCurator(
-                aPage.getModelObject().getProject(), aPage.getModelObject().getUser());
+        // Curator are excluded from the feature
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID
+                .equals(workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
+                        aPage.getModelObject().getProject()).getType())
+                && !projectService.isCurator(aPage.getModelObject().getProject(),
+                        aPage.getModelObject().getUser());
     }
 
     @Override

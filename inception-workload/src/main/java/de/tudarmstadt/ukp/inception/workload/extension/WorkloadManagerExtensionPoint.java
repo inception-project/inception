@@ -33,6 +33,6 @@ public interface WorkloadManagerExtensionPoint<T>
     extends ExtensionPoint<Project, WorkloadManagerExtension<T>>
 {
     WorkloadManagerExtension<T> getDefault();
-    
+
     List<WorkloadManagerType> getTypes();
 }

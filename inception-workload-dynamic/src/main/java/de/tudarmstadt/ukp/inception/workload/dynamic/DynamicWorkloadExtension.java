@@ -75,7 +75,7 @@ public class DynamicWorkloadExtension
 
     @Override
     public void writeTraits(WorkloadManagementService aWorkloadManagementService,
-                            DynamicWorkloadTraits aTrait, Project aProject)
+            DynamicWorkloadTraits aTrait, Project aProject)
     {
         try {
             WorkloadManager manager = aWorkloadManagementService

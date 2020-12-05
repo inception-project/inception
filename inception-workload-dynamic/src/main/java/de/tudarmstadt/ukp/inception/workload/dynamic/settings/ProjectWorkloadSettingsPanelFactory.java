@@ -38,7 +38,7 @@ public class ProjectWorkloadSettingsPanelFactory
 
     @Autowired
     public ProjectWorkloadSettingsPanelFactory(
-        WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
     {
         workloadManagerExtensionPoint = aWorkloadManagerExtensionPoint;
     }
