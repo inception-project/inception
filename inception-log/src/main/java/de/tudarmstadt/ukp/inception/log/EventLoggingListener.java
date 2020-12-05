@@ -60,6 +60,8 @@ public class EventLoggingListener implements DisposableBean
     private final ScheduledExecutorService scheduler;
     
     private final Deque<LoggedEvent> queue;
+    
+    private volatile boolean flushing = false;
 
     public EventLoggingListener(
             @Autowired EventRepository aRepo,
@@ -151,15 +153,29 @@ public class EventLoggingListener implements DisposableBean
     
     public void flush()
     {
-        synchronized (this) {
-            // Fetch all items that are currently in the queue
-            List<LoggedEvent> batch = new ArrayList<>();
-            while (!queue.isEmpty()) {
-                batch.add(queue.pop());
+        // If a flushing process is already in progress, we can abort here already. No need to
+        // wait for obtaining a synchronize lock. This also avoids a deadlock situation that was
+        // observed when importing huge tagsets with HSQLDB.
+        if (flushing) {
+            return;
+        }
+        
+        synchronized (queue) {
+            try {
+                flushing = true;
+                
+                // Fetch all items that are currently in the queue
+                List<LoggedEvent> batch = new ArrayList<>();
+                while (!queue.isEmpty()) {
+                    batch.add(queue.pop());
+                }
+                
+                // And dump them into the database
+                repo.create(batch.toArray(new LoggedEvent[batch.size()]));
             }
-            
-            // And dump them into the database
-            repo.create(batch.toArray(new LoggedEvent[batch.size()]));
+            finally {
+                flushing = false;
+            }
         }
     }
 

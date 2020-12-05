@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.curation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.inception.curation.CurationMetadata.CURATION_USER_PROJECT;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -57,7 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -200,19 +201,20 @@ public class CurationEditorExtension
     public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
             int aWindowEndOffset)
     {
-        if (!aState.getMode().equals(Mode.ANNOTATION)) {
+        if (!aState.getMode().equals(ANNOTATION)) {
             return;
         }
-        
+
+        // Check annotator state metadata if user is currently curating for this project
+        long projectId = aState.getProject().getId();
+        Boolean isCurating = aState.getMetaData(CURATION_USER_PROJECT);
+        if (isCurating == null || !isCurating) {
+            return;
+        }
+
+        // Check if user already finished with this document
         // check if user already finished with this document
         if (documentService.isAnnotationFinished(aState.getDocument(), aState.getUser())) {
-            return;
-        }
-        
-        //check annotatorstate metadata if user is currently curating for this project
-        long projectId = aState.getProject().getId();
-        Boolean isCurating = aState.getMetaData(CurationMetadata.CURATION_USER_PROJECT);
-        if (isCurating == null || !isCurating) {
             return;
         }
             
@@ -224,7 +226,6 @@ public class CurationEditorExtension
         }
 
         for (User user : selectedUsers) {
-                        
             try {
                 CAS userCas = documentService.readAnnotationCas(aState.getDocument(),
                         user.getUsername());
