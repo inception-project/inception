@@ -23,14 +23,6 @@
             overflow: auto;
         }
 
-        .table-striped > tbody > tr:nth-child(2n+1) > td, .table-striped > tbody > tr:nth-child(2n+1) > th {
-            background-color: lightgray;
-        }
-
-        .table-hover tbody tr:hover td, .table-hover tbody tr:hover th {
-            background-color: burlywood;
-        }
-
         .form-control.k-widget {
             display: inline-block;
             height: 100px;
@@ -38,27 +30,17 @@
         }
 
         .k-floatwrap {
-            height: 1000px;
+            height: fit-content ;
+            border: none;
         }
 
         .ddform {
             position: absolute;
-            top: 100%;
             right: 0;
             z-index: 1000;
             display: none;
-            float: left;
-            min-width: 10rem;
-            padding: 0.5rem 0;
-            margin: 0.125rem 0 0;
-            font-size: 1rem;
-            color: #212529;
-            text-align: left;
-            list-style: none;
             background-color: #fff;
-            background-clip: padding-box;
             border: 1px solid rgba(0, 0, 0, 0.15);
-            border-radius: 0.25rem;
         }
 
     </style>
@@ -82,44 +64,44 @@
                 <i class="fas fa-filter"></i>&nbsp;
                 <wicket:message key="Filter"/>
               </button>
-              <span class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 800px;">
+              <span class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 600px;">
                 <form wicket:id="searchForm">
                   <div class="card-header">
                     <wicket:message key="filterHeader"/>
                   </div>
                   <div class="card-body">
                     <div class="form-group form-row">
-                      <label class="col-form-label col-sm-4">
+                      <label class="col-form-label col-sm-3">
                         <wicket:message key="userFilterText"/>
                       </label>
-                      <div class="col-sm-8">
+                      <div class="col-sm-9">
                         <input wicket:id="userFilter" type="text" class="form-control"/>
                       </div>
                     </div>
                   <div class="form-group form-row">
-                  <label class="col-form-label col-sm-4">
+                  <label class="col-form-label col-sm-3">
                     <wicket:message key="documentFilterText"/>
                       </label>
-                        <div class="col-sm-8">
+                        <div class="col-sm-9">
                           <input wicket:id="documentFilter" type="text" class="form-control"/>
                         </div>
                       </div>
                       <div class="form-group form-row">
-                        <label class="col-form-label col-sm-4">
+                        <label class="col-form-label col-sm-3">
                           <wicket:message key="dateFilterText"/>
                         </label>
-                        <div class="col-sm-8">
+                        <div class="col-sm-9">
                           <span wicket:id="date"></span>
                         </div>
                       </div>
                       <div class="form-group form-row">
-                        <div class="offset-sm-4 col-sm-8">
+                        <div class="offset-sm-3 col-sm-9">
                           <input class="bootstrap-datetimepicker-widget" wicket:id="from" type="date"/>
                           <input class="bootstrap-datetimepicker-widget" wicket:id="to" type="date"/>
                         </div>
                       </div>
                       <div class="form-group form-row">
-                        <div class="offset-sm-4 col-sm-8">
+                        <div class="offset-sm-3 col-sm-9">
                           <div class="form-check">
                             <input wicket:id="unused" class="form-check-input" type="checkbox">
                             <label wicket:for="unused" class="form-check-label">
@@ -147,26 +129,30 @@
                   <wicket:message key="Annotators"/>
                 </button>
                   <script>
-                      let dropDownMenuButton = $('button.dd-toggle');
+                      /*
+                      This JS implementation is required in order to make the multiselect dropdown work
+                      properly. This method is an "override" of the data-toggle="dropdown" as it
+                      does not work properly with a multiselect dropdown within another dropdown menu.
+                       */
 
-                      dropDownMenuButton.on('click', function () {
-                          $('form.ddform').show();
+                      $('button.dd-toggle').click(function () {
+                          $('form.ddform').toggle();
                       });
 
                       $('body').on('click', function (e) {
-                          if (!dropDownMenuButton.is(e.target)
+                          if ($('form.ddform').is(':visible')
+                              && !$('button.dd-toggle').is(e.target)
                               && !$('form.ddform').is(e.target)
                               && !$('li').is(e.target)
-                              && dropDownMenuButton.has(e.target).length === 0
-                              && $('form.ddform').has(e.target).length === 0
-                              && $('.open').has(e.target).length === 0) {
+                              && $('button.dd-toggle').has(e.target).length === 0
+                              && $('form.ddform').has(e.target).length === 0) {
                               $('form.ddform').hide();
                           }
                       });
                   </script>
                 <form wicket:id="userForm" class="shadow-lg pt-0 pb-0 ddform" role="menu"
-                  style="width: 1000px; height: 435px;">
-                  <form wicket:id="userSelectionForm" style="height: 150px;">
+                  style="width: 800px; height: 385px;">
+                  <form wicket:id="userSelectionForm" style="height: 100px;">
                     <div class="card-header">
                       <wicket:message key="userSelection"/>
                     </div>
@@ -178,7 +164,7 @@
                     </div>
                   </form>
                   <div class="row-cols-2 form-row">
-                    <div>
+                    <div class="col-sm-7">
                       <form wicket:id="userAssignDocumentForm" class="form">
                         <div class="card-header">
                           <wicket:message key="userSettings"/>
@@ -204,19 +190,19 @@
                         </div>
                       </form>
                     </div>
-                    <div>
+                    <div class="col-sm-5">
                       <form wicket:id="userResetDocumentForm" class="form">
                         <div class="card-header">
                           <wicket:message key="resetDocument"/>
                         </div>
                         <div class="card-body" style="height: 200px">
                           <div>
-                          <label class="col-form-label col-sm-8">
+                          <label class="col-form-label col-sm-12">
                             <select wicket:id="resetDocument" class="form-control" data-container="body"></select>
                           </label>
                           </div>
                           <div>
-                          <label class="col-form-label col-sm-8">
+                          <label class="col-form-label col-sm-12">
                             <select wicket:id="documentState" class="form-control" data-container="body"></select>
                           </label>
                           </div>
