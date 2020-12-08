@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
@@ -95,6 +96,7 @@ public class AttachedAnnotationListPanel
         noAttachedAnnotationsInfo.setOutputMarkupPlaceholderTag(true);
         noAttachedAnnotationsInfo.add(visibleWhen(
                 () -> getModelObject() != null && getModelObject().getSelection().isSet()
+                        && getModelObject().getSelection().getAnnotation().getId() != NONE
                         && SPAN_TYPE.equals(getModelObject().getSelectedAnnotationLayer().getType())
                         && annotations.getObject().isEmpty()));
         add(noAttachedAnnotationsInfo);
@@ -121,7 +123,7 @@ public class AttachedAnnotationListPanel
     {
         Selection selection = getModelObject().getSelection();
 
-        if (!selection.isSet()) {
+        if (!selection.isSet() || selection.getAnnotation().getId() == NONE) {
             return Collections.emptyList();
         }
 
