@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.curation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -482,5 +483,15 @@ public class CurationServiceImpl
             long aProjectId)
     {
         return getCurationState(aUsername, aProjectId).getMergeStrategy();
+    }
+
+    @Override
+    public boolean isCurationFinished(AnnotatorState aState, String aCurrentUsername)
+    {
+        String username = aState.getUser().getUsername();
+        SourceDocument sourceDoc = aState.getDocument();
+        return (username.equals(aCurrentUsername) 
+                && documentService.isAnnotationFinished(sourceDoc, aState.getUser())) ||
+                (username.equals(CURATION_USER) && sourceDoc.getState().equals(CURATION_FINISHED));
     }
 }

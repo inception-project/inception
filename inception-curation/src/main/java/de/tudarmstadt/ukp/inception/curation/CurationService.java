@@ -108,4 +108,11 @@ public interface CurationService
      * List users that have finished the given document
      */
     public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument);
+
+    /**
+     * Check if user in given annotator state is curating and has finished it
+     * @param state the annotator state
+     * @param currentUsername the currently logged in user
+     */
+    public boolean isCurationFinished(AnnotatorState state, String currentUsername);
 }
