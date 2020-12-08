@@ -17,3 +17,25 @@
 [[sect_workload]]
 = Workload
 
+NOTE: This functionality is only available when the experimental feature dynamic-workload is enabled.
+
+Similar to the monitoring page, the workload page shall give project manager a fast overview of all documents
+and users within the current project.
+
+image::workload.png[align="center"]
+
+Therefore, it mainly consists of a substantial, but easy to understand table containing the data a project manager
+needs from their documents.
+Overall, there are three different tabs which enable advanced features for the workload page.
+. Filters: Different filters can be applied here to make the table easier to read and get faster the required information needed.
+. Annotators: In this menu, a project manager is able to execute different tasks regarding the annotators of the project. For example,
+specific documents can be assigned to an annotator, or if an annotator has accidentally finished a document he / she was working
+on, the project manager can reset the documents status.
+. Settings: The final tab gives a project manager the opportunity to select values for two different categories.
+The first one is the default number of annotations. This number is crucial for the documents distribution, as each document can
+only be assigned to annotators at a maximum of this number.
+The second option is the workflow for the documents. Right now, a project manager can select from two different workflow
+strategies.
+Default workflow means, that the documents are simply passed to the annotators in same the way as they are also represented in the table.
+Randomized workflow, as the name already explains, selects randomly from all documents each time a new document is requested by an annotator.
+

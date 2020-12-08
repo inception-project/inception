@@ -16,3 +16,13 @@
 
 [[sect_workload_settings]]
 = Workload settings
+
+NOTE: This functionality is only available when the experimental feature dynamic-workload is enabled.
+
+This configuration tab for a project enables the utilization of the dynamic workload feature. The dropbox lets
+the project manager choose, whether the standard monitoring or the dynamic workload feature shall be used.
+There can only be one of them in use at any given time.
+Upon selecting the dynamic workload from the dropdown and confirming it with the corresponding button, the
+project manager is able to select the new workload tab from the projects menu bar.
+
+image::workload_settings.png[align="center"]
