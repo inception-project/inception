@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
@@ -689,8 +688,7 @@ public class AnnotatorStateImpl
     @Override
     public boolean isUserViewingOthersWork(String aCurrentUserName)
     {
-        return !CURATION_USER.equals(aCurrentUserName) && 
-                !user.getUsername().equals(aCurrentUserName);
+        return !user.getUsername().equals(aCurrentUserName);
     }
 
     @SuppressWarnings("unchecked")

@@ -42,7 +42,7 @@ public enum AnnotationDocumentStateTransition
      */
     NEW_TO_IGNORE,
     /**
-     * Change document state from IGNOR back to NEW
+     * Change document state from IGNORE back to NEW
      */
     IGNORE_TO_NEW;
 

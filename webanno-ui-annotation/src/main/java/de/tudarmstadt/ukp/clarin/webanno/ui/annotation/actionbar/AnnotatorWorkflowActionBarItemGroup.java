@@ -32,9 +32,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
@@ -116,6 +118,12 @@ public class AnnotatorWorkflowActionBarItemGroup
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
             documentService.createAnnotationDocument(annotationDocument);
+            
+            // curation sidebar: need to update source doc state as well to finished
+            if (state.getUser().getUsername().equals(WebAnnoConst.CURATION_USER)) {
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+            }
 
             _target.add(page);
         });
