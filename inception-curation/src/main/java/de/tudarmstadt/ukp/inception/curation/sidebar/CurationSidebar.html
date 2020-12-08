@@ -22,44 +22,16 @@
     <div wicket:id="mainContainer" class="card flex-content">
       <div class="card-header">
         <wicket:message key="curationHeader"/>
+        <div class="actions">
+            <button wicket:id="toggleOptionsVisibility" class="btn btn-secondary">
+                <i class="fa fa-cog" aria-hidden="true"></i>
+            </button>
+        </div>
       </div>
       
       <div class="scrolling card-body flex-v-container">
         <div wicket:id="mergeConfirmDialog"></div>
-        <span class="flex-content no-data-notice" wicket:id="noDocumentsLabel"></span>
-        <span class="flex-content no-data-notice" wicket:id="finishedLabel"></span>
-        <form wicket:id="usersForm" class="card">
-          <div class="card-header">
-            <wicket:message key="usersLabel"/>
-            <div class="actions">
-          <button wicket:id="show" class="btn btn-primary">
-		    <i class="fas fa-save" wicket:message="title:apply"></i>
-          </button>
-          <button wicket:id="clear" class="btn btn-secondary">
-            <i class="fas fa-trash" wicket:message="title:clear"></i>
-          </button>
-          <button wicket:id="merge" class="btn btn-secondary">
-            <i class="fas fa-sync" wicket:message="title:merge"></i>
-          </button>
-          </div>
-          </div>
-                    
-          <div wicket:id="selectedUsers">
-          <table class="table">
-            <tr wicket:id="users">
-              <td style="text-align: center;">
-                <input type="checkbox" wicket:id="user"/>
-              </td>
-              <td><span wicket:id="name"></span></td>
-            </tr>
-          </table>
-          </div>
-          <div class="card-footer text-right">
-            <button wicket:id="toggleOptionsVisibility" type="submit" class="btn btn-secondary">
-                <i class="fa fa-cog" aria-hidden="true"></i>
-            </button>
-          </div>  
-        </form>
+        
         <form wicket:id="settingsForm" class="card">
           <div class="card-header small">
               <wicket:message key="settingsLabel"/>
@@ -80,6 +52,37 @@
             <input wicket:id="apply" class="btn btn-primary" type="submit" wicket:message="value:apply"/>
           </div>
         </form>
+        
+        <form wicket:id="usersForm" class="card">
+          <div class="card-header">
+            <wicket:message key="usersLabel"/>
+            <div class="actions">
+              <button wicket:id="show" class="btn btn-primary">
+		        <i class="fas fa-save" wicket:message="title:apply"></i>
+              </button>
+              <button wicket:id="clear" class="btn btn-secondary">
+                <i class="fas fa-trash" wicket:message="title:clear"></i>
+              </button>
+              <button wicket:id="merge" class="btn btn-secondary">
+                <i class="fas fa-sync" wicket:message="title:merge"></i>
+              </button>
+            </div>
+          </div>
+                    
+          <div wicket:id="selectedUsers">
+          <table class="table">
+            <tr wicket:id="users">
+              <td style="text-align: center;">
+                <input type="checkbox" wicket:id="user"/>
+              </td>
+              <td><span wicket:id="name"></span></td>
+            </tr>
+          </table>
+          </div>  
+        </form>
+        
+        <span class="flex-content no-data-notice" wicket:id="noDocumentsLabel"></span>
+        <span class="flex-content no-data-notice" wicket:id="finishedLabel"></span>
       </div>
     </div>
   </div>

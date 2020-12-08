@@ -205,13 +205,13 @@ public class DynamicWorkloadManagementPage
                 dataProvider::getInProgressAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Annotators"), getString("Annotators"),
                 dataProvider::getUsersWorkingOnTheDocument));
-        columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
-                this::lastAccessTimeForDocument));
+        columns.add(
+                new LambdaColumn<>(new ResourceModel("Updated"), this::lastAccessTimeForDocument));
 
         // Own column type, contains only a click
         // able image (AJAX event),
         // creates a small panel dialog containing metadata
-        columns.add(new HeaderlessColumn<>()
+        columns.add(new HeaderlessColumn<SourceDocument, String>()
         {
             private static final long serialVersionUID = 1L;
 
@@ -310,7 +310,8 @@ public class DynamicWorkloadManagementPage
                     dateFrom.setModelObject(null);
                     dateTo.setModelObject(null);
                 }
-                ajaxRequestTarget.add(userFilterTextField, documentFilterTextField, dateFrom, dateTo);
+                ajaxRequestTarget.add(userFilterTextField, documentFilterTextField, dateFrom,
+                        dateTo);
             }
         };
 
@@ -446,7 +447,8 @@ public class DynamicWorkloadManagementPage
         userAssignDocumentForm.add(visibleWhen(() -> !isNull(userSelection.getModelObject())));
 
         // This ensures that we get the user input in getChoices
-        documentsToAdd = new MultiSelect<>("documentsToAdd", new ChoiceRenderer<>("name"))
+        documentsToAdd = new MultiSelect<SourceDocument>("documentsToAdd",
+                new ChoiceRenderer<>("name"))
         {
             private static final long serialVersionUID = -6211358256515198208L;
 
@@ -563,8 +565,9 @@ public class DynamicWorkloadManagementPage
             return new ArrayList<>();
         }
         else {
-            List<AnnotationDocument> sortedList = new ArrayList<>(documentService.listAnnotationDocuments(
-                currentProject.getObject(), userSelection.getModelObject()));
+            List<AnnotationDocument> sortedList = new ArrayList<>(
+                    documentService.listAnnotationDocuments(currentProject.getObject(),
+                            userSelection.getModelObject()));
             sortedList.sort(Comparator.comparing(AnnotationDocument::getName));
             return sortedList;
         }
@@ -617,7 +620,7 @@ public class DynamicWorkloadManagementPage
         userFilterTextField.setModelObject(null);
         documentFilterTextField.setModelObject(null);
 
-        aTarget.add(dateFrom,dateTo,unused,userFilterTextField,documentFilterTextField);
+        aTarget.add(dateFrom, dateTo, unused, userFilterTextField, documentFilterTextField);
     }
 
     private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -760,22 +763,22 @@ public class DynamicWorkloadManagementPage
         Date latest = new Date();
         latest.setTime(0);
         try {
-            //Fetch all annotation documents for the source document
-            List<String> userList = documentService.listAnnotationDocuments(aDoc)
-                .stream().filter(d -> projectService.isAnnotator(
-                    currentProject.getObject(), userRepository.get(d.getUser())))
-                .map(AnnotationDocument::getUser)
-                .collect(Collectors.toList());
+            // Fetch all annotation documents for the source document
+            List<String> userList = documentService.listAnnotationDocuments(aDoc).stream()
+                    .filter(d -> projectService.isAnnotator(currentProject.getObject(),
+                            userRepository.get(d.getUser())))
+                    .map(AnnotationDocument::getUser).collect(Collectors.toList());
 
-            for (String user: userList) {
-                //Get the latest update
-                Long date = documentService.getAnnotationCasTimestamp(aDoc,user).orElse(null);
+            for (String user : userList) {
+                // Get the latest update
+                Long date = documentService.getAnnotationCasTimestamp(aDoc, user).orElse(null);
                 if (date != null && new Date(date).compareTo(latest) > 0) {
                     latest = new Date(date);
                 }
             }
 
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
 
