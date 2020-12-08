@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
@@ -296,7 +297,10 @@ public abstract class AnnotationPageBase
             throw new NotEditableException("No document selected");
         }
 
-        if (state.getMode().equals(CURATION)) {
+        // If curating (check mode for curation page and user for curation sidebar), 
+        // then it is editable unless the curation is finished
+        if (state.getMode().equals(CURATION) || 
+                state.getUser().getUsername().equals(CURATION_USER)) {
             if (state.getDocument().getState().equals(CURATION_FINISHED)) {
                 throw new NotEditableException("Curation is already finished. You can put it back "
                                 + "into progress via the monitoring page.");
@@ -325,8 +329,10 @@ public abstract class AnnotationPageBase
             return false;
         }
         
-        // If curating, then it is editable unless the curation is finished
-        if (state.getMode().equals(CURATION)) {
+        // If curating (check mode for curation page and user for curation sidebar), 
+        // then it is editable unless the curation is finished
+        if (state.getMode().equals(CURATION) || 
+                state.getUser().getUsername().equals(CURATION_USER)) {
             return !CURATION_FINISHED.equals(state.getDocument().getState());
         }
         
