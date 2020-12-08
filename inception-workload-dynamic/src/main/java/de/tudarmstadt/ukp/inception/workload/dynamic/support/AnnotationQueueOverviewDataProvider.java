@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -184,7 +183,8 @@ public class AnnotationQueueOverviewDataProvider
 
             // Check if DocumentName was entered
             if (filter.getDocumentName() != null) {
-                if (doc.getName().contains(filter.getDocumentName())) {
+                //Also check that it does not add duplicates
+                if (doc.getName().contains(filter.getDocumentName()) && !docNameList.contains(doc)) {
                     docNameList.add(doc);
                 }
             }
@@ -311,11 +311,6 @@ public class AnnotationQueueOverviewDataProvider
                 .filter(d -> d.getDocument().equals(aDocument) && !d.getState().equals(NEW)
                         && !d.getState().equals(IGNORE))
                 .map(AnnotationDocument::getUser).sorted().collect(Collectors.joining(", "));
-    }
-
-    public Date lastAccessTimeForDocument(SourceDocument aDoc)
-    {
-        return aDoc.getUpdated();
     }
 
     public void setAllAnnotationDocuments(List<AnnotationDocument> aListOfAnnotationDocuments)

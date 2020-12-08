@@ -34,7 +34,7 @@
             border: none;
         }
 
-        .ddform {
+        .ddFilterForm, .ddUserForm {
             position: absolute;
             right: 0;
             z-index: 1000;
@@ -58,14 +58,37 @@
       <div class="card-header">
         <wicket:message key="documentStatus"/>
           <div class="actions">
-            <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-              <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
-                type="button" data-toggle="dropdown">
+             <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-action btn-secondary dropdown-toggle flex-content dd-filter"
+                        type="button">
                 <i class="fas fa-filter"></i>&nbsp;
                 <wicket:message key="Filter"/>
               </button>
-              <span class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 600px;">
-                <form wicket:id="searchForm">
+               <script>
+                      /*
+                      This JS implementation is required in order to make the dateselect work
+                      properly. This method is an "override" of the data-toggle="dropdown" as it
+                      does not work properly with a dateselect within a dropdown menu.
+                       */
+
+                      $('button.dd-filter').click(function () {
+                          $('form.ddFilterForm').toggle();
+                      });
+
+                      $('body').on('click', function (e) {
+                          if ($('form.ddFilterForm').is(':visible')
+                              && !$('button.dd-filter').is(e.target)
+                              && !$('form.ddFilterForm').is(e.target)
+                              && !$('div.k-animation-container').is(e.target)
+                              && $('button.dd-filter').has(e.target).length === 0
+                              && $('div.k-animation-container').has(e.target).length === 0
+                              && $('form.ddFilterForm').has(e.target).length === 0) {
+                              $('form.ddFilterForm').hide();
+                          }
+                      });
+                  </script>
+                <form wicket:id="searchForm" class="shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
+                      style="min-width: 600px;">
                   <div class="card-header">
                     <wicket:message key="filterHeader"/>
                   </div>
@@ -120,10 +143,9 @@
                       </button>
                     </div>
                   </form>
-                </span>
               </span>
               <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-                <button class="btn btn-action btn-secondary dropdown-toggle flex-content dd-toggle"
+                <button class="btn btn-action btn-secondary dropdown-toggle flex-content dd-annotator"
                   type="button">
                   <i class="fas fa-user"></i>&nbsp;
                   <wicket:message key="Annotators"/>
@@ -135,22 +157,22 @@
                       does not work properly with a multiselect dropdown within another dropdown menu.
                        */
 
-                      $('button.dd-toggle').click(function () {
-                          $('form.ddform').toggle();
+                      $('button.dd-annotator').click(function () {
+                          $('form.ddUserForm').toggle();
                       });
 
                       $('body').on('click', function (e) {
-                          if ($('form.ddform').is(':visible')
-                              && !$('button.dd-toggle').is(e.target)
-                              && !$('form.ddform').is(e.target)
+                          if ($('form.ddUserForm').is(':visible')
+                              && !$('button.dd-annotator').is(e.target)
+                              && !$('form.ddUserForm').is(e.target)
                               && !$('li').is(e.target)
-                              && $('button.dd-toggle').has(e.target).length === 0
-                              && $('form.ddform').has(e.target).length === 0) {
-                              $('form.ddform').hide();
+                              && $('button.dd-annotator').has(e.target).length === 0
+                              && $('form.ddUserForm').has(e.target).length === 0) {
+                              $('form.ddUserForm').hide();
                           }
                       });
                   </script>
-                <form wicket:id="userForm" class="shadow-lg pt-0 pb-0 ddform" role="menu"
+                <form wicket:id="userForm" class="shadow-lg pt-0 pb-0 ddUserForm" role="menu"
                   style="width: 800px; height: 385px;">
                   <form wicket:id="userSelectionForm" style="height: 100px;">
                     <div class="card-header">

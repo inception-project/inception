@@ -22,9 +22,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Objects.isNull;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -203,7 +206,7 @@ public class DynamicWorkloadManagementPage
         columns.add(new LambdaColumn<>(new ResourceModel("Annotators"), getString("Annotators"),
                 dataProvider::getUsersWorkingOnTheDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
-                dataProvider::lastAccessTimeForDocument));
+                this::lastAccessTimeForDocument));
 
         // Own column type, contains only a click
         // able image (AJAX event),
@@ -307,7 +310,7 @@ public class DynamicWorkloadManagementPage
                     dateFrom.setModelObject(null);
                     dateTo.setModelObject(null);
                 }
-                ajaxRequestTarget.add(searchForm);
+                ajaxRequestTarget.add(userFilterTextField, documentFilterTextField, dateFrom, dateTo);
             }
         };
 
@@ -487,6 +490,7 @@ public class DynamicWorkloadManagementPage
                         result.addAll(
                                 documentService.listAnnotatableDocuments(currentProject.getObject(),
                                         userSelection.getModelObject()).keySet());
+                        result.sort(Comparator.comparing(SourceDocument::getName));
                     }
                 }
                 return result;
@@ -559,8 +563,10 @@ public class DynamicWorkloadManagementPage
             return new ArrayList<>();
         }
         else {
-            return new ArrayList<>(documentService.listAnnotationDocuments(
-                    currentProject.getObject(), userSelection.getModelObject()));
+            List<AnnotationDocument> sortedList = new ArrayList<>(documentService.listAnnotationDocuments(
+                currentProject.getObject(), userSelection.getModelObject()));
+            sortedList.sort(Comparator.comparing(AnnotationDocument::getName));
+            return sortedList;
         }
     }
 
@@ -611,7 +617,7 @@ public class DynamicWorkloadManagementPage
         userFilterTextField.setModelObject(null);
         documentFilterTextField.setModelObject(null);
 
-        aTarget.add(searchForm);
+        aTarget.add(dateFrom,dateTo,unused,userFilterTextField,documentFilterTextField);
     }
 
     private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -747,5 +753,35 @@ public class DynamicWorkloadManagementPage
         catch (NoResultException e) {
             return Optional.empty();
         }
+    }
+
+    private Date lastAccessTimeForDocument(SourceDocument aDoc)
+    {
+        Date latest = new Date();
+        latest.setTime(0);
+        try {
+            //Fetch all annotation documents for the source document
+            List<String> userList = documentService.listAnnotationDocuments(aDoc)
+                .stream().filter(d -> projectService.isAnnotator(
+                    currentProject.getObject(), userRepository.get(d.getUser())))
+                .map(AnnotationDocument::getUser)
+                .collect(Collectors.toList());
+
+            for (String user: userList) {
+                //Get the latest update
+                Long date = documentService.getAnnotationCasTimestamp(aDoc,user).orElse(null);
+                if (date != null && new Date(date).compareTo(latest) > 0) {
+                    latest = new Date(date);
+                }
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (latest.compareTo(new Date(0)) == 0) {
+            latest = null;
+        }
+        return latest;
     }
 }
