@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJ
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
@@ -524,6 +525,16 @@ public class AnnotationPage
                 if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
                     documentService.transitionAnnotationDocumentState(annotationDocument,
                             AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+                }
+
+                if (state.getUser().getUsername().equals(CURATION_USER)) {
+                    SourceDocument sourceDoc = state.getDocument();
+                    SourceDocumentState sourceDocState = sourceDoc.getState();
+                    if (!sourceDocState.equals(SourceDocumentState.CURATION_IN_PROGRESS)
+                            && !sourceDocState.equals(SourceDocumentState.CURATION_FINISHED)) {
+                        documentService.transitionSourceDocumentState(sourceDoc,
+                                ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
+                    }
                 }
             }
 
