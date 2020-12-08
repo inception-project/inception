@@ -482,8 +482,9 @@ public class CurationServiceImpl
     {
         String username = aState.getUser().getUsername();
         SourceDocument sourceDoc = aState.getDocument();
-        return (username.equals(aCurrentUsername) 
-                && documentService.isAnnotationFinished(sourceDoc, aState.getUser())) ||
-                (username.equals(CURATION_USER) && sourceDoc.getState().equals(CURATION_FINISHED));
+        return (username.equals(aCurrentUsername)
+                && documentService.isAnnotationFinished(sourceDoc, aState.getUser()))
+                || (username.equals(CURATION_USER)
+                        && sourceDoc.getState().equals(CURATION_FINISHED));
     }
 }

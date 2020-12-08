@@ -109,8 +109,11 @@ public interface CurationService
 
     /**
      * Check if user in given annotator state is curating and has finished it
-     * @param state the annotator state
-     * @param currentUsername the currently logged in user
+     * 
+     * @param state
+     *            the annotator state
+     * @param currentUsername
+     *            the currently logged in user
      */
     public boolean isCurationFinished(AnnotatorState state, String currentUsername);
 }
