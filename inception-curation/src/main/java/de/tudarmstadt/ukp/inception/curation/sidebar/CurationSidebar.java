@@ -51,7 +51,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.value.AttributeMap;
 import org.apache.wicket.util.value.IValueMap;
-import org.danekja.java.util.function.serializable.SerializableBooleanSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,8 +137,8 @@ public class CurationSidebar
                 LoadableDetachableModel.of(state::getUser)));
         finishedLabel.setOutputMarkupPlaceholderTag(true);
         mainContainer.add(finishedLabel);
-        finishedLabel.add(visibleWhen(
-            () -> documentService.isAnnotationFinished(state.getDocument(), state.getUser())));
+        finishedLabel
+                .add(visibleWhen(() -> curationService.isCurationFinished(state, currentUsername)));
         noDocsLabel.add(visibleWhen(() -> !finishedLabel.isVisible() &&
                 users.getModelObject().isEmpty()));
         mainContainer.add(noDocsLabel);
@@ -166,7 +165,6 @@ public class CurationSidebar
         // add toggle for settings
         mainContainer.add(new AjaxLink<Void>("toggleOptionsVisibility")
         {
-
             private static final long serialVersionUID = -5535838955781542216L;
 
             @Override
@@ -180,18 +178,7 @@ public class CurationSidebar
         // user started curating, extension can show suggestions
         state.setMetaData(CurationMetadata.CURATION_USER_PROJECT, true);
         
-        usersForm.add(enabledWhen(isCurationOngoing(state, currentUsername)));
-    }
-
-    private SerializableBooleanSupplier isCurationOngoing(AnnotatorState aState,
-            String aCurrentUsername)
-    {
-        String username = aState.getUser().getUsername();
-        return () -> (
-                // actual user or curation user is not finished 
-                // (exclude case that admin user is looking at other users)
-                (username.equals(aCurrentUsername) || username.equals(CURATION_USER))
-                && !documentService.isAnnotationFinished(aState.getDocument(), aState.getUser()));
+        usersForm.add(enabledWhen(() -> !finishedLabel.isVisible()));
     }
     
     private Form<Void> createSettingsForm(String aId)
@@ -353,9 +340,10 @@ public class CurationSidebar
     private List<User> listUsers()
     {
         User currentUser = userRepository.getCurrentUser();
+        String curatorName = getModelObject().getUser().getUsername();
         return curationService.listFinishedUsers(getModelObject().getProject(), 
                 getModelObject().getDocument()).stream()
-                .filter(user -> !user.equals(currentUser))
+                .filter(user -> !user.equals(currentUser) || curatorName.equals(CURATION_USER))
                 .collect(Collectors.toList());
     }
     
