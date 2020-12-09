@@ -4,11 +4,11 @@
 #
 ############################################################
 
-FROM openjdk:8
+FROM openjdk:11
 
 MAINTAINER WebAnno Team
 
-# make sure webanno is running in en_US.UTF-8 locale
+# make sure WebAnno is running in en_US.UTF-8 locale
 RUN set -ex \
       && DEBIAN_FRONTEND=noninteractive \
       && apt-get update \
