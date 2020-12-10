@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 
 import java.io.IOException;
@@ -28,8 +29,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
@@ -38,6 +42,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -47,11 +52,14 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.NavigationToolbar;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -116,6 +124,8 @@ public class DynamicWorkloadManagementPage
 {
     private static final long serialVersionUID = 1180618893870240262L;
 
+    private static final String MID_LABEL = "label";
+
     // Forms
     private Form<Void> searchForm;
     private Form<Collection<SourceDocument>> userAssignDocumentForm;
@@ -137,16 +147,18 @@ public class DynamicWorkloadManagementPage
     private BootstrapRadioChoice<DateSelection> dateChoices;
     private DropDownChoice<WorkflowType> workflowChoices;
     private DropDownChoice<User> userSelection;
-    private DropDownChoice<AnnotationDocument> unassignDocument;
     private DropDownChoice<AnnotationDocument> resetDocument;
     private DropDownChoice<AnnotationDocumentState> documentState;
     private MultiSelect<SourceDocument> documentsToAdd;
+    private WebMarkupContainer stateFilters;
+    private IModel<Set<AnnotationDocumentState>> documentStateFilters;
 
     // Table
     private DataTable<SourceDocument, String> table;
 
     // Modal dialog
     private ModalWindow infoDialog;
+    private LambdaAjaxButton deleteDocumentLink;
 
     // SpringBeans
     private @SpringBean UserDao userRepository;
@@ -201,12 +213,12 @@ public class DynamicWorkloadManagementPage
                 SourceDocument::getName));
         columns.add(new LambdaColumn<>(new ResourceModel("Finished"), getString("Finished"),
                 dataProvider::getFinishedAmountForDocument));
-        columns.add(new LambdaColumn<>(new ResourceModel("Processed"), getString("Processed"),
+        columns.add(new LambdaColumn<>(new ResourceModel("Processing"), getString("Processing"),
                 dataProvider::getInProgressAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Annotators"), getString("Annotators"),
                 dataProvider::getUsersWorkingOnTheDocument));
-        columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
-                this::lastAccessTimeForDocument));
+        columns.add(
+                new LambdaColumn<>(new ResourceModel("Updated"), this::lastAccessTimeForDocument));
 
         // Own column type, contains only a click
         // able image (AJAX event),
@@ -294,8 +306,36 @@ public class DynamicWorkloadManagementPage
             }
         });
 
-        // add them to the form
         searchForm.add(dateChoices);
+
+        // StateFilter
+        documentStateFilters = Model.ofSet(new HashSet<>());
+        ListView<AnnotationDocumentState> listview = new ListView<>("stateFilter",
+                asList(AnnotationDocumentState.values()))
+        {
+            private static final long serialVersionUID = -2292408105823066466L;
+
+            @Override
+            protected void populateItem(ListItem<AnnotationDocumentState> aItem)
+            {
+                LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
+                        (d -> actionApplyStateFilter(aItem.getModelObject())));
+
+                link.add(new Label(MID_LABEL, aItem.getModel().getObject().getName()));
+                link.add(new AttributeAppender("class",
+                        () -> documentStateFilters.getObject().contains(aItem.getModelObject())
+                                ? "active"
+                                : "",
+                        " "));
+                aItem.add(link);
+            }
+        };
+
+        stateFilters = new WebMarkupContainer("stateFilters");
+        stateFilters.setOutputMarkupPlaceholderTag(true);
+        stateFilters.add(listview);
+
+        searchForm.add(stateFilters);
 
         // Checkbox for showing only unused source documents disables other textfields
         unused = new AjaxCheckBox("unused", PropertyModel.of(dataProvider, "filter.selected"))
@@ -310,7 +350,8 @@ public class DynamicWorkloadManagementPage
                     dateFrom.setModelObject(null);
                     dateTo.setModelObject(null);
                 }
-                ajaxRequestTarget.add(userFilterTextField, documentFilterTextField, dateFrom, dateTo);
+                ajaxRequestTarget.add(userFilterTextField, documentFilterTextField, dateFrom,
+                        dateTo);
             }
         };
 
@@ -319,15 +360,16 @@ public class DynamicWorkloadManagementPage
 
         // Condition for filter inputs to be enabled or disabled
         dateTo.add(enabledWhen(
-                () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0).name())
+                () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1).name())
                         && !(dataProvider.getFilterState().getSelected())));
         dateFrom.add(enabledWhen(
-                () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(1).name())
+                () -> !dateChoices.getDefaultModelObjectAsString().equals(dateChoice.get(0).name())
                         && !(dataProvider.getFilterState().getSelected())));
         dateChoices.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
         userFilterTextField.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
         documentFilterTextField
                 .add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
+        listview.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
 
         // Reset button
         searchForm.add(new LambdaAjaxButton<>("reset", this::actionReset));
@@ -501,16 +543,10 @@ public class DynamicWorkloadManagementPage
         documentsToAdd.setOutputMarkupId(true);
         userAssignDocumentForm.add(documentsToAdd);
 
-        // Dropdown for all annotation documents for the user that exist in the DB
-        unassignDocument = new DropDownChoice<>("unassignDocument");
-        unassignDocument.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocument::getName));
-        unassignDocument.setChoices(this::getCreatedDocumentsForSelectedUser);
-        unassignDocument.setModel(LoadableDetachableModel.of(this::getSelectedAnnotationDocument));
-        unassignDocument.setOutputMarkupId(true);
-        userAssignDocumentForm.add(unassignDocument);
 
         // Add the "Confirm" button
-        userAssignDocumentForm.add(new LambdaAjaxButton<>("confirm", this::actionAssignDocument));
+        userAssignDocumentForm.add(deleteDocumentLink = new LambdaAjaxButton<>("confirm", this::actionAssignDocument));
+
         return userAssignDocumentForm;
     }
 
@@ -563,8 +599,9 @@ public class DynamicWorkloadManagementPage
             return new ArrayList<>();
         }
         else {
-            List<AnnotationDocument> sortedList = new ArrayList<>(documentService.listAnnotationDocuments(
-                currentProject.getObject(), userSelection.getModelObject()));
+            List<AnnotationDocument> sortedList = new ArrayList<>(
+                    documentService.listAnnotationDocuments(currentProject.getObject(),
+                            userSelection.getModelObject()));
             sortedList.sort(Comparator.comparing(AnnotationDocument::getName));
             return sortedList;
         }
@@ -606,7 +643,7 @@ public class DynamicWorkloadManagementPage
 
     private void actionSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
     {
-        aTarget.add(table);
+        aTarget.add(table, searchForm);
     }
 
     private void actionReset(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -616,8 +653,9 @@ public class DynamicWorkloadManagementPage
         unused.setModelObject(false);
         userFilterTextField.setModelObject(null);
         documentFilterTextField.setModelObject(null);
+        dataProvider.getFilterState().setState(null);
 
-        aTarget.add(dateFrom,dateTo,unused,userFilterTextField,documentFilterTextField);
+        aTarget.add(table, searchForm);
     }
 
     private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
@@ -670,11 +708,9 @@ public class DynamicWorkloadManagementPage
         updateTable(aAjaxRequestTarget);
     }
 
-    private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget,
-            Form<List<SourceDocument>> aForm)
+    private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget, Form aForm)
     {
-        aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
-
+        aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);;
         // First check if there are documents to assign
         Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
         for (SourceDocument source : documentsToAssign) {
@@ -691,14 +727,6 @@ public class DynamicWorkloadManagementPage
                 error("Document '" + annotationDocument.getName()
                         + "' is either already assigned or even finished.");
             }
-        }
-
-        // Now check if a document needs to be unassigned
-        AnnotationDocument documentToDelete = unassignDocument.getModelObject();
-        if (documentToDelete != null) {
-            documentService.removeAnnotationDocument(documentToDelete);
-            success("Document " + documentToDelete.getName() + " for user "
-                    + documentToDelete.getUser() + " has been unassigned");
         }
 
         aAjaxRequestTarget.add(userAssignDocumentForm, userResetDocumentForm);
@@ -755,33 +783,61 @@ public class DynamicWorkloadManagementPage
         }
     }
 
-    private Date lastAccessTimeForDocument(SourceDocument aDoc)
+    private void actionApplyStateFilter(AnnotationDocumentState aState)
+    {
+        dataProvider.getFilterState().setState(aState);
+    }
+
+    private String lastAccessTimeForDocument(SourceDocument aDoc)
     {
         Date latest = new Date();
         latest.setTime(0);
         try {
-            //Fetch all annotation documents for the source document
-            List<String> userList = documentService.listAnnotationDocuments(aDoc)
-                .stream().filter(d -> projectService.isAnnotator(
-                    currentProject.getObject(), userRepository.get(d.getUser())))
-                .map(AnnotationDocument::getUser)
-                .collect(Collectors.toList());
+            // Fetch all annotation documents for the source document
+            List<String> userList = documentService.listAnnotationDocuments(aDoc).stream()
+                    .filter(d -> projectService.isAnnotator(currentProject.getObject(),
+                            userRepository.get(d.getUser())))
+                    .map(AnnotationDocument::getUser).collect(Collectors.toList());
 
-            for (String user: userList) {
-                //Get the latest update
-                Long date = documentService.getAnnotationCasTimestamp(aDoc,user).orElse(null);
+            for (String user : userList) {
+                // Get the latest update
+                Long date = documentService.getAnnotationCasTimestamp(aDoc, user).orElse(null);
                 if (date != null && new Date(date).compareTo(latest) > 0) {
                     latest = new Date(date);
                 }
             }
 
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
 
+        // Required, otherwise 01.01.1970 will be entered
         if (latest.compareTo(new Date(0)) == 0) {
-            latest = null;
+            return "";
         }
-        return latest;
+        else {
+            // Return now "1 day ago" , "2 days" etc until 1 week, then simply put in the date
+            long daysSinceLastUpdate = Math.abs(latest.getTime() - new Date().getTime());
+            int diff = (int)TimeUnit.DAYS.convert(daysSinceLastUpdate, TimeUnit.MILLISECONDS);
+            switch (diff) {
+            case (0):
+                return "Today";
+            case (1):
+                return "Yesterday";
+            case (2):
+                return "2 days ago";
+            case (3):
+                return "3 days ago";
+            case (4):
+                return "4 days ago";
+            case (5):
+                return "5 days ago";
+            case (6):
+                return "6 days ago";
+            default:
+                return latest.toString();
+            }
+        }
     }
 }

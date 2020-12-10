@@ -19,5 +19,5 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 public enum TableHeader
 {
-    Document, Finished, InProgress, Annotators, Updated, Actions;
+    Document, Finished, Processing, Annotators, Updated, Actions;
 }

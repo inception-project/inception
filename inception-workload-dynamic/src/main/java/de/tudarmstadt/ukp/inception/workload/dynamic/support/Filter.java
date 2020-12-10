@@ -21,6 +21,8 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 import java.io.Serializable;
 import java.util.Date;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+
 //Helper class for the Filter
 public class Filter
     implements Serializable
@@ -38,6 +40,9 @@ public class Filter
     // dates
     private Date from;
     private Date to;
+
+    //State
+    private AnnotationDocumentState state;
 
     // Default constructor
     public Filter()
@@ -92,5 +97,15 @@ public class Filter
     public void setTo(Date aTo)
     {
         this.to = aTo;
+    }
+
+    public AnnotationDocumentState getState()
+    {
+        return state;
+    }
+
+    public void setState(AnnotationDocumentState state)
+    {
+        this.state = state;
     }
 }

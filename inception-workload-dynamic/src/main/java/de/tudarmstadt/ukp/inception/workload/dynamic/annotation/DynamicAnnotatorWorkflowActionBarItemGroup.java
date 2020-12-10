@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -73,7 +74,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     // SpringBeans
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
-    private @SpringBean DynamicWorkloadExtension dynamicWorkloadExtension;
+    private @SpringBean WorkloadManagerExtension<DynamicWorkloadExtension> dynamicWorkloadExtension;
     private @SpringBean EntityManager entityManager;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
@@ -160,7 +161,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             WorkflowExtension currentWorkflowExtension = new DefaultWorkflowExtension();
             for (WorkflowExtension extension : workflowExtensionPoint.getExtensions()) {
                 if (extension.getId().equals(
-                        dynamicWorkloadExtension.readTraits(currentWorkload).getWorkflowType())) {
+                        dynamicWorkloadExtension.readTraits(currentWorkload))) {
                     currentWorkflowExtension = extension;
                     break;
                 }
@@ -172,7 +173,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             // homepage
             if (!currentWorkflowExtension.loadNextDocument(sourceDocuments, project,
                     currentWorkload, getAnnotationPage(), _target, workloadManagementService,
-                    dynamicWorkloadExtension, documentService)) {
+                dynamicWorkloadExtension.readTraits(currentWorkload), documentService)) {
                 redirectUserToHomePage();
             }
         });

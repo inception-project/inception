@@ -23,6 +23,10 @@
             overflow: auto;
         }
 
+        tr td:first-child, tr th:first-child, tr td:nth-child(4), tr th:nth-child(4) {
+            text-align: left;
+        }
+
         .form-control.k-widget {
             display: inline-block;
             height: 100px;
@@ -79,13 +83,18 @@
                           if ($('form.ddFilterForm').is(':visible')
                               && !$('button.dd-filter').is(e.target)
                               && !$('form.ddFilterForm').is(e.target)
+                              && !$('div.wicket-modal').is(e.target)
                               && !$('div.k-animation-container').is(e.target)
                               && $('button.dd-filter').has(e.target).length === 0
                               && $('div.k-animation-container').has(e.target).length === 0
-                              && $('form.ddFilterForm').has(e.target).length === 0) {
+                              && $('div.wicket-modal').has(e.target).length === 0
+                              && $('form.ddFilterForm').has(e.target).length === 0
+                              || $('form.submitButton').is(e.target)) {
                               $('form.ddFilterForm').hide();
                           }
                       });
+
+
                   </script>
                 <form wicket:id="searchForm" class="shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
                       style="min-width: 600px;">
@@ -124,6 +133,29 @@
                         </div>
                       </div>
                       <div class="form-group form-row">
+                      <label class="col-form-label col-sm-3">
+                        <wicket:message key="stateFilter"/>
+                      </label>
+                        <div class="flex-h-container flex-gutter justify-content-end">
+                          <div>
+                            <div wicket:id="stateFilters" class="input-group">
+                              <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                 <i class="fas fa-filter"></i>
+                                </div>
+                              </div>
+                              <div class="input-group-append" role="group">
+                                <wicket:container wicket:id="stateFilter">
+                                  <button type="button" class="btn btn-outline-secondary" wicket:id="stateFilterLink">
+                                    <wicket:container wicket:id="label"/>
+                                  </button>
+                                </wicket:container>
+                             </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group form-row">
                         <div class="offset-sm-3 col-sm-9">
                           <div class="form-check">
                             <input wicket:id="unused" class="form-check-input" type="checkbox">
@@ -135,10 +167,10 @@
                       </div>
                     </div>
                     <div class="card-footer">
-                      <button class="btn btn-primary" wicket:id="search">
+                      <button class="btn btn-primary submitButton" wicket:id="search">
                         <wicket:message key="search"/>
                       </button>
-                      <button class="btn btn-primary" wicket:id="reset">
+                      <button class="btn btn-primary submitButton" wicket:id="reset">
                         <wicket:message key="reset"/>
                       </button>
                     </div>
@@ -198,15 +230,9 @@
                             </div>
                             <select wicket:id="documentsToAdd" class="form-control col-sm-6" data-container="body" style="display: inline-block"></select>
                           </div>
-                          <div class="form-group form-row">
-                            <label class="col-form-label col-sm-5">
-                              <wicket:message key="unassignDocument"/>
-                            </label>
-                            <select wicket:id="unassignDocument" class="form-control col-sm-6" data-container="body"></select>
-                          </div>
                         </div>
                         <div class="card-footer">
-                          <button class="btn btn-primary" wicket:id="confirm">
+                          <button class="btn btn-primary" wicket:id="confirm" type="button">
                             <wicket:message key="confirm"/>
                           </button>
                         </div>

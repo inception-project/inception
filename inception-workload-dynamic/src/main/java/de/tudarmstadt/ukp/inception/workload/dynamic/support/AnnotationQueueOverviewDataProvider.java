@@ -171,6 +171,7 @@ public class AnnotationQueueOverviewDataProvider
         List<SourceDocument> docNameList = new ArrayList<>();
         List<SourceDocument> dateList = new ArrayList<>();
         List<SourceDocument> unusedList = new ArrayList<>();
+        List<SourceDocument> stateList = new ArrayList<>();
 
         for (SourceDocument doc : aData) {
             // Unused documents selected
@@ -238,6 +239,15 @@ public class AnnotationQueueOverviewDataProvider
                     }
                 }
             }
+
+            if (filter.getState() != null) {
+                for (AnnotationDocument anno: allAnnotationDocuments) {
+                    if (anno.getName().equals(doc.getName()) && anno.getState().equals(filter.getState())
+                    && !stateList.contains(doc)) {
+                        stateList.add(doc);
+                    }
+                }
+            }
         }
 
         // Intersection of the lists
@@ -256,6 +266,10 @@ public class AnnotationQueueOverviewDataProvider
 
         if (unusedList.size() > 0 || filter.getSelected()) {
             finalList.add(unusedList);
+        }
+
+        if (stateList.size() > 0 || filter.getState() != null) {
+            finalList.add(stateList);
         }
 
         for (int i = 0; i < finalList.size() - 1; i++) {

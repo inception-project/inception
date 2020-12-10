@@ -19,5 +19,5 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 public enum DateSelection
 {
-    from, until, between;
+    before, after, between;
 }
