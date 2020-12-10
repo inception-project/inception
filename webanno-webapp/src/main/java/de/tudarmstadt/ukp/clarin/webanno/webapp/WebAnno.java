@@ -134,7 +134,7 @@ public class WebAnno
         // either located in webanno.home or under the user's home directory. Make sure we pick
         // it up from there in addition to reading the built-in application.properties file.
         aBuilder.properties("spring.config.additional-location="
-                + "${webanno.home:${user.home}/.webanno}/settings.properties");
+                + "optional:${webanno.home:${user.home}/.webanno}/settings.properties");
     }
 
     public static void main(String[] args) throws Exception
