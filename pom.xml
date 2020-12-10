@@ -98,7 +98,6 @@
     <module>inception-testing</module>
     <module>inception-ui-core</module>
     <module>inception-app-webapp</module>
-
     <!-- Internal search -->
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
@@ -138,6 +137,8 @@
     <module>inception-workload</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-dynamic</module>
+    <!-- Packaging -->
+    <module>inception-docker</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -1428,7 +1429,7 @@
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.22.1</version>
+          <version>0.34.1</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
