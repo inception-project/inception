@@ -223,7 +223,7 @@ public class DynamicWorkloadManagementPage
         // Own column type, contains only a click
         // able image (AJAX event),
         // creates a small panel dialog containing metadata
-        columns.add(new HeaderlessColumn<>()
+        columns.add(new HeaderlessColumn<SourceDocument, String>()
         {
             private static final long serialVersionUID = 1L;
 
@@ -488,7 +488,8 @@ public class DynamicWorkloadManagementPage
         userAssignDocumentForm.add(visibleWhen(() -> !isNull(userSelection.getModelObject())));
 
         // This ensures that we get the user input in getChoices
-        documentsToAdd = new MultiSelect<>("documentsToAdd", new ChoiceRenderer<>("name"))
+        documentsToAdd = new MultiSelect<SourceDocument>("documentsToAdd",
+                new ChoiceRenderer<>("name"))
         {
             private static final long serialVersionUID = -6211358256515198208L;
 
