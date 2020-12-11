@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,7 +35,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
@@ -92,7 +93,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
@@ -103,6 +103,7 @@ import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOver
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DateSelection;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.WorkflowType;
@@ -158,7 +159,6 @@ public class DynamicWorkloadManagementPage
 
     // Modal dialog
     private ModalWindow infoDialog;
-    private LambdaAjaxButton deleteDocumentLink;
 
     // SpringBeans
     private @SpringBean UserDao userRepository;
@@ -253,7 +253,7 @@ public class DynamicWorkloadManagementPage
     }
 
     /**
-     * Creates the "Filter" dropdown menu form
+     * @return the "Filter" dropdown menu form
      */
     public Form<Void> createSearchForm()
     {
@@ -296,6 +296,8 @@ public class DynamicWorkloadManagementPage
         // Update Behaviour on click, disable according date inputs and reset their values
         dateChoices.add(new AjaxFormChoiceComponentUpdatingBehavior()
         {
+            private static final long serialVersionUID = -7935623563910383563L;
+
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
             {
@@ -310,8 +312,8 @@ public class DynamicWorkloadManagementPage
 
         // StateFilter
         documentStateFilters = Model.ofSet(new HashSet<>());
-        ListView<AnnotationDocumentState> listview = new ListView<>("stateFilter",
-                asList(AnnotationDocumentState.values()))
+        ListView<AnnotationDocumentState> listview = new ListView<AnnotationDocumentState>(
+                "stateFilter", asList(AnnotationDocumentState.values()))
         {
             private static final long serialVersionUID = -2292408105823066466L;
 
@@ -340,6 +342,8 @@ public class DynamicWorkloadManagementPage
         // Checkbox for showing only unused source documents disables other textfields
         unused = new AjaxCheckBox("unused", PropertyModel.of(dataProvider, "filter.selected"))
         {
+            private static final long serialVersionUID = 4975472693715689974L;
+
             @Override
             protected void onUpdate(AjaxRequestTarget ajaxRequestTarget)
             {
@@ -381,7 +385,7 @@ public class DynamicWorkloadManagementPage
     }
 
     /**
-     * Creates the "Settings" dropdown menu form
+     * @return the "Settings" dropdown menu form
      */
     public Form<Void> createSettingsForm()
     {
@@ -423,7 +427,7 @@ public class DynamicWorkloadManagementPage
     }
 
     /**
-     * Creates the "Users" dropdown menu form
+     * @return the "Users" dropdown menu form
      */
     public Form<Void> createUserForm()
     {
@@ -459,6 +463,11 @@ public class DynamicWorkloadManagementPage
         // Add AjaxUpdating Behavior to the dropdown
         userSelection.add(new AjaxFormComponentUpdatingBehavior("change")
         {
+            /**
+             * 
+             */
+            private static final long serialVersionUID = 3661600387962267783L;
+
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
@@ -544,9 +553,8 @@ public class DynamicWorkloadManagementPage
         documentsToAdd.setOutputMarkupId(true);
         userAssignDocumentForm.add(documentsToAdd);
 
-
         // Add the "Confirm" button
-        userAssignDocumentForm.add(deleteDocumentLink = new LambdaAjaxButton<>("confirm", this::actionAssignDocument));
+        userAssignDocumentForm.add(new LambdaAjaxButton<>("confirm", this::actionAssignDocument));
 
         return userAssignDocumentForm;
     }
@@ -630,7 +638,7 @@ public class DynamicWorkloadManagementPage
     {
         DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
-        Extension extension = workflowExtensionPoint.getExtension(traits.getWorkflowType());
+        WorkflowExtension extension = workflowExtensionPoint.getExtension(traits.getWorkflowType());
         // NP catch for older project
         if (extension == null) {
             return new WorkflowType(DefaultWorkflowExtension.DEFAULT_WORKFLOW,
@@ -709,9 +717,10 @@ public class DynamicWorkloadManagementPage
         updateTable(aAjaxRequestTarget);
     }
 
-    private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget, Form aForm)
+    private void actionAssignDocument(AjaxRequestTarget aAjaxRequestTarget, Form<?> aForm)
     {
-        aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);;
+        aAjaxRequestTarget.addChildren(getPage(), IFeedback.class);
+        ;
         // First check if there are documents to assign
         Collection<SourceDocument> documentsToAssign = documentsToAdd.getModelObject();
         for (SourceDocument source : documentsToAssign) {
@@ -820,7 +829,7 @@ public class DynamicWorkloadManagementPage
         else {
             // Return now "1 day ago" , "2 days" etc until 1 week, then simply put in the date
             long daysSinceLastUpdate = Math.abs(latest.getTime() - new Date().getTime());
-            int diff = (int)TimeUnit.DAYS.convert(daysSinceLastUpdate, TimeUnit.MILLISECONDS);
+            int diff = (int) DAYS.convert(daysSinceLastUpdate, MILLISECONDS);
             switch (diff) {
             case (0):
                 return "Today";

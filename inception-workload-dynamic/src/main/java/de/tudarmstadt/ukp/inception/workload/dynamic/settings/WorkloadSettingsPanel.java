@@ -30,9 +30,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
@@ -51,12 +51,11 @@ public class WorkloadSettingsPanel
     private final BootstrapSelect<WorkloadManagerType> workloadStrategy;
     private final Project project;
 
-    // Springbeans
     private @SpringBean WorkloadManagementService workloadManagementService;
-    private @SpringBean WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
+    private @SpringBean WorkloadManagerExtensionPoint<?> workloadManagerExtensionPoint;
 
     /**
-     * Constructor, creates the whole panel. Consists a a single form.
+     * Constructor, creates the whole panel. Consists of a single form.
      */
     public WorkloadSettingsPanel(String aID, IModel<Project> aProject)
     {
@@ -92,12 +91,13 @@ public class WorkloadSettingsPanel
     {
         WorkloadManager manager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
-        Extension extension = workloadManagerExtensionPoint.getExtension(manager.getType());
+        WorkloadManagerExtension<?> extension = workloadManagerExtensionPoint
+                .getExtension(manager.getType());
         return new WorkloadManagerType(extension.getId(), extension.getId());
     }
 
     /**
-     * Confimation action of the button
+     * Confirmation action of the button
      */
     private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm) throws IOException
     {
