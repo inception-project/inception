@@ -120,20 +120,16 @@ application will run. The last command starts the containers.
 
 [source,shell,subs="+attributes"]
 ----
-$ export DBUSER=<USER_NAME>
-$ export DBPASSWORD=<PASSWORD>
-$ export INCEPTION_HOME=/srv/inception
-$ export INCEPTION_PORT=8080
 $ docker-compose -p inception up -d
 ----
 
-This will start two docker containers: `inception_mysqlserver_1`, and `inception_webserver_1`. 
+This will start two docker containers: `inception_db_1`, and `inception_app_1`. 
 You can check the logs of each by running 
 
 [source,shell,subs="+attributes"]
 ----
-$ docker logs inception_mysqlserver_1
-$ docker logs inception_webserver_1
+$ docker logs inception_db_1
+$ docker logs inception_app_1
 ----
 
 The actual name of these containers might vary. A list of running containers can be retrieved by
@@ -143,12 +139,40 @@ The actual name of these containers might vary. A list of running containers can
 $ docker ps
 ----
 
-Two directories in your {product-name} home folder will be created: `mysql-data` and `webserver-data`.
-No data is stored in the containers themselves, you are safe to delete them with 
+The data of the containers will be stored in Docker volumes. If you shut the containers down and
+start them again later, the data will still be there - try it out! 
 
 [source,shell,subs="+attributes"]
 ----
 $ docker-compose -p inception down
 ----
 
-You can also just stop or pause them, please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
+You can list the Docker volumes on your system using
+
+[source,shell,subs="+attributes"]
+----
+$ docker volume ls
+----
+
+If you want to provide a custom `settings.properties` file, you can also choose to mount the data volume
+to your hosts file system instead of to a Docker volume by setting the `INCEPTION_HOME` environment
+variable to the path you want to store your data in and where you will also put the `settings.properties`
+file. You can also choose to override the default location for the database data by setting the
+`INCEPTION_DB_HOME` environment variable.
+
+[source,shell,subs="+attributes"]
+----
+$ export INCEPTION_HOME=/srv/inception/server-data 
+$ export INCEPTION_DB_HOME=/srv/inception/mysql-data
+$ docker-compose -f docker-compose.yml -p inception up
+----
+
+If you are running Docker on Linux, the data of the volumes should end up on the file system anyway
+in a special folder used by Docker. You can figure out which folder that is using 
+`docker volume inspect ...`. However, if you are running Docker on macOS or Windows, the data is likely to
+live in a special virtual machine that is owned by Docker and it will not be easily accessible unless
+you mount the data to folders on your host.
+
+NOTE: Mind that you cannot arbitrarily switch between volume-managed and host-stored data. Choose wisely.
+
+There is a lot more that you can do using Docker and Docker Compose. Please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
