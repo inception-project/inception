@@ -13,7 +13,7 @@ To create a SNAPSHOT build:
 
 To run the latest SNAPSHOT build, use: 
 
-    docker run -v inception-data:/export -it inceptionproject/inception-snapshots
+    docker run -p8080:8080 -v inception-data:/export -it inceptionproject/inception-snapshots
 
 To run the latest SNAPSHOT build with Docker Compose, use:
 
@@ -26,7 +26,7 @@ For a release build:
     mvn -Pdocker docker:build -Ddocker.image.name="inceptionproject/inception"
     mvn -Pdocker docker:push -Ddocker.image.name="inceptionproject/inception"
         
-    docker run -v inception-data:/export -it inceptionproject/inception
+    docker run -p8080:8080 -v inception-data:/export -it inceptionproject/inception
 
 ## Options
 If you want to keep the application data easily accessible in a folder on your host (e.g. if you
@@ -34,11 +34,8 @@ want to use a custom settings.properties file), you can provide a path on the ho
 parameter.
 
     docker run -v /path/on/host/inception/repository:/export ...
-    
-If you want INCEpTION to be accessible from other hosts, you need to publish the application port.
 
-    docker run -p port-on-host:8080 ...
-        
+## More on Docker Compose
 In order to use **docker-compose**, specify 
 
 export INCEPTION_HOME=/path/on/host/inception
