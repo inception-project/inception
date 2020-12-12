@@ -31,10 +31,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
@@ -159,7 +157,6 @@ public class DynamicWorkloadManagementPage
     private DropDownChoice<AnnotationDocumentState> documentState;
     private MultiSelect<SourceDocument> documentsToAdd;
     private WebMarkupContainer stateFilters;
-    private IModel<Set<AnnotationDocumentState>> documentStateFilters;
 
     // Table
     private DataTable<SourceDocument, AnnotationQueueSortKeys> table;
@@ -217,7 +214,7 @@ public class DynamicWorkloadManagementPage
         // Each column creates TableMetaData
         List<IColumn<SourceDocument, AnnotationQueueSortKeys>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"),
-                AnnotationQueueSortKeys.State, this::documentState)
+                AnnotationQueueSortKeys.State, doc -> documentStateSymbol(doc.getState()))
         {
             private static final long serialVersionUID = -2103168638018286379L;
 
@@ -268,7 +265,6 @@ public class DynamicWorkloadManagementPage
 
         // Add StateFilters
         stateFilters = new WebMarkupContainer("stateFilters");
-        documentStateFilters = Model.ofSet(new HashSet<>());
         ListView<SourceDocumentState> listview = new ListView<>("stateFilter",
                 asList(SourceDocumentState.values()))
         {
@@ -280,7 +276,8 @@ public class DynamicWorkloadManagementPage
                 LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
                         (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
 
-                link.add(new Label(MID_LABEL, aItem.getModel().getObject().getName()));
+                link.add(new Label(MID_LABEL, documentStateSymbol(aItem.getModel().getObject()))
+                        .setEscapeModelStrings(false));
                 link.add(new AttributeAppender("class", () -> dataProvider.getFilterState()
                         .getStates().contains(aItem.getModelObject()) ? "active" : "", " "));
                 aItem.add(link);
@@ -824,19 +821,19 @@ public class DynamicWorkloadManagementPage
         aTarget.add(table, stateFilters);
     }
 
-    private String documentState(SourceDocument aDoc)
+    private String documentStateSymbol(SourceDocumentState aDocState)
     {
-        switch (aDoc.getState()) {
-        case ANNOTATION_FINISHED:
-            return "<i class=\"fas fa-check\"></i>";
+        switch (aDocState) {
+        case NEW:
+            return "<i class=\"far fa-circle\"></i>";
         case ANNOTATION_IN_PROGRESS:
-            return "<i class=\"fas fa-play\"></i>";
-        case CURATION_FINISHED:
+            return "<i class=\"far fa-play-circle\"></i>";
+        case ANNOTATION_FINISHED:
             return "<i class=\"far fa-check-circle\"></i>";
         case CURATION_IN_PROGRESS:
-            return "<i class=\"fas fa-eye\"></i>";
-        case NEW:
-            return "";
+            return "<i class=\"fas fa-clipboard\"></i>";
+        case CURATION_FINISHED:
+            return "<i class=\"fas fa-clipboard-check\"></i>";
         }
 
         return "";
