@@ -214,6 +214,19 @@ public class DynamicWorkloadManagementPage
         // Columns of the table
         // Each column creates TableMetaData
         List<IColumn<SourceDocument, String>> columns = new ArrayList<>();
+        columns.add(new LambdaColumn<SourceDocument, String>(new ResourceModel("DocumentState"),
+                "state", this::documentState)
+        {
+            private static final long serialVersionUID = -2103168638018286379L;
+
+            @Override
+            public void populateItem(Item<ICellPopulator<SourceDocument>> item, String componentId,
+                    IModel<SourceDocument> rowModel)
+            {
+                item.add(new Label(componentId, getDataModel(rowModel))
+                        .setEscapeModelStrings(false));
+            }
+        });
         columns.add(new LambdaColumn<>(new ResourceModel("Document"), getString("Document"),
                 SourceDocument::getName));
         columns.add(new LambdaColumn<>(new ResourceModel("Assigned"), getString("Assigned"),
@@ -801,6 +814,24 @@ public class DynamicWorkloadManagementPage
     private void actionApplyStateFilter(AnnotationDocumentState aState)
     {
         dataProvider.getFilterState().setState(aState);
+    }
+
+    private String documentState(SourceDocument aDoc)
+    {
+        switch (aDoc.getState()) {
+        case ANNOTATION_FINISHED:
+            return "<i class=\"fas fa-check\"></i>";
+        case ANNOTATION_IN_PROGRESS:
+            return "<i class=\"fas fa-play\"></i>";
+        case CURATION_FINISHED:
+            return "<i class=\"far fa-check-circle\"></i>";
+        case CURATION_IN_PROGRESS:
+            return "<i class=\"fas fa-eye\"></i>";
+        case NEW:
+            return "";
+        }
+
+        return "";
     }
 
     private String lastAccessTimeForDocument(SourceDocument aDoc)
