@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension_Impl;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPointImpl;
@@ -37,7 +38,7 @@ public class DynamicWorkloadManagerAutoConfiguration
     @Bean
     public DynamicWorkloadExtension dynamicWorkloadExtension()
     {
-        return new DynamicWorkloadExtension();
+        return new DynamicWorkloadExtension_Impl();
     }
 
     @Bean

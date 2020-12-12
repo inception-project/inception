@@ -17,74 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadExtension}
- * </p>
- */
-public class DynamicWorkloadExtension
-    implements WorkloadManagerExtension<DynamicWorkloadTraits>
+public interface DynamicWorkloadExtension
+    extends WorkloadManagerExtension<DynamicWorkloadTraits>
 {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
     public static final String DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID = "dynamic";
-
-    @Override
-    public String getId()
-    {
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
-    }
-
-    @Override
-    public String getLabel()
-    {
-        return "Dynamic assignment";
-    }
-
-    @Override
-    public DynamicWorkloadTraits readTraits(WorkloadManager aWorkloadManager)
-    {
-        DynamicWorkloadTraits traits = null;
-
-        try {
-            traits = JSONUtil.fromJsonString(DynamicWorkloadTraits.class,
-                    aWorkloadManager.getTraits());
-        }
-        catch (Exception e) {
-            this.log.error("Unable to read traits", e);
-        }
-
-        if (traits == null) {
-            traits = new DynamicWorkloadTraits();
-        }
-
-        return traits;
-    }
-
-    @Override
-    public void writeTraits(WorkloadManagementService aWorkloadManagementService,
-            DynamicWorkloadTraits aTrait, Project aProject)
-    {
-        try {
-            WorkloadManager manager = aWorkloadManagementService
-                    .loadOrCreateWorkloadManagerConfiguration(aProject);
-            manager.setTraits(JSONUtil.toJsonString(aTrait));
-            aWorkloadManagementService.saveConfiguration(manager);
-        }
-        catch (Exception e) {
-            this.log.error("Unable to write traits", e);
-        }
-    }
 }
