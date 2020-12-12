@@ -100,11 +100,10 @@ public class AnnotationQueueOverviewDataProvider
         newList.sort((o1, o2) -> {
             int dir = getSort().isAscending() ? 1 : -1;
             if (getSort().getProperty().equals(headers.get(0).name())) {
-                System.out.println(o1.getState().getName());
-                System.out.println(o2.getState().getName());
                 return dir * (o1.getState().getName().compareTo(o2.getState().getName()));
 
-            } else if (getSort().getProperty().equals(headers.get(1).name())) {
+            }
+            else if (getSort().getProperty().equals(headers.get(1).name())) {
                 return dir * (o1.getName().compareTo(o2.getName()));
             }
             else if (getSort().getProperty().equals(headers.get(2).name())) {
@@ -189,8 +188,9 @@ public class AnnotationQueueOverviewDataProvider
 
             // Check if DocumentName was entered
             if (filter.getDocumentName() != null) {
-                //Also check that it does not add duplicates
-                if (doc.getName().contains(filter.getDocumentName()) && !docNameList.contains(doc)) {
+                // Also check that it does not add duplicates
+                if (doc.getName().contains(filter.getDocumentName())
+                        && !docNameList.contains(doc)) {
                     docNameList.add(doc);
                 }
             }
@@ -246,9 +246,10 @@ public class AnnotationQueueOverviewDataProvider
             }
 
             if (filter.getStates() != null) {
-                for (AnnotationDocument anno: allAnnotationDocuments) {
-                    if (anno.getName().equals(doc.getName()) && filter.getStates().contains(anno.getState())
-                    && (!stateList.contains(doc))) {
+                for (AnnotationDocument anno : allAnnotationDocuments) {
+                    if (anno.getName().equals(doc.getName())
+                            && filter.getStates().contains(anno.getState())
+                            && (!stateList.contains(doc))) {
                         stateList.add(doc);
                     }
                 }
