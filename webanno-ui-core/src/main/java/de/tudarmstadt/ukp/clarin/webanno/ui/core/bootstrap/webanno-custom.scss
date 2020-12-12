@@ -349,23 +349,23 @@ tr.even:hover{
     vertical-align:bottom;
 }
 
-/*
- * We do not have the images on-board right now. Would be better to replace them with
- * Font Awesome anyway probably.
-tr.headers th.wicket_orderDown a{
-    padding-right:24px;
-    background-image:url(../images/descending.png);
-    background-position:right;
-    background-repeat:no-repeat;
+tr.headers th.wicket_orderDown a::after {
+    font-family: "Font Awesome 5 Free";
+    content: "\f0dd";
+    display: inline-block;
+    padding-left: 3px;
+    vertical-align: middle;
+    font-weight: 900;
 }
 
-tr.headers th.wicket_orderUp a{
-    padding-right:24px;
-    background-image:url(../images/ascending.png);
-    background-position:right;
-    background-repeat:no-repeat;
+tr.headers th.wicket_orderUp a::after {
+    font-family: "Font Awesome 5 Free";
+    content: "\f0de";
+    display: inline-block;
+    padding-left: 3px;
+    vertical-align: middle;
+    font-weight: 900;
 }
-*/
 
 div.navigatorLabel{
     float:left;
