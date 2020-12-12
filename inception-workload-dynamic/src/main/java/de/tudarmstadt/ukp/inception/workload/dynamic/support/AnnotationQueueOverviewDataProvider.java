@@ -75,7 +75,7 @@ public class AnnotationQueueOverviewDataProvider
         filter = new Filter();
 
         // Initial Sorting
-        setSort(headers.get(0).name(), SortOrder.ASCENDING);
+        setSort(headers.get(1).name(), SortOrder.ASCENDING);
 
         // Required, set model
         model = new LoadableDetachableModel<List<SourceDocument>>()
@@ -100,22 +100,27 @@ public class AnnotationQueueOverviewDataProvider
         newList.sort((o1, o2) -> {
             int dir = getSort().isAscending() ? 1 : -1;
             if (getSort().getProperty().equals(headers.get(0).name())) {
+                System.out.println(o1.getState().getName());
+                System.out.println(o2.getState().getName());
+                return dir * (o1.getState().getName().compareTo(o2.getState().getName()));
+
+            } else if (getSort().getProperty().equals(headers.get(1).name())) {
                 return dir * (o1.getName().compareTo(o2.getName()));
             }
-            else if (getSort().getProperty().equals(headers.get(1).name())) {
+            else if (getSort().getProperty().equals(headers.get(2).name())) {
                 return dir * Long.compare(getFinishedAmountForDocument(o1),
                         getFinishedAmountForDocument(o2));
             }
-            else if (getSort().getProperty().equals(headers.get(2).name())) {
+            else if (getSort().getProperty().equals(headers.get(3).name())) {
                 return dir * Long.compare(getInProgressAmountForDocument(o1),
                         getInProgressAmountForDocument(o2));
             }
-            else if (getSort().getProperty().equals(headers.get(3).name())) {
+            else if (getSort().getProperty().equals(headers.get(4).name())) {
                 return dir * (Integer.compare(getUsersWorkingOnTheDocument(o1).length(),
                         getUsersWorkingOnTheDocument(o2).length()));
 
             }
-            else if (getSort().getProperty().equals(headers.get(4).name())) {
+            else if (getSort().getProperty().equals(headers.get(5).name())) {
                 if (o1.getUpdated() == null) {
                     return dir;
                 }
@@ -240,10 +245,10 @@ public class AnnotationQueueOverviewDataProvider
                 }
             }
 
-            if (filter.getState() != null) {
+            if (filter.getStates() != null) {
                 for (AnnotationDocument anno: allAnnotationDocuments) {
-                    if (anno.getName().equals(doc.getName()) && anno.getState().equals(filter.getState())
-                    && !stateList.contains(doc)) {
+                    if (anno.getName().equals(doc.getName()) && filter.getStates().contains(anno.getState())
+                    && (!stateList.contains(doc))) {
                         stateList.add(doc);
                     }
                 }
@@ -268,7 +273,7 @@ public class AnnotationQueueOverviewDataProvider
             finalList.add(unusedList);
         }
 
-        if (stateList.size() > 0 || filter.getState() != null) {
+        if (stateList.size() > 0 || filter.getStates() != null) {
             finalList.add(stateList);
         }
 

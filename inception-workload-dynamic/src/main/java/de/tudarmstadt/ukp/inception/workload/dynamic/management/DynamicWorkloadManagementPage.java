@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.*;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
@@ -89,11 +90,6 @@ import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -214,8 +210,8 @@ public class DynamicWorkloadManagementPage
         // Columns of the table
         // Each column creates TableMetaData
         List<IColumn<SourceDocument, String>> columns = new ArrayList<>();
-        columns.add(new LambdaColumn<SourceDocument, String>(new ResourceModel("DocumentState"),
-                "state", this::documentState)
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"),
+                "State", this::documentState)
         {
             private static final long serialVersionUID = -2103168638018286379L;
 
@@ -263,6 +259,40 @@ public class DynamicWorkloadManagementPage
         table.addTopToolbar(new HeadersToolbar<>(table, dataProvider));
 
         add(table);
+
+
+        // Add StateFilters
+        stateFilters = new WebMarkupContainer("stateFilters");
+        documentStateFilters = Model.ofSet(new HashSet<>());
+        ListView<AnnotationDocumentState> listview = new ListView<>(
+            "stateFilter", asList(AnnotationDocumentState.values()))
+        {
+            private static final long serialVersionUID = -2292408105823066466L;
+
+            @Override
+            protected void populateItem(ListItem<AnnotationDocumentState> aItem)
+            {
+                LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
+                    (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
+
+                link.add(new Label(MID_LABEL, aItem.getModel().getObject().getName()));
+                System.out.println(documentStateFilters.getObject());
+                link.add(new AttributeAppender("class",
+                    () -> dataProvider.getFilterState().getStates().contains(aItem.getModelObject())
+                        ? "active"
+                        : "",
+                    " "));
+                aItem.add(link);
+            }
+        };
+
+        stateFilters.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
+
+        stateFilters = new WebMarkupContainer("stateFilters");
+        stateFilters.setOutputMarkupPlaceholderTag(true);
+        stateFilters.add(listview);
+
+        add(stateFilters);
 
         // Add forms of the dropdowns
         add(createSearchForm());
@@ -328,35 +358,6 @@ public class DynamicWorkloadManagementPage
 
         searchForm.add(dateChoices);
 
-        // StateFilter
-        documentStateFilters = Model.ofSet(new HashSet<>());
-        ListView<AnnotationDocumentState> listview = new ListView<AnnotationDocumentState>(
-                "stateFilter", asList(AnnotationDocumentState.values()))
-        {
-            private static final long serialVersionUID = -2292408105823066466L;
-
-            @Override
-            protected void populateItem(ListItem<AnnotationDocumentState> aItem)
-            {
-                LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
-                        (d -> actionApplyStateFilter(aItem.getModelObject())));
-
-                link.add(new Label(MID_LABEL, aItem.getModel().getObject().getName()));
-                link.add(new AttributeAppender("class",
-                        () -> documentStateFilters.getObject().contains(aItem.getModelObject())
-                                ? "active"
-                                : "",
-                        " "));
-                aItem.add(link);
-            }
-        };
-
-        stateFilters = new WebMarkupContainer("stateFilters");
-        stateFilters.setOutputMarkupPlaceholderTag(true);
-        stateFilters.add(listview);
-
-        searchForm.add(stateFilters);
-
         // Checkbox for showing only unused source documents disables other textfields
         unused = new AjaxCheckBox("unused", PropertyModel.of(dataProvider, "filter.selected"))
         {
@@ -391,7 +392,6 @@ public class DynamicWorkloadManagementPage
         userFilterTextField.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
         documentFilterTextField
                 .add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
-        listview.add(enabledWhen(() -> !(dataProvider.getFilterState().getSelected())));
 
         // Reset button
         searchForm.add(new LambdaAjaxButton<>("reset", this::actionReset));
@@ -811,9 +811,15 @@ public class DynamicWorkloadManagementPage
         }
     }
 
-    private void actionApplyStateFilter(AnnotationDocumentState aState)
+    private void actionApplyStateFilter(AjaxRequestTarget aTarget, AnnotationDocumentState aState)
     {
-        dataProvider.getFilterState().setState(aState);
+        List<AnnotationDocumentState> selectedStates = dataProvider.getFilterState().getStates();
+        if (selectedStates.contains(aState)) {
+            selectedStates.remove(aState);
+        } else {
+            selectedStates.add(aState);
+        }
+        aTarget.add(table, stateFilters);
     }
 
     private String documentState(SourceDocument aDoc)

@@ -54,19 +54,40 @@
   <div class="flex-content flex-h-container flex-gutter">
     <div class="flex-content flex-v-container flex-gutter">
       <div class="card">
-        <div class="card-header border-bottom-0">
+        <div class="card-header border-bottom-0" style="position: relative">
           <h1>
             <wicket:container wicket:id="name" />
           </h1>
         </div>
       </div>
       <div class="flex-content card">
-        <div class="card-header">
-          <wicket:message key="documentStatus" />
-          <div class="actions">
+        <div class="card-header" style="position:relative;">
+          <div>
+            <div class="form-group form-row" style="float: left">
+                <div class="flex-h-container flex-gutter justify-content-end">
+                    <div>
+                        <div wicket:id="stateFilters" class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <i class="fas fa-filter"></i>
+                                </div>
+                            </div>
+                            <div class="input-group-append" role="group">
+                                <wicket:container wicket:id="stateFilter">
+                                    <button type="button" class="btn btn-outline-secondary"
+                                            wicket:id="stateFilterLink">
+                                        <wicket:container wicket:id="label" />
+                                    </button>
+                                </wicket:container>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          <div class="actions" style="position: absolute; bottom: 0; right: 0%">
             <span class="dropdown" aria-haspopup="true" aria-expanded="false">
               <button class="btn btn-action btn-secondary dropdown-toggle flex-content dd-filter"
-                type="button">
+                      type="button">
                 <i class="fas fa-filter"></i>&nbsp;
                 <wicket:message key="Filter" />
               </button>
@@ -99,7 +120,7 @@
 
                   </script>
                 <form wicket:id="searchForm" class="shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
-                  style="min-width: 600px;">
+                      style="min-width: 600px;">
                   <div class="card-header">
                     <wicket:message key="filterHeader" />
                   </div>
@@ -135,30 +156,6 @@
                       </div>
                     </div>
                     <div class="form-group form-row">
-                      <label class="col-form-label col-sm-3"> <wicket:message
-                          key="stateFilter" />
-                      </label>
-                      <div class="flex-h-container flex-gutter justify-content-end">
-                        <div>
-                          <div wicket:id="stateFilters" class="input-group">
-                            <div class="input-group-prepend">
-                              <div class="input-group-text">
-                                <i class="fas fa-filter"></i>
-                              </div>
-                            </div>
-                            <div class="input-group-append" role="group">
-                              <wicket:container wicket:id="stateFilter">
-                                <button type="button" class="btn btn-outline-secondary"
-                                  wicket:id="stateFilterLink">
-                                  <wicket:container wicket:id="label" />
-                                </button>
-                              </wicket:container>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="form-group form-row">
                       <div class="offset-sm-3 col-sm-9">
                         <div class="form-check">
                           <input wicket:id="unused" class="form-check-input" type="checkbox">
@@ -180,8 +177,8 @@
                 </form>
               </span> <span class="dropdown" aria-haspopup="true" aria-expanded="false">
                 <button
-                  class="btn btn-action btn-secondary dropdown-toggle flex-content dd-annotator"
-                  type="button">
+                    class="btn btn-action btn-secondary dropdown-toggle flex-content dd-annotator"
+                    type="button">
                   <i class="fas fa-user"></i>&nbsp;
                   <wicket:message key="Annotators" />
                 </button> <script>
@@ -207,7 +204,7 @@
                       });
                   </script>
                 <form wicket:id="userForm" class="shadow-lg pt-0 pb-0 ddUserForm" role="menu"
-                  style="width: 800px; height: 385px;">
+                      style="width: 800px; height: 385px;">
                   <form wicket:id="userSelectionForm" style="height: 100px;">
                     <div class="card-header">
                       <wicket:message key="userSelection" />
@@ -230,7 +227,7 @@
                               <wicket:message key="assignDocument" />
                             </div>
                             <select wicket:id="documentsToAdd" class="form-control col-sm-6"
-                              data-container="body" style="display: inline-block"></select>
+                                    data-container="body" style="display: inline-block"></select>
                           </div>
                         </div>
                         <div class="card-footer">
@@ -248,12 +245,12 @@
                         <div class="card-body" style="height: 200px">
                           <div>
                             <label class="col-form-label col-sm-12"> <select
-                              wicket:id="resetDocument" class="form-control" data-container="body"></select>
+                                wicket:id="resetDocument" class="form-control" data-container="body"></select>
                             </label>
                           </div>
                           <div>
                             <label class="col-form-label col-sm-12"> <select
-                              wicket:id="documentState" class="form-control" data-container="body"></select>
+                                wicket:id="documentState" class="form-control" data-container="body"></select>
                             </label>
                           </div>
                         </div>
@@ -268,7 +265,7 @@
                 </form>
               </span> <span class="dropdown" aria-haspopup="true" aria-expanded="false">
                 <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
-                  type="button" data-toggle="dropdown">
+                        type="button" data-toggle="dropdown">
                   <i class="fas fa-cog"></i>&nbsp;
                   <wicket:message key="settings" />
                 </button>
@@ -284,19 +281,19 @@
                         </label>
                         <div class="col-sm-5">
                           <input wicket:id="defaultDocumentsNumberTextField" type="number"
-                            class="form-control" />
+                                 class="form-control" />
                         </div>
                       </div>
                       <div class="form-group form-row">
                         <label class="col-form-label col-sm-7"> <wicket:message
                             key="workflow" /> <a target="_blank"
-                          wicket:message="href:workflow.help.link"> <i
+                                                 wicket:message="href:workflow.help.link"> <i
                             class="fas fa-question-circle"></i>
                         </a>
                         </label>
                         <div class="col-sm-5">
                           <select wicket:id="workflowStrategy" data-container="body"
-                            class="form-control"></select>
+                                  class="form-control"></select>
                         </div>
                       </div>
                     </div>
@@ -309,6 +306,7 @@
                 </div>
               </span>
             </div>
+          </div>
           </div>
           <div class="card-body flex-content scrolling p-0">
             <table class="table table-sm table-hover table-striped" cellspacing="0"
