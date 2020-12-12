@@ -47,15 +47,15 @@ public enum SourceDocumentState
     ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green"),
 
     /**
-     * curator claims to have curated all annotations
-     */
-    CURATION_FINISHED("CURATION_FINISHED", "red"),
-
-    /**
      * curator has started working with the annotation document, annotators can no longer make
      * modifications in annotation documents
      */
-    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue");
+    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue"),
+
+    /**
+     * curator claims to have curated all annotations
+     */
+    CURATION_FINISHED("CURATION_FINISHED", "red");
 
     private final String id;
     private final String color;
