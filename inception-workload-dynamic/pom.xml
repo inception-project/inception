@@ -137,9 +137,5 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-core</artifactId>
-    </dependency>
   </dependencies>
 </project>

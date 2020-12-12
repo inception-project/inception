@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -73,6 +74,8 @@ import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
@@ -124,6 +127,8 @@ public class DynamicWorkloadManagementPage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = 1180618893870240262L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(DynamicWorkloadManagementPage.class);
 
     private static final String MID_LABEL = "label";
 
@@ -211,10 +216,10 @@ public class DynamicWorkloadManagementPage
         List<IColumn<SourceDocument, String>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("Document"), getString("Document"),
                 SourceDocument::getName));
+        columns.add(new LambdaColumn<>(new ResourceModel("Assigned"), getString("Assigned"),
+                dataProvider::getInProgressAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Finished"), getString("Finished"),
                 dataProvider::getFinishedAmountForDocument));
-        columns.add(new LambdaColumn<>(new ResourceModel("Processing"), getString("Processing"),
-                dataProvider::getInProgressAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Annotators"), getString("Annotators"),
                 dataProvider::getUsersWorkingOnTheDocument));
         columns.add(
@@ -816,10 +821,10 @@ public class DynamicWorkloadManagementPage
                     latest = new Date(date);
                 }
             }
-
         }
         catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("Unable to retrieve last access time for document", e);
+            return "ERROR";
         }
 
         // Required, otherwise 01.01.1970 will be entered
@@ -846,7 +851,7 @@ public class DynamicWorkloadManagementPage
             case (6):
                 return "6 days ago";
             default:
-                return latest.toString();
+                return DateFormatUtils.format(latest, "d MMM y");
             }
         }
     }

@@ -51,24 +51,26 @@
 </wicket:head>
 <body>
 <wicket:extend>
-  <div class="flex-content flex-v-container flex-gutter">
-    <div class="page-header">
-      <h1>
-        <wicket:container wicket:id="name"/>
-      </h1>
-    </div>
-  <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div class="flex-content card m-2 ">
-      <div class="card-header">
-        <wicket:message key="documentStatus"/>
+  <div class="flex-content flex-h-container flex-gutter">
+    <div class="flex-content flex-v-container flex-gutter">
+      <div class="card">
+        <div class="card-header border-bottom-0">
+          <h1>
+            <wicket:container wicket:id="name" />
+          </h1>
+        </div>
+      </div>
+      <div class="flex-content card">
+        <div class="card-header">
+          <wicket:message key="documentStatus" />
           <div class="actions">
-             <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-                <button class="btn btn-action btn-secondary dropdown-toggle flex-content dd-filter"
-                        type="button">
+            <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+              <button class="btn btn-action btn-secondary dropdown-toggle flex-content dd-filter"
+                type="button">
                 <i class="fas fa-filter"></i>&nbsp;
-                <wicket:message key="Filter"/>
+                <wicket:message key="Filter" />
               </button>
-               <script>
+              <script>
                       /*
                       This JS implementation is required in order to make the dateselect work
                       properly. This method is an "override" of the data-toggle="dropdown" as it
@@ -97,92 +99,92 @@
 
                   </script>
                 <form wicket:id="searchForm" class="shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
-                      style="min-width: 600px;">
+                  style="min-width: 600px;">
                   <div class="card-header">
-                    <wicket:message key="filterHeader"/>
+                    <wicket:message key="filterHeader" />
                   </div>
                   <div class="card-body">
                     <div class="form-group form-row">
-                      <label class="col-form-label col-sm-3">
-                        <wicket:message key="userFilterText"/>
+                      <label class="col-form-label col-sm-3"> <wicket:message
+                          key="userFilterText" />
                       </label>
                       <div class="col-sm-9">
-                        <input wicket:id="userFilter" type="text" class="form-control"/>
+                        <input wicket:id="userFilter" type="text" class="form-control" />
                       </div>
                     </div>
-                  <div class="form-group form-row">
-                  <label class="col-form-label col-sm-3">
-                    <wicket:message key="documentFilterText"/>
+                    <div class="form-group form-row">
+                      <label class="col-form-label col-sm-3"> <wicket:message
+                          key="documentFilterText" />
                       </label>
-                        <div class="col-sm-9">
-                          <input wicket:id="documentFilter" type="text" class="form-control"/>
-                        </div>
+                      <div class="col-sm-9">
+                        <input wicket:id="documentFilter" type="text" class="form-control" />
                       </div>
-                      <div class="form-group form-row">
-                        <label class="col-form-label col-sm-3">
-                          <wicket:message key="dateFilterText"/>
-                        </label>
-                        <div class="col-sm-9">
-                          <span wicket:id="date"></span>
-                        </div>
-                      </div>
-                      <div class="form-group form-row">
-                        <div class="offset-sm-3 col-sm-9">
-                          <input class="bootstrap-datetimepicker-widget" wicket:id="from" type="date"/>
-                          <input class="bootstrap-datetimepicker-widget" wicket:id="to" type="date"/>
-                        </div>
-                      </div>
-                      <div class="form-group form-row">
-                      <label class="col-form-label col-sm-3">
-                        <wicket:message key="stateFilter"/>
+                    </div>
+                    <div class="form-group form-row">
+                      <label class="col-form-label col-sm-3"> <wicket:message
+                          key="dateFilterText" />
                       </label>
-                        <div class="flex-h-container flex-gutter justify-content-end">
-                          <div>
-                            <div wicket:id="stateFilters" class="input-group">
-                              <div class="input-group-prepend">
-                                <div class="input-group-text">
-                                 <i class="fas fa-filter"></i>
-                                </div>
+                      <div class="col-sm-9">
+                        <span wicket:id="date"></span>
+                      </div>
+                    </div>
+                    <div class="form-group form-row">
+                      <div class="offset-sm-3 col-sm-9">
+                        <input class="bootstrap-datetimepicker-widget" wicket:id="from" type="date" />
+                        <input class="bootstrap-datetimepicker-widget" wicket:id="to" type="date" />
+                      </div>
+                    </div>
+                    <div class="form-group form-row">
+                      <label class="col-form-label col-sm-3"> <wicket:message
+                          key="stateFilter" />
+                      </label>
+                      <div class="flex-h-container flex-gutter justify-content-end">
+                        <div>
+                          <div wicket:id="stateFilters" class="input-group">
+                            <div class="input-group-prepend">
+                              <div class="input-group-text">
+                                <i class="fas fa-filter"></i>
                               </div>
-                              <div class="input-group-append" role="group">
-                                <wicket:container wicket:id="stateFilter">
-                                  <button type="button" class="btn btn-outline-secondary" wicket:id="stateFilterLink">
-                                    <wicket:container wicket:id="label"/>
-                                  </button>
-                                </wicket:container>
-                             </div>
+                            </div>
+                            <div class="input-group-append" role="group">
+                              <wicket:container wicket:id="stateFilter">
+                                <button type="button" class="btn btn-outline-secondary"
+                                  wicket:id="stateFilterLink">
+                                  <wicket:container wicket:id="label" />
+                                </button>
+                              </wicket:container>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <div class="form-group form-row">
-                        <div class="offset-sm-3 col-sm-9">
-                          <div class="form-check">
-                            <input wicket:id="unused" class="form-check-input" type="checkbox">
-                            <label wicket:for="unused" class="form-check-label">
-                              <wicket:label key="unused"/>
-                            </label>
-                          </div>
+                    </div>
+                    <div class="form-group form-row">
+                      <div class="offset-sm-3 col-sm-9">
+                        <div class="form-check">
+                          <input wicket:id="unused" class="form-check-input" type="checkbox">
+                          <label wicket:for="unused" class="form-check-label"> <wicket:label
+                              key="unused" />
+                          </label>
                         </div>
                       </div>
                     </div>
-                    <div class="card-footer">
-                      <button class="btn btn-primary submitButton" wicket:id="search">
-                        <wicket:message key="search"/>
-                      </button>
-                      <button class="btn btn-primary submitButton" wicket:id="reset">
-                        <wicket:message key="reset"/>
-                      </button>
-                    </div>
-                  </form>
-              </span>
-              <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-                <button class="btn btn-action btn-secondary dropdown-toggle flex-content dd-annotator"
+                  </div>
+                  <div class="card-footer">
+                    <button class="btn btn-primary submitButton" wicket:id="search">
+                      <wicket:message key="search" />
+                    </button>
+                    <button class="btn btn-primary submitButton" wicket:id="reset">
+                      <wicket:message key="reset" />
+                    </button>
+                  </div>
+                </form>
+              </span> <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button
+                  class="btn btn-action btn-secondary dropdown-toggle flex-content dd-annotator"
                   type="button">
                   <i class="fas fa-user"></i>&nbsp;
-                  <wicket:message key="Annotators"/>
-                </button>
-                  <script>
+                  <wicket:message key="Annotators" />
+                </button> <script>
                       /*
                       This JS implementation is required in order to make the multiselect dropdown work
                       properly. This method is an "override" of the data-toggle="dropdown" as it
@@ -208,32 +210,32 @@
                   style="width: 800px; height: 385px;">
                   <form wicket:id="userSelectionForm" style="height: 100px;">
                     <div class="card-header">
-                      <wicket:message key="userSelection"/>
+                      <wicket:message key="userSelection" />
                     </div>
                     <div class="card-body form-row row-cols-2">
-                      <label class="col-form-label col-sm-3">
-                        <wicket:message key="userSelect"/>
-                      </label>
-                      <select wicket:id="userSelection" class="form col-sm-6" data-container="body"></select>
+                      <label class="col-form-label col-sm-3"> <wicket:message
+                          key="userSelect" />
+                      </label> <select wicket:id="userSelection" class="form col-sm-6" data-container="body"></select>
                     </div>
                   </form>
                   <div class="row-cols-2 form-row">
                     <div class="col-sm-7">
                       <form wicket:id="userAssignDocumentForm" class="form">
                         <div class="card-header">
-                          <wicket:message key="userSettings"/>
+                          <wicket:message key="userSettings" />
                         </div>
                         <div class="card-body" style="height: 200px">
                           <div>
                             <div class="col-sm-5" style="display: inline-block; height: 80px">
-                              <wicket:message key="assignDocument"/>
+                              <wicket:message key="assignDocument" />
                             </div>
-                            <select wicket:id="documentsToAdd" class="form-control col-sm-6" data-container="body" style="display: inline-block"></select>
+                            <select wicket:id="documentsToAdd" class="form-control col-sm-6"
+                              data-container="body" style="display: inline-block"></select>
                           </div>
                         </div>
                         <div class="card-footer">
                           <button class="btn btn-primary" wicket:id="confirm" type="button">
-                            <wicket:message key="confirm"/>
+                            <wicket:message key="confirm" />
                           </button>
                         </div>
                       </form>
@@ -241,65 +243,66 @@
                     <div class="col-sm-5">
                       <form wicket:id="userResetDocumentForm" class="form">
                         <div class="card-header">
-                          <wicket:message key="resetDocument"/>
+                          <wicket:message key="resetDocument" />
                         </div>
                         <div class="card-body" style="height: 200px">
                           <div>
-                          <label class="col-form-label col-sm-12">
-                            <select wicket:id="resetDocument" class="form-control" data-container="body"></select>
-                          </label>
+                            <label class="col-form-label col-sm-12"> <select
+                              wicket:id="resetDocument" class="form-control" data-container="body"></select>
+                            </label>
                           </div>
                           <div>
-                          <label class="col-form-label col-sm-12">
-                            <select wicket:id="documentState" class="form-control" data-container="body"></select>
-                          </label>
+                            <label class="col-form-label col-sm-12"> <select
+                              wicket:id="documentState" class="form-control" data-container="body"></select>
+                            </label>
                           </div>
-
                         </div>
                         <div class="card-footer">
                           <button class="btn btn-primary" wicket:id="set">
-                            <wicket:message key="set"/>
+                            <wicket:message key="set" />
                           </button>
                         </div>
                       </form>
                     </div>
                   </div>
                 </form>
-              </span>
-              <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-                <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button"
-                  data-toggle="dropdown">
-                  <i class="fas fa-cog"></i>&nbsp;<wicket:message key="settings"/>
+              </span> <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
+                  type="button" data-toggle="dropdown">
+                  <i class="fas fa-cog"></i>&nbsp;
+                  <wicket:message key="settings" />
                 </button>
                 <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 600px;">
                   <form wicket:id="settingsForm">
                     <div class="card-header">
-                      <wicket:message key="settings"/>
+                      <wicket:message key="settings" />
                     </div>
                     <div class="card-body">
                       <div class="form-group form-row">
-                        <label class="col-form-label col-sm-7">
-                          <wicket:message key="defaultDocumentsLabel"/>
+                        <label class="col-form-label col-sm-7"> <wicket:message
+                            key="defaultDocumentsLabel" />
                         </label>
                         <div class="col-sm-5">
-                          <input wicket:id="defaultDocumentsNumberTextField" type="number" class="form-control"/>
+                          <input wicket:id="defaultDocumentsNumberTextField" type="number"
+                            class="form-control" />
                         </div>
                       </div>
                       <div class="form-group form-row">
-                        <label class="col-form-label col-sm-7">
-                          <wicket:message key="workflow"/>
-                          <a target="_blank" wicket:message="href:workflow.help.link">
-                             <i class="fas fa-question-circle"></i>
-                          </a>
+                        <label class="col-form-label col-sm-7"> <wicket:message
+                            key="workflow" /> <a target="_blank"
+                          wicket:message="href:workflow.help.link"> <i
+                            class="fas fa-question-circle"></i>
+                        </a>
                         </label>
                         <div class="col-sm-5">
-                          <select wicket:id="workflowStrategy" data-container="body" class="form-control"></select>
+                          <select wicket:id="workflowStrategy" data-container="body"
+                            class="form-control"></select>
                         </div>
                       </div>
                     </div>
                     <div class="card-footer">
                       <button class="btn btn-primary" wicket:id="save">
-                        <wicket:message key="save"/>
+                        <wicket:message key="save" />
                       </button>
                     </div>
                   </form>
@@ -307,9 +310,9 @@
               </span>
             </div>
           </div>
-          <div class="card-body flex-content fit-child-snug">
+          <div class="card-body flex-content scrolling p-0">
             <table class="table table-sm table-hover table-striped" cellspacing="0"
-            wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">
+              wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">
             </table>
           </div>
         </div>

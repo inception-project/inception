@@ -23,7 +23,6 @@ import javax.persistence.EntityManager;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
@@ -34,7 +33,6 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImpl
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 @Configuration
-@Order(300)
 public class WorkloadManagementAutoConfiguration<T>
 {
     @Bean
@@ -56,5 +54,4 @@ public class WorkloadManagementAutoConfiguration<T>
     {
         return new WorkloadManager();
     }
-
 }
