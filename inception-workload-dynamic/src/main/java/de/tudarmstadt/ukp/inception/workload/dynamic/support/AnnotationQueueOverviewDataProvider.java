@@ -25,11 +25,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NE
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
@@ -46,12 +48,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
  * of the features of the workload page (e.g. the table)
  */
 public class AnnotationQueueOverviewDataProvider
-    extends SortableDataProvider<SourceDocument, String>
+    extends SortableDataProvider<SourceDocument, AnnotationQueueSortKeys>
     implements IFilterStateLocator<Filter>, Serializable
 {
     private static final long serialVersionUID = 4125678936105494485L;
 
-    private final List<TableHeader> headers;
     private List<SourceDocument> data;
     private List<AnnotationDocument> allAnnotationDocuments;
     private List<SourceDocument> shownDocuments;
@@ -67,7 +68,6 @@ public class AnnotationQueueOverviewDataProvider
             List<AnnotationDocument> aAllAnnotationDocuments)
     {
         data = aData;
-        headers = Arrays.asList(TableHeader.values());
         allAnnotationDocuments = aAllAnnotationDocuments;
         shownDocuments = new ArrayList<>();
 
@@ -75,7 +75,7 @@ public class AnnotationQueueOverviewDataProvider
         filter = new Filter();
 
         // Initial Sorting
-        setSort(headers.get(1).name(), SortOrder.ASCENDING);
+        setSort(AnnotationQueueSortKeys.Document, SortOrder.ASCENDING);
 
         // Required, set model
         model = new LoadableDetachableModel<List<SourceDocument>>()
@@ -99,27 +99,22 @@ public class AnnotationQueueOverviewDataProvider
         // Apply sorting
         newList.sort((o1, o2) -> {
             int dir = getSort().isAscending() ? 1 : -1;
-            if (getSort().getProperty().equals(headers.get(0).name())) {
-                return dir * (o1.getState().getName().compareTo(o2.getState().getName()));
 
-            }
-            else if (getSort().getProperty().equals(headers.get(1).name())) {
-                return dir * (o1.getName().compareTo(o2.getName()));
-            }
-            else if (getSort().getProperty().equals(headers.get(2).name())) {
-                return dir * Long.compare(getFinishedAmountForDocument(o1),
-                        getFinishedAmountForDocument(o2));
-            }
-            else if (getSort().getProperty().equals(headers.get(3).name())) {
-                return dir * Long.compare(getInProgressAmountForDocument(o1),
-                        getInProgressAmountForDocument(o2));
-            }
-            else if (getSort().getProperty().equals(headers.get(4).name())) {
+            switch (getSort().getProperty()) {
+            case State:
+                return dir * (o1.getState().getName().compareTo(o2.getState().getName()));
+            case Annotators:
                 return dir * (Integer.compare(getUsersWorkingOnTheDocument(o1).length(),
                         getUsersWorkingOnTheDocument(o2).length()));
-
-            }
-            else if (getSort().getProperty().equals(headers.get(5).name())) {
+            case Assigned:
+                return dir * Long.compare(getInProgressAmountForDocument(o1),
+                        getInProgressAmountForDocument(o2));
+            case Document:
+                return dir * (o1.getName().compareTo(o2.getName()));
+            case Finished:
+                return dir * Long.compare(getFinishedAmountForDocument(o1),
+                        getFinishedAmountForDocument(o2));
+            case Updated:
                 if (o1.getUpdated() == null) {
                     return dir;
                 }
@@ -129,8 +124,8 @@ public class AnnotationQueueOverviewDataProvider
                 else {
                     return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
                 }
-            }
-            else {
+            case Actions: // fall-through
+            default:
                 return 0;
             }
         });
@@ -170,126 +165,67 @@ public class AnnotationQueueOverviewDataProvider
      */
     public List<SourceDocument> filterTable(List<SourceDocument> aData)
     {
-        List<SourceDocument> resultList = new ArrayList<>();
-        List<SourceDocument> userNameList = new ArrayList<>();
-        List<SourceDocument> docNameList = new ArrayList<>();
-        List<SourceDocument> dateList = new ArrayList<>();
-        List<SourceDocument> unusedList = new ArrayList<>();
-        List<SourceDocument> stateList = new ArrayList<>();
+        // AnnotationDocuments are created lazily, so we may not have one for every combination of
+        // user and SourceDocument or even one for every SourceDocuemnt. But if any of the filters
+        // below are used, then we must have an AnnotationDocument, so it is sufficient to check
+        // these and we do not have to look at any SourceDocuments for which no AnnotationDocument
+        // does exist.
+        boolean filteredByAnnotationDocumentProperties = filter.getUsername() != null //
+                || filter.getSelected() //
+                || filter.getFrom() != null || filter.getTo() != null;
 
-        for (SourceDocument doc : aData) {
-            // Unused documents selected
-            if (filter.getSelected()) {
-                if ((getInProgressAmountForDocument(doc) == 0)
-                        && (getFinishedAmountForDocument(doc) == 0)) {
-                    unusedList.add(doc);
-                }
-            }
+        Stream<SourceDocument> docStream;
+        if (filteredByAnnotationDocumentProperties) {
+            Stream<AnnotationDocument> annotationStream = allAnnotationDocuments.stream();
 
-            // Check if DocumentName was entered
-            if (filter.getDocumentName() != null) {
-                // Also check that it does not add duplicates
-                if (doc.getName().contains(filter.getDocumentName())
-                        && !docNameList.contains(doc)) {
-                    docNameList.add(doc);
-                }
-            }
-
-            // Check if Username filter was entered
+            // Filter by annotators(s)
             if (filter.getUsername() != null) {
-                // Get all entered usernames
-                String[] usernames = filter.getUsername().split(",");
-                // Get all documents with the given user
-                for (String user : usernames) {
-                    for (AnnotationDocument annotationDocument : allAnnotationDocuments) {
-                        if (annotationDocument.getUser().equals(user)
-                                && annotationDocument.getName().equals(doc.getName())
-                                && !annotationDocument.getState()
-                                        .equals(AnnotationDocumentState.NEW)) {
-                            userNameList.add(doc);
-                            break;
-                        }
-                    }
-                }
-
+                Set<String> usernames = Set.of(filter.getUsername().split(","));
+                docStream = allAnnotationDocuments.stream()
+                        .filter(adoc -> !AnnotationDocumentState.NEW.equals(adoc.getState()))
+                        .filter(adoc -> usernames.contains(adoc.getUser()))
+                        .map(adoc -> adoc.getDocument());
             }
 
-            // Check if one of the date fields are selected and the document
-            // has a created value
-            if ((filter.getFrom() != null || filter.getTo() != null) && doc.getUpdated() != null) {
-
-                // between selected
-                if (filter.getFrom() != null && filter.getTo() != null) {
-                    if (filter.getFrom().compareTo(filter.getTo()) >= 0) {
-                        if (doc.getUpdated().compareTo(filter.getTo()) > 0
-                                && doc.getUpdated().compareTo(filter.getFrom()) <= 0) {
-                            dateList.add(doc);
-                        }
-                    }
-                    if (doc.getUpdated().compareTo(filter.getFrom()) > 0
-                            && doc.getUpdated().compareTo(filter.getTo()) <= 0) {
-                        dateList.add(doc);
-                    }
-                    // From selected
-                }
-                else if (filter.getFrom() != null) {
-                    if (doc.getUpdated().compareTo(filter.getFrom()) >= 0) {
-                        dateList.add(doc);
-                    }
-                }
-                else {
-                    // Until
-                    if (doc.getUpdated().compareTo(filter.getTo()) <= 0) {
-                        dateList.add(doc);
-                    }
-                }
-            }
-
-            if (filter.getStates() != null) {
-                for (AnnotationDocument anno : allAnnotationDocuments) {
-                    if (anno.getName().equals(doc.getName())
-                            && filter.getStates().contains(anno.getState())
-                            && (!stateList.contains(doc))) {
-                        stateList.add(doc);
-                    }
-                }
-            }
-        }
-
-        // Intersection of the lists
-        List<List<SourceDocument>> finalList = new ArrayList<>();
-        if (dateList.size() > 0 || filter.getFrom() != null || filter.getTo() != null) {
-            finalList.add(dateList);
-        }
-
-        if (docNameList.size() > 0 || filter.getDocumentName() != null) {
-            finalList.add(docNameList);
-        }
-
-        if (userNameList.size() > 0 || filter.getUsername() != null) {
-            finalList.add(userNameList);
-        }
-
-        if (unusedList.size() > 0 || filter.getSelected()) {
-            finalList.add(unusedList);
-        }
-
-        if (stateList.size() > 0 || filter.getStates() != null) {
-            finalList.add(stateList);
-        }
-
-        for (int i = 0; i < finalList.size() - 1; i++) {
-            finalList.get(0).retainAll(finalList.get(i + 1));
-        }
-
-        if (finalList.size() == 0) {
-            resultList = aData;
+            docStream = annotationStream.map(AnnotationDocument::getDocument).distinct();
         }
         else {
-            resultList = finalList.get(0);
+            docStream = aData.stream();
         }
 
-        return resultList;
+        // Filter by document name
+        if (filter.getDocumentName() != null) {
+            docStream = docStream.filter(doc -> doc.getName().contains(filter.getDocumentName()));
+        }
+
+        // Filter by document states
+        if (CollectionUtils.isNotEmpty(filter.getStates())) {
+            docStream = docStream.filter(doc -> filter.getStates().contains(doc.getState()));
+        }
+
+        // Filter out any documents which have any annotations ongoing or finished
+        if (filter.getSelected()) {
+            docStream = docStream.filter(doc -> allAnnotationDocuments.stream()
+                    .anyMatch(adoc -> AnnotationDocumentState.IN_PROGRESS.equals(adoc.getState())
+                            || AnnotationDocumentState.FINISHED.equals(adoc.getState())));
+        }
+
+        // Filter by last updated
+        if (filter.getFrom() != null || filter.getTo() != null) {
+            docStream = docStream.filter(doc -> doc.getUpdated() != null);
+
+            if (filter.getFrom() != null) {
+                docStream = docStream
+                        .filter(doc -> doc.getUpdated().compareTo(filter.getFrom()) >= 0);
+            }
+
+            if (filter.getTo() != null) {
+                docStream = docStream
+                        .filter(doc -> doc.getUpdated().compareTo(filter.getTo()) <= 0);
+            }
+        }
+
+        return docStream.collect(Collectors.toList());
     }
 
     /**

@@ -20,11 +20,10 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 //Helper class for the Filter
 public class Filter
@@ -44,13 +43,12 @@ public class Filter
     private Date from;
     private Date to;
 
-    //State
-    private List<AnnotationDocumentState> states = new ArrayList<>();
+    // State
+    private final List<SourceDocumentState> aStates = new ArrayList<>();
 
-    // Default constructor
     public Filter()
     {
-        states.addAll(Arrays.asList(AnnotationDocumentState.values()));
+        // Nothing to do
     }
 
     public String getUsername()
@@ -103,13 +101,16 @@ public class Filter
         this.to = aTo;
     }
 
-    public List<AnnotationDocumentState> getStates()
+    public List<SourceDocumentState> getStates()
     {
-        return states;
+        return aStates;
     }
 
-    public void setState(List<AnnotationDocumentState> states)
+    public void setState(List<SourceDocumentState> states)
     {
-        this.states = states;
+        aStates.clear();
+        if (states != null) {
+            aStates.addAll(states);
+        }
     }
 }

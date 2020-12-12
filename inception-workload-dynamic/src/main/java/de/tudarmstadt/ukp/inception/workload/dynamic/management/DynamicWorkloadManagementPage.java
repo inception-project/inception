@@ -94,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -103,6 +104,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DateSelection;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
@@ -160,7 +162,7 @@ public class DynamicWorkloadManagementPage
     private IModel<Set<AnnotationDocumentState>> documentStateFilters;
 
     // Table
-    private DataTable<SourceDocument, String> table;
+    private DataTable<SourceDocument, AnnotationQueueSortKeys> table;
 
     // Modal dialog
     private ModalWindow infoDialog;
@@ -213,9 +215,9 @@ public class DynamicWorkloadManagementPage
 
         // Columns of the table
         // Each column creates TableMetaData
-        List<IColumn<SourceDocument, String>> columns = new ArrayList<>();
+        List<IColumn<SourceDocument, AnnotationQueueSortKeys>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"),
-                "State", this::documentState)
+                AnnotationQueueSortKeys.State, this::documentState)
         {
             private static final long serialVersionUID = -2103168638018286379L;
 
@@ -227,21 +229,21 @@ public class DynamicWorkloadManagementPage
                         .setEscapeModelStrings(false));
             }
         });
-        columns.add(new LambdaColumn<>(new ResourceModel("Document"), getString("Document"),
-                SourceDocument::getName));
-        columns.add(new LambdaColumn<>(new ResourceModel("Assigned"), getString("Assigned"),
-                dataProvider::getInProgressAmountForDocument));
-        columns.add(new LambdaColumn<>(new ResourceModel("Finished"), getString("Finished"),
-                dataProvider::getFinishedAmountForDocument));
-        columns.add(new LambdaColumn<>(new ResourceModel("Annotators"), getString("Annotators"),
-                dataProvider::getUsersWorkingOnTheDocument));
+        columns.add(new LambdaColumn<>(new ResourceModel("Document"),
+                AnnotationQueueSortKeys.Document, SourceDocument::getName));
+        columns.add(new LambdaColumn<>(new ResourceModel("Assigned"),
+                AnnotationQueueSortKeys.Assigned, dataProvider::getInProgressAmountForDocument));
+        columns.add(new LambdaColumn<>(new ResourceModel("Finished"),
+                AnnotationQueueSortKeys.Finished, dataProvider::getFinishedAmountForDocument));
+        columns.add(new LambdaColumn<>(new ResourceModel("Annotators"),
+                AnnotationQueueSortKeys.Annotators, dataProvider::getUsersWorkingOnTheDocument));
         columns.add(
                 new LambdaColumn<>(new ResourceModel("Updated"), this::lastAccessTimeForDocument));
 
         // Own column type, contains only a click
         // able image (AJAX event),
         // creates a small panel dialog containing metadata
-        columns.add(new HeaderlessColumn<SourceDocument, String>()
+        columns.add(new HeaderlessColumn<SourceDocument, AnnotationQueueSortKeys>()
         {
             private static final long serialVersionUID = 1L;
 
@@ -264,28 +266,23 @@ public class DynamicWorkloadManagementPage
 
         add(table);
 
-
         // Add StateFilters
         stateFilters = new WebMarkupContainer("stateFilters");
         documentStateFilters = Model.ofSet(new HashSet<>());
-        ListView<AnnotationDocumentState> listview = new ListView<>(
-            "stateFilter", asList(AnnotationDocumentState.values()))
+        ListView<SourceDocumentState> listview = new ListView<>("stateFilter",
+                asList(SourceDocumentState.values()))
         {
             private static final long serialVersionUID = -2292408105823066466L;
 
             @Override
-            protected void populateItem(ListItem<AnnotationDocumentState> aItem)
+            protected void populateItem(ListItem<SourceDocumentState> aItem)
             {
                 LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
-                    (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
+                        (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
 
                 link.add(new Label(MID_LABEL, aItem.getModel().getObject().getName()));
-                System.out.println(documentStateFilters.getObject());
-                link.add(new AttributeAppender("class",
-                    () -> dataProvider.getFilterState().getStates().contains(aItem.getModelObject())
-                        ? "active"
-                        : "",
-                    " "));
+                link.add(new AttributeAppender("class", () -> dataProvider.getFilterState()
+                        .getStates().contains(aItem.getModelObject()) ? "active" : "", " "));
                 aItem.add(link);
             }
         };
@@ -815,12 +812,13 @@ public class DynamicWorkloadManagementPage
         }
     }
 
-    private void actionApplyStateFilter(AjaxRequestTarget aTarget, AnnotationDocumentState aState)
+    private void actionApplyStateFilter(AjaxRequestTarget aTarget, SourceDocumentState aState)
     {
-        List<AnnotationDocumentState> selectedStates = dataProvider.getFilterState().getStates();
+        List<SourceDocumentState> selectedStates = dataProvider.getFilterState().getStates();
         if (selectedStates.contains(aState)) {
             selectedStates.remove(aState);
-        } else {
+        }
+        else {
             selectedStates.add(aState);
         }
         aTarget.add(table, stateFilters);
