@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.CFG_AUTH_MODE;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -27,6 +29,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.ResourcePropertySource;
+import org.springframework.util.unit.DataSize;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
@@ -63,7 +66,7 @@ public class InceptionApplicationContextInitializer
         }
 
         // Activate bean profile depending on authentication mode
-        if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(SettingsUtil.CFG_AUTH_MODE))) {
+        if (AUTH_MODE_PREAUTH.equals(aEnvironment.getProperty(CFG_AUTH_MODE))) {
             aEnvironment.setActiveProfiles(PROFILE_PREAUTH);
             log.info("Authentication: pre-auth");
         }
@@ -71,5 +74,9 @@ public class InceptionApplicationContextInitializer
             aEnvironment.setActiveProfiles(PROFILE_DATABASE);
             log.info("Authentication: database");
         }
+
+        Runtime rt = Runtime.getRuntime();
+        log.info("Max. application memory: {}MB", DataSize.ofBytes(rt.maxMemory()).toMegabytes());
+
     }
 }
