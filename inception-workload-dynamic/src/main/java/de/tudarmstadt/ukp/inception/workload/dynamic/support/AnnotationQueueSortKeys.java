@@ -19,5 +19,5 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 public enum AnnotationQueueSortKeys
 {
-    State, Document, Finished, Assigned, Annotators, Updated, Actions;
+    STATE, DOCUMENT, FINISHED, ASSIGNED, ANNOTATORS, UPDATED;
 }

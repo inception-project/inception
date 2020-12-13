@@ -24,6 +24,7 @@ import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +32,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -101,6 +105,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueItem;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DateSelection;
@@ -203,9 +208,7 @@ public class DynamicWorkloadManagementPage
         add(name);
 
         // Data Provider for the table
-        dataProvider = new AnnotationQueueOverviewDataProvider(
-                documentService.listSourceDocuments(currentProject.getObject()),
-                documentService.listAnnotationDocuments(currentProject.getObject()));
+        dataProvider = makeAnnotationQueueOverviewDataProvider();
 
         infoDialog = new ModalWindow("infoDialog");
         add(infoDialog);
@@ -214,7 +217,7 @@ public class DynamicWorkloadManagementPage
         // Each column creates TableMetaData
         List<IColumn<SourceDocument, AnnotationQueueSortKeys>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"),
-                AnnotationQueueSortKeys.State, doc -> documentStateSymbol(doc.getState()))
+                AnnotationQueueSortKeys.STATE, doc -> documentStateSymbol(doc.getState()))
         {
             private static final long serialVersionUID = -2103168638018286379L;
 
@@ -227,13 +230,13 @@ public class DynamicWorkloadManagementPage
             }
         });
         columns.add(new LambdaColumn<>(new ResourceModel("Document"),
-                AnnotationQueueSortKeys.Document, SourceDocument::getName));
+                AnnotationQueueSortKeys.DOCUMENT, SourceDocument::getName));
         columns.add(new LambdaColumn<>(new ResourceModel("Assigned"),
-                AnnotationQueueSortKeys.Assigned, dataProvider::getInProgressAmountForDocument));
+                AnnotationQueueSortKeys.ASSIGNED, dataProvider::getInProgressAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Finished"),
-                AnnotationQueueSortKeys.Finished, dataProvider::getFinishedAmountForDocument));
+                AnnotationQueueSortKeys.FINISHED, dataProvider::getFinishedAmountForDocument));
         columns.add(new LambdaColumn<>(new ResourceModel("Annotators"),
-                AnnotationQueueSortKeys.Annotators, dataProvider::getUsersWorkingOnTheDocument));
+                AnnotationQueueSortKeys.ANNOTATORS, dataProvider::getUsersWorkingOnTheDocument));
         columns.add(
                 new LambdaColumn<>(new ResourceModel("Updated"), this::lastAccessTimeForDocument));
 
@@ -848,7 +851,8 @@ public class DynamicWorkloadManagementPage
             List<String> userList = documentService.listAnnotationDocuments(aDoc).stream()
                     .filter(d -> projectService.isAnnotator(currentProject.getObject(),
                             userRepository.get(d.getUser())))
-                    .map(AnnotationDocument::getUser).collect(Collectors.toList());
+                    .map(AnnotationDocument::getUser) //
+                    .collect(toList());
 
             for (String user : userList) {
                 // Get the latest update
@@ -867,28 +871,50 @@ public class DynamicWorkloadManagementPage
         if (latest.compareTo(new Date(0)) == 0) {
             return "";
         }
-        else {
-            // Return now "1 day ago" , "2 days" etc until 1 week, then simply put in the date
-            long daysSinceLastUpdate = Math.abs(latest.getTime() - new Date().getTime());
-            int diff = (int) DAYS.convert(daysSinceLastUpdate, MILLISECONDS);
-            switch (diff) {
-            case (0):
-                return "Today";
-            case (1):
-                return "Yesterday";
-            case (2):
-                return "2 days ago";
-            case (3):
-                return "3 days ago";
-            case (4):
-                return "4 days ago";
-            case (5):
-                return "5 days ago";
-            case (6):
-                return "6 days ago";
-            default:
-                return DateFormatUtils.format(latest, "d MMM y");
-            }
+
+        // Return now "1 day ago" , "2 days" etc until 1 week, then simply put in the date
+        long daysSinceLastUpdate = Math.abs(latest.getTime() - new Date().getTime());
+        int diff = (int) DAYS.convert(daysSinceLastUpdate, MILLISECONDS);
+        switch (diff) {
+        case (0):
+            return "Today";
+        case (1):
+            return "Yesterday";
+        case (2):
+            return "2 days ago";
+        case (3):
+            return "3 days ago";
+        case (4):
+            return "4 days ago";
+        case (5):
+            return "5 days ago";
+        case (6):
+            return "6 days ago";
+        default:
+            return DateFormatUtils.format(latest, "d MMM y");
         }
+    }
+
+    private AnnotationQueueOverviewDataProvider makeAnnotationQueueOverviewDataProvider()
+    {
+        Project project = currentProject.getObject();
+
+        Map<SourceDocument, List<AnnotationDocument>> documentMap = new HashMap<>();
+
+        documentService.listSourceDocuments(project)
+                .forEach(d -> documentMap.put(d, new ArrayList<>()));
+
+        documentService.listAnnotationDocuments(project).forEach(ad -> documentMap
+                .computeIfAbsent(ad.getDocument(), d -> new ArrayList<>()).add(ad));
+
+        List<AnnotationQueueItem> queue = new ArrayList<>();
+        for (Entry<SourceDocument, List<AnnotationDocument>> e : documentMap.entrySet()) {
+            AnnotationQueueItem item = new AnnotationQueueItem(e.getKey(), e.getValue());
+            queue.add(item);
+        }
+
+        return new AnnotationQueueOverviewDataProvider(
+                documentService.listSourceDocuments(currentProject.getObject()),
+                documentService.listAnnotationDocuments(currentProject.getObject()));
     }
 }

@@ -53,11 +53,11 @@ public class AnnotationQueueOverviewDataProvider
 {
     private static final long serialVersionUID = 4125678936105494485L;
 
-    private List<SourceDocument> data;
-    private List<AnnotationDocument> allAnnotationDocuments;
-    private List<SourceDocument> shownDocuments;
+    private final List<SourceDocument> allSourceDocuments;
+    private final List<SourceDocument> shownDocuments;
+    private final IModel<List<SourceDocument>> model;
 
-    private IModel<List<SourceDocument>> model;
+    private List<AnnotationDocument> allAnnotationDocuments;
     private Filter filter;
 
     /**
@@ -67,7 +67,7 @@ public class AnnotationQueueOverviewDataProvider
     public AnnotationQueueOverviewDataProvider(List<SourceDocument> aData,
             List<AnnotationDocument> aAllAnnotationDocuments)
     {
-        data = aData;
+        allSourceDocuments = aData;
         allAnnotationDocuments = aAllAnnotationDocuments;
         shownDocuments = new ArrayList<>();
 
@@ -75,7 +75,7 @@ public class AnnotationQueueOverviewDataProvider
         filter = new Filter();
 
         // Initial Sorting
-        setSort(AnnotationQueueSortKeys.Document, SortOrder.ASCENDING);
+        setSort(AnnotationQueueSortKeys.DOCUMENT, SortOrder.ASCENDING);
 
         // Required, set model
         model = new LoadableDetachableModel<List<SourceDocument>>()
@@ -85,7 +85,7 @@ public class AnnotationQueueOverviewDataProvider
             @Override
             protected List<SourceDocument> load()
             {
-                return data;
+                return allSourceDocuments;
             }
         };
     }
@@ -94,27 +94,27 @@ public class AnnotationQueueOverviewDataProvider
     public Iterator<SourceDocument> iterator(long aFirst, long aCount)
     {
         // Apply Filter
-        List<SourceDocument> newList = filterTable(data);
+        List<SourceDocument> newList = filterTable(allSourceDocuments);
 
         // Apply sorting
         newList.sort((o1, o2) -> {
             int dir = getSort().isAscending() ? 1 : -1;
 
             switch (getSort().getProperty()) {
-            case State:
+            case STATE:
                 return dir * (o1.getState().getName().compareTo(o2.getState().getName()));
-            case Annotators:
+            case ANNOTATORS:
                 return dir * (Integer.compare(getUsersWorkingOnTheDocument(o1).length(),
                         getUsersWorkingOnTheDocument(o2).length()));
-            case Assigned:
+            case ASSIGNED:
                 return dir * Long.compare(getInProgressAmountForDocument(o1),
                         getInProgressAmountForDocument(o2));
-            case Document:
+            case DOCUMENT:
                 return dir * (o1.getName().compareTo(o2.getName()));
-            case Finished:
+            case FINISHED:
                 return dir * Long.compare(getFinishedAmountForDocument(o1),
                         getFinishedAmountForDocument(o2));
-            case Updated:
+            case UPDATED:
                 if (o1.getUpdated() == null) {
                     return dir;
                 }
@@ -124,7 +124,6 @@ public class AnnotationQueueOverviewDataProvider
                 else {
                     return dir * (o1.getUpdated().compareTo(o2.getUpdated()));
                 }
-            case Actions: // fall-through
             default:
                 return 0;
             }
@@ -144,7 +143,7 @@ public class AnnotationQueueOverviewDataProvider
     @Override
     public long size()
     {
-        return filterTable(data).size();
+        return filterTable(allSourceDocuments).size();
     }
 
     @Override
