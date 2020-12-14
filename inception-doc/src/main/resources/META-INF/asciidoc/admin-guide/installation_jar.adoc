@@ -47,16 +47,6 @@ server.port=18080
 If you need to do additional configurations of the embedded Tomcat, best refer to the 
 documentation of Spring Boot itself.
 +
-* Make sure that the file `/srv/inception/inception.conf` is owned by the root user. If this is
-  not the case, {product-name} will ignore it and any settings made there will not have any effect. If
-  you start {product-name} and instead of using the MySQL database, it is using an embedded database,
-  then you should double-check that `/srv/inception/inception.conf` is owned by the root user.
-+
-[source,bash]
-----
-$ chown root:root /srv/inception/inception.conf
-----
-+
 * We will run {product-name} as the user `www-data`. Change the owner/group of `/srv/inception/inception.jar` to `www-data`.
   **Do NOT run {product-name} as root.**
 +
@@ -72,7 +62,7 @@ $ chown www-data:www-data /srv/inception/inception.jar
 $ chmod +x /srv/inception/inception.jar
 ----
 +
-* Create a file in `/etc/systemd/system/inception.service` with the following content:
+* Create a file `/etc/systemd/system/inception.service` with the following content:
 +
 [source,bash]
 ----
@@ -124,7 +114,18 @@ of accessing it directly. This assumes that you already have the following packa
 * mod_proxy
 * mod_proxy_ajp
 
-* Add the following lines to `/srv/inception/settings.properties`:
+You can enable the two modules with
+[source,bash]
+----
+$ a2enmod proxy proxy_ajp
+----
+and check that they are enabled with
+[source,bash]
+----
+$ apachectl -M
+----
+
+* Add the following lines to `/srv/inception/settings.properties` (`server.ajp.secret` might not be supported by your server version, in this case add `server.ajp.secret-required=false` instead)
 +
 [source,text]
 ----
@@ -135,7 +136,7 @@ server.servlet.context-path=/inception
 server.use-forward-headers=true
 ----
 +
-* Edit `/etc/apache2/conf.d/inception.local.conf`
+* Edit `/etc/apache2/conf-available/inception.local.conf` (alternatively, you may want to configure a new virtual host for {product-name})
 +
 [source,xml]
 ----
@@ -152,6 +153,12 @@ ProxyPreserveHost On
   ProxyPassReverse http://localhost/inception
 </Location>
 ----
+* Enable the configuration with
++
+[source,bash]
+----
+$ a2enconf inception.local
+----
 * Restart Apache web server
 +
 [source,bash]
@@ -159,7 +166,7 @@ ProxyPreserveHost On
 $ service apache2 restart
 ----
 
-NOTE: The `secret` option is supported e.g. in link:https://httpd.apache.org/docs/trunk/mod/
-       mod_proxy_ajp.html[Apache HTTP 2.5 mod_proxy_ajp]. If you are using reverse proxy which does not	
+NOTE: The `secret` option is supported e.g. in https://httpd.apache.org/docs/trunk/mod/mod_proxy_ajp.html[Apache HTTP 2.5 mod_proxy_ajp]. 
+       If you are using a reverse proxy which does not	
        support passing along a secret, you may set `server.ajp.secret-required=false` in the 
        `settings.properties` file.

@@ -44,7 +44,7 @@ $ mkdir /srv/inception
 ----
 database.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
 database.driver=com.mysql.jdbc.Driver
-database.url=jdbc:mysql://localhost:3306/inception?useSSL=false&serverTimezone=UTC
+database.url=jdbc:mysql://localhost:3306/inception?useSSL=false&serverTimezone=UTC&useUnicode=yes&characterEncoding=UTF-8
 database.username=inception
 database.password=t0t4llYSecreT
 
@@ -61,7 +61,7 @@ backup.keep.number=10
 +
 [source,bash]
 ----
-$ chown -R www-data /srv/inception
+$ chown -R www-data:www-data /srv/inception
 ----
 
 
