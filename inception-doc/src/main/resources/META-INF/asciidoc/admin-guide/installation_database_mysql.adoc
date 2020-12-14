@@ -30,7 +30,7 @@ $ apt-get install mysql-server
 ----
 
 [[character-set-config]]
-* make sure your MySQL server is configured for 4 Byte UTF-8 (utf8mb4) to ensure that all unicode characters can be represented (e.g. emojis). In MySQL versions 8 and upwards, this is the default. Check that `character-set-server`, `default-character-set` are set to  `utf8mb4` and `collation-server` is set to `utf8mb4_unicode_ci` by logging into MySQL with
+* When first setting up your database make sure your MySQL server is configured for 4 Byte UTF-8 (utf8mb4, utf8mb4_unicode_ci) to ensure that all unicode characters can be represented (e.g. emojis). Changing the character-set and collation later on can be dangerous, so make sure you have a backup of your database. In that case, you might also need to perform some additional migration steps. In MySQL versions 8 and upwards, 4 Byte UTF-8 is already the default. Check that `character-set-server`, `default-character-set` are set to  `utf8mb4` and `collation-server` is set to `utf8mb4_unicode_ci` by logging into MySQL with
 +
 [source,bash]
 ----
