@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
+import static java.util.concurrent.TimeUnit.DAYS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
@@ -25,6 +28,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -88,29 +92,42 @@ public class AnnotationQueueItem
         return sourceDocument;
     }
 
+    public String getSourceDocumentName()
+    {
+        return sourceDocument.getName();
+    }
+
     public List<AnnotationDocument> getAnnotationDocuments()
     {
         return annotationDocuments;
     }
 
-    public Set<String> getAnnotators()
+    public String getLastUpdated()
     {
-        return annotators;
-    }
-
-    public int getFinishedCount()
-    {
-        return finishedCount;
-    }
-
-    public int getInProgressCount()
-    {
-        return inProgressCount;
-    }
-
-    public Date getLastUpdated()
-    {
-        return lastUpdated;
+        if (lastUpdated == null) {
+            return "";
+        }
+        // Return now "1 day ago" , "2 days" etc until 1 week, then simply put in the date
+        long daysSinceLastUpdate = Math.abs(lastUpdated.getTime() - new Date().getTime());
+        int diff = (int) DAYS.convert(daysSinceLastUpdate, MILLISECONDS);
+        switch (diff) {
+            case (0):
+                return "Today";
+            case (1):
+                return "Yesterday";
+            case (2):
+                return "2 days ago";
+            case (3):
+                return "3 days ago";
+            case (4):
+                return "4 days ago";
+            case (5):
+                return "5 days ago";
+            case (6):
+                return "6 days ago";
+            default:
+                return DateFormatUtils.format(lastUpdated, "d MMM y");
+        }
     }
 
     @Override
@@ -127,5 +144,20 @@ public class AnnotationQueueItem
     public int hashCode()
     {
         return new HashCodeBuilder().append(sourceDocument).toHashCode();
+    }
+
+    public int getInProgressCount()
+    {
+        return inProgressCount;
+    }
+
+    public int getFinishedCount()
+    {
+        return finishedCount;
+    }
+
+    public Set<String> getAnnotators()
+    {
+        return annotators;
     }
 }

@@ -22,16 +22,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
-import static java.util.concurrent.TimeUnit.DAYS;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.stream.Collectors.toList;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +36,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -164,7 +158,7 @@ public class DynamicWorkloadManagementPage
     private WebMarkupContainer stateFilters;
 
     // Table
-    private DataTable<SourceDocument, AnnotationQueueSortKeys> table;
+    private DataTable<AnnotationQueueItem, AnnotationQueueSortKeys> table;
 
     // Modal dialog
     private ModalWindow infoDialog;
@@ -215,41 +209,41 @@ public class DynamicWorkloadManagementPage
 
         // Columns of the table
         // Each column creates TableMetaData
-        List<IColumn<SourceDocument, AnnotationQueueSortKeys>> columns = new ArrayList<>();
+        List<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"),
-                AnnotationQueueSortKeys.STATE, doc -> documentStateSymbol(doc.getState()))
+                AnnotationQueueSortKeys.STATE, doc -> documentStateSymbol(doc.getSourceDocument().getState()))
         {
             private static final long serialVersionUID = -2103168638018286379L;
 
             @Override
-            public void populateItem(Item<ICellPopulator<SourceDocument>> item, String componentId,
-                    IModel<SourceDocument> rowModel)
+            public void populateItem(Item<ICellPopulator<AnnotationQueueItem>> item, String componentId,
+                    IModel<AnnotationQueueItem> rowModel)
             {
                 item.add(new Label(componentId, getDataModel(rowModel))
                         .setEscapeModelStrings(false));
             }
         });
         columns.add(new LambdaColumn<>(new ResourceModel("Document"),
-                AnnotationQueueSortKeys.DOCUMENT, SourceDocument::getName));
+                AnnotationQueueSortKeys.DOCUMENT, AnnotationQueueItem::getSourceDocumentName));
         columns.add(new LambdaColumn<>(new ResourceModel("Assigned"),
-                AnnotationQueueSortKeys.ASSIGNED, dataProvider::getInProgressAmountForDocument));
+                AnnotationQueueSortKeys.ASSIGNED, AnnotationQueueItem::getInProgressCount));
         columns.add(new LambdaColumn<>(new ResourceModel("Finished"),
-                AnnotationQueueSortKeys.FINISHED, dataProvider::getFinishedAmountForDocument));
+                AnnotationQueueSortKeys.FINISHED, AnnotationQueueItem::getFinishedCount));
         columns.add(new LambdaColumn<>(new ResourceModel("Annotators"),
-                AnnotationQueueSortKeys.ANNOTATORS, dataProvider::getUsersWorkingOnTheDocument));
+                AnnotationQueueSortKeys.ANNOTATORS, AnnotationQueueItem::getAnnotators));
         columns.add(
-                new LambdaColumn<>(new ResourceModel("Updated"), this::lastAccessTimeForDocument));
+                new LambdaColumn<>(new ResourceModel("Updated"), AnnotationQueueItem::getLastUpdated));
 
         // Own column type, contains only a click
         // able image (AJAX event),
         // creates a small panel dialog containing metadata
-        columns.add(new HeaderlessColumn<SourceDocument, AnnotationQueueSortKeys>()
+        columns.add(new HeaderlessColumn<AnnotationQueueItem, AnnotationQueueSortKeys>()
         {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void populateItem(Item<ICellPopulator<SourceDocument>> aItem, String componentId,
-                    IModel<SourceDocument> rowModel)
+            public void populateItem(Item<ICellPopulator<AnnotationQueueItem>> aItem, String componentId,
+                    IModel<AnnotationQueueItem> rowModel)
             {
                 Fragment fragment = new Fragment(componentId, "infoColumn",
                         DynamicWorkloadManagementPage.this);
@@ -259,7 +253,7 @@ public class DynamicWorkloadManagementPage
             }
         });
 
-        table = new DataTable<>("dataTable", columns, dataProvider, 20);
+        table = new DataTable<AnnotationQueueItem,AnnotationQueueSortKeys>("dataTable", columns, dataProvider, 20);
         table.setOutputMarkupId(true);
         table.addTopToolbar(new NavigationToolbar(table));
         table.addTopToolbar(new HeadersToolbar<>(table, dataProvider));
@@ -763,24 +757,24 @@ public class DynamicWorkloadManagementPage
         updateTable(aAjaxRequestTarget);
     }
 
-    private void actionShowInfoDialog(AjaxRequestTarget aTarget, IModel<SourceDocument> aDoc)
+    private void actionShowInfoDialog(AjaxRequestTarget aTarget, IModel<AnnotationQueueItem> aDoc)
     {
         // Get the current selected Row
-        SourceDocument doc = aDoc.getObject();
+        AnnotationQueueItem doc = aDoc.getObject();
 
         // Create the modalWindow
-        infoDialog.setTitle("Metadata of document: " + doc.getName());
+        infoDialog.setTitle("Metadata of document: " + doc.getSourceDocument().getName());
 
         // Set contents of the modalWindow
         List<String> finishedUsersForDocument = workloadManagementService
-                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.FINISHED, doc,
+                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.FINISHED, doc.getSourceDocument(),
                         currentProject.getObject())
                 .stream().map(AnnotationDocument::getUser).collect(Collectors.toList());
         List<String> inProgressUsersForDocument = workloadManagementService
-                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.IN_PROGRESS, doc,
+                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.IN_PROGRESS, doc.getSourceDocument(),
                         currentProject.getObject())
                 .stream().map(AnnotationDocument::getUser).collect(Collectors.toList());
-        infoDialog.setContent(new WorkloadMetadataDialog(infoDialog.getContentId(), doc,
+        infoDialog.setContent(new WorkloadMetadataDialog(infoDialog.getContentId(), doc.getSourceDocument(),
                 finishedUsersForDocument, inProgressUsersForDocument));
 
         // Open the dialog
@@ -842,59 +836,6 @@ public class DynamicWorkloadManagementPage
         return "";
     }
 
-    private String lastAccessTimeForDocument(SourceDocument aDoc)
-    {
-        Date latest = new Date();
-        latest.setTime(0);
-        try {
-            // Fetch all annotation documents for the source document
-            List<String> userList = documentService.listAnnotationDocuments(aDoc).stream()
-                    .filter(d -> projectService.isAnnotator(currentProject.getObject(),
-                            userRepository.get(d.getUser())))
-                    .map(AnnotationDocument::getUser) //
-                    .collect(toList());
-
-            for (String user : userList) {
-                // Get the latest update
-                Long date = documentService.getAnnotationCasTimestamp(aDoc, user).orElse(null);
-                if (date != null && new Date(date).compareTo(latest) > 0) {
-                    latest = new Date(date);
-                }
-            }
-        }
-        catch (IOException e) {
-            LOG.error("Unable to retrieve last access time for document", e);
-            return "ERROR";
-        }
-
-        // Required, otherwise 01.01.1970 will be entered
-        if (latest.compareTo(new Date(0)) == 0) {
-            return "";
-        }
-
-        // Return now "1 day ago" , "2 days" etc until 1 week, then simply put in the date
-        long daysSinceLastUpdate = Math.abs(latest.getTime() - new Date().getTime());
-        int diff = (int) DAYS.convert(daysSinceLastUpdate, MILLISECONDS);
-        switch (diff) {
-        case (0):
-            return "Today";
-        case (1):
-            return "Yesterday";
-        case (2):
-            return "2 days ago";
-        case (3):
-            return "3 days ago";
-        case (4):
-            return "4 days ago";
-        case (5):
-            return "5 days ago";
-        case (6):
-            return "6 days ago";
-        default:
-            return DateFormatUtils.format(latest, "d MMM y");
-        }
-    }
-
     private AnnotationQueueOverviewDataProvider makeAnnotationQueueOverviewDataProvider()
     {
         Project project = currentProject.getObject();
@@ -913,8 +854,7 @@ public class DynamicWorkloadManagementPage
             queue.add(item);
         }
 
-        return new AnnotationQueueOverviewDataProvider(
-                documentService.listSourceDocuments(currentProject.getObject()),
+        return new AnnotationQueueOverviewDataProvider(queue,
                 documentService.listAnnotationDocuments(currentProject.getObject()));
     }
 }
