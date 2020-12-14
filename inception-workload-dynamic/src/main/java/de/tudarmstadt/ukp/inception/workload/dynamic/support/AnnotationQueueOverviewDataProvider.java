@@ -18,8 +18,10 @@
 
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
+import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.DOCUMENT;
+import static org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder.ASCENDING;
+
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -27,14 +29,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.filter.IFilterStateLocator;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 
 /**
@@ -48,39 +47,22 @@ public class AnnotationQueueOverviewDataProvider
 {
     private static final long serialVersionUID = 4125678936105494485L;
 
-    private final List<AnnotationQueueItem> annotationQueueItems;
-    private final List<AnnotationQueueItem> shownDocuments = new ArrayList<>();
-    private final IModel<List<AnnotationQueueItem>> model;
-    private List<AnnotationDocument> annotationDocuments;
+    private List<AnnotationQueueItem> annotationQueueItems;
     private Filter filter;
 
     /**
      * Default Constructor, initialize values and set the default sorting of the table to ASCENDING
      * of the first column of the table.
      */
-    public AnnotationQueueOverviewDataProvider(List<AnnotationQueueItem> aAnnotationQueueItemsList,
-            List<AnnotationDocument> aAnnotationDocuments)
+    public AnnotationQueueOverviewDataProvider(List<AnnotationQueueItem> aAnnotationQueueItemsList)
     {
-        annotationDocuments = aAnnotationDocuments;
         annotationQueueItems = aAnnotationQueueItemsList;
 
         // Init filter
         filter = new Filter();
 
         // Initial Sorting
-        setSort(AnnotationQueueSortKeys.DOCUMENT, SortOrder.ASCENDING);
-
-        // Required, set model
-        model = new LoadableDetachableModel<>()
-        {
-            private static final long serialVersionUID = -3938543310389673460L;
-
-            @Override
-            protected List<AnnotationQueueItem> load()
-            {
-                return annotationQueueItems;
-            }
-        };
+        setSort(DOCUMENT, ASCENDING);
     }
 
     @Override
@@ -121,10 +103,6 @@ public class AnnotationQueueOverviewDataProvider
             }
         });
 
-        // Reset
-        shownDocuments.clear();
-        shownDocuments.addAll(newList);
-
         if ((int) aFirst + (int) aCount > newList.size()) {
             aCount = newList.size() - aFirst;
         }
@@ -142,13 +120,6 @@ public class AnnotationQueueOverviewDataProvider
     public IModel<AnnotationQueueItem> model(AnnotationQueueItem aAnnotationQueueItem)
     {
         return Model.of(aAnnotationQueueItem);
-    }
-
-    @Override
-    public void detach()
-    {
-        super.detach();
-        model.detach();
     }
 
     /**
@@ -179,25 +150,23 @@ public class AnnotationQueueOverviewDataProvider
             docStream = aData.stream();
         }
 
-
-
         // Filter by document name
         if (filter.getDocumentName() != null) {
-            docStream = docStream.filter(doc -> doc.getSourceDocument().getName()
-                .contains(filter.getDocumentName()));
+            docStream = docStream.filter(
+                    doc -> doc.getSourceDocument().getName().contains(filter.getDocumentName()));
         }
 
         // Filter by document states
         if (CollectionUtils.isNotEmpty(filter.getStates())) {
-            docStream = docStream.filter(
-                doc -> filter.getStates().contains(doc.getSourceDocument().getState()));
+            docStream = docStream
+                    .filter(doc -> filter.getStates().contains(doc.getSourceDocument().getState()));
         }
 
         // Filter out any documents which have any annotations ongoing or finished
         if (filter.getSelected()) {
             docStream = docStream.filter(doc -> doc.getAnnotationDocuments().stream()
-                .anyMatch(anno -> AnnotationDocumentState.NEW.equals(anno.getState())
-                    || AnnotationDocumentState.FINISHED.equals(anno.getState())));
+                    .anyMatch(anno -> AnnotationDocumentState.NEW.equals(anno.getState())
+                            || AnnotationDocumentState.FINISHED.equals(anno.getState())));
         }
 
         // Filter by last updated
@@ -206,12 +175,12 @@ public class AnnotationQueueOverviewDataProvider
 
             if (filter.getFrom() != null) {
                 docStream = docStream.filter(doc -> doc.getSourceDocument().getUpdated()
-                    .compareTo(filter.getFrom()) >= 0);
+                        .compareTo(filter.getFrom()) >= 0);
             }
 
             if (filter.getTo() != null) {
-                docStream = docStream.filter(doc -> doc.getSourceDocument().getUpdated()
-                    .compareTo(filter.getTo()) <= 0);
+                docStream = docStream.filter(
+                        doc -> doc.getSourceDocument().getUpdated().compareTo(filter.getTo()) <= 0);
             }
         }
 
@@ -230,9 +199,8 @@ public class AnnotationQueueOverviewDataProvider
         filter = aFilter;
     }
 
-    public void setAllAnnotationDocuments(List<AnnotationDocument> aListOfAnnotationDocuments)
+    public void setAnnotationQueueItems(List<AnnotationQueueItem> aAnnotationQueueItems)
     {
-        annotationDocuments = aListOfAnnotationDocuments;
+        annotationQueueItems = aAnnotationQueueItems;
     }
-
 }

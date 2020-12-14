@@ -20,6 +20,11 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.ANNOTATORS;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.ASSIGNED;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.DOCUMENT;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.FINISHED;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 
@@ -79,6 +84,7 @@ import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.utils.RequestCycleUtils;
 import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
+import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
@@ -211,28 +217,29 @@ public class DynamicWorkloadManagementPage
         // Each column creates TableMetaData
         List<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>> columns = new ArrayList<>();
         columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"),
-                AnnotationQueueSortKeys.STATE, doc -> documentStateSymbol(doc.getSourceDocument().getState()))
+                AnnotationQueueSortKeys.STATE,
+                doc -> documentStateSymbol(doc.getSourceDocument().getState()))
         {
             private static final long serialVersionUID = -2103168638018286379L;
 
             @Override
-            public void populateItem(Item<ICellPopulator<AnnotationQueueItem>> item, String componentId,
-                    IModel<AnnotationQueueItem> rowModel)
+            public void populateItem(Item<ICellPopulator<AnnotationQueueItem>> item,
+                    String componentId, IModel<AnnotationQueueItem> rowModel)
             {
                 item.add(new Label(componentId, getDataModel(rowModel))
                         .setEscapeModelStrings(false));
             }
         });
-        columns.add(new LambdaColumn<>(new ResourceModel("Document"),
-                AnnotationQueueSortKeys.DOCUMENT, AnnotationQueueItem::getSourceDocumentName));
-        columns.add(new LambdaColumn<>(new ResourceModel("Assigned"),
-                AnnotationQueueSortKeys.ASSIGNED, AnnotationQueueItem::getInProgressCount));
-        columns.add(new LambdaColumn<>(new ResourceModel("Finished"),
-                AnnotationQueueSortKeys.FINISHED, AnnotationQueueItem::getFinishedCount));
-        columns.add(new LambdaColumn<>(new ResourceModel("Annotators"),
-                AnnotationQueueSortKeys.ANNOTATORS, AnnotationQueueItem::getAnnotators));
-        columns.add(
-                new LambdaColumn<>(new ResourceModel("Updated"), AnnotationQueueItem::getLastUpdated));
+        columns.add(new LambdaColumn<>(new ResourceModel("Document"), DOCUMENT,
+                AnnotationQueueItem::getSourceDocumentName));
+        columns.add(new LambdaColumn<>(new ResourceModel("Assigned"), ASSIGNED,
+                AnnotationQueueItem::getInProgressCount));
+        columns.add(new LambdaColumn<>(new ResourceModel("Finished"), FINISHED,
+                AnnotationQueueItem::getFinishedCount));
+        columns.add(new LambdaColumn<>(new ResourceModel("Annotators"), ANNOTATORS,
+                item -> join(", ", item.getAnnotators())));
+        columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
+                AnnotationQueueItem::getLastUpdated));
 
         // Own column type, contains only a click
         // able image (AJAX event),
@@ -242,8 +249,8 @@ public class DynamicWorkloadManagementPage
             private static final long serialVersionUID = 1L;
 
             @Override
-            public void populateItem(Item<ICellPopulator<AnnotationQueueItem>> aItem, String componentId,
-                    IModel<AnnotationQueueItem> rowModel)
+            public void populateItem(Item<ICellPopulator<AnnotationQueueItem>> aItem,
+                    String componentId, IModel<AnnotationQueueItem> rowModel)
             {
                 Fragment fragment = new Fragment(componentId, "infoColumn",
                         DynamicWorkloadManagementPage.this);
@@ -253,7 +260,7 @@ public class DynamicWorkloadManagementPage
             }
         });
 
-        table = new DataTable<AnnotationQueueItem,AnnotationQueueSortKeys>("dataTable", columns, dataProvider, 20);
+        table = new DataTable<>("dataTable", columns, dataProvider, 20);
         table.setOutputMarkupId(true);
         table.addTopToolbar(new NavigationToolbar(table));
         table.addTopToolbar(new HeadersToolbar<>(table, dataProvider));
@@ -423,7 +430,7 @@ public class DynamicWorkloadManagementPage
         settingsForm.add(defaultNumberDocumentsTextField);
 
         // Dropdown menu for the workflow strategy
-        workflowChoices = new DropDownChoice<>("workflowStrategy");
+        workflowChoices = new DropDownList<>("workflowStrategy");
         workflowChoices.setChoiceRenderer(new LambdaChoiceRenderer<>(WorkflowType::getUiName));
         workflowChoices.setModel(LoadableDetachableModel.of(this::getWorkflowChoice));
         workflowChoices.setRequired(true);
@@ -465,7 +472,7 @@ public class DynamicWorkloadManagementPage
         userSelectionForm.setOutputMarkupId(true);
 
         // Dropdown menu with all available users of the project
-        userSelection = new DropDownChoice<>("userSelection");
+        userSelection = new DropDownList<>("userSelection");
         userSelection.setChoiceRenderer(new LambdaChoiceRenderer<>(User::getUsername));
         // No default model required, as the input shall be empty by default
         userSelection.setModel(new Model<>());
@@ -585,7 +592,7 @@ public class DynamicWorkloadManagementPage
         userResetDocumentForm.add(visibleWhen(() -> !isNull(userSelection.getModelObject())));
 
         // Dropdown for all annotation documents for the user that exist in the DB
-        resetDocument = new DropDownChoice<>("resetDocument");
+        resetDocument = new DropDownList<>("resetDocument");
         resetDocument.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocument::getName));
         resetDocument.setChoices(this::getCreatedDocumentsForSelectedUser);
         resetDocument.setModel(LoadableDetachableModel.of(this::getSelectedAnnotationDocument));
@@ -593,7 +600,7 @@ public class DynamicWorkloadManagementPage
         userResetDocumentForm.add(resetDocument);
 
         // Dropdown for all states that can be assign to the selected document
-        documentState = new DropDownChoice<>("documentState");
+        documentState = new DropDownList<>("documentState");
         documentState
                 .setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocumentState::getName));
         documentState.setChoices(this::getAnnotationDocumentStates);
@@ -767,15 +774,15 @@ public class DynamicWorkloadManagementPage
 
         // Set contents of the modalWindow
         List<String> finishedUsersForDocument = workloadManagementService
-                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.FINISHED, doc.getSourceDocument(),
-                        currentProject.getObject())
+                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.FINISHED,
+                        doc.getSourceDocument(), currentProject.getObject())
                 .stream().map(AnnotationDocument::getUser).collect(Collectors.toList());
         List<String> inProgressUsersForDocument = workloadManagementService
-                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.IN_PROGRESS, doc.getSourceDocument(),
-                        currentProject.getObject())
+                .getUsersForSpecificDocumentAndState(AnnotationDocumentState.IN_PROGRESS,
+                        doc.getSourceDocument(), currentProject.getObject())
                 .stream().map(AnnotationDocument::getUser).collect(Collectors.toList());
-        infoDialog.setContent(new WorkloadMetadataDialog(infoDialog.getContentId(), doc.getSourceDocument(),
-                finishedUsersForDocument, inProgressUsersForDocument));
+        infoDialog.setContent(new WorkloadMetadataDialog(infoDialog.getContentId(),
+                doc.getSourceDocument(), finishedUsersForDocument, inProgressUsersForDocument));
 
         // Open the dialog
         infoDialog.show(aTarget);
@@ -788,8 +795,7 @@ public class DynamicWorkloadManagementPage
      */
     private void updateTable(AjaxRequestTarget aTarget)
     {
-        dataProvider.setAllAnnotationDocuments(
-                documentService.listAnnotationDocuments(currentProject.getObject()));
+        dataProvider.setAnnotationQueueItems(getQueue());
         aTarget.add(table);
     }
 
@@ -836,7 +842,7 @@ public class DynamicWorkloadManagementPage
         return "";
     }
 
-    private AnnotationQueueOverviewDataProvider makeAnnotationQueueOverviewDataProvider()
+    private List<AnnotationQueueItem> getQueue()
     {
         Project project = currentProject.getObject();
 
@@ -853,8 +859,11 @@ public class DynamicWorkloadManagementPage
             AnnotationQueueItem item = new AnnotationQueueItem(e.getKey(), e.getValue());
             queue.add(item);
         }
+        return queue;
+    }
 
-        return new AnnotationQueueOverviewDataProvider(queue,
-                documentService.listAnnotationDocuments(currentProject.getObject()));
+    private AnnotationQueueOverviewDataProvider makeAnnotationQueueOverviewDataProvider()
+    {
+        return new AnnotationQueueOverviewDataProvider(getQueue());
     }
 }

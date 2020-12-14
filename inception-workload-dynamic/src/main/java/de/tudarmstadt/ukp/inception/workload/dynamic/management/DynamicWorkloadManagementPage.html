@@ -28,12 +28,6 @@ tr td:nth-child(2), tr th:nth-child(2), tr td:nth-child(5), tr th:nth-child(5)
  text-align: left;
 }
 
-.form-control.k-widget {
- display: inline-block;
- height: 100px;
- overflow-y: scroll;
-}
-
 .k-floatwrap {
  height: fit-content;
  border: none;
@@ -211,25 +205,22 @@ tr td:nth-child(2), tr th:nth-child(2), tr td:nth-child(5), tr th:nth-child(5)
                   <div class="card-header">
                     <wicket:message key="userSelection" />
                   </div>
-                  <div class="card-body form-row row-cols-2">
+                  <div class="card-body flex-h-container">
                     <label class="col-form-label col-sm-3"> <wicket:message
                         key="userSelect" />
-                    </label> <select wicket:id="userSelection" class="form col-sm-6"
+                    </label> <select wicket:id="userSelection" class="form-control"
                       data-container="body"></select>
                   </div>
                 </form>
-                <div class="row-cols-2 form-row">
-                  <div class="col-sm-7">
-                    <form wicket:id="userAssignDocumentForm" class="form">
+                <div class="flex-h-container">
+                  <div class="flex-content flex-v-container">
+                    <form wicket:id="userAssignDocumentForm" class="form flex-content flex-v-container">
                       <div class="card-header">
-                        <wicket:message key="userSettings" />
+                        <wicket:message key="assignDocument" />
                       </div>
-                      <div class="card-body" style="height: 200px">
-                        <div>
-                          <div class="col-sm-5" style="display: inline-block; height: 80px">
-                            <wicket:message key="assignDocument" />
-                          </div>
-                          <select wicket:id="documentsToAdd" class="form-control col-sm-6"
+                      <div class="card-body flex-content" style="height: 200px">
+                        <div class="form-group">
+                          <select wicket:id="documentsToAdd" class="form-control"
                             data-container="body" style="display: inline-block"></select>
                         </div>
                       </div>
@@ -240,21 +231,19 @@ tr td:nth-child(2), tr th:nth-child(2), tr td:nth-child(5), tr th:nth-child(5)
                       </div>
                     </form>
                   </div>
-                  <div class="col-sm-5">
-                    <form wicket:id="userResetDocumentForm" class="form">
+                  <div class="flex-content flex-v-container">
+                    <form wicket:id="userResetDocumentForm" class="form flex-content flex-v-container">
                       <div class="card-header">
                         <wicket:message key="resetDocument" />
                       </div>
-                      <div class="card-body" style="height: 200px">
-                        <div>
-                          <label class="col-form-label col-sm-12"> <select
-                            wicket:id="resetDocument" class="form-control" data-container="body"></select>
-                          </label>
+                      <div class="card-body flex-content">
+                        <div class="form-group">
+                        <select
+                            wicket:id="resetDocument" class="form-control" data-container="body"/>
                         </div>
-                        <div>
-                          <label class="col-form-label col-sm-12"> <select
-                            wicket:id="documentState" class="form-control" data-container="body"></select>
-                          </label>
+                        <div class="form-group">
+                        <select
+                            wicket:id="documentState" class="form-control" data-container="body"/>
                         </div>
                       </div>
                       <div class="card-footer">
