@@ -455,8 +455,9 @@ public class SearchAnnotationSidebar
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
                     state.getUser().getUsername(), targetQuery.getObject(), limitToDocument));
             SearchOptions opt = searchOptions.getObject();
-            resultsProvider.initializeQuery(currentUser, project, targetQuery.getObject(),
-                    limitToDocument, opt.getGroupingLayer(), opt.getGroupingFeature());
+            resultsProvider.initializeQuery(getModelObject().getUser(), project,
+                    targetQuery.getObject(), limitToDocument, opt.getGroupingLayer(),
+                    opt.getGroupingFeature());
             return;
         }
         catch (Exception e) {
