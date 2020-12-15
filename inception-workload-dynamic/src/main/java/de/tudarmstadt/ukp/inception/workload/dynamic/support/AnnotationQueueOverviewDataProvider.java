@@ -158,8 +158,7 @@ public class AnnotationQueueOverviewDataProvider
 
         // Filter by document states
         if (CollectionUtils.isNotEmpty(filter.getStates())) {
-            docStream = docStream
-                    .filter(doc -> filter.getStates().contains(doc.getSourceDocument().getState()));
+            docStream = docStream.filter(doc -> filter.getStates().contains(doc.getState()));
         }
 
         // Filter out any documents which have any annotations ongoing or finished

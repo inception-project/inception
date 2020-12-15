@@ -18,12 +18,16 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.management;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.ANNOTATORS;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.ASSIGNED;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.DOCUMENT;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.FINISHED;
+import static de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys.STATE;
+import static java.lang.Integer.parseInt;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
@@ -216,9 +220,8 @@ public class DynamicWorkloadManagementPage
         // Columns of the table
         // Each column creates TableMetaData
         List<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>> columns = new ArrayList<>();
-        columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"),
-                AnnotationQueueSortKeys.STATE,
-                doc -> documentStateSymbol(doc.getSourceDocument().getState()))
+        columns.add(new LambdaColumn<>(new ResourceModel("DocumentState"), STATE,
+                item -> documentStateSymbol(item.getState()))
         {
             private static final long serialVersionUID = -2103168638018286379L;
 
@@ -694,9 +697,11 @@ public class DynamicWorkloadManagementPage
         // Writes the new traits into the DB
         dynamicWorkloadExtension.writeTraits(workloadManagementService,
                 new DynamicWorkloadTraits(workflowChoices.getModelObject().getWorkflowExtensionId(),
-                        Integer.parseInt(defaultNumberDocumentsTextField.getInput())),
+                        parseInt(defaultNumberDocumentsTextField.getInput())),
                 currentProject.getObject());
         success("Changes saved");
+
+        updateTable(aTarget);
     }
 
     private void actionSetDocumentStatus(AjaxRequestTarget aAjaxRequestTarget,
@@ -715,21 +720,19 @@ public class DynamicWorkloadManagementPage
             if (documentState.getModelObject().equals(AnnotationDocumentState.IN_PROGRESS)) {
                 documentService.transitionAnnotationDocumentState(
                         documentService.getAnnotationDocument(
-                                documentService.getSourceDocument(
-                                        currentProject.getObject(),
+                                documentService.getSourceDocument(currentProject.getObject(),
                                         resetDocument.getModelObject().getName()),
                                 userSelection.getModelObject()),
-                        AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
+                        ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS);
             }
             else {
                 // OR INPROGRESS to FINSIHED
                 documentService.transitionAnnotationDocumentState(
                         documentService.getAnnotationDocument(
-                                documentService.getSourceDocument(
-                                        currentProject.getObject(),
+                                documentService.getSourceDocument(currentProject.getObject(),
                                         resetDocument.getModelObject().getName()),
                                 userSelection.getModelObject()),
-                        AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
+                        ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
             }
             success("Document status changed");
         }
@@ -854,10 +857,13 @@ public class DynamicWorkloadManagementPage
         documentService.listAnnotationDocuments(project).forEach(ad -> documentMap
                 .computeIfAbsent(ad.getDocument(), d -> new ArrayList<>()).add(ad));
 
+        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(currentProject.getObject()));
+
         List<AnnotationQueueItem> queue = new ArrayList<>();
         for (Entry<SourceDocument, List<AnnotationDocument>> e : documentMap.entrySet()) {
-            AnnotationQueueItem item = new AnnotationQueueItem(e.getKey(), e.getValue());
-            queue.add(item);
+            queue.add(new AnnotationQueueItem(e.getKey(), e.getValue(),
+                    traits.getDefaultNumberOfAnnotations()));
         }
         return queue;
     }

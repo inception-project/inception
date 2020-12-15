@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -32,6 +35,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 public class AnnotationQueueItem
     implements Serializable
@@ -41,12 +45,13 @@ public class AnnotationQueueItem
     private final SourceDocument sourceDocument;
     private final List<AnnotationDocument> annotationDocuments;
     private final Set<String> annotators;
+    private SourceDocumentState state;
     private int inProgressCount;
     private int finishedCount;
     private Date lastUpdated;
 
     public AnnotationQueueItem(SourceDocument aSourceDocument,
-            List<AnnotationDocument> aAnnotationDocuments)
+            List<AnnotationDocument> aAnnotationDocuments, int aRequiredAnnotations)
     {
         super();
         sourceDocument = aSourceDocument;
@@ -69,6 +74,17 @@ public class AnnotationQueueItem
                 // Nothing to do
             }
         }
+
+        state = sourceDocument.getState();
+        if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)
+                && finishedCount >= aRequiredAnnotations) {
+            state = ANNOTATION_FINISHED;
+        }
+    }
+
+    public SourceDocumentState getState()
+    {
+        return state;
     }
 
     private void updateLastUpdated(Date aDate)
@@ -111,22 +127,22 @@ public class AnnotationQueueItem
         long daysSinceLastUpdate = Math.abs(lastUpdated.getTime() - new Date().getTime());
         int diff = (int) DAYS.convert(daysSinceLastUpdate, MILLISECONDS);
         switch (diff) {
-            case (0):
-                return "Today";
-            case (1):
-                return "Yesterday";
-            case (2):
-                return "2 days ago";
-            case (3):
-                return "3 days ago";
-            case (4):
-                return "4 days ago";
-            case (5):
-                return "5 days ago";
-            case (6):
-                return "6 days ago";
-            default:
-                return DateFormatUtils.format(lastUpdated, "d MMM y");
+        case (0):
+            return "Today";
+        case (1):
+            return "Yesterday";
+        case (2):
+            return "2 days ago";
+        case (3):
+            return "3 days ago";
+        case (4):
+            return "4 days ago";
+        case (5):
+            return "5 days ago";
+        case (6):
+            return "6 days ago";
+        default:
+            return DateFormatUtils.format(lastUpdated, "d MMM y");
         }
     }
 
