@@ -21,7 +21,8 @@ import org.apache.uima.cas.CAS;
 import org.assertj.core.api.Assertions;
 
 public class InceptionAssertions
-    extends Assertions {
+    extends Assertions
+{
 
     public static CasAssert assertThat(CAS actual)
     {

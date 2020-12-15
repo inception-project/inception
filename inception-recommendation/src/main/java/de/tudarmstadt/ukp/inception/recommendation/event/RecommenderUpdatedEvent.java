@@ -41,7 +41,8 @@ public class RecommenderUpdatedEvent
         return recommender;
     }
 
-    @Override public String toString()
+    @Override
+    public String toString()
     {
         StringBuilder builder = new StringBuilder();
         builder.append("RecommenderUpdatedEvent [recommender=");

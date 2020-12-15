@@ -33,7 +33,7 @@ public abstract class ValueEditor
     {
         super(aId, aModel);
     }
-    
+
     public KBStatement getModelObject()
     {
         return (KBStatement) getDefaultModelObject();

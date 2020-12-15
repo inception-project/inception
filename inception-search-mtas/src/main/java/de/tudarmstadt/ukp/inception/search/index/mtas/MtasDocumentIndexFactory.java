@@ -44,7 +44,7 @@ public class MtasDocumentIndexFactory
     private final RepositoryProperties repositoryProperties;
     private final FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
-    
+
     @Autowired
     public MtasDocumentIndexFactory(AnnotationSchemaService aSchemaService,
             DocumentService aDocumentService, RepositoryProperties aRepositoryProperties,

@@ -22,16 +22,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 
-
 @SpringBootConfiguration
-@ComponentScan(
-        basePackages = {
-            "de.tudarmstadt.ukp.inception"
-        })
-@EntityScan(
-        basePackages = {
-            "de.tudarmstadt.ukp.clarin.webanno.security"
-})
+@ComponentScan(basePackages = { "de.tudarmstadt.ukp.inception" })
+@EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.security" })
 @EnableAutoConfiguration
 public class SpringConfig
 {

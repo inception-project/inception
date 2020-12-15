@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.app.menu;
 
-
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,29 +31,30 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @Component
-public class ProjectSettingsPageMenuItem implements MenuItem
+public class ProjectSettingsPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
-    
+
     @Override
     public String getPath()
     {
         return "/settings";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/setting_tools.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Settings";
     }
-    
+
     /**
      * Only project admins and annotators can see this page
      */
@@ -65,7 +65,7 @@ public class ProjectSettingsPageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
-        
+
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
@@ -74,13 +74,13 @@ public class ProjectSettingsPageMenuItem implements MenuItem
         User user = userRepo.getCurrentUser();
         return projectService.isAdmin(project, user);
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {
         return ProjectPage.class;
     }
-    
+
     @Override
     public boolean isDirectAccessAllowed()
     {

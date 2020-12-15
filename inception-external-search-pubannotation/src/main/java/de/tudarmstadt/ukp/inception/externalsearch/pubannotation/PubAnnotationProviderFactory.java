@@ -72,7 +72,7 @@ public class PubAnnotationProviderFactory
     @Override
     public ExternalSearchProvider getNewExternalSearchProvider()
     {
-        return new PubAnnotationProvider(); 
+        return new PubAnnotationProvider();
     }
 
     @Override

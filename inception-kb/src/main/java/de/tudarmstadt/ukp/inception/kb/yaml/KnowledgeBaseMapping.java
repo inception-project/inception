@@ -25,7 +25,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class KnowledgeBaseMapping implements Serializable
+public class KnowledgeBaseMapping
+    implements Serializable
 {
 
     private static final long serialVersionUID = 8967034943386456692L;
@@ -56,17 +57,17 @@ public class KnowledgeBaseMapping implements Serializable
 
     @JsonProperty("property-description")
     private IRI propertyDescriptionIri;
-    
-   
-    @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
-        @JsonProperty("subclass-of") String aSubclassIri,
-        @JsonProperty("instance-of") String aTypeIri,
-        @JsonProperty("subproperty-of") String aSubPropertyIri,
-        @JsonProperty("description") String aDescriptionIri,
-        @JsonProperty("label") String aLabelIri,
-        @JsonProperty("property-type") String aPropertyTypeIri,
-        @JsonProperty("property-label") String aPropertyLabelIri,
-        @JsonProperty("property-description") String aPropertyDescriptionIri)
+
+    @JsonCreator
+    public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
+            @JsonProperty("subclass-of") String aSubclassIri,
+            @JsonProperty("instance-of") String aTypeIri,
+            @JsonProperty("subproperty-of") String aSubPropertyIri,
+            @JsonProperty("description") String aDescriptionIri,
+            @JsonProperty("label") String aLabelIri,
+            @JsonProperty("property-type") String aPropertyTypeIri,
+            @JsonProperty("property-label") String aPropertyLabelIri,
+            @JsonProperty("property-description") String aPropertyDescriptionIri)
 
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
@@ -80,18 +81,19 @@ public class KnowledgeBaseMapping implements Serializable
         propertyLabelIri = vf.createIRI(aPropertyLabelIri);
         propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);
     }
-    
-    public KnowledgeBaseMapping() {
-        
+
+    public KnowledgeBaseMapping()
+    {
+
     }
 
     public IRI getClassIri()
     {
         return classIri;
     }
-    
+
     public void setClassIri(IRI aClassIri)
-    {   
+    {
         classIri = aClassIri;
     }
 

@@ -33,19 +33,19 @@ public class ProjectStateChangedEventAdapter
     implements EventLoggingAdapter<ProjectStateChangedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof ProjectStateChangedEvent;
     }
-    
+
     @Override
     public long getProject(ProjectStateChangedEvent aEvent)
     {
         return aEvent.getProject().getId();
     }
-    
+
     @Override
     public String getDetails(ProjectStateChangedEvent aEvent)
     {

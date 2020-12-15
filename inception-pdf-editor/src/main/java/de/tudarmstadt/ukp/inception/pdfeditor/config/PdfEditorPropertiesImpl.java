@@ -22,7 +22,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties("ui.pdf")
-public class PdfEditorPropertiesImpl implements PdfEditorProperties
+public class PdfEditorPropertiesImpl
+    implements PdfEditorProperties
 {
     private boolean debug = false;
 

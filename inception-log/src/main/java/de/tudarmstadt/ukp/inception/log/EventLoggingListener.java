@@ -46,7 +46,8 @@ import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 @Component
-public class EventLoggingListener implements DisposableBean
+public class EventLoggingListener
+    implements DisposableBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -58,19 +59,20 @@ public class EventLoggingListener implements DisposableBean
     private final EventRepository repo;
 
     private final ScheduledExecutorService scheduler;
-    
+
     private final Deque<LoggedEvent> queue;
 
-    public EventLoggingListener(
-            @Autowired EventRepository aRepo,
+    private volatile boolean flushing = false;
+
+    public EventLoggingListener(@Autowired EventRepository aRepo,
             @Lazy @Autowired(required = false) List<EventLoggingAdapter<?>> aAdapters)
     {
         repo = aRepo;
         adapterProxy = aAdapters;
         adapterCache = new HashedMap<>();
-        
+
         queue = new ConcurrentLinkedDeque<>();
-        
+
         scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() -> flush(), 1, 1, TimeUnit.SECONDS);
     }
@@ -122,7 +124,7 @@ public class EventLoggingListener implements DisposableBean
 
         return Optional.ofNullable(adapter);
     }
-    
+
     @EventListener
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
@@ -141,25 +143,39 @@ public class EventLoggingListener implements DisposableBean
             e.setDetails(a.getDetails(aEvent));
             // Add to the writing queue which gets flushed regularly by a timer
             queue.add(e);
-            
+
             // If the queue gets too large, force a flush even if the timer is not there yet
             if (queue.size() > 1000) {
                 flush();
             }
         }
     }
-    
+
     public void flush()
     {
-        synchronized (this) {
-            // Fetch all items that are currently in the queue
-            List<LoggedEvent> batch = new ArrayList<>();
-            while (!queue.isEmpty()) {
-                batch.add(queue.pop());
+        // If a flushing process is already in progress, we can abort here already. No need to
+        // wait for obtaining a synchronize lock. This also avoids a deadlock situation that was
+        // observed when importing huge tagsets with HSQLDB.
+        if (flushing) {
+            return;
+        }
+
+        synchronized (queue) {
+            try {
+                flushing = true;
+
+                // Fetch all items that are currently in the queue
+                List<LoggedEvent> batch = new ArrayList<>();
+                while (!queue.isEmpty()) {
+                    batch.add(queue.pop());
+                }
+
+                // And dump them into the database
+                repo.create(batch.toArray(new LoggedEvent[batch.size()]));
             }
-            
-            // And dump them into the database
-            repo.create(batch.toArray(new LoggedEvent[batch.size()]));
+            finally {
+                flushing = false;
+            }
         }
     }
 
@@ -168,7 +184,7 @@ public class EventLoggingListener implements DisposableBean
     {
         // Kill the flush scheduler
         scheduler.shutdownNow();
-        
+
         // Make sure and pending events are flushed before the application shuts down
         flush();
     }

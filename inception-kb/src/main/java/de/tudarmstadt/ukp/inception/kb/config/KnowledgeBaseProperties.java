@@ -22,12 +22,12 @@ import java.time.Duration;
 public interface KnowledgeBaseProperties
 {
     int getDefaultMaxResults();
-    
+
     int getHardMaxResults();
 
     /**
-     * The cache size in terms of KB items that are being cached. A single query may return a
-     * large number of such items.
+     * The cache size in terms of KB items that are being cached. A single query may return a large
+     * number of such items.
      */
     long getCacheSize();
 

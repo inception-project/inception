@@ -82,13 +82,12 @@ public class OpenNlpPosRecommender
     {
         return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
-    
+
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
-        throws RecommendationException
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
         List<POSSample> posSamples = extractPosSamples(aCasses);
-        
+
         if (posSamples.size() < 2) {
             LOG.info("Not enough training data: [{}] items", posSamples.size());
             return;
@@ -105,20 +104,19 @@ public class OpenNlpPosRecommender
 
         aContext.put(KEY_MODEL, model);
     }
-    
+
     @Override
-    public RecommendationEngineCapability getTrainingCapability() 
+    public RecommendationEngineCapability getTrainingCapability()
     {
         return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas)
-        throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        POSModel model = aContext.get(KEY_MODEL).orElseThrow(() -> 
-                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
-        
+        POSModel model = aContext.get(KEY_MODEL).orElseThrow(
+                () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+
         POSTaggerME tagger = new POSTaggerME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
@@ -135,24 +133,23 @@ public class OpenNlpPosRecommender
                 break;
             }
             predictionCount++;
-            
+
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
-            String[] tokens = tokenAnnotations.stream()
-                .map(AnnotationFS::getCoveredText)
-                .toArray(String[]::new);
+            String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
+                    .toArray(String[]::new);
 
             Sequence[] bestSequences = tagger.topKSequences(tokens);
 
-//            LOG.debug("Total number of sequences predicted: {}", bestSequences.length);
+            // LOG.debug("Total number of sequences predicted: {}", bestSequences.length);
 
             for (int s = 0; s < Math.min(bestSequences.length, maxRecommendations); s++) {
                 Sequence sequence = bestSequences[s];
                 List<String> outcomes = sequence.getOutcomes();
                 double[] probabilities = sequence.getProbs();
 
-//                LOG.debug("Sequence {} score {}", s, sequence.getScore());
-//                LOG.debug("Outcomes: {}", outcomes);
-//                LOG.debug("Probabilities: {}", asList(probabilities));
+                // LOG.debug("Sequence {} score {}", s, sequence.getScore());
+                // LOG.debug("Outcomes: {}", outcomes);
+                // LOG.debug("Probabilities: {}", asList(probabilities));
 
                 for (int i = 0; i < outcomes.size(); i++) {
                     String label = outcomes.get(i);
@@ -181,7 +178,7 @@ public class OpenNlpPosRecommender
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
-    {        
+    {
         List<POSSample> data = extractPosSamples(aCasses);
         List<POSSample> trainingSet = new ArrayList<>();
         List<POSSample> testSet = new ArrayList<>();
@@ -204,22 +201,22 @@ public class OpenNlpPosRecommender
         int trainingSetSize = trainingSet.size();
         double overallTrainingSize = data.size() - testSetSize;
         double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
-        
+
         if (trainingSetSize < 2 || testSetSize < 2) {
             String info = String.format(
                     "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s]",
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
 
-            EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize, trainRatio);
+            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
+                    trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
         }
 
         LOG.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
-            testSet.size(), data.size());
+                testSet.size(), data.size());
 
         // Train model
         POSModel model = train(trainingSet, traits.getParameters());
@@ -239,14 +236,14 @@ public class OpenNlpPosRecommender
             }
         }
 
-        return labelPairs.stream().collect(EvaluationResult
-                .collector(trainingSetSize, testSetSize, trainRatio, PAD));
+        return labelPairs.stream()
+                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, PAD));
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)
     {
         List<POSSample> posSamples = new ArrayList<>();
-        
+
         casses: for (CAS cas : aCasses) {
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
@@ -257,17 +254,17 @@ public class OpenNlpPosRecommender
                 if (posSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
                 }
-                
+
                 AnnotationFS sentence = e.getKey();
 
                 Collection<AnnotationFS> tokens = e.getValue();
-                
+
                 createPosSample(cas, sentence, tokens).map(posSamples::add);
             }
         }
-        
+
         LOG.debug("Extracted {} POS samples", posSamples.size());
-        
+
         return posSamples;
     }
 
@@ -297,7 +294,7 @@ public class OpenNlpPosRecommender
 
             i++;
         }
-        
+
         // Require at least X percent of the sentence to have tags to avoid class imbalance on PAD
         // tag.
         double coverage = ((double) withTagCount * 100) / (double) numberOfTokens;

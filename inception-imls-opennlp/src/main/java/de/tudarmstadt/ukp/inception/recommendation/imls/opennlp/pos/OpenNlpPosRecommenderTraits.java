@@ -43,7 +43,7 @@ public class OpenNlpPosRecommenderTraits
     {
         numThreads = aNumThreads;
     }
-    
+
     public int getTrainingSetSizeLimit()
     {
         return trainingSetSizeLimit;
@@ -63,17 +63,17 @@ public class OpenNlpPosRecommenderTraits
     {
         predictionLimit = aPredictionLimit;
     }
-    
+
     public double getTaggedTokensThreshold()
     {
         if (taggedTokensThreshold < 0.0) {
             return 0.0;
         }
-        
+
         if (taggedTokensThreshold > 100.0) {
             return 100.0;
         }
-        
+
         return taggedTokensThreshold;
     }
 

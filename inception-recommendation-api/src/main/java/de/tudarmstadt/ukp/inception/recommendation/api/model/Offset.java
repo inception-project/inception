@@ -26,7 +26,7 @@ public class Offset
 
     private int begin = -1;
     private int end = -1;
-    
+
     public Offset(int beginCharacter, int endCharacter)
     {
         this.begin = beginCharacter;
@@ -62,49 +62,50 @@ public class Offset
     {
         setEnd(endCharacter);
     }
-    
+
     @Deprecated
     public int getStart()
     {
         return getBegin();
     }
-    
+
     public void setBegin(int aBegin)
     {
         begin = aBegin;
     }
-    
+
     public int getBegin()
     {
         return begin;
     }
-    
+
     public void setEnd(int aEnd)
     {
         end = aEnd;
     }
-    
+
     public int getEnd()
     {
         return end;
     }
-    
+
     public boolean overlaps(final Offset i)
     {
         // Cases:
         //
-        //         start                     end
-        //           |                        |
-        //  1     #######                     |
-        //  2        |                     #######
-        //  3   ####################################
-        //  4        |        #######         |
-        //           |                        |
+        // start end
+        // | |
+        // 1 ####### |
+        // 2 | #######
+        // 3 ####################################
+        // 4 | ####### |
+        // | |
 
         return (((i.getStart() <= getStart()) && (getStart() < i.getEnd())) || // Case 1-3
                 ((i.getStart() < getEnd()) && (getEnd() <= i.getEnd())) || // Case 1-3
                 ((getStart() <= i.getStart()) && (i.getEnd() <= getEnd()))); // Case 4
-    }    
+    }
+
     @Override
     public int hashCode()
     {
@@ -143,11 +144,11 @@ public class Offset
         if (o == null) {
             return 1;
         }
-        
+
         if (this == o) {
             return 0;
         }
-        
+
         if (begin == o.begin) {
             // Sort by end decreasing
             return o.end - end;

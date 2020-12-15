@@ -43,7 +43,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Component
-public class DynamicWorkflowDocumentNavigationActionBarExtension implements ActionBarExtension
+public class DynamicWorkflowDocumentNavigationActionBarExtension
+    implements ActionBarExtension
 {
     private final DocumentService documentService;
     private final WorkloadManagementService workloadManagementService;
@@ -51,9 +52,8 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     private final @PersistenceContext EntityManager entityManager;
 
     @Autowired
-    public DynamicWorkflowDocumentNavigationActionBarExtension(
-        DocumentService aDocumentService,
-        EntityManager aEntityManager, WorkloadManagementService aWorkloadManagementService)
+    public DynamicWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
+            EntityManager aEntityManager, WorkloadManagementService aWorkloadManagementService)
     {
         documentService = aDocumentService;
         entityManager = aEntityManager;
@@ -73,16 +73,16 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
     }
 
     @Override
-    public boolean accepts (AnnotationPageBase aPage)
+    public boolean accepts(AnnotationPageBase aPage)
     {
         // #Issue 1813 fix
         if (aPage.getModelObject().getProject() == null) {
             return false;
         }
 
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService.
-            getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
-            .getType());
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
+                .getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
+                .getType());
     }
 
     @Override
@@ -91,53 +91,53 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension implements Acti
         return new DynamicDocumentNavigator(aId);
     }
 
-    //Init of the page, select a random document
+    // Init of the page, select a random document
     @Override
     public void onInitialize(AnnotationPageBase aPage)
     {
         User user = aPage.getModelObject().getUser();
         Project project = aPage.getModelObject().getProject();
-        //Check if there is a document in progress and return this one
-        for (AnnotationDocument annotationDocument:
-            documentService.listAnnotationDocuments(project,user)) {
-            //There was one in progress, load it
+        // Check if there is a document in progress and return this one
+        for (AnnotationDocument annotationDocument : documentService
+                .listAnnotationDocuments(project, user)) {
+            // There was one in progress, load it
             if (annotationDocument.getState().equals(IN_PROGRESS)) {
                 aPage.getModelObject().setDocument(annotationDocument.getDocument(),
-                    documentService.listSourceDocuments(project));
-                Optional<AjaxRequestTarget> target = RequestCycle.get().
-                    find(AjaxRequestTarget.class);
+                        documentService.listSourceDocuments(project));
+                Optional<AjaxRequestTarget> target = RequestCycle.get()
+                        .find(AjaxRequestTarget.class);
                 aPage.actionLoadDocument(target.orElse(null));
                 return;
             }
         }
-        //Nothing in progress found, get a random document
+        // Nothing in progress found, get a random document
         if (aPage.getModelObject().getDocument() == null) {
-            //Go through all documents in a random order and check if there is a Annotation document
-            //with the state NEW
-            String query =  "FROM SourceDocument " +
-                            "WHERE project = :project " +
-                            "ORDER BY rand()";
-            for (SourceDocument doc: entityManager.createQuery(query,SourceDocument.class)
-                .setParameter("project", project).getResultList()) {
-                //Check if it exist or is NEW
-                if (documentService.listAnnotatableDocuments(project,user).get(doc) == null ||
-                    documentService.listAnnotatableDocuments(project,user).get(doc).
-                        getState().equals(NEW)) {
-                    //This document had the state NEW, load it
-                    aPage.getModelObject().setDocument(doc, documentService.
-                        listSourceDocuments(project));
+            // Go through all documents in a random order and check if there is a Annotation
+            // document
+            // with the state NEW
+            String query = "FROM SourceDocument " + "WHERE project = :project " + "ORDER BY rand()";
+            for (SourceDocument doc : entityManager.createQuery(query, SourceDocument.class)
+                    .setParameter("project", project).getResultList()) {
+                // Check if it exist or is NEW
+                if (documentService.listAnnotatableDocuments(project, user).get(doc) == null
+                        || documentService.listAnnotatableDocuments(project, user).get(doc)
+                                .getState().equals(NEW)) {
+                    // This document had the state NEW, load it
+                    aPage.getModelObject().setDocument(doc,
+                            documentService.listSourceDocuments(project));
 
-                    Optional<AjaxRequestTarget> target = RequestCycle.get().
-                        find(AjaxRequestTarget.class);
+                    Optional<AjaxRequestTarget> target = RequestCycle.get()
+                            .find(AjaxRequestTarget.class);
                     aPage.actionLoadDocument(target.orElse(null));
                     return;
                 }
             }
         }
-        //No documents left
+        // No documents left
         if (aPage.getModelObject().getDocument() == null) {
             aPage.setResponsePage(aPage.getApplication().getHomePage());
-            aPage.getSession().info("There are no more documents to annotate available for you. Please contact your project supervisor.");
+            aPage.getSession().info(
+                    "There are no more documents to annotate available for you. Please contact your project supervisor.");
         }
     }
 }

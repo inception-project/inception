@@ -33,25 +33,25 @@ public class AnnotationStateChangedEventAdapter
     implements EventLoggingAdapter<AnnotationStateChangeEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof AnnotationStateChangeEvent;
     }
-    
+
     @Override
     public String getAnnotator(AnnotationStateChangeEvent aEvent)
     {
         return aEvent.getAnnotationDocument().getUser();
     }
-    
+
     @Override
     public long getDocument(AnnotationStateChangeEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(AnnotationStateChangeEvent aEvent)
     {

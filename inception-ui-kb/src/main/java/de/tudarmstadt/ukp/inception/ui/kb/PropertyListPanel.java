@@ -50,8 +50,10 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewPropertyEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 
-public class PropertyListPanel extends Panel {
-    
+public class PropertyListPanel
+    extends Panel
+{
+
     private static final long serialVersionUID = 4129861816335804882L;
     private static final Logger LOG = LoggerFactory.getLogger(PropertyListPanel.class);
 
@@ -77,13 +79,13 @@ public class PropertyListPanel extends Panel {
         overviewList.setChoices(LambdaModel.of(this::getProperties));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                 this::actionSelectionChanged));
-        
+
         add(overviewList);
 
         add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
 
         LambdaAjaxLink addLink = new LambdaAjaxLink("add",
-            target -> send(getPage(), Broadcast.BREADTH, new AjaxNewPropertyEvent(target)));
+                target -> send(getPage(), Broadcast.BREADTH, new AjaxNewPropertyEvent(target)));
         addLink.add(new Label("label", new ResourceModel("property.list.add")));
         addLink.add(new WriteProtectionBehavior(kbModel));
         add(addLink);
@@ -109,7 +111,8 @@ public class PropertyListPanel extends Panel {
         }
     }
 
-    private void actionSelectionChanged(AjaxRequestTarget aTarget) {
+    private void actionSelectionChanged(AjaxRequestTarget aTarget)
+    {
         // if the selection changes, publish an event denoting the change
         AjaxPropertySelectionEvent e = new AjaxPropertySelectionEvent(aTarget,
                 selectedProperty.getObject());
@@ -122,40 +125,46 @@ public class PropertyListPanel extends Panel {
      * 
      * @param aTarget
      */
-    private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
+    private void actionPreferenceChanged(AjaxRequestTarget aTarget)
+    {
         if (!preferences.getObject().showAllProperties && selectedProperty.getObject() != null
                 && IriConstants.isFromImplicitNamespace(selectedProperty.getObject())) {
             send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, null, true));
-        } else {
+        }
+        else {
             aTarget.add(this);
         }
     }
 
-    private List<KBProperty> getProperties() {
+    private List<KBProperty> getProperties()
+    {
         if (isVisibleInHierarchy()) {
             Preferences prefs = preferences.getObject();
             List<KBProperty> statements = new ArrayList<>();
             try {
-                statements = kbService.listProperties(kbModel.getObject(),
-                        prefs.showAllProperties);
+                statements = kbService.listProperties(kbModel.getObject(), prefs.showAllProperties);
                 return statements;
             }
             catch (QueryEvaluationException e) {
-                //FIXME when this error(...) is called, a -org.apache.wicket.WicketRuntimeException:
-                //Cannot modify component hierarchy after render phase has started- is thrown.
-                //error("Unable to list properties: " + e.getLocalizedMessage());
+                // FIXME when this error(...) is called, a
+                // -org.apache.wicket.WicketRuntimeException:
+                // Cannot modify component hierarchy after render phase has started- is thrown.
+                // error("Unable to list properties: " + e.getLocalizedMessage());
                 LOG.debug("Unable to list properties.", e);
                 KBProperty errorPlaceholder = new KBProperty();
                 errorPlaceholder.setName("Unable to list properties.");
                 statements.add(errorPlaceholder);
                 return statements;
             }
-        } else {
+        }
+        else {
             return Collections.emptyList();
         }
     }
 
-    static class Preferences implements Serializable {
+    static class Preferences
+        implements Serializable
+    {
         private static final long serialVersionUID = 4181477265434386379L;
 
         boolean showAllProperties;

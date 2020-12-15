@@ -47,38 +47,38 @@ public class BooleanLiteralValueSupport
     implements ValueTypeSupport
 {
     private String valueTypeSupportId;
-    
+
     @Override
     public String getId()
     {
         return valueTypeSupportId;
     }
-    
+
     @Override
     public void setBeanName(String aBeanName)
     {
         valueTypeSupportId = aBeanName;
     }
-    
+
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
         return asList(
                 new ValueType(XMLSchema.BOOLEAN.stringValue(), "Boolean", valueTypeSupportId));
     }
-    
+
     @Override
     public boolean accepts(KBStatement aStatement, KBProperty aProperty)
     {
         if (aStatement.getValue() == null) {
             return false;
         }
-        
+
         IRI iri = DefaultDatatypeMapper.getDatatypeURI((aStatement.getValue()).getClass());
 
-        return iri != null && XMLSchema.BOOLEAN.equals(iri);        
+        return iri != null && XMLSchema.BOOLEAN.equals(iri);
     }
-    
+
     @Override
     public boolean accepts(String range, Optional<KBObject> rangeKbObject)
     {
@@ -87,9 +87,6 @@ public class BooleanLiteralValueSupport
         }
         return false;
     }
-
-    
-    
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,

@@ -52,7 +52,7 @@ public class RecommenderViewPanel
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annotationSchemaService;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
-    
+
     private IModel<Recommender> recommenderModel;
 
     public RecommenderViewPanel(String aId, IModel<Recommender> aRecommender)
@@ -62,18 +62,18 @@ public class RecommenderViewPanel
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
 
-        recommenderModel = aRecommender; 
-        
+        recommenderModel = aRecommender;
+
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
         add(form);
-        
+
         nameField = new TextField<>(MID_NAME, String.class);
         form.add(nameField);
-        
-        tool = new TextField<>(MID_TOOL,String.class);
+
+        tool = new TextField<>(MID_TOOL, String.class);
         form.add(tool);
-        
-        feature = new TextField<AnnotationFeature>(MID_FEATURE );
+
+        feature = new TextField<AnnotationFeature>(MID_FEATURE);
         form.add(feature);
 
         layer = new TextField<AnnotationLayer>(MID_LAYER);
@@ -86,7 +86,7 @@ public class RecommenderViewPanel
         super.onConfigure();
 
         setVisible(recommenderModel != null && recommenderModel.getObject() != null);
-        
+
         if (recommenderModel != null && recommenderModel.getObject() != null) {
             String name = recommenderModel.getObject().getLayer().getUiName();
             layer.setDefaultModel(Model.of(name));

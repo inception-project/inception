@@ -38,6 +38,7 @@ public interface PhysicalIndex
     /**
      * Deletes the index data, e.g. by removing the index files from disk. If necessary, the index
      * is closed before.
+     * 
      * @throws IOException
      */
     void delete() throws IOException;
@@ -47,7 +48,7 @@ public interface PhysicalIndex
     void close();
 
     Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest)
-            throws IOException, ExecutionException;
+        throws IOException, ExecutionException;
 
     long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
@@ -57,11 +58,11 @@ public interface PhysicalIndex
     void deindexDocument(AnnotationDocument aDocument) throws IOException;
 
     void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException;
-    
+
     void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;
 
     void clear() throws IOException;
-    
+
     /**
      * Retrieve the timestamp of this annotation document
      * 

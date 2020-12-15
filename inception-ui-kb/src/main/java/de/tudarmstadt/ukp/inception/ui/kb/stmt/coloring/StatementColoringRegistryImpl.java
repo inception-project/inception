@@ -48,8 +48,8 @@ public class StatementColoringRegistryImpl
 
     private List<StatementColoringStrategy> statementColoringStrategies;
 
-    public StatementColoringRegistryImpl(@Lazy @Autowired(required = false)
-        List<StatementColoringStrategy> aStatementColoringStrategies)
+    public StatementColoringRegistryImpl(
+            @Lazy @Autowired(required = false) List<StatementColoringStrategy> aStatementColoringStrategies)
     {
         statementColoringStrategiesProxy = aStatementColoringStrategies;
     }
@@ -70,7 +70,7 @@ public class StatementColoringRegistryImpl
 
             for (StatementColoringStrategy fs : fsp) {
                 log.info("Found value type support: {}",
-                    ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
@@ -84,12 +84,12 @@ public class StatementColoringRegistryImpl
     }
 
     @Override
-    public StatementColoringStrategy getStatementColoringStrategy(
-        String aPropertyIdentifier, KnowledgeBase aKB, List<String> aLabelProperties)
+    public StatementColoringStrategy getStatementColoringStrategy(String aPropertyIdentifier,
+            KnowledgeBase aKB, List<String> aLabelProperties)
     {
         for (StatementColoringStrategy coloringStrategy : getStatementColoringStrategies()) {
             if (coloringStrategy.acceptsProperty(aPropertyIdentifier, aKB, aLabelProperties)
-                && !(coloringStrategy instanceof DefaultColoringStrategyImpl)) {
+                    && !(coloringStrategy instanceof DefaultColoringStrategyImpl)) {
                 return coloringStrategy;
             }
         }

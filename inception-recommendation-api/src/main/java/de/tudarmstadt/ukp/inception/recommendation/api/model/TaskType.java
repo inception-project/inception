@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 public class TaskType
 {
-    public enum Type {
-            SELECTION, TRAINING_AND_PREDICTION
+    public enum Type
+    {
+        SELECTION, TRAINING_AND_PREDICTION
     };
 }

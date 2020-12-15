@@ -62,27 +62,25 @@ public class AdminDashboardPage
         if (!adminAreaAccessRequired(userRepository, projectService)) {
             setResponsePage(getApplication().getHomePage());
         }
-        
+
         setStatelessHint(true);
         setVersioned(false);
-        
+
         // In case we restore a saved session, make sure the user actually still exists in the DB.
         // redirect to login page (if no user is found, admin/admin will be created)
         User user = userRepository.getCurrentUser();
         if (user == null) {
             setResponsePage(LoginPage.class);
         }
-        
+
         // if not either a curator or annotator, display warning message
-        if (
-                !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION) && 
-                !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION) && 
-                !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_CORRECTION) && 
-                !curationEnabeled(projectService, user)) 
-        {
+        if (!annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_ANNOTATION)
+                && !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_AUTOMATION)
+                && !annotationEnabeled(projectService, user, WebAnnoConst.PROJECT_TYPE_CORRECTION)
+                && !curationEnabeled(projectService, user)) {
             info("You are not member of any projects to annotate or curate");
         }
-        
+
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
         // Pages linked from the admin menu are global ones - we do not want to set the current
         // project ID there because the same page may support a global and a project-specific view
@@ -92,10 +90,10 @@ public class AdminDashboardPage
         // show the local project view without the project selection.
         menu.setSendProjectIdToPage(false);
         add(menu);
-        
+
         add(new SystemStatusDashlet("systemStatusDashlet"));
     }
-    
+
     private List<MenuItem> getMenuItems()
     {
         return menuItemService.getMenuItems().stream()
@@ -106,23 +104,23 @@ public class AdminDashboardPage
     public static boolean adminAreaAccessRequired(UserDao aUserRepo, ProjectService aProjectService)
     {
         User user = aUserRepo.getCurrentUser();
-        
+
         // Project managers need access to the admin area to manage projects
         if (aProjectService.managesAnyProject(user)) {
             return true;
         }
-        
-        // Admins need access to the admin area to manage projects 
+
+        // Admins need access to the admin area to manage projects
         if (aUserRepo.isAdministrator(user)) {
             return true;
         }
-    
+
         // If users are allowed to access their profile information, the also need to access the
         // admin area. Note: access to the users own profile should be handled differently.
         List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
                 .getEnvironment().getActiveProfiles());
         Properties settings = SettingsUtil.getSettings();
-        return !activeProfiles.contains("auto-mode-preauth") && "true"
-                        .equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
+        return !activeProfiles.contains("auto-mode-preauth")
+                && "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
     }
 }

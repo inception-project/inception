@@ -48,7 +48,7 @@ public class PdfAnnoModelTest
     public void testgetAnnoFileContent() throws Exception
     {
         String annoFileString = pdfAnnoModel.getAnnoFileContent();
-        assertThat(linesOf(new File("src/test/resources/annoFile.anno"),
-            "UTF-8")).isEqualTo(Arrays.asList(annoFileString.split("\n")));
+        assertThat(linesOf(new File("src/test/resources/annoFile.anno"), "UTF-8"))
+                .isEqualTo(Arrays.asList(annoFileString.split("\n")));
     }
 }

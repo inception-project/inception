@@ -39,7 +39,7 @@ public class RecommendationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
     private static final ResourceReference ICON = new PackageResourceReference(
-        RecommendationSidebarFactory.class, "speech_bubble.png");
+            RecommendationSidebarFactory.class, "speech_bubble.png");
 
     @Override
     public String getDisplayName()

@@ -57,9 +57,9 @@ public class PdfAnnoPanel
     private AbstractAjaxBehavior apiProvider;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel,
-                        PdfAnnotationEditor aPdfAnnotationEditor)
+            PdfAnnotationEditor aPdfAnnotationEditor)
     {
         super(aId, aModel);
 
@@ -75,8 +75,8 @@ public class PdfAnnoPanel
                 File pdfFile = documentService.getSourceDocumentFile(doc);
 
                 getRequestCycle().scheduleRequestHandlerAfterCurrent(
-                    new ResourceStreamRequestHandler(new FileResourceStream(pdfFile),
-                        doc.getName()));
+                        new ResourceStreamRequestHandler(new FileResourceStream(pdfFile),
+                                doc.getName()));
             }
         });
 
@@ -90,17 +90,17 @@ public class PdfAnnoPanel
                 aPdfAnnotationEditor.initialize(aTarget);
                 String pdftext = aPdfAnnotationEditor.getPdfExtractFile().getPdftxt();
                 getRequestCycle().scheduleRequestHandlerAfterCurrent(
-                    new ResourceStreamRequestHandler(
-                        new StringResourceStream(pdftext))
-                );
+                        new ResourceStreamRequestHandler(new StringResourceStream(pdftext)));
             }
         });
 
-        add(apiProvider = new AbstractDefaultAjaxBehavior() {
+        add(apiProvider = new AbstractDefaultAjaxBehavior()
+        {
             private static final long serialVersionUID = 3816087744638629290L;
 
             @Override
-            protected void respond(AjaxRequestTarget aTarget) {
+            protected void respond(AjaxRequestTarget aTarget)
+            {
                 aPdfAnnotationEditor.handleAPIRequest(aTarget, getRequest().getPostParameters());
             }
         });
@@ -114,7 +114,8 @@ public class PdfAnnoPanel
             {
                 checkComponentTag(aTag, "iframe");
 
-                String indexFile = pdfEditorProperties.isDebug() ? "index-debug.html" : "index.html";
+                String indexFile = pdfEditorProperties.isDebug() ? "index-debug.html"
+                        : "index.html";
 
                 String viewerUrl = RequestCycle.get().getUrlRenderer()
                         .renderFullUrl(Url.parse("resources/pdfanno/" + indexFile));
@@ -123,10 +124,10 @@ public class PdfAnnoPanel
                         .renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));
 
                 String pdftxtUrl = getPage().getRequestCycle().getUrlRenderer()
-                    .renderFullUrl(Url.parse(pdftxtProvider.getCallbackUrl()));
+                        .renderFullUrl(Url.parse(pdftxtProvider.getCallbackUrl()));
 
                 String apiUrl = getPage().getRequestCycle().getUrlRenderer()
-                    .renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
+                        .renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
 
                 viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&api=" + apiUrl;
 

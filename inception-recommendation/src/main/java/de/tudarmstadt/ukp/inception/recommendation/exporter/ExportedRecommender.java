@@ -49,7 +49,7 @@ public class ExportedRecommender
 
     @JsonProperty("skipEvaluation")
     private boolean skipEvaluation;
-    
+
     @JsonProperty("enabled")
     private boolean enabled;
 

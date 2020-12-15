@@ -26,23 +26,23 @@ import org.apache.wicket.markup.html.panel.Panel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-
-public class WorkloadMetadataDialog extends Panel
+public class WorkloadMetadataDialog
+    extends Panel
 {
 
     private static final long serialVersionUID = 2797336810690526392L;
 
-    public WorkloadMetadataDialog(String aID, SourceDocument aDocument,
-                                  List<String> finishedUsers, List<String> inProgressUsers)
+    public WorkloadMetadataDialog(String aID, SourceDocument aDocument, List<String> finishedUsers,
+            List<String> inProgressUsers)
     {
         super(aID);
 
-        //TODO more content, e.g. created date
+        // TODO more content, e.g. created date
         Label documentName = new Label("documentName", aDocument.getName());
-        Label userInProgress = new Label("userInProgress",
-            inProgressUsers.isEmpty() ? "-" : inProgressUsers.stream().collect(Collectors.joining(", ")));
-        Label userFinished = new Label("userFinished",
-            finishedUsers.isEmpty() ? "-" : finishedUsers.stream().collect(Collectors.joining(", ")));
+        Label userInProgress = new Label("userInProgress", inProgressUsers.isEmpty() ? "-"
+                : inProgressUsers.stream().collect(Collectors.joining(", ")));
+        Label userFinished = new Label("userFinished", finishedUsers.isEmpty() ? "-"
+                : finishedUsers.stream().collect(Collectors.joining(", ")));
 
         add(documentName);
         add(userInProgress);

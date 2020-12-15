@@ -41,15 +41,15 @@ public class ImageFeatureEditor
     private static final long serialVersionUID = 7056716971303216020L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ImageFeatureEditor.class);
-    
+
     private AbstractTextComponent<String> field;
-    
+
     public ImageFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-        
+
         IModel<String> urlModel = getModel().bind("value");
-        
+
         ExternalImage preview = new ExternalImage("preview");
         // Need to manually set the markup ID of the preview because the feature editor usually
         // resides in a list view causing the markup ID to change on every refresh - and this
@@ -66,12 +66,12 @@ public class ImageFeatureEditor
         field.add(OnChangeAjaxBehavior.onChange(_target -> _target.add(preview)));
         add(field);
     }
-    
+
     private UrlValidator urlValidator()
     {
         return new UrlValidator(new String[] { "http", "https" });
     }
-    
+
     @Override
     public CompoundPropertyModel<FeatureState> getModel()
     {

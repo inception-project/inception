@@ -76,12 +76,12 @@ public class KnowledgeBaseWrapper
     {
         files.add(Pair.of(aTitle, aFile));
     }
-    
+
     public List<Pair<String, File>> getFiles()
     {
         return Collections.unmodifiableList(files);
     }
-    
+
     public void clearFiles()
     {
         files.clear();
