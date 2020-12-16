@@ -100,10 +100,6 @@ include::{include-dir}monitoring.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}workload_settings.adoc[leveloffset=+1]/home/thefarseer/Desktop/workload.png
-
-<<<
-
 include::{include-dir}workload.adoc[leveloffset=+1]
 
 <<<
