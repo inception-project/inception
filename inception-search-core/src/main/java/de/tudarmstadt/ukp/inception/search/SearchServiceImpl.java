@@ -107,7 +107,7 @@ public class SearchServiceImpl
      */
     private void unloadIndex(Long aProjectId, Index aIndex, RemovalCause aCause)
     {
-        if (aIndex.getPhysicalIndex() != null && aIndex.getPhysicalIndex().isOpen()) {
+        if (aIndex.getPhysicalIndex() != null) {
             log.trace("Unloading index for project [{}]({})", aIndex.getProject().getName(),
                     aIndex.getProject().getId());
             aIndex.getPhysicalIndex().close();
@@ -150,11 +150,11 @@ public class SearchServiceImpl
         // Get the index factory
         PhysicalIndexFactory indexFactory = physicalIndexRegistry
                 .getIndexFactory(DEFAULT_PHSYICAL_INDEX_FACTORY);
-        
+
         if (indexFactory == null) {
             return null;
         }
-        
+
         // Acquire the low-level index object and attach it to the index state (transient)
         index.setPhysicalIndex(indexFactory.getPhysicalIndex(aProject));
 
@@ -288,7 +288,7 @@ public class SearchServiceImpl
                 project.getId());
 
         Index index = indexByProject.get(project.getId());
-        
+
         // If the index is null, then indexing is not supported.
         if (index == null) {
             return;
@@ -331,12 +331,12 @@ public class SearchServiceImpl
                 project.getId());
 
         Index index = indexByProject.get(project.getId());
-        
+
         // If the index is null, then indexing is not supported.
         if (index == null) {
             return;
         }
-        
+
         synchronized (index) {
             // Index already initialized? If not, schedule full re-indexing job. This will also
             // index the given document, so we can stop here after scheduling the re-indexing.
@@ -432,10 +432,10 @@ public class SearchServiceImpl
 
         synchronized (index) {
             index.setInvalid(true);
-            
+
             // Clear the index
             index.getPhysicalIndex().clear();
-            
+
             // Index all the annotation documents
             for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
                 List<AnnotationDocument> annotationDocumentsForUser = documentService
@@ -464,8 +464,8 @@ public class SearchServiceImpl
                     casAsByteArray = casToByteArray(documentService.createOrReadInitialCas(doc));
                 }
                 indexDocument(doc, casAsByteArray);
-            }            
-            
+            }
+
             // After re-indexing, reset the invalid flag
             index.setInvalid(false);
             entityManager.merge(index);
@@ -500,7 +500,7 @@ public class SearchServiceImpl
         if (index == null) {
             return 0;
         }
-        
+
         ensureIndexIsCreatedAndValid(aProject, index);
 
         // Index is valid, try to execute the query
