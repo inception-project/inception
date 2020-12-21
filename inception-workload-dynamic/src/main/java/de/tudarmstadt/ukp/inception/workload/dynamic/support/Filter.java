@@ -19,7 +19,11 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 
 //Helper class for the Filter
 public class Filter
@@ -33,16 +37,18 @@ public class Filter
     private String documentName;
 
     // Checkbox
-    private String selected;
+    private boolean selected = false;
 
     // dates
     private Date from;
     private Date to;
 
-    // Default constructor
+    // State
+    private final List<SourceDocumentState> aStates = new ArrayList<>();
+
     public Filter()
     {
-        this.selected = "false";
+        // Nothing to do
     }
 
     public String getUsername()
@@ -55,7 +61,7 @@ public class Filter
         return documentName;
     }
 
-    public String getSelected()
+    public boolean getSelected()
     {
         return selected;
     }
@@ -80,7 +86,7 @@ public class Filter
         this.documentName = aDocumentName;
     }
 
-    public void setSelected(String aSelected)
+    public void setSelected(boolean aSelected)
     {
         this.selected = aSelected;
     }
@@ -93,5 +99,18 @@ public class Filter
     public void setTo(Date aTo)
     {
         this.to = aTo;
+    }
+
+    public List<SourceDocumentState> getStates()
+    {
+        return aStates;
+    }
+
+    public void setState(List<SourceDocumentState> states)
+    {
+        aStates.clear();
+        if (states != null) {
+            aStates.addAll(states);
+        }
     }
 }

@@ -14,6 +14,7 @@
 
 Beto Boullosa
 Chaitrali Agashe[chaitraliagashe]
+Christoph Scheunemann [christophscheunemann]
 Jan-Christoph Klie [jcklie]
 Jennifer Chen [shinyichen]
 Michael Bugert
