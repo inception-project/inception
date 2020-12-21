@@ -413,8 +413,8 @@
       <artifactId>commons-dbcp2</artifactId>
     </dependency>
     <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
+      <groupId>org.mariadb.jdbc</groupId>
+      <artifactId>mariadb-java-client</artifactId>
     </dependency>
     <dependency>
       <groupId>org.hsqldb</groupId>
@@ -718,7 +718,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
-              <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
@@ -736,6 +735,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>  
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
@@ -767,7 +767,7 @@
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
               <usedDependency>org.apache.commons:commons-dbcp2</usedDependency>
-              <usedDependency>mysql:mysql-connector-java</usedDependency>
+              <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.liquibase:liquibase-core</usedDependency>
               <!-- Logging - used via reflection / optional -->
@@ -782,10 +782,6 @@
               <!-- Wicket plugins -->
               <usedDependency>org.wicketstuff:wicketstuff-htmlcompressor</usedDependency>
               <usedDependency>org.mozilla:rhino-runtime</usedDependency>
-              <!-- JavaMelody - used via web.xml -->
-              <!--
-              <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>
-              -->
               <!-- Spring configuration -->
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
@@ -793,12 +789,6 @@
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
-              <!-- Spring AOP
-                <usedDependency>org.springframework:spring-aop</usedDependency>
-                <usedDependency>org.springframework:spring-aspects</usedDependency>
-                <usedDependency>org.aspectj:aspectjrt</usedDependency>
-              -->
               <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
               <!-- Tutorial Js dependencies -->
               <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>

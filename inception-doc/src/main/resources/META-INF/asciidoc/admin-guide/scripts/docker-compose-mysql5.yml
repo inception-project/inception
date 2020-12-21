@@ -9,7 +9,7 @@ networks:
 
 services:
   db:
-    image: "mariadb:10.5"
+    image: "mysql:5"
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=inception
@@ -18,7 +18,7 @@ services:
       - MYSQL_PASSWORD=${DBPASSWORD:-inception}
     volumes:
       - ${INCEPTION_DB_HOME:-db-data}:/var/lib/mysql
-    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_bin"]
+    command: ["--character-set-server=utf8", "--collation-server=utf8_bin"]
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-p${DBPASSWORD:-inception}", "-u${DBUSER:-inception}"]
       interval: 20s
@@ -28,18 +28,17 @@ services:
       inception-net:
 
   app:
-    image: "${INCEPTION_IMAGE:-inceptionproject/inception}:${INCEPTION_VERSION:-{revnumber}}"
+    image: "${INCEPTION_IMAGE:-inceptionproject/inception}:${INCEPTION_VERSION:-{revnumber}"
     ports:
       - "${INCEPTION_PORT:-8080}:8080"
     environment:
-      - INCEPTION_DB_DIALECT=org.hibernate.dialect.MariaDB103Dialect 
-      - INCEPTION_DB_DRIVER=org.mariadb.jdbc.Driver
-      - INCEPTION_DB_URL=jdbc:mariadb://db:3306/inception?useSSL=false&useUnicode=true&characterEncoding=UTF-8
+      - INCEPTION_DB_DIALECT=org.hibernate.dialect.MySQL5InnoDBDialect
+      - INCEPTION_DB_DRIVER=com.mysql.jdbc.Driver
+      - INCEPTION_DB_URL=jdbc:mysql://db:3306/inception?useSSL=false&useUnicode=true&characterEncoding=UTF-8
       - INCEPTION_DB_USERNAME=${DBUSER:-inception}
       - INCEPTION_DB_PASSWORD=${DBPASSWORD:-inception}
-      - JAVA_OPTS=-Dspring.jpa.properties.hibernate.dialect.storage_engine=innodb
     volumes:
-      - ${INCEPTION_HOME:-app-data}:/export
+      - ${INCEPTION_HOME:-app-data⁄}:/export
     depends_on:
       db:
         condition: service_healthy
