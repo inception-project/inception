@@ -297,15 +297,15 @@ public class MtasDocumentIndex
 
     private void closeIndex()
     {
-        OPEN_INDEXES.remove(project.getId());
-
-        if (!isOpen()) {
-            return;
-        }
-
-        ensureAllIsCommitted();
-
         try {
+            OPEN_INDEXES.remove(project.getId());
+
+            if (!isOpen()) {
+                return;
+            }
+
+            ensureAllIsCommitted();
+
             _indexWriter.close();
         }
         catch (IOException e) {
