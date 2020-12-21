@@ -239,17 +239,35 @@ public class MtasDocumentIndex
             FileUtils.forceMkdir(getIndexDir());
             IndexWriterConfig config = new IndexWriterConfig(analyzer);
             config.setCodec(Codec.forName(MTAS_CODEC_NAME));
+
+            @SuppressWarnings("resource")
             IndexWriter indexWriter = new IndexWriter(FSDirectory.open(getIndexDir().toPath()),
                     config);
 
             // Initialize the index
-            indexWriter.commit();
+            try {
+                indexWriter.commit();
+            }
+            catch (IOException e) {
+                try {
+                    indexWriter.close();
+                }
+                catch (IOException e1) {
+                    log.error("Error while trying to close index which could not be initalized"
+                            + " - actual exception follows", e);
+                }
+                throw e;
+            }
 
             // After the index has been initialized, assign the _indexWriter - this is also used
             // by isOpen() to check if the index writer is available.
             _indexWriter = indexWriter;
 
             return _indexWriter;
+        }
+        catch (IOException e) {
+            _indexWriter = null;
+            throw e;
         }
         finally {
             if (isOpen()) {
@@ -295,7 +313,7 @@ public class MtasDocumentIndex
         closeIndex();
     }
 
-    private void closeIndex()
+    private synchronized void closeIndex()
     {
         try {
             OPEN_INDEXES.remove(project.getId());
