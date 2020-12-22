@@ -297,6 +297,8 @@ public interface ProjectService
      */
     List<Project> listProjectsForAgreement();
 
+    File getProjectFolder(Project aProject);
+
     /**
      * Export the associated project log for this {@link Project} while copying a project
      *

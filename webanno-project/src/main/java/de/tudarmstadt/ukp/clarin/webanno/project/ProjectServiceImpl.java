@@ -353,6 +353,13 @@ public class ProjectServiceImpl
     }
 
     @Override
+    public File getProjectFolder(Project aProject)
+    {
+        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
+                + "/" + aProject.getId());
+    }
+
+    @Override
     public File getProjectLogFile(Project aProject)
     {
         return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
@@ -759,8 +766,8 @@ public class ProjectServiceImpl
         projectTypes = new ArrayList<>();
 
         // Scan for project type annotations
-        ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(
-                false);
+        ClassPathScanningCandidateComponentProvider scanner = //
+                new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(ProjectType.class));
 
         for (BeanDefinition bd : scanner.findCandidateComponents("de.tudarmstadt.ukp")) {
