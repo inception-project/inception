@@ -70,7 +70,8 @@ public class MtasDocumentIndexFactory
         MtasDocumentIndex openIndex = MtasDocumentIndex.getIndex(aProject.getId());
         if (openIndex != null) {
             throw new IllegalStateException(
-                    "Trying to create new index for project already having an open index!");
+                    "Trying to create new index for project [" + aProject.getName() + "]("
+                            + aProject.getId() + ") which having has an open index!");
         }
 
         return new MtasDocumentIndex(aProject, documentService, schemaService,

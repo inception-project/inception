@@ -123,10 +123,16 @@ public class SearchServiceImpl
      */
     private void unloadIndex(Long aProjectId, Index aIndex, RemovalCause aCause)
     {
-        if (aIndex.getPhysicalIndex() != null) {
-            log.trace("Unloading index for project [{}]({})", aIndex.getProject().getName(),
-                    aIndex.getProject().getId());
-            aIndex.getPhysicalIndex().close();
+        try {
+            if (aIndex.getPhysicalIndex() != null) {
+                log.trace("Unloading index for project [{}]({})", aIndex.getProject().getName(),
+                        aIndex.getProject().getId());
+                aIndex.getPhysicalIndex().close();
+            }
+        }
+        catch (Throwable e) {
+            log.error("Exception while tying to unload index for project [{}]({})",
+                    aIndex.getProject().getName(), aIndex.getProject().getId(), e);
         }
     }
 
@@ -178,11 +184,12 @@ public class SearchServiceImpl
     }
 
     /**
-     * beforeProjectRemove event. Triggered before a project is removed
+     * Triggered before a project is removed.
      * 
      * @param aEvent
-     *            The BeforeProjectRemovedEvent event
+     *            the event
      * @throws IOException
+     *             if the index cannot be removed.
      */
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
@@ -257,7 +264,6 @@ public class SearchServiceImpl
 
         // Schedule new document index process
         indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getCas());
-
     }
 
     @TransactionalEventListener(fallbackExecution = true)
