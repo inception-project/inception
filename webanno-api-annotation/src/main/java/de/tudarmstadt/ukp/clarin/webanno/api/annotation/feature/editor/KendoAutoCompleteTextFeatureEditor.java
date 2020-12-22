@@ -180,6 +180,9 @@ public class KendoAutoCompleteTextFeatureEditor
                         else if (value instanceof Tag) {
                             return ((Tag) value).getName();
                         }
+                        else if (value instanceof ReorderableTag) {
+                            return ((ReorderableTag) value).getName();
+                        }
                         else {
                             return null;
                         }
