@@ -31,10 +31,10 @@
   </module>
 
   <module name="SuppressWithPlainTextCommentFilter"/>
-  
+
   <module name="LineLength">
-    <property name="max" value="100"/>
-    <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://|&quot;[)]*[,;]?$"/>
+    <property name="max" value="120"/>
+    <property name="ignorePattern" value="^package.*|^import.*|JavaCCOptions|a href|href|http://|https://|ftp://|&quot;[ ]?[)}]*[,;]?$"/>
   </module>
 
   <module name="TreeWalker">
@@ -70,6 +70,8 @@
       <message key="name.invalidPattern"
                value="Interface type name ''{0}'' must match pattern ''{1}''."/>
     </module>
+    
+    <!--
     <module name="GenericWhitespace">
       <message key="ws.followed"
                value="GenericWhitespace ''{0}'' is followed by whitespace."/>
@@ -80,7 +82,9 @@
       <message key="ws.notPreceded"
                value="GenericWhitespace ''{0}'' is not preceded with whitespace."/>
     </module>
+    -->
     
+    <!--
     <module name="Indentation">
       <property name="basicOffset" value="4"/>
       <property name="braceAdjustment" value="0"/>
@@ -90,6 +94,7 @@
       <property name="arrayInitIndent" value="8"/>
       <property name="severity" value="error"/>
     </module>
+    -->
     
     <module name="EmptyCatchBlock">
       <property name="exceptionVariableName" value="expected|ignore"/>

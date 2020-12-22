@@ -325,6 +325,8 @@ public class MtasDocumentIndex
             ensureAllIsCommitted();
 
             _indexWriter.close();
+
+            log.error("Closed index for project [{}]({})", project.getName(), project.getId());
         }
         catch (IOException e) {
             log.error("Error closing index for project [{}]({})", project.getName(),

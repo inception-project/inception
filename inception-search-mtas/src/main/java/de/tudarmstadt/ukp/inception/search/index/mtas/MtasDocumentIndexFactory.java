@@ -44,7 +44,7 @@ public class MtasDocumentIndexFactory
     private final RepositoryProperties repositoryProperties;
     private final FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
-    
+
     @Autowired
     public MtasDocumentIndexFactory(AnnotationSchemaService aSchemaService,
             DocumentService aDocumentService, RepositoryProperties aRepositoryProperties,
@@ -67,6 +67,12 @@ public class MtasDocumentIndexFactory
     @Override
     public PhysicalIndex getPhysicalIndex(Project aProject)
     {
+        MtasDocumentIndex openIndex = MtasDocumentIndex.getIndex(aProject.getId());
+        if (openIndex != null) {
+            throw new IllegalStateException(
+                    "Trying to create new index for project already having an open index!");
+        }
+
         return new MtasDocumentIndex(aProject, documentService, schemaService,
                 repositoryProperties.getPath().getAbsolutePath(), featureIndexingSupportRegistry,
                 featureSupportRegistry);

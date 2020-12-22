@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.search.config;
 
+import java.time.Duration;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -31,6 +33,8 @@ public class SearchServicePropertiesImpl
 {
     private boolean enabled = false;
 
+    private Duration indexKeepOpenTime = Duration.ofMinutes(10);
+
     @Override
     public boolean isEnabled()
     {
@@ -40,5 +44,16 @@ public class SearchServicePropertiesImpl
     public void setEnabled(boolean aEnabled)
     {
         enabled = aEnabled;
+    }
+
+    @Override
+    public Duration getIndexKeepOpenTime()
+    {
+        return indexKeepOpenTime;
+    }
+
+    public void setIndexKeepOpenTime(Duration aIndexKeepOpenTime)
+    {
+        indexKeepOpenTime = aIndexKeepOpenTime;
     }
 }

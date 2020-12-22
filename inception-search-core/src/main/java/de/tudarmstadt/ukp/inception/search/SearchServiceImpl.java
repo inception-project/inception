@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,6 +39,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.github.benmanes.caffeine.cache.Scheduler;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
@@ -75,10 +76,11 @@ public class SearchServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
 
-    private @Autowired DocumentService documentService;
-    private @Autowired ProjectService projectService;
-    private @Autowired PhysicalIndexRegistry physicalIndexRegistry;
-    private @Autowired IndexScheduler indexScheduler;
+    private final DocumentService documentService;
+    private final ProjectService projectService;
+    private final PhysicalIndexRegistry physicalIndexRegistry;
+    private final IndexScheduler indexScheduler;
+    private final SearchServiceProperties properties;
 
     // In fact - the only factory we have at the moment...
     private final String DEFAULT_PHSYICAL_INDEX_FACTORY = "mtasDocumentIndexFactory";
@@ -87,10 +89,24 @@ public class SearchServiceImpl
     private LoadingCache<Long, Index> indexByProject;
 
     @Autowired
-    public SearchServiceImpl()
+    public SearchServiceImpl(DocumentService aDocumentService, ProjectService aProjectService,
+            PhysicalIndexRegistry aPhysicalIndexRegistry, IndexScheduler aIndexScheduler,
+            SearchServiceProperties aProperties)
     {
-        indexByProject = Caffeine.newBuilder().expireAfterAccess(10, MINUTES).maximumSize(1_000)
-                .removalListener(this::unloadIndex).build(key -> loadIndex(key));
+        documentService = aDocumentService;
+        projectService = aProjectService;
+        physicalIndexRegistry = aPhysicalIndexRegistry;
+        indexScheduler = aIndexScheduler;
+        properties = aProperties;
+
+        log.info("Index keep-open time: {}", properties.getIndexKeepOpenTime());
+
+        indexByProject = Caffeine.newBuilder() //
+                .expireAfterAccess(properties.getIndexKeepOpenTime()) //
+                .scheduler(Scheduler.systemScheduler()) //
+                .maximumSize(1_000) //
+                .removalListener(this::unloadIndex) //
+                .build(key -> loadIndex(key));
     }
 
     @Override
