@@ -77,12 +77,6 @@ public class SearchServiceAutoConfiguration
     }
 
     @Bean
-    public SearchServiceProperties searchServiceProperties()
-    {
-        return new SearchServicePropertiesImpl();
-    }
-
-    @Bean
     public IndexScheduler indexScheduler()
     {
         return new IndexSchedulerImpl();
