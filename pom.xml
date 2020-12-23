@@ -631,15 +631,15 @@
         <artifactId>wlfxb</artifactId>
         <version>1.4.3</version>
         <exclusions>
-          <!-- 
-           - Looks like moxy isn't even used by wlfxb except for an annotation which again doesn't
-           - seem to be handled by anything.
-           - https://github.com/weblicht/wlfxb/issues/24
-           -->
-          <dependency>
+          <!--
+            - Looks like moxy isn't even used by wlfxb except for an annotation which again doesn't
+            - seem to be handled by anything.
+            - https://github.com/weblicht/wlfxb/issues/24
+          -->
+          <exclusion>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>org.eclipse.persistence.moxy</artifactId>
-          </dependency>
+          </exclusion>
         </exclusions>
       </dependency>
 
