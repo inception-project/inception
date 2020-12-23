@@ -21,12 +21,6 @@ import java.time.Duration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link SearchServiceAutoConfiguration#searchServiceProperties()}.
- * </p>
- */
 @ConfigurationProperties("search")
 public class SearchServicePropertiesImpl
     implements SearchServiceProperties
