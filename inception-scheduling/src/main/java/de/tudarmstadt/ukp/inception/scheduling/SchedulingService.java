@@ -123,8 +123,9 @@ public class SchedulingService
     public synchronized void enqueue(Task aTask)
     {
         if (enqueuedTasks.contains(aTask)) {
-            enqueuedTasks.set(enqueuedTasks.indexOf(aTask), aTask);
-            log.debug("Equivalent task already queued - updated queue: [{}]", aTask);
+            Task previousTask = enqueuedTasks.set(enqueuedTasks.indexOf(aTask), aTask);
+            log.debug("Equivalent task already queued - updated queue: [{}] replaced with [{}]",
+                    previousTask, aTask);
             return;
         }
 
@@ -141,6 +142,8 @@ public class SchedulingService
         }
 
         schedule(aTask);
+
+        logState();
     }
 
     /**
@@ -171,6 +174,8 @@ public class SchedulingService
                 schedule(t);
             }
         }
+
+        logState();
     }
 
     /**
@@ -197,5 +202,12 @@ public class SchedulingService
     {
         log.info("Shutting down scheduling service!");
         executor.shutdownNow();
+    }
+
+    private void logState()
+    {
+        getEnqueuedTasks().forEach(t -> log.debug("Queued   : {}", t));
+        getScheduledTasks().forEach(t -> log.debug("Scheduled: {}", t));
+        getRunningTasks().forEach(t -> log.debug("Running  : {}", t));
     }
 }

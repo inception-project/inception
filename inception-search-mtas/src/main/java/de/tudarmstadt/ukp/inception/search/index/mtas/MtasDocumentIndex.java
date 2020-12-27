@@ -44,7 +44,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -115,13 +114,6 @@ import mtas.search.spans.util.MtasSpanQuery;
 public class MtasDocumentIndex
     implements PhysicalIndex
 {
-    /**
-     * Static map allowing access to the MTAS index for a given project. This the
-     * {@link MtasUimaParser} to quickly access the current layer configuration from the current
-     * index.
-     */
-    private static Map<Long, MtasDocumentIndex> OPEN_INDEXES = new ConcurrentHashMap<>();
-
     private static final String INDEX = "indexMtas";
 
     /**
@@ -171,12 +163,9 @@ public class MtasDocumentIndex
     private final File repositoryDir;
     private final ScheduledExecutorService schedulerService;
 
-    // The index writers for this index
     private IndexWriter _indexWriter;
     private ReferenceManager<IndexSearcher> _searcherManager;
     private ScheduledFuture<?> _commitFuture;
-
-    private Map<AnnotationLayer, List<AnnotationFeature>> layersAndFeatures;
 
     public MtasDocumentIndex(Project aProject, DocumentService aDocumentService,
             AnnotationSchemaService aSchemaService, String aDir,
@@ -199,23 +188,10 @@ public class MtasDocumentIndex
             return _indexWriter;
         }
 
-        log.debug("Opening index for project [{}]({})", project.getName(), project.getId());
+        // log.debug("Opening index for project [{}]({})", project.getName(), project.getId(),
+        // new RuntimeException());
 
         try {
-            // Initialize and populate the hash maps for the layers and features
-            layersAndFeatures = new LinkedHashMap<>();
-            schemaService.listAnnotationLayer(project)
-                    .forEach(layer -> layersAndFeatures.put(layer, new ArrayList<>()));
-            for (AnnotationFeature feat : schemaService.listAnnotationFeature(project)) {
-                if (!feat.getLayer().isEnabled() || !feat.isEnabled()) {
-                    continue;
-                }
-
-                List<AnnotationFeature> feats = layersAndFeatures.computeIfAbsent( //
-                        feat.getLayer(), key -> new ArrayList<>());
-                feats.add(feat);
-            }
-
             // Add the project id to the configuration
             JSONObject jsonParserConfiguration = new JSONObject();
             jsonParserConfiguration.put(PARAM_PROJECT_ID, project.getId());
@@ -269,11 +245,6 @@ public class MtasDocumentIndex
             _indexWriter = null;
             throw e;
         }
-        finally {
-            if (isOpen()) {
-                OPEN_INDEXES.put(project.getId(), this);
-            }
-        }
     }
 
     private void ensureAllIsCommitted()
@@ -316,25 +287,34 @@ public class MtasDocumentIndex
     private synchronized void closeIndex()
     {
         try {
-            OPEN_INDEXES.remove(project.getId());
+            try {
+                if (!isOpen()) {
+                    return;
+                }
 
-            if (!isOpen()) {
-                return;
+                ensureAllIsCommitted();
+
+                _indexWriter.close();
+            }
+            catch (IOException e) {
+                log.error("Error closing index for project [{}]({})", project.getName(),
+                        project.getId(), e);
             }
 
-            ensureAllIsCommitted();
-
-            _indexWriter.close();
-
-            log.debug("Closed index for project [{}]({})", project.getName(), project.getId());
-        }
-        catch (IOException e) {
-            log.error("Error closing index for project [{}]({})", project.getName(),
-                    project.getId());
+            if (_searcherManager != null) {
+                try {
+                    _searcherManager.close();
+                }
+                catch (IOException e) {
+                    log.error("Error closing index for project [{}]({})", project.getName(),
+                            project.getId(), e);
+                }
+            }
         }
         finally {
             _indexWriter = null;
             _searcherManager = null;
+            log.debug("Closed index for project [{}]({})", project.getName(), project.getId());
         }
     }
 
@@ -411,7 +391,7 @@ public class MtasDocumentIndex
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)
         throws IOException, ExecutionException
     {
-        log.trace("Executing query [{}] on index [{}]", aRequest, getIndexDir());
+        log.debug("Executing query [{}] on index [{}]", aRequest, getIndexDir());
 
         ensureAllIsCommitted();
 
@@ -895,7 +875,7 @@ public class MtasDocumentIndex
         // Calculate timestamp that will be indexed
         String timestamp = DateTools.dateToString(new Date(), DateTools.Resolution.MILLISECOND);
 
-        log.trace(
+        log.debug(
                 "Indexing document in project [{}]({}). sourceId: {}, annotationId: {}, "
                         + "user: {} timestamp: {}",
                 project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId, aUser,
@@ -943,7 +923,7 @@ public class MtasDocumentIndex
             return;
         }
 
-        log.trace(
+        log.debug(
                 "Removing from index in project [{}]({}). sourceId: {}, annotationId: {}, user: {}",
                 project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId,
                 aUser);
@@ -1007,10 +987,7 @@ public class MtasDocumentIndex
         // Remove all data from the index
         IndexWriter indexWriter = getIndexWriter();
         indexWriter.deleteAll();
-
-        // Close the index temporarily because we want the IndexWriter to be re-initialized on the
-        // next access in order to pick up the current layer configuration of the project.
-        closeIndex();
+        ensureAllIsCommitted();
     }
 
     /**
@@ -1117,16 +1094,6 @@ public class MtasDocumentIndex
     public Project getProject()
     {
         return project;
-    }
-
-    public Map<AnnotationLayer, List<AnnotationFeature>> getLayersAndFeaturesToIndex()
-    {
-        return layersAndFeatures;
-    }
-
-    public static MtasDocumentIndex getIndex(long aProjectId)
-    {
-        return OPEN_INDEXES.get(aProjectId);
     }
 
     @Override

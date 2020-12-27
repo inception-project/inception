@@ -74,6 +74,7 @@ public class IndexSchedulerImpl
     @Override
     public void destroy()
     {
+        queue.clear();
         consumerThread.interrupt();
     }
 
@@ -164,7 +165,7 @@ public class IndexSchedulerImpl
         }
     }
 
-    public synchronized void stopAllTasksForUser(String username)
+    public synchronized void cancelAllTasksForUser(String username)
     {
         Iterator<Task> taskIterator = queue.iterator();
         while (taskIterator.hasNext()) {
@@ -187,5 +188,11 @@ public class IndexSchedulerImpl
     private Optional<Task> findAlreadyScheduled(Task aTask)
     {
         return queue.stream().filter(aTask::matches).findAny();
+    }
+
+    @Override
+    public boolean isBusy()
+    {
+        return !queue.isEmpty() || consumer.getActiveTask().isPresent();
     }
 }
