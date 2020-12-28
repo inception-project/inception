@@ -225,6 +225,13 @@ way is to go to `File -> Open` and the select the `pom.xml` in the {product-name
 IntelliJ IDEA will then guide you through the import process, the defaults work out of the box.
 INCEpTION can now be started via running `inception-app-webapp/src/main/java/de/tudarmstadt/ukp/inception/INCEpTION.java`.
 
+If you get errors that certain classes are not found, then open a terminal, go to the INCEpTION
+repository root and run
+
+    mvn clean install -DskipTests=true -D "checkstyle.skip=true"
+
+Alternatively, you can run the `install` Maven goal from IntelliJ.
+
 === Checkstyle and Formatting
 
 We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
@@ -243,6 +250,10 @@ In `File | Settings | Other Settings | Eclipse Code Formatter`, create a new pro
 file.
 
 Also make sure to enable auto import optimization in `File | Settings | Editor | General | Auto Import`.
+
+To format your source code on save, we also recommend to install the
+https://plugins.jetbrains.com/plugin/7642-save-actions[Save Actions] plugin and configure it
+accordingly.
 
 === IntelliJ IDEA Tomcat Integration
 
