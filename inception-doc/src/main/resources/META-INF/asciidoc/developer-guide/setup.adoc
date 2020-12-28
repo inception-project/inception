@@ -230,7 +230,7 @@ repository root and run
 
     mvn clean install -DskipTests=true -Dcheckstyle.skip=true
 
-Alternatively, you can run the `install` Maven goal from IntelliJ.
+Alternatively, you can run the `clean` and `install` Maven goals from IntelliJ manually.
 
 === Checkstyle and Formatting
 
