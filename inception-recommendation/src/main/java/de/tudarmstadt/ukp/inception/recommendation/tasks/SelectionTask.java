@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -70,7 +71,7 @@ public class SelectionTask
     private final SourceDocument currentDocument;
 
     public SelectionTask(User aUser, Project aProject, String aTrigger,
-                         SourceDocument aCurrentDocument)
+            SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
         currentDocument = aCurrentDocument;
@@ -83,7 +84,7 @@ public class SelectionTask
             Project project = getProject();
             User user = getUser();
             String userName = user.getUsername();
-            
+
             // Read the CASes only when they are accessed the first time. This allows us to skip
             // reading the CASes in case that no layer / recommender is available or if no
             // recommender requires evaluation.
@@ -101,18 +102,18 @@ public class SelectionTask
                 if (!layer.isEnabled()) {
                     continue;
                 }
-                
+
                 List<Recommender> recommenders = recommendationService.listRecommenders(layer);
                 if (recommenders == null || recommenders.isEmpty()) {
                     log.trace("[{}][{}]: No recommenders, skipping selection.", userName,
                             layer.getUiName());
                     continue;
                 }
-                
+
                 seenRecommender = true;
-        
+
                 List<EvaluatedRecommender> activeRecommenders = new ArrayList<>();
-                
+
                 for (Recommender r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
@@ -132,53 +133,58 @@ public class SelectionTask
                     }
 
                     String recommenderName = recommender.getName();
-                    
+
                     try {
                         long start = System.currentTimeMillis();
                         RecommendationEngineFactory factory = recommendationService
-                            .getRecommenderFactory(recommender);
-                        
+                                .getRecommenderFactory(recommender);
+
                         if (factory == null) {
                             log.error("[{}][{}]: No recommender factory available for [{}]",
                                     user.getUsername(), r.getName(), r.getTool());
                             continue;
                         }
-                        
+
                         if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                            log.info("[{}][{}]: Recommender configured with invalid layer or feature "
-                                    + "- skipping recommender", user.getUsername(), r.getName());
+                            log.info(
+                                    "[{}][{}]: Recommender configured with invalid layer or feature "
+                                            + "- skipping recommender",
+                                    user.getUsername(), r.getName());
                             continue;
                         }
-                        
+
                         RecommendationEngine recommendationEngine = factory.build(recommender);
 
                         if (recommender.isAlwaysSelected()) {
-                            log.debug("[{}][{}]: Activating [{}] without evaluating - always selected",
-                                    userName, recommenderName, recommenderName);
-                            activeRecommenders.add(new EvaluatedRecommender(recommender,
-                                    EvaluationResult.skipped()));
-                            continue;
-                        } else if (!factory.isEvaluable()) {
-                            log.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable",
+                            log.debug(
+                                    "[{}][{}]: Activating [{}] without evaluating - always selected",
                                     userName, recommenderName, recommenderName);
                             activeRecommenders.add(new EvaluatedRecommender(recommender,
                                     EvaluationResult.skipped()));
                             continue;
                         }
-        
+                        else if (!factory.isEvaluable()) {
+                            log.debug(
+                                    "[{}][{}]: Activating [{}] without evaluating - not evaluable",
+                                    userName, recommenderName, recommenderName);
+                            activeRecommenders.add(new EvaluatedRecommender(recommender,
+                                    EvaluationResult.skipped()));
+                            continue;
+                        }
+
                         log.info("[{}][{}]: Evaluating...", userName, recommenderName);
 
                         DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
                         EvaluationResult result = recommendationEngine.evaluate(casses.get(),
                                 splitter);
- 
+
                         if (result.isEvaluationSkipped()) {
                             log.info("[{}][{}]: Evaluation could not be performed: {}",
                                     user.getUsername(), recommenderName,
                                     result.getErrorMsg().orElse("unknown reason"));
                             continue;
                         }
-                        
+
                         double score = result.computeF1Score();
 
                         Double threshold = recommender.getThreshold();
@@ -187,31 +193,29 @@ public class SelectionTask
                             activated = true;
                             activeRecommenders.add(new EvaluatedRecommender(recommender, result));
                             log.info("[{}][{}]: Activated ({} is above threshold {})",
-                                    user.getUsername(), recommenderName, score,
-                                    threshold);
+                                    user.getUsername(), recommenderName, score, threshold);
                         }
                         else {
                             activated = false;
                             log.info("[{}][{}]: Not activated ({} is not above threshold {})",
-                                    user.getUsername(), recommenderName, score,
-                                    threshold);
+                                    user.getUsername(), recommenderName, score, threshold);
                         }
 
                         appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
                                 recommender, user.getUsername(), result,
                                 System.currentTimeMillis() - start, activated));
                     }
-                   
+
                     // Catching Throwable is intentional here as we want to continue the execution
                     // even if a particular recommender fails.
                     catch (Throwable e) {
                         log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
                     }
                 }
-        
+
                 recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
             }
-            
+
             if (!seenRecommender) {
                 log.trace("[{}]: No recommenders configured, skipping training.", userName);
                 return;
@@ -221,7 +225,7 @@ public class SelectionTask
                 log.debug("[{}]: No recommenders active, skipping training.", userName);
                 return;
             }
-            
+
             schedulingService.enqueue(new TrainingTask(user, getProject(),
                     "SelectionTask after activating recommenders", currentDocument));
         }
@@ -232,9 +236,12 @@ public class SelectionTask
         List<CAS> casses = new ArrayList<>();
         for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
             try {
-                CAS cas = documentService.readAnnotationCas(document, aUserName, AUTO_CAS_UPGRADE);
+                // We should not have to modify the CASes... right? Fingers crossed.
+                CAS cas = documentService.readAnnotationCas(document, aUserName, AUTO_CAS_UPGRADE,
+                        SHARED_READ_ONLY_ACCESS);
                 casses.add(cas);
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
             }
         }
