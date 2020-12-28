@@ -228,7 +228,7 @@ INCEpTION can now be started via running `inception-app-webapp/src/main/java/de/
 If you get errors that certain classes are not found, then open a terminal, go to the INCEpTION
 repository root and run
 
-    mvn clean install -DskipTests=true -D "checkstyle.skip=true"
+    mvn clean install -DskipTests=true -Dcheckstyle.skip=true
 
 Alternatively, you can run the `install` Maven goal from IntelliJ.
 
