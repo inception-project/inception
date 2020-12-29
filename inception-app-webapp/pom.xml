@@ -931,7 +931,7 @@
               <dependency>
                 <groupId>de.tudarmstadt.ukp.inception.app</groupId>
                 <artifactId>inception-boot-loader</artifactId>
-                <version>0.10.0-SNAPSHOT</version>
+                <version>${project.version}</version>
               </dependency>
             </dependencies>
           </plugin>
