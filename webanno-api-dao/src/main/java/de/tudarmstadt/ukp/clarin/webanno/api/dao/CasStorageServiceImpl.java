@@ -32,6 +32,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.failOnConcurrentModification;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils.writeSerializedCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl.RepairAndUpgradeFlags.ISOLATED_SESSION;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.newSetFromMap;
 import static java.util.Collections.synchronizedSet;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -90,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 @Component(CasStorageService.SERVICE_NAME)
 public class CasStorageServiceImpl
@@ -249,6 +251,8 @@ public class CasStorageServiceImpl
     private void realWriteCas(SourceDocument aDocument, String aUserName, CAS aCas)
         throws IOException
     {
+        long t0 = System.currentTimeMillis();
+
         analyze(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aUserName, aCas);
 
         log.debug(
@@ -433,6 +437,8 @@ public class CasStorageServiceImpl
                 }
             }
         }
+
+        WicketUtil.serverTiming("realWriteCas", currentTimeMillis() - t0);
     }
 
     @Override

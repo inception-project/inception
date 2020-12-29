@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -76,7 +77,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
@@ -151,7 +151,6 @@ public class BratAnnotationEditor
 
     private final ContextMenu contextMenu;
 
-    private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
@@ -332,8 +331,10 @@ public class BratAnnotationEditor
                             "Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
                 }
 
-                LOG.trace("AJAX-RPC DONE: [{}] completed in {}ms", action,
-                        (System.currentTimeMillis() - timerStart));
+                long duration = System.currentTimeMillis() - timerStart;
+                LOG.trace("AJAX-RPC DONE: [{}] completed in {}ms", action, duration);
+
+                serverTiming("Brat-AJAX", "Brat-AJAX (" + action + ")", duration);
             }
         };
 
@@ -569,6 +570,7 @@ public class BratAnnotationEditor
 
         timer.stop();
         metrics.renderComplete(RenderType.FULL, timer.getTime(), json, null);
+        serverTiming("Brat-JSON", "Brat JSON generation (FULL)", timer.getTime());
 
         return json;
     }
@@ -743,6 +745,7 @@ public class BratAnnotationEditor
         timer.stop();
 
         metrics.renderComplete(renderType, timer.getTime(), json, diffJsonStr);
+        serverTiming("Brat-JSON", "Brat-JSON generation (" + renderType + ")", timer.getTime());
 
         if (SKIP.equals(renderType)) {
             return Optional.empty();

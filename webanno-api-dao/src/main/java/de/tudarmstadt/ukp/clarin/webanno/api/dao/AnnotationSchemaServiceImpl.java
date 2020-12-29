@@ -120,6 +120,7 @@ public class AnnotationSchemaServiceImpl
     private final LayerSupportRegistry layerSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final LoadingCache<TagSet, List<ImmutableTag>> immutableTagsCache;
+    private final TypeSystemDescription builtInTypes;
 
     @Autowired
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
@@ -132,6 +133,13 @@ public class AnnotationSchemaServiceImpl
 
         immutableTagsCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
                 .maximumSize(10 * 1024).build(this::loadImmutableTags);
+
+        try {
+            builtInTypes = createTypeSystemDescription();
+        }
+        catch (ResourceInitializationException e) {
+            throw new IllegalStateException("Unable to initialize built-in type system", e);
+        }
     }
 
     public AnnotationSchemaServiceImpl()
@@ -863,8 +871,6 @@ public class AnnotationSchemaServiceImpl
         // Create a new type system from scratch
         TypeSystemDescription tsd = new TypeSystemDescription_impl();
 
-        TypeSystemDescription builtInTypes = createTypeSystemDescription();
-
         List<AnnotationLayer> allLayersInProject = listSupportedLayers(aProject);
         List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
 
@@ -936,7 +942,7 @@ public class AnnotationSchemaServiceImpl
         List<TypeSystemDescription> typeSystems = new ArrayList<>();
 
         // Types detected by uimaFIT
-        typeSystems.add(createTypeSystemDescription());
+        typeSystems.add(builtInTypes);
 
         if (aIncludeInternalTypes) {
             // Types internally used by WebAnno (which we intentionally exclude from being detected
@@ -1195,8 +1201,6 @@ public class AnnotationSchemaServiceImpl
     public void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        TypeSystemDescription builtInTypes = createTypeSystemDescription();
-
         TypeSystemAnalysis analysis = TypeSystemAnalysis.of(aTSD);
         for (AnnotationLayer l : analysis.getLayers()) {
             // Modifications/imports of built-in layers are not supported

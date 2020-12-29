@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
 import static io.bit3.jsass.OutputStyle.EXPANDED;
 import static io.bit3.jsass.OutputStyle.NESTED;
+import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,7 +32,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
-import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authorization.strategies.page.SimplePageAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
@@ -38,9 +39,11 @@ import org.apache.wicket.core.request.mapper.HomePageMapper;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.IRequestMapper;
+import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.JQueryResourceReference;
@@ -90,8 +93,7 @@ public abstract class WicketApplicationBase
 {
     protected boolean isInitialized = false;
 
-    @Autowired
-    private MenuItemRegistry menuItemRegistry;
+    private @Autowired MenuItemRegistry menuItemRegistry;
 
     @Override
     protected void init()
@@ -152,6 +154,8 @@ public abstract class WicketApplicationBase
 
         // Allow fetching the current page from non-Wicket code
         initPageRequestTracker();
+
+        initServerTimeReporting();
     }
 
     private void initPageRequestTracker()
@@ -337,9 +341,32 @@ public abstract class WicketApplicationBase
 
     protected void initStatelessChecker()
     {
-        if (RuntimeConfigurationType.DEVELOPMENT.equals(getConfigurationType())) {
+        if (DEVELOPMENT.equals(getConfigurationType())) {
             getComponentPostOnBeforeRenderListeners().add(new StatelessChecker());
         }
+    }
+
+    protected void initServerTimeReporting()
+    {
+        Properties settings = SettingsUtil.getSettings();
+        if (!DEVELOPMENT.equals(getConfigurationType())
+                && !"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+            return;
+        }
+
+        getRequestCycleListeners().add(new IRequestCycleListener()
+        {
+            @Override
+            public void onEndRequest(RequestCycle cycle)
+            {
+                final Response response = cycle.getResponse();
+                if (response instanceof WebResponse) {
+                    final long serverTime = currentTimeMillis() - cycle.getStartTime();
+                    ((WebResponse) response).addHeader("Server-Timing",
+                            "Server-Side;desc=\"Server-side total\";dur=" + serverTime);
+                }
+            }
+        });
     }
 
     @Override
