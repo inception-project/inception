@@ -342,25 +342,28 @@ public class MtasDocumentIndex
         log.debug("Enqueuing new future to index for project [{}]({})", project.getName(),
                 project.getId());
 
-        _commitFuture = schedulerService.schedule(() -> {
-            try {
-                log.debug("Executing future to index for project [{}]({})", project.getName(),
-                        project.getId());
-                if (_indexWriter != null && _indexWriter.isOpen()) {
-                    _indexWriter.commit();
-                    log.debug("Committed changes to index for project [{}]({})", project.getName(),
-                            project.getId());
+        _commitFuture = schedulerService.schedule(this::commit, 3, SECONDS);
+    }
 
-                    if (_searcherManager != null) {
-                        _searcherManager.maybeRefresh();
-                    }
+    private void commit()
+    {
+        try {
+            log.debug("Executing future to index for project [{}]({})", project.getName(),
+                    project.getId());
+            if (_indexWriter != null && _indexWriter.isOpen()) {
+                _indexWriter.commit();
+                log.debug("Committed changes to index for project [{}]({})", project.getName(),
+                        project.getId());
+
+                if (_searcherManager != null) {
+                    _searcherManager.maybeRefresh();
                 }
             }
-            catch (IOException e) {
-                log.error("Unable to commit to index of project [{}]({})", project.getName(),
-                        project.getId());
-            }
-        }, 3, SECONDS);
+        }
+        catch (IOException e) {
+            log.error("Unable to commit to index of project [{}]({})", project.getName(),
+                    project.getId());
+        }
     }
 
     /**
