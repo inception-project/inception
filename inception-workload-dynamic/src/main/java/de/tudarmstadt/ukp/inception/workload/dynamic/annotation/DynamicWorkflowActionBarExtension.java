@@ -19,31 +19,31 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Component
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkflowActionBarExtension
     implements ActionBarExtension
 {
     private final WorkloadManagementService workloadManagementService;
-    private final @PersistenceContext EntityManager entityManager;
+    private final ProjectService projectService;
 
     @Autowired
-    public DynamicWorkflowActionBarExtension(EntityManager aEntityManager,
-            WorkloadManagementService aWorkloadManagementService)
+    public DynamicWorkflowActionBarExtension(WorkloadManagementService aWorkloadManagementService,
+            ProjectService aProjectService)
     {
-        entityManager = aEntityManager;
         workloadManagementService = aWorkloadManagementService;
+        projectService = aProjectService;
     }
 
     @Override
@@ -66,15 +66,17 @@ public class DynamicWorkflowActionBarExtension
             return false;
         }
 
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject())
-                .getType());
+        // Curator are excluded from the feature
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID
+                .equals(workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
+                        aPage.getModelObject().getProject()).getType())
+                && !projectService.isCurator(aPage.getModelObject().getProject(),
+                        aPage.getModelObject().getUser());
     }
 
     @Override
     public Panel createActionBarItem(String aID, AnnotationPageBase aAnnotationPageBase)
     {
-        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase,
-                entityManager);
+        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase);
     }
 }

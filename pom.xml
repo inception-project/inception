@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.dkpro</groupId>
@@ -82,7 +84,7 @@
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
     <okhttp.version>3.14.2</okhttp.version>
-    
+
     <asciidoctor.plugin.version>2.0.0-RC.1</asciidoctor.plugin.version>
     <asciidoctor.version>2.3.0</asciidoctor.version>
     <asciidoctor-diagram.version>2.0.2</asciidoctor-diagram.version>
@@ -141,7 +143,7 @@
     <module>inception-docker</module>
   </modules>
   <repositories>
-    <!-- For RELEASEes of WebAnno / DKPro Core-->
+    <!-- For RELEASEes of WebAnno / DKPro Core -->
     <repository>
       <id>ukp-oss-releases</id>
       <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
@@ -235,7 +237,7 @@
       <artifactId>javax.activation-api</artifactId>
       <scope>runtime</scope>
     </dependency>
-    
+
     <!-- Testing -->
     <dependency>
       <groupId>junit</groupId>
@@ -506,14 +508,14 @@
         <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
         <version>${wicket-jquery-ui.version}</version>
       </dependency>
-      
+
       <!-- Wicketstuff -->
       <dependency>
         <groupId>org.wicketstuff</groupId>
         <artifactId>wicketstuff-htmlcompressor</artifactId>
         <version>${wicketstuff.version}</version>
       </dependency>
-      
+
       <!-- SPRING -->
       <dependency>
         <groupId>org.springframework</groupId>
@@ -585,7 +587,7 @@
         <artifactId>spring-context-support</artifactId>
         <version>${spring.version}</version>
       </dependency>
-      
+
       <!-- SPRING SECURITY -->
       <dependency>
         <groupId>org.springframework.security</groupId>
@@ -602,7 +604,7 @@
         <artifactId>spring-security-web</artifactId>
         <version>${spring.security.version}</version>
       </dependency>
-      
+
       <!-- GROOVY -->
       <dependency>
         <groupId>org.codehaus.groovy</groupId>
@@ -613,7 +615,7 @@
       </dependency>
 
       <!-- LOG4J -->
-      
+
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-api</artifactId>
@@ -630,16 +632,35 @@
         <version>${log4j.version}</version>
       </dependency>
 
-      <!-- JSOUP  -->
+      <!-- Weblicht -->
+
+      <dependency>
+        <groupId>eu.clarin.weblicht</groupId>
+        <artifactId>wlfxb</artifactId>
+        <version>1.4.3</version>
+        <exclusions>
+          <!--
+            - Looks like moxy isn't even used by wlfxb except for an annotation which again doesn't
+            - seem to be handled by anything.
+            - https://github.com/weblicht/wlfxb/issues/24
+          -->
+          <exclusion>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>org.eclipse.persistence.moxy</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- JSOUP -->
 
       <dependency>
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
         <version>1.11.3</version>
       </dependency>
-      
+
       <!-- LUCENE MTAS -->
-    
+
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-core</artifactId>
@@ -717,14 +738,14 @@
         <version>${mtas.version}</version>
         <exclusions>
           <!-- We do not use MTAS with Solr -->
-          <!-- Solr depends on jdk.tools via Hadoop which is not available on recent JDKs-->
+          <!-- Solr depends on jdk.tools via Hadoop which is not available on recent JDKs -->
           <exclusion>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
-    
+
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
@@ -770,7 +791,7 @@
         <artifactId>h2</artifactId>
         <version>1.4.197</version>
       </dependency>
-     
+
       <!-- JAXB DEPENDENCIES -->
       <dependency>
         <groupId>javax.xml.bind</groupId>
@@ -792,7 +813,7 @@
         <artifactId>javax.activation-api</artifactId>
         <version>1.2.0</version>
       </dependency>
-      
+
       <dependency>
         <groupId>jaxen</groupId>
         <artifactId>jaxen</artifactId>
@@ -836,16 +857,16 @@
         </exclusions>
       </dependency>
 
-      <!--  
-      <dependency>
+      <!--
+        <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
         <artifactId>rdf4j-bom</artifactId>
         <version>${rdf4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
+        </dependency>
       -->
-  
+
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
         <artifactId>rdf4j-config</artifactId>
@@ -1158,7 +1179,7 @@
         <artifactId>jsonld-java</artifactId>
         <version>0.12.3</version>
       </dependency>
-        
+
       <dependency>
         <groupId>org.elasticsearch</groupId>
         <artifactId>elasticsearch</artifactId>
@@ -1179,19 +1200,19 @@
         <artifactId>elasticsearch-rest-high-level-client</artifactId>
         <version>${elasticsearch.version}</version>
       </dependency>
-        
+
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>c3</artifactId>
         <version>0.6.6</version>
       </dependency>
-    
+
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>d3js</artifactId>
         <version>5.5.0</version>
       </dependency>
-      
+
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-curation</artifactId>
@@ -1201,17 +1222,17 @@
         <groupId>org.webjars.bowergithub.xbsoftware</groupId>
         <artifactId>enjoyhint</artifactId>
         <version>3.1.0</version>
-	  </dependency>
-	  <dependency>
-	    <groupId>org.webjars.npm</groupId>
-	    <artifactId>kinetic</artifactId>
-	    <version>5.2.0</version>
-	  </dependency>
-	  <dependency>
-	    <groupId>org.webjars.bower</groupId>
-	    <artifactId>jquery.scrollTo</artifactId>
-	    <version>2.1.2</version>
-	  </dependency>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>kinetic</artifactId>
+        <version>5.2.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.bower</groupId>
+        <artifactId>jquery.scrollTo</artifactId>
+        <version>2.1.2</version>
+      </dependency>
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-logging</artifactId>
@@ -1251,7 +1272,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      
+
       <dependency>
         <!-- Import dependency management from WebAnno -->
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -1260,7 +1281,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      
+
       <dependency>
         <!-- Import dependency management from DKPro Core -->
         <groupId>org.dkpro.core</groupId>
@@ -1269,7 +1290,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      
+
       <dependency>
         <!-- Import dependency management from Wicket -->
         <groupId>org.apache.wicket</groupId>
@@ -1280,7 +1301,7 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
   <build>
     <plugins>
       <plugin>
@@ -1341,30 +1362,30 @@
         <configuration>
           <failOnWarning>true</failOnWarning>
           <ignoredDependencies combine.children="append">
-            <!-- 
+            <!--
               - Logging is used via reflection and cannot be detected by Maven
-              -->
+            -->
             <dependency>org.apache.logging.log4j:log4j-slf4j-impl</dependency>
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
             <dependency>org.slf4j:jcl-over-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
-            <!-- 
+            <!--
               - JAXB is used via reflection and cannot be detected by Maven
-              -->
+            -->
             <dependency>javax.xml.bind:jaxb-api</dependency>
             <dependency>com.sun.xml.bind:jaxb-core</dependency>
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
-            <!-- 
-              - h2database and data-jpa, used via reflection in tests in search-mtas, 
+            <!--
+              - h2database and data-jpa, used via reflection in tests in search-mtas,
               - cannot be detected by Maven
-              -->
+            -->
             <dependency>com.h2database:h2</dependency>
             <dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
-            <!-- 
+            <!--
               - Basic test dependencies
-              -->
+            -->
             <dependency>junit:junit</dependency>
             <dependency>nl.ru:test-categories</dependency>
             <dependency>org.mockito:mockito-core</dependency>
@@ -1377,8 +1398,8 @@
           <dependency>
             <!--
               - Required to use the dependency plugin on newer Java versions.
-              - See: https://issues.apache.org/jira/browse/MDEP-613 
-              -->
+              - See: https://issues.apache.org/jira/browse/MDEP-613
+            -->
             <groupId>org.apache.maven.shared</groupId>
             <artifactId>maven-dependency-analyzer</artifactId>
             <version>1.11.1</version>
@@ -1448,7 +1469,9 @@
     <profile>
       <id>wicket-module</id>
       <activation>
-        <file><exists>marker-wicket-module</exists></file>
+        <file>
+          <exists>marker-wicket-module</exists>
+        </file>
       </activation>
       <build>
         <resources>

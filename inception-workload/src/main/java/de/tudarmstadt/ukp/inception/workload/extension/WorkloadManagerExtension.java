@@ -19,8 +19,14 @@ package de.tudarmstadt.ukp.inception.workload.extension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
-public interface WorkloadManagerExtension
+/**
+ * Extensions for the workload manager. Also has a readTraits and writeTraits property for the DB
+ * entry traits
+ */
+public interface WorkloadManagerExtension<T>
     extends Extension<Project>
 {
     @Override
@@ -30,4 +36,9 @@ public interface WorkloadManagerExtension
     }
 
     String getLabel();
+
+    T readTraits(WorkloadManager aWorkloadManager);
+
+    void writeTraits(WorkloadManagementService aWorkloadManagementService, T aTrait,
+            Project aProject);
 }

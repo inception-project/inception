@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.settings;
+package de.tudarmstadt.ukp.inception.workload.project;
+
+import java.io.IOException;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -36,6 +38,11 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerType;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
+/**
+ * This class represents the panel "workload" shown in any projects settings. It can be used to
+ * enable the experimental feature "workload". It consists of a simple dropdown menu from which a
+ * project manager can select which workload type he wants to use.
+ */
 public class WorkloadSettingsPanel
     extends Panel
 {
@@ -45,8 +52,11 @@ public class WorkloadSettingsPanel
     private final Project project;
 
     private @SpringBean WorkloadManagementService workloadManagementService;
-    private @SpringBean WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
+    private @SpringBean WorkloadManagerExtensionPoint<?> workloadManagerExtensionPoint;
 
+    /**
+     * Constructor, creates the whole panel. Consists of a single form.
+     */
     public WorkloadSettingsPanel(String aID, IModel<Project> aProject)
     {
         super(aID, aProject);
@@ -56,15 +66,15 @@ public class WorkloadSettingsPanel
         // Basic form
         Form<Void> form = new Form<>("form");
 
+        // Dropdown menu
         workloadStrategy = new BootstrapSelect<>("workloadStrategy");
         workloadStrategy
                 .setChoiceRenderer(new LambdaChoiceRenderer<>(WorkloadManagerType::getUiName));
+        workloadStrategy.setModel(LoadableDetachableModel.of(this::getWorkloadManager));
         workloadStrategy.setRequired(true);
         workloadStrategy.setNullValid(false);
         workloadStrategy.setChoices(workloadManagerExtensionPoint.getTypes());
-        workloadStrategy.setModel(LoadableDetachableModel.of(this::getWorkloadManager));
 
-        // add them to the form
         form.add(workloadStrategy);
 
         // Finally, add the confirm button at the end
@@ -74,22 +84,30 @@ public class WorkloadSettingsPanel
         add(form);
     }
 
+    /**
+     * @return current {@link WorkloadManager}
+     */
     private WorkloadManagerType getWorkloadManager()
     {
         WorkloadManager manager = workloadManagementService
-                .getOrCreateWorkloadManagerConfiguration(project);
-        WorkloadManagerExtension extension = workloadManagerExtensionPoint
+                .loadOrCreateWorkloadManagerConfiguration(project);
+        WorkloadManagerExtension<?> extension = workloadManagerExtensionPoint
                 .getExtension(manager.getType());
-        return new WorkloadManagerType(extension.getId(), extension.getLabel());
+        return new WorkloadManagerType(extension.getId(), extension.getId());
     }
 
-    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm)
+    /**
+     * Confirmation action of the button
+     */
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<?> aForm) throws IOException
     {
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        workloadManagementService.setWorkloadManagerConfiguration(
-                workloadStrategy.getModelObject().getWorkloadManagerExtensionId(), project);
+        WorkloadManager manager = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(project);
+        manager.setType(workloadStrategy.getModelObject().getWorkloadManagerExtensionId());
+        workloadManagementService.saveConfiguration(manager);
 
-        success("Workload settings changed");
+        success("Workload settings saved");
     }
 }
