@@ -22,9 +22,9 @@ import java.io.Serializable;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 
 /**
- * Represents a logical position in the text. All annotations considered to be at the same
- * logical position in the document are collected under this. Within the position, there are
- * groups that represent the different configurations of the annotation made by different users.
+ * Represents a logical position in the text. All annotations considered to be at the same logical
+ * position in the document are collected under this. Within the position, there are groups that
+ * represent the different configurations of the annotation made by different users.
  */
 public interface Position
     extends Comparable<Position>, Serializable
@@ -33,30 +33,31 @@ public interface Position
      * @return the CAS id.
      */
     int getCasId();
-    
+
     /**
      * @return the type.
      */
     String getType();
-    
+
     /**
      * @return the feature if this is a sub-position for a link feature.
      */
     String getFeature();
-    
+
     String getRole();
-    
+
     int getLinkTargetBegin();
-    
+
     int getLinkTargetEnd();
-    
+
     /**
      * Get the way in which links are compared and labels for links are generated.
      */
     LinkCompareBehavior getLinkCompareBehavior();
-    
+
     String getCollectionId();
+
     String getDocumentId();
-    
+
     String toMinimalString();
 }

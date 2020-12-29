@@ -34,13 +34,13 @@ public class EntityAttributes
     public static final String ATTR_COLOR = "c";
     public static final String ATTR_HOVER_TEXT = "h";
     public static final String ATTR_ACTION_BUTTONS = "a";
-    
+
     private @JsonProperty(ATTR_LABEL) String labelText;
     private @JsonProperty(ATTR_COLOR) String color;
     private @JsonProperty(ATTR_HOVER_TEXT) String hoverText;
     @JsonSerialize(using = NumericBooleanSerializer.class)
     private @JsonProperty(ATTR_ACTION_BUTTONS) boolean actionButtons;
-    
+
     public void setLabelText(String aLabelText)
     {
         labelText = aLabelText;
@@ -60,7 +60,7 @@ public class EntityAttributes
     {
         color = aColor;
     }
-    
+
     public void setHoverText(String aHovertext)
     {
         hoverText = aHovertext;
@@ -70,12 +70,12 @@ public class EntityAttributes
     {
         return hoverText;
     }
-    
+
     public Boolean isActionButtons()
     {
         return actionButtons;
     }
-    
+
     public void setActionButtons(Boolean aActionButtons)
     {
         actionButtons = aActionButtons;

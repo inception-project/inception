@@ -47,7 +47,8 @@ public class BeanAsArraySerializer
     }
 
     public BeanAsArraySerializer(JavaType elemType, boolean staticTyping, TypeSerializer vts,
-            JsonSerializer<Object> valueSerializer) {
+            JsonSerializer<Object> valueSerializer)
+    {
         super(Collection.class, elemType, staticTyping, vts, valueSerializer);
     }
 
@@ -57,12 +58,12 @@ public class BeanAsArraySerializer
         super(Collection.class, elemType, staticTyping, vts, property, null);
     }
 
-    public BeanAsArraySerializer(BeanAsArraySerializer src,
-            BeanProperty property, TypeSerializer vts, JsonSerializer<?> valueSerializer,
-            Boolean unwrapSingle) {
+    public BeanAsArraySerializer(BeanAsArraySerializer src, BeanProperty property,
+            TypeSerializer vts, JsonSerializer<?> valueSerializer, Boolean unwrapSingle)
+    {
         super(src, property, vts, valueSerializer, unwrapSingle);
     }
-    
+
     @Override
     public ContainerSerializer<?> _withValueTypeSerializer(TypeSerializer vts)
     {
@@ -76,7 +77,7 @@ public class BeanAsArraySerializer
     {
         return new BeanAsArraySerializer(this, aProperty, aVts, aElementSerializer, aUnwrapSingle);
     }
-    
+
     @Override
     public boolean hasSingleElement(Object aValue)
     {
@@ -85,10 +86,10 @@ public class BeanAsArraySerializer
                 return ((Object[]) aValue).length == 1;
             }
         }
-        
+
         return false;
     }
-    
+
     @Override
     public void serializeContents(Object value, JsonGenerator jgen, SerializerProvider provider)
         throws IOException

@@ -48,17 +48,17 @@ public class RResponse<T>
     {
         body = aBody;
     }
-    
+
     public T getBody()
     {
         return body;
     }
-    
+
     public void addMessage(RMessageLevel aLevel, String aMessage)
     {
         messages.add(new RMessage(aLevel, aMessage));
     }
-    
+
     public List<RMessage> getMessages()
     {
         return messages;

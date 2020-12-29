@@ -26,6 +26,5 @@ import org.apache.wicket.markup.html.form.Form;
 public interface AjaxFormCallback<T>
     extends Serializable
 {
-    void accept(AjaxRequestTarget aTarget, Form<T> aForm)
-        throws Exception;
+    void accept(AjaxRequestTarget aTarget, Form<T> aForm) throws Exception;
 }

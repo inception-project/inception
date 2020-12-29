@@ -30,15 +30,17 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 public class WebAnnoBanner
     implements Banner
 {
+    // @formatter:off
     private static final String[] BANNER = { "",
             "  _      __    __   ___                ",
             " | | /| / /__ / /  / _ | ___  ___  ___ ",
             " | |/ |/ / -_) _ \\/ __ |/ _ \\/ _ \\/ _ \\",
             " |__/|__/\\__/_.__/_/ |_/_//_/_//_/\\___/"};
+    // @formatter:on
 
     @Override
-    public void printBanner(Environment environment, Class<?> sourceClass,
-            PrintStream printStream) {
+    public void printBanner(Environment environment, Class<?> sourceClass, PrintStream printStream)
+    {
         for (String line : BANNER) {
             printStream.println(line);
         }

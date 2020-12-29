@@ -55,8 +55,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class ConstraintsGeneratorTest
 {
     @Test
-    public void testSimpleFeature()
-        throws Exception
+    public void testSimpleFeature() throws Exception
     {
         ParsedConstraints constraints = parseFile("src/test/resources/rules/9.rules");
 
@@ -76,11 +75,10 @@ public class ConstraintsGeneratorTest
     }
 
     @Test
-    public void testSimplePath()
-        throws Exception
+    public void testSimplePath() throws Exception
     {
         ParsedConstraints constraints = parseFile("src/test/resources/rules/10.rules");
-        
+
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("The sun.");
 
@@ -111,8 +109,8 @@ public class ConstraintsGeneratorTest
 
         Evaluator constraintsEvaluator = new ValuesGenerator();
 
-        List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(
-                dep_the_sun, "DependencyType", constraints);
+        List<PossibleValue> possibleValues = constraintsEvaluator
+                .generatePossibleValues(dep_the_sun, "DependencyType", constraints);
 
         List<PossibleValue> expectedOutput = new LinkedList<>();
         expectedOutput.add(new PossibleValue("det", false));
@@ -121,39 +119,38 @@ public class ConstraintsGeneratorTest
     }
 
     @Test
-    public void testTwoConditions()
-        throws Exception
+    public void testTwoConditions() throws Exception
     {
         JCas jcas = makeJCasOneSentence();
         CAS cas = jcas.getCas();
-        
+
         List<Token> tokens = new ArrayList<>(select(jcas, Token.class));
-        
+
         Token t1 = tokens.get(0);
         Token t2 = tokens.get(tokens.size() - 1);
 
         NamedEntity gov = new NamedEntity(jcas, t1.getBegin(), t1.getEnd());
         gov.setValue("Animal");
         gov.addToIndexes();
-        NamedEntity dep =  new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
+        NamedEntity dep = new NamedEntity(jcas, t2.getBegin(), t2.getEnd());
         dep.setValue("NotWeight");
         dep.addToIndexes();
 
         Type relationType = cas.getTypeSystem().getType("webanno.custom.Relation");
-        
+
         AnnotationFS fs1 = cas.createAnnotation(relationType, dep.getBegin(), dep.getEnd());
         FSUtil.setFeature(fs1, "Governor", gov);
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
-        
+
         ParsedConstraints constraints = parseFile("src/test/resources/rules/twoConditions.rules");
 
         Evaluator constraintsEvaluator = new ValuesGenerator();
-        List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(
-                fs1, "label", constraints);
-        
+        List<PossibleValue> possibleValues = constraintsEvaluator.generatePossibleValues(fs1,
+                "label", constraints);
+
         System.out.println(possibleValues);
-        
+
         // "Weight" != "NotWeight", so the rule should not match
         assertEquals(0, possibleValues.size());
     }
@@ -164,17 +161,16 @@ public class ConstraintsGeneratorTest
         TypeSystemDescription local = TypeSystemDescriptionFactory
                 .createTypeSystemDescriptionFromPath(
                         "src/test/resources/desc/types/webannoTestTypes.xml");
-       
+
         TypeSystemDescription merged = CasCreationUtils.mergeTypeSystems(asList(global, local));
-        
+
         JCas jcas = JCasFactory.createJCas(merged);
-        
+
         DocumentMetaData.create(jcas).setDocumentId("doc");
-        
-        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class,
-                Sentence.class);
+
+        TokenBuilder<Token, Sentence> tb = new TokenBuilder<>(Token.class, Sentence.class);
         tb.buildTokens(jcas, "This is a test .");
-        
+
         return jcas;
     }
 }

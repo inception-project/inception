@@ -24,8 +24,7 @@ public class BratUrlMonitorResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BratUrlMonitorResourceReference INSTANCE = 
-            new BratUrlMonitorResourceReference();
+    private static final BratUrlMonitorResourceReference INSTANCE = new BratUrlMonitorResourceReference();
 
     /**
      * Gets the instance of the resource reference

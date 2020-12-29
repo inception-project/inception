@@ -53,11 +53,11 @@ public abstract class Plugin
             ((ConfigurableApplicationContext) applicationContext).close();
         }
     }
-    
+
     protected ApplicationContext createApplicationContext()
     {
         Plugin springPlugin = (Plugin) getWrapper().getPlugin();
-        
+
         // Create an application context for this plugin using Spring annotated classes starting
         // with the plugin class
         AnnotationConfigApplicationContext pluginContext = new AnnotationConfigApplicationContext();
@@ -74,8 +74,7 @@ public abstract class Plugin
 
         // Initialize the context
         pluginContext.refresh();
-        
-        
+
         return pluginContext;
     }
 

@@ -26,7 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
 @Order(900)
 @Component
-public class ScriptDirectionActionBarExtension implements ActionBarExtension
+public class ScriptDirectionActionBarExtension
+    implements ActionBarExtension
 {
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)

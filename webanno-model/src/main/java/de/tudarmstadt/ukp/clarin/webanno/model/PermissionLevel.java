@@ -32,15 +32,15 @@ public enum PermissionLevel
 {
     // We keep the legacy values for the project export/import for compatibility reasons
     @JsonProperty("USER")
-    ANNOTATOR("user"), 
-    
+    ANNOTATOR("user"),
+
     @JsonProperty("CURATOR")
     CURATOR("curator"),
-    
+
     // We keep the legacy values for the project export/import for compatibility reasons
     @JsonProperty("ADMIN")
     MANAGER("admin");
-    
+
     private final String id;
 
     public String getName()

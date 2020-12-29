@@ -38,7 +38,7 @@ public class ProjectUsersPanel
     public ProjectUsersPanel(String id, IModel<Project> aProject)
     {
         super(id, aProject);
-        
+
         selectedUser = Model.of();
         project = aProject;
 
@@ -50,7 +50,7 @@ public class ProjectUsersPanel
         users.setChangeAction(t -> t.add(permissions));
         add(users);
     }
-    
+
     @Override
     protected void onModelChanged()
     {

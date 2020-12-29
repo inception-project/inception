@@ -29,14 +29,13 @@ import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 
-
 public class NumberFeatureEditor<T extends Number>
     extends FeatureEditor
 {
     private static final long serialVersionUID = -2426303638953208057L;
-    
+
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    
+
     @SuppressWarnings("rawtypes")
     private final NumberTextField field;
 
@@ -44,7 +43,7 @@ public class NumberFeatureEditor<T extends Number>
             NumberFeatureTraits aTraits)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-        
+
         switch (getModelObject().feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
             Options options = new Options();
@@ -68,7 +67,7 @@ public class NumberFeatureEditor<T extends Number>
             throw new IllegalArgumentException("Type [" + getModelObject().feature.getType()
                     + "] cannot be rendered as a numeric input field");
         }
-        
+
         add(field);
     }
 

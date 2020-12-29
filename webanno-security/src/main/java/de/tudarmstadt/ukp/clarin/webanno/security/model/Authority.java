@@ -28,6 +28,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+
 /**
  * The persistence object for authority the user have. Authorities can be either {@code ROLE_ADMIN}
  * or {@code ROLE_USER}

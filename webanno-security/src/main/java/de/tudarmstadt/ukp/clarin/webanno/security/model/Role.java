@@ -26,12 +26,12 @@ public enum Role
      * System-wide administrator privilege.
      */
     ROLE_ADMIN,
-    
+
     /**
      * Project user such as manager, annotator or curator.
      */
-    ROLE_USER, 
-    
+    ROLE_USER,
+
     /**
      * Privilege for web-service based user access
      */

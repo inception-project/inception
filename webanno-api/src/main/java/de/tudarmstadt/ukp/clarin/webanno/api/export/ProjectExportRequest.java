@@ -33,15 +33,15 @@ public class ProjectExportRequest
     private String format;
     private boolean includeInProgress;
     private String filenameTag;
-    
+
     public ProjectExportRequest()
     {
         // Nothing to do;
     }
-    
+
     /**
-     * Create a new project export request. Use this constructor if the project is not known yet
-     * or may change. Make sure to set the project via the setter before starting the export.
+     * Create a new project export request. Use this constructor if the project is not known yet or
+     * may change. Make sure to set the project via the setter before starting the export.
      */
     public ProjectExportRequest(String aFormat, boolean aIncludeInProgress)
     {
@@ -49,24 +49,24 @@ public class ProjectExportRequest
         project = null;
         includeInProgress = aIncludeInProgress;
     }
-    
+
     public ProjectExportRequest(Project aProject, String aFormat, boolean aIncludeInProgress)
     {
         format = aFormat;
         project = aProject;
         includeInProgress = aIncludeInProgress;
     }
-    
+
     public void setProject(Project aProject)
     {
         project = aProject;
     }
-    
+
     public Project getProject()
     {
         return project;
     }
-    
+
     /**
      * Set the ID of the export format.
      * 
@@ -76,7 +76,7 @@ public class ProjectExportRequest
     {
         format = aFormat;
     }
-    
+
     /**
      * Get the ID of the export format.
      * 
@@ -91,7 +91,7 @@ public class ProjectExportRequest
     {
         includeInProgress = aIncludeInProgress;
     }
-    
+
     public boolean isIncludeInProgress()
     {
         return includeInProgress;

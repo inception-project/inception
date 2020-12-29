@@ -34,17 +34,18 @@ public class UserMetricsImpl
 {
     private final UserDao userRepository;
     private final SessionRegistry sessionRegistry;
-    
+
     @Autowired
     public UserMetricsImpl(UserDao aUserRepository, SessionRegistry aSessionRegistry)
     {
         userRepository = aUserRepository;
         sessionRegistry = aSessionRegistry;
     }
-    
+
     @Override
     @ManagedAttribute
-    public long getActiveUsersTotal() {
+    public long getActiveUsersTotal()
+    {
         return sessionRegistry.getAllPrincipals().size();
     }
 

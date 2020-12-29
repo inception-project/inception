@@ -23,17 +23,17 @@ public enum LinkCompareBehavior
 {
     /**
      * The link target is considered to be the label. As a consequence, the
-     * {@link Position#compareTo} method includes the role label into comparison but not the
-     * link target.
+     * {@link Position#compareTo} method includes the role label into comparison but not the link
+     * target.
      */
     LINK_TARGET_AS_LABEL,
 
     /**
-     * The link role is considered to be the label and the {@link Position#compareTo} method
-     * takes the link target into account
+     * The link role is considered to be the label and the {@link Position#compareTo} method takes
+     * the link target into account
      */
     LINK_ROLE_AS_LABEL;
-    
+
     public String getName()
     {
         return toString();

@@ -22,8 +22,8 @@ import java.util.List;
 public interface AnnotationSidebarRegistry
 {
     List<AnnotationSidebarFactory> getSidebarFactories();
-    
+
     AnnotationSidebarFactory getSidebarFactory(String aId);
-    
+
     AnnotationSidebarFactory getDefaultSidebarFactory();
 }

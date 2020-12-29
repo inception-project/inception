@@ -36,6 +36,7 @@ public class VTextMarker
         begin = aBegin;
         end = aEnd;
     }
+
     public int getBegin()
     {
         return begin;
@@ -45,7 +46,7 @@ public class VTextMarker
     {
         return end;
     }
-    
+
     @Override
     public String getType()
     {

@@ -22,7 +22,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
-
 /**
  * Permits access to the Spring context anywhere in the application. If any other means of accessing
  * the Spring context exist, these should be used. This class is mainly meant to be used by the
@@ -40,8 +39,7 @@ public class ApplicationContextProvider
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext aContext)
-        throws BeansException
+    public void setApplicationContext(ApplicationContext aContext) throws BeansException
     {
         context = aContext;
     }

@@ -41,21 +41,21 @@ public class LayerBehaviorRegistryImpl
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final List<LayerBehavior> layerBehaviorsProxy;
-    
+
     private List<LayerBehavior> layerBehaviors;
-    
+
     public LayerBehaviorRegistryImpl(
             @Lazy @Autowired(required = false) List<LayerBehavior> aLayerSupports)
     {
         layerBehaviorsProxy = aLayerSupports;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     public void init()
     {
         List<LayerBehavior> lsp = new ArrayList<>();
@@ -63,16 +63,16 @@ public class LayerBehaviorRegistryImpl
         if (layerBehaviorsProxy != null) {
             lsp.addAll(layerBehaviorsProxy);
             AnnotationAwareOrderComparator.sort(lsp);
-        
+
             for (LayerBehavior fs : lsp) {
                 log.info("Found layer behavior: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         layerBehaviors = Collections.unmodifiableList(lsp);
     }
-    
+
     @Override
     public List<LayerBehavior> getLayerBehaviors()
     {
@@ -84,7 +84,6 @@ public class LayerBehaviorRegistryImpl
     {
         return getLayerBehaviors().stream()
                 .filter(b -> b.accepts(aLayerSupport) && aAPI.isAssignableFrom(b.getClass()))
-                .map(b -> aAPI.cast(b))
-                .collect(Collectors.toList());
+                .map(b -> aAPI.cast(b)).collect(Collectors.toList());
     }
 }

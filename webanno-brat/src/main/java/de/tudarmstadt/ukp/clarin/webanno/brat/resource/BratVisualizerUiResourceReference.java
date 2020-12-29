@@ -24,8 +24,7 @@ public class BratVisualizerUiResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BratVisualizerUiResourceReference INSTANCE = 
-            new BratVisualizerUiResourceReference();
+    private static final BratVisualizerUiResourceReference INSTANCE = new BratVisualizerUiResourceReference();
 
     /**
      * Gets the instance of the resource reference

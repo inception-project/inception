@@ -38,7 +38,7 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
     implements LayerSupport<A, T>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private LayerSupportRegistry layerSupportRegistry;
 
     protected final FeatureSupportRegistry featureSupportRegistry;
@@ -47,7 +47,7 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
     {
         featureSupportRegistry = aFeatureSupportRegistry;
     }
-    
+
     public final void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
             List<AnnotationFeature> aFeatures)
     {
@@ -56,27 +56,27 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
             fs.generateFeature(aTSD, aTD, feature);
         }
     }
-    
+
     @Override
     public void setLayerSupportRegistry(LayerSupportRegistry aLayerSupportRegistry)
     {
         if (layerSupportRegistry != null) {
             throw new IllegalStateException("LayerSupportRegistry can only be set once!");
         }
-        
+
         layerSupportRegistry = aLayerSupportRegistry;
     }
-    
+
     @Override
     public LayerSupportRegistry getLayerSupportRegistry()
     {
         if (layerSupportRegistry == null) {
             throw new IllegalStateException("LayerSupportRegistry not set!");
         }
-        
+
         return layerSupportRegistry;
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
     public T readTraits(AnnotationLayer aLayer)
@@ -88,14 +88,14 @@ public abstract class LayerSupport_ImplBase<A extends TypeAdapter, T>
         catch (IOException e) {
             log.error("Unable to read traits", e);
         }
-    
+
         if (traits == null) {
             traits = createTraits();
         }
-    
+
         return traits;
     }
-    
+
     @Override
     public void writeTraits(AnnotationLayer aLayer, T aTraits)
     {

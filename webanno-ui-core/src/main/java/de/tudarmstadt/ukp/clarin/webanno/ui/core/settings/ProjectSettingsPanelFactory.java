@@ -33,7 +33,8 @@ public interface ProjectSettingsPanelFactory
         return null;
     }
 
-    default boolean applies(Project aProject) {
+    default boolean applies(Project aProject)
+    {
         return true;
     }
 

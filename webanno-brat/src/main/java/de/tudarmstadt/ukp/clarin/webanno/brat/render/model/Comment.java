@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 public interface Comment
 {
     public static final String EDIT_HIGHLIGHT = "EditHighlight";
-    
+
     public static final String ANNOTATION_ERROR = "AnnotationError";
     public static final String ANNOTATION_INCOMPLETE = "AnnotationIncomplete";
     public static final String ANNOTATION_UNCONFIRMED = "AnnotationUnconfirmed";
@@ -32,7 +32,8 @@ public interface Comment
     public static final String TRUE_POSITIVE = "True_positive";
     public static final String FALSE_POSITIVE = "False_positive";
     public static final String FALSE_NEGATIVE = "False_negative";
-    
+
     String getCommentType();
+
     String getComment();
 }

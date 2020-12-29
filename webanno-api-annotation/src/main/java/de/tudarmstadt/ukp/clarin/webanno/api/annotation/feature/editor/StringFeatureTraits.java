@@ -31,56 +31,56 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTr
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StringFeatureTraits
-        implements Serializable, KeyBindingTrait
+    implements Serializable, KeyBindingTrait
 {
     private static final long serialVersionUID = -8450181605003189055L;
-    
+
     private boolean multipleRows = false;
     private boolean dynamicSize = false;
     private int collapsedRows = 1;
     private int expandedRows = 1;
     private List<KeyBinding> keyBindings = new ArrayList<>();
-    
+
     public StringFeatureTraits()
     {
         // Nothing to do
     }
-    
+
     public boolean isMultipleRows()
     {
         return multipleRows;
     }
-    
+
     public void setMultipleRows(boolean multipleRows)
     {
         this.multipleRows = multipleRows;
     }
-    
+
     public boolean isDynamicSize()
     {
         return dynamicSize;
     }
-    
+
     public void setDynamicSize(boolean dynamicSize)
     {
         this.dynamicSize = dynamicSize;
     }
-    
+
     public int getCollapsedRows()
     {
         return collapsedRows;
     }
-    
+
     public void setCollapsedRows(int collapsedRows)
     {
         this.collapsedRows = collapsedRows;
     }
-    
+
     public int getExpandedRows()
     {
         return expandedRows;
     }
-    
+
     public void setExpandedRows(int expandedRows)
     {
         this.expandedRows = expandedRows;

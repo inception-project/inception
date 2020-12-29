@@ -59,12 +59,12 @@ public class SpanLayerTraitsEditor
             _this.setEnabled(
                     // Surface form must be non-stacking for CONLL-U writer to work.
                     !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for layers that attach to tokens (currently that is
-                    // the only layer on which we use the attach feature)
-                    layer.getAttachFeature() == null);
-        })); 
+            // Not configurable for layers that attach to tokens (currently that is
+            // the only layer on which we use the attach feature)
+            layer.getAttachFeature() == null);
+        }));
         aForm.add(overlapMode);
-        
+
         AnchoringModeSelect anchoringMode = new AnchoringModeSelect("anchoringMode",
                 getLayerModel());
         anchoringMode.add(LambdaBehavior.onConfigure(_this -> {
@@ -72,12 +72,12 @@ public class SpanLayerTraitsEditor
             _this.setEnabled(
                     // Surface form must be locked to token boundaries for CONLL-U writer to work.
                     !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for layers that attach to tokens (currently
-                    // that is the only layer on which we use the attach feature)
-                    layer.getAttachFeature() == null);
+            // Not configurable for layers that attach to tokens (currently
+            // that is the only layer on which we use the attach feature)
+            layer.getAttachFeature() == null);
         }));
         aForm.add(anchoringMode);
-        
+
         CheckBox crossSentence = new CheckBox("crossSentence");
         crossSentence.setOutputMarkupPlaceholderTag(true);
         crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
@@ -87,25 +87,26 @@ public class SpanLayerTraitsEditor
                     // Surface form must be locked to token boundaries for CONLL-U writer
                     // to work.
                     !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for layers that attach to tokens (currently that
-                    // is the only layer on which we use the attach feature)
-                    layer.getAttachFeature() == null);
+            // Not configurable for layers that attach to tokens (currently that
+            // is the only layer on which we use the attach feature)
+            layer.getAttachFeature() == null);
         }));
         aForm.add(crossSentence);
 
         TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
-        onClickJavascriptAction.setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
+        onClickJavascriptAction
+                .setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
         onClickJavascriptAction.add(new AttributeModifier("placeholder",
                 "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
                         + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));
         aForm.add(onClickJavascriptAction);
-        
+
         CheckBox showTextInHover = new CheckBox("showTextInHover");
         showTextInHover.setOutputMarkupPlaceholderTag(true);
         showTextInHover.setModel(PropertyModel.of(getLayerModel(), "showTextInHover"));
         // Surface form must be locked to token boundaries for CONLL-U writer to work.
         showTextInHover.add(enabledWhen(
-            () -> !SurfaceForm.class.getName().equals(getLayerModelObject().getName())));
+                () -> !SurfaceForm.class.getName().equals(getLayerModelObject().getName())));
         aForm.add(showTextInHover);
     }
 }

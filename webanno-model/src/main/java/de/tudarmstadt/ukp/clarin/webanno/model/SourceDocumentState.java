@@ -29,12 +29,12 @@ public enum SourceDocumentState
      * No annotation document has been created for this document
      */
     NEW("NEW", "black"),
-    
+
     /**
      * At least one annotation document has been created for the document
      */
     ANNOTATION_IN_PROGRESS("ANNOTATION_INPROGRESS", "black"),
-    
+
     /**
      * All annotations have marked their annotation document as finished
      * 
@@ -45,18 +45,18 @@ public enum SourceDocumentState
      *             statically in the source document.
      */
     ANNOTATION_FINISHED("ANNOTATION_FINISHED", "green"),
-    
-    /**
-     * curator claims to have curated all annotations
-     */
-    CURATION_FINISHED("CURATION_FINISHED", "red"),
-    
+
     /**
      * curator has started working with the annotation document, annotators can no longer make
      * modifications in annotation documents
      */
-    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue");
-    
+    CURATION_IN_PROGRESS("CURATION_INPROGRESS", "blue"),
+
+    /**
+     * curator claims to have curated all annotations
+     */
+    CURATION_FINISHED("CURATION_FINISHED", "red");
+
     private final String id;
     private final String color;
 
@@ -65,7 +65,7 @@ public enum SourceDocumentState
         id = aId;
         color = aColor;
     }
-    
+
     public String getName()
     {
         return getId();
@@ -76,12 +76,12 @@ public enum SourceDocumentState
     {
         return id;
     }
-    
+
     public String getColor()
     {
         return color;
     }
-    
+
     @Override
     public String toString()
     {

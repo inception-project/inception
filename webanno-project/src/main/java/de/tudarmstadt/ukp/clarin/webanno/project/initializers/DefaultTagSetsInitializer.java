@@ -32,7 +32,7 @@ public class DefaultTagSetsInitializer
     implements TagSetInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
-    
+
     @Autowired
     public DefaultTagSetsInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
@@ -48,20 +48,20 @@ public class DefaultTagSetsInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-//        JsonImportUtil.importTagSetFromJson(aProject,
-//                new ClassPathResource("/tagsets/de-pos-stts.json").getInputStream(),
-//                annotationSchemaService);
-//        JsonImportUtil.importTagSetFromJson(aProject,
-//                new ClassPathResource("/tagsets/de-dep-tiger.json").getInputStream(),
-//                annotationSchemaService);
-//        JsonImportUtil.importTagSetFromJson(aProject,
-//                new ClassPathResource("/tagsets/en-dep-sd.json").getInputStream(),
-//                annotationSchemaService);
-//        JsonImportUtil.importTagSetFromJson(aProject,
-//                new ClassPathResource("/tagsets/en-pos-ptb-tt.json").getInputStream(),
-//                annotationSchemaService);
-//        JsonImportUtil.importTagSetFromJson(aProject,
-//                new ClassPathResource("/tagsets/mul-pos-upos.json").getInputStream(),
-//                annotationSchemaService);
+        // JsonImportUtil.importTagSetFromJson(aProject,
+        // new ClassPathResource("/tagsets/de-pos-stts.json").getInputStream(),
+        // annotationSchemaService);
+        // JsonImportUtil.importTagSetFromJson(aProject,
+        // new ClassPathResource("/tagsets/de-dep-tiger.json").getInputStream(),
+        // annotationSchemaService);
+        // JsonImportUtil.importTagSetFromJson(aProject,
+        // new ClassPathResource("/tagsets/en-dep-sd.json").getInputStream(),
+        // annotationSchemaService);
+        // JsonImportUtil.importTagSetFromJson(aProject,
+        // new ClassPathResource("/tagsets/en-pos-ptb-tt.json").getInputStream(),
+        // annotationSchemaService);
+        // JsonImportUtil.importTagSetFromJson(aProject,
+        // new ClassPathResource("/tagsets/mul-pos-upos.json").getInputStream(),
+        // annotationSchemaService);
     }
 }

@@ -68,8 +68,7 @@ public class WebannoTsv2Reader
     private String fileName;
     Map<String, Token> indexedTokens;
 
-    public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding)
-        throws IOException
+    public void convertToCas(JCas aJCas, InputStream aIs, String aEncoding) throws IOException
 
     {
         StringBuilder text = new StringBuilder();
@@ -280,7 +279,7 @@ public class WebannoTsv2Reader
                                 governorAnno.getBegin(), governorAnno.getEnd()).get(0);
                         governorAnno.setFeatureValue(attachFeature, posGovernorAnno);
                     }
-                    
+
                     // update begin/end of relation annotation
                     relationAnno.getCAS().removeFsFromIndexes(relationAnno);
                     if (dependentAnno.getEnd() <= governorAnno.getEnd()) {
@@ -295,7 +294,7 @@ public class WebannoTsv2Reader
 
                     relationAnno.setFeatureValue(dependentFeature, dependentAnno);
                     relationAnno.setFeatureValue(governorFeature, governorAnno);
-                    
+
                     relationAnno.getCAS().addFsToIndexes(relationAnno);
                     i++;
                 }
@@ -542,8 +541,7 @@ public class WebannoTsv2Reader
      */
 
     @Override
-    public void getNext(JCas aJCas)
-        throws IOException, CollectionException
+    public void getNext(JCas aJCas) throws IOException, CollectionException
     {
         Resource res = nextFile();
         initCas(aJCas, res);

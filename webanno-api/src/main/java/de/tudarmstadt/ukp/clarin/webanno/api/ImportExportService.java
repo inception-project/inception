@@ -39,13 +39,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public interface ImportExportService
 {
     String SERVICE_NAME = "importExportService";
-    
+
     // --------------------------------------------------------------------------------------------
     // Methods related to import/export data formats
     // --------------------------------------------------------------------------------------------
-    
+
     List<FormatSupport> getFormats();
-    
+
     default List<FormatSupport> getReadableFormats()
     {
         return getFormats().stream().filter(FormatSupport::isReadable).collect(Collectors.toList());
@@ -83,14 +83,14 @@ public interface ImportExportService
     {
         return getFormats().stream().filter(f -> f.getName().equals(aFormatName)).findFirst();
     }
-    
+
     // --------------------------------------------------------------------------------------------
     // Methods related to importing/exporting
     // --------------------------------------------------------------------------------------------
-    
+
     /**
      * Convert a file to a CAS. This method collects the project's type system as part of the call.
-     * It is not well-suited for bulk-imports. For these, use 
+     * It is not well-suited for bulk-imports. For these, use
      * {@link #importCasFromFile(File, Project, String, TypeSystemDescription)} instead.
      *
      * @param aFile
@@ -109,7 +109,7 @@ public interface ImportExportService
         throws UIMAException, IOException;
 
     /**
-     * Convert a file to a CAS. This method is good for bulk-importing because it accepts the 
+     * Convert a file to a CAS. This method is good for bulk-importing because it accepts the
      * project type system as a parameter instead of collecting it on every call.
      *
      * @param aFile
@@ -120,19 +120,19 @@ public interface ImportExportService
      *            ID of a supported file format
      * @param aFullProjectTypeSystem
      *            the project type system. If this parameter is {@code null}, then the method will
-     *            try to resolve the type system itself. 
+     *            try to resolve the type system itself.
      * @return the CAS.
      * @throws UIMAException
      *             if a conversion error occurs.
      * @throws IOException
      *             if an I/O error occurs.
-     */    
+     */
     CAS importCasFromFile(File aFile, Project aProject, String aFormatId,
             TypeSystemDescription aFullProjectTypeSystem)
-                    throws UIMAException, IOException;
+        throws UIMAException, IOException;
 
     /**
-     * Exports the given CAS to a file on disk. 
+     * Exports the given CAS to a file on disk.
      * 
      * A new directory is created using UUID so that every exported file will reside in its own
      * directory. This is useful as the written file can have multiple extensions based on the
@@ -143,7 +143,7 @@ public interface ImportExportService
         throws IOException, UIMAException;
 
     /**
-     * Exports the given CAS to a file on disk. 
+     * Exports the given CAS to a file on disk.
      * 
      * A new directory is created using UUID so that every exported file will reside in its own
      * directory. This is useful as the written file can have multiple extensions based on the
@@ -152,9 +152,9 @@ public interface ImportExportService
     File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat,
             boolean aStripExtension, Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException;
-    
+
     /**
-     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats. 
+     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
      *
      * @param document
      *            The {@link SourceDocument} where we get the id which hosts both the source

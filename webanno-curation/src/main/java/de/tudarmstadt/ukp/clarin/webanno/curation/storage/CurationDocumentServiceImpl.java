@@ -72,15 +72,13 @@ public class CurationDocumentServiceImpl
     }
 
     @Override
-    public CAS readCurationCas(SourceDocument aDocument)
-        throws IOException
+    public CAS readCurationCas(SourceDocument aDocument) throws IOException
     {
         return casStorageService.readCas(aDocument, CURATION_USER);
     }
 
     @Override
-    public void deleteCurationCas(SourceDocument aDocument)
-        throws IOException
+    public void deleteCurationCas(SourceDocument aDocument) throws IOException
     {
         casStorageService.deleteCas(aDocument, CURATION_USER);
     }
@@ -97,7 +95,7 @@ public class CurationDocumentServiceImpl
     public List<SourceDocument> listCuratableSourceDocuments(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
-        
+
         List<SourceDocument> docs = entityManager
                 .createQuery(
                         "SELECT DISTINCT adoc.document FROM AnnotationDocument AS adoc "
@@ -109,48 +107,40 @@ public class CurationDocumentServiceImpl
         docs.sort(SourceDocument.NAME_COMPARATOR);
         return docs;
     }
-    
+
     @Override
     public Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        
+
         return casStorageService.getCasTimestamp(aDocument, CURATION_USER);
     }
-    
+
     @Override
     @Transactional
     public List<SourceDocument> listCuratedDocuments(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
-        
-        String query = String.join("\n",
-                "FROM SourceDocument WHERE",
-                "  project = :project AND",
+
+        String query = String.join("\n", "FROM SourceDocument WHERE", "  project = :project AND",
                 "  state = :state");
-        
-        return entityManager
-                .createQuery(query, SourceDocument.class)
+
+        return entityManager.createQuery(query, SourceDocument.class)
                 .setParameter("project", aProject)
-                .setParameter("state", SourceDocumentState.CURATION_FINISHED)
-                .getResultList();
+                .setParameter("state", SourceDocumentState.CURATION_FINISHED).getResultList();
     }
-    
+
     @Override
     @Transactional
     public boolean isCurationFinished(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        
-        String query = String.join("\n",
-                "FROM SourceDocument WHERE",
-                "  id = :id");
-        
-        SourceDocument d = entityManager
-                .createQuery(query, SourceDocument.class)
-                .setParameter("id", aDocument.getId())
-                .getSingleResult();
-        
+
+        String query = String.join("\n", "FROM SourceDocument WHERE", "  id = :id");
+
+        SourceDocument d = entityManager.createQuery(query, SourceDocument.class)
+                .setParameter("id", aDocument.getId()).getSingleResult();
+
         return SourceDocumentState.CURATION_FINISHED.equals(d.getState());
     }
 

@@ -56,9 +56,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 public class LayerExporterTest
 {
     public @Rule TemporaryFolder tempFolder = new TemporaryFolder();
-    
+
     private @Mock AnnotationSchemaService annotationService;
-    
+
     private Project project;
     private File workFolder;
 
@@ -73,11 +73,11 @@ public class LayerExporterTest
         project.setId(1l);
         project.setName("Test Project");
         project.setMode(PROJECT_TYPE_ANNOTATION);
-        
+
         workFolder = tempFolder.newFolder();
-        
+
         when(annotationService.listAnnotationLayer(any())).thenReturn(layers());
-        
+
         sut = new LayerExporter(annotationService);
     }
 
@@ -88,27 +88,26 @@ public class LayerExporterTest
         ArgumentCaptor<AnnotationLayer> captor = runExportImportAndFetchLayers();
 
         // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues())
-                .usingElementComparatorIgnoringFields("id")
+        assertThat(captor.getAllValues()).usingElementComparatorIgnoringFields("id")
                 .containsExactlyInAnyOrderElementsOf(layers());
     }
-    
+
     private List<AnnotationLayer> layers()
     {
-        AnnotationLayer layer1 = new AnnotationLayer("webanno.custom.Span", "Span",
-                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer layer1 = new AnnotationLayer("webanno.custom.Span", "Span", SPAN_TYPE,
+                project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer1.setValidationMode(ValidationMode.ALWAYS);
 
-        AnnotationLayer layer2 = new AnnotationLayer("webanno.custom.Span2", "Span2",
-                SPAN_TYPE, project, false, SENTENCES, NO_OVERLAP);
+        AnnotationLayer layer2 = new AnnotationLayer("webanno.custom.Span2", "Span2", SPAN_TYPE,
+                project, false, SENTENCES, NO_OVERLAP);
         layer2.setValidationMode(ValidationMode.NEVER);
 
         AnnotationLayer layer3 = new AnnotationLayer("webanno.custom.Relation", "Relation",
                 RELATION_TYPE, project, true, TOKENS, ANY_OVERLAP);
-        
+
         return asList(layer1, layer2, layer3);
     }
-    
+
     private ArgumentCaptor<AnnotationLayer> runExportImportAndFetchLayers() throws Exception
     {
         // Export the project
@@ -126,7 +125,7 @@ public class LayerExporterTest
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         ZipFile zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
-        
+
         return captor;
     }
 }

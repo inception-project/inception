@@ -38,21 +38,21 @@ public class GlobalInterceptorsRegistryImpl
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final List<GlobalInterceptor> interceptorsProxy;
-    
+
     private List<GlobalInterceptor> interceptors;
-    
+
     public GlobalInterceptorsRegistryImpl(
             @Lazy @Autowired(required = false) List<GlobalInterceptor> aInterceptors)
     {
         interceptorsProxy = aInterceptors;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     public void init()
     {
         List<GlobalInterceptor> fsp = new ArrayList<>();
@@ -60,16 +60,16 @@ public class GlobalInterceptorsRegistryImpl
         if (interceptorsProxy != null) {
             fsp.addAll(interceptorsProxy);
             AnnotationAwareOrderComparator.sort(fsp);
-        
+
             for (GlobalInterceptor fs : fsp) {
                 log.info("Found global interceptor: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         interceptors = Collections.unmodifiableList(fsp);
     }
-    
+
     @Override
     public List<GlobalInterceptor> getInterceptors()
     {

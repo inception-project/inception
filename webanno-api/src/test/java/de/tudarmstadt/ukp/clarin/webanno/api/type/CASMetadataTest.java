@@ -29,7 +29,7 @@ public class CASMetadataTest
     public void thatCASMetadataIsNotAutodetected() throws Exception
     {
         TypeSystemDescription tsd = TypeSystemDescriptionFactory.createTypeSystemDescription();
-        
+
         assertThat(tsd.getType(CASMetadata.class.getName()))
                 .as("CASMetadata is detected by uimaFIT").isNull();
     }

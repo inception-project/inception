@@ -54,7 +54,7 @@ public class PermissionsExporter
 
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userService;
-    
+
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
@@ -73,7 +73,7 @@ public class PermissionsExporter
             }
         }
         aExProject.setProjectPermissions(projectPermissions);
-        
+
         LOG.info("Exported [{}] permissions for project [{}]", projectPermissions.size(),
                 aRequest.getProject().getName());
     }
@@ -96,10 +96,8 @@ public class PermissionsExporter
         // Import permissions - always import permissions for the importing user but skip
         // permissions for other users unless permission import was requested.
         for (ExportedProjectPermission importedPermission : aExProject.getProjectPermissions()) {
-            boolean isPermissionOfImportingUser = aRequest.getManager()
-                    .map(User::getUsername)
-                    .map(importedPermission.getUser()::equals)
-                    .orElse(false);
+            boolean isPermissionOfImportingUser = aRequest.getManager().map(User::getUsername)
+                    .map(importedPermission.getUser()::equals).orElse(false);
             if (isPermissionOfImportingUser || aRequest.isImportPermissions()) {
                 ProjectPermission permission = new ProjectPermission();
                 permission.setLevel(importedPermission.getLevel());
@@ -108,7 +106,7 @@ public class PermissionsExporter
                 projectService.createProjectPermission(permission);
             }
         }
-        
+
         // Give all permissions to the importing user if requested
         if (aRequest.getManager().isPresent()) {
             User user = aRequest.getManager().get();
@@ -127,17 +125,17 @@ public class PermissionsExporter
                         new ProjectPermission(aProject, username, ANNOTATOR));
             }
         }
-        
+
         // Add any users that are referenced by the project but missing in the current instance.
         // Users are added without passwords and disabled.
         if (aRequest.isCreateMissingUsers()) {
             Set<String> users = new HashSet<>();
-            
+
             for (ExportedProjectPermission importedPermission : aExProject
                     .getProjectPermissions()) {
                 users.add(importedPermission.getUser());
             }
-            
+
             for (String user : users) {
                 if (!userService.exists(user)) {
                     User u = new User();

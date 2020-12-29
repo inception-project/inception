@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
@@ -61,7 +63,7 @@ public class TagSetExporter
             exTagSet.setDescription(tagSet.getDescription());
             exTagSet.setLanguage(tagSet.getLanguage());
             exTagSet.setName(tagSet.getName());
-            
+
             List<ExportedTag> exTags = new ArrayList<>();
             for (Tag tag : annotationService.listTags(tagSet)) {
                 ExportedTag exTag = new ExportedTag();
@@ -74,11 +76,11 @@ public class TagSetExporter
         }
 
         aExProject.setTagSets(extTagSets);
-        
+
         LOG.info("Exported [{}] tagsets for project [{}]", extTagSets.size(),
                 aRequest.getProject().getName());
     }
-    
+
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
@@ -87,22 +89,21 @@ public class TagSetExporter
         // this is projects prior to version 2.0
         if (aExProject.getVersion() == 0) {
             importTagSetsV0(aProject, aExProject);
+            return;
         }
-        else {
-            for (ExportedTagSet exTagSet : aExProject.getTagSets()) {
-                importTagSet(new TagSet(), exTagSet, aProject);
-            }
+
+        for (ExportedTagSet exTagSet : aExProject.getTagSets()) {
+            importTagSet(new TagSet(), exTagSet, aProject);
         }
     }
-    
+
     /**
      * Import tagsets from projects prior to WebAnno 2.0.
      */
-    private void importTagSetsV0(Project aProject, ExportedProject aExProject)
-        throws IOException
+    private void importTagSetsV0(Project aProject, ExportedProject aExProject) throws IOException
     {
         List<ExportedTagSet> importedTagSets = aExProject.getTagSets();
-        
+
         List<String> posTags = new ArrayList<>();
         List<String> depTags = new ArrayList<>();
         List<String> neTags = new ArrayList<>();
@@ -143,14 +144,14 @@ public class TagSetExporter
                 break;
             }
         }
-        
+
         new LegacyProjectInitializer(annotationService).initialize(aProject,
                 posTags.toArray(new String[0]), posTagDescriptions.toArray(new String[0]),
                 depTags.toArray(new String[0]), depTagDescriptions.toArray(new String[0]),
                 neTags.toArray(new String[0]), neTagDescriptions.toArray(new String[0]),
                 corefTypeTags.toArray(new String[0]), corefRelTags.toArray(new String[0]));
     }
-    
+
     private void importTagSet(TagSet aTagSet, ExportedTagSet aExTagSet, Project aProject)
         throws IOException
     {
@@ -163,16 +164,24 @@ public class TagSetExporter
         aTagSet.setProject(aProject);
         annotationService.createTagSet(aTagSet);
 
+        Set<String> existingTags = annotationService.listTags(aTagSet).stream() //
+                .map(Tag::getName) //
+                .collect(Collectors.toSet());
+
+        List<Tag> tags = new ArrayList<>();
         for (ExportedTag exTag : aExTagSet.getTags()) {
             // do not duplicate tag
-            if (annotationService.existsTag(exTag.getName(), aTagSet)) {
+            if (existingTags.contains(exTag.getName())) {
                 continue;
             }
+
             Tag tag = new Tag();
             tag.setDescription(exTag.getDescription());
             tag.setTagSet(aTagSet);
             tag.setName(exTag.getName());
-            annotationService.createTag(tag);
+            tags.add(tag);
         }
+
+        annotationService.createTags(tags.stream().toArray(Tag[]::new));
     }
 }

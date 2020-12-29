@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.docinfo;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.docinfo;
 
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;

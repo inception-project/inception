@@ -26,7 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
 @Order(500)
 @Component
-public class PagingActionBarExtension implements ActionBarExtension
+public class PagingActionBarExtension
+    implements ActionBarExtension
 {
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)

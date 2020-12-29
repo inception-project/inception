@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -56,7 +57,7 @@ public class SpanAdapter
     extends TypeAdapter_ImplBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final List<SpanLayerBehavior> behaviors;
 
     public SpanAdapter(LayerSupportRegistry aLayerSupportRegistry,
@@ -65,7 +66,7 @@ public class SpanAdapter
             Supplier<Collection<AnnotationFeature>> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
         super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
-        
+
         if (aBehaviors == null) {
             behaviors = emptyList();
         }
@@ -99,7 +100,7 @@ public class SpanAdapter
     {
         return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aCas, aBegin, aEnd));
     }
-    
+
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
         CreateSpanAnnotationRequest request = aRequest;
@@ -116,7 +117,7 @@ public class SpanAdapter
 
         return newAnnotation;
     }
-    
+
     /**
      * A Helper method to add annotation to CAS
      */
@@ -138,12 +139,12 @@ public class SpanAdapter
                 throw new IllegalPlacementException("No annotation of type [" + getAttachTypeName()
                         + "] to attach to at location [" + aBegin + "-" + aEnd + "].");
             }
-            CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)
-                    .setFeatureValue(attachFeature, newAnnotation);
+            CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0).setFeatureValue(attachFeature,
+                    newAnnotation);
         }
-        
+
         aCas.addFsToIndexes(newAnnotation);
-        
+
         return newAnnotation;
     }
 
@@ -162,10 +163,10 @@ public class SpanAdapter
                         .setFeatureValue(attachFeature, null);
             }
         }
-        
+
         publishEvent(new SpanDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
@@ -177,5 +178,11 @@ public class SpanAdapter
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
         return messages;
+    }
+
+    @Override
+    public void select(AnnotatorState aState, AnnotationFS aAnno)
+    {
+        aState.getSelection().selectSpan(aAnno);
     }
 }

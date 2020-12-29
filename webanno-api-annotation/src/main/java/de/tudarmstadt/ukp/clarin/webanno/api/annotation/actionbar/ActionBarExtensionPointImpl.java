@@ -39,7 +39,7 @@ public class ActionBarExtensionPointImpl
     {
         super(aExtensions);
     }
-    
+
     /**
      * Returns all extensions matching in the given context. Ensures that for a given
      * {@link ActionBarExtension#getRole() role}, only the extension with the highest
@@ -52,16 +52,16 @@ public class ActionBarExtensionPointImpl
         // are displayed in the action bar.
         Map<String, ActionBarExtension> byRole = new LinkedHashMap<>();
         for (ActionBarExtension extension : super.getExtensions(aContext)) {
-            ActionBarExtension existingExtension = byRole.computeIfAbsent(
-                    extension.getRole(), key -> extension);
-            
+            ActionBarExtension existingExtension = byRole.computeIfAbsent(extension.getRole(),
+                    key -> extension);
+
             // If the previously found extension has a lower priority, then we replace it with the
             // current one
             if (existingExtension.getPriority() < extension.getPriority()) {
                 byRole.put(extension.getRole(), extension);
             }
         }
-        
+
         return new ArrayList<>(byRole.values());
     }
 }

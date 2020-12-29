@@ -25,7 +25,8 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 
-public class WebAnnoDaoAuthenticationProvider extends DaoAuthenticationProvider
+public class WebAnnoDaoAuthenticationProvider
+    extends DaoAuthenticationProvider
 {
     @Override
     protected void additionalAuthenticationChecks(UserDetails aUserDetails,
@@ -34,15 +35,14 @@ public class WebAnnoDaoAuthenticationProvider extends DaoAuthenticationProvider
     {
         String presentedPassword = aAuthentication.getCredentials().toString();
 
-        // Users which are created through the pre-auth mechanism end up with an empty password. 
+        // Users which are created through the pre-auth mechanism end up with an empty password.
         // So we do not want to accept these blank passwords when we have a non-preauth login.
         if (EMPTY_PASSWORD.equals(presentedPassword)) {
 
             throw new BadCredentialsException(messages.getMessage(
-                    "AbstractUserDetailsAuthenticationProvider.badCredentials",
-                    "Bad credentials"));
+                    "AbstractUserDetailsAuthenticationProvider.badCredentials", "Bad credentials"));
         }
-        
+
         super.additionalAuthenticationChecks(aUserDetails, aAuthentication);
     }
 }

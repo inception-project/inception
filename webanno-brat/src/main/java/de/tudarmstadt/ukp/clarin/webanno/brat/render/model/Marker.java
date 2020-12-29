@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
 public interface Marker
 {
-    public static final String EDITED = "edited"; 
+    public static final String EDITED = "edited";
     public static final String FOCUS = "focus";
     public static final String MATCH_FOCUS = "matchfocus";
     public static final String MATCH = "match";
-    
+
     String getType();
 }

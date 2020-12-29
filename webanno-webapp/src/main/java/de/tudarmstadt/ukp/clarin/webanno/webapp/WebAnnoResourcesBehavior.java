@@ -30,7 +30,7 @@ public class WebAnnoResourcesBehavior
     extends Behavior
 {
     private static final long serialVersionUID = 8847646938685436192L;
-    
+
     private static final WebAnnoResourcesBehavior INSTANCE = new WebAnnoResourcesBehavior();
 
     @Override
@@ -40,7 +40,7 @@ public class WebAnnoResourcesBehavior
         aResponse.render(CssHeaderItem.forReference(WebAnnoCssReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
     }
-    
+
     public static WebAnnoResourcesBehavior get()
     {
         return INSTANCE;

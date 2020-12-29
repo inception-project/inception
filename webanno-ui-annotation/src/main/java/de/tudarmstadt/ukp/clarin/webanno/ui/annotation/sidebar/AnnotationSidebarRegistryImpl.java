@@ -54,7 +54,7 @@ public class AnnotationSidebarRegistryImpl
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<AnnotationSidebarFactory> exts = new ArrayList<>();
@@ -68,16 +68,16 @@ public class AnnotationSidebarRegistryImpl
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
     }
-    
+
     @Override
     public List<AnnotationSidebarFactory> getSidebarFactories()
     {
         return extensions;
     }
-    
+
     @Override
     public AnnotationSidebarFactory getSidebarFactory(String aId)
     {
@@ -89,7 +89,7 @@ public class AnnotationSidebarRegistryImpl
                     .orElse(null);
         }
     }
-    
+
     @Override
     public AnnotationSidebarFactory getDefaultSidebarFactory()
     {
@@ -97,15 +97,15 @@ public class AnnotationSidebarRegistryImpl
     }
 
     /**
-     * Builds a comparator that sorts first by the order, if specified, then by the display
-     * name to break ties. It is assumed that the compared elements are all non-null
+     * Builds a comparator that sorts first by the order, if specified, then by the display name to
+     * break ties. It is assumed that the compared elements are all non-null
+     * 
      * @return The comparator
      */
     private Comparator<AnnotationSidebarFactory> buildComparator()
     {
         return (asf1, asf2) -> new CompareToBuilder()
                 .appendSuper(AnnotationAwareOrderComparator.INSTANCE.compare(asf1, asf2))
-                .append(asf1.getDisplayName(), asf2.getDisplayName())
-                .toComparison();
+                .append(asf1.getDisplayName(), asf2.getDisplayName()).toComparison();
     }
 }

@@ -35,7 +35,7 @@ public class PooledCasHolderFactory
     {
         return new DefaultPooledObject<CasHolder>(aCas);
     }
-    
+
     @Override
     public boolean validateObject(CasKey aKey, PooledObject<CasHolder> aP)
     {

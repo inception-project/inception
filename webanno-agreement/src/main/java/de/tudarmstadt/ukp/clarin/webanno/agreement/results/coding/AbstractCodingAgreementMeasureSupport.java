@@ -40,23 +40,19 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgreementTraits>
-    extends AgreementMeasureSupport_ImplBase<
-            T, 
-            PairwiseAnnotationResult<CodingAgreementResult>, 
-            ICodingAnnotationStudy>
+    extends
+    AgreementMeasureSupport_ImplBase<T, PairwiseAnnotationResult<CodingAgreementResult>, ICodingAnnotationStudy>
 {
     @Override
     public boolean accepts(AnnotationFeature aFeature)
     {
         AnnotationLayer layer = aFeature.getLayer();
-        
-        if (
-                asList(SPAN_TYPE, RELATION_TYPE).contains(layer.getType()) && 
-                asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(layer.getAnchoringMode())
-        ) {
+
+        if (asList(SPAN_TYPE, RELATION_TYPE).contains(layer.getType())
+                && asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(layer.getAnchoringMode())) {
             return true;
         }
-        
+
         return false;
     }
 

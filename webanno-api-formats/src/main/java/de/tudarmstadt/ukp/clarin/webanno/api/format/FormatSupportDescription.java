@@ -37,7 +37,7 @@ public class FormatSupportDescription
     private final String name;
     private final String readerClass;
     private final String writerClass;
-    
+
     public FormatSupportDescription(String aId, String aName, String aReaderClass,
             String aWriterClass)
     {
@@ -77,9 +77,10 @@ public class FormatSupportDescription
         throws ResourceInitializationException
     {
         if (!isReadable()) {
-            throw new UnsupportedOperationException("The format [" + getName() + "] cannot be read");
+            throw new UnsupportedOperationException(
+                    "The format [" + getName() + "] cannot be read");
         }
-        
+
         Class<? extends CollectionReader> readerClazz;
         try {
             readerClazz = (Class<? extends CollectionReader>) Class.forName(readerClass);
@@ -87,7 +88,7 @@ public class FormatSupportDescription
         catch (ClassNotFoundException e) {
             throw new ResourceInitializationException(e);
         }
-        
+
         return createReaderDescription(readerClazz, aTSD);
     }
 
@@ -98,7 +99,8 @@ public class FormatSupportDescription
         throws ResourceInitializationException
     {
         if (!isReadable()) {
-            throw new UnsupportedOperationException("The format [" + getName() + "] cannot be written");
+            throw new UnsupportedOperationException(
+                    "The format [" + getName() + "] cannot be written");
         }
 
         Class<? extends AnalysisComponent> writerClazz;

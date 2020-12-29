@@ -27,7 +27,7 @@ public class SpanDeletedEvent
     implements AnnotationDeletedEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
-    
+
     public SpanDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationLayer aLayer, AnnotationFS aAnnotation)
     {

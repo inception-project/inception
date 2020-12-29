@@ -29,14 +29,14 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
 public interface DiffAdapter
 {
     String getType();
-    
+
     Collection<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,
             LinkCompareBehavior aLinkCompareBehavior);
 
     LinkFeatureDecl getLinkFeature(String aFeature);
-    
+
     Set<String> getLabelFeatures();
-    
+
     Position getPosition(int aCasId, FeatureStructure aFS);
 
     Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,

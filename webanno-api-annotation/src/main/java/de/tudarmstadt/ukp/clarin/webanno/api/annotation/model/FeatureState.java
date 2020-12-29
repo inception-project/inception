@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 
 public class FeatureState
     implements Serializable
@@ -34,7 +34,7 @@ public class FeatureState
     private static final long serialVersionUID = 3512979848975446735L;
     public final AnnotationFeature feature;
     public Serializable value;
-    public List<Tag> tagset;
+    public List<ReorderableTag> tagset;
     public List<PossibleValue> possibleValues;
     public RulesIndicator indicator = new RulesIndicator();
     public VID vid;
@@ -52,7 +52,7 @@ public class FeatureState
             value = new ArrayList<>();
         }
     }
-    
+
     public Serializable getValue()
     {
         return value;
@@ -79,7 +79,8 @@ public class FeatureState
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -87,12 +88,12 @@ public class FeatureState
             return false;
         }
         FeatureState that = (FeatureState) o;
-        return feature.equals(that.feature) &&
-                vid.equals(that.vid);
+        return feature.equals(that.feature) && vid.equals(that.vid);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(feature, vid);
     }
 }

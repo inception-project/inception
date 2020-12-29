@@ -31,8 +31,7 @@ import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 @Deprecated
 public enum ConcreteAgreementMeasure
 {
-    COHEN_KAPPA_AGREEMENT(false),
-    FLEISS_KAPPA_AGREEMENT(false), 
+    COHEN_KAPPA_AGREEMENT(false), FLEISS_KAPPA_AGREEMENT(false),
     KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT(true);
 
     private final boolean nullValueSupported;

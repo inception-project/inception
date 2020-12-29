@@ -47,13 +47,13 @@ public class AllFeatureStructuresIndexedCheck
                 if (count >= 100) {
                     break;
                 }
-                
+
                 aMessages.add(LogMessage.error(this,
                         "Non-indexed feature structure [%s] reachable through [%s]", e.getKey(),
                         e.getValue()));
                 count++;
             }
-            
+
             if (count >= 100) {
                 aMessages.add(LogMessage.error(this,
                         "In total [%d] annotations were reachable but not indexed", count));

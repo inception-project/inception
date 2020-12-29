@@ -79,7 +79,7 @@ public class SourceDocumentExporter
         exportSourceDocuments(aRequest.getProject(), aExProject);
         exportSourceDocumentContents(aRequest, aMonitor, aExProject, aStage);
     }
-    
+
     private void exportSourceDocuments(Project aProject, ExportedProject exProject)
     {
         List<ExportedSourceDocument> sourceDocuments = new ArrayList<>();
@@ -133,7 +133,7 @@ public class SourceDocumentExporter
             }
         }
     }
-    
+
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
@@ -148,7 +148,7 @@ public class SourceDocumentExporter
                 aExProject.getSourceDocuments().size(), aExProject.getName(),
                 DurationFormatUtils.formatDurationWords(currentTimeMillis() - start, true, true));
     }
-    
+
     /**
      * Create s {@link SourceDocument} from the exported {@link SourceDocument}
      * 
@@ -178,7 +178,7 @@ public class SourceDocumentExporter
             documentService.createSourceDocument(sourceDocument);
         }
     }
-    
+
     /**
      * copy source document files from the exported source documents
      * 
@@ -195,10 +195,10 @@ public class SourceDocumentExporter
         // Query once for all the documents to avoid hitting the DB in the loop below
         Map<String, SourceDocument> docs = documentService.listSourceDocuments(aProject).stream()
                 .collect(Collectors.toMap(SourceDocument::getName, identity()));
-        
+
         // Create the folder structure for the project. This saves time over waiting for the
         // mkdirs in FastIOUtils.copy to kick in.
-        Path docRoot = Paths.get(repositoryProperties.getPath().getAbsolutePath(), PROJECT_FOLDER, 
+        Path docRoot = Paths.get(repositoryProperties.getPath().getAbsolutePath(), PROJECT_FOLDER,
                 aProject.getId().toString(), DOCUMENT_FOLDER);
         Files.createDirectories(docRoot);
         for (SourceDocument doc : docs.values()) {
@@ -207,7 +207,7 @@ public class SourceDocumentExporter
             Path sourceDocFolder = docFolder.resolve(SOURCE_FOLDER);
             createDirectory(sourceDocFolder);
         }
-        
+
         int n = 0;
         for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
             ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
@@ -220,7 +220,7 @@ public class SourceDocumentExporter
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
-                
+
                 SourceDocument sourceDocument = docs.get(fileName);
                 File sourceFilePath = documentService.getSourceDocumentFile(sourceDocument);
                 copy(zip.getInputStream(entry), sourceFilePath);

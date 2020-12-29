@@ -51,8 +51,7 @@ public class WebannoTsv3XWriter
     /**
      * Use this filename extension.
      */
-    public static final String PARAM_FILENAME_EXTENSION = 
-            ComponentParameters.PARAM_FILENAME_EXTENSION;
+    public static final String PARAM_FILENAME_EXTENSION = ComponentParameters.PARAM_FILENAME_EXTENSION;
     @ConfigurationParameter(name = PARAM_FILENAME_EXTENSION, mandatory = true, defaultValue = ".tsv")
     private String filenameSuffix;
 
@@ -60,11 +59,11 @@ public class WebannoTsv3XWriter
     public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
         TsvSchema schema = Tsv3XCasSchemaAnalyzer.analyze(aJCas.getTypeSystem());
-        
+
         TsvDocument doc = Tsv3XCasDocumentBuilder.of(schema, aJCas);
-        
-        try (PrintWriter docOS = new PrintWriter(new OutputStreamWriter(buffer(
-                getOutputStream(aJCas, filenameSuffix)), encoding))) {
+
+        try (PrintWriter docOS = new PrintWriter(
+                new OutputStreamWriter(buffer(getOutputStream(aJCas, filenameSuffix)), encoding))) {
             new Tsv3XSerializer().write(docOS, doc);
         }
         catch (IOException e) {

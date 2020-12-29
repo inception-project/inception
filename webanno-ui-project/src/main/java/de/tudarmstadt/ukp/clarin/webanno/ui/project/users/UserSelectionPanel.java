@@ -59,16 +59,16 @@ class UserSelectionPanel
 
     private IModel<Project> projectModel;
     private IModel<User> userModel;
-    
+
     private OverviewListChoice<User> overviewList;
     private MultiSelect<User> usersToAdd;
 
     public UserSelectionPanel(String id, IModel<Project> aProject, IModel<User> aUser)
     {
         super(id);
-        
+
         setOutputMarkupId(true);
-        
+
         projectModel = aProject;
         userModel = aUser;
 
@@ -78,11 +78,12 @@ class UserSelectionPanel
         overviewList.setChoices(this::listUsersWithPermissions);
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
-        
+
         IModel<Collection<User>> usersToAddModel = new CollectionModel<>(new ArrayList<>());
         Form<Collection<User>> form = new Form<>("form", usersToAddModel);
         add(form);
-        usersToAdd = new MultiSelect<User>("usersToAdd", new ChoiceRenderer<>("username")) {
+        usersToAdd = new MultiSelect<User>("usersToAdd", new ChoiceRenderer<>("username"))
+        {
             private static final long serialVersionUID = 8231304829756188352L;
 
             @Override
@@ -91,7 +92,7 @@ class UserSelectionPanel
                 // This ensures that we get the user input in getChoices
                 aDataSource.set("serverFiltering", true);
             }
-            
+
             @Override
             public void onConfigure(JQueryBehavior aBehavior)
             {
@@ -108,7 +109,7 @@ class UserSelectionPanel
                         .getQueryParameterValue("filter[filters][0][value]").toString();
 
                 List<User> result = new ArrayList<>();
-                
+
                 if (config.isHideUsers()) {
                     // only offer the user matching what the input entered into the field
                     User user = userRepository.get(input);
@@ -122,11 +123,11 @@ class UserSelectionPanel
                             .filter(user -> input == null || user.getUsername().contains(input))
                             .forEach(result::add);
                 }
-                
+
                 if (!result.isEmpty()) {
                     result.removeAll(listUsersWithPermissions());
                 }
-                
+
                 return result;
             }
         };
@@ -134,7 +135,7 @@ class UserSelectionPanel
         form.add(usersToAdd);
         form.add(new LambdaAjaxButton<>("add", this::actionAdd));
     }
-    
+
     private IChoiceRenderer<User> makeUserChoiceRenderer()
     {
         return new org.apache.wicket.markup.html.form.ChoiceRenderer<User>()
@@ -147,7 +148,7 @@ class UserSelectionPanel
                 String permissionLevels = projectRepository
                         .getProjectPermissionLevels(aUser, projectModel.getObject()).stream()
                         .map(PermissionLevel::getName).collect(joining(", ", "[", "]"));
-                
+
                 return aUser.getUsername() + " " + permissionLevels
                         + (aUser.isEnabled() ? "" : " (login disabled)");
             }
@@ -165,9 +166,9 @@ class UserSelectionPanel
             projectRepository.createProjectPermission(new ProjectPermission(
                     projectModel.getObject(), user.getUsername(), PermissionLevel.ANNOTATOR));
         }
-        
+
         aForm.getModelObject().clear();
-        
+
         aTarget.add(this);
     }
 }

@@ -35,8 +35,7 @@ public class TextAreaFeatureEditor
 {
     private static final long serialVersionUID = 8686646370500180943L;
 
-    public TextAreaFeatureEditor(String aId, MarkupContainer aItem,
-            IModel<FeatureState> aModel)
+    public TextAreaFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
         super(aId, aItem, aModel);
     }
@@ -48,8 +47,8 @@ public class TextAreaFeatureEditor
         textarea.add(new AjaxPreventSubmitBehavior());
         try {
             String traitsString = getModelObject().feature.getTraits();
-            StringFeatureTraits traits = 
-                    JSONUtil.fromJsonString(StringFeatureTraits.class, traitsString);
+            StringFeatureTraits traits = JSONUtil.fromJsonString(StringFeatureTraits.class,
+                    traitsString);
             textarea.add(new AttributeModifier("rows", traits.getCollapsedRows()));
             textarea.add(new AttributeAppender("onfocus",
                     "this.rows=" + traits.getExpandedRows() + ";"));

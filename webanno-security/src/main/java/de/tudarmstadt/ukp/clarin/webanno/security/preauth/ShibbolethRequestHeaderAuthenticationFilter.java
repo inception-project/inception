@@ -40,7 +40,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String EMPTY_PASSWORD = "";
-    
+
     private UserDetailsManager userDetailsManager;
     private UserDao userRepository;
 
@@ -50,11 +50,11 @@ public class ShibbolethRequestHeaderAuthenticationFilter
         u.setUsername((String) super.getPreAuthenticatedPrincipal(aRequest));
         u.setPassword(EMPTY_PASSWORD);
         u.setEnabled(true);
-        
+
         Set<Role> s = new HashSet<>();
         s.add(Role.ROLE_USER);
         Properties settings = SettingsUtil.getSettings();
-        
+
         String extraRoles = settings.getProperty(SettingsUtil.CFG_AUTH_PREAUTH_NEWUSER_ROLES);
         if (StringUtils.isNotBlank(extraRoles)) {
             for (String role : extraRoles.split(",")) {
@@ -68,7 +68,7 @@ public class ShibbolethRequestHeaderAuthenticationFilter
             }
         }
         u.setRoles(s);
-        
+
         userRepository.create(u);
         log.debug("Created new user [" + u.getUsername() + "] with roles " + u.getRoles());
     }

@@ -26,7 +26,7 @@ public class AfterCasWrittenEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = 686641613168415460L;
-    
+
     private final AnnotationDocument document;
     private final CAS cas;
 

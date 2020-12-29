@@ -47,15 +47,16 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class WebAnnoTsv3ReaderWriterTest
 {
     @Test
-    public void test()
-        throws Exception
+    public void test() throws Exception
     {
         String targetFolder = "target/test-output/" + testContext.getTestOutputFolderName();
-        
+
+        // @formatter:off
         CollectionReader reader = CollectionReaderFactory.createReader(
                 WebannoTsv3Reader.class,
                 WebannoTsv3Reader.PARAM_SOURCE_LOCATION, "src/test/resources/tsv3/",
                 WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
+        // @formatter:on
 
         List<String> slotFeatures = new ArrayList<>();
         List<String> slotTargets = new ArrayList<>();
@@ -69,6 +70,7 @@ public class WebAnnoTsv3ReaderWriterTest
         List<String> relationLayers = new ArrayList<>();
         relationLayers.add(Dependency.class.getName());
 
+        // @formatter:off
         AnalysisEngineDescription writer = createEngineDescription(
                 WebannoTsv3Writer.class,
                 WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
@@ -80,18 +82,23 @@ public class WebAnnoTsv3ReaderWriterTest
                 WebannoTsv3Writer.PARAM_LINK_TYPES, linkTypes, 
                 WebannoTsv3Writer.PARAM_CHAIN_LAYERS, chainLayers,
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, relationLayers);
+        // @formatter:on
 
         runPipeline(reader, writer);
 
+        // @formatter:off
         CollectionReader reader1 = CollectionReaderFactory.createReader(
                 WebannoTsv3Reader.class,
                 WebannoTsv3Reader.PARAM_SOURCE_LOCATION, "src/test/resources/tsv3/",
                 WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
+        // @formatter:on
 
+        // @formatter:off
         CollectionReader reader2 = CollectionReaderFactory.createReader(
                 WebannoTsv3Reader.class,
                 WebannoTsv3Reader.PARAM_SOURCE_LOCATION, targetFolder,
                 WebannoTsv3Reader.PARAM_PATTERNS, "coref.tsv");
+        // @formatter:on
 
         CAS cas1 = JCasFactory.createJCas().getCas();
         reader1.getNext(cas1);
@@ -112,7 +119,7 @@ public class WebAnnoTsv3ReaderWriterTest
         assertEquals(JCasUtil.select(cas2.getJCas(), Dependency.class).size(),
                 JCasUtil.select(cas1.getJCas(), Dependency.class).size());
     }
-    
+
     @Test
     public void testEscaping() throws Exception
     {
@@ -127,11 +134,11 @@ public class WebAnnoTsv3ReaderWriterTest
         samples.put("new\nline", "new\\nline");
         samples.put("A*-search", "A\\*-search");
         samples.put("[[jo]]->**mo**", "\\[\\[jo\\]\\]\\->\\*\\*mo\\*\\*");
-        
+
         for (Entry<String, String> sample : samples.entrySet()) {
             assertEquals(sample.getValue(), WebannoTsv3Writer.replaceEscapeChars(sample.getKey()));
         }
-        
+
         long start = System.currentTimeMillis();
         for (int n = 0; n < 100000; n++) {
             for (Entry<String, String> sample : samples.entrySet()) {

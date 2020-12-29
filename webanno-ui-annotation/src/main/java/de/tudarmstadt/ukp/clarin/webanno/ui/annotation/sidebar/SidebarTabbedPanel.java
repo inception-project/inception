@@ -51,13 +51,13 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     public SidebarTabbedPanel(String aId, List<T> aTabs)
     {
         super(aId, aTabs);
-        
+
         setOutputMarkupPlaceholderTag(true);
         setOutputMarkupId(true);
         setVisible(!aTabs.isEmpty());
-        
+
         LambdaAjaxLink showHideLink = new LambdaAjaxLink("showHideLink", this::showHideAction);
-        
+
         showHideLink.add(icon = new Image("showHideIcon", ICON_EXPANDED));
         ((WebMarkupContainer) get("tabs-container")).add(showHideLink);
     }
@@ -77,17 +77,17 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         icon.setImageResourceReference(expanded ? ICON_EXPANDED : ICON_COLLAPSED);
     }
-    
+
     @Override
     protected void onBeforeRender()
     {
         super.onBeforeRender();
         get("panel").setVisible(expanded);
     }
-    
+
     @Override
     protected void onAjaxUpdate(Optional<AjaxRequestTarget> aTarget)
     {
@@ -106,8 +106,9 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         image.add(new AttributeModifier("title", aTitleModel));
         return image;
     }
-    
-    private static class StaticImage extends Image
+
+    private static class StaticImage
+        extends Image
     {
         public StaticImage(String aId, final ResourceReference aResourceReference)
         {
@@ -115,7 +116,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         }
 
         private static final long serialVersionUID = 1207122722078977614L;
-        
+
         @Override
         protected boolean shouldAddAntiCacheParameter()
         {

@@ -41,27 +41,26 @@ public class CohenKappaAgreementMeasure
     extends CodingAggreementMeasure_ImplBase<DefaultAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
-    
+
     public CohenKappaAgreementMeasure(AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
             AnnotationSchemaService aAnnotationService)
     {
         super(aFeature, aTraits);
         annotationService = aAnnotationService;
     }
-    
+
     @Override
-    public CodingAgreementResult calculatePairAgreement(
-            Map<String, List<CAS>> aCasMap)
+    public CodingAgreementResult calculatePairAgreement(Map<String, List<CAS>> aCasMap)
     {
         AnnotationFeature feature = getFeature();
         DefaultAgreementTraits traits = getTraits();
-        
+
         List<DiffAdapter> adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
 
         CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
 
-        CodingAgreementResult agreementResult = makeCodingStudy(diff,
-                feature.getLayer().getName(), feature.getName(), true, aCasMap);
+        CodingAgreementResult agreementResult = makeCodingStudy(diff, feature.getLayer().getName(),
+                feature.getName(), true, aCasMap);
 
         IAgreementMeasure agreement = new CohenKappaAgreement(agreementResult.getStudy());
 
@@ -71,7 +70,7 @@ public class CohenKappaAgreementMeasure
         else {
             agreementResult.setAgreement(Double.NaN);
         }
-        
+
         return agreementResult;
     }
 }

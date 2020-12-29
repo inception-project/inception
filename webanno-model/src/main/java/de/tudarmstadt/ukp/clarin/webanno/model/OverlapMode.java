@@ -36,15 +36,16 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
  * </p>
  */
 public enum OverlapMode
-    implements
-    PersistentEnum
+    implements PersistentEnum
 {
     /**
      * No overlap.
      * <p>
      * For span layers (the examples below do <b>not</b> include all possible overlapping cases):
      * </p>
-     * <pre><code>
+     * 
+     * <pre>
+     * <code>
      * OK:  AAAA
      *          BBBB
      *      
@@ -59,12 +60,15 @@ public enum OverlapMode
      * 
      * BAD: AAAA
      *       BB
-     * </code></pre>
+     * </code>
+     * </pre>
      * <p>
      * For relation layers (the examples below do <b>not</b> include all possible overlapping
      * cases):
      * </p>
-     * <pre><code>
+     * 
+     * <pre>
+     * <code>
      * OK:   
      *        ┏━━ A ━━┓
      *       XXXX [XXX] XXXX
@@ -85,7 +89,8 @@ public enum OverlapMode
      *       
      *        ┏━━ B ━━┓
      *       XXXX [XXX] XXXX
-     * </code></pre>
+     * </code>
+     * </pre>
      */
     NO_OVERLAP("none"),
 
@@ -94,7 +99,9 @@ public enum OverlapMode
      * <p>
      * For span layers (the examples below do <b>not</b> include all possible overlapping cases):
      * </p>
-     * <pre><code>
+     * 
+     * <pre>
+     * <code>
      * OK:  AAAA
      *      BBBB
      *      
@@ -109,13 +116,16 @@ public enum OverlapMode
      * 
      * BAD: AAAA
      *       BB
-     * </code></pre>
+     * </code>
+     * </pre>
      * 
      * <p>
      * For relation layers (the examples below do <b>not</b> include all possible overlapping
      * cases):
      * </p>
-     * <pre><code>
+     * 
+     * <pre>
+     * <code>
      * OK:   
      *        ┏━━ A ━━┓
      *       XXXX [XXX] XXXX
@@ -129,7 +139,8 @@ public enum OverlapMode
      *       
      *        ┏━━ B ━━┓
      *       XXXX [XXX] XXXX
-     * </code></pre>
+     * </code>
+     * </pre>
      */
     STACKING_ONLY("stackingOnly"),
 
@@ -140,7 +151,9 @@ public enum OverlapMode
      * <p>
      * For span layers (the examples below do <b>not</b> include all possible overlapping cases):
      * </p>
-     * <pre><code>
+     * 
+     * <pre>
+     * <code>
      * OK:  AAAA
      *          BBBB
      *      
@@ -155,13 +168,16 @@ public enum OverlapMode
      *       
      * BAD: AAAA
      *      BBBB
-     * </code></pre>
+     * </code>
+     * </pre>
      * 
      * <p>
      * For relation layers (the examples below do <b>not</b> include all possible overlapping
      * cases):
      * </p>
-     * <pre><code>
+     * 
+     * <pre>
+     * <code>
      * OK:    ┏ A ┓
      *       XXXX XXXX [XXX]
      *       
@@ -179,7 +195,8 @@ public enum OverlapMode
      *       
      *        ┏━━ B ━━┓
      *       XXXX [XXX] XXXX
-     * </code></pre>
+     * </code>
+     * </pre>
      */
     OVERLAP_ONLY("overlapOnly"),
 

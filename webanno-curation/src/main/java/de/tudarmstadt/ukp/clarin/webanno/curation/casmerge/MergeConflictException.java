@@ -46,5 +46,5 @@ public class MergeConflictException
     public MergeConflictException(Throwable aCause)
     {
         super(aCause);
-    }   
+    }
 }

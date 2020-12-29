@@ -34,12 +34,11 @@ public class SuccessfulLoginListener
     public static final String SERVICE_NAME = "successfulLoginListener";
 
     private @Autowired UserDao userRepository;
-    
+
     @Override
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
-        if (aEvent instanceof AuthenticationSuccessEvent)
-        {
+        if (aEvent instanceof AuthenticationSuccessEvent) {
             AuthenticationSuccessEvent event = (AuthenticationSuccessEvent) aEvent;
             User user = userRepository.get(event.getAuthentication().getName());
             user.setLastLogin(new Date(event.getTimestamp()));

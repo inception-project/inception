@@ -24,8 +24,7 @@ public class JQueryScrollbarWidthReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final JQueryScrollbarWidthReference INSTANCE = 
-            new JQueryScrollbarWidthReference();
+    private static final JQueryScrollbarWidthReference INSTANCE = new JQueryScrollbarWidthReference();
 
     /**
      * Gets the instance of the resource reference

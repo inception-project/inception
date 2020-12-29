@@ -120,21 +120,18 @@ public class WebannoTsv3Writer
     private Map<String, Set<String>> featurePerLayer = new LinkedHashMap<>();
     private Map<AnnotationUnit, String> unitsLineNumber = new HashMap<>();
     private Map<AnnotationUnit, String> sentenceUnits = new HashMap<>();
-    private Map<String, Map<AnnotationUnit, List<List<String>>>> annotationsPerPostion = 
-            new HashMap<>();
+    private Map<String, Map<AnnotationUnit, List<List<String>>>> annotationsPerPostion = new HashMap<>();
     private Map<Feature, Type> slotFeatureTypes = new HashMap<>();
 
     private Map<Type, Map<FeatureStructure, Integer>> annotaionRefPerType = new HashMap<>();
 
     private Map<String, Map<AnnotationUnit, Boolean>> ambigUnits = new HashMap<>();
-    private Map<Type, Map<AnnotationUnit, Map<FeatureStructure, Integer>>> multiAnnosPerUnit = 
-            new HashMap<>();
+    private Map<Type, Map<AnnotationUnit, Map<FeatureStructure, Integer>>> multiAnnosPerUnit = new HashMap<>();
     private Map<String, String> slotLinkTypes = new HashMap<>();
     private Map<Type, Integer> layerMaps = new LinkedHashMap<>();
 
     @Override
-    public void process(JCas aJCas)
-        throws AnalysisEngineProcessException
+    public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
         try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
             resetVariables();
@@ -149,8 +146,8 @@ public class WebannoTsv3Writer
             for (AnnotationUnit unit : units) {
                 if (sentenceUnits.containsKey(unit)) {
                     String[] sentWithNl = sentenceUnits.get(unit).split("\n");
-                    IOUtils.write(LF + "#Text=" + escapeSpecial(sentWithNl[0]) + LF, 
-                            docOS, encoding);
+                    IOUtils.write(LF + "#Text=" + escapeSpecial(sentWithNl[0]) + LF, docOS,
+                            encoding);
                     // if sentence contains new line character
                     // GITHUB ISSUE 318: New line in sentence should be exported as is
                     if (sentWithNl.length > 1) {
@@ -242,8 +239,7 @@ public class WebannoTsv3Writer
      * Write headers, in the sequence <br>
      * Type TAB List(Features sep by TAB)
      */
-    private void writeHeader(OutputStream docOS)
-        throws IOException
+    private void writeHeader(OutputStream docOS) throws IOException
     {
         IOUtils.write("#FORMAT=WebAnno TSV 3.2" + LF, docOS, encoding);
         for (String type : featurePerLayer.keySet()) {
@@ -312,8 +308,8 @@ public class WebannoTsv3Writer
         for (String l : spanLayers) {
             Type type = getType(aJCas.getCas(), l);
             List<Feature> features = type.getFeatures();
-            Collections.sort(features, (a, b) -> 
-                    StringUtils.compare(a.getShortName(), b.getShortName()));
+            Collections.sort(features,
+                    (a, b) -> StringUtils.compare(a.getShortName(), b.getShortName()));
             for (Feature f : features) {
                 if (slotFeatures != null && slotFeatures.contains(f.getName())) {
                     slotFeatureTypes.put(f, getType(aJCas.getCas(), slotTargets.get(i)));
@@ -435,8 +431,8 @@ public class WebannoTsv3Writer
             Feature governorFeature = null;
 
             List<Feature> features = type.getFeatures();
-            Collections.sort(features, (a, b) -> 
-                    StringUtils.compare(a.getShortName(), b.getShortName()));
+            Collections.sort(features,
+                    (a, b) -> StringUtils.compare(a.getShortName(), b.getShortName()));
             for (Feature feature : features) {
                 if (feature.getShortName().equals(DEPENDENT)) {
 
@@ -655,8 +651,8 @@ public class WebannoTsv3Writer
             ref = 0;
         }
         List<Feature> features = aType.getFeatures();
-        Collections.sort(features, (a, b) -> 
-                StringUtils.compare(a.getShortName(), b.getShortName()));
+        Collections.sort(features,
+                (a, b) -> StringUtils.compare(a.getShortName(), b.getShortName()));
         for (Feature feature : features) {
             if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
                     || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
@@ -809,8 +805,8 @@ public class WebannoTsv3Writer
     {
         List<String> annoPerFeatures = new ArrayList<>();
         List<Feature> features = aType.getFeatures();
-        Collections.sort(features, (a, b) -> 
-                StringUtils.compare(a.getShortName(), b.getShortName()));
+        Collections.sort(features,
+                (a, b) -> StringUtils.compare(a.getShortName(), b.getShortName()));
         for (Feature feature : features) {
             if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
                     || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
@@ -860,8 +856,8 @@ public class WebannoTsv3Writer
         List<String> annoPerFeatures = new ArrayList<>();
         featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
         List<Feature> features = type.getFeatures();
-        Collections.sort(features, (a, b) -> 
-                StringUtils.compare(a.getShortName(), b.getShortName()));
+        Collections.sort(features,
+                (a, b) -> StringUtils.compare(a.getShortName(), b.getShortName()));
         for (Feature feature : features) {
             if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
                     || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
@@ -1037,7 +1033,8 @@ public class WebannoTsv3Writer
         }
     }
 
-    private void resetVariables() {
+    private void resetVariables()
+    {
         units.clear();
         subUnits.clear();
         featurePerLayer.clear();
@@ -1052,7 +1049,8 @@ public class WebannoTsv3Writer
         layerMaps.clear();
     }
 
-    private String escapeSpecial(String aText) {
+    private String escapeSpecial(String aText)
+    {
         List<String> pat = new ArrayList<>();
         List<String> esc = new ArrayList<>();
         for (int i = 0; i < 32; i++) {
@@ -1082,8 +1080,8 @@ public class WebannoTsv3Writer
         pat.add("\\");
         esc.add("\\\\");
 
-        return StringUtils.replaceEach(aText, 
-                pat.toArray(new String[pat.size()]), esc.toArray(new String[esc.size()]));
+        return StringUtils.replaceEach(aText, pat.toArray(new String[pat.size()]),
+                esc.toArray(new String[esc.size()]));
     }
 
     class SubTokenAnno

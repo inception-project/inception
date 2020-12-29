@@ -53,23 +53,23 @@ public class LogMessage
     {
         return level;
     }
-    
+
     public String getMessage()
     {
         return message;
     }
-    
+
     public String getSource()
     {
         return source;
     }
-    
+
     @Override
     public String toString()
     {
         return String.format("[%s] %s", source != null ? source : "<unknown>", message);
     }
-    
+
     public static LogMessage info(Object aSource, String aFormat, Object... aValues)
     {
         return new LogMessage(aSource, LogLevel.INFO, aFormat, aValues);

@@ -23,7 +23,7 @@ public class SvgChartOptions
     implements Serializable
 {
     private static final long serialVersionUID = -9057189986760933181L;
-    
+
     private int viewBoxWidth = 400;
     private int viewBoxHeight = 300;
 

@@ -30,7 +30,7 @@ public class StyledComboBox<T>
     extends ComboBox<T>
 {
     private static final long serialVersionUID = 1L;
-    
+
     public StyledComboBox(String aId, IModel<List<T>> aChoices)
     {
         super(aId, aChoices);
@@ -38,9 +38,9 @@ public class StyledComboBox<T>
 
     public StyledComboBox(String id, IModel<String> model, List<T> choices)
     {
-        super(id, model, choices);            
+        super(id, model, choices);
     }
-    
+
     public StyledComboBox(String aId, IModel<String> aModel, IModel<List<T>> aChoices)
     {
         super(aId, aModel, aChoices);
@@ -50,12 +50,12 @@ public class StyledComboBox<T>
     {
         super(string, choices);
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        
+
         // This was an attempt to fix the problem that Wicket does not correctly return the
         // focus to ComboBoxes after an AJAX submit/onChange event. Unfortunately, it does
         // not fix the problem.
@@ -69,9 +69,9 @@ public class StyledComboBox<T>
         return new IJQueryTemplate()
         {
             private static final long serialVersionUID = 1L;
+
             /**
-             * Marks the reordered entries in bold.
-             * Same as text feature editor.
+             * Marks the reordered entries in bold. Same as text feature editor.
              */
             @Override
             public String getText()
@@ -79,11 +79,10 @@ public class StyledComboBox<T>
                 // Some docs on how the templates work in Kendo, in case we need
                 // more fancy dropdowns
                 // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                return "# if (data.reordered == 'true') { #" +
-                    "<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n" +
-                    "# } else { #" +
-                    "<div title=\"#: data.description #\">#: data.name #</div>\n" +
-                    "# } #";
+                return "# if (data.reordered == 'true') { #"
+                        + "<div title=\"#: data.description #\"><b>#: data.name #</b></div>\n"
+                        + "# } else { #"
+                        + "<div title=\"#: data.description #\">#: data.name #</div>\n" + "# } #";
             }
 
             @Override

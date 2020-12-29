@@ -38,7 +38,7 @@ public class TextFormatSupport
 {
     public static final String ID = "text";
     public static final String NAME = "Plain text";
-    
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class TextFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -69,7 +69,7 @@ public class TextFormatSupport
     {
         return createReaderDescription(TextReader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

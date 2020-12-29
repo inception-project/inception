@@ -30,26 +30,27 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 
 @Order(1000)
 @Component
-public class CurationWorkflowActionBarExtension implements ActionBarExtension
+public class CurationWorkflowActionBarExtension
+    implements ActionBarExtension
 {
     @Override
     public String getRole()
     {
         return DefaultWorkflowActionBarExtension.class.getName();
     }
-    
+
     @Override
     public int getPriority()
     {
         return MAX_VALUE;
     }
-    
+
     @Override
     public boolean accepts(AnnotationPageBase aPage)
     {
         return aPage instanceof CurationPage;
     }
-    
+
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
     {

@@ -46,16 +46,16 @@ public class RelationLayerTraitsEditor
     protected void initializeForm(Form<RelationLayerTraits> aForm)
     {
         aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
-        
+
         OverlapModeSelect overlapMode = new OverlapModeSelect("overlapMode", getLayerModel());
         // Not configurable for layers that attach to tokens (currently that is the only layer on
         // which we use the attach feature)
         overlapMode.add(enabledWhen(() -> getLayerModelObject().getAttachFeature() == null));
         aForm.add(overlapMode);
-        
-        aForm.add(new ColoringRulesConfigurationPanel("coloringRules",
-                getLayerModel(), getTraitsModel().bind("coloringRules.rules")));
-        
+
+        aForm.add(new ColoringRulesConfigurationPanel("coloringRules", getLayerModel(),
+                getTraitsModel().bind("coloringRules.rules")));
+
         CheckBox crossSentence = new CheckBox("crossSentence");
         crossSentence.setOutputMarkupPlaceholderTag(true);
         crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
@@ -65,7 +65,8 @@ public class RelationLayerTraitsEditor
         aForm.add(crossSentence);
 
         TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
-        onClickJavascriptAction.setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
+        onClickJavascriptAction
+                .setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
         onClickJavascriptAction.add(new AttributeModifier("placeholder",
                 "alert($PARAM.PID + ' ' + $PARAM.PNAME + ' ' + $PARAM.DOCID + ' ' + "
                         + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));

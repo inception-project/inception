@@ -21,10 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 
-public class StaticColoringStrategy implements ColoringStrategy
+public class StaticColoringStrategy
+    implements ColoringStrategy
 {
     private final String color;
-    
+
     public StaticColoringStrategy(String aColor)
     {
         super();

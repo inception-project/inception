@@ -51,18 +51,19 @@ public class ActionBar
             }
         });
     }
-    
+
     @Override
     protected void onInitialize()
     {
         super.onInitialize();
-        
+
         for (ActionBarExtension ext : getExtensions()) {
             ext.onInitialize((AnnotationPageBase) getPage());
         }
     }
-    
-    private List<ActionBarExtension> getExtensions() {
+
+    private List<ActionBarExtension> getExtensions()
+    {
         return actionBarExtensionPoint.getExtensions((AnnotationPageBase) getPage());
     }
 }

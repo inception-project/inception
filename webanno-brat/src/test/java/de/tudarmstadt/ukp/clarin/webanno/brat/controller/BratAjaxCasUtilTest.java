@@ -45,7 +45,7 @@ public class BratAjaxCasUtilTest
         Sentence s3 = jb.add(".", Sentence.class);
         Sentence s4 = jb.add(".", Sentence.class);
         jb.close();
-        
+
         CAS cas = jcas.getCas();
 
         assertFalse(isBeginInSameSentence(cas, s2.getBegin(), s2.getEnd()));
@@ -80,7 +80,7 @@ public class BratAjaxCasUtilTest
         jb.close();
 
         CAS cas = jcas.getCas();
-        
+
         assertTrue(isBeginEndInSameSentence(cas, s2.getBegin(), s2.getEnd()));
 
         assertTrue(isBeginEndInSameSentence(cas, s1.getBegin() + 1, s1.getEnd() - 1));
@@ -98,7 +98,7 @@ public class BratAjaxCasUtilTest
         // Note that this is an invalid use of isBeginEndInSameSentence because two begin offsets
         // are compared with each other
         assertTrue(isBeginEndInSameSentence(cas, s3.getBegin(), s4.getBegin()));
-        
+
         // Note that these are invalid uses of isBeginEndInSameSentence because the first offset
         // must be a begin offset
         // Invalid because begin > end

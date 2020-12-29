@@ -47,10 +47,11 @@ public class FeatureSupportRegistryImpl
     {
         return findExtension(aFeature);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId) {
+    public <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId)
+    {
         return (T) getExtension(aFeatureSupportId);
     }
 
@@ -68,7 +69,7 @@ public class FeatureSupportRegistryImpl
 
         return allTypes;
     }
-    
+
     @Override
     public List<FeatureType> getUserSelectableTypes(AnnotationLayer aLayer)
     {
@@ -90,7 +91,7 @@ public class FeatureSupportRegistryImpl
         if (aFeature.getType() == null) {
             return null;
         }
-        
+
         // Figure out which feature support provides the given type.
         // If we can find a suitable feature support, then use it to resolve the type to a
         // FeaatureType

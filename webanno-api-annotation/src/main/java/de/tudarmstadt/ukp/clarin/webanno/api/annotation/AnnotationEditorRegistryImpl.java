@@ -46,13 +46,13 @@ public class AnnotationEditorRegistryImpl
     {
         extensionsProxy = aExtensions;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<AnnotationEditorFactory> exts = new ArrayList<>();
@@ -60,13 +60,13 @@ public class AnnotationEditorRegistryImpl
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
-        
+
             for (AnnotationEditorFactory fs : exts) {
                 log.info("Found annotation editor: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
     }
 
@@ -75,7 +75,7 @@ public class AnnotationEditorRegistryImpl
     {
         return extensions;
     }
-    
+
     @Override
     public AnnotationEditorFactory getEditorFactory(String aId)
     {
@@ -87,7 +87,7 @@ public class AnnotationEditorRegistryImpl
                     .orElse(null);
         }
     }
-    
+
     @Override
     public AnnotationEditorFactory getDefaultEditorFactory()
     {

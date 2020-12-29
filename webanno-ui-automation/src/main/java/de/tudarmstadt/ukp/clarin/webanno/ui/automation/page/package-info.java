@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 /**
- * A wicket page that support auatomation of annotation using different techniques such
- * as search similar pattern and active learning
+ * A wicket page that support auatomation of annotation using different techniques such as search
+ * similar pattern and active learning
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;

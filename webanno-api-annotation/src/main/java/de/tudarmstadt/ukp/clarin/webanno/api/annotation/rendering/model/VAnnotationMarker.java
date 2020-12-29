@@ -24,7 +24,7 @@ public class VAnnotationMarker
 {
     private final VID[] vid;
     private String type;
-    
+
     public VAnnotationMarker(String aType, VID aVid)
     {
         this(null, aType, aVid);
@@ -41,7 +41,7 @@ public class VAnnotationMarker
     {
         return vid[0];
     }
-    
+
     @Override
     public String getType()
     {

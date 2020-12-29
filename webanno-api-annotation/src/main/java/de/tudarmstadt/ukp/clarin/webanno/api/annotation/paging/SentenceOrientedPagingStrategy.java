@@ -48,23 +48,23 @@ public class SentenceOrientedPagingStrategy
             if (i > aLastIndex) {
                 break;
             }
-            
+
             if (i >= aFirstIndex) {
                 units.add(toUnit(i, sentence));
             }
-            
+
             i++;
         }
         return units;
     }
-    
+
     @Override
     public int unitCount(CAS aCas)
     {
         // This is way faster than the default implementation which first materializes all units
-        return aCas.getAnnotationIndex(CasUtil.getType(aCas, Sentence.class)).size(); 
+        return aCas.getAnnotationIndex(CasUtil.getType(aCas, Sentence.class)).size();
     }
-    
+
     private Unit toUnit(int aIndex, AnnotationFS aSentence)
     {
         // If there is a sentence ID, then make it accessible to the user via a sentence-level
@@ -72,7 +72,7 @@ public class SentenceOrientedPagingStrategy
         String sentId = FSUtil.getFeature(aSentence, "id", String.class);
         return new Unit(sentId, aIndex, aSentence.getBegin(), aSentence.getEnd());
     }
-    
+
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -86,7 +86,7 @@ public class SentenceOrientedPagingStrategy
         label.setOutputMarkupPlaceholderTag(true);
         return label;
     }
-    
+
     @Override
     public DefaultPagingNavigator createPageNavigator(String aId, AnnotationPageBase aPage)
     {

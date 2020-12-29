@@ -30,29 +30,30 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 @Order(110)
-public class AutomationPageMenuItem implements MenuItem
+public class AutomationPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
-    
+
     @Override
     public String getPath()
     {
         return "/automation";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/update.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Automation";
     }
-    
+
     /**
      * Only project admins and annotators can see this page
      */
@@ -62,7 +63,7 @@ public class AutomationPageMenuItem implements MenuItem
         return SecurityUtil.annotationEnabeled(projectService, userRepo.getCurrentUser(),
                 WebAnnoConst.PROJECT_TYPE_AUTOMATION);
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

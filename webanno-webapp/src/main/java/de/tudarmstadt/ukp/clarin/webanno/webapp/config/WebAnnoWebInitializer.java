@@ -49,7 +49,7 @@ public class WebAnnoWebInitializer
                 OpenEntityManagerInViewFilter.class);
         openSessionInViewFilter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false,
                 "/*");
-        
+
         aServletContext.addListener(HttpSessionEventPublisher.class);
     }
 }

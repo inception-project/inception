@@ -49,12 +49,11 @@ public class RemoveDanglingFeatureAttachedSpanAnnotationsRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
-        
+
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             int count = 0;
-            
-            if (!(SPAN_TYPE.equals(layer.getType())
-                    && layer.getAttachFeature() != null)) {
+
+            if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
                 continue;
             }
 

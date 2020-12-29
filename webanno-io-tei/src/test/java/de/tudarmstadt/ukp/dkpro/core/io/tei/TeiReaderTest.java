@@ -39,9 +39,8 @@ public class TeiReaderTest
 {
 
     @Test
-     @Ignore("No TEI yet to opensource ")
-    public void testTeiReader()
-        throws Exception
+    @Ignore("No TEI yet to opensource ")
+    public void testTeiReader() throws Exception
     {
         CollectionReaderDescription reader = createReaderDescription(TeiReader.class,
                 TeiReader.PARAM_LANGUAGE, "en", TeiReader.PARAM_SOURCE_LOCATION,
@@ -61,8 +60,8 @@ public class TeiReaderTest
             assertEquals(0, JCasUtil.select(jcas, NamedEntity.class).size());
             assertEquals(30, JCasUtil.select(jcas, Sentence.class).size());
 
-            assertEquals(firstSentence, JCasUtil.select(jcas, Sentence.class).iterator().next()
-                    .getCoveredText());
+            assertEquals(firstSentence,
+                    JCasUtil.select(jcas, Sentence.class).iterator().next().getCoveredText());
         }
 
     }

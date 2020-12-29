@@ -32,9 +32,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
@@ -63,7 +65,7 @@ public class AnnotatorWorkflowActionBarItemGroup
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
                 new StringResourceModel("FinishDocumentDialog.title", this, null),
                 new StringResourceModel("FinishDocumentDialog.text", this, null)));
-        
+
         add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
                 this::actionFinishDocument));
         finishDocumentLink.setOutputMarkupId(true);
@@ -74,8 +76,8 @@ public class AnnotatorWorkflowActionBarItemGroup
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
         add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
                 new StringResourceModel("ResetDocumentDialog.title", this),
-                new StringResourceModel("ResetDocumentDialog.text", this)
-                        .setModel(page.getModel()).setParameters(documentNameModel),
+                new StringResourceModel("ResetDocumentDialog.text", this).setModel(page.getModel())
+                        .setParameters(documentNameModel),
                 documentNameModel));
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
 
@@ -83,16 +85,16 @@ public class AnnotatorWorkflowActionBarItemGroup
                 resetDocumentDialog::show));
         resetDocumentLink.add(enabledWhen(() -> page.isEditable()));
     }
-    
+
     protected AnnotationPageBase getAnnotationPage()
     {
         return page;
     }
-    
+
     public String getStateClass()
     {
         AnnotatorState state = page.getModelObject();
-        
+
         if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
             return FontAwesome5IconType.lock_s.cssClassName();
         }
@@ -116,6 +118,12 @@ public class AnnotatorWorkflowActionBarItemGroup
             // manually update state change!! No idea why it is not updated in the DB
             // without calling createAnnotationDocument(...)
             documentService.createAnnotationDocument(annotationDocument);
+
+            // curation sidebar: need to update source doc state as well to finished
+            if (state.getUser().getUsername().equals(WebAnnoConst.CURATION_USER)) {
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+            }
 
             _target.add(page);
         });

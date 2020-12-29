@@ -23,13 +23,13 @@ public class RProject
 {
     public long id;
     public String name;
-    
+
     public RProject(Project aProject)
     {
         id = aProject.getId();
         name = aProject.getName();
     }
-    
+
     public RProject(long aId, String aName)
     {
         super();

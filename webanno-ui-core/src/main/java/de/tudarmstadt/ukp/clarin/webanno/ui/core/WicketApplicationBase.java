@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
 import static io.bit3.jsass.OutputStyle.EXPANDED;
 import static io.bit3.jsass.OutputStyle.NESTED;
+import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -30,7 +32,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
-import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authorization.strategies.page.SimplePageAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
@@ -38,9 +39,11 @@ import org.apache.wicket.core.request.mapper.HomePageMapper;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.request.IRequestMapper;
+import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.resource.JQueryResourceReference;
@@ -90,44 +93,41 @@ public abstract class WicketApplicationBase
 {
     protected boolean isInitialized = false;
 
-    @Autowired
-    private MenuItemRegistry menuItemRegistry;
-    
+    private @Autowired MenuItemRegistry menuItemRegistry;
+
     @Override
     protected void init()
     {
         super.init();
 
         CompoundAuthorizationStrategy authorizationStrategy = new CompoundAuthorizationStrategy();
-        // Custom authorization strategy which prevents access to pages if the corresponding 
+        // Custom authorization strategy which prevents access to pages if the corresponding
         // menu item does not permit it.
-        authorizationStrategy.add(
-                new SimplePageAuthorizationStrategy(Page.class, getHomePage())
-                {
-                    @Override
-                    protected <T extends Page> boolean isPageAuthorized(Class<T> aPageClass)
-                    {
-                        return menuItemRegistry.getMenuItem(aPageClass)
-                                .map(item -> item.isDirectAccessAllowed() || item.applies())
-                                .orElse(true);
-                    }
+        authorizationStrategy.add(new SimplePageAuthorizationStrategy(Page.class, getHomePage())
+        {
+            @Override
+            protected <T extends Page> boolean isPageAuthorized(Class<T> aPageClass)
+            {
+                return menuItemRegistry.getMenuItem(aPageClass)
+                        .map(item -> item.isDirectAccessAllowed() || item.applies()).orElse(true);
+            }
 
-                    @Override
-                    protected boolean isAuthorized()
-                    {
-                        throw new IllegalStateException("This should not be called");
-                    }
-                });
+            @Override
+            protected boolean isAuthorized()
+            {
+                throw new IllegalStateException("This should not be called");
+            }
+        });
         authorizationStrategy.add(new RoleAuthorizationStrategy(this));
-        getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);        
-        
+        getSecuritySettings().setAuthorizationStrategy(authorizationStrategy);
+
         getCspSettings().blocking().disabled();
-        
+
         initStatelessChecker();
-        
+
         if (!isInitialized) {
             initOnce();
-            
+
             isInitialized = true;
         }
     }
@@ -136,26 +136,28 @@ public abstract class WicketApplicationBase
     {
         // Allow nested string resource resolving using "#(key)"
         initNestedStringResourceLoader();
-        
-//        // This should avoid some application-reloading while working on I18N
-//        getResourceSettings().setThrowExceptionOnMissingResource(false);
-//        getResourceSettings().setCachingStrategy(new NoOpResourceCachingStrategy());
-        
+
+        // // This should avoid some application-reloading while working on I18N
+        // getResourceSettings().setThrowExceptionOnMissingResource(false);
+        // getResourceSettings().setCachingStrategy(new NoOpResourceCachingStrategy());
+
         initWebFrameworks();
-        
+
         initDefaultPageMounts();
-        
+
         initLogoReference();
 
         // Display stack trace instead of internal error
         initShowExceptionPage();
 
         initMDCLifecycle();
-        
+
         // Allow fetching the current page from non-Wicket code
         initPageRequestTracker();
+
+        initServerTimeReporting();
     }
-    
+
     private void initPageRequestTracker()
     {
         getRequestCycleListeners().add(new PageRequestHandlerTracker());
@@ -164,20 +166,20 @@ public abstract class WicketApplicationBase
     protected void initWebFrameworks()
     {
         initJQueryResourceReference();
- 
+
         addJQueryJavascriptToAllPages();
-        
+
         initBootstrap();
-        
+
         addKendoResourcesToAllPages();
-        
+
         addJQueryUIResourcesToAllPages();
-        
+
         addFontAwesomeToAllPages();
-        
+
         addCssBrowserSelectorToAllPages();
     }
-    
+
     protected void initBootstrap()
     {
         SassCompilerOptionsFactory sassOptionsFactory = () -> {
@@ -185,7 +187,7 @@ public abstract class WicketApplicationBase
             options.setOutputStyle(DEPLOYMENT.equals(getConfigurationType()) ? EXPANDED : NESTED);
             return options;
         };
-        
+
         WicketWebjars.install(this);
 
         BootstrapSass.install(this, sassOptionsFactory);
@@ -193,9 +195,8 @@ public abstract class WicketApplicationBase
         SassCacheManager cacheManager = new SassCacheManager(sassOptionsFactory);
         cacheManager.install(this);
 
-        
         Bootstrap.install(this);
-        
+
         IBootstrapSettings settings = Bootstrap.getSettings(this);
         settings.setCssResourceReference(CustomBootstrapSassReference.get());
     }
@@ -218,7 +219,7 @@ public abstract class WicketApplicationBase
             }
         });
     }
-    
+
     protected void addCssBrowserSelectorToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
@@ -227,7 +228,7 @@ public abstract class WicketApplicationBase
             }
         });
     }
-    
+
     protected void addJQueryUIResourcesToAllPages()
     {
         JQueryUILibrarySettings jqueryUiCfg = JQueryUILibrarySettings.get();
@@ -235,14 +236,14 @@ public abstract class WicketApplicationBase
         // JQuery UI tooltip that we use e.g. on the annotation page takes precedence over
         // the less powerful Bootstrap tooltip (both are JQuery plugins using the same name!)
         jqueryUiCfg.setJavaScriptReference(BootstrapAwareJQueryUIJavaScriptResourceReference.get());
-        
+
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
                 component.add(new JQueryUIResourceBehavior());
             }
         });
     }
-    
+
     protected void addJQueryJavascriptToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
@@ -251,6 +252,7 @@ public abstract class WicketApplicationBase
             }
         });
     }
+
     protected void initMDCLifecycle()
     {
         getRequestCycleListeners().add(new IRequestCycleListener()
@@ -281,8 +283,8 @@ public abstract class WicketApplicationBase
     {
         Properties settings = SettingsUtil.getSettings();
         if ("true".equalsIgnoreCase(settings.getProperty("debug.showExceptionPage"))) {
-            getExceptionSettings().setUnexpectedExceptionDisplay(
-                    ExceptionSettings.SHOW_EXCEPTION_PAGE);
+            getExceptionSettings()
+                    .setUnexpectedExceptionDisplay(ExceptionSettings.SHOW_EXCEPTION_PAGE);
         }
     }
 
@@ -298,7 +300,7 @@ public abstract class WicketApplicationBase
             mountResource("/assets/logo.png", new PackageResourceReference(getLogoLocation()));
         }
     }
-    
+
     protected String getLogoLocation()
     {
         return "/de/tudarmstadt/ukp/clarin/webanno/ui/core/logo/logo.png";
@@ -308,7 +310,7 @@ public abstract class WicketApplicationBase
     {
         mountPage("/login.html", getSignInPageClass());
         mountPage("/welcome.html", getHomePage());
-        
+
         // Mount the other pages via @MountPath annotation on the page classes
         AnnotatedMountList mounts = new AnnotatedMountScanner().scanPackage("de.tudarmstadt.ukp");
         for (IRequestMapper mapper : mounts) {
@@ -321,7 +323,7 @@ public abstract class WicketApplicationBase
 
     protected void initJQueryResourceReference()
     {
-        // See: 
+        // See:
         // https://github.com/webanno/webanno/issues/1397
         // https://github.com/sebfz1/wicket-jquery-ui/issues/311
         getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV2());
@@ -339,9 +341,32 @@ public abstract class WicketApplicationBase
 
     protected void initStatelessChecker()
     {
-        if (RuntimeConfigurationType.DEVELOPMENT.equals(getConfigurationType())) {
+        if (DEVELOPMENT.equals(getConfigurationType())) {
             getComponentPostOnBeforeRenderListeners().add(new StatelessChecker());
         }
+    }
+
+    protected void initServerTimeReporting()
+    {
+        Properties settings = SettingsUtil.getSettings();
+        if (!DEVELOPMENT.equals(getConfigurationType())
+                && !"true".equalsIgnoreCase(settings.getProperty("debug.sendServerSideTimings"))) {
+            return;
+        }
+
+        getRequestCycleListeners().add(new IRequestCycleListener()
+        {
+            @Override
+            public void onEndRequest(RequestCycle cycle)
+            {
+                final Response response = cycle.getResponse();
+                if (response instanceof WebResponse) {
+                    final long serverTime = currentTimeMillis() - cycle.getStartTime();
+                    ((WebResponse) response).addHeader("Server-Timing",
+                            "Server-Side;desc=\"Server-side total\";dur=" + serverTime);
+                }
+            }
+        });
     }
 
     @Override
@@ -355,7 +380,7 @@ public abstract class WicketApplicationBase
     {
         return ApplicationSession.class;
     }
-    
+
     public Class<? extends Component> getMenubarClass()
     {
         return MenuBar.class;

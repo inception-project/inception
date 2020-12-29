@@ -32,16 +32,16 @@ public class GuidelinesActionBarItem
     private static final long serialVersionUID = 4139817495914347777L;
 
     private GuidelinesDialog guidelinesDialog;
-    
+
     private @SpringBean ProjectService projectService;
-    
+
     public GuidelinesActionBarItem(String aId, AnnotationPageBase aPage)
     {
         super(aId);
 
         add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", aPage.getModel()));
         add(new LambdaAjaxLink("showGuidelinesDialog", guidelinesDialog::show));
-        
+
         // Hide the guidelines button if there are no guidelines
         add(visibleWhen(() -> projectService.hasGuidelines(aPage.getModelObject().getProject())));
     }

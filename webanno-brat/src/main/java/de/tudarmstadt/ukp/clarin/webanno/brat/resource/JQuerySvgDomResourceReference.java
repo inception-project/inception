@@ -24,8 +24,7 @@ public class JQuerySvgDomResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final JQuerySvgDomResourceReference INSTANCE = 
-            new JQuerySvgDomResourceReference();
+    private static final JQuerySvgDomResourceReference INSTANCE = new JQuerySvgDomResourceReference();
 
     /**
      * Gets the instance of the resource reference

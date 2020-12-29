@@ -93,8 +93,7 @@ public class WebannoTsv2Writer
     NavigableMap<Integer, Integer> tokenPositions;
 
     @Override
-    public void process(JCas aJCas)
-        throws AnalysisEngineProcessException
+    public void process(JCas aJCas) throws AnalysisEngineProcessException
     {
         OutputStream docOS = null;
         try {
@@ -114,7 +113,7 @@ public class WebannoTsv2Writer
         throws IOException, ResourceInitializationException, CASRuntimeException, CASException
     {
         LowLevelCAS llCas = aJCas.getLowLevelCas();
-        
+
         tokenIds = new HashMap<>();
         setTokenId(aJCas, tokenIds);
         tokenPositions = new TreeMap<>();
@@ -160,8 +159,8 @@ public class WebannoTsv2Writer
             for (AnnotationFS anno : CasUtil.select(aJCas.getCas(), type)) {
                 for (Feature feature : type.getFeatures()) {
                     if (feature.getShortName().equals(GOVERNOR)) {
-                        relationTypesMap.put(type, anno.getFeatureValue(feature).getType()
-                                .getName());
+                        relationTypesMap.put(type,
+                                anno.getFeatureValue(feature).getType().getName());
                     }
                 }
             }
@@ -311,9 +310,8 @@ public class WebannoTsv2Writer
                         IOUtils.write("_\t", aOs, aEncoding);
                     }
                     else {
-                        IOUtils.write(
-                                governorAnnos.get(type).get(llCas.ll_getFSRef(token)) + "\t", aOs,
-                                aEncoding);
+                        IOUtils.write(governorAnnos.get(type).get(llCas.ll_getFSRef(token)) + "\t",
+                                aOs, aEncoding);
                     }
                 }
                 IOUtils.write("\n", aOs, aEncoding);
@@ -373,8 +371,8 @@ public class WebannoTsv2Writer
                                 aTokenAnnoMap.put(llCas.ll_getFSRef(token), annotation);
                             }
                             else {
-                                aTokenAnnoMap.put(llCas.ll_getFSRef(token), "O-_|"
-                                        + (first ? "B-" : "I-") + annotation);
+                                aTokenAnnoMap.put(llCas.ll_getFSRef(token),
+                                        "O-_|" + (first ? "B-" : "I-") + annotation);
                                 first = false;
                             }
                         }
@@ -383,8 +381,8 @@ public class WebannoTsv2Writer
                                 aTokenAnnoMap.put(llCas.ll_getFSRef(token), annotation);
                             }
                             else {
-                                aTokenAnnoMap.put(llCas.ll_getFSRef(token), (first ? "B-" : "I-")
-                                        + annotation);
+                                aTokenAnnoMap.put(llCas.ll_getFSRef(token),
+                                        (first ? "B-" : "I-") + annotation);
                                 first = false;
                             }
                         }
@@ -392,8 +390,7 @@ public class WebannoTsv2Writer
                     else {
                         if (!multipleSpans.contains(aType.getName())) {
                             aTokenAnnoMap.put(llCas.ll_getFSRef(token),
-                                    aTokenAnnoMap.get(llCas.ll_getFSRef(token)) + "|"
-                                            + annotation);
+                                    aTokenAnnoMap.get(llCas.ll_getFSRef(token)) + "|" + annotation);
                             previous = true;
                         }
                         else {
@@ -462,7 +459,7 @@ public class WebannoTsv2Writer
                 }
                 // TODO: remove the B- and I- code in the if/else above. no such a thing of
                 // multiple-span annotation on relations.
-                
+
                 // if the annotation gov/dep span annotation is on multiple tokens,
                 // we just need an arc to the first token.
                 break;
@@ -507,9 +504,9 @@ public class WebannoTsv2Writer
                                         tokenPositions.floorEntry(govAnno.getBegin()).getValue()));
                     }
                 }
-             // if the annotation gov/dep span annotation is on multiple tokens,
-             //we just need an arc to the first token.
-                break; 
+                // if the annotation gov/dep span annotation is on multiple tokens,
+                // we just need an arc to the first token.
+                break;
             }
         }
     }

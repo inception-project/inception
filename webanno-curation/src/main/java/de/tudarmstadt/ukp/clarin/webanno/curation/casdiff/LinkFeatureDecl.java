@@ -22,7 +22,7 @@ public class LinkFeatureDecl
     private final String name;
     private final String roleFeature;
     private final String targetFeature;
-    
+
     public LinkFeatureDecl(String aName, String aRoleFeature, String aTargetFeature)
     {
         name = aName;

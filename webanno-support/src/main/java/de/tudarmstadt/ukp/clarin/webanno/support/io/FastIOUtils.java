@@ -53,25 +53,25 @@ public final class FastIOUtils
             }
         }
     }
-    
+
     public static void copy(InputStream aIS, File aTargetFile) throws IOException
     {
         aTargetFile.getParentFile().mkdirs();
-        
-        try (
-                ReadableByteChannel in = newChannel(aIS);
-                WritableByteChannel out = newChannel(new FileOutputStream(aTargetFile))
-        ) {
+
+        try (ReadableByteChannel in = newChannel(aIS);
+                WritableByteChannel out = newChannel(new FileOutputStream(aTargetFile))) {
             final ByteBuffer buffer = allocateDirect(8192);
             while (in.read(buffer) != -1) {
                 // Cast to buffer to permit code to run on Java 8.
-                // See: https://github.com/inception-project/inception/issues/1828#issuecomment-717047584
+                // See:
+                // https://github.com/inception-project/inception/issues/1828#issuecomment-717047584
                 ((Buffer) buffer).flip();
                 out.write(buffer);
                 buffer.compact();
             }
             // Cast to buffer to permit code to run on Java 8.
-            // See: https://github.com/inception-project/inception/issues/1828#issuecomment-717047584
+            // See:
+            // https://github.com/inception-project/inception/issues/1828#issuecomment-717047584
             ((Buffer) buffer).flip();
             while (buffer.hasRemaining()) {
                 out.write(buffer);

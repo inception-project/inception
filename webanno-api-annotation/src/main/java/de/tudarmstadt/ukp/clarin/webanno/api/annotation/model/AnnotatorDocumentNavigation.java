@@ -33,7 +33,7 @@ public interface AnnotatorDocumentNavigation
     int getDocumentIndex();
 
     int getNumberOfDocuments();
-    
+
     // ---------------------------------------------------------------------------------------------
     // Navigation within or across a document
     // ---------------------------------------------------------------------------------------------

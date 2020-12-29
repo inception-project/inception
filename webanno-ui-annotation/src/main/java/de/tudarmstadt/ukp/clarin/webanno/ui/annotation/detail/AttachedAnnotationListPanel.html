@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--
+#Copyright 2020
+#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div wicket:id="noAttachedAnnotationsInfo" class="flex-content flex-h-container text-center small text-muted mb-2">
+      <div>No links or relations connect to this annotation.</div>
+    </div>
+    <div class="flex-content feature-editors-sidebar" wicket:id="attachedAnnotationsContainer">
+      <div class="form-group form-row" wicket:id="annotations">
+        <label class="feature-editor-label col-form-label">
+          <a wicket:id="selectRelation"><i wicket:id="direction" aria-hidden="true"/></a>
+          <span wicket:id="label"/>
+          <a wicket:id="jumpToEndpoint" class="float-right"><i class="fas fa-crosshairs"></i></a>
+        </label>
+        <div class="feature-editor-value">
+          <div wicket:id="endpoint" class="form-control col-sm-12 scrolling"
+            style="height: unset; max-height: 4.5rem; word-wrap: break-word;" readonly></div>
+        </div>
+      </div>
+    </div>
+  </wicket:panel>
+</body>
+</html>

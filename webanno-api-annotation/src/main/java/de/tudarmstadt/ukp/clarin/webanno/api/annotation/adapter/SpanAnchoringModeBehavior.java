@@ -46,7 +46,7 @@ public class SpanAnchoringModeBehavior
     {
         return super.accepts(aLayerType) || aLayerType instanceof ChainLayerSupport;
     }
-    
+
     @Override
     public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
             CreateSpanAnnotationRequest aRequest)
@@ -60,11 +60,11 @@ public class SpanAnchoringModeBehavior
 
             return aRequest;
         }
-        
+
         int[] originalRange = new int[] { aRequest.getBegin(), aRequest.getEnd() };
         int[] adjustedRange = adjust(aRequest.getCas(), aAdapter.getLayer().getAnchoringMode(),
                 originalRange);
-        
+
         if (adjustedRange.equals(originalRange)) {
             return aRequest;
         }
@@ -72,7 +72,7 @@ public class SpanAnchoringModeBehavior
             return aRequest.changeSpan(adjustedRange[0], adjustedRange[1]);
         }
     }
-    
+
     public static int[] adjust(CAS aCas, AnchoringMode aMode, int[] aRange)
         throws AnnotationException
     {
@@ -88,7 +88,7 @@ public class SpanAnchoringModeBehavior
                 throw new IllegalPlacementException(
                         "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
             }
-                        
+
             return new int[] { tokens.get(0).getBegin(), tokens.get(0).getEnd() };
         }
         case TOKENS: {
@@ -103,27 +103,27 @@ public class SpanAnchoringModeBehavior
             // update the begin and ends (no sub token selection)
             int begin = tokens.get(0).getBegin();
             int end = tokens.get(tokens.size() - 1).getEnd();
-            
+
             return new int[] { begin, end };
         }
         case SENTENCES: {
             Type sentenceType = getType(aCas, Sentence.class);
             List<AnnotationFS> sentences = selectOverlapping(aCas, sentenceType, aRange[0],
                     aRange[1]);
-            
+
             if (sentences.isEmpty()) {
                 throw new IllegalPlacementException(
                         "No sentences found int range [" + aRange[0] + "-" + aRange[1] + "]");
             }
-            
+
             // update the begin and ends (no sub token selection)
             int begin = sentences.get(0).getBegin();
             int end = sentences.get(sentences.size() - 1).getEnd();
-            
+
             return new int[] { begin, end };
         }
         default:
             throw new IllegalArgumentException("Unsupported anchoring mode: [" + aMode + "]");
-        }    
+        }
     }
 }

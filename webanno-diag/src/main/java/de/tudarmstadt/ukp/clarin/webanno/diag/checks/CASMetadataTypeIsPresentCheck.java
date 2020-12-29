@@ -26,8 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
- * Checks if the type {@link CASMetadata} is defined in the type system of this CAS. If this is
- * not the case, then the application may not be able to detect concurrent modifications.
+ * Checks if the type {@link CASMetadata} is defined in the type system of this CAS. If this is not
+ * the case, then the application may not be able to detect concurrent modifications.
  */
 public class CASMetadataTypeIsPresentCheck
     implements Check
@@ -39,7 +39,7 @@ public class CASMetadataTypeIsPresentCheck
             aMessages.add(LogMessage.warn(this, "CAS needs upgrade to support CASMetadata which is "
                     + "required to detect concurrent modifications to CAS files."));
         }
-        
+
         // This is an informative check - not critical, so we always pass it.
         return true;
     }

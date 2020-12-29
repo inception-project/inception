@@ -52,17 +52,17 @@ public class TelemetryServiceImpl
 
     @PersistenceContext
     private EntityManager entityManager;
-    
+
     private final List<TelemetrySupport> telemetrySupportsProxy;
     private final ApplicationEventPublisher eventPublisher;
-    
+
     private List<TelemetrySupport> telemetrySupports;
-    
+
     @Value("${running.from.commandline}")
     private boolean runningFromCommandline;
-    
+
     private int port = -1;
-    
+
     public TelemetryServiceImpl(
             @Lazy @Autowired(required = false) List<TelemetrySupport> aTelemetrySupports,
             ApplicationEventPublisher aEventPublisher)
@@ -70,7 +70,7 @@ public class TelemetryServiceImpl
         telemetrySupportsProxy = aTelemetrySupports;
         eventPublisher = aEventPublisher;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
@@ -82,7 +82,7 @@ public class TelemetryServiceImpl
     {
         port = aEvt.getWebServer().getPort();
     }
-    
+
     public void init()
     {
         List<TelemetrySupport> tsp = new ArrayList<>();
@@ -90,15 +90,15 @@ public class TelemetryServiceImpl
         if (telemetrySupportsProxy != null) {
             tsp.addAll(telemetrySupportsProxy);
             AnnotationAwareOrderComparator.sort(tsp);
-        
+
             for (TelemetrySupport ts : tsp) {
                 log.info("Found telemetry support: {}", ts.getId());
             }
         }
-        
+
         telemetrySupports = Collections.unmodifiableList(tsp);
     }
-    
+
     /**
      * The embedded server was used (i.e. not running as a WAR).
      */
@@ -106,17 +106,17 @@ public class TelemetryServiceImpl
     {
         return port != -1 && runningFromCommandline;
     }
-    
+
     public boolean isDesktopInstance()
     {
-        return  // The embedded server was used (i.e. not running as a WAR)
-                isEmbeddedServerDeployment() &&
-                // There is no console available (happens which double-clicking on the JAR)
-                System.console() == null && 
+        return // The embedded server was used (i.e. not running as a WAR)
+        isEmbeddedServerDeployment() &&
+        // There is no console available (happens which double-clicking on the JAR)
+                System.console() == null &&
                 // There is a graphical environment available
-                !GraphicsEnvironment.isHeadless() ;
+                !GraphicsEnvironment.isHeadless();
     }
-    
+
     @Override
     public DeploymentMode getDeploymentMode()
     {
@@ -130,62 +130,53 @@ public class TelemetryServiceImpl
             return DeploymentMode.SERVER_WAR;
         }
     }
-    
+
     @Override
     public List<TelemetrySupport> getTelemetrySupports()
     {
         return telemetrySupports;
     }
-    
+
     @Override
     public Optional<TelemetrySupport> getTelemetrySuppport(String aSupport)
     {
-        return telemetrySupports.stream()
-                .filter(ts -> ts.getId().equals(aSupport))
-                .findFirst();
+        return telemetrySupports.stream().filter(ts -> ts.getId().equals(aSupport)).findFirst();
     }
-    
+
     @Override
     @Transactional
     public List<TelemetrySettings> listSettings()
     {
         String query = "FROM TelemetrySettings";
-        
-        return entityManager.createQuery(query, TelemetrySettings.class)
-            .getResultList();
+
+        return entityManager.createQuery(query, TelemetrySettings.class).getResultList();
     }
-    
+
     @Override
     @Transactional
     public <T> Optional<TelemetrySettings> readSettings(TelemetrySupport<T> aSupport)
     {
-        String query = 
-                "FROM TelemetrySettings " + 
-                "WHERE support = :support";
-        
+        String query = "FROM TelemetrySettings WHERE support = :support";
+
         List<TelemetrySettings> results = entityManager.createQuery(query, TelemetrySettings.class)
-            .setParameter("support", aSupport.getId())
-            .getResultList();
-        
+                .setParameter("support", aSupport.getId()).getResultList();
+
         if (results.isEmpty()) {
             return Optional.empty();
         }
-        
+
         return Optional.of(results.get(0));
-    }    
-    
+    }
+
     @Override
     @Transactional
     public <T> TelemetrySettings readOrCreateSettings(TelemetrySupport<T> aSupport)
     {
-        String query = 
-                "FROM TelemetrySettings " + 
-                "WHERE support = :support";
-        
+        String query = "FROM TelemetrySettings WHERE support = :support";
+
         List<TelemetrySettings> results = entityManager.createQuery(query, TelemetrySettings.class)
-            .setParameter("support", aSupport.getId())
-            .getResultList();
-        
+                .setParameter("support", aSupport.getId()).getResultList();
+
         if (!results.isEmpty()) {
             return results.get(0);
         }
@@ -193,7 +184,7 @@ public class TelemetryServiceImpl
             return new TelemetrySettings(aSupport);
         }
     }
-    
+
     @Transactional
     private void writeSettings(TelemetrySettings aSettings)
     {
@@ -204,7 +195,7 @@ public class TelemetryServiceImpl
             entityManager.merge(aSettings);
         }
     }
-    
+
     @Override
     @Transactional
     public void writeAllSettings(List<TelemetrySettings> aSettings)
@@ -212,7 +203,7 @@ public class TelemetryServiceImpl
         for (TelemetrySettings settings : aSettings) {
             writeSettings(settings);
         }
-        
+
         eventPublisher.publishEvent(new TelemetrySettingsSavedEvent(this, aSettings));
     }
 }

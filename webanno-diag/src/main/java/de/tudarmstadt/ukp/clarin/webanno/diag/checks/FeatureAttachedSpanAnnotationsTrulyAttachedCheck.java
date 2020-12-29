@@ -77,18 +77,18 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
                                             + "] but is not.\nAnnotation: [" + anno
                                             + "]\nAttach annotation:[" + attach + "]"));
                         }
-                        count ++;
+                        count++;
                         ok = false;
                     }
                 }
             }
         }
-        
+
         if (count >= 100) {
             aMessages.add(new LogMessage(this, LogLevel.ERROR,
                     "In total [%d] annotations were not properly attached", count));
         }
-        
+
         return ok;
     }
 }

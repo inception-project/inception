@@ -33,7 +33,7 @@ public class Restriction
     implements Serializable
 {
     private static final long serialVersionUID = -6950610587083804950L;
-    
+
     private final String path;
     private final String value;
     private final boolean flagImportant;

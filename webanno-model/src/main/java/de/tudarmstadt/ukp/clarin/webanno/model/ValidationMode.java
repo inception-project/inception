@@ -29,7 +29,7 @@ public enum ValidationMode
      * Never validate.
      */
     NEVER("never"),
-    
+
     /**
      * Validate always.
      */

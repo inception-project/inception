@@ -29,7 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 @Order(200)
-public class CurationPageMenuItem implements MenuItem
+public class CurationPageMenuItem
+    implements MenuItem
 {
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
@@ -39,19 +40,19 @@ public class CurationPageMenuItem implements MenuItem
     {
         return "/curation";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/data_table.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Curation";
     }
-    
+
     /**
      * Only project admins and curators can see this page
      */
@@ -60,7 +61,7 @@ public class CurationPageMenuItem implements MenuItem
     {
         return SecurityUtil.curationEnabeled(projectService, userRepo.getCurrentUser());
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

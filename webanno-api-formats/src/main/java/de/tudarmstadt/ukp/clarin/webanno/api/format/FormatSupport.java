@@ -41,8 +41,7 @@ public interface FormatSupport
     String getName();
 
     /**
-     * @return whether the format can be reader (i.e. {@link #getReaderDescription} is
-     *         implemented).
+     * @return whether the format can be reader (i.e. {@link #getReaderDescription} is implemented).
      */
     default boolean isReadable()
     {

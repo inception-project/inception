@@ -23,7 +23,7 @@ public enum RMessageLevel
 {
     @JsonProperty("DEBUG")
     DEBUG,
-    
+
     @JsonProperty("INFO")
     INFO,
 

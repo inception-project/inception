@@ -29,7 +29,7 @@ public class ThreadLockingInvocationHandler
     implements InvocationHandler
 {
     private final List<String> UNCHECKED_METHODS = asList("toString", "hashCode", "equals");
-    
+
     private Thread owner;
     private Object target;
     private StackTraceElement[] trace;
@@ -45,7 +45,7 @@ public class ThreadLockingInvocationHandler
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable
     {
         Thread current = Thread.currentThread();
-        
+
         if (current != owner && !UNCHECKED_METHODS.contains(method.getName())) {
             throw new IllegalStateException("Object " + target + " bound to thread " + owner
                     + " but method " + method + " was called by thread " + current
@@ -55,12 +55,12 @@ public class ThreadLockingInvocationHandler
 
         return method.invoke(target, args);
     }
-    
+
     public void transferOwnershipToCurrentThread()
     {
         owner = Thread.currentThread();
     }
-    
+
     public Object getTarget()
     {
         Thread current = Thread.currentThread();
@@ -69,15 +69,13 @@ public class ThreadLockingInvocationHandler
                     + " but unwrapping was requested by thread " + current
                     + ". Object originally created at:\n" + getTrace());
         }
-        
+
         return target;
     }
-    
-    private String getTrace() 
+
+    private String getTrace()
     {
-        return Stream.of(trace)
-                .map(e -> "\t * " + e.toString())
-                .collect(joining("\n")) 
+        return Stream.of(trace).map(e -> "\t * " + e.toString()).collect(joining("\n"))
                 + "--- END OF CREATION TRACE ---\n";
     }
 }

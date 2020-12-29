@@ -31,7 +31,7 @@ public abstract class ProjectSettingsPanelBase
     {
         super(id);
     }
-    
+
     public ProjectSettingsPanelBase(String id, IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);

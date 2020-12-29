@@ -35,8 +35,9 @@ public class TelemetryDetailsPanel
     public TelemetryDetailsPanel(String aId, IModel<List<TelemetryDetail>> aModel)
     {
         super(aId, aModel);
-        
-        ListView<TelemetryDetail> details = new ListView<TelemetryDetail>("details") {
+
+        ListView<TelemetryDetail> details = new ListView<TelemetryDetail>("details")
+        {
             private static final long serialVersionUID = 5156853968330655499L;
 
             @Override
@@ -47,7 +48,7 @@ public class TelemetryDetailsPanel
                 aItem.add(new Label("description", aItem.getModelObject().getDescription()));
             }
         };
-        
+
         details.setModel(aModel);
 
         add(details);

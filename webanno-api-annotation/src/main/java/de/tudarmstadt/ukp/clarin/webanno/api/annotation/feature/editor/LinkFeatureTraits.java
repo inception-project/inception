@@ -46,12 +46,12 @@ public class LinkFeatureTraits
     {
         defaultSlots = aDefaultSlots;
     }
-    
+
     public boolean isEnableRoleLabels()
     {
         return enableRoleLabels;
     }
-    
+
     public void setEnableRoleLabels(boolean enableRoleLabels)
     {
         this.enableRoleLabels = enableRoleLabels;

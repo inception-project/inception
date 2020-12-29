@@ -38,7 +38,7 @@ public class Conll2009FormatSupport
 {
     public static final String ID = "conll2009";
     public static final String NAME = "CoNLL 2009";
-    
+
     @Override
     public String getId()
     {
@@ -56,7 +56,7 @@ public class Conll2009FormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -69,7 +69,7 @@ public class Conll2009FormatSupport
     {
         return createReaderDescription(Conll2009Reader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

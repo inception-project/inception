@@ -60,7 +60,7 @@ public class AutomationTrainingDocumentExporter
     private static final String TRAIN = "train";
     private static final String TRAIN_FOLDER = "/" + TRAIN;
     private static final String TRAINING_DOCUMENTS = "training_documents";
-    
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired AutomationService automationService;
@@ -80,13 +80,13 @@ public class AutomationTrainingDocumentExporter
         exportTrainingDocuments(aRequest.getProject(), aExProject);
         exportTrainingDocumentContents(aRequest, aMonitor, aExProject, aCopyDir);
     }
-    
+
     private void exportTrainingDocuments(Project aProject, ExportedProject aExProject)
     {
         List<ExportedTrainingDocument> trainDocuments = new ArrayList<>();
         List<TrainingDocument> trainingDocuments = automationService
                 .listTrainingDocuments(aProject);
-        
+
         for (TrainingDocument trainingDocument : trainingDocuments) {
             ExportedTrainingDocument exDocument = new ExportedTrainingDocument();
             exDocument.setFormat(trainingDocument.getFormat());
@@ -102,10 +102,10 @@ public class AutomationTrainingDocumentExporter
             }
             trainDocuments.add(exDocument);
         }
-        
+
         aExProject.setProperty(TRAINING_DOCUMENTS, trainDocuments);
     }
-    
+
     private void exportTrainingDocumentContents(ProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aCopyDir)
         throws IOException, ProjectExportException
@@ -138,7 +138,7 @@ public class AutomationTrainingDocumentExporter
             }
         }
     }
-    
+
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
@@ -147,13 +147,13 @@ public class AutomationTrainingDocumentExporter
         importTrainingDocuments(aExProject, aProject);
         importTrainingDocumentContents(aZip, aProject);
     }
-    
+
     private void importTrainingDocuments(ExportedProject aExProject, Project aProject)
         throws IOException
     {
         ExportedTrainingDocument[] trainingDocuments = aExProject
                 .getArrayProperty(TRAINING_DOCUMENTS, ExportedTrainingDocument.class);
-        
+
         for (ExportedTrainingDocument importedTrainingDocument : trainingDocuments) {
             TrainingDocument trainingDocument = new TrainingDocument();
             trainingDocument.setFormat(importedTrainingDocument.getFormat());
@@ -163,8 +163,8 @@ public class AutomationTrainingDocumentExporter
             trainingDocument.setTimestamp(importedTrainingDocument.getTimestamp());
             trainingDocument.setSentenceAccessed(importedTrainingDocument.getSentenceAccessed());
             if (importedTrainingDocument.getFeature() != null) {
-                AnnotationLayer trainingLayer = annotationService
-                        .findLayer(aProject, importedTrainingDocument.getFeature().getLayer());
+                AnnotationLayer trainingLayer = annotationService.findLayer(aProject,
+                        importedTrainingDocument.getFeature().getLayer());
                 AnnotationFeature trainingFeature = annotationService
                         .getFeature(importedTrainingDocument.getFeature().getName(), trainingLayer);
                 trainingDocument.setFeature(trainingFeature);

@@ -25,7 +25,7 @@ public class AfterProjectCreatedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = -5773307457064819019L;
-    
+
     private final Project project;
 
     public AfterProjectCreatedEvent(Object aSource, Project aProject)

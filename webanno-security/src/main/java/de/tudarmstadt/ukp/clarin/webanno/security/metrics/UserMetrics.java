@@ -23,6 +23,7 @@ public interface UserMetrics
      * Retrieve the total number of currently active (i.e. logged in) users
      */
     public long getActiveUsersTotal();
+
     /**
      * Retrieve the total number of enabled users
      */

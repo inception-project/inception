@@ -35,16 +35,16 @@ public class DescriptionTooltipBehavior
 {
     private static final long serialVersionUID = 1L;
 
-    public enum Mode {
-        DEFAULT,
-        MARKDOWN
+    public enum Mode
+    {
+        DEFAULT, MARKDOWN
     }
-    
+
     @SuppressWarnings("unused")
     private final String title;
 
     private final String description;
-    
+
     private Mode mode = Mode.DEFAULT;
 
     public DescriptionTooltipBehavior(String aTitle, String aDescription)
@@ -63,7 +63,7 @@ public class DescriptionTooltipBehavior
     {
         mode = aMode;
     }
-    
+
     public Mode getMode()
     {
         return mode;
@@ -85,7 +85,8 @@ public class DescriptionTooltipBehavior
         return options;
     }
 
-    private static class DescriptionTooltipPanel extends Panel
+    private static class DescriptionTooltipPanel
+        extends Panel
     {
         private static final long serialVersionUID = 1L;
 
@@ -95,8 +96,8 @@ public class DescriptionTooltipBehavior
             add(new Label("title"));
             switch (aModel.getObject().mode) {
             case MARKDOWN: {
-                Label label = new Label("description", Model.of(Processor.process(
-                        aModel.getObject().description, true)));
+                Label label = new Label("description",
+                        Model.of(Processor.process(aModel.getObject().description, true)));
                 label.setEscapeModelStrings(false);
                 add(label);
                 break;

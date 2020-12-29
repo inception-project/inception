@@ -25,7 +25,7 @@ public class BeforeDocumentRemovedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = 2978609733854059009L;
-    
+
     private final SourceDocument document;
 
     public BeforeDocumentRemovedEvent(Object aSource, SourceDocument aDocument)

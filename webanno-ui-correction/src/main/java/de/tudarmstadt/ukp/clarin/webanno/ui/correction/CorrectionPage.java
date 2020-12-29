@@ -127,8 +127,7 @@ public class CorrectionPage
 
     private CurationContainer curationContainer;
 
-    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress =
-            new HashMap<>();
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = new HashMap<>();
 
     private SourceListView curationSegment = new SourceListView();
 
@@ -136,30 +135,30 @@ public class CorrectionPage
     {
         commonInit();
     }
-    
+
     private void commonInit()
     {
         setVersioned(false);
-        
+
         setModel(Model.of(new AnnotatorStateImpl(Mode.CORRECTION)));
-        
+
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         // Override sidebar width from preferences
         rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
                 .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
         rightSidebar.setOutputMarkupId(true);
         add(rightSidebar);
-        
+
         rightSidebar.add(detailEditor = createDetailEditor());
 
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(createDocumentInfoLabel());
-        
+
         actionBar = new ActionBar("actionBar");
         centerArea.add(actionBar);
-        
+
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
         centerArea.add(annotationEditor);
@@ -170,8 +169,8 @@ public class CorrectionPage
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
                 .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
-                    (c, e) -> e.getRequestHandler().add(c))));
-        
+                        (c, e) -> e.getRequestHandler().add(c))));
+
         List<UserAnnotationSegment> segments = new LinkedList<>();
         UserAnnotationSegment userAnnotationSegment = new UserAnnotationSegment();
         if (getModelObject().getDocument() != null) {
@@ -180,7 +179,7 @@ public class CorrectionPage
             userAnnotationSegment.setAnnotatorState(getModelObject());
             segments.add(userAnnotationSegment);
         }
-        
+
         suggestionView = new SuggestionViewPanel("correctionView", new ListModel<>(segments))
         {
             private static final long serialVersionUID = 2583509126979792202L;
@@ -189,7 +188,7 @@ public class CorrectionPage
             public void onChange(AjaxRequestTarget aTarget)
             {
                 AnnotatorState state = CorrectionPage.this.getModelObject();
-                
+
                 aTarget.addChildren(getPage(), IFeedback.class);
                 try {
                     // update begin/end of the curation segment based on bratAnnotatorModel changes
@@ -200,7 +199,7 @@ public class CorrectionPage
 
                     suggestionView.requestUpdate(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
-                    
+
                     annotationEditor.requestRender(aTarget);
                     update(aTarget);
                 }
@@ -219,7 +218,7 @@ public class CorrectionPage
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
     }
-    
+
     @Override
     public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
@@ -230,8 +229,8 @@ public class CorrectionPage
             @Override
             protected List<DecoratedObject<Project>> load()
             {
-                User user = userRepository.get(
-                        SecurityContextHolder.getContext().getAuthentication().getName());
+                User user = userRepository
+                        .get(SecurityContextHolder.getContext().getAuthentication().getName());
                 List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
                 for (Project project : projectService.listProjects()) {
                     if (projectService.isAnnotator(project, user)
@@ -285,7 +284,7 @@ public class CorrectionPage
             {
                 annotationEditor.requestRender(aTarget);
             }
-            
+
             @Override
             public CAS getEditorCas() throws IOException
             {
@@ -303,19 +302,18 @@ public class CorrectionPage
     }
 
     @Override
-    public CAS getEditorCas()
-        throws IOException
+    public CAS getEditorCas() throws IOException
     {
         AnnotatorState state = getModelObject();
 
         if (state.getDocument() == null) {
             throw new IllegalStateException("Please open a document first!");
         }
-        
+
         // If we have a timestamp, then use it to detect if there was a concurrent access
         verifyAndUpdateDocumentTimestamp(state, documentService
                 .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
-        
+
         return documentService.readAnnotationCas(getModelObject().getDocument(),
                 state.getUser().getUsername());
     }
@@ -323,8 +321,8 @@ public class CorrectionPage
     @Override
     public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
-        ensureIsEditable(); 
-        
+        ensureIsEditable();
+
         AnnotatorState state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
@@ -335,7 +333,7 @@ public class CorrectionPage
             state.setAnnotationDocumentTimestamp(diskTimestamp.get());
         }
     }
-    
+
     private void setCurationSegmentBeginEnd(CAS aEditorCas)
         throws UIMAException, ClassNotFoundException, IOException
     {
@@ -350,14 +348,14 @@ public class CorrectionPage
         suggestionView.requestUpdate(target, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
     }
-    
+
     @Override
     public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
 
         AnnotatorState state = getModelObject();
-        
+
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
 
@@ -398,8 +396,8 @@ public class CorrectionPage
             correctionDocumentService.upgradeCorrectionCas(correctionCas, state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            documentService.writeAnnotationCas(editorCas,
-                    annotationDocument.getDocument(), user, false);
+            documentService.writeAnnotationCas(editorCas, annotationDocument.getDocument(), user,
+                    false);
             correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument());
 
             // (Re)initialize brat model after potential creating / upgrading CAS
@@ -417,7 +415,7 @@ public class CorrectionPage
 
             // Initialize the visible content
             state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));
-            
+
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
                 state.clearRememberedFeatures();
@@ -426,8 +424,8 @@ public class CorrectionPage
             currentprojectId = state.getProject().getId();
 
             setCurationSegmentBeginEnd(editorCas);
-            suggestionView.init(aTarget, curationContainer,
-                    annotationSelectionByUsernameAndAddress, curationSegment);
+            suggestionView.init(aTarget, curationContainer, annotationSelectionByUsernameAndAddress,
+                    curationSegment);
             update(aTarget);
 
             // Re-render the whole page because the font size
@@ -455,7 +453,7 @@ public class CorrectionPage
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }
-    
+
     @Override
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {

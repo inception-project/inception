@@ -40,7 +40,7 @@ public class LambdaBehavior
             }
         };
     }
-    
+
     public static Behavior onRemove(SerializableConsumer<Component> aAction)
     {
         return new Behavior()
@@ -54,7 +54,7 @@ public class LambdaBehavior
             }
         };
     }
-    
+
     public static <T> Behavior onEvent(Class<T> aEventClass,
             SerializableBiConsumer<Component, T> aAction)
     {
@@ -71,7 +71,7 @@ public class LambdaBehavior
             }
         };
     }
-    
+
     public static Behavior onException(SerializableBiConsumer<Component, RuntimeException> aAction)
     {
         return new Behavior()
@@ -85,7 +85,7 @@ public class LambdaBehavior
             }
         };
     }
-    
+
     public static Behavior onComponentTag(SerializableBiConsumer<Component, ComponentTag> aAction)
     {
         return new Behavior()
@@ -99,7 +99,7 @@ public class LambdaBehavior
             }
         };
     }
-    
+
     public static Behavior visibleWhen(SerializableBooleanSupplier aPredicate)
     {
         return new Behavior()
@@ -113,7 +113,7 @@ public class LambdaBehavior
             }
         };
     }
-    
+
     public static Behavior enabledWhen(SerializableBooleanSupplier aPredicate)
     {
         return new Behavior()

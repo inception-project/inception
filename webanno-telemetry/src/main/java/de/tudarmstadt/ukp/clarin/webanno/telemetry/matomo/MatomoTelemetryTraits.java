@@ -25,8 +25,8 @@ public class MatomoTelemetryTraits
     private static final long serialVersionUID = -4179104336689495419L;
 
     /*
-     * We are intentionally using a Boolean here so we can record three state: true, false and
-     * null (not decided yet).
+     * We are intentionally using a Boolean here so we can record three state: true, false and null
+     * (not decided yet).
      */
     private Boolean enabled = null;
 

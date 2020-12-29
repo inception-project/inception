@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import org.apache.wicket.request.resource.CssResourceReference;
 
-public class WebAnnoCssReference extends CssResourceReference
+public class WebAnnoCssReference
+    extends CssResourceReference
 {
     private static final long serialVersionUID = 1L;
 

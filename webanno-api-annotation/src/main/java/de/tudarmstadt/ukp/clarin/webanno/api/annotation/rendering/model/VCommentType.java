@@ -19,7 +19,5 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
 public enum VCommentType
 {
-    INFO,
-    ERROR,
-    YIELD
+    INFO, ERROR, YIELD
 }

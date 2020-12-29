@@ -31,18 +31,18 @@ public class FeatureValueUpdatedEvent
     implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = -6246331778850797138L;
-    
+
     private final FeatureStructure fs;
     private final AnnotationFeature feature;
     private final Object oldValue;
     private final Object newValue;
-    
+
     public FeatureValueUpdatedEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationLayer aLayer, FeatureStructure aFS, AnnotationFeature aFeature,
             Object aNewValue, Object aOldValue)
     {
         super(aSource, aDocument, aUser, aLayer);
-        
+
         fs = aFS;
         feature = aFeature;
         oldValue = aOldValue;
@@ -68,7 +68,7 @@ public class FeatureValueUpdatedEvent
     {
         return newValue;
     }
-    
+
     @Override
     public String toString()
     {

@@ -64,17 +64,17 @@ public class SemPredArgLayerInitializer
         AnnotationLayer semArgLayer = new AnnotationLayer(SemArg.class.getName(), "SemArg",
                 SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         semArgLayer.setCrossSentence(false);
-        
+
         annotationSchemaService.createLayer(semArgLayer);
-        
+
         AnnotationLayer semPredLayer = new AnnotationLayer(SemPred.class.getName(), "SemPred",
                 SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         semPredLayer.setCrossSentence(false);
-        
+
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, semPredLayer,
                 "category", "category", CAS.TYPE_NAME_STRING,
                 "Category of the semantic predicate, e.g. the frame identifier.", null));
-        
+
         AnnotationFeature semPredArgumentsFeature = new AnnotationFeature();
         semPredArgumentsFeature.setName("arguments");
         semPredArgumentsFeature.setUiName("arguments");
@@ -89,7 +89,7 @@ public class SemPredArgLayerInitializer
         semPredArgumentsFeature.setLinkTypeTargetFeatureName("target");
         semPredArgumentsFeature.setLayer(semPredLayer);
         annotationSchemaService.createFeature(semPredArgumentsFeature);
-        
+
         annotationSchemaService.createLayer(semPredLayer);
     }
 }

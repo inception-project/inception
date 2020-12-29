@@ -32,13 +32,13 @@ public class CohenKappaAgreementMeasureSupport
     extends AbstractCodingAgreementMeasureSupport<DefaultAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
-    
+
     public CohenKappaAgreementMeasureSupport(AnnotationSchemaService aAnnotationService)
     {
         super();
         annotationService = aAnnotationService;
     }
-    
+
     @Override
     public String getName()
     {

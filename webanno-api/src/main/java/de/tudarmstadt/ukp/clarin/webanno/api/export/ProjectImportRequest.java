@@ -34,14 +34,14 @@ public class ProjectImportRequest
     public int progress = 0;
 
     private final Queue<String> messages = new ConcurrentLinkedQueue<>();
-    
+
     private final boolean createMissingUsers;
     private final boolean importPermissions;
     private final Optional<User> manager;
 
     /**
-     * Request the import of a project, optionally creating any users referenced in the project
-     * but missing in the current instance.
+     * Request the import of a project, optionally creating any users referenced in the project but
+     * missing in the current instance.
      */
     public ProjectImportRequest(boolean aCreateMissingUsers)
     {
@@ -82,12 +82,12 @@ public class ProjectImportRequest
     {
         return createMissingUsers;
     }
-    
+
     public boolean isImportPermissions()
     {
         return importPermissions;
     }
-    
+
     public Optional<User> getManager()
     {
         return manager;

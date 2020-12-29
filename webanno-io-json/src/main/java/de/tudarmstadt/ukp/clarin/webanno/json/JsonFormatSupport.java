@@ -35,7 +35,7 @@ public class JsonFormatSupport
 {
     public static final String ID = "json";
     public static final String NAME = "UIMA CAS JSON";
-    
+
     @Override
     public String getId()
     {

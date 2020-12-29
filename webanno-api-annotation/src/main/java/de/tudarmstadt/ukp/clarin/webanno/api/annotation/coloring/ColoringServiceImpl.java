@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType.DYNAMIC;
@@ -30,52 +31,63 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ReadonlyColoringBehaviour.NORMAL;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 
 @Component
-public class ColoringServiceImpl implements ColoringService
+public class ColoringServiceImpl
+    implements ColoringService
 {
     private final AnnotationSchemaService schemaService;
-    
+
+    private LoadingCache<AnnotationLayer, Boolean> hasLinkFeatureCache;
+
     @Autowired
     public ColoringServiceImpl(AnnotationSchemaService aSchemaService)
     {
         schemaService = aSchemaService;
+
+        hasLinkFeatureCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
+                .maximumSize(10 * 1024).build(this::loadHasLinkFeature);
     }
 
     @Override
-    public ColoringStrategy getStrategy(
-            AnnotationLayer aLayer, AnnotationPreference aPreferences,
+    public ColoringStrategy getStrategy(AnnotationLayer aLayer, AnnotationPreference aPreferences,
             Map<String[], Queue<String>> aColorQueues)
     {
         ColoringStrategyType t = aPreferences.getColorPerLayer().get(aLayer.getId());
         ReadonlyColoringBehaviour rt = aPreferences.getReadonlyLayerColoringBehaviour();
-        
+
         if (aLayer.isReadonly() && rt != NORMAL) {
             t = rt.t;
         }
-        
+
         if (t == null || t == LEGACY) {
             t = getBestInitialStrategy(aLayer, aPreferences);
         }
-        
+
         return getStrategy(aLayer, t, aColorQueues);
     }
 
-    private ColoringStrategy getStrategy(
-            AnnotationLayer aLayer, ColoringStrategyType colortype,
+    private ColoringStrategy getStrategy(AnnotationLayer aLayer, ColoringStrategyType colortype,
             Map<String[], Queue<String>> aColorQueues)
     {
         // Decide on coloring strategy for the current layer
@@ -96,22 +108,17 @@ public class ColoringServiceImpl implements ColoringService
             return new LabelHashBasedColoringStrategy(aPalette);
         case DYNAMIC_PASTELLE:
         case DYNAMIC:
-            String[] palette;
             if (SPAN_TYPE.equals(aLayer.getType()) && !hasLinkFeature(aLayer)) {
-                palette = PALETTE_NORMAL;
+                return new LabelHashBasedColoringStrategy(PALETTE_NORMAL);
             }
-            else {
-                // Chains and arcs contain relations that are rendered as lines on the light
-                // window background - need to make sure there is some contrast, so we cannot use
-                // the full palette.
-                palette = PALETTE_NORMAL_FILTERED;
-            }
-            final String[] aPalette1 = palette;
-            return new LabelHashBasedColoringStrategy(aPalette1);
+
+            // Chains and arcs contain relations that are rendered as lines on the light
+            // window background - need to make sure there is some contrast, so we cannot use
+            // the full palette.
+            return new LabelHashBasedColoringStrategy(PALETTE_NORMAL_FILTERED);
         case GRAY:
         default:
-            String[] aPalette2 = { DISABLED };
-            return new LabelHashBasedColoringStrategy(aPalette2);
+            return new LabelHashBasedColoringStrategy(DISABLED);
         }
     }
 
@@ -135,6 +142,11 @@ public class ColoringServiceImpl implements ColoringService
 
     private boolean hasLinkFeature(AnnotationLayer aLayer)
     {
+        return hasLinkFeatureCache.get(aLayer);
+    }
+
+    private boolean loadHasLinkFeature(AnnotationLayer aLayer)
+    {
         for (AnnotationFeature feature : schemaService.listAnnotationFeature(aLayer)) {
             if (!LinkMode.NONE.equals(feature.getLinkMode())) {
                 return true;
@@ -143,8 +155,8 @@ public class ColoringServiceImpl implements ColoringService
         return false;
     }
 
-    private String nextPaletteEntry(String[] aPalette,
-            Map<String[], Queue<String>> aPaletteCursors, int aThreshold)
+    private String nextPaletteEntry(String[] aPalette, Map<String[], Queue<String>> aPaletteCursors,
+            int aThreshold)
     {
         // Initialize the color queue if not already done so
         Queue<String> colorQueue = aPaletteCursors.get(aPalette);
@@ -169,4 +181,10 @@ public class ColoringServiceImpl implements ColoringService
         return color;
     }
 
+    @EventListener
+    public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
+    {
+        hasLinkFeatureCache.asMap().keySet().removeIf(
+                key -> Objects.equals(key.getProject().getId(), aEvent.getProject().getId()));
+    }
 }

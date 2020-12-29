@@ -29,13 +29,13 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 public class RepositoryProperties
 {
     private File path;
-    
+
     public File getPath()
     {
         if (path != null) {
             return path;
         }
-        
+
         return new File(System.getProperty(SettingsUtil.getPropApplicationHome(),
                 System.getProperty("user.home") + "/"
                         + SettingsUtil.getApplicationUserHomeSubdir()),

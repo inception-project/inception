@@ -26,7 +26,7 @@ public class IllegalFeatureValueException
     {
         super();
     }
-    
+
     public IllegalFeatureValueException(String message)
     {
         super(message);

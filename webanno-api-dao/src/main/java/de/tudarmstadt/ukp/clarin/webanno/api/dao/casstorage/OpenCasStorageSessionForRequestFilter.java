@@ -37,8 +37,7 @@ public class OpenCasStorageSessionForRequestFilter
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    public void init(FilterConfig filterConfig)
-        throws ServletException
+    public void init(FilterConfig filterConfig) throws ServletException
     {
         // Do nothing
     }
@@ -50,7 +49,7 @@ public class OpenCasStorageSessionForRequestFilter
         try (CasStorageSession session = CasStorageSession.open()) {
             chain.doFilter(req, resp);
         }
-        catch (IOException |  ServletException e) {
+        catch (IOException | ServletException e) {
             throw e;
         }
         catch (Exception e) {

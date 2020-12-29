@@ -32,14 +32,13 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-
 @Component
 public class Conll2003FormatSupport
     implements FormatSupport
 {
     public static final String ID = "conll2003";
     public static final String NAME = "CoNLL 2003";
-    
+
     @Override
     public String getId()
     {
@@ -57,7 +56,7 @@ public class Conll2003FormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -70,7 +69,7 @@ public class Conll2003FormatSupport
     {
         return createReaderDescription(Conll2003Reader.class, aTSD);
     }
-    
+
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

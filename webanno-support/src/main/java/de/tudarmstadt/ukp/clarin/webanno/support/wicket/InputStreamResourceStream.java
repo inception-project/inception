@@ -27,7 +27,7 @@ public class InputStreamResourceStream
     extends AbstractResourceStream
 {
     private static final long serialVersionUID = 1L;
-    
+
     private InputStream inputStream;
 
     public InputStreamResourceStream(InputStream aInputStream)

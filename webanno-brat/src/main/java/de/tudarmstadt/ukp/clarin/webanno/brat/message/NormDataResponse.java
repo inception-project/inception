@@ -25,14 +25,14 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.NormalizationQueryRes
 /**
  * Response for the {@code normData} command.
  * 
- * This is essentially present in brat, but there {@code results} would be a member of an array 
+ * This is essentially present in brat, but there {@code results} would be a member of an array
  * called {@code value}. We simplified this a bit here and in {@code visualizer_ui.js}.
  */
 public class NormDataResponse
     extends AjaxResponse
 {
     public static final String COMMAND = "normData";
-    
+
     private List<NormalizationQueryResult> results = new ArrayList<>();
 
     public NormDataResponse()
@@ -44,7 +44,7 @@ public class NormDataResponse
     {
         return COMMAND.equals(aCommand);
     }
-    
+
     public List<NormalizationQueryResult> getResults()
     {
         return results;

@@ -17,5 +17,5 @@
  */
 /**
  * Utility classes for brat annotation/curation/correction
-  */
+ */
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;

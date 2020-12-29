@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.docinfo;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.docinfo;
 
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
@@ -35,13 +36,13 @@ public class DocumentInfoSidebarFactory
 {
     private static final ResourceReference ICON = new UrlResourceReference(
             Url.parse("images/information.png")).setContextRelative(true);
-    
+
     @Override
     public String getDisplayName()
     {
         return "Document Info";
     }
-    
+
     @Override
     public ResourceReference getIcon()
     {
@@ -53,7 +54,6 @@ public class DocumentInfoSidebarFactory
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        return new DocumentInfoSidebar(aId, aModel, aActionHandler, aCasProvider,
-                aAnnotationPage);
+        return new DocumentInfoSidebar(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
     }
 }

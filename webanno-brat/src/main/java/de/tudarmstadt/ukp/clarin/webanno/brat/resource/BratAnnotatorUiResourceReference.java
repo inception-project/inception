@@ -24,8 +24,7 @@ public class BratAnnotatorUiResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final BratAnnotatorUiResourceReference INSTANCE = 
-            new BratAnnotatorUiResourceReference();
+    private static final BratAnnotatorUiResourceReference INSTANCE = new BratAnnotatorUiResourceReference();
 
     /**
      * Gets the instance of the resource reference

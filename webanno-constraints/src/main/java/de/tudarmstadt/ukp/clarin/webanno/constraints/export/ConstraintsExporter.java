@@ -46,7 +46,7 @@ public class ConstraintsExporter
     private static final String CONSTRAINTS = "/constraints/";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private @Autowired ConstraintsService constraintsService;
 
     @Override
@@ -64,7 +64,7 @@ public class ConstraintsExporter
                     new File(constraintsDir, fileName));
         }
     }
-    
+
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
@@ -73,10 +73,10 @@ public class ConstraintsExporter
         for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
                 .hasMoreElements();) {
             ZipEntry entry = zipEnumerate.nextElement();
-            
+
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ZipUtils.normalizeEntryName(entry);
-            
+
             if (entryName.startsWith(ConstraintsService.CONSTRAINTS + "/")) {
                 String fileName = FilenameUtils.getName(entry.getName());
                 if (fileName.trim().isEmpty()) {

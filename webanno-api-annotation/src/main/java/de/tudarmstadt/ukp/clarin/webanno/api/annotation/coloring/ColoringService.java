@@ -27,7 +27,7 @@ public interface ColoringService
 {
     ColoringStrategy getStrategy(AnnotationLayer aLayer, AnnotationPreference aPreferences,
             Map<String[], Queue<String>> aColorQueues);
-    
+
     ColoringStrategyType getBestInitialStrategy(AnnotationLayer aLayer,
             AnnotationPreference aPreferences);
 }

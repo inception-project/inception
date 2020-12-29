@@ -53,16 +53,16 @@ public class RelationAttachmentBehavior
         originFS = selectCovered(cas, attachType, originFS.getBegin(), originFS.getEnd()).get(0);
         return aRequest.changeRelation(originFS, targetFS);
     }
-        
+
     public static FeatureStructure[] resolve(RelationAdapter aAdapter, AnnotationFS aRelation)
     {
         Type type = aRelation.getType();
         Feature targetFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
         Feature sourceFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
-        
+
         FeatureStructure targetFs;
         FeatureStructure sourceFs;
-        
+
         if (aAdapter.getAttachFeatureName() != null) {
             Type spanType = getType(aRelation.getCAS(), aAdapter.getAttachTypeName());
             Feature arcSpanFeature = spanType.getFeatureByBaseName(aAdapter.getAttachFeatureName());
@@ -73,7 +73,7 @@ public class RelationAttachmentBehavior
             targetFs = aRelation.getFeatureValue(targetFeature);
             sourceFs = aRelation.getFeatureValue(sourceFeature);
         }
-        
+
         return new FeatureStructure[] { sourceFs, targetFs };
     }
 }

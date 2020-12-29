@@ -52,19 +52,17 @@ public class KrippendorffAlphaAgreementMeasure
     }
 
     @Override
-    public CodingAgreementResult calculatePairAgreement(
-            Map<String, List<CAS>> aCasMap)
+    public CodingAgreementResult calculatePairAgreement(Map<String, List<CAS>> aCasMap)
     {
         AnnotationFeature feature = getFeature();
         KrippendorffAlphaAgreementTraits traits = getTraits();
-        
+
         List<DiffAdapter> adapters = getDiffAdapters(annotationService, asList(feature.getLayer()));
 
         CasDiff diff = doDiff(adapters, traits.getLinkCompareBehavior(), aCasMap);
 
-        CodingAgreementResult agreementResult = makeCodingStudy(diff,
-                feature.getLayer().getName(), feature.getName(), traits.isExcludeIncomplete(),
-                aCasMap);
+        CodingAgreementResult agreementResult = makeCodingStudy(diff, feature.getLayer().getName(),
+                feature.getName(), traits.isExcludeIncomplete(), aCasMap);
 
         IAgreementMeasure agreement = new KrippendorffAlphaAgreement(agreementResult.getStudy(),
                 new NominalDistanceFunction());

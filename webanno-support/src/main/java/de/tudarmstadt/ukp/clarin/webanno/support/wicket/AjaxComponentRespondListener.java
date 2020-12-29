@@ -14,7 +14,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */ 
+ */
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
 import org.apache.wicket.Component;
@@ -35,7 +35,7 @@ public class AjaxComponentRespondListener
     implements AjaxRequestTarget.ITargetRespondListener
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private Component owner;
     private AjaxCallback callback;
     private StackTraceElement[] creationStack;
@@ -59,7 +59,7 @@ public class AjaxComponentRespondListener
         catch (WicketRuntimeException e) {
             return;
         }
-        
+
         try {
             callback.accept(aTarget);
         }

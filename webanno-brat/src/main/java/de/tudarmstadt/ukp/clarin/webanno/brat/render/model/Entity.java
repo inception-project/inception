@@ -122,12 +122,12 @@ public class Entity
     {
         offsets = aOffsets;
     }
-    
+
     public EntityAttributes getAttributes()
     {
         return attributes;
     }
-    
+
     public void setAttributes(EntityAttributes aAttributes)
     {
         attributes = aAttributes;
@@ -170,7 +170,7 @@ public class Entity
     {
         attributes.setColor(aColor);
     }
-    
+
     /**
      * @deprecated Use {@code getAttributes().setHoverText(...)}.
      */

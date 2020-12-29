@@ -106,7 +106,7 @@ public class LayerDetailForm
 
     private FeatureSelectionForm featureSelectionForm;
     private FeatureDetailForm featureDetailForm;
-    
+
     private WebMarkupContainer traitsContainer;
 
     private LayerExportMode exportMode = LayerExportMode.JSON;
@@ -118,10 +118,9 @@ public class LayerDetailForm
 
         featureSelectionForm = aFeatureSelectionForm;
         featureDetailForm = aFeatureDetailForm;
-        
+
         setOutputMarkupPlaceholderTag(true);
 
-        
         add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupId(true);
 
@@ -134,8 +133,9 @@ public class LayerDetailForm
         add(new Label("name").add(visibleWhen(() -> isNotBlank(getModelObject().getName()))));
 
         add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
-        
-        add(layerTypeSelect = new BootstrapSelect<LayerType>("type") {
+
+        add(layerTypeSelect = new BootstrapSelect<LayerType>("type")
+        {
             private static final long serialVersionUID = 9029205407108101183L;
 
             @Override
@@ -160,9 +160,9 @@ public class LayerDetailForm
         layerTypeSelect.setRequired(true);
         layerTypeSelect.setNullValid(false);
         layerTypeSelect.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-        layerTypeSelect.setModel(LambdaModelAdapter.of(
-            () -> layerSupportRegistry.getLayerType(getModelObject()), 
-            (v) -> getModelObject().setType(v.getName())));
+        layerTypeSelect.setModel(
+                LambdaModelAdapter.of(() -> layerSupportRegistry.getLayerType(getModelObject()),
+                        (v) -> getModelObject().setType(v.getName())));
         layerTypeSelect.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             private static final long serialVersionUID = 6790949494089940303L;
@@ -190,7 +190,7 @@ public class LayerDetailForm
         effectiveAttachType.add(visibleWhen(() -> !isNull(getModelObject().getId())
                 && RELATION_TYPE.equals(getModelObject().getType())));
         add(effectiveAttachType);
-        
+
         // Behaviors of layers
         add(new CheckBox("readonly").setOutputMarkupPlaceholderTag(true));
 
@@ -200,7 +200,7 @@ public class LayerDetailForm
         exportModeChoice.setChoiceRenderer(new EnumChoiceRenderer<>(this));
         exportModeChoice.add(new LambdaAjaxFormChoiceComponentUpdatingBehavior());
         add(exportModeChoice);
-        
+
         add(new AjaxDownloadLink("export",
                 new LambdaModel<>(this::getExportLayerFileName).autoDetaching(),
                 this::exportLayer));
@@ -211,15 +211,15 @@ public class LayerDetailForm
         add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
         add(new LambdaAjaxLink("cancel", this::actionCancel));
     }
-    
+
     private String getEffectiveAttachTypeName()
     {
         AnnotationLayer layer = LayerDetailForm.this.getModelObject();
-        
+
         if (layer.getAttachType() == null) {
             return null;
         }
-        
+
         if (layer.getAttachFeature() != null) {
             Project project = getModelObject().getProject();
             AnnotationLayer actualAttachLayer = annotationService.findLayer(project,
@@ -231,7 +231,7 @@ public class LayerDetailForm
             return layer.getAttachType().getUiName();
         }
     }
-    
+
     /**
      * Gets the list of annotation layers to which a relation layer may attach.
      */
@@ -240,7 +240,7 @@ public class LayerDetailForm
         Project project = getModelObject().getProject();
         AnnotationLayer layer = LayerDetailForm.this.getModelObject();
 
-        // If the layer has already been created, the attach layer cannot be changed anymore. 
+        // If the layer has already been created, the attach layer cannot be changed anymore.
         // So in this case, we return either an empty list of a list with exactly the configured
         // attach layer in it.
         if (layer.getId() != null) {
@@ -257,7 +257,7 @@ public class LayerDetailForm
                 return asList(layer.getAttachType());
             }
         }
-        
+
         // Attach layers are only valid for relation layers.
         if (!RELATION_TYPE.equals(layer.getType())) {
             return emptyList();
@@ -265,14 +265,14 @@ public class LayerDetailForm
 
         // Get all the layers
         List<AnnotationLayer> allLayers = annotationService.listAnnotationLayer(project);
-        
+
         // Candidates for attach-layers are only span layers, so lets filter these
         List<AnnotationLayer> candidateLayers = allLayers.stream()
                 .filter(l -> SPAN_TYPE.equals(l.getType()))
                 .filter(l -> !Token.class.getName().equals(l.getName())
                         && !Sentence.class.getName().equals(l.getName()))
                 .collect(Collectors.toCollection(ArrayList::new));
-        
+
         // Further narrow down the candidates by removing all layers which are already the target
         // of an attachment
         for (AnnotationLayer l : allLayers) {
@@ -303,7 +303,7 @@ public class LayerDetailForm
         AnnotationLayer layer = LayerDetailForm.this.getModelObject();
 
         final Project project = layer.getProject();
-        
+
         // Set type name only when the layer is initially created. After that, only the UI
         // name may be updated. Also any validation related to the type name only needs to
         // happen on the initial creation.
@@ -318,14 +318,14 @@ public class LayerDetailForm
                         + "layer has been created.");
                 return;
             }
-            
+
             if (!Character.isJavaIdentifierStart(layerName.charAt(0))) {
                 error("Initial layer name cannot start with [" + layerName.charAt(0)
                         + "]. Please choose a different initial name and rename after the "
                         + "layer has been created.");
                 return;
             }
-            
+
             if (annotationService.existsLayer(TYPE_PREFIX + layerName, project)) {
                 error("A layer with the name [" + TYPE_PREFIX + layerName
                         + "] already exists in this project.");
@@ -334,21 +334,21 @@ public class LayerDetailForm
 
             layer.setName(TYPE_PREFIX + layerName);
         }
-        
+
         if (layer.getType().equals(RELATION_TYPE) && layer.getAttachType() == null) {
             error("A relation layer needs to attach to a span layer.");
             return;
         }
 
         annotationService.createLayer(layer);
-        
+
         // Initialize default features if necessary but only after the layer has actually been
         // persisted in the database.
         if (isNewLayer) {
             TypeAdapter adapter = annotationService.getAdapter(layer);
             adapter.initialize(annotationService);
         }
-        
+
         success("Settings for layer [" + layer.getUiName() + "] saved.");
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(findParent(ProjectLayersPanel.class));
@@ -364,7 +364,7 @@ public class LayerDetailForm
     {
         setModelObject(null);
         featureDetailForm.setModelObject(null);
-        
+
         aTarget.add(getParent());
         aTarget.addChildren(getPage(), IFeedback.class);
     }
@@ -418,16 +418,16 @@ public class LayerDetailForm
 
             List<ExportedAnnotationLayer> exLayers = new ArrayList<>();
 
-            ExportedAnnotationLayer exMainLayer = ImportUtil.exportLayerDetails(null, null,
-                    layer, annotationService);
+            ExportedAnnotationLayer exMainLayer = ImportUtil.exportLayerDetails(null, null, layer,
+                    annotationService);
             exLayers.add(exMainLayer);
 
             // If the layer is attached to another layer, then we also have to export
             // that, otherwise we would be missing it during re-import.
             if (layer.getAttachType() != null) {
                 AnnotationLayer attachLayer = layer.getAttachType();
-                ExportedAnnotationLayer exAttachLayer = ImportUtil.exportLayerDetails(null,
-                        null, attachLayer, annotationService);
+                ExportedAnnotationLayer exAttachLayer = ImportUtil.exportLayerDetails(null, null,
+                        attachLayer, annotationService);
                 exMainLayer.setAttachType(
                         new ExportedAnnotationLayerReference(exAttachLayer.getName()));
                 exLayers.add(exAttachLayer);

@@ -25,25 +25,25 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 public abstract class FeatureEditorEvent
 {
     private final FeatureEditor editor;
-    
+
     private final AjaxRequestTarget target;
-    
+
     public FeatureEditorEvent(FeatureEditor aEditor, AjaxRequestTarget aTarget)
     {
         editor = aEditor;
         target = aTarget;
     }
-    
+
     public FeatureState getFeatureState()
     {
         return editor.getModelObject();
     }
-    
+
     public AjaxRequestTarget getTarget()
     {
         return target;
     }
-    
+
     public FeatureEditor getEditor()
     {
         return editor;

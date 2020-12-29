@@ -37,8 +37,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
 /**
- * Utility Class for {@link TypeAdapter} with static methods such as geting
- * {@link TypeAdapter} based on its {@link CAS} {@link Type}
+ * Utility Class for {@link TypeAdapter} with static methods such as geting {@link TypeAdapter}
+ * based on its {@link CAS} {@link Type}
  */
 public final class TypeUtil
 {
@@ -79,7 +79,7 @@ public final class TypeUtil
         StringBuilder labelText = new StringBuilder();
         for (Entry<String, String> feature : aFeatures.entrySet()) {
             String label = StringUtils.defaultString(feature.getValue());
-            
+
             if (labelText.length() > 0 && label.length() > 0) {
                 labelText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
@@ -97,31 +97,32 @@ public final class TypeUtil
             return "";
         }
     }
-    
+
     /**
      * Construct the hover text used in the user interface.
      *
-     * @param aAdapter the adapter.
-     * @param aHoverFeatures the features.
+     * @param aAdapter
+     *            the adapter.
+     * @param aHoverFeatures
+     *            the features.
      * @return the hover text.
      */
     public static String getUiHoverText(TypeAdapter aAdapter, Map<String, String> aHoverFeatures)
     {
         StringBuilder bratHoverText = new StringBuilder();
         if (aHoverFeatures.containsKey("__spantext__")) {
-            bratHoverText
-                .append("\"")
-                .append(StringUtils.defaultString(aHoverFeatures.get("__spantext__")))
-                .append("\" ");
+            bratHoverText.append("\"")
+                    .append(StringUtils.defaultString(aHoverFeatures.get("__spantext__")))
+                    .append("\" ");
         }
-        
+
         boolean featuresToShowAvailable = false;
         for (Entry<String, String> feature : aHoverFeatures.entrySet()) {
             if ("__spantext__".equals(feature.getKey())) {
                 continue;
             }
             String text = StringUtils.defaultString(feature.getValue());
-            
+
             if (bratHoverText.length() > 0 && featuresToShowAvailable && text.length() > 0) {
                 bratHoverText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
@@ -134,18 +135,21 @@ public final class TypeUtil
             return bratHoverText.toString();
         }
         else {
-            // If there are no hover features at all, then use the spantext, which 
+            // If there are no hover features at all, then use the spantext, which
             // is the default if no hover text is provided
             return null;
         }
     }
-    
+
     /**
      * Construct the label text used in the brat user interface.
      *
-     * @param aAdapter the adapter.
-     * @param aFs the annotation.
-     * @param aFeatures the features.
+     * @param aAdapter
+     *            the adapter.
+     * @param aFs
+     *            the annotation.
+     * @param aFeatures
+     *            the features.
      * @return the label.
      */
     public static String getUiLabelText(TypeAdapter aAdapter, FeatureStructure aFs,
@@ -161,7 +165,7 @@ public final class TypeUtil
 
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
             String label = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
-            
+
             if (bratLabelText.length() > 0 && label.length() > 0) {
                 bratLabelText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
@@ -177,13 +181,16 @@ public final class TypeUtil
             return "(" + aAdapter.getLayer().getUiName() + ")";
         }
     }
-    
+
     /**
      * Construct the hover text used in the user interface.
      *
-     * @param aAdapter the adapter.
-     * @param aFs the annotation.
-     * @param aFeatures the features.
+     * @param aAdapter
+     *            the adapter.
+     * @param aFs
+     *            the annotation.
+     * @param aFeatures
+     *            the features.
      * @return the hover text.
      */
     public static String getUiHoverText(TypeAdapter aAdapter, AnnotationFS aFs,
@@ -199,7 +206,7 @@ public final class TypeUtil
 
             Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
             String text = StringUtils.defaultString(aFs.getFeatureValueAsString(labelFeature));
-            
+
             if (hoverText.length() > 0 && text.length() > 0) {
                 hoverText.append(TypeAdapter.FEATURE_SEPARATOR);
             }
@@ -214,7 +221,7 @@ public final class TypeUtil
             return hoverText.toString();
         }
         else {
-            // If there are no label features at all, then use the spantext, which 
+            // If there are no label features at all, then use the spantext, which
             // is the default if no hover text is provided
             return null;
         }
@@ -230,7 +237,6 @@ public final class TypeUtil
     {
         return parseLong(aUiTypeName);
     }
-
 
     /**
      * @see TypeAdapter#getEncodedTypeName()

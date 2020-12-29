@@ -60,9 +60,8 @@ class AutoOpenDialogBehavior
         page.getModelObject().getSelection().clear();
         page.getFooterItems().getObject().stream()
                 .filter(component -> component instanceof OpenDocumentDialog)
-                .map(component -> (OpenDocumentDialog) component)
-                .findFirst()
+                .map(component -> (OpenDocumentDialog) component).findFirst()
                 .ifPresent(dialog -> dialog.show(aTarget));
-            
+
     }
 }

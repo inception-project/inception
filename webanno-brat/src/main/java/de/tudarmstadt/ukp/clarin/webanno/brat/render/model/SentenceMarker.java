@@ -31,18 +31,18 @@ public class SentenceMarker
     private final String kind = "sent";
     private String type;
     private int index;
-    
+
     public SentenceMarker(String aType, int aIndex)
     {
         type = aType;
         index = aIndex;
     }
-    
+
     public int getIndex()
     {
         return index;
     }
-    
+
     @Override
     public String getType()
     {

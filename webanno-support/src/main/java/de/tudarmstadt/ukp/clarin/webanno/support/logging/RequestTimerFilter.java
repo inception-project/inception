@@ -35,8 +35,7 @@ public class RequestTimerFilter
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    public void init(FilterConfig filterConfig)
-        throws ServletException
+    public void init(FilterConfig filterConfig) throws ServletException
     {
         // Do nothing
     }

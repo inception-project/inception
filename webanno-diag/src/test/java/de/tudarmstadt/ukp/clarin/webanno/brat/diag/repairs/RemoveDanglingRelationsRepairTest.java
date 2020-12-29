@@ -36,23 +36,22 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class RemoveDanglingRelationsRepairTest
 {
     @Test
-    public void test()
-        throws Exception
+    public void test() throws Exception
     {
         JCas jcas = JCasFactory.createJCas();
 
         jcas.setDocumentText("This is a test.");
-        
+
         Token span1 = new Token(jcas, 0, 4);
         span1.addToIndexes();
-        
+
         Token span2 = new Token(jcas, 6, 8);
-        
+
         Dependency dep = new Dependency(jcas, 0, 8);
         dep.setGovernor(span1);
         dep.setDependent(span2);
         dep.addToIndexes();
-        
+
         List<LogMessage> messages = new ArrayList<>();
         CasDoctor cd = new CasDoctor(RemoveDanglingRelationsRepair.class,
                 AllFeatureStructuresIndexedCheck.class);
@@ -60,9 +59,9 @@ public class RemoveDanglingRelationsRepairTest
         boolean result = cd.analyze(null, jcas.getCas(), messages);
         // A project is not required for this repair
         cd.repair(null, jcas.getCas(), messages);
-        
+
         assertFalse(result);
-        
+
         messages.forEach(System.out::println);
     }
 }

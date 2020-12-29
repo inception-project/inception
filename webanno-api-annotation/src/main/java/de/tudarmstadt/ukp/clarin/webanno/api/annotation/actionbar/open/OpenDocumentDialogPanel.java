@@ -76,41 +76,39 @@ public class OpenDocumentDialogPanel
 
     private OverviewListChoice<DecoratedObject<Project>> projectListChoice;
     private IModel<List<DecoratedObject<Project>>> projects;
-    
+
     private OverviewListChoice<DecoratedObject<SourceDocument>> docListChoice;
 
     private OverviewListChoice<DecoratedObject<User>> userListChoice;
 
     private final AnnotatorState state;
-    
+
     private final ModalWindow modalWindow;
-    
-    private final SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> 
-        docListProvider;
-    
+
+    private final SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> docListProvider;
+
     public OpenDocumentDialogPanel(String aId, AnnotatorState aState, ModalWindow aModalWindow,
             IModel<List<DecoratedObject<Project>>> aProjects,
-            SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> 
-                aDocListProvider)
+            SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> aDocListProvider)
     {
         super(aId);
-        
+
         modalWindow = aModalWindow;
         state = aState;
         projects = aProjects;
         docListProvider = aDocListProvider;
-        
+
         projectListChoice = createProjectListChoice(aState);
         userListChoice = createUserListChoice(aState);
         docListChoice = createDocListChoice();
-        
+
         Form<Void> form = new Form<>("form");
         form.setOutputMarkupId(true);
-       
+
         form.add(projectListChoice);
         form.add(docListChoice);
         form.add(userListChoice);
-        
+
         buttonsContainer = new WebMarkupContainer("buttons");
         buttonsContainer.setOutputMarkupId(true);
         LambdaAjaxSubmitLink openButton = new LambdaAjaxSubmitLink("openButton",
@@ -121,7 +119,7 @@ public class OpenDocumentDialogPanel
                 new LambdaAjaxLink("cancelButton", OpenDocumentDialogPanel.this::actionCancel));
         form.add(buttonsContainer);
         form.setDefaultButton(openButton);
-        
+
         add(form);
     }
 
@@ -153,7 +151,7 @@ public class OpenDocumentDialogPanel
         if (!docListChoice.getChoices().isEmpty()) {
             docListChoice.setModelObject(docListChoice.getChoices().get(0));
         }
-        
+
         docListChoice.setDisplayMessageOnEmptyChoice(true);
         return docListChoice;
     }
@@ -183,7 +181,7 @@ public class OpenDocumentDialogPanel
                 selectedProject = Model.of();
             }
         }
-        
+
         projectListChoice = new OverviewListChoice<>("project", selectedProject,
                 projects.getObject());
         projectListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<Project>>()
@@ -221,31 +219,31 @@ public class OpenDocumentDialogPanel
 
                     aTarget.add(userListChoice);
                 }
-                
+
                 docListChoice.setChoices(listDocuments());
                 docListChoice.setDefaultModel(Model.of());
-                
+
                 if (!docListChoice.getChoices().isEmpty()) {
                     docListChoice.setModelObject(docListChoice.getChoices().get(0));
                 }
-                
+
                 aTarget.add(buttonsContainer);
                 aTarget.add(docListChoice);
             }
         });
-        
+
         if (aBModel.isProjectLocked()) {
             projectListChoice.setVisible(false);
         }
-                
+
         return projectListChoice;
     }
-    
+
     private OverviewListChoice<DecoratedObject<User>> createUserListChoice(AnnotatorState aState)
     {
         DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
         DecoratedObject<User> viewUser = DecoratedObject.of(aState.getUser());
-        
+
         userListChoice = new OverviewListChoice<>("user", Model.of(), listUsers());
         userListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
         {
@@ -272,19 +270,19 @@ public class OpenDocumentDialogPanel
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
                 docListChoice.setChoices(listDocuments());
-                
+
                 if (!docListChoice.getChoices().isEmpty()) {
                     docListChoice.setModelObject(docListChoice.getChoices().get(0));
                 }
                 else {
                     docListChoice.setModelObject(null);
                 }
-                
+
                 aTarget.add(buttonsContainer);
                 aTarget.add(docListChoice);
             }
-        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)
-                && isManagerForListedProjects()));
+        }).add(visibleWhen(
+                () -> state.getMode().equals(Mode.ANNOTATION) && isManagerForListedProjects()));
 
         if (userListChoice.getChoices().contains(viewUser)) {
             userListChoice.setModelObject(viewUser);
@@ -298,7 +296,7 @@ public class OpenDocumentDialogPanel
         else {
             userListChoice.setModelObject(null);
         }
-        
+
         return userListChoice;
     }
 
@@ -308,10 +306,9 @@ public class OpenDocumentDialogPanel
     private boolean isManagerForListedProjects()
     {
         User currentUser = userRepository.getCurrentUser();
-        return projectService.isManager(projectListChoice.getModelObject().get(),
-                currentUser)
-                || projects.getObject().stream().anyMatch(
-                    p -> projectService.isManager(p.get(), currentUser));
+        return projectService.isManager(projectListChoice.getModelObject().get(), currentUser)
+                || projects.getObject().stream()
+                        .anyMatch(p -> projectService.isManager(p.get(), currentUser));
     }
 
     private List<DecoratedObject<User>> listUsers()
@@ -321,20 +318,20 @@ public class OpenDocumentDialogPanel
         }
 
         List<DecoratedObject<User>> users = new ArrayList<>();
-        
+
         Project selectedProject = projectListChoice.getModelObject().get();
         User currentUser = userRepository.getCurrentUser();
         // cannot select other user than themselves if curating or not admin
-        if (state.getMode().equals(Mode.CURATION) || 
-                !projectService.isManager(selectedProject, currentUser)) {
+        if (state.getMode().equals(Mode.CURATION)
+                || !projectService.isManager(selectedProject, currentUser)) {
             DecoratedObject<User> du = DecoratedObject.of(currentUser);
             du.setLabel(currentUser.getUsername());
             users.add(du);
             return users;
         }
 
-        for (User user : projectService.listProjectUsersWithPermissions(
-                selectedProject, PermissionLevel.ANNOTATOR)) {               
+        for (User user : projectService.listProjectUsersWithPermissions(selectedProject,
+                PermissionLevel.ANNOTATOR)) {
             DecoratedObject<User> du = DecoratedObject.of(user);
             du.setLabel(user.getUsername());
             if (user.equals(currentUser)) {
@@ -347,21 +344,21 @@ public class OpenDocumentDialogPanel
 
         return users;
     }
-    
+
     private List<DecoratedObject<SourceDocument>> listDocuments()
-    {        
+    {
         Project project = projectListChoice.getModel().map(DecoratedObject::get).orElse(null)
                 .getObject();
         User user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
-        
+
         if (project == null || user == null) {
             return new ArrayList<>();
         }
-        
+
         if (docListProvider != null) {
             return docListProvider.apply(project, user);
         }
-        
+
         return listDocuments(project, user);
     }
 
@@ -372,8 +369,7 @@ public class OpenDocumentDialogPanel
         // Remove from the list source documents that are in IGNORE state OR
         // that do not have at least one annotation document marked as
         // finished for curation dialog
-        Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(
-                aProject,
+        Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(aProject,
                 aUser);
 
         for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
@@ -382,7 +378,7 @@ public class OpenDocumentDialogPanel
                 AnnotationDocument adoc = e.getValue();
                 AnnotationDocumentState docState = adoc.getState();
                 dsd.setColor(docState.getColor());
-                
+
                 boolean userIsSelected = aUser.equals(userRepository.getCurrentUser());
                 // if current user is opening her own docs, don't let her see locked ones
                 if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
@@ -391,7 +387,7 @@ public class OpenDocumentDialogPanel
             }
             allSourceDocuments.add(dsd);
         }
-        
+
         return allSourceDocuments;
     }
 
@@ -411,7 +407,7 @@ public class OpenDocumentDialogPanel
             modalWindow.close(aTarget);
         }
     }
-    
+
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         projectListChoice.detach();
@@ -433,7 +429,7 @@ public class OpenDocumentDialogPanel
         if (projectListChoice.isVisible()) {
             return projectListChoice;
         }
-        
+
         return docListChoice;
     }
 }

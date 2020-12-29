@@ -32,8 +32,8 @@ import org.springframework.beans.DirectFieldAccessor;
 
 /**
  * Wicket model implementation which makes sure that s persistent model object is always attached to
- * an entity manager. Requires Hibernate and requires that the {@link ApplicationContextProvider}
- * is present in the Spring context.
+ * an entity manager. Requires Hibernate and requires that the {@link ApplicationContextProvider} is
+ * present in the Spring context.
  *
  */
 public class EntityModel<T>
@@ -58,7 +58,7 @@ public class EntityModel<T>
         if (entityClass == null) {
             return null;
         }
-        
+
         if (id == null || id.longValue() == 0) {
             return BeanUtils.instantiate(entityClass);
         }

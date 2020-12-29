@@ -67,7 +67,7 @@ public class GetCollectionInformationResponse
 
     @JsonProperty("visual_options")
     private VisualOptions visualOptions = new VisualOptions();
-    
+
     public GetCollectionInformationResponse()
     {
         super(COMMAND);
@@ -168,7 +168,6 @@ public class GetCollectionInformationResponse
     {
         annotationLogging = aAnnotationLogging;
     }
-
 
     public Set<EntityType> getEntityTypes()
     {

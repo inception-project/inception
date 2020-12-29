@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class ProjectExportTaskMonitor
 {
     private final Queue<LogMessage> messages = new ConcurrentLinkedQueue<>();
-    
+
     private long createTime;
     private long startTime = -1;
     private long endTime = -1;
@@ -48,11 +48,11 @@ public class ProjectExportTaskMonitor
     public synchronized void setState(ProjectExportTaskState aState)
     {
         state = aState;
-        
+
         if (state == NOT_STARTED && aState != NOT_STARTED) {
             startTime = System.currentTimeMillis();
         }
-        
+
         if (asList(COMPLETED, CANCELLED, FAILED).contains(aState)) {
             endTime = System.currentTimeMillis();
         }
@@ -101,7 +101,7 @@ public class ProjectExportTaskMonitor
             messages.add(aMessage);
         }
     }
-    
+
     public Queue<LogMessage> getMessages()
     {
         return messages;

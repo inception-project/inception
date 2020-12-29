@@ -27,7 +27,7 @@ public class AnnotationStateChangeMessage
 
     private long documentId;
     private String documentName;
-    
+
     private String annotationUser;
 
     private String annotationPreviousState;
@@ -37,7 +37,7 @@ public class AnnotationStateChangeMessage
     {
         // Nothing to do
     }
-    
+
     public AnnotationStateChangeMessage(AnnotationStateChangeEvent aEvent)
     {
         projectId = aEvent.getDocument().getProject().getId();
@@ -47,7 +47,7 @@ public class AnnotationStateChangeMessage
         documentName = aEvent.getDocument().getName();
 
         annotationUser = aEvent.getAnnotationDocument().getUser();
-        
+
         annotationState = AeroRemoteApiController
                 .annotationDocumentStateToString(aEvent.getNewState());
         annotationPreviousState = AeroRemoteApiController

@@ -17,7 +17,7 @@
 [[sect_database]]
 = Database
 
-{product-name} uses an SQL database to store project and user data. 
+{product-name} uses a SQL database to store project and user data. 
 
 {product-name} uses by default an embedded HSQLDB database. However, we recommend using the embedded
 database only for testing purposes. For production use, we recommend using a MySQL server. The reason

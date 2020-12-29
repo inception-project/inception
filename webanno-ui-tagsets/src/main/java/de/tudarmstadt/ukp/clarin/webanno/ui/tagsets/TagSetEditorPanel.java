@@ -74,81 +74,85 @@ public class TagSetEditorPanel
     private static final long serialVersionUID = 3084260865116114184L;
 
     private @SpringBean AnnotationSchemaService annotationSchemaService;
-    
+
     private ConfirmationDialog confirmationDialog;
 
     private IModel<Project> selectedProject;
     private IModel<TagSet> selectedTagSet;
     private IModel<Tag> selectedTag;
     private IModel<String> exportFormat;
-    
+
     public TagSetEditorPanel(String aId, IModel<Project> aProject, IModel<TagSet> aTagSet,
             IModel<Tag> aSelectedTag)
     {
         super(aId, aTagSet);
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         selectedProject = aProject;
         selectedTagSet = aTagSet;
         selectedTag = aSelectedTag;
         exportFormat = Model.of(supportedFormats().get(0));
-        
+
         Form<TagSet> form = new Form<>("form", CompoundPropertyModel.of(aTagSet));
         add(form);
 
-        form.add(new TextField<String>("name")
-                .add(new TagSetExistsValidator())
+        form.add(new TextField<String>("name") //
+                .add(new TagSetExistsValidator()) //
                 .setRequired(true));
         form.add(new TextField<String>("language"));
         form.add(new TextArea<String>("description"));
-        form.add(new CheckBox("createTag"));
-        
+        form.add(new CheckBox("createTag").setOutputMarkupId(true));
+
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("delete", this::actionDelete)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
-        
+
         BootstrapRadioChoice<String> format = new BootstrapRadioChoice<>("format", exportFormat,
                 LoadableDetachableModel.of(this::supportedFormats));
-        // The AjaxDownloadLink does not submit the form, so the format radio-buttons need to 
+        // The AjaxDownloadLink does not submit the form, so the format radio-buttons need to
         // submit themselves so their value is available when the export button is pressed
-        format.add(onUpdateChoice(_target -> { /*NO-OP*/ }));
+        format.add(onUpdateChoice(_target -> {
+            // NO-OP
+        }));
         form.add(format);
-        
+
         form.add(new AjaxDownloadLink("export", LoadableDetachableModel.of(this::export)));
-        
+
         confirmationDialog = new ConfirmationDialog("confirmationDialog");
         confirmationDialog.setTitleModel(new StringResourceModel("DeleteDialog.title", this));
         add(confirmationDialog);
     }
-    
+
     private List<String> supportedFormats()
     {
         return asList(JSON_FORMAT, TAB_FORMAT);
     }
-    
-    private void actionSave(AjaxRequestTarget aTarget, Form<Tag> aForm) {
+
+    private void actionSave(AjaxRequestTarget aTarget, Form<Tag> aForm)
+    {
         if (isNull(selectedTagSet.getObject().getId())) {
-            if (annotationSchemaService.existsTagSet(selectedTagSet.getObject()
-                    .getName(), selectedProject.getObject())) {
+            if (annotationSchemaService.existsTagSet(selectedTagSet.getObject().getName(),
+                    selectedProject.getObject())) {
                 error("Only one tagset per project is allowed!");
             }
         }
-        
+
         selectedTagSet.getObject().setProject(selectedProject.getObject());
         annotationSchemaService.createTagSet(selectedTagSet.getObject());
-        
+
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }
-    
-    private void actionDelete(AjaxRequestTarget aTarget) {
+
+    private void actionDelete(AjaxRequestTarget aTarget)
+    {
         confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
                 .setParameters(selectedTagSet.getObject().getName()));
         confirmationDialog.show(aTarget);
-        
+
         confirmationDialog.setConfirmAction((_target) -> {
             // If the tagset is used in any features, clear the tagset on these features when
             // the tagset is deleted!
@@ -166,15 +170,16 @@ public class TagSetEditorPanel
             actionCancel(_target);
         });
     }
-    
-    private void actionCancel(AjaxRequestTarget aTarget) {
+
+    private void actionCancel(AjaxRequestTarget aTarget)
+    {
         selectedTagSet.setObject(null);
         selectedTag.setObject(null);
-        
+
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }
-    
+
     private FileResourceStream export()
     {
         File exportFile = null;
@@ -213,7 +218,7 @@ public class TagSetEditorPanel
                 catch (IOException e) {
                     error("File Path not found or No permision to save the file!");
                 }
-                
+
                 info("TagSets successfully exported to :" + exportFile.getAbsolutePath());
             }
         }
@@ -234,22 +239,19 @@ public class TagSetEditorPanel
                 os = new FileOutputStream(exportFile);
                 osw = new OutputStreamWriter(os, "UTF-8");
                 bw = new BufferedWriter(osw);
-                bw.write(tagSet.getName() + "\t"
-                        + tagSetDescription.replace("\n", "\\n") + "\n");
+                bw.write(tagSet.getName() + "\t" + tagSetDescription.replace("\n", "\\n") + "\n");
                 bw.write(tagSet.getLanguage() + "\t" + " \n");
                 for (Tag tag : annotationSchemaService.listTags(tagSet)) {
-                    String tagDescription = tag.getDescription() == null ? "" : tag
-                            .getDescription();
-                    bw.write(tag.getName() + "\t" + tagDescription.replace("\n", "\\n")
-                            + "\n");
+                    String tagDescription = tag.getDescription() == null ? ""
+                            : tag.getDescription();
+                    bw.write(tag.getName() + "\t" + tagDescription.replace("\n", "\\n") + "\n");
                 }
 
                 bw.flush();
                 bw.close();
             }
             catch (FileNotFoundException e) {
-                error("The file for export not found "
-                        + ExceptionUtils.getRootCauseMessage(e));
+                error("The file for export not found " + ExceptionUtils.getRootCauseMessage(e));
             }
             catch (UnsupportedEncodingException e) {
                 error("Unsupported encoding " + ExceptionUtils.getRootCauseMessage(e));
@@ -261,7 +263,7 @@ public class TagSetEditorPanel
         }
         return new FileResourceStream(exportFile);
     }
-    
+
     private class TagSetExistsValidator
         implements IValidator<String>
     {

@@ -35,21 +35,21 @@ public class AjaxDownloadLink
     private IModel<String> filename;
     private AbstractAjaxBehavior downloadBehavior;
     private boolean addAntiCache = true;
-    
+
     public AjaxDownloadLink(String aId, IModel<IResourceStream> aData)
     {
         super(aId, aData);
         filename = null;
         commonInit();
     }
-    
+
     public AjaxDownloadLink(String aId, IModel<String> aFilename, IModel<IResourceStream> aData)
     {
         super(aId, aData);
         filename = aFilename;
         commonInit();
     }
-    
+
     public boolean isAddAntiCache()
     {
         return addAntiCache;
@@ -84,7 +84,7 @@ public class AjaxDownloadLink
             public void onRequest()
             {
                 IResourceStream is = AjaxDownloadLink.this.getModelObject();
-                
+
                 if (is != null) {
                     // If no filename has been set explicitly, try to get it from the resource
                     String name = filename != null ? filename.getObject() : null;
@@ -97,7 +97,7 @@ public class AjaxDownloadLink
                                     .toString();
                         }
                     }
-                    
+
                     ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(
                             AjaxDownloadLink.this.getModelObject(), name);
                     handler.setContentDisposition(ContentDisposition.ATTACHMENT);

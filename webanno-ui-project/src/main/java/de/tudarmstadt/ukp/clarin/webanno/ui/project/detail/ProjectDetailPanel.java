@@ -68,25 +68,25 @@ public class ProjectDetailPanel
     private static final long serialVersionUID = 1118880151557285316L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectDetailPanel.class);
-    
+
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationSchemaService annotationService;
-    
+
     private IModel<Project> projectModel;
-    
+
     private Label idLabel;
     private DropDownChoice<String> projectTypes;
 
     public ProjectDetailPanel(String id, IModel<Project> aModel)
     {
         super(id, aModel);
-        
+
         projectModel = aModel;
-        
+
         Form<Project> form = new Form<>("form", CompoundPropertyModel.of(aModel));
         add(form);
-        
+
         TextField<String> projectNameTextField = new TextField<>("name");
         projectNameTextField.setRequired(true);
         projectNameTextField.add(new ProjectExistsValidator());
@@ -99,21 +99,21 @@ public class ProjectDetailPanel
                 .equals(getApplication().getConfigurationType()));
 
         form.add(new TextArea<String>("description").setOutputMarkupId(true));
-        
+
         DropDownChoice<ScriptDirection> scriptDirection = new BootstrapSelect<>("scriptDirection");
         scriptDirection.setChoiceRenderer(new EnumChoiceRenderer<>(this));
         scriptDirection.setChoices(Arrays.asList(ScriptDirection.values()));
         form.add(scriptDirection);
-        
+
         form.add(new CheckBox("disableExport").setOutputMarkupPlaceholderTag(true));
 
         form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
 
         form.add(projectTypes = makeProjectTypeChoice());
-        
+
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
     }
-        
+
     private DropDownChoice<String> makeProjectTypeChoice()
     {
         List<String> types = projectService.listProjectTypes().stream().map(t -> t.id())
@@ -128,15 +128,15 @@ public class ProjectDetailPanel
             if (projectTypes.getChoices().size() == 1 && project.getMode() == null) {
                 project.setMode(projectTypes.getChoices().get(0));
             }
-            
+
             _this.setEnabled(
                     nonNull(projectModel.getObject()) && isNull(projectModel.getObject().getId()));
-            
+
             // If there is only a single project type, then we can simply select that and do not
             // need to show the choice at all.
             _this.setVisible(projTypes.getChoices().size() > 1);
         }));
-        
+
         return projTypes;
     }
 
@@ -145,7 +145,7 @@ public class ProjectDetailPanel
         aTarget.add(getPage());
         // aTarget.add(((ApplicationPageBase) getPage()).getPageContent());
         // aTarget.addChildren(getPage(), IFeedback.class);
-        
+
         Project project = aForm.getModelObject();
         if (isNull(project.getId())) {
             try {

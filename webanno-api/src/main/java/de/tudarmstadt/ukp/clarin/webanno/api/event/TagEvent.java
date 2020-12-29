@@ -27,7 +27,7 @@ public class TagEvent
     implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = 8243752811013952530L;
-    
+
     private final Tag tag;
 
     public TagEvent(Object aSource, Tag aTag)

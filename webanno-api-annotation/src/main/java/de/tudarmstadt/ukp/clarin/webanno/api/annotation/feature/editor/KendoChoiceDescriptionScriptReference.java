@@ -34,8 +34,7 @@ public class KendoChoiceDescriptionScriptReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final KendoChoiceDescriptionScriptReference INSTANCE = 
-            new KendoChoiceDescriptionScriptReference();
+    private static final KendoChoiceDescriptionScriptReference INSTANCE = new KendoChoiceDescriptionScriptReference();
 
     /**
      * Gets the instance of the resource reference
@@ -52,20 +51,21 @@ public class KendoChoiceDescriptionScriptReference
      */
     private KendoChoiceDescriptionScriptReference()
     {
-        super(KendoChoiceDescriptionScriptReference.class, "KendoChoiceDescriptionScriptReference.js");
+        super(KendoChoiceDescriptionScriptReference.class,
+                "KendoChoiceDescriptionScriptReference.js");
     }
-    
+
     @Override
     public List<HeaderItem> getDependencies()
     {
         List<HeaderItem> dependencies = new ArrayList<>(super.getDependencies());
-        
-        // Required to load the tooltop plugin 
+
+        // Required to load the tooltop plugin
         dependencies.add(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
-        
+
         return dependencies;
     }
-    
+
     public static IJQueryTemplate template()
     {
         return new IJQueryTemplate()
@@ -90,7 +90,7 @@ public class KendoChoiceDescriptionScriptReference
             }
         };
     }
-    
+
     public static IJQueryTemplate templateReorderable()
     {
         return new IJQueryTemplate()
@@ -104,12 +104,12 @@ public class KendoChoiceDescriptionScriptReference
                 // more fancy dropdowns
                 // http://docs.telerik.com/kendo-ui/framework/templates/overview
                 return "# if (data.reordered == 'true') { #"
-                    + "<div title=\"#: data.description #\" "
-                    + "onmouseover=\"javascript:applyTooltip(this)\">"
-                    + "<b>#: data.name #</b></div>\n" + "# } else { #"
-                    + "<div title=\"#: data.description #\" "
-                    + "onmouseover=\"javascript:applyTooltip(this)\">"
-                    + "#: data.name #</div>\n" + "# } #";
+                        + "<div title=\"#: data.description #\" "
+                        + "onmouseover=\"javascript:applyTooltip(this)\">"
+                        + "<b>#: data.name #</b></div>\n" + "# } else { #"
+                        + "<div title=\"#: data.description #\" "
+                        + "onmouseover=\"javascript:applyTooltip(this)\">"
+                        + "#: data.name #</div>\n" + "# } #";
             }
 
             @Override

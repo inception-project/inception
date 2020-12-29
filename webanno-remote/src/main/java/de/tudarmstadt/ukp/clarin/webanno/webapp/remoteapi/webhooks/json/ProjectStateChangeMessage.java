@@ -28,17 +28,17 @@ public class ProjectStateChangeMessage
 
     private String projectPreviousState;
     private String projectState;
-    
+
     public ProjectStateChangeMessage()
     {
         // Nothing to do
     }
-    
+
     public ProjectStateChangeMessage(ProjectStateChangedEvent aEvent)
     {
         projectId = aEvent.getProject().getId();
         projectName = aEvent.getProject().getName();
-        
+
         projectState = projectStateToString(aEvent.getNewState());
         projectPreviousState = projectStateToString(aEvent.getPreviousState());
     }

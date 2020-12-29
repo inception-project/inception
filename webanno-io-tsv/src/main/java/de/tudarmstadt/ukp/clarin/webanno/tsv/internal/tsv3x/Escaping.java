@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
+ */
+package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
 
 import static org.apache.commons.lang3.StringEscapeUtils.unescapeJava;
 
@@ -78,7 +79,8 @@ public class Escaping
                 esc.toArray(new String[esc.size()]));
     }
 
-    public static String unescapeText(TsvFormatHeader aHeader, String aText) {
+    public static String unescapeText(TsvFormatHeader aHeader, String aText)
+    {
         if ("3.1".equals(aHeader.getVersion())) {
             return unescapeJava(aText);
         }
@@ -111,8 +113,8 @@ public class Escaping
             // backslash
             pat.add("\\");
             esc.add("\\\\");
-            return StringUtils.replaceEach(aText, 
-                    esc.toArray(new String[esc.size()]), pat.toArray(new String[pat.size()]));
+            return StringUtils.replaceEach(aText, esc.toArray(new String[esc.size()]),
+                    pat.toArray(new String[pat.size()]));
         }
         else {
             throw new IllegalStateException("Unknown version: [" + aHeader.getVersion() + "]");

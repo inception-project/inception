@@ -29,9 +29,9 @@ public interface AnnotationEditorFactory
      * @return get the bean name.
      */
     String getBeanName();
-    
+
     String getDisplayName();
-    
+
     AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider);
 

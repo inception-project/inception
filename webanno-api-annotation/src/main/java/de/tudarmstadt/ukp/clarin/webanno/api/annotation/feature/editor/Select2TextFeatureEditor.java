@@ -34,7 +34,7 @@ import com.github.openjson.JSONException;
 import com.github.openjson.JSONStringer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 
 /**
  * String feature editor using Select2.
@@ -46,11 +46,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
  * 
  * <b>CONs</b>
  * <ul>
- * <li>Clicking "x" to clear the selection leaves a popup hanging around
- *     Cf. https://github.com/select2/select2/issues/3320</li>
- *       
- * <li>The input cannot be focussed and does not properly react to keyboard inputs. That
- *     Means tabbing through it doesn't work well/at all.</li>
+ * <li>Clicking "x" to clear the selection leaves a popup hanging around Cf.
+ * https://github.com/select2/select2/issues/3320</li>
+ * 
+ * <li>The input cannot be focussed and does not properly react to keyboard inputs. That Means
+ * tabbing through it doesn't work well/at all.</li>
  * </ul>
  * 
  * <b>TODOs</b>
@@ -63,8 +63,7 @@ public class Select2TextFeatureEditor
 {
     private static final long serialVersionUID = 8686646370500180943L;
 
-    public Select2TextFeatureEditor(String aId, MarkupContainer aItem,
-            IModel<FeatureState> aModel)
+    public Select2TextFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
         super(aId, aItem, aModel);
     }
@@ -89,43 +88,42 @@ public class Select2TextFeatureEditor
                 if (aPage == 0) {
                     aResponse.add("");
                 }
-                
-//                // If adding own tags is allowed, the always return the current input as the first
-//                // choice.
-//                boolean inputAsFirstResult = aTerm != null && aPage == 0
-//                        && TextFeatureEditor.this.getModelObject().feature.getTagset()
-//                                .isCreateTag();
-//                if (inputAsFirstResult) {
-//                    aResponse.add(aTerm);
-//                }
-                
+
+                // // If adding own tags is allowed, the always return the current input as the
+                // first
+                // // choice.
+                // boolean inputAsFirstResult = aTerm != null && aPage == 0
+                // && TextFeatureEditor.this.getModelObject().feature.getTagset()
+                // .isCreateTag();
+                // if (inputAsFirstResult) {
+                // aResponse.add(aTerm);
+                // }
+
                 List<String> matches = Select2TextFeatureEditor.this.getModelObject().tagset
                         .stream()
                         .filter(t -> isBlank(aTerm) || containsIgnoreCase(t.getName(), aTerm))
-//                        // If we added the input term as the first result and by freak accident
-//                        // it is even returned as a result, then skip it.
-//                        .filter(t -> !(inputAsFirstResult && t.getName().equals(aTerm)))
-                        .skip(aPage * 10)
-                        .limit(11)
-                        .map(Tag::getName)
+                        // // If we added the input term as the first result and by freak accident
+                        // // it is even returned as a result, then skip it.
+                        // .filter(t -> !(inputAsFirstResult && t.getName().equals(aTerm)))
+                        .skip(aPage * 10) //
+                        .limit(11) //
+                        .map(ReorderableTag::getName) //
                         .collect(Collectors.toList());
-                
+
                 aResponse.addAll(matches.subList(0, Math.min(matches.size(), 10)));
-                aResponse.setHasMore(matches.size() > 10); 
+                aResponse.setHasMore(matches.size() > 10);
             }
-            
+
             @Override
             protected void toJson(String aChoice, JSONStringer aStringer) throws JSONException
             {
-                String description = Select2TextFeatureEditor.this.getModelObject().tagset
-                        .stream()
-                        .filter(t -> t.getName().equals(aChoice))
-                        .findFirst()
+                String description = Select2TextFeatureEditor.this.getModelObject().tagset.stream()
+                        .filter(t -> t.getName().equals(aChoice)).findFirst()
                         .map(t -> t.getDescription()).orElse("");
-                
+
                 super.toJson(aChoice, aStringer);
-                
-                //aStringer.key("description").value(description);
+
+                // aStringer.key("description").value(description);
             }
         });
         return select;

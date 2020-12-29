@@ -16,6 +16,6 @@
  * limitations under the License.
  */
 /**
- * Provides Interfaces for different dao method implementations. 
+ * Provides Interfaces for different dao method implementations.
  */
 package de.tudarmstadt.ukp.clarin.webanno.api;

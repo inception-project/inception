@@ -22,7 +22,8 @@ import org.apache.wicket.markup.html.panel.Panel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 
-public interface ActionBarExtension extends Extension<AnnotationPageBase>
+public interface ActionBarExtension
+    extends Extension<AnnotationPageBase>
 {
     @Override
     default String getId()
@@ -39,27 +40,30 @@ public interface ActionBarExtension extends Extension<AnnotationPageBase>
     /**
      * @return the role of the action bar extension.
      */
-    default String getRole() {
+    default String getRole()
+    {
         return getClass().getName();
     }
-    
+
     /**
-     * For a given {@link #getRole() role}, only one extension is added to the action bar. If 
+     * For a given {@link #getRole() role}, only one extension is added to the action bar. If
      * multiple extensions apply in the context, then the one with the highest priority is used.
      * 
      * @return the priority
      */
-    default int getPriority() {
+    default int getPriority()
+    {
         return 0;
     }
-    
+
     Panel createActionBarItem(String aId, AnnotationPageBase aPage);
 
     /**
      * Called when the {@link ActionBar} is added to the page. This allows the action bar extensions
      * e.g. to inject behaviors into the page before their items are even visible on screen.
      */
-    default void onInitialize(AnnotationPageBase aPage) {
+    default void onInitialize(AnnotationPageBase aPage)
+    {
         // Do nothing by default
     }
 }

@@ -42,7 +42,7 @@ public class DocumentNamePanel
         setOutputMarkupId(true);
         add(new Label("doumentName", LambdaModel.of(this::getLabel)).setOutputMarkupId(true));
     }
-    
+
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
@@ -58,7 +58,7 @@ public class DocumentNamePanel
             sb.append(state.getUser().getUsername());
             sb.append(": ");
         }
-        
+
         if (state.getProject() != null) {
             sb.append(state.getProject().getName());
         }

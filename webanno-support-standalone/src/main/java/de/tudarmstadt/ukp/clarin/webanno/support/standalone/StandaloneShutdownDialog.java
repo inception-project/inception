@@ -52,31 +52,31 @@ public class StandaloneShutdownDialog
 
     private static final String ACTION_OPEN_BROWSER = "Open browser";
     private static final String ACTION_SHUTDOWN = "Shut down";
-    
+
     @Autowired
     private ApplicationEventPublisher eventPublisher;
-    
+
     @Value("${running.from.commandline}")
     private boolean runningFromCommandline;
-    
+
     @Value("${spring.application.name}")
     private String applicationName;
-    
+
     private int port = -1;
-    
+
     @EventListener
     public void onApplicationEvent(ApplicationReadyEvent aEvt)
     {
         log.info("Console: " + ((System.console() != null) ? "available" : "not available"));
         log.info("Headless: " + (GraphicsEnvironment.isHeadless() ? "yes" : "no"));
-        
+
         // Show this only when run from the standalone JAR via a double-click
         if (port != -1 && System.console() == null && !GraphicsEnvironment.isHeadless()
                 && runningFromCommandline) {
             log.info("If you are running " + applicationName
                     + " in a server environment, please use '-Djava.awt.headless=true'");
-            eventPublisher.publishEvent(
-                    new ShutdownDialogAvailableEvent(StandaloneShutdownDialog.this));
+            eventPublisher
+                    .publishEvent(new ShutdownDialogAvailableEvent(StandaloneShutdownDialog.this));
 
             final int style;
             final String[] options;
@@ -88,12 +88,11 @@ public class StandaloneShutdownDialog
                 style = JOptionPane.OK_OPTION;
                 options = new String[] { ACTION_SHUTDOWN };
             }
-            
+
             EventQueue.invokeLater(() -> {
                 final JOptionPane optionPane = new JOptionPane(
                         new JLabel("<HTML>" + applicationName + " is running now and can be "
-                                + "accessed via <b>http://localhost:8080</b>.<br>"
-                                + applicationName
+                                + "accessed via <b>http://localhost:8080</b>.<br>" + applicationName
                                 + " works best with the browsers Google Chrome or Safari.<br>"
                                 + "Use this dialog to shut " + applicationName + " down.</HTML>"),
                         JOptionPane.INFORMATION_MESSAGE, style, null, options);
@@ -115,15 +114,17 @@ public class StandaloneShutdownDialog
             });
         }
         else {
-            log.info("Running in server environment or from command line: disabling interactive shutdown dialog.");
+            log.info(
+                    "Running in server environment or from command line: disabling interactive shutdown dialog.");
         }
     }
-    
+
     @EventListener
-    public void onApplicationEvent(WebServerInitializedEvent aEvt) {
+    public void onApplicationEvent(WebServerInitializedEvent aEvt)
+    {
         port = aEvt.getWebServer().getPort();
     }
-    
+
     private void handleCloseEvent(PropertyChangeEvent aEvt)
     {
         if (aEvt.getPropertyName().equals(JOptionPane.VALUE_PROPERTY)) {

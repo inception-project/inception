@@ -53,23 +53,20 @@ public class CorrectionDocumentServiceImpl
     }
 
     @Override
-    public boolean existsCorrectionCas(SourceDocument aSourceDocument)
-        throws IOException
+    public boolean existsCorrectionCas(SourceDocument aSourceDocument) throws IOException
     {
         return casStorageService.existsCas(aSourceDocument, CORRECTION_USER);
     }
 
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    public void writeCorrectionCas(CAS aCas, SourceDocument aDocument)
-        throws IOException
+    public void writeCorrectionCas(CAS aCas, SourceDocument aDocument) throws IOException
     {
         casStorageService.writeCas(aDocument, aCas, CORRECTION_USER);
     }
 
     @Override
-    public CAS readCorrectionCas(SourceDocument aDocument)
-        throws IOException
+    public CAS readCorrectionCas(SourceDocument aDocument) throws IOException
     {
         return casStorageService.readCas(aDocument, CORRECTION_USER);
     }
@@ -80,12 +77,12 @@ public class CorrectionDocumentServiceImpl
     {
         annotationService.upgradeCas(aCas, aDocument, CORRECTION_USER);
     }
-    
+
     @Override
     public Optional<Long> getCorrectionCasTimestamp(SourceDocument aDocument) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
-        
+
         return casStorageService.getCasTimestamp(aDocument, CORRECTION_USER);
     }
 }

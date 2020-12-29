@@ -49,24 +49,25 @@ public class UserPermissionsPanel
     private static final long serialVersionUID = -5278078988218713188L;
 
     private @SpringBean ProjectService projectRepository;
-    
+
     private IModel<Project> project;
     private IModel<User> user;
 
     public UserPermissionsPanel(String aId, IModel<Project> aProject, IModel<User> aUser)
     {
         super(aId);
-        
+
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
-        
+
         project = aProject;
         user = aUser;
-        
+
         Form<Void> form = new Form<>("form");
         add(form);
 
-        CheckBoxMultipleChoice<PermissionLevel> levels = new CheckBoxMultipleChoice<>("permissions");
+        CheckBoxMultipleChoice<PermissionLevel> levels = new CheckBoxMultipleChoice<>(
+                "permissions");
         levels.setPrefix("<div class=\"checkbox\">");
         levels.setSuffix("</div>");
         levels.setLabelPosition(LabelPosition.WRAP_AFTER);
@@ -81,34 +82,35 @@ public class UserPermissionsPanel
         levels.setChoices(asList(MANAGER, CURATOR, ANNOTATOR));
         levels.setChoiceRenderer(new EnumChoiceRenderer<>(levels));
         form.add(levels);
-        
+
         form.add(new Label("username", PropertyModel.of(aUser, "username")));
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         setVisible(user.getObject() != null);
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<Void> aForm) {
+    private void actionSave(AjaxRequestTarget aTarget, Form<Void> aForm)
+    {
         // The model adapter already commits the changes for us as part of the normal form
         // processing cycle. So nothing special to do here.
-        
+
         success("Permissions saved");
-        
+
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }
-    
-    
-    private void actionCancel(AjaxRequestTarget aTarget) {
+
+    private void actionCancel(AjaxRequestTarget aTarget)
+    {
         user.setObject(null);
-        
+
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }

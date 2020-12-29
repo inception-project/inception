@@ -31,15 +31,15 @@ public abstract class VObject
     private final String type;
     private final Map<String, String> features;
     private final int equivalenceSet;
-    
+
     private VID vid;
     private Map<String, String> hoverFeatures = new HashMap<>();
     private List<VLazyDetailQuery> lazyDetails = new ArrayList<>();
     private String colorHint;
     private String label;
     private boolean actionButtons;
-    
-    public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures, 
+
+    public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures,
             Map<String, String> aHoverFeatures)
     {
         this(aLayer, aVid, aType, -1, aFeatures, aHoverFeatures);
@@ -75,7 +75,7 @@ public abstract class VObject
     {
         return type;
     }
-    
+
     public int getEquivalenceSet()
     {
         return equivalenceSet;
@@ -95,7 +95,7 @@ public abstract class VObject
     {
         hoverFeatures = aHoverFeatures;
     }
-    
+
     public void addHoverFeature(String aFeature, String aValue)
     {
         hoverFeatures.put(aFeature, aValue);
@@ -120,7 +120,7 @@ public abstract class VObject
     {
         lazyDetails.add(aDetail);
     }
-    
+
     public void setColorHint(String aColor)
     {
         colorHint = aColor;
@@ -130,22 +130,22 @@ public abstract class VObject
     {
         return colorHint;
     }
-    
+
     public void setLabelHint(String aLabelHint)
     {
         label = aLabelHint;
     }
-    
+
     public String getLabelHint()
     {
         return label;
     }
-    
+
     public boolean isActionButtons()
     {
-        return actionButtons; 
+        return actionButtons;
     }
-    
+
     public void setActionButtons(boolean aActionButtons)
     {
         actionButtons = aActionButtons;

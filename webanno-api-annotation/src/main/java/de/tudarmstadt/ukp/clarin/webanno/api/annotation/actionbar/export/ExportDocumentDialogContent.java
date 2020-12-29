@@ -75,12 +75,12 @@ public class ExportDocumentDialogContent
         Preferences prefs = new Preferences();
         prefs.format = writeableFormats.get(0);
         prefs.documentType = SELECTEXPORT.ANNOTATED.toString();
-        
+
         preferences = Model.of(prefs);
-        
+
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
         add(form);
-        
+
         DropDownChoice<String> format = new BootstrapSelect<>("format", writeableFormats);
         format.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         form.add(format);
@@ -98,47 +98,44 @@ public class ExportDocumentDialogContent
         form.add(export);
         form.add(new LambdaAjaxLink("cancel", (target) -> modalWindow.close(target)));
     }
-    
+
     private FileResourceStream export()
     {
         File downloadFile = null;
-        
+
         String username;
-        
-        if (state.getObject().getMode()
-                .equals(Mode.AUTOMATION)
-                && preferences.getObject().documentType
-                        .equals(SELECTEXPORT.AUTOMATED.toString())) {
+
+        if (state.getObject().getMode().equals(Mode.AUTOMATION)
+                && preferences.getObject().documentType.equals(SELECTEXPORT.AUTOMATED.toString())) {
             username = WebAnnoConst.CORRECTION_USER;
         }
         else {
             username = state.getObject().getUser().getUsername();
         }
-        
+
         try {
             downloadFile = importExportService.exportAnnotationDocument(
                     state.getObject().getDocument(), username,
-                    importExportService.getFormatByName(preferences.getObject().format)
-                            .get(),
+                    importExportService.getFormatByName(preferences.getObject().format).get(),
                     state.getObject().getDocument().getName(), state.getObject().getMode());
         }
         catch (Exception e) {
             LOG.error("Export failed", e);
             error("Export failed:" + ExceptionUtils.getRootCauseMessage(e));
             // This will cause the open dialog to pop up again, but at least
-            // the error feedback message will be visible. With the 
+            // the error feedback message will be visible. With the
             // RestartResponseException the feedback message only flashes.
             throw new NonResettingRestartException(getPage().getPageClass());
         }
-            
+
         return new FileResourceStream(downloadFile);
     }
-    
+
     private static class Preferences
         implements Serializable
     {
         private static final long serialVersionUID = -4905538356691404575L;
-        
+
         public String documentType;
         public String format;
 

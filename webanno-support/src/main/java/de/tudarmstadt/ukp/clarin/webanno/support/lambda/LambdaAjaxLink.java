@@ -48,17 +48,17 @@ public class LambdaAjaxLink
         onConfigureAction = aAction;
         return this;
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         if (onConfigureAction != null) {
             onConfigureAction.run(this);
         }
     }
-    
+
     @Override
     public void onClick(AjaxRequestTarget aTarget)
     {

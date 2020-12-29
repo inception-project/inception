@@ -24,12 +24,12 @@ public final class Logging
     public static final String KEY_PROJECT_ID = "projectId";
     public static final String KEY_USERNAME = "username";
     public static final String KEY_REPOSITORY_PATH = "repositoryPath";
-    
+
     private Logging()
     {
         // No instances
     }
-    
+
     public static void setMDC(long aProjectId, String aUsername)
     {
         MDC.put(KEY_PROJECT_ID, String.valueOf(aProjectId));

@@ -27,15 +27,15 @@ public interface TelemetryService
     List<TelemetrySupport> getTelemetrySupports();
 
     /**
-     * Reads the telemetry settings from the DB. If there are no settings yet, this method returns
-     * a new settings object.
+     * Reads the telemetry settings from the DB. If there are no settings yet, this method returns a
+     * new settings object.
      */
     <T> TelemetrySettings readOrCreateSettings(TelemetrySupport<T> aSupport);
 
     <T> Optional<TelemetrySettings> readSettings(TelemetrySupport<T> aSupport);
 
     void writeAllSettings(List<TelemetrySettings> aSettings);
-    
+
     List<TelemetrySettings> listSettings();
 
     Optional<TelemetrySupport> getTelemetrySuppport(String aSupport);

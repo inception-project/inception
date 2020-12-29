@@ -59,15 +59,15 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
   
-    <mockito.version>3.3.3</mockito.version>
-    <assertj.version>3.15.0</assertj.version>
-    <spring.version>5.2.7.RELEASE</spring.version>
-    <spring.boot.version>2.3.4.RELEASE</spring.boot.version>
+    <mockito.version>3.6.0</mockito.version>
+    <assertj.version>3.18.1</assertj.version>
+    <spring.version>5.3.1</spring.version>
+    <spring.boot.version>2.4.0</spring.boot.version>
     <spring.security.version>5.4.1</spring.security.version>
-    <wicket.version>9.1.0</wicket.version>
-    <wicketstuff.version>9.1.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.0.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>5.0.2</wicket-bootstrap.version>
+    <wicket.version>9.2.0</wicket.version>
+    <wicketstuff.version>9.2.0</wicketstuff.version>
+    <wicket-jquery-ui.version>9.1.0</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>5.0.3</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.1</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.1</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
@@ -974,7 +974,7 @@
       <dependency>
         <groupId>org.dkpro.statistics</groupId>
         <artifactId>dkpro-statistics-agreement</artifactId>
-        <version>2.2.0</version>
+        <version>2.2.1</version>
       </dependency>
       
       <dependency>

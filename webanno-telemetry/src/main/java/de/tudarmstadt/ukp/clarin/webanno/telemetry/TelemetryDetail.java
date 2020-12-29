@@ -19,14 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry;
 
 import java.io.Serializable;
 
-public class TelemetryDetail implements Serializable
+public class TelemetryDetail
+    implements Serializable
 {
     private static final long serialVersionUID = -3891866931664933567L;
-    
+
     private final String key;
     private final String value;
     private final String description;
-    
+
     public TelemetryDetail(String aKey, String aValue)
     {
         this(aKey, aValue, null);

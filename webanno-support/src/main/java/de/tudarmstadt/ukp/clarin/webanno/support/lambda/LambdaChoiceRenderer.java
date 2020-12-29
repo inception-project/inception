@@ -24,7 +24,7 @@ public class LambdaChoiceRenderer<T>
     extends ChoiceRenderer<T>
 {
     private static final long serialVersionUID = -3003614158636642108L;
-    
+
     private SerializableFunction<T, String> displayValueFunc;
 
     public LambdaChoiceRenderer(SerializableFunction<T, String> aDisplayValueFunc)

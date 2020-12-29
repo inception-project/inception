@@ -31,37 +31,38 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
 
-public abstract class DiffAdapter_ImplBase implements DiffAdapter
+public abstract class DiffAdapter_ImplBase
+    implements DiffAdapter
 {
     private final String type;
-    
+
     private final Set<String> labelFeatures;
-    
+
     private final List<LinkFeatureDecl> linkFeatures = new ArrayList<>();
-    
+
     public DiffAdapter_ImplBase(String aType, Set<String> aLabelFeatures)
     {
         type = aType;
         labelFeatures = Collections.unmodifiableSet(new HashSet<>(aLabelFeatures));
     }
-    
+
     public void addLinkFeature(String aName, String aRoleFeature, String aTargetFeature)
     {
         linkFeatures.add(new LinkFeatureDecl(aName, aRoleFeature, aTargetFeature));
     }
-    
+
     @Override
     public String getType()
     {
         return type;
     }
-    
+
     @Override
     public Set<String> getLabelFeatures()
     {
         return labelFeatures;
     }
-    
+
     @Override
     public LinkFeatureDecl getLinkFeature(String aFeature)
     {
@@ -78,13 +79,13 @@ public abstract class DiffAdapter_ImplBase implements DiffAdapter
     {
         return getPosition(aCasId, aFS, null, null, -1, -1, null);
     }
-    
+
     @Override
     public List<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,
             LinkCompareBehavior aLinkCompareBehavior)
     {
         List<Position> subPositions = new ArrayList<>();
-        
+
         for (LinkFeatureDecl decl : linkFeatures) {
             Feature linkFeature = aFs.getType().getFeatureByBaseName(decl.getName());
             ArrayFS array = (ArrayFS) aFs.getFeatureValue(linkFeature);
@@ -92,16 +93,16 @@ public abstract class DiffAdapter_ImplBase implements DiffAdapter
                 continue;
             }
             for (FeatureStructure linkFS : array.toArray()) {
-                String role = linkFS.getStringValue(linkFS.getType().getFeatureByBaseName(
-                        decl.getRoleFeature()));
-                AnnotationFS target = (AnnotationFS) linkFS.getFeatureValue(linkFS.getType()
-                        .getFeatureByBaseName(decl.getTargetFeature()));
+                String role = linkFS.getStringValue(
+                        linkFS.getType().getFeatureByBaseName(decl.getRoleFeature()));
+                AnnotationFS target = (AnnotationFS) linkFS.getFeatureValue(
+                        linkFS.getType().getFeatureByBaseName(decl.getTargetFeature()));
                 Position pos = getPosition(aCasId, aFs, decl.getName(), role, target.getBegin(),
                         target.getEnd(), aLinkCompareBehavior);
                 subPositions.add(pos);
             }
         }
-        
+
         return subPositions;
     }
 }

@@ -46,7 +46,7 @@ public class ComplexTypeTest
 {
     private CAS cas;
     private Evaluator sut;
-    
+
     @Before
     public void setup() throws ResourceInitializationException
     {
@@ -56,13 +56,13 @@ public class ComplexTypeTest
         cas = CasCreationUtils.createCas(tsd, null, null);
         sut = new ValuesGenerator();
     }
-    
+
     @Test
-    public void thatSlotFeatureInConditionWorks()
-            throws Exception
+    public void thatSlotFeatureInConditionWorks() throws Exception
     {
         cas.setDocumentText("ACME acquired Foobar.");
-        
+
+        // @formatter:off
         AnnotationFS host = buildAnnotation(cas, "webanno.custom.ComplexLinkHost")
             .on("acquired")
             .withFeature("links", asList(
@@ -79,23 +79,22 @@ public class ComplexTypeTest
                                 .buildAndAddToIndexes())
                         .buildWithoutAddingToIndexes()))
             .buildAndAddToIndexes();
-        
+        // @formatter:on
+
         ParsedConstraints constraints = parseFile(
                 "src/test/resources/rules/slot_feature_in_condition.rules");
 
-        List<PossibleValue> possibleValues = sut.generatePossibleValues(host, "value",
-                constraints);
+        List<PossibleValue> possibleValues = sut.generatePossibleValues(host, "value", constraints);
 
-        assertThat(possibleValues)
-                .containsExactly(new PossibleValue("move", false));
+        assertThat(possibleValues).containsExactly(new PossibleValue("move", false));
     }
-    
+
     @Test
-    public void thatFeaturePathInConditionWorks()
-        throws Exception
+    public void thatFeaturePathInConditionWorks() throws Exception
     {
         cas.setDocumentText("I listen to lectures by Prof. Gurevych sometimes.");
 
+        // @formatter:off
         AnnotationFS proemel = buildAnnotation(cas, "de.tud.Prof")
                 .withFeature("fullName", "Hans Juergen Proeml")
                 .buildAndAddToIndexes();
@@ -104,24 +103,26 @@ public class ComplexTypeTest
                 .withFeature("fullName", "Iryna Gurevych")
                 .withFeature("boss", proemel)
                 .buildAndAddToIndexes();
+        // @formatter:on
 
-        ParsedConstraints constraints = parseFile("src/test/resources/rules/feature_path_in_condition.rules");
-        
+        ParsedConstraints constraints = parseFile(
+                "src/test/resources/rules/feature_path_in_condition.rules");
+
+        // @formatter:off
         assertThat(constraints.getScopeByName("Prof").getRules())
                 .containsExactly(new Rule(
                         new Condition("boss.fullName", "Hans Juergen Proeml"),
                         new Restriction("professorName", "Iryna Gurevych")));
+        // @formatter:on
 
         List<PossibleValue> possibleValues = sut.generatePossibleValues(gurevych, "professorName",
                 constraints);
 
-        assertThat(possibleValues)
-                .containsExactly(new PossibleValue("Iryna Gurevych", false));
+        assertThat(possibleValues).containsExactly(new PossibleValue("Iryna Gurevych", false));
     }
 
     @Test
-    public void thatConjunctionInConditionWorks()
-        throws Exception
+    public void thatConjunctionInConditionWorks() throws Exception
     {
         cas.setDocumentText("Asia is the largest continent on Earth. Asia is subdivided into 48 "
                 + "countries, two of them (Russia and Turkey) having part of their land in "
@@ -133,6 +134,7 @@ public class ComplexTypeTest
                 + "world. Tropical rainforests stretch across much of southern Asia and "
                 + "coniferous and deciduous forests lie farther north.");
 
+        // @formatter:off
         AnnotationFS asiaContinent = buildAnnotation(cas, "de.Continent")
                 .at(0, 4)
                 .withFeature("name", "Asia")
@@ -143,53 +145,61 @@ public class ComplexTypeTest
                 .withFeature("name", "Russian Federation")
                 .withFeature("continent", asiaContinent)
                 .buildAndAddToIndexes();
-                
+        // @formatter:on
+
         ParsedConstraints constraints = parseFile("src/test/resources/rules/region.rules");
 
         List<PossibleValue> possibleValues = sut.generatePossibleValues(russia, "regionType",
                 constraints);
 
-        assertThat(possibleValues)
-                .containsExactly(new PossibleValue("cold", true));
+        assertThat(possibleValues).containsExactly(new PossibleValue("cold", true));
     }
-    
+
     @Test
     public void thatBooleanValueInConditionWorks() throws Exception
     {
         cas.setDocumentText("blah");
-        
+
+        // @formatter:off
         AnnotationFS continent = buildAnnotation(cas, "de.Continent")
                 .at(0, 1)
                 .withFeature("discovered", true)
                 .buildAndAddToIndexes();
-        
+        // @formatter:on
+
         ParsedConstraints constraints = parseFile("src/test/resources/rules/region.rules");
 
         List<PossibleValue> possibleValues = sut.generatePossibleValues(continent, "name",
                 constraints);
-        
+
+        // @formatter:off
         assertThat(possibleValues)
                 .extracting(PossibleValue::getValue)
                 .containsExactlyInAnyOrder("America");
+        // @formatter:on
     }
-    
+
     @Test
     public void thatIntegerValueInConditionWorks() throws Exception
     {
         cas.setDocumentText("blah");
-        
+
+        // @formatter:off
         AnnotationFS continent = buildAnnotation(cas, "de.Continent")
                 .at(0, 1)
                 .withFeature("area", 100)
                 .buildAndAddToIndexes();
+        // @formatter:on
 
         ParsedConstraints constraints = parseFile("src/test/resources/rules/region.rules");
 
         List<PossibleValue> possibleValues = sut.generatePossibleValues(continent, "name",
                 constraints);
-        
+
+        // @formatter:off
         assertThat(possibleValues)
                 .extracting(PossibleValue::getValue)
                 .containsExactlyInAnyOrder("Fantasy Island");
+        // @formatter:on
     }
 }

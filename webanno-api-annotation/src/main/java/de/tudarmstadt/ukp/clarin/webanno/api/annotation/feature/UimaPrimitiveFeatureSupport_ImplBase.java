@@ -30,13 +30,13 @@ public abstract class UimaPrimitiveFeatureSupport_ImplBase<T>
     implements FeatureSupport<T>, InitializingBean
 {
     private String featureSupportId;
-    
+
     @Override
     public String getId()
     {
         return featureSupportId;
     }
-    
+
     @Override
     public void setBeanName(String aBeanName)
     {
@@ -48,13 +48,13 @@ public abstract class UimaPrimitiveFeatureSupport_ImplBase<T>
     {
         return (Serializable) aValue;
     }
-    
+
     @Override
-    public <V> V  unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         return (V) aValue;
     }
-    
+
     @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)

@@ -33,7 +33,7 @@ public class PairwiseAnnotationResult<R extends Serializable>
 
     private final Set<String> raters = new TreeSet<>();
     private final Map<String, R> results = new HashMap<>();
-    
+
     private final AnnotationFeature feature;
     private final DefaultAgreementTraits traits;
 
@@ -43,7 +43,7 @@ public class PairwiseAnnotationResult<R extends Serializable>
         feature = aFeature;
         traits = aTraits;
     }
-    
+
     public AnnotationFeature getFeature()
     {
         return feature;
@@ -53,7 +53,7 @@ public class PairwiseAnnotationResult<R extends Serializable>
     {
         return traits;
     }
-    
+
     public Set<String> getRaters()
     {
         return raters;

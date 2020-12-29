@@ -31,12 +31,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 public class EntityTest
 {
     @Test
-    public void toJsonTest()
-        throws IOException
+    public void toJsonTest() throws IOException
     {
         String json = JSONUtil.toPrettyJsonString(new Entity(new VID(1, 2), "type",
                 new Offsets(1, 2), "label", "color", "somehoverspantext", true));
 
+        // @formatter:off
         assertEquals(
                 String.join("\n",
                         "[ \"1.2\", \"type\", [ [ 1, 2 ] ], {",
@@ -46,5 +46,6 @@ public class EntityTest
                         "  \"a\" : 1",
                         "} ]"),
                 json);
+        // @formatter:on
     }
 }

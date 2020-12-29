@@ -42,8 +42,8 @@ import org.hibernate.annotations.Type;
  * stored in the file system.
  */
 @Entity
-@Table(name = "source_document", uniqueConstraints = { @UniqueConstraint(columnNames = { "name",
-        "project" }) })
+@Table(name = "source_document", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "name", "project" }) })
 public class SourceDocument
     implements Serializable
 {
@@ -85,7 +85,7 @@ public class SourceDocument
      */
     @Deprecated
     private boolean trainingDocument = false;
-    
+
     /*
      * This field are only here because we still may have the non-nullable columns in the DB. Once
      * we can properly migrate the database schema, this can go away.
@@ -97,7 +97,7 @@ public class SourceDocument
     {
         // Nothing to do
     }
-    
+
     public SourceDocument(String aName, Project aProject, String aFormat)
     {
         super();
@@ -176,11 +176,11 @@ public class SourceDocument
     {
         this.sentenceAccessed = sentenceAccessed;
     }
-    
+
     @PrePersist
     protected void onCreate()
     {
-        // When we import data, we set the fields via setters and don't want these to be 
+        // When we import data, we set the fields via setters and don't want these to be
         // overwritten by this event handler.
         if (created != null) {
             created = new Date();
@@ -255,7 +255,7 @@ public class SourceDocument
         }
         return true;
     }
-    
+
     @Override
     public String toString()
     {

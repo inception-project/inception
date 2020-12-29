@@ -45,38 +45,40 @@ public class VDocument
         if (arcs.containsKey(aArc.getVid()) || spans.containsKey(aArc.getVid())) {
             throw new IllegalStateException("Annotation [" + aArc.getVid() + "] already exists.");
         }
-        
+
         arcs.put(aArc.getVid(), aArc);
         annotationLayers.put(aArc.getLayer().getId(), aArc.getLayer());
         arcsByLayer.put(aArc.getLayer().getId(), aArc);
     }
-    
+
     public void add(VSpan aSpan)
     {
         if (arcs.containsKey(aSpan.getVid()) || spans.containsKey(aSpan.getVid())) {
             throw new IllegalStateException("Annotation [" + aSpan.getVid() + "] already exists.");
         }
-        
+
         spans.put(aSpan.getVid(), aSpan);
         annotationLayers.put(aSpan.getLayer().getId(), aSpan.getLayer());
         spansByLayer.put(aSpan.getLayer().getId(), aSpan);
     }
-    
+
     public void add(VComment aComment)
     {
         comments.put(aComment.getVid(), aComment);
     }
-    
+
     public void add(VMarker aMarker)
     {
         markers.add(aMarker);
     }
-    
-    public VSpan getSpan(VID aVid) {
+
+    public VSpan getSpan(VID aVid)
+    {
         return spans.get(aVid);
     }
 
-    public VArc getArc(VID aVid) {
+    public VArc getArc(VID aVid)
+    {
         return arcs.get(aVid);
     }
 
@@ -84,7 +86,7 @@ public class VDocument
     {
         return Collections.unmodifiableCollection(spans.values());
     }
-    
+
     public List<VMarker> getMarkers()
     {
         return markers;
@@ -122,14 +124,14 @@ public class VDocument
     {
         return (Collection) comments.values();
     }
-    
+
     public VObject get(VID aVid)
     {
         VArc arc = arcs.get(aVid);
         if (arc != null) {
             return arc;
         }
-        
+
         return spans.get(aVid);
     }
 

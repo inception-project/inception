@@ -23,7 +23,7 @@ public class LayerType
     implements Serializable
 {
     private static final long serialVersionUID = 4990576447229259657L;
-    
+
     private final String name;
     private final String uiName;
     private final String layerSupportId;

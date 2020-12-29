@@ -33,8 +33,8 @@ public enum AnnotationDocumentStateTransition
      */
     ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED,
     /**
-     * explicit annotator action, only possible if associated document in states
-     * "annotation in progress" or "annotation finished"
+     * explicit annotator action, only possible if associated document in states "annotation in
+     * progress" or "annotation finished"
      */
     ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS,
     /**
@@ -42,7 +42,7 @@ public enum AnnotationDocumentStateTransition
      */
     NEW_TO_IGNORE,
     /**
-     * Change document state from IGNOR back to NEW
+     * Change document state from IGNORE back to NEW
      */
     IGNORE_TO_NEW;
 

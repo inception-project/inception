@@ -58,7 +58,7 @@ public class ExportedSourceDocument
     @JsonProperty("updated")
     @Temporal(TemporalType.TIMESTAMP)
     private Date updated;
-    
+
     public String getName()
     {
         return name;

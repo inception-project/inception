@@ -23,7 +23,7 @@ public enum DeploymentMode
      * Probably running as a service based on the standalone JAR using the embedded server.
      */
     SERVER_JAR,
-    
+
     /**
      * Probably running as a service based on the WAR file using an external application server.
      */

@@ -21,20 +21,21 @@ import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.ResourceReference;
 
-public abstract class SidebarTab extends AbstractTab
+public abstract class SidebarTab
+    extends AbstractTab
 {
     private static final long serialVersionUID = -3205381571000021331L;
-    
+
     private ResourceReference icon;
-    
+
     public SidebarTab(IModel<String> aTitle, ResourceReference aIcon)
     {
         super(aTitle);
         icon = aIcon;
     }
-    
+
     public ResourceReference getIcon()
     {
         return icon;
-    }    
+    }
 }

@@ -28,7 +28,7 @@ public class NormalizationQueryResult
 {
     private String label;
     private String value;
-    
+
     public NormalizationQueryResult(String aLabel, String aValue)
     {
         label = aLabel;

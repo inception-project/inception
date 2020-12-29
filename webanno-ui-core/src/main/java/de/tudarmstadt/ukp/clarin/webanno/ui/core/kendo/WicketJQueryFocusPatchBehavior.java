@@ -26,9 +26,8 @@ public class WicketJQueryFocusPatchBehavior
     extends Behavior
 {
     private static final long serialVersionUID = -2409798559354838695L;
-    
-    private static final WicketJQueryFocusPatchBehavior INSTANCE = 
-            new WicketJQueryFocusPatchBehavior();
+
+    private static final WicketJQueryFocusPatchBehavior INSTANCE = new WicketJQueryFocusPatchBehavior();
 
     public static WicketJQueryFocusPatchBehavior get()
     {

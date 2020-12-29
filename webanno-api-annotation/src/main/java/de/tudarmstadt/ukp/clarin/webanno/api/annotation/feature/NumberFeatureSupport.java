@@ -53,15 +53,15 @@ public class NumberFeatureSupport
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private List<FeatureType> primitiveTypes;
-    
+
     @Override
     public void afterPropertiesSet() throws Exception
     {
         primitiveTypes = asList(
-                new FeatureType(CAS.TYPE_NAME_INTEGER, "Primitive: Integer", getId()), 
+                new FeatureType(CAS.TYPE_NAME_INTEGER, "Primitive: Integer", getId()),
                 new FeatureType(CAS.TYPE_NAME_FLOAT, "Primitive: Float", getId()));
     }
-    
+
     @Override
     public List<FeatureType> getSupportedFeatureTypes(AnnotationLayer aAnnotationLayer)
     {
@@ -77,24 +77,24 @@ public class NumberFeatureSupport
     }
 
     @Override
-    public Panel createTraitsEditor(String aId,  IModel<AnnotationFeature> aFeatureModel)
+    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeatureModel)
     {
         AnnotationFeature feature = aFeatureModel.getObject();
-        
+
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
-        
+
         return new NumberFeatureTraitsEditor(aId, this, aFeatureModel);
     }
-    
+
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
             final IModel<FeatureState> aFeatureStateModel)
     {
         AnnotationFeature feature = aFeatureStateModel.getObject().feature;
-        
+
         if (!accepts(feature)) {
             throw unsupportedFeatureTypeException(feature);
         }
@@ -121,7 +121,7 @@ public class NumberFeatureSupport
             throw unsupportedFeatureTypeException(feature);
         }
     }
-    
+
     @Override
     public void configureFeature(AnnotationFeature aFeature)
     {
@@ -140,14 +140,14 @@ public class NumberFeatureSupport
         catch (IOException e) {
             log.error("Unable to read traits", e);
         }
-        
+
         if (traits == null) {
             traits = new NumberFeatureTraits();
         }
-        
+
         return traits;
     }
-    
+
     @Override
     public void writeTraits(AnnotationFeature aFeature, NumberFeatureTraits aTraits)
     {

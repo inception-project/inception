@@ -28,12 +28,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 public class ConstraintsServiceEventAdapter
 {
     private @Autowired ConstraintsService service;
-    
+
     @EventListener
-    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
-        throws Exception
+    public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws Exception
     {
-        //Remove Constraints
+        // Remove Constraints
         for (ConstraintSet set : service.listConstraintSets(aEvent.getProject())) {
             service.removeConstraintSet(set);
         }

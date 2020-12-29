@@ -46,8 +46,7 @@ public class GetCollectionInformationResponseTest
     {
         String jsonFilePath = "target/test-output/output_cas_to_json_collection.json";
 
-        GetCollectionInformationResponse collectionInformation = 
-                new GetCollectionInformationResponse();
+        GetCollectionInformationResponse collectionInformation = new GetCollectionInformationResponse();
 
         List<AnnotationLayer> layerList = new ArrayList<>();
 

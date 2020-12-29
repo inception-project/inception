@@ -27,12 +27,12 @@ public class RulesIndicator
     implements Serializable
 {
     private static final long serialVersionUID = -5606299056181945134L;
-    
+
     private static final int STATUS_UNKNOWN = 0;
     private static final int STATUS_NO_TAGSET = 1;
     private static final int STATUS_NO_RULE_MATCH = 2;
     private static final int STATUS_RULE_MATCH = 3;
-    
+
     private int status = STATUS_UNKNOWN;
     private boolean affected;
 
@@ -54,7 +54,7 @@ public class RulesIndicator
     {
         return affected;
     }
-    
+
     public void reset()
     {
         status = STATUS_UNKNOWN;
@@ -68,7 +68,7 @@ public class RulesIndicator
     {
         affected = existence;
     }
-    
+
     /**
      * If a feature is affected by a constraint but there is no tagset defined on the feature. In
      * such a case the constraints cannot reorder tags and have no effect.
@@ -79,7 +79,7 @@ public class RulesIndicator
             status = STATUS_NO_TAGSET;
         }
     }
-    
+
     /**
      * if a feature is affected by a constraint but no rule covers the feature value, e.g.
      * <code>@Lemma.value = "go" -&gt; aFrame = "going"</code>. Here aFrame is affected by a
@@ -92,9 +92,9 @@ public class RulesIndicator
             status = STATUS_NO_RULE_MATCH;
         }
     }
-    
-    /** 
-     * For case that a constrained actually applied ok there should be a marker. 
+
+    /**
+     * For case that a constrained actually applied ok there should be a marker.
      */
     public void rulesApplied()
     {
@@ -129,4 +129,3 @@ public class RulesIndicator
         }
     }
 }
-

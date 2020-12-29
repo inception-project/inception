@@ -22,21 +22,21 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * This class comprises usernames, which agree on a specific annotation (same annotation type, 
- * same annotation value, same position).
+ * This class comprises usernames, which agree on a specific annotation (same annotation type, same
+ * annotation value, same position).
  */
 public class AnnotationSelection
     implements Serializable
 {
     private static final long serialVersionUID = -8839941493657969753L;
-    
+
     private Map<String, Integer> addressByUsername = new LinkedHashMap<>();
 
     public AnnotationSelection()
     {
-        // TODO Auto-generated constructor stub
+        // Nothing to do
     }
-    
+
     public Map<String, Integer> getAddressByUsername()
     {
         return addressByUsername;
@@ -66,7 +66,7 @@ public class AnnotationSelection
         if (!(obj instanceof AnnotationSelection)) {
             return false;
         }
-        
+
         AnnotationSelection as = (AnnotationSelection) obj;
         return addressByUsername.equals(as.getAddressByUsername());
     }

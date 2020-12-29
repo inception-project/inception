@@ -130,11 +130,11 @@ public class AutomationPage
     private WebMarkupContainer centerArea;
     private WebMarkupContainer actionBar;
     private AnnotationEditorBase annotationEditor;
-    private AnnotationDetailEditorPanel detailEditor;    
+    private AnnotationDetailEditorPanel detailEditor;
     private SuggestionViewPanel suggestionView;
-    
-    private final Map<String, Map<Integer, AnnotationSelection>> 
-            annotationSelectionByUsernameAndAddress = new HashMap<>();
+
+    private final Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress = //
+            new HashMap<>();
 
     private final SourceListView curationSegment = new SourceListView();
 
@@ -144,42 +144,42 @@ public class AutomationPage
     {
         commonInit();
     }
-    
+
     private void commonInit()
     {
         setVersioned(false);
-        
+
         setModel(Model.of(new AnnotatorStateImpl(Mode.AUTOMATION)));
-        
+
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         // Override sidebar width from preferencesa
         rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
                 .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
         rightSidebar.setOutputMarkupId(true);
         add(rightSidebar);
-        
+
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
-        
+
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
-        
+
         actionBar = new ActionBar("actionBar");
         centerArea.add(actionBar);
-        
+
         rightSidebar.add(detailEditor = createDetailEditor());
-        
+
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
         centerArea.add(annotationEditor);
         add(centerArea);
-        
+
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         centerArea.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
                 .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
-                    (c, e) -> e.getRequestHandler().add(c))));
+                        (c, e) -> e.getRequestHandler().add(c))));
 
         List<UserAnnotationSegment> segments = new LinkedList<>();
         UserAnnotationSegment userAnnotationSegment = new UserAnnotationSegment();
@@ -189,7 +189,7 @@ public class AutomationPage
             userAnnotationSegment.setAnnotatorState(getModelObject());
             segments.add(userAnnotationSegment);
         }
-        
+
         suggestionView = new SuggestionViewPanel("automateView", new ListModel<>(segments))
         {
             private static final long serialVersionUID = 2583509126979792202L;
@@ -208,7 +208,7 @@ public class AutomationPage
 
                     suggestionView.requestUpdate(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
-                    
+
                     annotationEditor.requestRender(aTarget);
                     update(aTarget);
                 }
@@ -222,7 +222,7 @@ public class AutomationPage
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
     }
-    
+
     @Override
     public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
@@ -249,9 +249,9 @@ public class AutomationPage
             protected void onChange(AjaxRequestTarget aTarget)
             {
                 AnnotatorState state = getModelObject();
-                
+
                 aTarget.addChildren(getPage(), IFeedback.class);
-                
+
                 try {
                     annotationEditor.requestRender(aTarget);
                 }
@@ -270,19 +270,19 @@ public class AutomationPage
 
                     suggestionView.requestUpdate(aTarget, curationContainer,
                             annotationSelectionByUsernameAndAddress, curationSegment);
-                    
+
                     update(aTarget);
                 }
                 catch (Exception e) {
                     handleException(this, aTarget, e);
                 }
             }
-            
+
             @Override
             public void onAnnotate(AjaxRequestTarget aTarget)
             {
                 AnnotatorState state = getModelObject();
-                
+
                 if (state.isForwardAnnotation()) {
                     return;
                 }
@@ -343,7 +343,7 @@ public class AutomationPage
             {
                 annotationEditor.requestRender(aTarget);
             }
-            
+
             @Override
             public void onDelete(AjaxRequestTarget aTarget, AnnotationFS aFS)
             {
@@ -376,7 +376,7 @@ public class AutomationPage
                     }
                 }
             }
-            
+
             @Override
             public CAS getEditorCas() throws IOException
             {
@@ -394,8 +394,7 @@ public class AutomationPage
     }
 
     @Override
-    public CAS getEditorCas()
-        throws IOException
+    public CAS getEditorCas() throws IOException
     {
         AnnotatorState state = getModelObject();
 
@@ -410,12 +409,12 @@ public class AutomationPage
         return documentService.readAnnotationCas(getModelObject().getDocument(),
                 state.getUser().getUsername());
     }
-    
+
     @Override
     public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
-        ensureIsEditable(); 
-        
+        ensureIsEditable();
+
         AnnotatorState state = getModelObject();
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
@@ -426,7 +425,7 @@ public class AutomationPage
             state.setAnnotationDocumentTimestamp(diskTimestamp.get());
         }
     }
-    
+
     private void setCurationSegmentBeginEnd(CAS aEditorCas)
         throws UIMAException, ClassNotFoundException, IOException
     {
@@ -442,14 +441,13 @@ public class AutomationPage
                 annotationSelectionByUsernameAndAddress, curationSegment);
     }
 
-    
     @Override
     public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
 
         AnnotatorState state = getModelObject();
-        
+
         state.setUser(userRepository.getCurrentUser());
         state.setDocument(state.getDocument(), getListOfDocs());
 
@@ -496,7 +494,7 @@ public class AutomationPage
 
             // Initialize the visible content
             state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));
-            
+
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
                 state.clearRememberedFeatures();
@@ -524,7 +522,7 @@ public class AutomationPage
                 documentService.transitionAnnotationDocumentState(annotationDocument,
                         AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
             }
-            
+
             // Reset the editor
             detailEditor.reset(aTarget);
         }
@@ -534,7 +532,7 @@ public class AutomationPage
 
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }
-    
+
     @Override
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {

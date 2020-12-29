@@ -37,7 +37,6 @@ public class ProjectExportTaskHandle
 
     // This is the id of the task within the instance.
     private final long runId;
-    
 
     public ProjectExportTaskHandle()
     {
@@ -45,7 +44,6 @@ public class ProjectExportTaskHandle
         instanceId = INSTANCE_ID;
     }
 
-    
     @Override
     public boolean equals(final Object other)
     {

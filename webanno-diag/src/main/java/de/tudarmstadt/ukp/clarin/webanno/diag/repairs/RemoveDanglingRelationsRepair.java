@@ -47,23 +47,23 @@ public class RemoveDanglingRelationsRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         Set<FeatureStructure> nonIndexed = getNonIndexedFSes(aCas);
-        
+
         Set<FeatureStructure> toDelete = new LinkedHashSet<>();
-        
+
         for (AnnotationFS fs : aCas.getAnnotationIndex()) {
             Type t = fs.getType();
-            
+
             Feature sourceFeat = t.getFeatureByBaseName(WebAnnoConst.FEAT_REL_SOURCE);
             Feature targetFeat = t.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
-            
+
             // Is this a relation?
             if (!(sourceFeat != null && targetFeat != null)) {
                 continue;
             }
-            
+
             FeatureStructure source = fs.getFeatureValue(sourceFeat);
             FeatureStructure target = fs.getFeatureValue(targetFeat);
-            
+
             // Does it point to deleted spans?
             if (nonIndexed.contains(source) || nonIndexed.contains(target)) {
                 toDelete.add(fs);

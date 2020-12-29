@@ -25,7 +25,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class LambdaAjaxSubmitLink<T extends Serializable>
     extends AjaxSubmitLink
 {
@@ -77,7 +77,7 @@ public class LambdaAjaxSubmitLink<T extends Serializable>
             }
         }
     }
-    
+
     @Override
     protected void onError(AjaxRequestTarget aTarget)
     {
