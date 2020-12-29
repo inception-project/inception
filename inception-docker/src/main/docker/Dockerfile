@@ -4,7 +4,7 @@
 #
 ############################################################
 
-FROM openjdk:8
+FROM openjdk:11
 
 MAINTAINER INCEpTION Team
 
@@ -31,4 +31,4 @@ EXPOSE 8080
 
 ENV JAVA_OPTS="-Xmx750m"
 
-CMD java ${JAVA_OPTS} -Djava.awt.headless=true -XX:+UseConcMarkSweepGC -Dinception.home=/export -jar inception-app-standalone.jar
+CMD java ${JAVA_OPTS} -Djava.awt.headless=true -Dinception.home=/export -jar inception-app-standalone.jar

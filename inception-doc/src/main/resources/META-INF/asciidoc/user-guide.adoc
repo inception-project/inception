@@ -164,6 +164,8 @@ include::{include-dir}external-search-repos.adoc[leveloffset=+2]
 
 include::{include-dir}external-search-repos-elasticsearch.adoc[leveloffset=+3]
 
+include::{include-dir}external-search-repos-solr.adoc[leveloffset=+3]
+
 include::{include-dir}external-search-repos-pubannotation.adoc[leveloffset=+3]
 
 <<<
