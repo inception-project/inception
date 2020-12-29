@@ -42,6 +42,7 @@ import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.markup.html.link.ExternalLink;
@@ -89,6 +90,7 @@ public class ConceptFeatureEditor
     private static final long serialVersionUID = 7763348613632105600L;
 
     private AutoCompleteField focusComponent;
+    private WebMarkupContainer descriptionContainer;
     private Label description;
     private IriInfoBadge iriBadge;
     private ExternalLink openIriLink;
@@ -127,11 +129,14 @@ public class ConceptFeatureEditor
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
 
-        description = new Label("description", LoadableDetachableModel.of(this::descriptionValue));
-        description.setOutputMarkupPlaceholderTag(true);
-        description.add(visibleWhen(
+        descriptionContainer = new WebMarkupContainer("descriptionContainer");
+        descriptionContainer.setOutputMarkupPlaceholderTag(true);
+        descriptionContainer.add(visibleWhen(
                 () -> getLabelComponent().isVisible() && getModelObject().getValue() != null));
-        add(description);
+        add(descriptionContainer);
+
+        description = new Label("description", LoadableDetachableModel.of(this::descriptionValue));
+        descriptionContainer.add(description);
     }
 
     @Override
@@ -266,7 +271,7 @@ public class ConceptFeatureEditor
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                aTarget.add(description);
+                aTarget.add(descriptionContainer);
                 send(focusComponent, BUBBLE,
                         new FeatureEditorValueChangedEvent(ConceptFeatureEditor.this, aTarget));
             }

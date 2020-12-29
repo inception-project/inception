@@ -44,7 +44,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -115,13 +114,6 @@ import mtas.search.spans.util.MtasSpanQuery;
 public class MtasDocumentIndex
     implements PhysicalIndex
 {
-    /**
-     * Static map allowing access to the MTAS index for a given project. This the
-     * {@link MtasUimaParser} to quickly access the current layer configuration from the current
-     * index.
-     */
-    private static Map<Long, MtasDocumentIndex> OPEN_INDEXES = new ConcurrentHashMap<>();
-
     private static final String INDEX = "indexMtas";
 
     /**
@@ -171,12 +163,9 @@ public class MtasDocumentIndex
     private final File repositoryDir;
     private final ScheduledExecutorService schedulerService;
 
-    // The index writers for this index
     private IndexWriter _indexWriter;
     private ReferenceManager<IndexSearcher> _searcherManager;
     private ScheduledFuture<?> _commitFuture;
-
-    private Map<AnnotationLayer, List<AnnotationFeature>> layersAndFeatures;
 
     public MtasDocumentIndex(Project aProject, DocumentService aDocumentService,
             AnnotationSchemaService aSchemaService, String aDir,
@@ -195,25 +184,14 @@ public class MtasDocumentIndex
 
     private synchronized IndexWriter getIndexWriter() throws IOException
     {
-        if (_indexWriter == null) {
-            log.debug("Opening index for project [{}]({})", project.getName(), project.getId());
+        if (_indexWriter != null) {
+            return _indexWriter;
+        }
 
-            OPEN_INDEXES.put(project.getId(), this);
+        // log.debug("Opening index for project [{}]({})", project.getName(), project.getId(),
+        // new RuntimeException());
 
-            // Initialize and populate the hash maps for the layers and features
-            layersAndFeatures = new LinkedHashMap<>();
-            schemaService.listAnnotationLayer(project)
-                    .forEach(layer -> layersAndFeatures.put(layer, new ArrayList<>()));
-            for (AnnotationFeature feat : schemaService.listAnnotationFeature(project)) {
-                if (!feat.getLayer().isEnabled() || !feat.isEnabled()) {
-                    continue;
-                }
-
-                List<AnnotationFeature> feats = layersAndFeatures.computeIfAbsent(feat.getLayer(),
-                        key -> new ArrayList<>());
-                feats.add(feat);
-            }
-
+        try {
             // Add the project id to the configuration
             JSONObject jsonParserConfiguration = new JSONObject();
             jsonParserConfiguration.put(PARAM_PROJECT_ID, project.getId());
@@ -237,18 +215,36 @@ public class MtasDocumentIndex
             FileUtils.forceMkdir(getIndexDir());
             IndexWriterConfig config = new IndexWriterConfig(analyzer);
             config.setCodec(Codec.forName(MTAS_CODEC_NAME));
+
+            @SuppressWarnings("resource")
             IndexWriter indexWriter = new IndexWriter(FSDirectory.open(getIndexDir().toPath()),
                     config);
 
             // Initialize the index
-            indexWriter.commit();
+            try {
+                indexWriter.commit();
+            }
+            catch (IOException e) {
+                try {
+                    indexWriter.close();
+                }
+                catch (IOException e1) {
+                    log.error("Error while trying to close index which could not be initalized"
+                            + " - actual exception follows", e);
+                }
+                throw e;
+            }
 
             // After the index has been initialized, assign the _indexWriter - this is also used
             // by isOpen() to check if the index writer is available.
             _indexWriter = indexWriter;
-        }
 
-        return _indexWriter;
+            return _indexWriter;
+        }
+        catch (IOException e) {
+            _indexWriter = null;
+            throw e;
+        }
     }
 
     private void ensureAllIsCommitted()
@@ -288,30 +284,41 @@ public class MtasDocumentIndex
         closeIndex();
     }
 
-    private void closeIndex()
+    private synchronized void closeIndex()
     {
-        OPEN_INDEXES.remove(project.getId());
-
-        if (!isOpen()) {
-            return;
-        }
-
-        ensureAllIsCommitted();
-
         try {
-            _indexWriter.close();
-        }
-        catch (IOException e) {
-            log.error("Error closing index for project [{}]({})", project.getName(),
-                    project.getId());
+            try {
+                if (!isOpen()) {
+                    return;
+                }
+
+                ensureAllIsCommitted();
+
+                _indexWriter.close();
+            }
+            catch (IOException e) {
+                log.error("Error closing index for project [{}]({})", project.getName(),
+                        project.getId(), e);
+            }
+
+            if (_searcherManager != null) {
+                try {
+                    _searcherManager.close();
+                }
+                catch (IOException e) {
+                    log.error("Error closing index for project [{}]({})", project.getName(),
+                            project.getId(), e);
+                }
+            }
         }
         finally {
             _indexWriter = null;
             _searcherManager = null;
+            log.debug("Closed index for project [{}]({})", project.getName(), project.getId());
         }
     }
 
-    private ReferenceManager<IndexSearcher> getSearcherManager() throws IOException
+    private synchronized ReferenceManager<IndexSearcher> getSearcherManager() throws IOException
     {
         if (_searcherManager == null) {
             _searcherManager = new SearcherManager(getIndexWriter(), true, true,
@@ -335,25 +342,28 @@ public class MtasDocumentIndex
         log.debug("Enqueuing new future to index for project [{}]({})", project.getName(),
                 project.getId());
 
-        _commitFuture = schedulerService.schedule(() -> {
-            try {
-                log.debug("Executing future to index for project [{}]({})", project.getName(),
-                        project.getId());
-                if (_indexWriter != null && _indexWriter.isOpen()) {
-                    _indexWriter.commit();
-                    log.debug("Committed changes to index for project [{}]({})", project.getName(),
-                            project.getId());
+        _commitFuture = schedulerService.schedule(this::commit, 3, SECONDS);
+    }
 
-                    if (_searcherManager != null) {
-                        _searcherManager.maybeRefresh();
-                    }
+    private void commit()
+    {
+        try {
+            log.debug("Executing future to index for project [{}]({})", project.getName(),
+                    project.getId());
+            if (_indexWriter != null && _indexWriter.isOpen()) {
+                _indexWriter.commit();
+                log.debug("Committed changes to index for project [{}]({})", project.getName(),
+                        project.getId());
+
+                if (_searcherManager != null) {
+                    _searcherManager.maybeRefresh();
                 }
             }
-            catch (IOException e) {
-                log.error("Unable to commit to index of project [{}]({})", project.getName(),
-                        project.getId());
-            }
-        }, 3, SECONDS);
+        }
+        catch (IOException e) {
+            log.error("Unable to commit to index of project [{}]({})", project.getName(),
+                    project.getId());
+        }
     }
 
     /**
@@ -384,7 +394,7 @@ public class MtasDocumentIndex
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)
         throws IOException, ExecutionException
     {
-        log.trace("Executing query [{}] on index [{}]", aRequest, getIndexDir());
+        log.debug("Executing query [{}] on index [{}]", aRequest, getIndexDir());
 
         ensureAllIsCommitted();
 
@@ -868,7 +878,7 @@ public class MtasDocumentIndex
         // Calculate timestamp that will be indexed
         String timestamp = DateTools.dateToString(new Date(), DateTools.Resolution.MILLISECOND);
 
-        log.trace(
+        log.debug(
                 "Indexing document in project [{}]({}). sourceId: {}, annotationId: {}, "
                         + "user: {} timestamp: {}",
                 project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId, aUser,
@@ -916,7 +926,7 @@ public class MtasDocumentIndex
             return;
         }
 
-        log.trace(
+        log.debug(
                 "Removing from index in project [{}]({}). sourceId: {}, annotationId: {}, user: {}",
                 project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId,
                 aUser);
@@ -980,10 +990,7 @@ public class MtasDocumentIndex
         // Remove all data from the index
         IndexWriter indexWriter = getIndexWriter();
         indexWriter.deleteAll();
-
-        // Close the index temporarily because we want the IndexWriter to be re-initialized on the
-        // next access in order to pick up the current layer configuration of the project.
-        closeIndex();
+        ensureAllIsCommitted();
     }
 
     /**
@@ -1090,16 +1097,6 @@ public class MtasDocumentIndex
     public Project getProject()
     {
         return project;
-    }
-
-    public Map<AnnotationLayer, List<AnnotationFeature>> getLayersAndFeaturesToIndex()
-    {
-        return layersAndFeatures;
-    }
-
-    public static MtasDocumentIndex getIndex(long aProjectId)
-    {
-        return OPEN_INDEXES.get(aProjectId);
     }
 
     @Override
