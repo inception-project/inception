@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-public class SearchOptions extends Options
+public class SearchOptions
+    extends Options
 {
     private static final long serialVersionUID = 3030323391922717647L;
 
@@ -29,6 +30,10 @@ public class SearchOptions extends Options
     private AnnotationLayer groupingLayer;
 
     private AnnotationFeature groupingFeature;
+
+    private long itemsPerPage;
+
+    private boolean lowLevelPaging;
 
     public boolean isLimitedToCurrentDocument()
     {
@@ -58,5 +63,25 @@ public class SearchOptions extends Options
     public void setGroupingFeature(AnnotationFeature aGroupingFeature)
     {
         groupingFeature = aGroupingFeature;
+    }
+
+    public long getItemsPerPage()
+    {
+        return itemsPerPage;
+    }
+
+    public void setItemsPerPage(long aItemsPerPage)
+    {
+        itemsPerPage = aItemsPerPage;
+    }
+
+    public boolean isLowLevelPaging()
+    {
+        return lowLevelPaging;
+    }
+
+    public void setLowLevelPaging(boolean aLowLevelPaging)
+    {
+        lowLevelPaging = aLowLevelPaging;
     }
 }

@@ -24,6 +24,7 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.nif.NifReader;
 import org.dkpro.core.io.nif.NifWriter;
 import org.springframework.stereotype.Component;
@@ -37,7 +38,7 @@ public class NifFormatSupport
 {
     public static final String ID = "nif";
     public static final String NAME = "NLP Interchange Format (NIF)";
-    
+
     @Override
     public String getId()
     {
@@ -55,7 +56,7 @@ public class NifFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -63,15 +64,17 @@ public class NifFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
-    {
-        return createReaderDescription(NifReader.class);
-    }
-    
-    @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createEngineDescription(NifWriter.class);
+        return createReaderDescription(NifReader.class, aTSD);
+    }
+
+    @Override
+    public AnalysisEngineDescription getWriterDescription(Project aProject,
+            TypeSystemDescription aTSD, CAS aCAS)
+        throws ResourceInitializationException
+    {
+        return createEngineDescription(NifWriter.class, aTSD);
     }
 }

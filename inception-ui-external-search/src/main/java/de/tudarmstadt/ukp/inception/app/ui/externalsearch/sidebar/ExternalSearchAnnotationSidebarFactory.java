@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
 
 import org.apache.wicket.model.IModel;
-
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 
@@ -42,7 +41,7 @@ public class ExternalSearchAnnotationSidebarFactory
 {
     private static final ResourceReference ICON = new PackageResourceReference(
             ExternalSearchAnnotationSidebarFactory.class, "world_go.png");
-    
+
     @Override
     public String getDisplayName()
     {
@@ -54,7 +53,7 @@ public class ExternalSearchAnnotationSidebarFactory
     {
         return ICON;
     }
-    
+
     @Override
     public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,

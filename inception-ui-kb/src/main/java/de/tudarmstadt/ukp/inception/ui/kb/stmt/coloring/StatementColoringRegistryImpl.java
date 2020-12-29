@@ -29,12 +29,18 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
-@Component
-public class StatementColoringRegistryImpl implements StatementColoringRegistry
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#statementColoringRegistry}.
+ * </p>
+ */
+public class StatementColoringRegistryImpl
+    implements StatementColoringRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -42,8 +48,8 @@ public class StatementColoringRegistryImpl implements StatementColoringRegistry
 
     private List<StatementColoringStrategy> statementColoringStrategies;
 
-    public StatementColoringRegistryImpl(@Lazy @Autowired(required = false)
-        List<StatementColoringStrategy> aStatementColoringStrategies)
+    public StatementColoringRegistryImpl(
+            @Lazy @Autowired(required = false) List<StatementColoringStrategy> aStatementColoringStrategies)
     {
         statementColoringStrategiesProxy = aStatementColoringStrategies;
     }
@@ -64,7 +70,7 @@ public class StatementColoringRegistryImpl implements StatementColoringRegistry
 
             for (StatementColoringStrategy fs : fsp) {
                 log.info("Found value type support: {}",
-                    ClassUtils.getAbbreviatedName(fs.getClass(), 20));
+                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
@@ -78,12 +84,12 @@ public class StatementColoringRegistryImpl implements StatementColoringRegistry
     }
 
     @Override
-    public StatementColoringStrategy getStatementColoringStrategy(
-        String aPropertyIdentifier, KnowledgeBase aKB, List<String> aLabelProperties)
+    public StatementColoringStrategy getStatementColoringStrategy(String aPropertyIdentifier,
+            KnowledgeBase aKB, List<String> aLabelProperties)
     {
         for (StatementColoringStrategy coloringStrategy : getStatementColoringStrategies()) {
             if (coloringStrategy.acceptsProperty(aPropertyIdentifier, aKB, aLabelProperties)
-                && !(coloringStrategy instanceof DefaultColoringStrategyImpl)) {
+                    && !(coloringStrategy instanceof DefaultColoringStrategyImpl)) {
                 return coloringStrategy;
             }
         }

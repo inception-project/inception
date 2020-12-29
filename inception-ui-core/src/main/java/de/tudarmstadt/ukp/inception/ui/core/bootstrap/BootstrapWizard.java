@@ -17,26 +17,47 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.bootstrap;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.extensions.wizard.IWizardModel;
+import org.apache.wicket.extensions.wizard.IWizardStep;
 import org.apache.wicket.extensions.wizard.Wizard;
+import org.apache.wicket.extensions.wizard.WizardStep;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
 
-public class BootstrapWizard extends Wizard {
+public class BootstrapWizard
+    extends Wizard
+{
 
     private static final long serialVersionUID = 4855036643803029655L;
 
-    public BootstrapWizard(String id) {
+    public BootstrapWizard(String id)
+    {
         super(id);
     }
 
-    public BootstrapWizard(String id, IWizardModel wizardModel) {
+    public BootstrapWizard(String id, IWizardModel wizardModel)
+    {
         super(id, wizardModel);
     }
-    
+
     @Override
-    protected Component newFeedbackPanel(String id) {
+    public void onActiveStepChanged(final IWizardStep newStep)
+    {
+        super.onActiveStepChanged(newStep);
+
+        if (newStep instanceof WizardStep) {
+            WizardStep step = (WizardStep) newStep;
+            getForm().get(HEADER_ID).add(visibleWhen(() -> isNotBlank(step.getTitle())));
+        }
+    }
+
+    @Override
+    protected Component newFeedbackPanel(String id)
+    {
         BootstrapFeedbackPanel panel = new BootstrapFeedbackPanel(id);
         panel.setOutputMarkupId(true);
         return panel;

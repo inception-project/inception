@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.chart.resources;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class ChartJsReference extends JavaScriptResourceReference
+public class ChartJsReference
+    extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 

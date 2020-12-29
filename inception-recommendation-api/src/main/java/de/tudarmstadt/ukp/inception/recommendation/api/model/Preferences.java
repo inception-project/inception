@@ -46,4 +46,5 @@ public class Preferences
     {
         showAllPredictions = aShowAllPredictions;
     }
+
 }

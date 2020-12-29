@@ -48,7 +48,7 @@ public class DisabledKBWarning
     private Project project;
 
     public DisabledKBWarning(String aId, IModel<AnnotationFeature> aFeatureModel,
-        IModel<ConceptFeatureTraits> aTraitsModel)
+            IModel<ConceptFeatureTraits> aTraitsModel)
     {
         super(aId);
 
@@ -58,7 +58,7 @@ public class DisabledKBWarning
         // If traits are not explicitly given, try to resolve them via featureSupportRegistry
         if (aTraitsModel == null) {
             FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                .getFeatureSupport(aFeatureModel.getObject());
+                    .getFeatureSupport(aFeatureModel.getObject());
             featureTraits = Model.of(fs.readTraits(aFeatureModel.getObject()));
         }
         else {
@@ -73,8 +73,7 @@ public class DisabledKBWarning
         TooltipBehavior tip = new TooltipBehavior();
         warning.add(tip);
         tip.setOption("content", Options.asString(new StringResourceModel("disabledKbWarning", this)
-            .setParameters(kbName, feature.getLayer().getUiName(), feature.getUiName())
-            .getString()));
+                .setParameters(kbName, feature.getLayer().getUiName(), feature.getUiName())));
         tip.setOption("width", Options.asString("300px"));
     }
 
@@ -84,17 +83,18 @@ public class DisabledKBWarning
 
     }
 
-    private String resolveKBName(ConceptFeatureTraits aTraits) {
+    private String resolveKBName(ConceptFeatureTraits aTraits)
+    {
         Optional<KnowledgeBase> kb = Optional.empty();
         if (aTraits != null && aTraits.getRepositoryId() != null) {
-            kb = kbService.getKnowledgeBaseById(project,
-                aTraits.getRepositoryId());
+            kb = kbService.getKnowledgeBaseById(project, aTraits.getRepositoryId());
         }
         return kb.isPresent() ? kb.get().getName() : "unknown ID";
     }
 
     @Override
-    protected void onConfigure() {
+    protected void onConfigure()
+    {
         super.onConfigure();
         String repoId = featureTraits.getObject().getRepositoryId();
         setVisible(!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId)));

@@ -34,7 +34,7 @@ public class IncrementalSplitter
     private int trainCount;
     private int testCount;
     private int ignoreCount;
-    
+
     private final int increment;
     private int limit;
     private boolean hitTheLimit = true;
@@ -48,7 +48,7 @@ public class IncrementalSplitter
         increment = aIncrement;
         lowSampleThreshold = aLowSampleThreshold;
     }
-    
+
     public IncrementalSplitter(int aTrainBatchSize, int aTestBatchSize, int aIncrement,
             int aLowSampleThreshold)
     {
@@ -63,7 +63,7 @@ public class IncrementalSplitter
     {
         int module = trainBatchSize + testBatchSize;
         int count = trainCount + testCount + ignoreCount;
-        
+
         TargetSet target;
         // Low sample count behavior
         if (count < lowSampleThreshold) {
@@ -83,12 +83,12 @@ public class IncrementalSplitter
         else {
             target = count % module < trainBatchSize ? TRAIN : TEST;
         }
-        
+
         if (trainCount >= limit && target == TRAIN) {
             target = IGNORE;
             hitTheLimit = true;
         }
-        
+
         switch (target) {
         case TRAIN:
             trainCount++;
@@ -119,9 +119,9 @@ public class IncrementalSplitter
         testCount = 0;
         ignoreCount = 0;
         hitTheLimit = false;
-        
+
         limit += increment;
-        
+
         return this;
     }
 }

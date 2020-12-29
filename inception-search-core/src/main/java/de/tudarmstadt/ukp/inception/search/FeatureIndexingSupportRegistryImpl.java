@@ -32,20 +32,25 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link SearchServiceAutoConfiguration#featureIndexingSupportRegistry}.
+ * </p>
+ */
 public class FeatureIndexingSupportRegistryImpl
     implements FeatureIndexingSupportRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final List<FeatureIndexingSupport> indexingSupportsProxy;
-    
+
     private List<FeatureIndexingSupport> indexingSupports;
-    
+
     private final Map<Long, FeatureIndexingSupport> supportCache = new HashMap<>();
 
     public FeatureIndexingSupportRegistryImpl(
@@ -53,13 +58,13 @@ public class FeatureIndexingSupportRegistryImpl
     {
         indexingSupportsProxy = aIndexingSupports;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     public void init()
     {
         List<FeatureIndexingSupport> fsp = new ArrayList<>();
@@ -67,31 +72,31 @@ public class FeatureIndexingSupportRegistryImpl
         if (indexingSupportsProxy != null) {
             fsp.addAll(indexingSupportsProxy);
             AnnotationAwareOrderComparator.sort(fsp);
-        
+
             for (FeatureIndexingSupport fs : fsp) {
                 log.info("Found indexing support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         indexingSupports = Collections.unmodifiableList(fsp);
     }
-    
+
     @Override
     public List<FeatureIndexingSupport> getFeatureSupports()
     {
         return indexingSupports;
     }
-    
+
     @Override
     public Optional<FeatureIndexingSupport> getIndexingSupport(AnnotationFeature aFeature)
     {
         FeatureIndexingSupport support = null;
-        
+
         if (aFeature.getId() != null) {
             support = supportCache.get(aFeature.getId());
         }
-        
+
         if (support == null) {
             for (FeatureIndexingSupport s : getFeatureSupports()) {
                 if (s.accepts(aFeature)) {
@@ -105,7 +110,7 @@ public class FeatureIndexingSupportRegistryImpl
                 }
             }
         }
-        
+
         return Optional.ofNullable(support);
     }
 }

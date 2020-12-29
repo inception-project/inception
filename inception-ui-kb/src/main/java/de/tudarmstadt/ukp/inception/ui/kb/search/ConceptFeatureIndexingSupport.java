@@ -25,10 +25,7 @@ import java.util.Optional;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -38,18 +35,22 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#conceptFeatureIndexingSupport}.
+ * </p>
+ */
 public class ConceptFeatureIndexingSupport
     implements FeatureIndexingSupport
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     public static final String KB_ENTITY = "KB" + SPECIAL_SEP + "Entity";
     public static final String INDEX_KB_CONCEPT = "class";
     public static final String INDEX_KB_INSTANCE = "instance";
     public static final String INDEX_KB_EXACT = "exact";
-    
+
     private String id;
 
     private final FeatureSupportRegistry featureSupportRegistry;
@@ -62,19 +63,19 @@ public class ConceptFeatureIndexingSupport
         featureSupportRegistry = aFeatureSupportRegistry;
         kbService = aKbService;
     }
-    
+
     @Override
     public String getId()
     {
         return id;
     }
-    
+
     @Override
     public void setBeanName(String aBeanName)
     {
         id = aBeanName;
     }
-    
+
     @Override
     public boolean accepts(AnnotationFeature aFeature)
     {
@@ -86,7 +87,7 @@ public class ConceptFeatureIndexingSupport
             return false;
         }
     }
-    
+
     @Override
     public MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
             AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature)
@@ -96,7 +97,7 @@ public class ConceptFeatureIndexingSupport
         FeatureSupport<?> featSup = featureSupportRegistry.getFeatureSupport(aFeature);
         KBHandle featureObject = featSup.getFeatureValue(aFeature, aAnnotation);
         MultiValuedMap<String, String> values = new HashSetValuedHashMap<String, String>();
-        
+
         // Feature value is not set
         if (featureObject == null) {
             return values;
@@ -111,13 +112,11 @@ public class ConceptFeatureIndexingSupport
         }
 
         String field = aFieldPrefix;
-        
+
         // Indexing <layer>.<feature>-exact=<UI label>
-        values.put(featureIndexName(field, aFeaturePrefix, aFeature),
-                featureObject.getUiLabel());
+        values.put(featureIndexName(field, aFeaturePrefix, aFeature), featureObject.getUiLabel());
         // Indexing <layer>.<feature>=<UI label>
-        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName(),
-                featureObject.getUiLabel());
+        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName(), featureObject.getUiLabel());
         // Indexing: <layer>.<feature>-exact=<URI>
         values.put(featureIndexName(field, aFeaturePrefix, aFeature),
                 featureObject.getIdentifier());
@@ -130,8 +129,8 @@ public class ConceptFeatureIndexingSupport
         values.put(KB_ENTITY, featureObject.getUiLabel());
         // Indexing: KB.Entity=<URI>
         values.put(KB_ENTITY, featureObject.getIdentifier());
-        
-        // Indexing super concepts with type super.concept 
+
+        // Indexing super concepts with type super.concept
         KBObject kbObj = kbObject.get();
         List<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObj.getKB(),
                 kbObj.getIdentifier(), false);
@@ -142,15 +141,15 @@ public class ConceptFeatureIndexingSupport
             values.put(field + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName(),
                     parentConcept.getUiLabel());
         }
-        
+
         return values;
     }
 
     @Override
     public String featureIndexName(String aFieldPrefix, String aFeaturePrefix,
-        AnnotationFeature aFeature)
+            AnnotationFeature aFeature)
     {
         return aFieldPrefix + ATTRIBUTE_SEP + aFeature.getUiName() + SPECIAL_SEP + INDEX_KB_EXACT;
     }
-    
+
 }

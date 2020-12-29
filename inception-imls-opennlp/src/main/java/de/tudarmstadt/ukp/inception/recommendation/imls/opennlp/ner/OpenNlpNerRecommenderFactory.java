@@ -41,9 +41,8 @@ public class OpenNlpNerRecommenderFactory
 
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = 
-            "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.OpenNlpNerClassificationTool";
-    
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.OpenNlpNerClassificationTool";
+
     @Override
     public String getId()
     {
@@ -51,7 +50,8 @@ public class OpenNlpNerRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender) {
+    public RecommendationEngine build(Recommender aRecommender)
+    {
         OpenNlpNerRecommenderTraits traits = new OpenNlpNerRecommenderTraits();
         return new OpenNlpNerRecommender(aRecommender, traits);
     }
@@ -68,7 +68,7 @@ public class OpenNlpNerRecommenderFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-        
+
         return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
                 && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
                 && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
+import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -25,7 +26,12 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class ConfusionMatrix
+    implements Serializable
 {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5181354025073954428L;
     /**
      * Stores number of predicted labels for each gold label
      */
@@ -38,16 +44,17 @@ public class ConfusionMatrix
         confusionMatrix = new Object2IntOpenHashMap<>();
         labels = new LinkedHashSet<>();
     }
-    
-    
-    public int getEntryCount(String aPredictedLabel, String aGoldLabel) {
+
+    public int getEntryCount(String aPredictedLabel, String aGoldLabel)
+    {
         return confusionMatrix.getInt(new ConfMatrixKey(aGoldLabel, aPredictedLabel));
     }
-    
-    public boolean containsEntry(String aPredictedLabel, String aGoldLabel) {
+
+    public boolean containsEntry(String aPredictedLabel, String aGoldLabel)
+    {
         return confusionMatrix.containsKey(new ConfMatrixKey(aGoldLabel, aPredictedLabel));
     }
-    
+
     /**
      * Increment the confusion matrix entries according to a result with the given predicted and the
      * given gold label.
@@ -85,7 +92,8 @@ public class ConfusionMatrix
         return confusionMatrix;
     }
 
-    public void addMatrix(ConfusionMatrix aMatrix) {
+    public void addMatrix(ConfusionMatrix aMatrix)
+    {
         for (Entry<ConfMatrixKey> entry : aMatrix.getConfusionMatrix().object2IntEntrySet()) {
             confusionMatrix.addTo(entry.getKey(), entry.getIntValue());
         }
@@ -120,10 +128,15 @@ public class ConfusionMatrix
      * Key identifying a confusion-matrix entry by predicted and gold label.
      */
     protected class ConfMatrixKey
+        implements Serializable
     {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 7241471544567740440L;
         private String predictedLabel;
         private String goldLabel;
-        
+
         public ConfMatrixKey(String aGoldLabel, String aPredictedLabel)
         {
             predictedLabel = aPredictedLabel;
@@ -158,6 +171,5 @@ public class ConfusionMatrix
             return goldLabel;
         }
     }
-
 
 }

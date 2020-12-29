@@ -29,15 +29,15 @@ public class ElasticSearchProviderTraits
     private String remoteUrl = "http://localhost:9200";
 
     private String indexName = "common-crawl-en";
-    
+
     private String searchPath = "_search";
-    
-    private String objectType = "texts";
-    
+
+    private String objectType = "_doc";
+
     private String defaultField = "doc.text";
-    
+
     /**
-     *  Number of results retrieved from the server
+     * Number of results retrieved from the server
      */
     private int resultSize = 1000;
 
@@ -84,12 +84,12 @@ public class ElasticSearchProviderTraits
     {
         objectType = aObjectType;
     }
-    
+
     public String getDefaultField()
     {
         return defaultField;
     }
-    
+
     public void setDefaultField(String aDefaultField)
     {
         defaultField = aDefaultField;

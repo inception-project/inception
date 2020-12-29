@@ -34,21 +34,26 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -59,7 +64,6 @@ import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
-@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
 public class KnowledgeBaseSubPropertyLabelTest
@@ -85,8 +89,9 @@ public class KnowledgeBaseSubPropertyLabelTest
 
     private TestFixtures testFixtures;
     private static Map<String, KnowledgeBaseProfile> PROFILES;
-    
-    public KnowledgeBaseSubPropertyLabelTest(Reification aReification) {
+
+    public KnowledgeBaseSubPropertyLabelTest(Reification aReification)
+    {
         reification = aReification;
     }
 
@@ -94,36 +99,41 @@ public class KnowledgeBaseSubPropertyLabelTest
     public static Collection<Object[]> data()
     {
         return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @BeforeClass
-    public static void setUpOnce() {
+    public static void setUpOnce()
+    {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
+        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws Exception
+    {
         testEntityManager.clear();
         sut.destroy();
     }
-    
+
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void thatChildConceptsLabel() throws IOException
     {
         kb = buildRemoteKnowledgeBase(project, "GND");
         String gndAccessURL = PROFILES.get("zbw-gnd").getAccess().getAccessUrl();
-        testFixtures.assumeEndpointIsAvailable(gndAccessURL, 5000);
+        testFixtures.assumeEndpointIsAvailable(gndAccessURL);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(gndAccessURL));
 
         long duration = System.currentTimeMillis();
@@ -135,29 +145,26 @@ public class KnowledgeBaseSubPropertyLabelTest
         System.out.printf("Time required           : %d ms%n", duration);
         instanceKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
 
-        assertThat(instanceKBHandle).as("Check that instance list is not empty")
-                   .isNotEmpty();
+        assertThat(instanceKBHandle).as("Check that instance list is not empty").isNotEmpty();
         assertThat(instanceKBHandle.stream().map(KBHandle::getName))
-                    .as("Check that child concept is retreived")
-                    .contains("Abele, Familie");
+                .as("Check that child concept is retreived").contains("Abele, Familie");
     }
 
+    @Ignore("#1522 - GND tests not running")
     @Test
     public void readInstance_ShouldReturnInstanceWithSubPropertyLabel() throws IOException
     {
         kb = buildRemoteKnowledgeBase(project, "GND");
         String gndAccessURL = PROFILES.get("zbw-gnd").getAccess().getAccessUrl();
-        testFixtures.assumeEndpointIsAvailable(gndAccessURL, 5000);
+        testFixtures.assumeEndpointIsAvailable(gndAccessURL);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(gndAccessURL));
 
         String instanceId = "http://d-nb.info/gnd/7509336-4";
         Optional<KBInstance> instance = sut.readInstance(kb, instanceId);
 
-        assertThat(instance).as("Check that instance is present")
-            .isPresent();
-        assertThat(instance.get().getName())
-            .as("Check that correct label is retrieved")
-            .contains("Abingdon, Bettine");
+        assertThat(instance).as("Check that instance is present").isPresent();
+        assertThat(instance.get().getName()).as("Check that correct label is retrieved")
+                .contains("Abingdon, Bettine");
     }
 
     @Test
@@ -169,7 +176,7 @@ public class KnowledgeBaseSubPropertyLabelTest
         KBProperty subpropertylabel = createSubPropertyLabel(kb);
 
         KBProperty property = testFixtures.buildProperty();
-        //set name to null so that the subproperty label becomes the main label
+        // set name to null so that the subproperty label becomes the main label
         property.setName(null);
         sut.createProperty(kb, property);
 
@@ -177,17 +184,15 @@ public class KnowledgeBaseSubPropertyLabelTest
         createStmtWithLiteral(kb, KBHandle.of(property), subpropertylabel, labelLiteral);
 
         Optional<KBProperty> optProperty = sut.readProperty(kb, property.getIdentifier());
-        assertThat(optProperty).as("Check that property is present")
-            .isPresent();
-        assertThat(optProperty.get().getName())
-            .as("Check that correct label is retrieved")
-            .contains(labelLiteral);
+        assertThat(optProperty).as("Check that property is present").isPresent();
+        assertThat(optProperty.get().getName()).as("Check that correct label is retrieved")
+                .contains(labelLiteral);
     }
 
+    // Helper
 
-    //Helper
-    
-    private Project createProject(String name) {
+    private Project createProject(String name)
+    {
         return testFixtures.createProject(name);
     }
 
@@ -239,7 +244,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     }
 
     private void createStmtWithLiteral(KnowledgeBase aKB, KBHandle aSubject, KBProperty aProperty,
-        String aLiteral)
+            String aLiteral)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         KBStatement stmt = new KBStatement(null, aSubject, aProperty, vf.createLiteral(aLiteral));
@@ -248,7 +253,7 @@ public class KnowledgeBaseSubPropertyLabelTest
 
     private void upsertStatement(KnowledgeBase aKB, KBStatement aStatement)
     {
-        //set reification to NONE just for "upserting" the statement, then restore old value
+        // set reification to NONE just for "upserting" the statement, then restore old value
         Reification kbReification = kb.getReification();
         try {
             kb.setReification(Reification.NONE);
@@ -260,9 +265,17 @@ public class KnowledgeBaseSubPropertyLabelTest
         }
     }
 
-   
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
         return KnowledgeBaseProfile.readKnowledgeBaseProfiles();
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    public static class SpringConfig
+    {
+        // No content
     }
 }

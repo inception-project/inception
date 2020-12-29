@@ -32,17 +32,17 @@ public interface GazeteerService
      * List gazeteers for the given recommender.
      */
     List<Gazeteer> listGazeteers(Recommender aRecommender);
-    
+
     /**
      * Delete the given gazetter.
      */
     void deleteGazeteers(Gazeteer aGazeteer) throws IOException;
-    
+
     /**
      * Import the gazeteer file for the given gazeteer.
      */
     void importGazeteerFile(Gazeteer aGazeteer, InputStream aStream) throws IOException;
-    
+
     /**
      * Get the gazeteer file for the given gazeteer. If no file has been imported yet for the given
      * gazeteer, the file returned by this method does not exist.

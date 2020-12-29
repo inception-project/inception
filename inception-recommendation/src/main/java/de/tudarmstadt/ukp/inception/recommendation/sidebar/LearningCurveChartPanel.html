@@ -18,14 +18,13 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="panel panel-default panel-small">
-    <div class="panel-heading">
-      <h3 class="panel-title">
-        <wicket:message key="learningCurve" />
-      </h3>
+  <div class="card">
+    <div class="card-header small">
+      <wicket:message key="learningCurve" />
     </div>
-    <div class="panel-body">
-      <div wicket:id="chart-container"></div>
+    <div class="card-body" style="position: relative;">
+      <div style="position: absolute; z-index: 1000;" wicket:id="dropdownPanel"></div>
+      <div style="height: 200px;" wicket:id="chart-container"></div>
     </div>
   </div>
 </wicket:panel>

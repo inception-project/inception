@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -70,13 +71,13 @@ public class InceptionSecurity
     extends GlobalAuthenticationConfigurerAdapter
 {
     private @Value("${auth.preauth.header.principal:remote_user}") String preAuthPrincipalHeader;
-    
+
     private final DataSource dataSource;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationProvider authenticationProvider;
     private final UserDao userRepository;
-    
+
     // The AuthenticationManager is created by this configuration, yet we also need to access it
     // when constructing the OverridableUserDetailsManager - to break the cyclic dependency, we
     // lazily inject it here.
@@ -97,8 +98,9 @@ public class InceptionSecurity
     protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception
     {
         auth.authenticationProvider(authenticationProvider);
+        auth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
     }
-    
+
     @Order(1)
     @Configuration
     public static class RemoteApiSecurity
@@ -107,6 +109,7 @@ public class InceptionSecurity
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
+            // @formatter:off
             aHttp
                 .antMatcher("/api/**")
                 .csrf().disable()
@@ -117,9 +120,10 @@ public class InceptionSecurity
                 .and()
                 .sessionManagement()
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            // @formatter:on
         }
     }
-    
+
     @Configuration
     @Profile("auto-mode-builtin")
     public static class WebUiSecurity
@@ -134,10 +138,11 @@ public class InceptionSecurity
         {
             return super.authenticationManagerBean();
         }
-        
+
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
+            // @formatter:off
             aHttp
                 .rememberMe()
                 .and()
@@ -165,6 +170,7 @@ public class InceptionSecurity
                             new AntPathRequestMatcher("/**"))
                 .and()
                     .headers().frameOptions().sameOrigin();
+            // @formatter:on
         }
     }
 
@@ -182,10 +188,11 @@ public class InceptionSecurity
         {
             return super.authenticationManagerBean();
         }
-        
+
         @Override
         protected void configure(HttpSecurity aHttp) throws Exception
         {
+            // @formatter:off
             aHttp
                 .rememberMe()
                 .and()
@@ -211,15 +218,15 @@ public class InceptionSecurity
                     .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
                 .and()
                     .headers().frameOptions().sameOrigin();
+            // @formatter:on
         }
     }
-    
+
     @Bean
     @Profile("auto-mode-preauth")
     public ShibbolethRequestHeaderAuthenticationFilter preAuthFilter()
     {
-        ShibbolethRequestHeaderAuthenticationFilter filter = 
-                new ShibbolethRequestHeaderAuthenticationFilter();
+        ShibbolethRequestHeaderAuthenticationFilter filter = new ShibbolethRequestHeaderAuthenticationFilter();
         filter.setPrincipalRequestHeader(preAuthPrincipalHeader);
         filter.setAuthenticationManager(authenticationManager);
         filter.setUserDetailsManager(userDetailsService());
@@ -227,7 +234,7 @@ public class InceptionSecurity
         filter.setExceptionIfHeaderMissing(true);
         return filter;
     }
-    
+
     @Bean(name = "authenticationProvider")
     @Profile("auto-mode-builtin")
     public DaoAuthenticationProvider internalAuthenticationProvider()
@@ -242,8 +249,7 @@ public class InceptionSecurity
     @Profile("auto-mode-preauth")
     public PreAuthenticatedAuthenticationProvider externalAuthenticationProvider()
     {
-        PreAuthenticatedAuthenticationProvider authProvider = 
-                new PreAuthenticatedAuthenticationProvider();
+        PreAuthenticatedAuthenticationProvider authProvider = new PreAuthenticatedAuthenticationProvider();
         authProvider.setPreAuthenticatedUserDetailsService(
                 new UserDetailsByNameServiceWrapper<PreAuthenticatedAuthenticationToken>(
                         userDetailsService()));
@@ -258,7 +264,7 @@ public class InceptionSecurity
         manager.setAuthenticationManager(authenticationManager);
         return manager;
     }
-    
+
     // This bean allows the application to access session information. We currently only use this
     // to display the number of active users in the SystemStatusDashlet. However, the LoginPage
     // also accesses this bean in order to manually register the session when the user logs in.

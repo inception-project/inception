@@ -25,7 +25,7 @@ distributions.
 == Installing as a service
 
 To set it up as a service, you can do the following steps. For the following
-example, I assume that you install {product-name} in `/srv/inception`:
+example, we assume that you install {product-name} in `/srv/inception`:
 
 * Copy the standalone JAR file `inception-app-standalone-{revnumber}.jar` to `/srv/inception/inception.jar`.
    Note the change of the filename to `inception.jar`.
@@ -49,7 +49,7 @@ documentation of Spring Boot itself.
 +
 * Make sure that the file `/srv/inception/inception.conf` is owned by the root user. If this is
   not the case, {product-name} will ignore it and any settings made there will not have any effect. If
-  you start {product-name} and intead of using the MySQL database, it is using an embedded database,
+  you start {product-name} and instead of using the MySQL database, it is using an embedded database,
   then you should double-check that `/srv/inception/inception.conf` is owned by the root user.
 +
 [source,bash]
@@ -57,9 +57,8 @@ documentation of Spring Boot itself.
 $ chown root:root /srv/inception/inception.conf
 ----
 +
-* Change the owner/group of `/srv/inception/inception.jar` to `www-data`. When the service is started,
-  it will run with the privileges of the user that owns the JAR file, i.e. in this case {product-name}
-  will run as under the `www-data` user. **Do NOT run {product-name} as root.**
+* We will run {product-name} as the user `www-data`. Change the owner/group of `/srv/inception/inception.jar` to `www-data`.
+  **Do NOT run {product-name} as root.**
 +
 [source,bash]
 ----
@@ -73,11 +72,19 @@ $ chown www-data:www-data /srv/inception/inception.jar
 $ chmod +x /srv/inception/inception.jar
 ----
 +
-* Create a symlink from `/etc/init.d` to the `/srv/inception/inception.jar`:
+* Create a file in `/etc/systemd/system/inception.service` with the following content:
 +
 [source,bash]
 ----
-$ ln -s /srv/inception/inception.jar /etc/init.d/inception
+[Unit]
+Description=INCEpTION
+
+[Service]
+ExecStart=/srv/inception/inception.jar
+User=www-data
+
+[Install]
+WantedBy=multi-user.target
 ----
 +
 * Enable the {product-name} service using
@@ -91,21 +98,21 @@ $ systemctl enable inception
 +
 [source,bash]
 ----
-$ service inception start
+$ systemctl start inception
 ----
 +
 * Check the log output
 +
 [source,bash]
 ----
-$ cat /var/log/inception.log
+$ journalctl -u inception
 ----
 +
 * Stop {product-name} using
 +
 [source,bash]
 ----
-$ service inception stop
+$ systemctl stop inception
 ----
 
 == Running the standalone behind HTTPD
@@ -121,8 +128,10 @@ of accessing it directly. This assumes that you already have the following packa
 +
 [source,text]
 ----
-tomcat.ajp.port=18009
-server.contextPath=/inception
+server.ajp.port=18009
+server.ajp.secret=SECRET_STRING_YOU_CHOOSE
+server.ajp.address=127.0.0.1
+server.servlet.context-path=/inception
 server.use-forward-headers=true
 ----
 +
@@ -139,7 +148,7 @@ ProxyPreserveHost On
 </Proxy>
 
 <Location /inception >
-  ProxyPass ajp://localhost:18009/inception timeout=1200
+  ProxyPass ajp://localhost:18009/inception timeout=1200 secret="SECRET_STRING_YOU_CHOOSE"
   ProxyPassReverse http://localhost/inception
 </Location>
 ----
@@ -149,3 +158,8 @@ ProxyPreserveHost On
 ----
 $ service apache2 restart
 ----
+
+NOTE: The `secret` option is supported e.g. in link:https://httpd.apache.org/docs/trunk/mod/
+       mod_proxy_ajp.html[Apache HTTP 2.5 mod_proxy_ajp]. If you are using reverse proxy which does not	
+       support passing along a secret, you may set `server.ajp.secret-required=false` in the 
+       `settings.properties` file.

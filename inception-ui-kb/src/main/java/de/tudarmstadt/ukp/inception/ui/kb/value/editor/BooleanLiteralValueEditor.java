@@ -18,10 +18,13 @@
 package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
 import org.apache.wicket.Component;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkbox.bootstrapcheckbox.BootstrapCheckBoxPicker;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkbox.bootstrapcheckbox.BootstrapCheckBoxPickerConfig;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
@@ -29,14 +32,27 @@ public class BooleanLiteralValueEditor
     extends ValueEditor
 {
     private static final long serialVersionUID = 160076747725321107L;
-    
+
     private CheckBox value;
-    
+
     public BooleanLiteralValueEditor(String aId, IModel<KBStatement> aModel)
     {
         super(aId, CompoundPropertyModel.of(aModel));
-        
-        value = new CheckBox("value");
+
+        BootstrapCheckBoxPickerConfig config = new BootstrapCheckBoxPickerConfig();
+        config.withReverse(true);
+        value = new BootstrapCheckBoxPicker("value", config)
+        {
+            private static final long serialVersionUID = -3413189824637877732L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+
+                aTag.put("data-group-cls", "btn-group-justified");
+            }
+        };
         value.setOutputMarkupId(true);
         value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
         add(value);

@@ -25,21 +25,22 @@ import org.springframework.context.ApplicationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class RecommendationAcceptedEvent extends ApplicationEvent
+public class RecommendationAcceptedEvent
+    extends ApplicationEvent
 {
     private static final long serialVersionUID = 4618078923202025558L;
-    
+
     private final SourceDocument document;
     private final String user;
     private final AnnotationFS fs;
     private final AnnotationFeature feature;
     private final Object recommendedValue;
-    
+
     public RecommendationAcceptedEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationFS aFS, AnnotationFeature aFeature, Object aRecommendedValue)
     {
         super(aSource);
-        
+
         document = aDocument;
         user = aUser;
         fs = aFS;
@@ -51,12 +52,12 @@ public class RecommendationAcceptedEvent extends ApplicationEvent
     {
         return document;
     }
-    
+
     public String getUser()
     {
         return user;
     }
-    
+
     public AnnotationFS getFS()
     {
         return fs;
@@ -71,12 +72,12 @@ public class RecommendationAcceptedEvent extends ApplicationEvent
     {
         return recommendedValue;
     }
-    
+
     @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("FeatureValueUpdatedEvent [");
+        builder.append("RecommendationAcceptedEvent [");
         if (document != null) {
             builder.append("docID=");
             builder.append(document.getId());

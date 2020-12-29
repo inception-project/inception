@@ -18,11 +18,11 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="form-group" wicket:enclosure="value">
-    <label wicket:for="value" class="col-sm-3 control-label">
+  <div class="form-group form-row" wicket:enclosure="value">
+    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
       <span wicket:id="feature"/>
     </label>
-    <div class="col-sm-9">
+    <div class="feature-editor-value">
       <div>
         <input wicket:id="value"/>
       </div>

@@ -19,29 +19,29 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 public class OpenNlpDoccatRecommenderTraitsEditor
-    extends Panel
+    extends DefaultTrainableRecommenderTraitsEditor
 {
     private static final long serialVersionUID = 1677442652521110324L;
 
     private static final String MID_FORM = "form";
 
     private @SpringBean RecommendationEngineFactory<OpenNlpDoccatRecommenderTraits> toolFactory;
-    
+
     private final OpenNlpDoccatRecommenderTraits traits;
 
     public OpenNlpDoccatRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-        
+
         traits = toolFactory.readTraits(aRecommender.getObject());
 
         Form<OpenNlpDoccatRecommenderTraits> form = new Form<OpenNlpDoccatRecommenderTraits>(
@@ -66,7 +66,7 @@ public class OpenNlpDoccatRecommenderTraitsEditor
         cutoff.setMinimum(1);
         cutoff.setMaximum(100_000);
         form.add(cutoff);
-        
+
         add(form);
     }
 }

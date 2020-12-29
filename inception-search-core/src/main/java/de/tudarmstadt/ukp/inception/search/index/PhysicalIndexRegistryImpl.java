@@ -30,9 +30,15 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
-@Component
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link SearchServiceAutoConfiguration#physicalIndexRegistry}.
+ * </p>
+ */
 public class PhysicalIndexRegistryImpl
     implements PhysicalIndexRegistry, BeanPostProcessor
 {
@@ -47,13 +53,13 @@ public class PhysicalIndexRegistryImpl
     {
         extensionsProxy = aExtensions;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     /* package private */ void init()
     {
         List<PhysicalIndexFactory> exts = new ArrayList<>();
@@ -61,16 +67,16 @@ public class PhysicalIndexRegistryImpl
         if (extensionsProxy != null) {
             exts.addAll(extensionsProxy);
             AnnotationAwareOrderComparator.sort(exts);
-        
+
             for (PhysicalIndexFactory fs : exts) {
                 log.info("Found index extension: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         extensions = Collections.unmodifiableList(exts);
     }
-    
+
     @Override
     public List<PhysicalIndexFactory> getIndexFactories()
     {

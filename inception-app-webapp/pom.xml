@@ -20,15 +20,12 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.10.0-SNAPSHOT</version>
+    <version>0.18.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
   <name>INCEpTION - Web-Application</name>
   <packaging>war</packaging>
-  <properties>
-    <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
-  </properties>
   <dependencies>
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
@@ -87,20 +84,20 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-lapps</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-opennlp</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-stringmatch</artifactId>
     </dependency>
-
-    <!-- INCEPTION - Example -->
-    <!--
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-example-imls-data-majority</artifactId>
+      <artifactId>inception-imls-weblicht</artifactId>
     </dependency>
-    !-->
 
     <!-- INCEPTION - ACTIVE LEARNING FUNCTIONALITY -->
     <dependency>
@@ -126,6 +123,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-external-search-elastic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-search-solr</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -159,6 +160,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-io-text</artifactId>
     </dependency>
     <dependency>
@@ -189,8 +194,24 @@
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-perseus-asl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-xml-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-imscwb-asl</artifactId>
+    </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-manager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-automation</artifactId>
@@ -209,6 +230,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-tagsets</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-brat</artifactId>
       <exclusions>
         <exclusion>
@@ -216,10 +241,6 @@
           <artifactId>slf4j-log4j12</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-project</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -263,6 +284,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-telemetry</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-doc</artifactId>
     </dependency>
 
@@ -283,6 +308,15 @@
       <artifactId>wicket-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.wicketstuff</groupId>
+      <artifactId>wicketstuff-htmlcompressor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mozilla</groupId>
+      <artifactId>rhino-runtime</artifactId>
+      <version>1.7.12</version>
+    </dependency>
+    <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui-theme-uilightness</artifactId>
     </dependency>
@@ -290,7 +324,7 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
-
+    
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
@@ -392,11 +426,6 @@
     </dependency>
 
     <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
@@ -433,12 +462,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -453,9 +476,8 @@
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.validation</groupId>
-      <artifactId>validation-api</artifactId>
-      <scope>compile</scope>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
@@ -468,6 +490,38 @@
       <version>${javamelody.version}</version>
     </dependency>
     -->
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-native-websocket-javax</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    	<artifactId>inception-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
+      <artifactId>enjoyhint</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>kinetic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.bower</groupId>
+      <artifactId>jquery.scrollTo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-matrix</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-dynamic</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -516,7 +570,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
               <imagesDir>./user-guide/images</imagesDir>
               <attributes>
@@ -534,7 +587,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
               <imagesDir>./developer-guide/images</imagesDir>
               <attributes>
@@ -552,7 +604,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
               <attributes>
                 <toc>left</toc>
@@ -590,6 +641,7 @@
             <configuration>
               <tasks>
                 <mkdir dir="src/main/resources/public/doc" />
+
                 <!-- 
                 It is important that we SYNC here instead of delete/copy, otherwise we may run into
                 an endless build loop in Eclipse.
@@ -601,6 +653,15 @@
                     <include name="**/*.jpg" />
                   </fileset>
                 </sync>
+
+                <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
+                  <include name="**/*.html" />
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
+                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
+                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
+                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
+                </replace>
+
               </tasks>
             </configuration>
           </execution>
@@ -612,6 +673,7 @@
         <plugin>
           <groupId>org.asciidoctor</groupId>
           <artifactId>asciidoctor-maven-plugin</artifactId>
+          <version>${asciidoctor.plugin.version}</version>
           <configuration>
             <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
             <attributes>
@@ -632,8 +694,13 @@
           <dependencies>
             <dependency>
               <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctorj</artifactId>
+              <version>${asciidoctor.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.asciidoctor</groupId>
               <artifactId>asciidoctorj-diagram</artifactId>
-              <version>1.5.12</version>
+              <version>${asciidoctor-diagram.version}</version>
             </dependency>
           </dependencies>
         </plugin>
@@ -649,19 +716,26 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
+              <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-elastic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-solr</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
@@ -686,8 +760,10 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
-              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
-              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-tagsets</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
               <usedDependency>org.apache.commons:commons-dbcp2</usedDependency>
@@ -703,6 +779,9 @@
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-jquery-ui-theme-uilightness</usedDependency>
+              <!-- Wicket plugins -->
+              <usedDependency>org.wicketstuff:wicketstuff-htmlcompressor</usedDependency>
+              <usedDependency>org.mozilla:rhino-runtime</usedDependency>
               <!-- JavaMelody - used via web.xml -->
               <!--
               <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>
@@ -711,16 +790,20 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
-              <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
-              <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
               <!-- Spring AOP
                 <usedDependency>org.springframework:spring-aop</usedDependency>
                 <usedDependency>org.springframework:spring-aspects</usedDependency>
                 <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
+              <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
+              <!-- Tutorial Js dependencies -->
+              <usedDependency>org.webjars.bowergithub.xbsoftware:enjoyhint</usedDependency>
+              <usedDependency>org.webjars.npm:kinetic</usedDependency>
+              <usedDependency>org.webjars.bower:jquery.scrollTo</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -835,6 +918,12 @@
                 <configuration>
                   <executable>true</executable>
                   <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.PluginEnabledWarLayoutFactory"/>
+                    <!--
+                      We want the original file to be the WAR and the repackaged all-inclusive runnable
+                      thing with the embedded Tomcat to be the JAR.
+                     -->
+                  <attach>false</attach>
+                  <classifier>standalone</classifier>
                 </configuration>
               </execution>
             </executions>
@@ -851,10 +940,6 @@
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
               <execution>
-                <!--
-                  We want the original file to be the WAR and the repackaged all-inclusive runnable
-                  thing with the embedded Tomcat to be the JAR.
-                 -->
                 <id>copy-war-to-jar</id>
                 <phase>package</phase>
                 <goals>
@@ -862,14 +947,35 @@
                 </goals>
                 <configuration>
                   <target>
-                    <move file="target/${project.artifactId}-${project.version}.war" tofile="target/inception-app-standalone-${project.version}.jar" />
-                    <move file="target/${project.artifactId}-${project.version}.war.original" tofile="target/${project.artifactId}-${project.version}.war" />
+                    <move file="target/${project.artifactId}-${project.version}-standalone.war" tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
                   </target>
                 </configuration>
               </execution>
             </executions>
           </plugin>
-        </plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-artifacts</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+                <configuration>
+                  <artifacts>
+                    <artifact>
+                      <file>target/${project.artifactId}-${project.version}-standalone.jar</file>
+                      <type>jar</type>
+                      <classifier>standalone</classifier>
+                    </artifact>
+                  </artifacts>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+              </plugins>
       </build>
     </profile>
     <profile>
@@ -899,7 +1005,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
                     <imagesDir>./user-guide/images</imagesDir>
                     <attributes>
@@ -917,7 +1022,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
                     <imagesDir>./developer-guide/images</imagesDir>
                     <attributes>
@@ -935,7 +1039,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
                     <attributes>
                       <toc>preamble</toc>
@@ -948,50 +1051,6 @@
             </plugin>
           </plugins>
         </pluginManagement>
-      </build>
-    </profile>
-    <profile>
-      <id>docker</id>
-      <activation>
-        <property>
-          <name>enable-docker</name>
-        </property>
-      </activation>
-      <properties>
-        <docker.jarfile>maven/inception-app-standalone-${project.version}.jar</docker.jarfile>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>io.fabric8</groupId>
-            <artifactId>docker-maven-plugin</artifactId>
-            <configuration>
-              <images>
-                <image>
-                  <name>${docker.image.name}</name>
-                  <build>
-                    <tags>
-                      <tag>latest</tag>
-                      <tag>${project.version}</tag>
-                    </tags>
-                    <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                    <filter>@</filter>
-                    <assembly>
-                      <descriptorRef>artifact</descriptorRef>
-                      <inline>
-                        <files>
-                          <file>
-                            <source>${project.build.directory}/inception-app-standalone-${project.version}.jar</source>
-                          </file>
-                        </files>
-                      </inline>
-                    </assembly>
-                  </build>
-                </image>
-              </images>
-            </configuration>
-          </plugin>
-        </plugins>
       </build>
     </profile>
     <profile>

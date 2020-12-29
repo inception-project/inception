@@ -53,13 +53,14 @@ public class FileUploadDownloadHelper
      * is garbage collected. The temporary file will keep its extension based on the specified file
      * name.
      *
-     * @param fileUpload The file upload handle to write to the temporary file
-     * @param marker The object to whose lifetime the temporary file is bound
+     * @param fileUpload
+     *            The file upload handle to write to the temporary file
+     * @param marker
+     *            The object to whose lifetime the temporary file is bound
      * @return A handle to the created temporary file
-     * @throws Exception
      */
     public File writeFileUploadToTemporaryFile(FileUpload fileUpload, Object marker)
-        throws Exception
+        throws IOException
     {
         String fileName = fileUpload.getClientFileName();
         File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
@@ -71,8 +72,8 @@ public class FileUploadDownloadHelper
         return tmpFile;
     }
 
-    public File writeFileDownloadToTemporaryFile(String downloadUrl, Object marker) throws
-        IOException
+    public File writeFileDownloadToTemporaryFile(String downloadUrl, Object marker)
+        throws IOException
     {
         Path pathName = Paths.get(downloadUrl);
         String fileName = pathName.getFileName().toString();
@@ -83,23 +84,23 @@ public class FileUploadDownloadHelper
         return tmpFile;
     }
 
-    public File writeClasspathResourceToTemporaryFile(String aLocation, Object marker) throws
-        IOException
+    public File writeClasspathResourceToTemporaryFile(String aLocation, Object marker)
+        throws IOException
     {
         String fileName = getNameFromClassPathResource(aLocation);
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        File tmpFile = File
-            .createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
+        File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
         fileTracker.track(tmpFile, marker);
         log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
         try (InputStream is = resolver.getResource(aLocation).getInputStream();
-            FileOutputStream os = new FileOutputStream(tmpFile)) {
+                FileOutputStream os = new FileOutputStream(tmpFile)) {
             IOUtils.copy(is, os);
         }
         return tmpFile;
     }
 
-    private String getNameFromClassPathResource(String aResource) {
-        return aResource.substring(aResource.lastIndexOf("/") + 1 );
+    private String getNameFromClassPathResource(String aResource)
+    {
+        return aResource.substring(aResource.lastIndexOf("/") + 1);
     }
 }

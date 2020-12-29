@@ -45,6 +45,7 @@ import org.mockito.Mock;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -74,7 +75,7 @@ public class RecommenderExporterTest
         project = new Project();
         project.setName("Test Project");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
-        
+
         when(annotationService.findLayer(project, layer.getName())).thenReturn(layer);
         when(annotationService.getFeature(eq("Feature 1"), any(AnnotationLayer.class)))
                 .thenReturn(buildFeature("1"));
@@ -92,16 +93,15 @@ public class RecommenderExporterTest
     public void thatExportingWorks()
     {
         when(recommendationService.listRecommenders(project)).thenReturn(recommenders());
-        
+
         // Export the project and import it again
         ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues())
-                .usingFieldByFieldElementComparator()
+        assertThat(captor.getAllValues()).usingFieldByFieldElementComparator()
                 .containsExactlyInAnyOrderElementsOf(recommenders());
     }
-    
+
     @Test
     public void thatMaxRecommendationCapIsEnforcedOnImport()
     {
@@ -111,9 +111,9 @@ public class RecommenderExporterTest
         recommender.setThreshold(.1);
         recommender.setSkipEvaluation(true);
         recommender.setMaxRecommendations(1000);
-        
+
         when(recommendationService.listRecommenders(project)).thenReturn(asList(recommender));
-        
+
         // Export the project and import it again
         ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
 
@@ -122,7 +122,7 @@ public class RecommenderExporterTest
         assertThat(captor.getAllValues().get(0))
                 .matches(rec -> rec.getMaxRecommendations() == MAX_RECOMMENDATIONS_CAP);
     }
-    
+
     @Test
     public void thatMissingMaxRecommendationIsSetToDefault()
     {
@@ -132,27 +132,28 @@ public class RecommenderExporterTest
         recommender.setThreshold(.1);
         recommender.setSkipEvaluation(true);
         recommender.setMaxRecommendations(0);
-        
+
         when(recommendationService.listRecommenders(project)).thenReturn(asList(recommender));
-        
+
         // Export the project and import it again
         ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()).hasSize(1);
-        assertThat(captor.getAllValues().get(0))
-            .hasFieldOrPropertyWithValue("maxRecommendations", MAX_RECOMMENDATIONS_DEFAULT);
+        assertThat(captor.getAllValues().get(0)).hasFieldOrPropertyWithValue("maxRecommendations",
+                MAX_RECOMMENDATIONS_DEFAULT);
     }
 
     private ArgumentCaptor<Recommender> runExportImportAndFetchRecommenders()
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(project);
         ExportedProject exportedProject = new ExportedProject();
         File file = mock(File.class);
 
-        sut.exportData(exportRequest, exportedProject, file);
+        sut.exportData(exportRequest, monitor, exportedProject, file);
 
         // Import the project again
         ArgumentCaptor<Recommender> captor = ArgumentCaptor.forClass(Recommender.class);
@@ -161,10 +162,10 @@ public class RecommenderExporterTest
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         ZipFile zipFile = mock(ZipFile.class);
         sut.importData(importRequest, project, exportedProject, zipFile);
-        
+
         return captor;
     }
-    
+
     private List<Recommender> recommenders()
     {
         Recommender recommender1 = buildRecommender("1");
@@ -208,11 +209,11 @@ public class RecommenderExporterTest
         feature.setName("Feature " + id);
         return feature;
     }
-    
+
     private Recommender buildRecommender(String id)
     {
         AnnotationFeature feature = buildFeature(id);
-        
+
         Recommender recommender = new Recommender();
         recommender.setFeature(feature);
         recommender.setName("Recommender " + id);

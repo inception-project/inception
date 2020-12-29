@@ -37,12 +37,11 @@ public class ProjectDocumentRepositoriesPanel
         super(aId);
 
         setOutputMarkupId(true);
-        
+
         selectedDocumentRepository = Model.of();
         projectModel = aProject;
 
-        DocumentRepositoryEditorPanel externalSearchProviderEditorPanel = 
-                new DocumentRepositoryEditorPanel(
+        DocumentRepositoryEditorPanel externalSearchProviderEditorPanel = new DocumentRepositoryEditorPanel(
                 "documentRepositoryEditor", projectModel, selectedDocumentRepository);
         add(externalSearchProviderEditorPanel);
 

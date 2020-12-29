@@ -17,8 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.ArrayList;
@@ -31,14 +30,12 @@ import java.util.stream.Collectors;
 import javax.persistence.NoResultException;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.WebPage;
-import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,13 +49,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.support.ui.LinkProvider;
 
-public class ActivitiesDashlet extends Dashlet_ImplBase
+public class ActivitiesDashlet
+    extends Dashlet_ImplBase
 {
     // annotation events
     public static final String SPAN_CREATED_EVENT = "SpanCreatedEvent";
@@ -68,9 +66,9 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     private static final int MAX_NUM_ACTIVITIES = 2;
 
     private static final long serialVersionUID = -2010294259619748756L;
-    
+
     private static final Logger log = LoggerFactory.getLogger(ActivitiesDashlet.class);
-    
+
     private @SpringBean EventRepository eventRepository;
     private @SpringBean UserDao userRepository;
     private @SpringBean DocumentService documentService;
@@ -82,21 +80,21 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     public ActivitiesDashlet(String aId, IModel<Project> aCurrentProject)
     {
         super(aId);
-        
+
         projectModel = aCurrentProject;
-        
+
         if (aCurrentProject == null || aCurrentProject.getObject() == null) {
             return;
         }
-        
+
         annotationEvents = new HashSet<>();
-        Collections.addAll(annotationEvents, SPAN_CREATED_EVENT, FEATURE_UPDATED_EVENT, 
+        Collections.addAll(annotationEvents, SPAN_CREATED_EVENT, FEATURE_UPDATED_EVENT,
                 RELATION_CREATED_EVENT);
-        
+
         WebMarkupContainer activitiesList = new WebMarkupContainer("activities",
                 new StringResourceModel("activitiesHeading", this));
         activitiesList.setOutputMarkupPlaceholderTag(true);
-        
+
         ListView<LoggedEvent> listView = new ListView<LoggedEvent>("activity",
                 LoadableDetachableModel.of(this::listActivities))
         {
@@ -106,9 +104,8 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
             protected void populateItem(ListItem<LoggedEvent> aItem)
             {
                 SourceDocument document = getSourceDocument(aItem.getModelObject());
-                LambdaStatelessLink eventLink = new LambdaStatelessLink("eventLink",
-                    () -> openLastActivity(aItem.getModelObject(), document));
-                eventLink.add(new Label("eventName", getEventDescription(aItem, document)));
+                ExternalLink eventLink = createLastActivityLink("eventLink", aItem.getModelObject(),
+                        document);
                 aItem.add(eventLink);
             }
         };
@@ -118,7 +115,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         activitiesList.add(listView);
         add(activitiesList);
     }
-   
+
     /**
      * Check that user still has the rights to access the document from the given event
      */
@@ -129,15 +126,15 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         if (aDocument == null || project == null) {
             return false;
         }
-        
+
         User user = userRepository.getCurrentUser();
-        
+
         // the document is in curation and the user is a curator
-        if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState()) 
+        if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState())
                 && projectService.isCurator(project, user)) {
             return true;
         }
-        
+
         return isAnnotationStillPossible(project, aDocument, user);
     }
 
@@ -146,42 +143,27 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
      */
     private boolean isAnnotationStillPossible(Project project, SourceDocument aDocument, User user)
     {
-        if (!documentService.existsAnnotationDocument(aDocument, user) 
+        if (!documentService.existsAnnotationDocument(aDocument, user)
                 || !projectService.isAnnotator(project, user)) {
             return false;
         }
-        
+
         AnnotationDocument annoDocument = documentService.getAnnotationDocument(aDocument, user);
         AnnotationDocumentState annoDocState = annoDocument.getState();
 
         // check that anno doc exists and user has not finished annotating it
-        if (!AnnotationDocumentState.IN_PROGRESS.equals(annoDocState)) {
-            log.info(String.format(
-                    "Annotation document [%s] in project [%d]] is locked for user [%s]",
-                    aDocument.getName(), project.getId(), user.getUsername()));
+        if (!IN_PROGRESS.equals(annoDocState)) {
+            log.debug(
+                    "Annotation document [{}]({}) in project [{}]({}) is locked for user [{}]. "
+                            + "Skipping...",
+                    aDocument.getName(), aDocument.getId(), project.getName(), project.getId(),
+                    user.getUsername());
             return false;
         }
-        
+
         return true;
     }
 
-    private String getEventDescription(ListItem<LoggedEvent> aItem, SourceDocument aDocument) {
-
-        if (aItem == null || aDocument == null) {
-            return null;
-        }
-        String documentName = aDocument.getName();
-        String eventDate = formatDateStr(aItem.getModelObject());
-
-        // the annotation event was fired while curating
-        if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState())) {
-            return String.format("%s: Curated \"%s\"", eventDate, documentName);
-        }
-        else {
-            return String.format("%s: Annotated \"%s\"", eventDate, documentName);
-        }
-    }
-    
     private SourceDocument getSourceDocument(LoggedEvent aEvent)
     {
         if (aEvent == null) {
@@ -198,7 +180,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
             document = documentService.getSourceDocument(projectModel.getObject().getId(), docId);
         }
         catch (NoResultException e) {
-            log.info(String.format("Source document [%d] no longer exists.", docId));
+            log.debug("Source document with id [{}] no longer exists. Skipping...", docId);
             return document;
         }
 
@@ -214,33 +196,41 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         }
         return eventDate;
     }
-    
-    private void openLastActivity(LoggedEvent aEvent, SourceDocument aDocument)
+
+    private ExternalLink createLastActivityLink(String aId, LoggedEvent aEvent,
+            SourceDocument aDocument)
     {
         if (aEvent == null || aDocument == null) {
-            return;
+            return getDummyLink(aId);
         }
-        
+
         String eventName = aEvent.getEvent();
         if (!annotationEvents.contains(eventName)) {
-            log.info(String.format("Unknown last activities event: %s", eventName));
-            return;
-        }        
-       
+            log.info("Unknown last activities event: {}", eventName);
+            return getDummyLink(aId);
+        }
+
+        Project project = projectModel.getObject();
+        Long docId = aDocument.getId();
+        String documentName = aDocument.getName();
+        String eventDate = formatDateStr(aEvent);
         if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState())) {
-            openDocument(aEvent, CurationPage.class);
+            String linkLabel = String.format("%s: Curated \"%s\"", eventDate, documentName);
+            return LinkProvider.createDocumentPageLink(project, docId, aId, linkLabel,
+                    CurationPage.class);
         }
         else {
-            openDocument(aEvent, AnnotationPage.class);
+            String linkLabel = String.format("%s: Annotated \"%s\"", eventDate, documentName);
+            return LinkProvider.createDocumentPageLink(project, docId, aId, linkLabel,
+                    AnnotationPage.class);
         }
     }
 
-    private void openDocument(LoggedEvent aEvent, Class<? extends WebPage> aPage)
+    private ExternalLink getDummyLink(String aId)
     {
-        PageParameters params = new PageParameters();
-        params.add(PAGE_PARAM_PROJECT_ID, projectModel.getObject().getId());
-        params.add(PAGE_PARAM_DOCUMENT_ID, aEvent.getDocument());
-        setResponsePage(aPage, params);
+        ExternalLink link = new ExternalLink(aId, "");
+        link.setVisible(false);
+        return link;
     }
 
     private List<LoggedEvent> listActivities()

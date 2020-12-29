@@ -21,50 +21,55 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationAcceptedEventAdapter}.
+ * </p>
+ */
 public class RecommendationAcceptedEventAdapter
     implements EventLoggingAdapter<RecommendationAcceptedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof RecommendationAcceptedEvent;
     }
-    
+
     @Override
     public long getDocument(RecommendationAcceptedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(RecommendationAcceptedEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(RecommendationAcceptedEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getDetails(RecommendationAcceptedEvent aEvent)
     {
         try {
             AnnotationDetails annotation = new AnnotationDetails(aEvent.getFS());
-            
+
             FeatureChangeDetails details = new FeatureChangeDetails();
             details.setAnnotation(annotation);
             details.setValue(aEvent.getRecommendedValue());

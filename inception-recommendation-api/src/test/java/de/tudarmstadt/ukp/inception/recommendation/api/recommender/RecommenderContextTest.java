@@ -26,7 +26,8 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 
-public class RecommenderContextTest {
+public class RecommenderContextTest
+{
     private final Key<String> KEY = new Key<>("Test");
 
     private RecommenderContext sut;
@@ -46,8 +47,7 @@ public class RecommenderContextTest {
 
         Optional<String> result = sut.get(KEY);
         assertThat(result.isPresent()).isTrue();
-        assertThat(result.get()).as("Correct value is returned")
-            .isEqualTo(value);
+        assertThat(result.get()).as("Correct value is returned").isEqualTo(value);
     }
 
     @Test
@@ -60,8 +60,7 @@ public class RecommenderContextTest {
 
         Optional<String> result = sut.get(KEY);
         assertThat(result.isPresent()).isTrue();
-        assertThat(result.get()).as("Correct value is returned")
-            .isEqualTo(value);
+        assertThat(result.get()).as("Correct value is returned").isEqualTo(value);
     }
 
     @Test
@@ -70,17 +69,17 @@ public class RecommenderContextTest {
         Optional<String> result = sut.get(KEY);
         assertThat(result.isPresent()).isFalse();
     }
-    
+
     @Test
     public void thatContextStartsOutNotReady()
     {
-        assertThat(sut.isReadyForPrediction()).isFalse();
+        assertThat(sut.isClosed()).isFalse();
     }
 
     @Test
     public void thatContextCanBeMarkedAsReady()
     {
-        sut.markAsReadyForPrediction();
-        assertThat(sut.isReadyForPrediction()).isTrue();
+        sut.close();
+        assertThat(sut.isClosed()).isTrue();
     }
 }

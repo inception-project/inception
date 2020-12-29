@@ -19,18 +19,22 @@ package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.config;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.PubAnnotationProviderFactory;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationSectionsFormatSupport;
 
 /**
  * Provides support for ElasticSearch-based document repositories.
  */
 @Configuration
 @AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
+@ConditionalOnProperty(prefix = "external-search.pub-annotation", //
+        name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(ExternalSearchService.class)
 public class PubAnnotationDocumentRepositoryAutoConfiguration
 {
@@ -38,5 +42,11 @@ public class PubAnnotationDocumentRepositoryAutoConfiguration
     public PubAnnotationProviderFactory pubAnnotationProviderFactory()
     {
         return new PubAnnotationProviderFactory();
+    }
+
+    @Bean
+    public PubAnnotationSectionsFormatSupport pubAnnotationSectionsFormatSupport()
+    {
+        return new PubAnnotationSectionsFormatSupport();
     }
 }

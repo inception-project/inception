@@ -23,16 +23,20 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
-
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ActiveLearningAutoConfiguration#activeLearningRecommendationEventAdapter()}.
+ * </p>
+ */
 public class ActiveLearningRecommendationEventAdapter
     implements EventLoggingAdapter<ActiveLearningRecommendationEvent>
 {
@@ -73,7 +77,7 @@ public class ActiveLearningRecommendationEventAdapter
             details.recommenderId = aEvent.getCurrentRecommendation().getRecommenderId();
 
             List<String> allLabelList = aEvent.getAllRecommendations().stream()
-                .map(ao -> ao.getLabel()).collect(Collectors.toList());
+                    .map(ao -> ao.getLabel()).collect(Collectors.toList());
             details.allLabels = String.join(", ", allLabelList);
             return JSONUtil.toJsonString(details);
         }

@@ -40,8 +40,10 @@ import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -68,12 +70,12 @@ public class ConceptFeatureIndexingSupportTest
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private FeatureIndexingSupportRegistryImpl featureIndexingSupportRegistry;
     private JCas jcas;
-    
+
     @Before
     public void setup() throws Exception
     {
         initMocks(this);
-        
+
         project = new Project();
         project.setId(1l);
         project.setName("test project");
@@ -81,16 +83,16 @@ public class ConceptFeatureIndexingSupportTest
 
         kb = new KnowledgeBase();
 
-        featureSupportRegistry = new FeatureSupportRegistryImpl(asList(
-                new PrimitiveUimaFeatureSupport(),
-                new ConceptFeatureSupport(kbService)));
+        featureSupportRegistry = new FeatureSupportRegistryImpl(
+                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
+                        new NumberFeatureSupport(), new ConceptFeatureSupport(kbService)));
         featureSupportRegistry.init();
-        
-        featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(asList(
-                new PrimitiveUimaIndexingSupport(featureSupportRegistry),
-                new ConceptFeatureIndexingSupport(featureSupportRegistry, kbService)));
+
+        featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(
+                asList(new PrimitiveUimaIndexingSupport(featureSupportRegistry),
+                        new ConceptFeatureIndexingSupport(featureSupportRegistry, kbService)));
         featureIndexingSupportRegistry.init();
-        
+
         // Resetting the JCas is faster than re-creating it
         if (jcas == null) {
             jcas = JCasFactory.createJCas();
@@ -99,7 +101,7 @@ public class ConceptFeatureIndexingSupportTest
             jcas.reset();
         }
     }
-    
+
     @Test
     public void testConceptFeature() throws Exception
     {
@@ -117,49 +119,43 @@ public class ConceptFeatureIndexingSupportTest
         ne.addToIndexes();
         builder.add(" ");
         builder.add(".", Token.class);
-        
-        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
+
+        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+                SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
-        when(annotationSchemaService.listAnnotationFeature(any(AnnotationLayer.class)))
-                .thenReturn(asList(
-                        new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
-                        new AnnotationFeature(2l, layer, "identifier", "kb:<ANY>")));
-        
-        when(kbService.readInstance(any(Project.class), any(String.class))).thenReturn(
-                Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
-        
-        
+        when(kbService.readInstance(any(Project.class), any(String.class)))
+                .thenReturn(Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
+
         KBInstance kbInstance = new KBInstance("urn:dummy-concept", "Dummy concept");
         kbInstance.setKB(kb);
-        
+
         when(kbService.readItem(any(Project.class), any(String.class)))
                 .thenReturn(Optional.of(kbInstance));
 
         List<KBHandle> dummyValue = new ArrayList<KBHandle>();
         dummyValue.add(new KBHandle("urn:dummy-parent-concept", "Dummy Parent Concept"));
-        
+
         when(kbService.getParentConceptList(any(KnowledgeBase.class), any(String.class),
                 any(Boolean.class))).thenReturn(dummyValue);
 
-        MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
-                featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas);
+        MtasUimaParser sut = new MtasUimaParser(
+                asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
+                        new AnnotationFeature(2l, layer, "identifier", "kb:<ANY>")),
+                annotationSchemaService, featureIndexingSupportRegistry);
+        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         MtasUtils.print(tc);
-        
+
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
-                
-        assertThat(tokens)
-            .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-            .extracting(MtasToken::getPrefix)
-            .contains("Named_Entity", "Named_Entity.identifier", "Named_Entity.identifier-exact");
-    
-        assertThat(tokens)
-            .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-            .extracting(MtasToken::getPostfix)
-            .contains("", "urn:dummy-concept", "Dummy concept");
+
+        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
+                .extracting(MtasToken::getPrefix).contains("Named_Entity",
+                        "Named_Entity.identifier", "Named_Entity.identifier-exact");
+
+        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
+                .extracting(MtasToken::getPostfix)
+                .contains("", "urn:dummy-concept", "Dummy concept");
     }
 }

@@ -21,11 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
@@ -35,8 +37,7 @@ public class OpenNlpPosRecommenderFactory
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = 
-            "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos.OpenNlpPosClassificationTool";
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos.OpenNlpPosClassificationTool";
 
     @Override
     public String getId()
@@ -62,9 +63,15 @@ public class OpenNlpPosRecommenderFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-        
+
         return SINGLE_TOKEN.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
                 && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+    }
+
+    @Override
+    public AbstractTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
+    {
+        return new OpenNlpPosRecommenderTraitsEditor(aId, aModel);
     }
 
     @Override
@@ -72,7 +79,7 @@ public class OpenNlpPosRecommenderFactory
     {
         return new OpenNlpPosRecommenderTraits();
     }
-    
+
     @Override
     public boolean isMultipleRecommendationProvider()
     {

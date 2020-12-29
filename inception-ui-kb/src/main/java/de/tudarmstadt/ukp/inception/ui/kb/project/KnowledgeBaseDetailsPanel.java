@@ -57,7 +57,7 @@ public class KnowledgeBaseDetailsPanel
     extends Panel
 {
     private static final long serialVersionUID = -3550082954966752196L;
-    
+
     private static final Logger log = LoggerFactory.getLogger(KnowledgeBaseDetailsPanel.class);
 
     private static final String TITLE_MARKUP_ID = "title";
@@ -115,20 +115,20 @@ public class KnowledgeBaseDetailsPanel
         form.add(new AjaxButton("save", form)
         {
             private static final long serialVersionUID = 3393631640806116694L;
-            
+
             @Override
-            protected void onError(AjaxRequestTarget aTarget) {
+            protected void onError(AjaxRequestTarget aTarget)
+            {
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
-            
+
             @Override
             protected void onAfterSubmit(AjaxRequestTarget aTarget)
             {
-                KnowledgeBaseDetailsPanel.this
-                    .actionSave(aTarget, form);
-                applicationEventPublisherHolder.get().publishEvent(
-                    new KnowledgeBaseConfigurationChangedEvent(this,
-                        aKbModel.getObject().getProject()));
+                KnowledgeBaseDetailsPanel.this.actionSave(aTarget, form);
+                applicationEventPublisherHolder.get()
+                        .publishEvent(new KnowledgeBaseConfigurationChangedEvent(this,
+                                aKbModel.getObject().getProject()));
             }
         });
 
@@ -144,11 +144,12 @@ public class KnowledgeBaseDetailsPanel
         setVisible(kbModel != null && kbModel.getObject() != null);
     }
 
-    @Override protected void onModelChanged()
+    @Override
+    protected void onModelChanged()
     {
         // propagate the changes to the original knowledge base model
         kbModel.setObject(kbwModel.getObject().getKb());
-        
+
         // Forget any in-transit uploaded files
         kbwModel.getObject().clearFiles();
     }
@@ -157,7 +158,7 @@ public class KnowledgeBaseDetailsPanel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(findParentWithAssociatedMarkup());
-        
+
         try {
             KnowledgeBaseWrapper kbw = kbwModel.getObject();
 
@@ -212,15 +213,14 @@ public class KnowledgeBaseDetailsPanel
                     kb.getProject().getId(), e);
         }
     }
-    
+
     private void actionDelete(AjaxRequestTarget aTarget)
     {
         // delete only if user confirms deletion
-        confirmationDialog
-            .setTitleModel(new StringResourceModel("kb.details.delete.confirmation.title", this));
-        confirmationDialog.setContentModel(
-            new StringResourceModel("kb.details.delete.confirmation.content", this,
-                kbwModel.bind("kb")));
+        confirmationDialog.setTitleModel(
+                new StringResourceModel("kb.details.delete.confirmation.title", this));
+        confirmationDialog.setContentModel(new StringResourceModel(
+                "kb.details.delete.confirmation.content", this, kbwModel.bind("kb")));
         confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction(_target -> {
             KnowledgeBase kb = kbwModel.getObject().getKb();
@@ -267,7 +267,7 @@ public class KnowledgeBaseDetailsPanel
             kbwModel = aKbwModel;
 
             Component generalSettings = new GeneralSettingsPanel("generalSettings",
-                Model.of(kbModel.getObject().getProject()), kbwModel);
+                    Model.of(kbModel.getObject().getProject()), kbwModel);
             add(generalSettings);
             generalSettings.get("name").setVisible(false);
 
@@ -275,10 +275,10 @@ public class KnowledgeBaseDetailsPanel
             add(accessSettings);
             accessSettings.get("type").setEnabled(false);
             accessSettings.get("writeprotection")
-                .setEnabled(kbwModel.getObject().getKb().getType() == RepositoryType.LOCAL);
+                    .setEnabled(kbwModel.getObject().getKb().getType() == RepositoryType.LOCAL);
 
             Component accessSpecificSettings = new AccessSpecificSettingsPanel(
-                "accessSpecificSettings", kbwModel, Collections.emptyMap());
+                    "accessSpecificSettings", kbwModel, Collections.emptyMap());
             add(accessSpecificSettings);
             accessSpecificSettings.get("remoteSpecificSettings:suggestions").setVisible(false);
             accessSpecificSettings.get("localSpecificSettings:listViewContainer").setVisible(false);
@@ -288,7 +288,6 @@ public class KnowledgeBaseDetailsPanel
 
             Component schemaMapping = new KnowledgeBaseIriPanel("schemaMapping", kbwModel);
             add(schemaMapping);
-            schemaMapping.get("reification").setEnabled(false);
 
             Component rootConcepts = new RootConceptsPanel("rootConcepts", kbwModel);
             add(rootConcepts);

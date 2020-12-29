@@ -41,9 +41,8 @@ public class OpenNlpDoccatRecommenderFactory
 
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = 
-            "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat.OpenNlpDoccatRecommenderFactory";
-    
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat.OpenNlpDoccatRecommenderFactory";
+
     @Override
     public String getId()
     {
@@ -51,7 +50,8 @@ public class OpenNlpDoccatRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender) {
+    public RecommendationEngine build(Recommender aRecommender)
+    {
         OpenNlpDoccatRecommenderTraits traits = new OpenNlpDoccatRecommenderTraits();
         return new OpenNlpDoccatRecommender(aRecommender, traits);
     }
@@ -68,7 +68,7 @@ public class OpenNlpDoccatRecommenderFactory
         if (aLayer == null || aFeature == null) {
             return false;
         }
-        
+
         return (asList(AnchoringMode.SENTENCES).contains(aLayer.getAnchoringMode()))
                 && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
@@ -79,7 +79,7 @@ public class OpenNlpDoccatRecommenderFactory
     {
         return new OpenNlpDoccatRecommenderTraits();
     }
-    
+
     @Override
     public OpenNlpDoccatRecommenderTraitsEditor createTraitsEditor(String aId,
             IModel<Recommender> aModel)

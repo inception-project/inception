@@ -27,4 +27,3 @@ public class ImageFeatureTraits
 {
     private static final long serialVersionUID = -5169695344924699148L;
 }
-

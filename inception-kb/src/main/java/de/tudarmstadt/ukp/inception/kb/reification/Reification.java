@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
-public enum Reification {
-    NONE(false),
-    WIKIDATA(true);
+public enum Reification
+{
+    NONE(false), WIKIDATA(true);
 
     private final boolean supportsQualifier;
 
@@ -28,7 +28,8 @@ public enum Reification {
         this.supportsQualifier = supportsQualifier;
     }
 
-    public boolean supportsQualifier() {
+    public boolean supportsQualifier()
+    {
         return supportsQualifier;
     }
 }

@@ -30,7 +30,7 @@ public class InceptionResourcesBehavior
     extends Behavior
 {
     private static final long serialVersionUID = 5367089196863803403L;
-    
+
     private static final InceptionResourcesBehavior INSTANCE = new InceptionResourcesBehavior();
 
     @Override
@@ -40,7 +40,7 @@ public class InceptionResourcesBehavior
         aResponse.render(CssHeaderItem.forReference(InceptionCssReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
     }
-    
+
     public static InceptionResourcesBehavior get()
     {
         return INSTANCE;

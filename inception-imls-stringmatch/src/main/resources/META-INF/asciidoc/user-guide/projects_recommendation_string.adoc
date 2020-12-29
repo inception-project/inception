@@ -1,5 +1,5 @@
 // Copyright 2018
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,3 +45,13 @@ Illinois State Senate	ORG
 Hawaii	LOC	
 Indonesia	LOC
 ----
+
+=== Character-level layers
+
+For layers which are configured to have a character-level annotation granularity, the string 
+matching recommender will still try to match only at the beginning of tokens. However, it will not
+require that the end of a match also ends at a token boundary. This helps e.g. in situations where
+punctuation is not correctly detected as being a separate token.
+
+NOTE: For layers with character-level granularity or layers which allow cross-sentence annotations,
+      the evaluation scores of the recommender may not be exact.

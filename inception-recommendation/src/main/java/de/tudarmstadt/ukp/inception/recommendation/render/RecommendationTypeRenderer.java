@@ -21,7 +21,6 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -45,12 +44,10 @@ public interface RecommendationTypeRenderer
      *            A VDocument containing annotations for the given layer
      * @param aBratAnnotatorModel
      *            Data model for brat annotations
-     * @param aColoringStrategy
-     *            the coloring strategy to render this layer
      */
     void render(CAS aCas, VDocument aVdoc, AnnotatorState aBratAnnotatorModel,
-        ColoringStrategy aColoringStrategy, AnnotationLayer aLayer,
-        RecommendationService aRecService, LearningRecordService aLearningRecordService,
-        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
-        DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset);
+            AnnotationLayer aLayer, RecommendationService aRecService,
+            LearningRecordService aLearningRecordService,
+            AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
+            DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset);
 }

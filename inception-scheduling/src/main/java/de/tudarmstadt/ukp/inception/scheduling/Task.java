@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.scheduling;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -27,19 +28,23 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public abstract class Task
     implements Runnable
 {
+    private final static AtomicInteger nextId = new AtomicInteger(1);
+
     private final User user;
     private final Project project;
     private final String trigger;
+    private final int id;
 
     public Task(User aUser, Project aProject, String aTrigger)
     {
         notNull(aUser);
         notNull(aProject);
         notNull(aTrigger);
-        
+
         user = aUser;
         project = aProject;
         trigger = aTrigger;
+        id = nextId.getAndIncrement();
     }
 
     public User getUser()
@@ -62,27 +67,39 @@ public abstract class Task
         return getClass().getSimpleName();
     }
 
+    public int getId()
+    {
+        return id;
+    }
+
     @Override
-    public String toString() {
+    public String toString()
+    {
         StringBuilder sb = new StringBuilder(getName());
         sb.append('{');
         sb.append("user=").append(user.getUsername());
         sb.append(", project=").append(project.getName());
-        sb.append(", trigger=").append(trigger);
+        sb.append(", trigger=\"").append(trigger);
         sb.append("\"}");
         return sb.toString();
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Task task = (Task) o;
         return user.equals(task.user) && project.equals(task.project);
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(user, project);
     }
 }

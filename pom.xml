@@ -15,16 +15,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>22</version>
+    <version>24</version>
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
-  <version>0.10.0-SNAPSHOT</version>
+  <version>0.18.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
   <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
@@ -42,8 +44,8 @@
     <system>GitHub Issues</system>
   </issueManagement>
   <scm>
-    <connection>scm:git:git://github.com/inception-project/inception</connection>
-    <developerConnection>scm:git:git@github.com:inception-project/inception.git</developerConnection>
+    <connection>scm:git:https://github.com/inception-project/inception.git</connection>
+    <developerConnection>scm:git:https://github.com/inception-project/inception.git</developerConnection>
     <url>https://github.com/inception-project/inception</url>
     <tag>HEAD</tag>
   </scm>
@@ -54,80 +56,113 @@
     </repository>
   </distributionManagement>
   <properties>
+    <maven.surefire.heap>6g</maven.surefire.heap>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
+    <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
+    <excludedTestCategories>nl.ru.test.category.SlowTests</excludedTestCategories>
+
+    <mockito.version>3.6.0</mockito.version>
+    <assertj.version>3.18.1</assertj.version>
+    <spring.version>5.3.1</spring.version>
+    <spring.boot.version>2.4.0</spring.boot.version>
+    <spring.security.version>5.4.1</spring.security.version>
+    <wicket.version>9.2.0</wicket.version>
+    <wicketstuff.version>9.2.0</wicketstuff.version>
+    <wicket-jquery-ui.version>9.1.0</wicket-jquery-ui.version>
+    <dkpro.version>2.1.0</dkpro.version>
+    <uima.version>3.1.1</uima.version>
+    <log4j.version>2.13.2</log4j.version>
+    <groovy.version>3.0.3</groovy.version>
+
     <webanno.version>4.0.0-SNAPSHOT</webanno.version>
-    <uima.version>3.0.2</uima.version>
-    <dkpro.version>2.0.0-SNAPSHOT</dkpro.version>
-    <spring.version>5.1.7.RELEASE</spring.version>
-    <spring.boot.version>2.1.4.RELEASE</spring.boot.version>
-    <wicket.version>8.3.0</wicket.version>
-    <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
+    <servlet-api.version>4.0.1</servlet-api.version>
     <lucene.version>7.3.1</lucene.version>
     <elasticsearch.version>6.3.0</elasticsearch.version>
+    <solr.version>8.5.1</solr.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
-    <mockito.version>2.27.0</mockito.version>
-    <assertj.version>3.12.2</assertj.version>
-    <okhttp.version>3.13.1</okhttp.version>
-    <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.target>8</maven.compiler.target>
-    <maven.compiler.source>8</maven.compiler.source>
-    <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
+    <okhttp.version>3.14.2</okhttp.version>
+
+    <asciidoctor.plugin.version>2.0.0-RC.1</asciidoctor.plugin.version>
+    <asciidoctor.version>2.3.0</asciidoctor.version>
+    <asciidoctor-diagram.version>2.0.2</asciidoctor-diagram.version>
   </properties>
   <modules>
+    <!-- Build infrastructure modules -->
     <module>inception-build</module>
     <module>inception-boot-loader</module>
+    <!-- Core application modules -->
+    <module>inception-plugin-parent</module>
+    <module>inception-log</module>
+    <module>inception-support</module>
+    <module>inception-scheduling</module>
+    <module>inception-testing</module>
+    <module>inception-ui-core</module>
     <module>inception-app-webapp</module>
+    <!-- Internal search -->
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
     <module>inception-search-mtas</module>
+    <!-- External search -->
     <module>inception-external-search-core</module>
     <module>inception-external-search-elastic</module>
+    <module>inception-external-search-solr</module>
     <module>inception-external-search-pubannotation</module>
     <module>inception-ui-external-search</module>
+    <!-- Knowledge base -->
     <module>inception-kb</module>
-    <module>inception-ui-core</module>
     <module>inception-ui-kb</module>
+    <module>inception-concept-linking</module>
+    <!-- Editor extensions -->
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
+    <!-- Schema extensions -->
+    <module>inception-layer-docmetadata</module>
+    <module>inception-image</module>
+    <!-- Recommendation system -->
     <module>inception-recommendation-api</module>
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
-    <module>inception-concept-linking</module>
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-dl4j</module>
     <module>inception-imls-external</module>
-    <module>inception-log</module>
-    <module>inception-support</module>
-    <module>inception-testing</module>
-    <module>inception-layer-docmetadata</module>
-    <module>inception-image</module>
-    <module>inception-scheduling</module>
+    <module>inception-imls-lapps</module>
+    <module>inception-imls-weblicht</module>
     <!-- Examples -->
     <module>inception-example-imls-data-majority</module>
     <!-- Documentation -->
     <module>inception-doc</module>
-
+    <!-- Curation -->
+    <module>inception-curation</module>
+    <module>inception-workload</module>
+    <module>inception-workload-matrix</module>
+    <module>inception-workload-dynamic</module>
+    <!-- Packaging -->
+    <module>inception-docker</module>
   </modules>
   <repositories>
-    <!-- For RELEASEes of WebAnno / DKPro Core-->
+    <!-- For RELEASEes of WebAnno / DKPro Core -->
     <repository>
       <id>ukp-oss-releases</id>
-      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
+      <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
       <releases>
         <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
       </releases>
       <snapshots>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
       </snapshots>
     </repository>
     <!-- For SNAPSHOTs of WebAnno / DKPro Core -->
     <repository>
       <id>ukp-oss-snapshots</id>
-      <url>http://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
+      <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-snapshots</url>
       <releases>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
       </releases>
       <snapshots>
         <enabled>true</enabled>
@@ -138,12 +173,12 @@
     <pluginRepository>
       <id>jcenter-snapshots</id>
       <name>jcenter</name>
-      <url>http://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
+      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local/</url>
     </pluginRepository>
     <pluginRepository>
       <id>jcenter-releases</id>
       <name>jcenter</name>
-      <url>http://jcenter.bintray.com</url>
+      <url>https://jcenter.bintray.com</url>
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
@@ -152,13 +187,13 @@
   <dependencies>
     <!-- The logging subsystem used by WebAnno -->
     <dependency>
-      <!-- Use Log4J http as logging backend -->
+      <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <!-- Use Log4J http as logging backend -->
+      <!-- Use Log4J v2 as logging backend -->
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
       <scope>runtime</scope>
@@ -203,6 +238,38 @@
       <artifactId>javax.activation-api</artifactId>
       <scope>runtime</scope>
     </dependency>
+
+    <!-- Testing -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>nl.ru</groupId>
+      <artifactId>test-categories</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>mockwebserver</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.awaitility</groupId>
+      <artifactId>awaitility</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <dependencyManagement>
     <dependencies>
@@ -210,137 +277,177 @@
       <dependency>
         <groupId>javax.servlet</groupId>
         <artifactId>javax.servlet-api</artifactId>
-        <version>3.1.0</version>
+        <version>${servlet-api.version}</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-doc</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-search</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-workload</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-workload-matrix</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-workload-dynamic</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-core</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-pubannotation</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-elastic</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-external-search-solr</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-external-search</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-kb</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-html-editor</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-pdf-editor</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation-api</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-active-learning</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-kb</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-concept-linking</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-opennlp</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-dl4j</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-external</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-lapps</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-weblicht</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-example-imls-data-majority</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-log</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-testing</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-layer-docmetadata</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-image</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-scheduling</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-search-core</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-search-mtas</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Testing -->
@@ -348,7 +455,12 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.12</version>
+        <version>4.13.1</version>
+      </dependency>
+      <dependency>
+        <groupId>nl.ru</groupId>
+        <artifactId>test-categories</artifactId>
+        <version>1.2.0</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
@@ -369,7 +481,6 @@
         <groupId>org.awaitility</groupId>
         <artifactId>awaitility</artifactId>
         <version>3.1.3</version>
-        <scope>test</scope>
       </dependency>
 
       <!-- Wicket jQuery -->
@@ -398,7 +509,14 @@
         <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
         <version>${wicket-jquery-ui.version}</version>
       </dependency>
-      
+
+      <!-- Wicketstuff -->
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-htmlcompressor</artifactId>
+        <version>${wicketstuff.version}</version>
+      </dependency>
+
       <!-- SPRING -->
       <dependency>
         <groupId>org.springframework</groupId>
@@ -408,11 +526,6 @@
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-context</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-context-support</artifactId>
         <version>${spring.version}</version>
       </dependency>
       <dependency>
@@ -470,9 +583,85 @@
         <artifactId>spring-aspects</artifactId>
         <version>${spring.version}</version>
       </dependency>
-      
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context-support</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+
+      <!-- SPRING SECURITY -->
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-core</artifactId>
+        <version>${spring.security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-config</artifactId>
+        <version>${spring.security.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-web</artifactId>
+        <version>${spring.security.version}</version>
+      </dependency>
+
+      <!-- GROOVY -->
+      <dependency>
+        <groupId>org.codehaus.groovy</groupId>
+        <artifactId>groovy-bom</artifactId>
+        <version>${groovy.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <!-- LOG4J -->
+
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j-impl</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+
+      <!-- Weblicht -->
+
+      <dependency>
+        <groupId>eu.clarin.weblicht</groupId>
+        <artifactId>wlfxb</artifactId>
+        <version>1.4.3</version>
+        <exclusions>
+          <!--
+            - Looks like moxy isn't even used by wlfxb except for an annotation which again doesn't
+            - seem to be handled by anything.
+            - https://github.com/weblicht/wlfxb/issues/24
+          -->
+          <exclusion>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>org.eclipse.persistence.moxy</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- JSOUP -->
+
+      <dependency>
+        <groupId>org.jsoup</groupId>
+        <artifactId>jsoup</artifactId>
+        <version>1.11.3</version>
+      </dependency>
+
       <!-- LUCENE MTAS -->
-    
+
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-core</artifactId>
@@ -550,33 +739,33 @@
         <version>${mtas.version}</version>
         <exclusions>
           <!-- We do not use MTAS with Solr -->
-          <!-- Solr depends on jdk.tools via Hadoop which is not available on recent JDKs-->
+          <!-- Solr depends on jdk.tools via Hadoop which is not available on recent JDKs -->
           <exclusion>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
-    
+
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.5</version>
+        <version>2.6</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
-        <version>1.6</version>
+        <version>1.8</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.8.1</version>
+        <version>3.9</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
-        <version>1.18</version>
+        <version>1.19</version>
       </dependency>
       <dependency>
         <groupId>commons-validator</groupId>
@@ -586,7 +775,7 @@
       <dependency>
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio</artifactId>
-        <version>1.14.0</version>
+        <version>1.17.4</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
@@ -596,30 +785,13 @@
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
-        <version>2.7.0</version>
+        <version>2.8.0</version>
       </dependency>
       <dependency>
         <groupId>com.h2database</groupId>
         <artifactId>h2</artifactId>
         <version>1.4.197</version>
       </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-search-core</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-search-mtas</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
-      </dependency>
-      <!--  
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-search-mimir</artifactId>
-        <version>0.5.0-SNAPSHOT</version>
-      </dependency>
-      -->
 
       <!-- JAXB DEPENDENCIES -->
       <dependency>
@@ -642,7 +814,26 @@
         <artifactId>javax.activation-api</artifactId>
         <version>1.2.0</version>
       </dependency>
-      
+
+      <dependency>
+        <groupId>jaxen</groupId>
+        <artifactId>jaxen</artifactId>
+        <version>1.2.0</version>
+        <exclusions>
+          <exclusion>
+            <artifactId>dom4j</artifactId>
+            <groupId>dom4j</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>xom</artifactId>
+            <groupId>xom</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>jdom</artifactId>
+            <groupId>jdom</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <dependency>
         <groupId>dom4j</groupId>
         <artifactId>dom4j</artifactId>
@@ -667,44 +858,16 @@
         </exclusions>
       </dependency>
 
-      <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-io-html-asl</artifactId>
-        <version>${dkpro.version}</version>
-      </dependency>
-      
-      <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-io-conll-asl</artifactId>
-        <version>${dkpro.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.dkpro.core</groupId>
-        <artifactId>dkpro-core-asl</artifactId>
-        <version>${dkpro.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno</artifactId>
-        <version>${webanno.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      
-      <!--  
-      <dependency>
+      <!--
+        <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
         <artifactId>rdf4j-bom</artifactId>
         <version>${rdf4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
-      </dependency>
+        </dependency>
       -->
-  
+
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
         <artifactId>rdf4j-config</artifactId>
@@ -1017,7 +1180,7 @@
         <artifactId>jsonld-java</artifactId>
         <version>0.12.3</version>
       </dependency>
-        
+
       <dependency>
         <groupId>org.elasticsearch</groupId>
         <artifactId>elasticsearch</artifactId>
@@ -1038,21 +1201,108 @@
         <artifactId>elasticsearch-rest-high-level-client</artifactId>
         <version>${elasticsearch.version}</version>
       </dependency>
-        
+
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>c3</artifactId>
         <version>0.6.6</version>
       </dependency>
-    
+
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>d3js</artifactId>
         <version>5.5.0</version>
       </dependency>
+
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-curation</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.bowergithub.xbsoftware</groupId>
+        <artifactId>enjoyhint</artifactId>
+        <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>kinetic</artifactId>
+        <version>5.2.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.bower</groupId>
+        <artifactId>jquery.scrollTo</artifactId>
+        <version>2.1.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-logging</artifactId>
+        <version>${spring.boot.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <version>${spring.boot.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+          </exclusion>
+          <exclusion>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <!-- Import dependency management from Spring Boot -->
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring.boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <!-- Import dependency management from WebAnno -->
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno</artifactId>
+        <version>${webanno.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <!-- Import dependency management from DKPro Core -->
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <!-- Import dependency management from Wicket -->
+        <groupId>org.apache.wicket</groupId>
+        <artifactId>wicket-parent</artifactId>
+        <version>${wicket.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
   <build>
     <plugins>
       <plugin>
@@ -1113,7 +1363,7 @@
         <configuration>
           <failOnWarning>true</failOnWarning>
           <ignoredDependencies combine.children="append">
-            <!-- 
+            <!--
               - Logging is used via reflection and cannot be detected by Maven
             -->
             <dependency>org.apache.logging.log4j:log4j-slf4j-impl</dependency>
@@ -1121,21 +1371,41 @@
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
             <dependency>org.slf4j:jcl-over-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
-            <!-- 
+            <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->
             <dependency>javax.xml.bind:jaxb-api</dependency>
             <dependency>com.sun.xml.bind:jaxb-core</dependency>
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
-            <!-- 
-              - h2database and data-jpa, used via reflection in tests in search-mtas, 
+            <!--
+              - h2database and data-jpa, used via reflection in tests in search-mtas,
               - cannot be detected by Maven
-             -->
+            -->
             <dependency>com.h2database:h2</dependency>
             <dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
+            <!--
+              - Basic test dependencies
+            -->
+            <dependency>junit:junit</dependency>
+            <dependency>nl.ru:test-categories</dependency>
+            <dependency>org.mockito:mockito-core</dependency>
+            <dependency>org.assertj:assertj-core</dependency>
+            <dependency>com.squareup.okhttp3:mockwebserver</dependency>
+            <dependency>org.awaitility:awaitility</dependency>
           </ignoredDependencies>
         </configuration>
+        <dependencies>
+          <dependency>
+            <!--
+              - Required to use the dependency plugin on newer Java versions.
+              - See: https://issues.apache.org/jira/browse/MDEP-613
+            -->
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-dependency-analyzer</artifactId>
+            <version>1.11.1</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -1175,12 +1445,23 @@
             <systemPropertyVariables>
               <dkpro.core.testCachePath>${dkpro.core.testCachePath}</dkpro.core.testCachePath>
             </systemPropertyVariables>
+            <excludedGroups>${excludedTestCategories}</excludedGroups>
           </configuration>
         </plugin>
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.22.1</version>
+          <version>0.34.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>2.7</version>
+          <configuration>
+            <rulesUri>file:${maven.multiModuleProjectDirectory}/rules.xml</rulesUri>
+            <allowAnyUpdates>false</allowAnyUpdates>
+            <allowMajorUpdates>false</allowMajorUpdates>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -1189,7 +1470,9 @@
     <profile>
       <id>wicket-module</id>
       <activation>
-        <file><exists>marker-wicket-module</exists></file>
+        <file>
+          <exists>marker-wicket-module</exists>
+        </file>
       </activation>
       <build>
         <resources>
@@ -1284,6 +1567,9 @@
                 <configuration>
                   <consoleOutput>true</consoleOutput>
                   <excludes>
+                    <exclude>.mvn/jvm.config</exclude>
+                    <exclude>.oracle_jre_usage/*.timestamp</exclude>
+                    <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
                     <exclude>suppressions.xml</exclude>
@@ -1292,6 +1578,7 @@
                     <exclude>src/main/filter/**/*</exclude>
                     <!-- release generated artifact -->
                     <exclude>release.properties</exclude>
+                    <exclude>CONTRIBUTORS.txt</exclude>
                     <exclude>CHANGES</exclude>
                     <exclude>NOTICE</exclude>
                     <exclude>README</exclude>
@@ -1382,7 +1669,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>3.0.0</version>
+              <version>3.1.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>
@@ -1393,7 +1680,7 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>8.20</version>
+                  <version>8.29</version>
                 </dependency>
               </dependencies>
               <configuration>
@@ -1437,6 +1724,12 @@
         <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
         <maven.war.skip>true</maven.war.skip>
         <remoteresources.skip>true</remoteresources.skip>
+      </properties>
+    </profile>
+    <profile>
+      <id>full-tests</id>
+      <properties>
+        <excludedTestCategories></excludedTestCategories>
       </properties>
     </profile>
   </profiles>

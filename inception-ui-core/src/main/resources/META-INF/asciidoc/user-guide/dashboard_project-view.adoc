@@ -14,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+[[sect_dashboard]]
 == Project dashboard
 
 Once you have selected a project from the <<sect_projects_list>>, you are taken to this project's

@@ -25,6 +25,7 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,10 +41,16 @@ import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2000Reader;
 import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -55,7 +62,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 public class DL4JSequenceRecommenderTest
 {
     private static File cache = DkproTestContext.getCacheFolder();
@@ -63,6 +72,7 @@ public class DL4JSequenceRecommenderTest
 
     private RecommenderContext context;
     private DL4JSequenceRecommenderTraits traits;
+    private CasStorageSession casSession;
 
     @Before
     public void setUp()
@@ -81,6 +91,13 @@ public class DL4JSequenceRecommenderTest
         traits.setTrainingSetSizeLimit(250);
         traits.setPredictionLimit(250);
         traits.setBatchSize(50);
+        casSession = CasStorageSession.open();
+    }
+
+    @After
+    public void tearDown()
+    {
+        CasStorageSession.get().close();
     }
 
     @Test
@@ -88,12 +105,12 @@ public class DL4JSequenceRecommenderTest
     {
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("a b b c c c abbccc");
-        
-        new Token(jcas,  0,  1).addToIndexes(); // a
-        new Token(jcas,  2,  3).addToIndexes(); // b
-        new Token(jcas,  4,  5).addToIndexes(); // b
-        new Token(jcas,  6,  7).addToIndexes(); // c
-        new Token(jcas,  8,  9).addToIndexes(); // c
+
+        new Token(jcas, 0, 1).addToIndexes(); // a
+        new Token(jcas, 2, 3).addToIndexes(); // b
+        new Token(jcas, 4, 5).addToIndexes(); // b
+        new Token(jcas, 6, 7).addToIndexes(); // c
+        new Token(jcas, 8, 9).addToIndexes(); // c
         new Token(jcas, 10, 11).addToIndexes(); // c
         new Token(jcas, 12, 13).addToIndexes(); // a
         new Token(jcas, 13, 14).addToIndexes(); // b
@@ -101,15 +118,15 @@ public class DL4JSequenceRecommenderTest
         new Token(jcas, 15, 16).addToIndexes(); // c
         new Token(jcas, 16, 17).addToIndexes(); // c
         new Token(jcas, 17, 18).addToIndexes(); // c
-        
+
         NamedEntity ne;
-        ne = new NamedEntity(jcas,  0,  1); // a
+        ne = new NamedEntity(jcas, 0, 1); // a
         ne.setValue("A");
         ne.addToIndexes();
-        ne = new NamedEntity(jcas,  2,  5); // b b
+        ne = new NamedEntity(jcas, 2, 5); // b b
         ne.setValue("B");
         ne.addToIndexes();
-        ne = new NamedEntity(jcas,  6, 11); // c c c
+        ne = new NamedEntity(jcas, 6, 11); // c c c
         ne.setValue("C");
         ne.addToIndexes();
         ne = new NamedEntity(jcas, 12, 13); // a
@@ -121,28 +138,27 @@ public class DL4JSequenceRecommenderTest
         ne = new NamedEntity(jcas, 15, 18); // ccc
         ne.setValue("C");
         ne.addToIndexes();
-        
+
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        List<String> labels = sut.extractTokenLabels(
-                new ArrayList<>(select(jcas, Token.class)), 
+        List<String> labels = sut.extractTokenLabels(new ArrayList<>(select(jcas, Token.class)),
                 new ArrayList<>(select(jcas, NamedEntity.class)));
-        
+
         assertThat(labels).containsExactly("A", "B", "B", "C", "C", "C", "A", "B", "B", "C", "C",
                 "C");
     }
-    
+
     @Test
     public void testExtractSparseLabels() throws Exception
     {
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("a b b c c c abbccc");
-        
-        new Token(jcas,  0,  1).addToIndexes(); // a
-        new Token(jcas,  2,  3).addToIndexes(); // b
-        new Token(jcas,  4,  5).addToIndexes(); // b
-        new Token(jcas,  6,  7).addToIndexes(); // c
-        new Token(jcas,  8,  9).addToIndexes(); // c
+
+        new Token(jcas, 0, 1).addToIndexes(); // a
+        new Token(jcas, 2, 3).addToIndexes(); // b
+        new Token(jcas, 4, 5).addToIndexes(); // b
+        new Token(jcas, 6, 7).addToIndexes(); // c
+        new Token(jcas, 8, 9).addToIndexes(); // c
         new Token(jcas, 10, 11).addToIndexes(); // c
         new Token(jcas, 12, 13).addToIndexes(); // a
         new Token(jcas, 13, 14).addToIndexes(); // b
@@ -150,79 +166,76 @@ public class DL4JSequenceRecommenderTest
         new Token(jcas, 15, 16).addToIndexes(); // c
         new Token(jcas, 16, 17).addToIndexes(); // c
         new Token(jcas, 17, 18).addToIndexes(); // c
-        
+
         NamedEntity ne;
-        ne = new NamedEntity(jcas,  6, 11); // c c c
+        ne = new NamedEntity(jcas, 6, 11); // c c c
         ne.setValue("C");
         ne.addToIndexes();
         ne = new NamedEntity(jcas, 13, 15); // bb
         ne.setValue("B");
         ne.addToIndexes();
-        
+
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        List<String> labels = sut.extractTokenLabels(
-                new ArrayList<>(select(jcas, Token.class)), 
+        List<String> labels = sut.extractTokenLabels(new ArrayList<>(select(jcas, Token.class)),
                 new ArrayList<>(select(jcas, NamedEntity.class)));
-        
+
         assertThat(labels).containsExactly(NO_LABEL, NO_LABEL, NO_LABEL, "C", "C", "C", NO_LABEL,
                 "B", "B", NO_LABEL, NO_LABEL, NO_LABEL);
-    }    
-    
+    }
+
     @Test
     public void testExtractLabelsWithBadBoundaries() throws Exception
     {
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("a b b");
-        
-        new Token(jcas,  0,  1).addToIndexes(); // a
-        new Token(jcas,  2,  3).addToIndexes(); // b
-        new Token(jcas,  4,  5).addToIndexes(); // b
-        
+
+        new Token(jcas, 0, 1).addToIndexes(); // a
+        new Token(jcas, 2, 3).addToIndexes(); // b
+        new Token(jcas, 4, 5).addToIndexes(); // b
+
         NamedEntity ne;
-        ne = new NamedEntity(jcas,  0,  1);
+        ne = new NamedEntity(jcas, 0, 1);
         ne.setValue("A");
         ne.addToIndexes();
-        ne = new NamedEntity(jcas,  1,  3);
+        ne = new NamedEntity(jcas, 1, 3);
         ne.setValue("B");
         ne.addToIndexes();
-        
+
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        
-        assertThatThrownBy(() -> sut.extractTokenLabels(
-                new ArrayList<>(select(jcas, Token.class)), 
+
+        assertThatThrownBy(() -> sut.extractTokenLabels(new ArrayList<>(select(jcas, Token.class)),
                 new ArrayList<>(select(jcas, NamedEntity.class))))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("must start/end at token boundaries");
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("must start/end at token boundaries");
     }
-    
+
     @Test
     public void testExtractOverlappingLabelsFails1() throws Exception
     {
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("a b b");
-        
-        new Token(jcas,  0,  1).addToIndexes(); // a
-        new Token(jcas,  2,  3).addToIndexes(); // b
-        new Token(jcas,  4,  5).addToIndexes(); // b
-        
+
+        new Token(jcas, 0, 1).addToIndexes(); // a
+        new Token(jcas, 2, 3).addToIndexes(); // b
+        new Token(jcas, 4, 5).addToIndexes(); // b
+
         NamedEntity ne;
-        ne = new NamedEntity(jcas,  0,  1); // a
+        ne = new NamedEntity(jcas, 0, 1); // a
         ne.setValue("A");
         ne.addToIndexes();
-        ne = new NamedEntity(jcas,  0,  5); // b b
+        ne = new NamedEntity(jcas, 0, 5); // b b
         ne.setValue("B");
         ne.addToIndexes();
-        
+
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        
-        assertThatThrownBy(() -> sut.extractTokenLabels(
-                new ArrayList<>(select(jcas, Token.class)), 
+
+        assertThatThrownBy(() -> sut.extractTokenLabels(new ArrayList<>(select(jcas, Token.class)),
                 new ArrayList<>(select(jcas, NamedEntity.class))))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Overlapping labels are not supported");
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Overlapping labels are not supported");
     }
 
     @Test
@@ -230,27 +243,26 @@ public class DL4JSequenceRecommenderTest
     {
         JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("a b b");
-        
-        new Token(jcas,  0,  1).addToIndexes(); // a
-        new Token(jcas,  2,  3).addToIndexes(); // b
-        new Token(jcas,  4,  5).addToIndexes(); // b
-        
+
+        new Token(jcas, 0, 1).addToIndexes(); // a
+        new Token(jcas, 2, 3).addToIndexes(); // b
+        new Token(jcas, 4, 5).addToIndexes(); // b
+
         NamedEntity ne;
-        ne = new NamedEntity(jcas,  0,  3); // a b
+        ne = new NamedEntity(jcas, 0, 3); // a b
         ne.setValue("A");
         ne.addToIndexes();
-        ne = new NamedEntity(jcas,  2,  5); // b b
+        ne = new NamedEntity(jcas, 2, 5); // b b
         ne.setValue("B");
         ne.addToIndexes();
-        
+
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        
-        assertThatThrownBy(() -> sut.extractTokenLabels(
-                new ArrayList<>(select(jcas, Token.class)), 
+
+        assertThatThrownBy(() -> sut.extractTokenLabels(new ArrayList<>(select(jcas, Token.class)),
                 new ArrayList<>(select(jcas, NamedEntity.class))))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Overlapping labels are not supported");
+                        .isInstanceOf(IllegalArgumentException.class)
+                        .hasMessageContaining("Overlapping labels are not supported");
     }
 
     @Test
@@ -258,13 +270,13 @@ public class DL4JSequenceRecommenderTest
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
                 cache);
-        JCas cas = loadPosDevelopmentData();
+        JCas cas = loadPosDevelopmentData("thatPosTrainingWorks");
+        casSession.add("testingNer", CasAccessMode.EXCLUSIVE_WRITE_ACCESS, cas.getCas());
 
         sut.train(context, asList(cas.getCas()));
 
-        assertThat(context.get(DL4JSequenceRecommender.KEY_MODEL))
-            .as("Model has been set")
-            .isNotNull();
+        assertThat(context.get(DL4JSequenceRecommender.KEY_MODEL)).as("Model has been set")
+                .isNotNull();
     }
 
     @Test
@@ -272,25 +284,24 @@ public class DL4JSequenceRecommenderTest
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
                 cache);
-        JCas cas = loadPosDevelopmentData();
-        
+        JCas cas = loadPosDevelopmentData("thatPosPredictionWorks");
+
         sut.train(context, asList(cas.getCas()));
 
         addScoreFeature(cas.getCas(), POS.class, "PosValue");
         sut.predict(context, cas.getCas());
 
         List<POS> predictions = getPredictions(cas.getCas(), POS.class);
-        assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
-        
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
+
         // check how many labels are not padding labels
         long numWithLabel = predictions.stream()
                 .filter(p -> !p.getPosValue().equals(DL4JSequenceRecommender.NO_LABEL)).count();
         System.out.printf("Predicted %d labels not no_label out of %d.%n", numWithLabel,
                 predictions.size());
-        
+
         assertThat(predictions).as("There are predictions other than *No_Label*")
-            .anyMatch(l -> !l.getPosValue().equals(DL4JSequenceRecommender.NO_LABEL));
+                .anyMatch(l -> !l.getPosValue().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
     @Test
@@ -299,7 +310,7 @@ public class DL4JSequenceRecommenderTest
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
                 cache);
-        JCas cas = loadPosDevelopmentData();
+        JCas cas = loadPosDevelopmentData("thatPosEvaluationWorks");
 
         EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
@@ -312,33 +323,34 @@ public class DL4JSequenceRecommenderTest
         System.out.printf("POS Accuracy: %f%n", accuracy);
         System.out.printf("POS Precision: %f%n", precision);
         System.out.printf("POS Recall: %f%n", recall);
-        
+
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);
         assertThat(recall).isStrictlyBetween(0.0, 1.0);
         assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
+    @Ignore
     @Test
     public void thatNerTrainingWorks() throws Exception
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas cas = loadNerDevelopmentData();
+        JCas cas = loadNerDevelopmentData("thatNerTrainingWorks");
 
         sut.train(context, asList(cas.getCas()));
 
-        assertThat(context.get(DL4JSequenceRecommender.KEY_MODEL))
-            .as("Model has been set")
-            .isNotNull();
+        assertThat(context.get(DL4JSequenceRecommender.KEY_MODEL)).as("Model has been set")
+                .isNotNull();
     }
 
+    @Ignore
     @Test
     public void thatNerPredictionWorks() throws Exception
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas jCas = loadNerDevelopmentData();
+        JCas jCas = loadNerDevelopmentData("thatNerPredictionWorks");
         CAS cas = jCas.getCas();
 
         sut.train(context, asList(cas));
@@ -347,26 +359,26 @@ public class DL4JSequenceRecommenderTest
         sut.predict(context, cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
-        assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
-        
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
+
         // check how many labels are not padding labels
         long numWithLabel = predictions.stream()
                 .filter(p -> !p.getValue().equals(DL4JSequenceRecommender.NO_LABEL)).count();
         System.out.printf("Predicted %d labels not no_label out of %d.%n", numWithLabel,
                 predictions.size());
-        
+
         assertThat(predictions).as("There are predictions other than *No_Label*")
-            .anyMatch(l -> !l.getValue().equals(DL4JSequenceRecommender.NO_LABEL));
+                .anyMatch(l -> !l.getValue().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
+    @Ignore
     @Test
     public void thatNerEvaluationWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas cas = loadNerDevelopmentData();
+        JCas cas = loadNerDevelopmentData("thatNerEvaluationWorks");
 
         EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
@@ -379,7 +391,7 @@ public class DL4JSequenceRecommenderTest
         System.out.printf("NER Accuracy: %f%n", accuracy);
         System.out.printf("NER Precision: %f%n", precision);
         System.out.printf("NER Recall: %f%n", recall);
-        
+
         // FIXME is always zero
         assertThat(fscore).isBetween(0.0, 1.0);
         assertThat(precision).isBetween(0.0, 1.0);
@@ -387,18 +399,19 @@ public class DL4JSequenceRecommenderTest
         assertThat(accuracy).isBetween(0.0, 1.0);
     }
 
+    @Ignore
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 50, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas cas = loadNerDevelopmentData();
+        JCas cas = loadNerDevelopmentData("thatIncrementalNerEvaluationWorks");
 
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
-            
+
             double score = sut.evaluate(asList(cas.getCas()), splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
@@ -409,34 +422,39 @@ public class DL4JSequenceRecommenderTest
         }
     }
 
-    private JCas loadPosDevelopmentData() throws IOException, UIMAException
+    private JCas loadPosDevelopmentData(String aTestId) throws IOException, UIMAException
     {
-        Dataset ds = loader.load("conll2000-en");
-        
+        Dataset ds = loader.load("conll2000-en", CONTINUE);
+
         CollectionReader reader = createReader(Conll2000Reader.class,
-                Conll2000Reader.PARAM_PATTERNS, ds.getDefaultSplit().getTestFiles(), 
+                Conll2000Reader.PARAM_PATTERNS, ds.getDefaultSplit().getTestFiles(),
                 Conll2000Reader.PARAM_LANGUAGE, ds.getLanguage());
-        
-        JCas cas = JCasFactory.createJCas();
-        reader.getNext(cas.getCas());
-        return cas;
+
+        JCas jcas = JCasFactory.createJCas();
+        CAS cas = jcas.getCas();
+        reader.getNext(cas);
+        casSession.add(aTestId, CasAccessMode.EXCLUSIVE_WRITE_ACCESS, cas);
+        return jcas;
     }
 
-    private JCas loadNerDevelopmentData() throws IOException, UIMAException
+    private JCas loadNerDevelopmentData(String aTestId) throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de");
-        
-        CollectionReader reader = createReader(Conll2002Reader.class,
-            Conll2002Reader.PARAM_PATTERNS, ds.getDefaultSplit().getDevelopmentFiles(), 
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
-            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
-            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, 
-            Conll2002Reader.PARAM_HAS_HEADER, true, 
-            Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
-        
-        JCas cas = JCasFactory.createJCas();
-        reader.getNext(cas.getCas());
-        return cas;
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
+
+        CollectionReader reader = createReader( //
+                Conll2002Reader.class, //
+                Conll2002Reader.PARAM_PATTERNS, ds.getDefaultSplit().getDevelopmentFiles(), //
+                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
+                Conll2002Reader.PARAM_COLUMN_SEPARATOR, ColumnSeparators.TAB.getName(),
+                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
+                Conll2002Reader.PARAM_HAS_HEADER, true, //
+                Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+
+        JCas jcas = JCasFactory.createJCas();
+        CAS cas = jcas.getCas();
+        reader.getNext(cas);
+        casSession.add(aTestId, CasAccessMode.EXCLUSIVE_WRITE_ACCESS, cas);
+        return jcas;
     }
 
     private static Recommender buildPosRecommender()
@@ -446,14 +464,14 @@ public class DL4JSequenceRecommenderTest
 
         AnnotationFeature feature = new AnnotationFeature();
         feature.setName("PosValue");
-        
+
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);
 
         return recommender;
     }
-    
+
     private static Recommender buildNerRecommender()
     {
         AnnotationLayer layer = new AnnotationLayer();

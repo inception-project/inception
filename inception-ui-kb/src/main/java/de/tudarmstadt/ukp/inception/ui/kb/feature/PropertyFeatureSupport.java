@@ -33,7 +33,6 @@ import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -48,24 +47,28 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.ui.kb.config.FactLinkingAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link FactLinkingAutoConfiguration#propertyFeatureSupport}.
+ * </p>
+ */
 public class PropertyFeatureSupport
     implements FeatureSupport<Void>
 {
     public static final String PREDICATE_KEY = "KB: Property";
     public static final String PREFIX = "kb-property:";
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureSupport.class);
 
     private final KnowledgeBaseService kbService;
-    
-    private LoadingCache<Key, String> labelCache = Caffeine.newBuilder()
-        .maximumSize(10_000)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
-        .refreshAfterWrite(1, TimeUnit.MINUTES)
-        .build(key -> loadLabelValue(key));
-    
+
+    private LoadingCache<Key, String> labelCache = Caffeine.newBuilder().maximumSize(10_000)
+            .expireAfterWrite(1, TimeUnit.MINUTES).refreshAfterWrite(1, TimeUnit.MINUTES)
+            .build(key -> loadLabelValue(key));
+
     private String featureSupportId;
 
     @Autowired
@@ -73,7 +76,7 @@ public class PropertyFeatureSupport
     {
         kbService = aKbService;
     }
-    
+
     @Override
     public String getId()
     {
@@ -155,7 +158,7 @@ public class PropertyFeatureSupport
             String identifier = (String) aValue;
             return new KBProperty(identifier, renderFeatureValue(aFeature, identifier));
         }
-        else if (aValue == null ) {
+        else if (aValue == null) {
             return null;
         }
         else {
@@ -163,7 +166,7 @@ public class PropertyFeatureSupport
                     "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
         }
     }
-    
+
     @Override
     public FeatureEditor createEditor(String aId, MarkupContainer aOwner,
             AnnotationActionHandler aHandler, IModel<AnnotatorState> aStateModel,
@@ -176,7 +179,7 @@ public class PropertyFeatureSupport
         case NONE:
             if (featureState.feature.getType().startsWith(PREFIX)) {
                 editor = new PropertyFeatureEditor(aId, aOwner, aHandler, aStateModel,
-                    aFeatureStateModel);
+                        aFeatureStateModel);
             }
             else {
                 throw unsupportedMultiValueModeException(featureState.feature);
@@ -192,7 +195,7 @@ public class PropertyFeatureSupport
 
     @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
-        AnnotationFeature aFeature)
+            AnnotationFeature aFeature)
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
@@ -201,24 +204,24 @@ public class PropertyFeatureSupport
     {
         private final AnnotationFeature feature;
         private final String label;
-        
+
         public Key(AnnotationFeature aFeature, String aLabel)
         {
             super();
             feature = aFeature;
             label = aLabel;
         }
-        
+
         public String getLabel()
         {
             return label;
         }
-        
+
         public AnnotationFeature getAnnotationFeature()
         {
             return feature;
         }
-        
+
         @Override
         public boolean equals(final Object other)
         {
@@ -237,4 +240,3 @@ public class PropertyFeatureSupport
         }
     }
 }
-

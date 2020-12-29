@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -34,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.log.exporter.LoggedEventExporter;
 
 /**
  * <p>
@@ -46,26 +46,25 @@ public class DocumentRepositoryExporter
     implements ProjectExporter
 {
     private static final String KEY = "external_search";
-    private static final Logger LOG = LoggerFactory.getLogger(LoggedEventExporter.class);
-    
+    private static final Logger LOG = LoggerFactory.getLogger(DocumentRepositoryExporter.class);
+
     private final ExternalSearchService externalSearchService;
-    
+
     @Autowired
     public DocumentRepositoryExporter(ExternalSearchService aExternalSearchService)
     {
         externalSearchService = aExternalSearchService;
     }
-    
+
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aFile)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aFile)
     {
         Project project = aRequest.getProject();
         List<ExportedDocumentRepository> exportedDocumentRepositories = new ArrayList<>();
-        for (DocumentRepository documentRepository:
-                externalSearchService.listDocumentRepositories(project))
-        {
-            ExportedDocumentRepository exportedDocumentRepository =
-                    new ExportedDocumentRepository();
+        for (DocumentRepository documentRepository : externalSearchService
+                .listDocumentRepositories(project)) {
+            ExportedDocumentRepository exportedDocumentRepository = new ExportedDocumentRepository();
             exportedDocumentRepository.setId(documentRepository.getId());
             exportedDocumentRepository.setName(documentRepository.getName());
             exportedDocumentRepository.setProperties(documentRepository.getProperties());
@@ -76,14 +75,14 @@ public class DocumentRepositoryExporter
         int n = exportedDocumentRepositories.size();
         LOG.info("Exported [{}] document repositories for project [{}]", n, project.getName());
     }
-    
+
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
             ExportedProject aExProject, ZipFile aZip)
     {
-        ExportedDocumentRepository[] exportedDocumentRepositories = aExProject
-                .getArrayProperty(KEY, ExportedDocumentRepository.class);
-    
+        ExportedDocumentRepository[] exportedDocumentRepositories = aExProject.getArrayProperty(KEY,
+                ExportedDocumentRepository.class);
+
         for (ExportedDocumentRepository exportedDocumentRepository : exportedDocumentRepositories) {
             DocumentRepository documentRepository = new DocumentRepository();
             documentRepository.setName(exportedDocumentRepository.getName());
@@ -92,7 +91,7 @@ public class DocumentRepositoryExporter
             documentRepository.setProject(aProject);
             externalSearchService.createOrUpdateDocumentRepository(documentRepository);
         }
-    
+
         int n = exportedDocumentRepositories.length;
         LOG.info("Imported [{}] document repositories for project [{}]", n, aProject.getName());
     }

@@ -27,19 +27,20 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.plugin.api.ExportedComponent;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
 // tag::classDefinition[]
+@ExportedComponent
 @Component
 public class DataMajorityRecommenderFactory
     extends RecommendationEngineFactoryImplBase<Void>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID =
-        "de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender";
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender";
 
     @Override
     public String getId()

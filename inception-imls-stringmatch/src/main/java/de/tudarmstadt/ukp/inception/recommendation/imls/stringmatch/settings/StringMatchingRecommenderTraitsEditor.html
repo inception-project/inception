@@ -17,43 +17,39 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:panel>
-    <div class="col-sm-12 form-horizontal">
-      <wicket:remove>
-        <!-- 
-          NOTE: The enclosure needs to be defined on the upload field. Defining it on the
-          gazeteers field does not work properly. I.e. when uploading a file or when removing
-          a gazeteer, the upload field/and are not re-rendered.
-         -->
-      </wicket:remove>
-      <div class="form-group" wicket:enclosure="upload">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="gazeteers"/>
-        </label>
-        <div class="col-sm-9 flex-v-container flex-gutter flex-only-internal-gutter">
-          <div class="flex-h-container">
-            <input type="file" wicket:id="upload" multiple="multiple"/>
-          </div>
-          
-          <div class="flex-h-container">
-            <div wicket:id="gazeteers" class="flex-content list-group">
-              <!-- <div wicket:id="gazeteers" class="flex-content list-group"> -->
-              <div wicket:id="gazeteer" class="input-group">
-                <span wicket:id="name" class="form-control"/>
-                <span class="input-group-btn">
-                  <button wicket:id="download" type="button" class="btn btn-default">
-                    <i class="fa fa-download" aria-hidden="true"></i>
-                  </button>
-                  <button wicket:id="delete" type="button" class="btn btn-danger">
-                    <i class="fa fa-trash" aria-hidden="true"></i>
-                  </button>
-                </span>
-              </div>
+  <wicket:extend>
+    <wicket:remove>
+      <!-- 
+        NOTE: The enclosure needs to be defined on the upload field. Defining it on the
+        gazeteers field does not work properly. I.e. when uploading a file or when removing
+        a gazeteer, the upload field/and are not re-rendered.
+       -->
+    </wicket:remove>
+    <div class="form-group form-row" wicket:enclosure="upload">
+      <label class="col-sm-3 col-form-label">
+        <wicket:message key="gazeteers"/>
+      </label>
+      <div class="col-sm-9">
+        <input type="file" wicket:id="upload" class="form-control" multiple="multiple"/>
+
+        <div class="flex-h-container pt-2">
+          <div wicket:id="gazeteers" class="flex-content list-group">
+            <!-- <div wicket:id="gazeteers" class="flex-content list-group"> -->
+            <div wicket:id="gazeteer" class="input-group">
+              <span wicket:id="name" class="form-control"/>
+              <span class="input-group-append">
+                <button wicket:id="download" type="button" class="btn btn-secondary">
+                  <i class="fas fa-download"></i>
+                </button>
+                <button wicket:id="delete" type="button" class="btn btn-danger">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </span>
             </div>
           </div>
         </div>
       </div>
     </div>  
-  </wicket:panel>
+  </wicket:extend>
 </body>
 </html>

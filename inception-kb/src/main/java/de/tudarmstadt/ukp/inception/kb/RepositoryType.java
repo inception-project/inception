@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-public enum RepositoryType {
+public enum RepositoryType
+{
     LOCAL, REMOTE;
 }

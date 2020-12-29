@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.isReachable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
@@ -33,33 +34,40 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 @RunWith(Parameterized.class)
-@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
 public class KnowledgeBaseServiceRemoteTest
@@ -67,7 +75,7 @@ public class KnowledgeBaseServiceRemoteTest
     private final String PROJECT_NAME = "Test project";
 
     private static Map<String, KnowledgeBaseProfile> PROFILES;
-    
+
     private final TestConfiguration sutConfig;
 
     private KnowledgeBaseServiceImpl sut;
@@ -111,9 +119,10 @@ public class KnowledgeBaseServiceRemoteTest
 
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
+        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = testFixtures.createProject(PROJECT_NAME);
         kb.setProject(project);
         if (kb.getType() == RepositoryType.LOCAL) {
@@ -122,7 +131,7 @@ public class KnowledgeBaseServiceRemoteTest
             importKnowledgeBase(sutConfig.getDataUrl());
         }
         else if (kb.getType() == RepositoryType.REMOTE) {
-            testFixtures.assumeEndpointIsAvailable(sutConfig.getDataUrl(), 5000);
+            testFixtures.assumeEndpointIsAvailable(sutConfig.getDataUrl());
             sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sutConfig.getDataUrl()));
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
         }
@@ -142,6 +151,10 @@ public class KnowledgeBaseServiceRemoteTest
     public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig) throws Exception
     {
         sutConfig = aConfig;
+
+        Assume.assumeTrue("Remote repository at [" + aConfig.getDataUrl() + "] is not reachable",
+                aConfig.getKnowledgeBase().getType() != RepositoryType.REMOTE
+                        || isReachable(aConfig.getDataUrl()));
     }
 
     @Parameterized.Parameters(name = "KB = {0}")
@@ -174,36 +187,35 @@ public class KnowledgeBaseServiceRemoteTest
                     rootConcepts, parentChildConcepts));
         }
 
-
-//        {
-//            ValueFactory vf = SimpleValueFactory.getInstance();
-//            KnowledgeBase kb_hucit = new KnowledgeBase();
-//            kb_hucit.setName("Hucit");
-//            kb_hucit.setType(profile.getType());
-//            kb_hucit.setReification(Reification.NONE);
-//            kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
-//            kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
-//            kb_hucit.setSubclassIri(
-//                    vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
-//            kb_hucit.setTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
-//            kb_hucit.setDescriptionIri(
-//                    vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
-//            kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
-//            kb_hucit.setPropertyTypeIri(
-//                    vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
-//            kb_hucit.setPropertyLabelIri(RDFS.LABEL);
-//            kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
-//            kb_hucit.setDefaultLanguage("en");
-//            kb_hucit.setMaxResults(maxResults);
-//            rootConcepts = new HashSet<String>();
-//            rootConcepts.add("http://www.w3.org/2000/01/rdf-schema#Class");
-//            parentChildConcepts = new HashMap<String, String>();
-//            parentChildConcepts.put("http://www.w3.org/2000/01/rdf-schema#Class",
-//                    "http://www.w3.org/2002/07/owl#Class");
-//            kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit,
-//                    // person -> Achilles :: urn:cts:cwkb:1137
-//                    "http://purl.org/hucit/kb/authors/1137", rootConcepts, parentChildConcepts));
-//        }
+        // {
+        // ValueFactory vf = SimpleValueFactory.getInstance();
+        // KnowledgeBase kb_hucit = new KnowledgeBase();
+        // kb_hucit.setName("Hucit");
+        // kb_hucit.setType(profile.getType());
+        // kb_hucit.setReification(Reification.NONE);
+        // kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
+        // kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
+        // kb_hucit.setSubclassIri(
+        // vf.createIRI("http://www.w3.org/2000/01/rdf-schema#subClassOf"));
+        // kb_hucit.setTypeIri(vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
+        // kb_hucit.setDescriptionIri(
+        // vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
+        // kb_hucit.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
+        // kb_hucit.setPropertyTypeIri(
+        // vf.createIRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"));
+        // kb_hucit.setPropertyLabelIri(RDFS.LABEL);
+        // kb_hucit.setPropertyDescriptionIri(RDFS.COMMENT);
+        // kb_hucit.setDefaultLanguage("en");
+        // kb_hucit.setMaxResults(maxResults);
+        // rootConcepts = new HashSet<String>();
+        // rootConcepts.add("http://www.w3.org/2000/01/rdf-schema#Class");
+        // parentChildConcepts = new HashMap<String, String>();
+        // parentChildConcepts.put("http://www.w3.org/2000/01/rdf-schema#Class",
+        // "http://www.w3.org/2002/07/owl#Class");
+        // kbList.add(new TestConfiguration("http://nlp.dainst.org:8888/sparql", kb_hucit,
+        // // person -> Achilles :: urn:cts:cwkb:1137
+        // "http://purl.org/hucit/kb/authors/1137", rootConcepts, parentChildConcepts));
+        // }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("wikidata");
@@ -272,13 +284,13 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setDefaultLanguage(profile.getDefaultLanguage());
             kb_yago.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
-            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+            rootConcepts.add("http://schema.org/Thing");
             parentChildConcepts = new HashMap<String, String>();
-            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+            parentChildConcepts.put("http://schema.org/Thing",
                     "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
-                    "http://yago-knowledge.org/resource/wikicat_Alkaloids",
-                    rootConcepts, parentChildConcepts));
+                    "http://yago-knowledge.org/resource/Elvis_Presley", rootConcepts,
+                    parentChildConcepts));
         }
 
         {
@@ -295,10 +307,10 @@ public class KnowledgeBaseServiceRemoteTest
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://zbw.eu/stw/thsys/a");
             parentChildConcepts = new HashMap<String, String>();
-            parentChildConcepts.put("http://zbw.eu/stw/thsys/a",
-                    "http://zbw.eu/stw/thsys/70582");
-            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(),
-                    kb_zbw_stw_economics, "http://zbw.eu/stw/thsys/71020", rootConcepts, parentChildConcepts));
+            parentChildConcepts.put("http://zbw.eu/stw/thsys/a", "http://zbw.eu/stw/thsys/70582");
+            kbList.add(
+                    new TestConfiguration(profile.getAccess().getAccessUrl(), kb_zbw_stw_economics,
+                            "http://zbw.eu/stw/thsys/71020", rootConcepts, parentChildConcepts));
         }
 
         // Commenting this out for the moment becuase we expect that every ontology contains
@@ -337,11 +349,11 @@ public class KnowledgeBaseServiceRemoteTest
         assertThat(rootConceptKBHandle).as("Check that root concept list is not empty")
                 .isNotEmpty();
         for (String expectedRoot : sutConfig.getRootIdentifier()) {
-            assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier)).as("Check that root concept is retreived")
-            .contains(expectedRoot);
+            assertThat(rootConceptKBHandle.stream().map(KBHandle::getIdentifier))
+                    .as("Check that root concept is retreived").contains(expectedRoot);
         }
     }
-    
+
     @Test
     public void thatPropertyListCanBeRetrieved()
     {
@@ -375,7 +387,7 @@ public class KnowledgeBaseServiceRemoteTest
 
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
-    
+
     // Helper
 
     private void importKnowledgeBase(String resourceName) throws Exception
@@ -404,10 +416,10 @@ public class KnowledgeBaseServiceRemoteTest
         private final KnowledgeBase kb;
         private final String testIdentifier;
         private final Set<String> rootIdentifier;
-        private final Map<String,String> parentChildIdentifier;
+        private final Map<String, String> parentChildIdentifier;
 
         public TestConfiguration(String aUrl, KnowledgeBase aKb, String atestIdentifier,
-                Set<String> aRootIdentifier, Map<String,String> aParentChildIdentifier)
+                Set<String> aRootIdentifier, Map<String, String> aParentChildIdentifier)
         {
             super();
             url = aUrl;
@@ -437,7 +449,7 @@ public class KnowledgeBaseServiceRemoteTest
             return rootIdentifier;
         }
 
-        public Map<String,String> getParentChildIdentifier()
+        public Map<String, String> getParentChildIdentifier()
         {
             return parentChildIdentifier;
         }
@@ -447,5 +459,14 @@ public class KnowledgeBaseServiceRemoteTest
         {
             return kb.getName();
         }
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    public static class SpringConfig
+    {
+        // No content
     }
 }

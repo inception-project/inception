@@ -20,50 +20,48 @@
 <wicket:panel>
   <div wicket:id="confirmationDialog"></div>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div wicket:id="mainContainer" class="panel panel-default panel-flex flex-content">
-      <div class="panel-heading">
-        <h3 class="panel-title"><wicket:message key="activeLearning"/></h3>
+    <div wicket:id="mainContainer" class="card flex-content">
+      <div class="card-header">
+        <wicket:message key="activeLearning"/>
       </div>
-      <div class="panel-body flex-v-container">
-        <span class="col-sm-12" wicket:id="noRecommenders">no Recommenders</span>
-        <form class="panel panel-default panel-small" wicket:id="sessionControlForm">
-          <div class="panel-heading">
-            <h3 class="panel-title"><wicket:message key="session"/></h3>
-          </div>
-          <div class="panel-body">
-            <div class="form-group form-horizontal">
-              <div class="input-group">
-                <select class="form-control flex-content" wicket:id="selectLayer" data-container="body"></select>
-                <span class="input-group-btn">
-                  <a wicket:id="startSession" class="btn btn-default">
-                    <i class="fa fa-play" aria-hidden="true"></i>
-                  </a>
-                  <a wicket:id="stopSession" class="btn btn-default">
-                    <i class="fa fa-stop" aria-hidden="true"></i>
-                  </a>
-                </span>
-              </div>
-            </div>
+      <div class="card-body flex-v-container">
+      
+        <span class="flex-content no-data-notice" wicket:id="noRecommenders">no Recommenders</span>
+        
+        <form wicket:id="sessionControlForm">
+          <div class="input-group">
+            <select class="form-control flex-content" wicket:id="selectLayer" data-container="body"></select>
+            <span class="input-group-append">
+              <a wicket:id="startSession" class="btn btn-primary">
+                <i class="fa fa-play" aria-hidden="true"></i>
+              </a>
+              <a wicket:id="stopSession" class="btn btn-secondary">
+                <i class="fa fa-stop" aria-hidden="true"></i>
+              </a>
+            </span>
           </div>
         </form>
 
-        <div class="panel panel-default panel-small" wicket:enclosure="noRecommendationLabel">
-          <span class="col-sm-12" wicket:id="noRecommendationLabel">no Recommendation</span>
+        <div class="card" wicket:enclosure="noRecommendationLabel">
+          <div class="card-body">
+            <span class="no-data-notice" wicket:id="noRecommendationLabel"></span>
+          </div>
         </div>
 
-        <form class="panel panel-default panel-small" wicket:id="learnFromSkippedRecommendationForm">
+        <form class="card" wicket:id="learnFromSkippedRecommendationForm">
           <span class="col-sm-12" wicket:id="onlySkippedRecommendationLabel">learnSkippedOnes</span>
-          <div class="panel-footer text-right">
+          <div class="card-footer text-right">
             <input type="submit" class="btn btn-success" wicket:id="learnSkippedOnes" value="Yes"/>
           </div>
         </form>
-        <form class="panel panel-default panel-small" wicket:id="recommendationForm">
-          <div class="panel-heading">
-            <h3 class="panel-title"><wicket:message key="recommendation"/></h3>
+        
+        <form class="card" wicket:id="recommendationForm">
+          <div class="card-header small">
+            <wicket:message key="recommendation"/>
           </div>
-          <div class="panel-body form-horizontal">
-            <div class="form-group">
-              <label class="col-sm-3 control-label"><wicket:message key="text"/></label>
+          <div class="card-body">
+            <div class="form-group form-row">
+              <label class="col-sm-3 col-form-label"><wicket:message key="text"/></label>
               <div class="col-sm-9" style="position: relative; height: 5em;">
                 <div class="form-control"
                   style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 10px; right: 10px;"
@@ -76,14 +74,14 @@
                 </div>
               </div>
             </div>
-            <div class="form-group">
-              <label class="col-sm-3 control-label"><wicket:message key="suggestion"/></label>
+            <div class="form-group form-row">
+              <label class="col-sm-3 col-form-label"><wicket:message key="suggestion"/></label>
               <div class="col-sm-9">
                 <span class="form-control" wicket:id="recommendedPredition"></span>
               </div>
             </div>
-            <div class="form-group">
-              <label class="col-sm-3 control-label"><wicket:message key="score"/></label>
+            <div class="form-group form-row">
+              <label class="col-sm-3 col-form-label"><wicket:message key="score"/></label>
               <div class="col-sm-9">
                 <span class="form-control"> 
                   <wicket:container wicket:id="recommendedConfidence"/>
@@ -94,37 +92,33 @@
             </div>
             <div wicket:id="editor"></div>
           </div>
-          <div class="panel-footer text-right">
+          <div class="card-footer text-right">
             <input type="submit" class="btn btn-success" wicket:id="annotateButton" value="Annotate"/>
             <input type="button" class="btn btn-danger" wicket:id="rejectButton" value="Reject"/>
             <input type="button" class="btn btn-warning" wicket:id="skipButton" value="Skip"/>
           </div>
         </form>
 
-        <form class="panel panel-default panel-flex panel-small flex-content"
+        <form class="card flex-content"
           wicket:id="learningHistoryForm">
-          <div class="panel-heading">
-            <h3 class="panel-title"><wicket:message key="history"/></h3>
+          <div class="card-header small">
+            <wicket:message key="history"/>
           </div>
-          <div class="scrolling panel-body">
-            <table class="table table-condensed col-sm-12">
-              <wicket:container wicket:id="historyListview">
-                <tr style="font-size: 90%;">
-                  <td style="width: 100%; padding-bottom: 0px;">
-                    <a wicket:id="removeRecord" class="btn-xs btn-danger pull-right" style="white-space:nowrap;">
-                      <i class="fa fa-trash" aria-hidden="true"></i>
-                    </a>
-                    <a wicket:id="jumpToAnnotation"></a>
-                  </td>
-                </tr>
-                <tr style="font-size: 70%; padding: 0px;">
-                  <td style="border:none;">
-                    <span wicket:id="userAction" class="pull-right"></span>
-                    <span wicket:id="recommendedAnnotation"></span>
-                  </td>
-                </tr>
-              </wicket:container>
-            </table>
+          <div class="scrolling card-body p-0">
+            <div class="list-group-flush">
+              <div wicket:id="historyListview" class="list-group-item px-2 py-1">
+                <div class="clearfix">
+                  <a wicket:id="removeRecord" class="btn-sm btn-outline-danger float-right" style="white-space:nowrap;">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                  </a>
+                  <a wicket:id="jumpToAnnotation"></a>
+                </div>
+                <div class="small">
+                  <span wicket:id="userAction" class="badge badge-secondary float-right"></span>
+                  <span wicket:id="recommendedAnnotation"></span>
+                </div>
+              </div>
+            </div>
           </div>
         </form>
       </div>

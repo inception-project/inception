@@ -23,8 +23,8 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
 
 /**
- * Intermediate representation / wrapper for VSpan, Span and Offset.
- * Used for converting representations of INCEpTION and PDFAnno
+ * Intermediate representation / wrapper for VSpan, Span and Offset. Used for converting
+ * representations of INCEpTION and PDFAnno
  */
 public class RenderSpan
 {

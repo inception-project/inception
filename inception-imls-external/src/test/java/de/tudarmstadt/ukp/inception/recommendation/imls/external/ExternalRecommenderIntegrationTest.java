@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.InceptionAssertions.assertThat;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
@@ -26,8 +27,11 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assumptions.assumeThat;
+import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,12 +48,14 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.io.conll.Conll2002Reader.ColumnSeparators;
 import org.dkpro.core.testing.DkproTestContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -65,7 +71,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 public class ExternalRecommenderIntegrationTest
 {
-    private static String TYPE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
+    private static final String TYPE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
     private static File cache = DkproTestContext.getCacheFolder();
     private static DatasetFactory loader = new DatasetFactory(cache);
 
@@ -81,10 +87,12 @@ public class ExternalRecommenderIntegrationTest
     private RemoteStringMatchingNerRecommender remoteRecommender;
     private MockWebServer server;
     private List<String> requestBodies;
+    private CasStorageSession casStorageSession;
 
     @Before
     public void setUp() throws Exception
     {
+        casStorageSession = CasStorageSession.open();
         recommender = buildRecommender();
         context = new RecommenderContext();
 
@@ -106,15 +114,16 @@ public class ExternalRecommenderIntegrationTest
     @After
     public void tearDown() throws Exception
     {
+        casStorageSession.close();
         server.shutdown();
     }
 
     @Test
-    public void thatTrainingWorks()
+    public void thatTrainingWorks() throws Exception
     {
-        assertThatCode(() ->
-            sut.train(context, loadDevelopmentData())
-        ).doesNotThrowAnyException();
+        List<CAS> data = loadDevelopmentData();
+
+        assertThatCode(() -> sut.train(context, data)).doesNotThrowAnyException();
     }
 
     @Test
@@ -129,13 +138,13 @@ public class ExternalRecommenderIntegrationTest
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).as("Predictions are not empty")
-                .isNotEmpty();
+        assertThat(predictions).as("Predictions are not empty").isNotEmpty();
 
-        assertThat(cas).as("Predictions are correct")
-            .containsNamedEntity("Ecce homo", "OTH")
-            .containsNamedEntity("The Lindsey School Lindsey School & Community Arts College", "ORG")
-            .containsNamedEntity("Lido delle Nazioni", "LOC");
+        assertThat(cas).as("Predictions are correct") //
+                .containsNamedEntity("Ecce homo", "OTH") //
+                .containsNamedEntity("The Lindsey School Lindsey School & Community Arts College",
+                        "ORG") //
+                .containsNamedEntity("Lido delle Nazioni", "LOC");
     }
 
     @Test
@@ -146,19 +155,18 @@ public class ExternalRecommenderIntegrationTest
 
         TrainingRequest request = fromJsonString(TrainingRequest.class, requestBodies.get(0));
 
-        assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
-            .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
-            .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
-            .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
-            .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
-            .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
-
+        assertThat(request.getMetadata()) //
+                .hasNoNullFieldsOrProperties() //
+                .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
+                .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
+                .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
+                .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
+                .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
 
         for (int i = 0; i < request.getDocuments().size(); i++) {
             Document doc = request.getDocuments().get(i);
-            assertThat(doc)
-                .hasFieldOrPropertyWithValue("documentId", (long) i)
-                .hasFieldOrPropertyWithValue("userId", USER_NAME);
+            assertThat(doc).hasFieldOrPropertyWithValue("documentId", (long) i)
+                    .hasFieldOrPropertyWithValue("userId", USER_NAME);
         }
     }
 
@@ -173,38 +181,47 @@ public class ExternalRecommenderIntegrationTest
 
         PredictionRequest request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
 
-        assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
-            .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
-            .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
-            .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
-            .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
-            .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
-        assertThat(request.getDocument())
-            .hasFieldOrPropertyWithValue("userId", USER_NAME)
-            .hasFieldOrPropertyWithValue("documentId", 0L);
+        assertThat(request.getMetadata()) //
+                .hasNoNullFieldsOrProperties() //
+                .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
+                .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
+                .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
+                .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
+                .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
+        assertThat(request.getDocument()).hasFieldOrPropertyWithValue("userId", USER_NAME)
+                .hasFieldOrPropertyWithValue("documentId", 0L);
     }
 
     private List<CAS> loadDevelopmentData() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de");
-        List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        try {
+            Dataset ds = loader.load("germeval2014-de", CONTINUE);
+            List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
 
-        for (int i = 0; i < data.size(); i++) {
-            CAS cas = data.get(i);
-            addCasMetadata(cas.getJCas(), i);
+            for (int i = 0; i < data.size(); i++) {
+                CAS cas = data.get(i);
+                addCasMetadata(cas.getJCas(), i);
+                casStorageSession.add("testDataCas" + i, EXCLUSIVE_WRITE_ACCESS, cas);
+            }
+            return data;
         }
-        return data;
+        catch (Exception e) {
+            // Workaround for https://github.com/dkpro/dkpro-core/issues/1469
+            assumeThat(e).isNotInstanceOf(FileNotFoundException.class);
+            throw e;
+        }
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2002Reader.class,
-            Conll2002Reader.PARAM_PATTERNS, files,
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(),
-            Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
-            Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true,
-            Conll2002Reader.PARAM_HAS_HEADER, true,
-            Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
+        CollectionReader reader = createReader( //
+                Conll2002Reader.class, //
+                Conll2002Reader.PARAM_PATTERNS, files, //
+                Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), //
+                Conll2002Reader.PARAM_COLUMN_SEPARATOR, ColumnSeparators.TAB.getName(), //
+                Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, //
+                Conll2002Reader.PARAM_HAS_HEADER, true, //
+                Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
@@ -228,20 +245,22 @@ public class ExternalRecommenderIntegrationTest
 
         AnnotationFeature feature = new AnnotationFeature();
         feature.setName("value");
-        
+
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);
-        
+
         return recommender;
     }
 
     private Dispatcher buildDispatcher()
     {
-        return new Dispatcher() {
+        return new Dispatcher()
+        {
             @Override
-            public MockResponse dispatch(RecordedRequest request) {
+            public MockResponse dispatch(RecordedRequest request)
+            {
                 try {
                     String body = request.getBody().readUtf8();
                     requestBodies.add(body);
@@ -249,11 +268,13 @@ public class ExternalRecommenderIntegrationTest
                     if (request.getPath().equals("/train")) {
                         remoteRecommender.train(body);
                         return new MockResponse().setResponseCode(204);
-                    } else if (request.getPath().equals("/predict")) {
+                    }
+                    else if (request.getPath().equals("/predict")) {
                         String response = remoteRecommender.predict(body);
                         return new MockResponse().setResponseCode(200).setBody(response);
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     throw new RuntimeException(e);
                 }
 

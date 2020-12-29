@@ -22,11 +22,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -35,6 +35,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -46,11 +48,12 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataDelete
 public class DocumentMetadataLayerAdapter
     extends TypeAdapter_ImplBase
 {
-    public DocumentMetadataLayerAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+    public DocumentMetadataLayerAdapter(LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures)
+            Supplier<Collection<AnnotationFeature>> aFeatures)
     {
-        super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        super(aLayerSupportRegistry, aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
     }
 
     @Override
@@ -100,34 +103,40 @@ public class DocumentMetadataLayerAdapter
         throws AnnotationException
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        
+
         AnnotationBaseFS newAnnotation = aCas.createFS(type);
         aCas.addFsToIndexes(newAnnotation);
-        
-        publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, newAnnotation));
-        
+
+        publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(),
+                newAnnotation));
+
         return newAnnotation;
     }
-    
+
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        FeatureStructure fs = selectFsByAddr(aCas, aVid.getId());
+        AnnotationBaseFS fs = (AnnotationBaseFS) selectFsByAddr(aCas, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
-        publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, fs));
+        publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         // There are no behaviors for document metadata annotations yet
         /*
-        for (SpanLayerBehavior behavior : behaviors) {
-            messages.addAll(behavior.onValidate(this, aJCas));
-        }
-        */
+         * for (SpanLayerBehavior behavior : behaviors) { messages.addAll(behavior.onValidate(this,
+         * aJCas)); }
+         */
         return messages;
+    }
+
+    @Override
+    public void select(AnnotatorState aState, AnnotationFS aAnno)
+    {
+        aState.getSelection().selectSpan(aAnno);
     }
 }

@@ -27,23 +27,17 @@ public class KBHandleTest
     public void thatUILabelExtractsGoodLabelFromIRI()
     {
         assertThat(new KBHandle("http://dummy.org/ontology#"))
-                .as("IRI has anchor symbol but nothing after it")
-                .extracting(KBHandle::getUiLabel)
+                .as("IRI has anchor symbol but nothing after it").extracting(KBHandle::getUiLabel)
                 .isEqualTo("http://dummy.org/ontology#");
-        
-        assertThat(new KBHandle("http://dummy.org/ontology"))
-                .as("IRI ends in a path segment")
-                .extracting(KBHandle::getUiLabel)
-                .isEqualTo("ontology");
 
-        assertThat(new KBHandle("http://dummy.org/ontology#someConcept"))
-                .as("IRI has named anchor")
-                .extracting(KBHandle::getUiLabel)
-                .isEqualTo("someConcept");
+        assertThat(new KBHandle("http://dummy.org/ontology")).as("IRI ends in a path segment")
+                .extracting(KBHandle::getUiLabel).isEqualTo("ontology");
+
+        assertThat(new KBHandle("http://dummy.org/ontology#someConcept")).as("IRI has named anchor")
+                .extracting(KBHandle::getUiLabel).isEqualTo("someConcept");
 
         assertThat(new KBHandle("http://dummy.org/ontology#some_Concept"))
-                .as("IRI has named anchor in snake_case")
-                .extracting(KBHandle::getUiLabel)
+                .as("IRI has named anchor in snake_case").extracting(KBHandle::getUiLabel)
                 .isEqualTo("some Concept");
     }
 }

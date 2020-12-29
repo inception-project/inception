@@ -30,7 +30,7 @@ public class LayerConfigurationChangedEventAdapter
     {
         return aEvent instanceof LayerConfigurationChangedEvent;
     }
-    
+
     @Override
     public long getProject(LayerConfigurationChangedEvent aEvent)
     {

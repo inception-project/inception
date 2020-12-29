@@ -17,13 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -43,27 +46,49 @@ public class PredictionTask
     private @Autowired RecommendationService recommendationService;
     private @Autowired DocumentService documentService;
 
-    public PredictionTask(User aUser, Project aProject, String aTrigger)
+    private final SourceDocument currentDocument;
+
+    public PredictionTask(User aUser, Project aProject, String aTrigger,
+            SourceDocument aCurrentDocument)
     {
         super(aUser, aProject, aTrigger);
+        currentDocument = aCurrentDocument;
     }
 
     @Override
     public void run()
     {
-        User user = getUser();
+        try (CasStorageSession session = CasStorageSession.open()) {
+            User user = getUser();
+            String username = user.getUsername();
 
-        Project project = getProject();
-        List<SourceDocument> docs = documentService.listSourceDocuments(project);
+            Project project = getProject();
 
-        log.info("[{}]: Starting prediction...", user.getUsername());
-        long startTime = System.currentTimeMillis();
+            List<SourceDocument> docs = documentService.listSourceDocuments(project);
+            List<SourceDocument> inherit = Collections.emptyList();
 
-        Predictions predictions = recommendationService.computePredictions(user, project, docs);
-        
-        log.debug("[{}]: Prediction complete ({} ms)", user.getUsername(),
-                (System.currentTimeMillis() - startTime));
+            // Limit prediction to a single document and inherit the rest?
+            if (!recommendationService.isPredictForAllDocuments(username, project)) {
+                inherit = docs.stream().filter(d -> !d.equals(currentDocument))
+                        .collect(Collectors.toList());
+                docs = Collections.singletonList(currentDocument);
+                log.debug("[{}][{}]: Limiting prediction to [{}]", getId(), username,
+                        currentDocument.getName());
+            }
 
-        recommendationService.putIncomingPredictions(user, project, predictions);
+            log.debug(
+                    "[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
+                    getId(), username, project, docs.size(), getTrigger());
+
+            long startTime = System.currentTimeMillis();
+
+            Predictions predictions = recommendationService.computePredictions(user, project, docs,
+                    inherit);
+
+            log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
+                    (System.currentTimeMillis() - startTime));
+
+            recommendationService.putIncomingPredictions(user, project, predictions);
+        }
     }
 }

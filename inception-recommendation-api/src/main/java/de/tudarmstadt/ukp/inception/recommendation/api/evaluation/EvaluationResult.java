@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -34,10 +35,15 @@ import java.util.stream.Collector;
  * annotated pairs except for those matching the optionally provided ignore-labels as a gold label.
  */
 public class EvaluationResult
+    implements Serializable
 {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 5842125748342833451L;
     private final int trainingSetSize;
     private final int testSetSize;
-    
+
     /**
      * Rate of this training data compared to all training data
      */
@@ -52,7 +58,6 @@ public class EvaluationResult
      */
     private ConfusionMatrix confusionMatrix;
 
-    
     public EvaluationResult()
     {
         ignoreLabels = new LinkedHashSet<>();
@@ -73,7 +78,7 @@ public class EvaluationResult
         testSetSize = aTestSetSize;
         trainingDataRatio = aTrainDataPercentage;
     }
-    
+
     public EvaluationResult(int aTrainSetSize, int aTestSetSize, double aTrainDataPercentage)
     {
         ignoreLabels = new HashSet<>();
@@ -86,7 +91,7 @@ public class EvaluationResult
     public int getNumOfLabels()
     {
         Set<String> labels = confusionMatrix.getLabels();
-        
+
         if (ignoreLabels.isEmpty()) {
             return labels.size();
         }
@@ -120,7 +125,7 @@ public class EvaluationResult
      */
     private double countIgnoreLabelsAsGold(String label)
     {
-        double ignoreLabelAsGold = 0.0; 
+        double ignoreLabelAsGold = 0.0;
         for (String ignoreLabel : ignoreLabels) {
             ignoreLabelAsGold += confusionMatrix.getEntryCount(label, ignoreLabel);
         }
@@ -135,9 +140,9 @@ public class EvaluationResult
     public double computePrecisionScore()
     {
         // precision divides tp by (tp + fp) i.e num of instances predicted as the goldlabel
-        return calcMetricAverage((goldLabel, predictedLabel) -> 
-                    ignoreLabels.contains(predictedLabel) ? 0.0 :
-                        confusionMatrix.getEntryCount(goldLabel, predictedLabel));
+        return calcMetricAverage(
+                (goldLabel, predictedLabel) -> ignoreLabels.contains(predictedLabel) ? 0.0
+                        : confusionMatrix.getEntryCount(goldLabel, predictedLabel));
     }
 
     /**
@@ -148,14 +153,16 @@ public class EvaluationResult
     public double computeRecallScore()
     {
         // recall divides tp by (tp + fn) i.e num of instances that are the goldlabel
-        return calcMetricAverage((goldLabel, predictedLabel) -> 
-                    ignoreLabels.contains(goldLabel) ? 0.0 : 
-                        confusionMatrix.getEntryCount(predictedLabel, goldLabel));
+        return calcMetricAverage(
+                (goldLabel, predictedLabel) -> ignoreLabels.contains(goldLabel) ? 0.0
+                        : confusionMatrix.getEntryCount(predictedLabel, goldLabel));
     }
 
     /**
      * Calculate the metric average for all labels for metrics which divide tp by a specific count
-     * @param countFunction the specific count of a certain label combination
+     * 
+     * @param countFunction
+     *            the specific count of a certain label combination
      * @return macro-averaged metric score
      */
     private double calcMetricAverage(ToDoubleBiFunction<String, String> countFunction)
@@ -233,7 +240,9 @@ public class EvaluationResult
     }
 
     /**
-     * Determine if evaluation was skipped.
+     * Indicates that an evaluation was not performed, either because it was not necessary (e.g.
+     * because the recommender is always active or cannot be evaluated) or because it was not
+     * possible to perform an evaluation, e.g. because there was not enough data to perform it.
      * 
      * @return true if evaluation was skipped
      */
@@ -241,7 +250,7 @@ public class EvaluationResult
     {
         return skippedEvaluation;
     }
-    
+
     public Optional<String> getErrorMsg()
     {
         return Optional.ofNullable(errorMsg);
@@ -262,13 +271,20 @@ public class EvaluationResult
         return new EvaluationResultCollector();
     }
 
+    public static EvaluationResult skipped()
+    {
+        EvaluationResult result = new EvaluationResult();
+        result.setEvaluationSkipped(true);
+        return result;
+    }
+
     public static EvaluationResultCollector collector(int aTrainSetSize, int aTestSetSize,
             double aTrainDataPercentage, String... aIgnoreLabels)
     {
         return new EvaluationResultCollector(aTrainSetSize, aTestSetSize, aTrainDataPercentage,
                 aIgnoreLabels);
     }
-    
+
     public static class EvaluationResultCollector
         implements Collector<LabelPair, ConfusionMatrix, EvaluationResult>
     {
@@ -320,8 +336,8 @@ public class EvaluationResult
         @Override
         public Function<ConfusionMatrix, EvaluationResult> finisher()
         {
-            return confMatrix -> new EvaluationResult(confMatrix, trainSize,
-                    testSize, trainDataRatio, ignoreLabels);
+            return confMatrix -> new EvaluationResult(confMatrix, trainSize, testSize,
+                    trainDataRatio, ignoreLabels);
         }
 
         @Override

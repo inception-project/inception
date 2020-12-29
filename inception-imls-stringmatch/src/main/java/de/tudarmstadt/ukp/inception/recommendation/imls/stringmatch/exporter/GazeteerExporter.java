@@ -30,9 +30,9 @@ import java.util.zip.ZipFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -40,23 +40,28 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link StringMatchingRecommenderAutoConfiguration#gazeteerExporter}.
+ * </p>
+ */
 public class GazeteerExporter
     implements ProjectExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(GazeteerExporter.class);
 
     private static final String KEY = "gazeteers";
-    
+
     private static final String GAZETEERS_FOLDER = "gazeteers";
-    
 
     private final RecommendationService recommendationService;
     private final GazeteerService gazeteerService;
-    
+
     @Autowired
     public GazeteerExporter(RecommendationService aRecommendationService,
             GazeteerService aGazeteerService)
@@ -66,16 +71,18 @@ public class GazeteerExporter
     }
 
     @Override
-    public List<Class<? extends ProjectExporter>> getImportDependencies() {
+    public List<Class<? extends ProjectExporter>> getImportDependencies()
+    {
         return asList(RecommenderExporter.class);
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ExportedProject aExProject, File aStage)
+    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            ExportedProject aExProject, File aStage)
         throws Exception
     {
         Project project = aRequest.getProject();
-        
+
         List<ExportedGazeteer> exportedGazeteers = new ArrayList<>();
         for (Recommender recommender : recommendationService.listRecommenders(project)) {
             for (Gazeteer gazeteer : gazeteerService.listGazeteers(recommender)) {
@@ -84,17 +91,17 @@ public class GazeteerExporter
                 exportedGazeteer.setName(gazeteer.getName());
                 exportedGazeteer.setRecommender(recommender.getName());
                 exportedGazeteers.add(exportedGazeteer);
-                
+
                 File targetFolder = new File(aStage, GAZETEERS_FOLDER);
                 targetFolder.mkdirs();
-                
+
                 Files.copy(gazeteerService.getGazeteerFile(gazeteer).toPath(),
                         new File(targetFolder, gazeteer.getId() + ".txt").toPath());
             }
         }
-        
+
         aExProject.setProperty(KEY, exportedGazeteers);
-        
+
         LOG.info("Exported [{}] gazeteers for project [{}]", exportedGazeteers.size(),
                 project.getName());
     }
@@ -105,23 +112,23 @@ public class GazeteerExporter
         throws Exception
     {
         ExportedGazeteer[] gazeteers = aExProject.getArrayProperty(KEY, ExportedGazeteer.class);
-        
+
         for (ExportedGazeteer exportedGazeteer : gazeteers) {
             Recommender recommender = recommendationService
                     .getRecommender(aProject, exportedGazeteer.getRecommender()).get();
-            
+
             Gazeteer gazeteer = new Gazeteer();
             gazeteer.setName(exportedGazeteer.getName());
             gazeteer.setRecommender(recommender);
             gazeteerService.createOrUpdateGazeteer(gazeteer);
-            
+
             ZipEntry entry = aZip
                     .getEntry(GAZETEERS_FOLDER + "/" + exportedGazeteer.getId() + ".txt");
             try (InputStream is = aZip.getInputStream(entry)) {
                 gazeteerService.importGazeteerFile(gazeteer, is);
             }
         }
-        
+
         LOG.info("Imported [{}] gazeteeres for project [{}]", gazeteers.length, aProject.getName());
     }
 }

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePage.PAGE_PARAM_KB_NAME;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
-import de.tudarmstadt.ukp.inception.ui.kb.less.KnowledgeBasePageLRR;
+import de.tudarmstadt.ukp.inception.ui.kb.sass.KnowledgeBasePageLRR;
 
 /**
  * Knowledge Base Page. Current UI/UX issues:
@@ -57,29 +58,32 @@ import de.tudarmstadt.ukp.inception.ui.kb.less.KnowledgeBasePageLRR;
  * selected concept instead</li>
  * </ul>
  */
-@MountPath(value = "/kb.html", alt = { "/kb/${" + PAGE_PARAM_PROJECT_ID + "}" })
+@MountPath(value = "/${" + PAGE_PARAM_PROJECT_ID + "}/kb/${" + PAGE_PARAM_KB_NAME + "}", alt = {
+        "/${" + PAGE_PARAM_PROJECT_ID + "}/kb" })
 public class KnowledgeBasePage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = -745797540252091140L;
-
     private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBasePage.class);
-    
+    public static final String PAGE_PARAM_KB_NAME = "kb";
+
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
     private @SpringBean KnowledgeBaseService kbService;
-        
-    public KnowledgeBasePage() {
+
+    public KnowledgeBasePage()
+    {
         super();
         LOG.debug("Setting up page without parameters");
         Project project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
         if (project == null) {
             abort();
         }
-        commonInit(project);
+        commonInit(project, null);
     }
 
-    public KnowledgeBasePage(PageParameters aPageParameters) {
+    public KnowledgeBasePage(PageParameters aPageParameters)
+    {
         super(aPageParameters);
 
         User user = userRepository.getCurrentUser();
@@ -91,7 +95,7 @@ public class KnowledgeBasePage
             long projectId = projectParam.toLong();
             try {
                 project = projectService.getProject(projectId);
-                
+
                 // Check access to project
                 if (!projectService.isAnnotator(project, user)) {
                     error("You have no permission to access project [" + project.getId() + "]");
@@ -103,38 +107,48 @@ public class KnowledgeBasePage
                 abort();
             }
         }
-        commonInit(project);
+
+        // If a KB id was specified in the URL, we try to get it
+        KnowledgeBase kb = null;
+        String kbName = aPageParameters.get("kb").toOptionalString();
+        if (project != null && kbName != null) {
+            kb = kbService.getKnowledgeBaseByName(project, kbName).orElse(null);
+        }
+
+        commonInit(project, kb);
     }
-    
-    private void abort() {
+
+    private void abort()
+    {
         throw new RestartResponseException(getApplication().getHomePage());
     }
-    
-    protected void commonInit(Project aProject) {
+
+    private void commonInit(Project aProject, KnowledgeBase aKb)
+    {
         IModel<Project> projectModel = new LambdaModel<>(() -> aProject);
 
-        List<KnowledgeBase> knowledgeBases = new ArrayList<KnowledgeBase>();
+        List<KnowledgeBase> knowledgeBases = new ArrayList<>();
         try {
             knowledgeBases = kbService.getEnabledKnowledgeBases(projectModel.getObject());
         }
         catch (Exception e) {
             error("Unable to fetch knowledgebases: " + e.getLocalizedMessage());
-            LOG.error("Unable to fetch knowledgebases.",e);
+            LOG.error("Unable to fetch knowledgebases.", e);
         }
-        
+
         if (knowledgeBases.isEmpty()) {
             abort();
-        }       
-        
+        }
+
         // add the main content panel
-        IModel<KnowledgeBase> kbModel = Model.of(knowledgeBases.get(0));
+        IModel<KnowledgeBase> kbModel = Model.of(aKb != null ? aKb : knowledgeBases.get(0));
         KnowledgeBasePanel panel = new KnowledgeBasePanel("content", projectModel, kbModel);
         add(panel);
-        
     }
-    
+
     @Override
-    public void renderHead(IHeaderResponse response) {
+    public void renderHead(IHeaderResponse response)
+    {
         super.renderHead(response);
         response.render(CssReferenceHeaderItem.forReference(KnowledgeBasePageLRR.get()));
     }

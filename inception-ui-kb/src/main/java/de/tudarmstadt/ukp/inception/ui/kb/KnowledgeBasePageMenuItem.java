@@ -21,7 +21,6 @@ import org.apache.wicket.Page;
 import org.apache.wicket.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -31,33 +30,49 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#knowledgeBasePageMenuItem}.
+ * </p>
+ */
 @Order(220)
-public class KnowledgeBasePageMenuItem implements MenuItem
+public class KnowledgeBasePageMenuItem
+    implements MenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired KnowledgeBaseService kbService;
-    
+    private final UserDao userRepo;
+    private final ProjectService projectService;
+    private final KnowledgeBaseService kbService;
+
+    @Autowired
+    public KnowledgeBasePageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+            KnowledgeBaseService aKbService)
+    {
+        userRepo = aUserRepo;
+        projectService = aProjectService;
+        kbService = aKbService;
+    }
+
     @Override
     public String getPath()
     {
         return "/knowledge-base";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/books.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Knowledge Base";
     }
-    
+
     @Override
     public boolean applies()
     {
@@ -65,7 +80,7 @@ public class KnowledgeBasePageMenuItem implements MenuItem
         if (sessionProject == null) {
             return false;
         }
-        
+
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
@@ -76,11 +91,11 @@ public class KnowledgeBasePageMenuItem implements MenuItem
                 && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode()))) {
             return false;
         }
-        
+
         // not visible if the current project does not have knowledge bases
         return !kbService.getKnowledgeBases(project).isEmpty();
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

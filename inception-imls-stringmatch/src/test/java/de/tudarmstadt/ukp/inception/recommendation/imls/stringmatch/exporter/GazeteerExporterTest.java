@@ -46,6 +46,7 @@ import org.mockito.Mockito;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -65,7 +66,7 @@ public class GazeteerExporterTest
     private AnnotationLayer sourceLayer;
     private AnnotationFeature sourceFeature;
     private Recommender sourceRecommender;
-    
+
     private Project targetProject;
     private AnnotationLayer targetLayer;
     private AnnotationFeature targetFeature;
@@ -91,7 +92,7 @@ public class GazeteerExporterTest
                 CAS.TYPE_NAME_STRING);
         sourceRecommender = new Recommender("rec1", sourceLayer);
         sourceRecommender.setFeature(sourceFeature);
-        
+
         targetProject = new Project();
         targetProject.setId(2l);
         targetProject.setName("Test Project");
@@ -103,9 +104,9 @@ public class GazeteerExporterTest
                 CAS.TYPE_NAME_STRING);
         targetRecommender = new Recommender("rec1", targetLayer);
         targetRecommender.setFeature(targetFeature);
-        
+
         when(gazeteerService.listGazeteers(sourceRecommender)).thenReturn(gazeteers());
-        
+
         when(gazeteerService.getGazeteerFile(Mockito.any())).thenAnswer(invocation -> {
             Gazeteer gaz = invocation.getArgument(0);
             File gazFile = temporaryFolder.newFile(gaz.getId() + ".txt");
@@ -116,7 +117,7 @@ public class GazeteerExporterTest
 
         when(recommendationService.listRecommenders(sourceProject))
                 .thenReturn(asList(sourceRecommender));
-        
+
         when(recommendationService.getRecommender(any(), any()))
                 .thenReturn(Optional.of(targetRecommender));
 
@@ -128,9 +129,10 @@ public class GazeteerExporterTest
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
-        sut.exportData(exportRequest, exportedProject, temporaryFolder.getRoot());
+        sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder.getRoot());
 
         // Import the project again
         ArgumentCaptor<Gazeteer> gazeteerCaptor = ArgumentCaptor.forClass(Gazeteer.class);
@@ -147,7 +149,7 @@ public class GazeteerExporterTest
         assertThat(gazeteerCaptor.getAllValues())
                 .usingElementComparatorIgnoringFields("id", "project")
                 .containsExactlyInAnyOrderElementsOf(gazeteers());
-        
+
         assertThat(gazeteerFileCaptor.getAllValues())
                 .usingElementComparatorIgnoringFields("id", "project")
                 .containsExactlyInAnyOrderElementsOf(gazeteers());

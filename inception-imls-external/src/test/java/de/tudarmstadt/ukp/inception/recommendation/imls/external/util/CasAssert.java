@@ -31,7 +31,7 @@ import org.assertj.core.api.ListAssert;
 public class CasAssert
     extends AbstractAssert<CasAssert, CAS>
 {
-    private static String TYPE_NE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
+    private static final String TYPE_NE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
 
     public CasAssert(CAS cas)
     {
@@ -44,8 +44,8 @@ public class CasAssert
 
         Type type = CasUtil.getType(actual, TYPE_NE);
         for (AnnotationFS annotation : CasUtil.select(actual, type)) {
-            if (annotation.getCoveredText().equals(text) &&
-                FSUtil.getFeature(annotation, "value", String.class).equals(value)) {
+            if (annotation.getCoveredText().equals(text)
+                    && FSUtil.getFeature(annotation, "value", String.class).equals(value)) {
                 return this;
             }
         }
@@ -55,7 +55,8 @@ public class CasAssert
         return this;
     }
 
-    /*
+    /* 
+    // @formatter:off
     public CasAssert containsPrediction(String text, String label)
     {
         isNotNull();
@@ -72,6 +73,7 @@ public class CasAssert
 
         return this;
     }
+    // @formatter:on
     */
 
     public ListAssert<AnnotationFS> extractNamedEntities()

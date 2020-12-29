@@ -25,9 +25,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
-
 public class TrieTest
 {
     private Trie<String> sut;
@@ -52,23 +49,23 @@ public class TrieTest
         assertThat(sut.size()).isEqualTo(keys.size());
         assertThat(sut.keys()).containsExactlyInAnyOrderElementsOf(keys);
         assertThat(sut.keyIterator()).toIterable().containsExactlyInAnyOrderElementsOf(keys);
-        
+
         for (String key : keys) {
             assertThat(sut.getNode(key)).isNotNull();
         }
-        
+
         assertThat(sut.getNode("029332")).isNull();
     }
-    
+
     @Test
     public void testThatKeySanitizerWorks()
     {
         sut = new Trie<String>(WhitespaceNormalizingSanitizer.factory());
-        
+
         sut.put("  this is\ta test  .", "exists");
-        
+
         System.out.println(sut.keys());
-        
+
         assertThat(sut.getNode("this is a test .")).isNotNull();
         assertThat(sut.getNode("  this is\ta test  .")).isNotNull();
     }

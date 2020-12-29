@@ -24,34 +24,35 @@ import org.apache.wicket.model.IModel;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
-public class IriInfoBadge extends Panel
+public class IriInfoBadge
+    extends Panel
 {
     private static final long serialVersionUID = 1L;
 
     private TooltipBehavior tip;
-    
+
     public IriInfoBadge(String aId, IModel<String> aModel)
     {
         super(aId, aModel);
-        
-        WebMarkupContainer iri = new WebMarkupContainer("iri"); 
-        
+
+        WebMarkupContainer iri = new WebMarkupContainer("iri");
+
         tip = new TooltipBehavior();
         tip.setOption("autoHide", false);
         tip.setOption("showOn", Options.asString("click"));
         iri.add(tip);
-        
+
         add(iri);
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
+
         tip.setOption("content", Options.asString(getModelObject()));
     }
-    
+
     public String getModelObject()
     {
         return (String) getDefaultModelObject();

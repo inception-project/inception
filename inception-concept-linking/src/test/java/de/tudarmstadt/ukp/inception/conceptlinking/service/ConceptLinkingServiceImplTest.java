@@ -18,6 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.ANY_OBJECT;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,30 +33,37 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
 public class ConceptLinkingServiceImplTest
 {
+    static {
+        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+        System.setProperty("spring.main.banner-mode", "off");
+    }
+
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Test knowledge base";
 
@@ -64,7 +72,7 @@ public class ConceptLinkingServiceImplTest
 
     @Autowired
     private TestEntityManager testEntityManager;
-    
+
     private KnowledgeBaseService kbService;
     private ConceptLinkingServiceImpl sut;
 
@@ -74,11 +82,12 @@ public class ConceptLinkingServiceImplTest
     public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
+        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
-        kbService = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        sut = new ConceptLinkingServiceImpl(kbService, new EntityLinkingProperties(), repoProps,
+        kbService = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
+        sut = new ConceptLinkingServiceImpl(kbService, new EntityLinkingPropertiesImpl(), repoProps,
                 emptyList());
         sut.afterPropertiesSet();
         sut.init();
@@ -92,12 +101,10 @@ public class ConceptLinkingServiceImplTest
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/pets.ttl");
 
-        List<KBHandle> handles = sut.disambiguate(kb, null,
-                ConceptFeatureValueType.ANY_OBJECT, null, "soc", 0, null);
+        List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "soc", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
-            .as("Check whether \"Socke\" has been retrieved.")
-            .contains("Socke");
+                .as("Check whether \"Socke\" has been retrieved.").contains("Socke");
     }
 
     @Test
@@ -109,19 +116,27 @@ public class ConceptLinkingServiceImplTest
         KBConcept concept = new KBConcept();
         concept.setName("manatee");
         kbService.createConcept(kb, concept);
-        List<KBHandle> handles = sut.disambiguate(kb, null,
-                ConceptFeatureValueType.ANY_OBJECT, null, "man", 0, null);
+        List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "man", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
-            .as("Check whether \"manatee\" has been retrieved.")
-            .contains("manatee");
+                .as("Check whether \"manatee\" has been retrieved.").contains("manatee");
     }
 
-    private void importKnowledgeBase(String resourceName) throws Exception {
+    private void importKnowledgeBase(String resourceName) throws Exception
+    {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
             kbService.importData(kb, fileName, is);
         }
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    public static class SpringConfig
+    {
+        // No content
     }
 }

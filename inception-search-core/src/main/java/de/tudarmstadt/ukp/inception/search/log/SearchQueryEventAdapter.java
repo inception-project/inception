@@ -21,14 +21,19 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link SearchServiceAutoConfiguration#searchQueryEventAdapter()}.
+ * </p>
+ */
 public class SearchQueryEventAdapter
     implements EventLoggingAdapter<SearchQueryEvent>
 {
@@ -51,7 +56,7 @@ public class SearchQueryEventAdapter
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getDetails(SearchQueryEvent aEvent)
     {

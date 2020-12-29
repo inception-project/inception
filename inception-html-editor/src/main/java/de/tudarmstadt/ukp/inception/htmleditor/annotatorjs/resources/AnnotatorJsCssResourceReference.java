@@ -24,8 +24,7 @@ public class AnnotatorJsCssResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final AnnotatorJsCssResourceReference INSTANCE = 
-            new AnnotatorJsCssResourceReference();
+    private static final AnnotatorJsCssResourceReference INSTANCE = new AnnotatorJsCssResourceReference();
 
     /**
      * Gets the instance of the resource reference
@@ -42,6 +41,6 @@ public class AnnotatorJsCssResourceReference
      */
     private AnnotatorJsCssResourceReference()
     {
-        super(AnnotatorJsCssResourceReference.class, "annotator.min.css");
+        super(AnnotatorJsCssResourceReference.class, "annotator.css");
     }
 }

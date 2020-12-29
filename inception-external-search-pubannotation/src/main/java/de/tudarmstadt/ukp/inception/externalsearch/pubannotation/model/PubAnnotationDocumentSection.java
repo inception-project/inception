@@ -36,16 +36,16 @@ public class PubAnnotationDocumentSection
 
     @JsonProperty("sourcedb")
     private String sourceDb;
-    
+
     @JsonProperty("sourceid")
     private String sourceId;
-    
+
     @JsonProperty("divid")
     private int divId;
-    
+
     @JsonProperty("section")
     private String section;
-    
+
     @JsonProperty("source_url")
     private String sourceUrl;
 
@@ -109,14 +109,13 @@ public class PubAnnotationDocumentSection
         sourceUrl = aSourceUrl;
     }
 
-    public static TypeReference<List<PubAnnotationDocumentSection>> JACKSON_LIST_TYPE_REF = 
+    public static final TypeReference<List<PubAnnotationDocumentSection>> JACKSON_LIST_TYPE_REF = //
             new TypeReference<List<PubAnnotationDocumentSection>>()
-    {
-    };
+            {
+            };
 
-    public static ParameterizedTypeReference<List<PubAnnotationDocumentSection>> 
-            SPRING_LIST_TYPE_REF = 
+    public static ParameterizedTypeReference<List<PubAnnotationDocumentSection>> SPRING_LIST_TYPE_REF = //
             new ParameterizedTypeReference<List<PubAnnotationDocumentSection>>()
-    {
-    };
+            {
+            };
 }

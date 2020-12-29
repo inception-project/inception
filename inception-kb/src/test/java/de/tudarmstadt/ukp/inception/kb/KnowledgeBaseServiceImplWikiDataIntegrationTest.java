@@ -32,23 +32,27 @@ import javax.persistence.EntityManager;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
@@ -59,12 +63,18 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import nl.ru.test.category.SlowTests;
 
+@Category(SlowTests.class)
 @RunWith(Parameterized.class)
-@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
-public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
+public class KnowledgeBaseServiceImplWikiDataIntegrationTest
+{
+    static {
+        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
+        System.setProperty("spring.main.banner-mode", "off");
+    }
 
     private static final String PROJECT_NAME = "Test project";
     private static final String KB_NAME = "Wikidata (official/direct mapping)";
@@ -101,24 +111,19 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
                 .collect(Collectors.toList());
     }
 
-    @BeforeClass
-    public static void setUpOnce()
-    {
-        System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
-    }
-
     @Before
     public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
+        KnowledgeBaseProperties kbProperties = new KnowledgeBasePropertiesImpl();
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        sut = new KnowledgeBaseServiceImpl(repoProps, kbProperties, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
         String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
-        testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl, 5000);
+        testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
 
     }
@@ -137,7 +142,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
                 "https://nonexistent.identifier.test", true);
         assertThat(savedConcept.isPresent()).as("Check that no concept was read").isFalse();
     }
-    
+
     @Test
     public void readConcept_WithExistentConcept_ShouldReturnResult()
     {
@@ -146,7 +151,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         assertThat(concept.get().getName()).as("Check that concept has the same UI label")
                 .isIn("12 Hours of Reims");
     }
-    
+
     @Test
     public void listChildConcept_WithExistentConcept_ShouldReturnResult()
     {
@@ -157,31 +162,28 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
                 .as("Check that concept has the same UI label")
                 .isIn("12-Stunden-Rennen von Reims 1965", "1965 12 Hours of Reims");
     }
-    
+
     @Test
     public void listRootConcepts()
     {
         Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
                 .map(KBHandle::getIdentifier);
         String expectedInstances = "http://www.wikidata.org/entity/Q35120";
-        
-        assertThat(rootConcepts)
-            .as("Check that root concepts have been found")
-            .contains(expectedInstances);
+
+        assertThat(rootConcepts).as("Check that root concepts have been found")
+                .contains(expectedInstances);
     }
 
-    
     @Test
-    public void listProperties() {
-        Stream<String> properties = sut.listProperties(kb, true)
-            .stream()
-            .map(KBObject::getIdentifier);
-        
-        assertThat(properties)
-            .as("Check that properties have been found")
-            .hasSize(kb.getMaxResults());
+    public void listProperties()
+    {
+        Stream<String> properties = sut.listProperties(kb, true).stream()
+                .map(KBObject::getIdentifier);
+
+        assertThat(properties).as("Check that properties have been found")
+                .hasSize(kb.getMaxResults());
     }
-    
+
     @Test
     public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult()
     {
@@ -202,41 +204,35 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         String[] expectedInstances = { "http://www.wikidata.org/entity/Q22663448",
                 "http://www.wikidata.org/entity/Q22663448",
                 "http://www.wikidata.org/entity/Q30059050" };
-        assertThat(instances).as("Check that instances have been found").hasSize(17)
+        assertThat(instances).as("Check that instances have been found")
                 .contains(expectedInstances);
 
     }
-    
+
     @Test
-    public void listStatements() {
+    public void listStatements()
+    {
         KBHandle handle = new KBHandle("http://www.wikidata.org/entity/Q50556889");
 
         Stream<String> properties = sut.listStatements(kb, handle, true).stream()
-                .map(KBStatement::getProperty)
-                .map(KBProperty::getIdentifier);
+                .map(KBStatement::getProperty).map(KBProperty::getIdentifier);
 
         if (reification == Reification.NONE) {
-            String[] expectedInstances = { 
-                    "http://www.wikidata.org/prop/P2894",
+            String[] expectedInstances = { "http://www.wikidata.org/prop/P2894",
                     "http://www.wikidata.org/prop/direct/P2894",
-                    "http://www.wikidata.org/prop/direct/P31", 
-                    "http://www.wikidata.org/prop/P31" };
+                    "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/prop/P31" };
             assertThat(properties).as("Check that properties have been found")
                     .contains(expectedInstances);
         }
         else {
-            String[] expectedInstances = { 
-                    "http://www.wikidata.org/prop/P585",
-                    "http://www.wikidata.org/prop/P31",
-                    "http://www.wikidata.org/prop/P361", 
-                    "http://www.wikidata.org/prop/P2894",
-                    "http://www.wikidata.org/prop/P31" };
+            String[] expectedInstances = { "http://www.wikidata.org/prop/P585",
+                    "http://www.wikidata.org/prop/P31", "http://www.wikidata.org/prop/P361",
+                    "http://www.wikidata.org/prop/P2894", "http://www.wikidata.org/prop/P31" };
             assertThat(properties).as("Check that properties have been found")
                     .contains(expectedInstances);
         }
     }
-    
-    
+
     // Helper
 
     private Project createProject(String name)
@@ -258,5 +254,14 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.setMaxResults(1000);
 
         return kb_wikidata_direct;
+    }
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.kb.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model" })
+    public static class SpringConfig
+    {
+        // No content
     }
 }

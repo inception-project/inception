@@ -66,6 +66,8 @@ public class TaskConsumer
                     activeTask.run();
                     log.debug("Indexing task completed: {}", activeTask);
                 }
+                // Catching Throwable is intentional here as we want to continue the execution even
+                // if a particular recommender fails.
                 catch (Throwable e) {
                     log.error("Indexing task failed: {}", activeTask, e);
                 }
@@ -75,7 +77,8 @@ public class TaskConsumer
             }
         }
         catch (InterruptedException ie) {
-            log.info("Thread interrupted: ", ie);
+            // We can (probably) safely ignore this. This happens e.g. when we wait for an
+            // active task and the system shuts down.
         }
     }
 

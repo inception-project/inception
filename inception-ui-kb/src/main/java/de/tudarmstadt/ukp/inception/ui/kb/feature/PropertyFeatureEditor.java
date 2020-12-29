@@ -24,10 +24,10 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -64,7 +64,7 @@ public class PropertyFeatureEditor
 {
     private static final long serialVersionUID = -4649541419448384970L;
     private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureEditor.class);
-    private Component focusComponent;
+    private FormComponent focusComponent;
     private IModel<AnnotatorState> stateModel;
     private AnnotationActionHandler actionHandler;
     private Project project;
@@ -77,8 +77,8 @@ public class PropertyFeatureEditor
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     public PropertyFeatureEditor(String aId, MarkupContainer aOwner,
-        AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
-        IModel<FeatureState> aFeatureStateModel)
+            AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
+            IModel<FeatureState> aFeatureStateModel)
     {
         super(aId, aOwner, new CompoundPropertyModel<>(aFeatureStateModel));
         stateModel = aStateModel;
@@ -89,7 +89,7 @@ public class PropertyFeatureEditor
         add(createStatementIndicatorLabel());
         add(createNoStatementLabel());
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature),
-            Model.of(traits)));
+                Model.of(traits)));
     }
 
     @Override
@@ -103,12 +103,13 @@ public class PropertyFeatureEditor
     private AutoCompleteTextField<KBProperty> createAutoCompleteTextField()
     {
         AutoCompleteTextField<KBProperty> field = new AutoCompleteTextField<KBProperty>("value",
-            new TextRenderer<KBProperty>("uiLabel"))
+                new TextRenderer<KBProperty>("uiLabel"))
         {
 
             private static final long serialVersionUID = 2499259496065983734L;
 
-            @Override protected List<KBProperty> getChoices(String input)
+            @Override
+            protected List<KBProperty> getChoices(String input)
             {
                 String repoId = traits.getRepositoryId();
                 if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
@@ -138,18 +139,18 @@ public class PropertyFeatureEditor
     private Label createStatementIndicatorLabel()
     {
         Label statementExists = new Label("statementExists",
-            "There is at least one statement " + "in the KB which matches for this SPO.");
-        statementExists
-            .add(LambdaBehavior.onConfigure(component -> component.setVisible(existStatements)));
+                "There is at least one statement " + "in the KB which matches for this SPO.");
+        statementExists.add(
+                LambdaBehavior.onConfigure(component -> component.setVisible(existStatements)));
         return statementExists;
     }
 
     private Label createNoStatementLabel()
     {
         Label statementDoesNotExist = new Label("statementDoesNotExist",
-            "There is no statement " + "in the KB which matches this SPO.");
-        statementDoesNotExist
-            .add(LambdaBehavior.onConfigure(component -> component.setVisible(!existStatements)));
+                "There is no statement " + "in the KB which matches this SPO.");
+        statementDoesNotExist.add(
+                LambdaBehavior.onConfigure(component -> component.setVisible(!existStatements)));
         return statementDoesNotExist;
     }
 
@@ -160,7 +161,7 @@ public class PropertyFeatureEditor
     }
 
     @Override
-    public Component getFocusComponent()
+    public FormComponent getFocusComponent()
     {
         return focusComponent;
     }
@@ -169,7 +170,7 @@ public class PropertyFeatureEditor
     public void onConfigure()
     {
         super.onConfigure();
-        
+
         KBHandle subject = getHandle(FactLinkingConstants.SUBJECT_ROLE);
         KBHandle object = getHandle(FactLinkingConstants.OBJECT_ROLE);
         KBProperty predicate = (KBProperty) getModelObject().value;
@@ -191,21 +192,21 @@ public class PropertyFeatureEditor
     }
 
     public KBHandle getLinkedSubjectObjectKBHandle(String featureName,
-        AnnotationActionHandler actionHandler, AnnotatorState aState)
+            AnnotationActionHandler actionHandler, AnnotatorState aState)
     {
         AnnotationLayer factLayer = annotationService.findLayer(aState.getProject(), FACT_LAYER);
         KBHandle kbHandle = null;
         AnnotationFeature annotationFeature = annotationService.getFeature(featureName, factLayer);
         List<LinkWithRoleModel> featureValue = (List<LinkWithRoleModel>) aState
-            .getFeatureState(annotationFeature).value;
+                .getFeatureState(annotationFeature).value;
         if (!featureValue.isEmpty()) {
             int targetAddress = featureValue.get(0).targetAddr;
             if (targetAddress != -1) {
                 CAS cas;
                 try {
                     cas = actionHandler.getEditorCas();
-                    kbHandle = factService
-                        .getKBHandleFromCasByAddr(cas, targetAddress, aState.getProject(), traits);
+                    kbHandle = factService.getKBHandleFromCasByAddr(cas, targetAddress,
+                            aState.getProject(), traits);
                 }
                 catch (Exception e) {
                     LOG.error("Error: " + e.getMessage(), e);
@@ -217,4 +218,3 @@ public class PropertyFeatureEditor
         return kbHandle;
     }
 }
-

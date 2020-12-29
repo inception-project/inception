@@ -21,6 +21,7 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDe
 
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.io.perseus.PerseusReader;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +33,7 @@ public class PerseusFormatSupport
 {
     public static final String ID = "perseus_2.1";
     public static final String NAME = "Perseus treebank XML (2.1)";
-    
+
     @Override
     public String getId()
     {
@@ -50,7 +51,7 @@ public class PerseusFormatSupport
     {
         return true;
     }
-    
+
     @Override
     public boolean isWritable()
     {
@@ -58,8 +59,9 @@ public class PerseusFormatSupport
     }
 
     @Override
-    public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
-        return createReaderDescription(PerseusReader.class);
+        return createReaderDescription(PerseusReader.class, aTSD);
     }
 }

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
-public enum StatementDetailPreference {
+public enum StatementDetailPreference
+{
     BASIC, INFERRED, ALL;
 }

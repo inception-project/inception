@@ -30,7 +30,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -41,7 +41,7 @@ public class QuerySettingsPanel
     extends Panel
 {
     private static final long serialVersionUID = -1594852739133649866L;
-    
+
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbProperties;
 
@@ -63,7 +63,6 @@ public class QuerySettingsPanel
         add(ftsField("fullTextSearchIri", "kb.fullTextSearchIri"));
 
     }
-
 
     private CheckBox maxQueryLimitCheckbox(String id, IModel<Boolean> aModel)
     {
@@ -113,7 +112,7 @@ public class QuerySettingsPanel
     private DropDownChoice<IRI> ftsField(String aId, String aProperty)
     {
         DropDownChoice<IRI> ftsField = new BootstrapSelect<>(aId, kbModel.bind(aProperty),
-            IriConstants.FTS_IRIS);
+                IriConstants.FTS_IRIS);
         ftsField.setOutputMarkupId(true);
         ftsField.setNullValid(true);
         return ftsField;
