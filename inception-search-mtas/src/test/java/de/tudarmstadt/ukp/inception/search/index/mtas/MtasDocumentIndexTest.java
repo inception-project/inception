@@ -109,6 +109,8 @@ import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
+import de.tudarmstadt.ukp.inception.search.config.SearchServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
@@ -548,9 +550,20 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public SearchService searchService()
+        public SearchService searchService(DocumentService aDocumentService,
+                ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
+                IndexScheduler aIndexScheduler, SearchServiceProperties aProperties)
         {
-            return new SearchServiceImpl();
+            return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
+                    aIndexScheduler, aProperties);
+        }
+
+        @Bean
+        public SearchServiceProperties searchServiceProperties()
+        {
+            SearchServicePropertiesImpl properties = new SearchServicePropertiesImpl();
+            properties.setEnabled(true);
+            return properties;
         }
 
         @Bean

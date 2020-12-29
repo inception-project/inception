@@ -23,6 +23,8 @@ import org.apache.wicket.markup.html.panel.Panel;
 public class DynamicDocumentNavigator
     extends Panel
 {
+    private static final long serialVersionUID = -8022038879911770593L;
+
     public DynamicDocumentNavigator(String aID)
     {
         super(aID);

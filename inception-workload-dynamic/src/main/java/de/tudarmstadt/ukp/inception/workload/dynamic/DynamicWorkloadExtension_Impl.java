@@ -15,53 +15,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.matrix;
+package de.tudarmstadt.ukp.inception.workload.dynamic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
-import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTrait;
+import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link MatrixWorkloadManagerAutoConfiguration#matrixWorkloadExtension}
+ * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadExtension}
  * </p>
  */
-@Order(-10)
-public class MatrixWorkloadExtension
-    implements WorkloadManagerExtension<MatrixWorkloadTrait>
+public class DynamicWorkloadExtension_Impl
+    implements DynamicWorkloadExtension
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    public static final String MATRIX_WORKLOAD_MANAGER_EXTENSION_ID = "matrix";
 
     @Override
     public String getId()
     {
-        return MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
+        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
     }
 
     @Override
     public String getLabel()
     {
-        return "Static assignment";
+        return "Dynamic assignment";
     }
 
     @Override
-    public MatrixWorkloadTrait readTraits(WorkloadManager aWorkloadManager)
+    public DynamicWorkloadTraits readTraits(WorkloadManager aWorkloadManager)
     {
-        MatrixWorkloadTrait traits = null;
+        DynamicWorkloadTraits traits = null;
 
         try {
-            traits = JSONUtil.fromJsonString(MatrixWorkloadTrait.class,
+            traits = JSONUtil.fromJsonString(DynamicWorkloadTraits.class,
                     aWorkloadManager.getTraits());
         }
         catch (Exception e) {
@@ -69,7 +64,7 @@ public class MatrixWorkloadExtension
         }
 
         if (traits == null) {
-            traits = new MatrixWorkloadTrait();
+            traits = new DynamicWorkloadTraits();
         }
 
         return traits;
@@ -77,7 +72,7 @@ public class MatrixWorkloadExtension
 
     @Override
     public void writeTraits(WorkloadManagementService aWorkloadManagementService,
-            MatrixWorkloadTrait aTrait, Project aProject)
+            DynamicWorkloadTraits aTrait, Project aProject)
     {
         try {
             WorkloadManager manager = aWorkloadManagementService

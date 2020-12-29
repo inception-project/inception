@@ -26,6 +26,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
@@ -46,9 +48,12 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 public class SearchServiceAutoConfiguration
 {
     @Bean
-    public SearchService searchService()
+    public SearchService searchService(DocumentService aDocumentService,
+            ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
+            IndexScheduler aIndexScheduler, SearchServiceProperties aProperties)
     {
-        return new SearchServiceImpl();
+        return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
+                aIndexScheduler, aProperties);
     }
 
     @Bean
@@ -69,12 +74,6 @@ public class SearchServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<FeatureIndexingSupport> aIndexingSupports)
     {
         return new FeatureIndexingSupportRegistryImpl(aIndexingSupports);
-    }
-
-    @Bean
-    public SearchServiceProperties searchServiceProperties()
-    {
-        return new SearchServicePropertiesImpl();
     }
 
     @Bean

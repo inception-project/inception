@@ -15,13 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.dynamic;
+package de.tudarmstadt.ukp.inception.workload.dynamic.support;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
-import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
-
-public interface DynamicWorkloadExtension
-    extends WorkloadManagerExtension<DynamicWorkloadTraits>
+public enum AnnotationQueueSortKeys
 {
-    public static final String DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID = "dynamic";
+    STATE, DOCUMENT, FINISHED, ASSIGNED, ANNOTATORS, UPDATED;
 }

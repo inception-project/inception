@@ -96,7 +96,7 @@ public class MonitoringPageMenuItem
         return (projectService.isCurator(project, user) || projectService.isManager(project, user))
                 && PROJECT_TYPE_ANNOTATION.equals(project.getMode())
                 && MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
-                        .getOrCreateWorkloadManagerConfiguration(project).getType());
+                        .loadOrCreateWorkloadManagerConfiguration(project).getType());
     }
 
     @Override
