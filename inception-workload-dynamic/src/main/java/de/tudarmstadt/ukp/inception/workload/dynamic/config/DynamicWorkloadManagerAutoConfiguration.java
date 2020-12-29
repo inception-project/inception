@@ -17,19 +17,46 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.config;
 
+import java.util.List;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension_Impl;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.RandomizedWorkflowExtension;
 
 @Configuration
-@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "workload.dynamic", name = "enabled", havingValue = "true")
 public class DynamicWorkloadManagerAutoConfiguration
 {
     @Bean
     public DynamicWorkloadExtension dynamicWorkloadExtension()
     {
-        return new DynamicWorkloadExtension();
+        return new DynamicWorkloadExtension_Impl();
     }
+
+    @Bean
+    public WorkflowExtensionPoint workflowExtensionPoint(List<WorkflowExtension> aWorkflowExtension)
+    {
+        return new WorkflowExtensionPointImpl(aWorkflowExtension);
+    }
+
+    @Bean
+    public DefaultWorkflowExtension defaultWorkflowExtension()
+    {
+        return new DefaultWorkflowExtension();
+    }
+
+    @Bean
+    public RandomizedWorkflowExtension randomizedWorkflowExtension()
+    {
+        return new RandomizedWorkflowExtension();
+    }
+
 }

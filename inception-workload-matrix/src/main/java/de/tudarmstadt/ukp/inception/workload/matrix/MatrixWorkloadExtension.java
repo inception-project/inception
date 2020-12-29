@@ -17,10 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTrait;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * <p>
@@ -30,8 +37,10 @@ import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManager
  */
 @Order(-10)
 public class MatrixWorkloadExtension
-    implements WorkloadManagerExtension
+    implements WorkloadManagerExtension<MatrixWorkloadTrait>
 {
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     public static final String MATRIX_WORKLOAD_MANAGER_EXTENSION_ID = "matrix";
 
     @Override
@@ -44,5 +53,40 @@ public class MatrixWorkloadExtension
     public String getLabel()
     {
         return "Static assignment";
+    }
+
+    @Override
+    public MatrixWorkloadTrait readTraits(WorkloadManager aWorkloadManager)
+    {
+        MatrixWorkloadTrait traits = null;
+
+        try {
+            traits = JSONUtil.fromJsonString(MatrixWorkloadTrait.class,
+                    aWorkloadManager.getTraits());
+        }
+        catch (Exception e) {
+            this.log.error("Unable to read traits", e);
+        }
+
+        if (traits == null) {
+            traits = new MatrixWorkloadTrait();
+        }
+
+        return traits;
+    }
+
+    @Override
+    public void writeTraits(WorkloadManagementService aWorkloadManagementService,
+            MatrixWorkloadTrait aTrait, Project aProject)
+    {
+        try {
+            WorkloadManager manager = aWorkloadManagementService
+                    .loadOrCreateWorkloadManagerConfiguration(aProject);
+            manager.setTraits(JSONUtil.toJsonString(aTrait));
+            aWorkloadManagementService.saveConfiguration(manager);
+        }
+        catch (Exception e) {
+            this.log.error("Unable to write traits", e);
+        }
     }
 }

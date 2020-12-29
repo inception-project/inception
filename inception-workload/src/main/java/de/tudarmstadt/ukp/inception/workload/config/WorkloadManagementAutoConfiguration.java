@@ -23,45 +23,35 @@ import javax.persistence.EntityManager;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImplBase;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementServiceImpl;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
-import de.tudarmstadt.ukp.inception.workload.settings.ProjectWorkloadSettingsPanelFactory;
 
 @Configuration
-@Order(300)
-public class WorkloadManagementAutoConfiguration
+public class WorkloadManagementAutoConfiguration<T>
 {
     @Bean
-    public WorkloadManagerExtensionPoint workloadExtensionPoint(
-            List<WorkloadManagerExtension> aWorkloadExtensions)
+    public WorkloadManagerExtensionPoint<T> workloadExtensionPoint(
+            List<WorkloadManagerExtension<T>> aWorkloadExtensions)
     {
-        return new WorkloadManagerExtensionPointImpl(aWorkloadExtensions);
+        return new WorkloadManagerExtensionPointImpl<>(aWorkloadExtensions);
     }
 
     @Bean
     public WorkloadManagementService workloadManagementService(EntityManager aEntityManager,
-            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
     {
-        return new WorkloadManagementServiceImplBase(aEntityManager,
-                aWorkloadManagerExtensionPoint);
+        return new WorkloadManagementServiceImpl(aEntityManager, aWorkloadManagerExtensionPoint);
     }
 
     @Bean
     public WorkloadManager workloadManager()
     {
         return new WorkloadManager();
-    }
-
-    @Bean
-    public ProjectWorkloadSettingsPanelFactory projectWorkloadSettingsPanelFactory(
-            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
-    {
-        return new ProjectWorkloadSettingsPanelFactory(aWorkloadManagerExtensionPoint);
     }
 }

@@ -1,0 +1,65 @@
+[[sect_external-search-repos-solr]]
+= Solr
+
+Selecting the **Solr** repository type allows connecting to remote Solr instances.
+
+In order to set up a connection to an Solr repository, the following information needs to
+be provided:
+
+* *Remote URL*: the URL where the Solr instance is running (e.g. `http://localhost:9200/`)
+* *Index Name*: the name of the collection (e.g. `techproducts`)
+* *Search path*: the suffix used to select the request handler. The '/select' request handler is the only supported for the moment.
+* *Default Field*: the field of the documents in the Solr repository that is used for searching (default `id`).
+* *Text Field*: the field of the document in the Solr repository that is used for retrieve all the text (default 'text')
+
+From this information, two URLs are constructed:
+
+* the search URL: `<URL>/<index name>/<search path>`
+* the document retrieval URL as: `<URL>/<index name>/<search path>/<query with document id>`
+
+NOTE: From the *remote URL* field, only the protocol, hostname and port information is used. Any
+      path information appearing after the port number is discarded and replaced by the index name and
+      search path as outlined above.
+
+The individual documents must contain the following field as their source:
+
+* *id*: should contain a unique id for the document
+* *text*: collection should contain a field which contain the plain text of the document. By default
+it take the value "text". You can change it by the "Text Field" parameter.
+
+The individual document should contain the following field as their source:
+
+* *name* or *title* : one of these two field should contain information about the title of the
+document.
+If no one of this field is set, the id is used
+* *language*, *uri*, *timestamp* : should contain this fields to provide further information
+about the document
+
+The *Random Ordering* setting allows to switch the ranking of results from the default ranking used by
+the Solr server to a random order. The documents returned will still match the query, but
+the order does not correspond to the matching quality anymore. When random ordering is enabled, no
+score is associated with the search results. If desired, the *random seed* used for the ordering
+can be customized.
+
+The *Result Size* setting allows to specify the number of document results that should be retrieved
+when querying the document repository. The possible result sizes lie between 1 and 10000 documents.
+
+The Highlight feature is available on the Default Field (or Search Field). Be aware that if Solr
+does not include character by character
+or word by word analysis in the schema the highlight feature would not work.
+
+If the default **Text Field** setting `text` is used, then the JSON structure for indexed documents
+should look as follows:
+
+```
+"docs" : {
+  "0" : {
+    "id" : "ID"
+    "text" : "Here goes the document text."
+    "other_field" : "Content of other field"
+  }
+}
+```
+
+The '0' represent the result number. By default the document with the best score
+(matching score) is placed on the top.

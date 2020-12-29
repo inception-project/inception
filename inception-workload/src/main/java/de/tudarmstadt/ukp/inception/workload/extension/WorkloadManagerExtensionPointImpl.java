@@ -28,37 +28,30 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
-import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link WorkloadManagementAutoConfiguration#workloadExtensionPoint}.
- * </p>
- */
-public class WorkloadManagerExtensionPointImpl
-    extends ExtensionPoint_ImplBase<Project, WorkloadManagerExtension>
-    implements WorkloadManagerExtensionPoint
+public class WorkloadManagerExtensionPointImpl<T>
+    extends ExtensionPoint_ImplBase<Project, WorkloadManagerExtension<T>>
+    implements WorkloadManagerExtensionPoint<T>
 {
 
     @Autowired
-    public WorkloadManagerExtensionPointImpl(List<WorkloadManagerExtension> aExtensions)
+    public WorkloadManagerExtensionPointImpl(List<WorkloadManagerExtension<T>> aExtensions)
     {
         super(aExtensions);
     }
 
     @Override
-    public List<WorkloadManagerExtension> getExtensions(Project aContext)
+    public List<WorkloadManagerExtension<T>> getExtensions(Project aContext)
     {
-        Map<String, WorkloadManagerExtension> byRole = new LinkedHashMap<>();
-        for (WorkloadManagerExtension extension : super.getExtensions(aContext)) {
+        Map<String, WorkloadManagerExtension<T>> byRole = new LinkedHashMap<>();
+        for (WorkloadManagerExtension<T> extension : super.getExtensions(aContext)) {
             byRole.put(extension.getId(), extension);
         }
         return new ArrayList<>(byRole.values());
     }
 
     @Override
-    public WorkloadManagerExtension getDefault()
+    public WorkloadManagerExtension<T> getDefault()
     {
         return getExtensions().get(0);
     }

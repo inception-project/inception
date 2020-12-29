@@ -130,8 +130,14 @@ public class PdfAnnotationEditor
 
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
     {
-        LOG.error(aMessage, aCause);
-        handleError(aMessage + ": " + ExceptionUtils.getRootCauseMessage(aCause), aTarget);
+        if (aCause instanceof AnnotationException) {
+            LOG.debug(aMessage, aCause);
+            handleError(aCause.getMessage(), aTarget);
+        }
+        else {
+            LOG.error(aMessage, aCause);
+            handleError(aMessage + ": " + ExceptionUtils.getRootCauseMessage(aCause), aTarget);
+        }
     }
 
     private void handleError(String aMessage, AjaxRequestTarget aTarget)

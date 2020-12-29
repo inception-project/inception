@@ -952,11 +952,11 @@ public class SPARQLQueryBuilder
             // Strip single quotes and asterisks because they have special semantics
             String sanitizedValue = sanitizeQueryStringForFTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
+
+            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
                 continue;
             }
-
-            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
             valuePatterns.add(VAR_SUBJECT
                     .has(FTS_LUCENE,
