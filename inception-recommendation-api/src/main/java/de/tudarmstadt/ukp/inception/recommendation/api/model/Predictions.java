@@ -95,8 +95,8 @@ public class Predictions
 
         for (AnnotationDocument doc : docs) {
             // TODO #176 use the document Id once it it available in the CAS
-            SuggestionDocumentGroup<T> p = getGroupedPredictions(type, doc.getName(), aLayer,
-                    -1, -1);
+            SuggestionDocumentGroup<T> p = getGroupedPredictions(type, doc.getName(), aLayer, -1,
+                    -1);
             result.put(doc.getName(), p);
         }
 
@@ -110,8 +110,8 @@ public class Predictions
      * list is a list of predictions for a token
      */
     public <T extends AnnotationSuggestion> SuggestionDocumentGroup<T> getGroupedPredictions(
-            Class<T> type, String aDocumentName,
-        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+            Class<T> type, String aDocumentName, AnnotationLayer aLayer, int aWindowBegin,
+            int aWindowEnd)
     {
         return new SuggestionDocumentGroup(
                 getFlattenedPredictions(type, aDocumentName, aLayer, aWindowBegin, aWindowEnd));
@@ -125,10 +125,9 @@ public class Predictions
      * respectively. This is useful when all suggestions should be fetched.
      */
     private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
-                                                                             String aDocumentName,
-                                                                             AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+            String aDocumentName, AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        return predictions.entrySet().stream().filter(f -> type.isInstance(f.getValue()) )
+        return predictions.entrySet().stream().filter(f -> type.isInstance(f.getValue()))
                 .map(f -> (Entry<ExtendedId, T>) (Entry) f)
                 .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
                 .filter(f -> f.getKey().getLayerId() == aLayer.getId())
