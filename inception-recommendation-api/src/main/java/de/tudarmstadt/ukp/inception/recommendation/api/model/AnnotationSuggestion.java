@@ -240,4 +240,9 @@ public abstract class AnnotationSuggestion
     }
 
     public abstract Position getPosition();
+
+    public abstract int getWindowBegin();
+
+    public abstract int getWindowEnd();
+
 }

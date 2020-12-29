@@ -27,10 +27,16 @@ public class Offset
     private final int begin;
     private final int end;
 
-    public Offset(int beginCharacter, int endCharacter)
+    public Offset(int aBeginCharacter, int aEndCharacter)
     {
-        this.begin = beginCharacter;
-        this.end = endCharacter;
+        begin = aBeginCharacter;
+        end = aEndCharacter;
+    }
+
+    public Offset(Offset aOffset)
+    {
+        begin = aOffset.begin;
+        end = aOffset.end;
     }
 
     @Override

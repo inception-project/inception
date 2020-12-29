@@ -1062,9 +1062,10 @@ public class ActiveLearningSidebar
 
             // Update visibility in case the annotation where the feature was set overlaps with
             // any suggestions that need to be hidden now.
-            recommendationService.calculateVisibility(getAnnotationPage().getEditorCas(),
-                    state.getUser().getUsername(), aLayer, (List) alState.getSuggestions(),
-                    state.getWindowBeginOffset(), state.getWindowEndOffset());
+            recommendationService.calculateSpanSuggestionVisibility(
+                    getAnnotationPage().getEditorCas(), state.getUser().getUsername(), aLayer,
+                    (List) alState.getSuggestions(), state.getWindowBeginOffset(),
+                    state.getWindowEndOffset());
 
             // Update the suggestion in the AL sidebar, but do not jump or touch the right
             // sidebar such that the user can happily continue to edit the annotation

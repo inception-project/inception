@@ -73,6 +73,18 @@ public class SpanSuggestion
     }
 
     @Override
+    public int getWindowBegin()
+    {
+        return position.getBegin();
+    }
+
+    @Override
+    public int getWindowEnd()
+    {
+        return position.getEnd();
+    }
+
+    @Override
     public Offset getPosition()
     {
         return position;

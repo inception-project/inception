@@ -408,7 +408,7 @@ public class RecommendationEditorExtension
         if (representative.get() instanceof SpanSuggestion) {
             SpanSuggestion sao = (SpanSuggestion) representative.get();
             group = predictions
-                    .getSpanPredictions(aDocument.getName(), aFeature.getLayer(), sao.getBegin(),
+                    .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(), aFeature.getLayer(), sao.getBegin(),
                             sao.getEnd())
                     .stream().filter(g -> g.contains(representative.get()))
                     .map(g -> (SuggestionGroup<AnnotationSuggestion>) (SuggestionGroup<? extends AnnotationSuggestion>) g)

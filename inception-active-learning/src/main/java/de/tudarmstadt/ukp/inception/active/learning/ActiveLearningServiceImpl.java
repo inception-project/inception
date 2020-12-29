@@ -87,7 +87,7 @@ public class ActiveLearningServiceImpl
         }
 
         Map<String, SuggestionDocumentGroup<SpanSuggestion>> recommendationsMap = predictions
-                .getSpanPredictionsForWholeProject(aLayer, documentService);
+                .getPredictionsForWholeProject(SpanSuggestion.class, aLayer, documentService);
 
         return recommendationsMap.values().stream().flatMap(docMap -> docMap.stream())
                 .collect(toList());

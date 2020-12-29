@@ -2,7 +2,7 @@
  * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,12 +31,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
@@ -100,7 +100,7 @@ public interface RecommendationService
 
     /**
      * Returns the {@code RecommenderContext} for the given recommender if it exists.
-     * 
+     *
      * @param aUser
      *            The owner of the context
      * @param aRecommender
@@ -111,7 +111,7 @@ public interface RecommendationService
 
     /**
      * Publishes a new context for the given recommender.
-     * 
+     *
      * @param aUser
      *            The owner of the context.
      * @param aRecommender
@@ -124,7 +124,7 @@ public interface RecommendationService
     /**
      * Uses the given annotation suggestion to create a new annotation or to update a feature in an
      * existing annotation.
-     * 
+     *
      * @return the CAS address of the created/updated annotation.
      */
     int upsertSpanFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
@@ -139,7 +139,7 @@ public interface RecommendationService
 
     /**
      * Compute predictions.
-     * 
+     *
      * @param aUser
      *            the user to compute the predictions for.
      * @param aProject
@@ -153,13 +153,13 @@ public interface RecommendationService
     Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments,
             List<SourceDocument> aInherit);
 
-    void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<AnnotationSuggestion>> aRecommendations, int aWindowBegin,
+    void calculateSpanSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd);
 
-    void calculateVisibilityForRelations(CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations,
-            int aWindowBegin, int aWindowEnd);
+    void calculateRelationSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
+            int aWindowEnd);
 
     List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
 

@@ -2,7 +2,7 @@
  * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -83,6 +83,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.lang.Nullable;
 import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
@@ -124,9 +125,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Position;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
@@ -1181,10 +1184,11 @@ public class RecommendationServiceImpl
                             // Calculate the visibility of the suggestions. This happens via the
                             // original CAS which contains only the manually created annotations
                             // and *not* the suggestions.
-                            SuggestionDocumentGroup<AnnotationSuggestion> groups = new SuggestionDocumentGroup<>(
-                                    suggestions);
-                            calculateVisibility(originalCas.get(), username, recommender.getLayer(),
-                                    groups, 0, originalCas.get().getDocumentText().length());
+                            SuggestionDocumentGroup<SpanSuggestion> groups = SuggestionDocumentGroup
+                                    .filter(SpanSuggestion.class, suggestions);
+                            calculateSpanSuggestionVisibility(originalCas.get(), username,
+                                    recommender.getLayer(), groups, 0,
+                                    originalCas.get().getDocumentText().length());
 
                             predictions.putPredictions(suggestions);
                         }
@@ -1346,14 +1350,13 @@ public class RecommendationServiceImpl
                 break;
             }
             case WebAnnoConst.RELATION_TYPE: {
-                layer.getAttachFeature();
                 AnnotationFS governor = (AnnotationFS) predictedAnnotation
                         .getFeatureValue(governorFeature);
-                AnnotationFS depedent = (AnnotationFS) predictedAnnotation
+                AnnotationFS dependent = (AnnotationFS) predictedAnnotation
                         .getFeatureValue(dependentFeature);
 
                 AnnotationFS originalGovernor = findEquivalent(aOriginalCas, governor).get();
-                AnnotationFS originalDependent = findEquivalent(aOriginalCas, depedent).get();
+                AnnotationFS originalDependent = findEquivalent(aOriginalCas, dependent).get();
 
                 suggestion = new RelationSuggestion(id, aRecommender.getId(), name, layer.getId(),
                         featureName, aDocument.getName(), originalGovernor, originalDependent,
@@ -1382,7 +1385,7 @@ public class RecommendationServiceImpl
 
     /**
      * Locates an annotation in the given CAS which is equivalent of the provided annotation.
-     * 
+     *
      * @param aOriginalCas
      *            the original CAS.
      * @param aAnnotation
@@ -1396,7 +1399,7 @@ public class RecommendationServiceImpl
 
     /**
      * Calculates the offsets of the given predicted annotation in the original CAS .
-     * 
+     *
      * @param aLayer
      *            the prediction layer definition.
      * @param aOriginalCas
@@ -1487,42 +1490,31 @@ public class RecommendationServiceImpl
     }
 
     /**
-     * Goes through all AnnotationObjects and determines the visibility of each one
+     * Goes through all SpanSuggestions and determines the visibility of each one
      */
     @Override
-    public void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
-            Collection<SuggestionGroup<AnnotationSuggestion>> aRecommendations, int aWindowBegin,
+    public void calculateSpanSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
-        // NOTE: In order to avoid having to upgrade the "original CAS" in computePredictions,this
-        // method is implemented in such a way that it gracefully handles cases where the CAS and
-        // the project type system are not in sync - specifically the CAS where the project defines
-        // layers or features which do not exist in the CAS.
+        Type type = getAnnotationType(aCas, aLayer);
 
-        // Collect all annotations of the given layer within the view window
-        Type type;
-        try {
-            type = CasUtil.getType(aCas, aLayer.getName());
-        }
-        catch (IllegalArgumentException e) {
-            // Type does not exist in the type system of the CAS. Probably it has not been upgraded
-            // to the latest version of the type system yet. If this is the case, we'll just skip.
+        List<AnnotationFS> annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin,
+                aWindowEnd);
+
+        if (annotationsInWindow.isEmpty()) {
             return;
         }
-
-        List<AnnotationFS> annotationsInWindow = select(aCas, type).stream()
-                .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
-                .collect(toList());
 
         // Collect all suggestions of the given layer within the view window
         List<SuggestionGroup<SpanSuggestion>> suggestionsInWindow = aRecommendations.stream()
                 // Only suggestions for the given layer
                 .filter(group -> group.getLayerId() == aLayer.getId())
                 // ... and in the given window
-                .filter(group -> group.getPosition() instanceof Offset).filter(group -> {
+                .filter(group -> {
                     Offset offset = (Offset) group.getPosition();
                     return aWindowBegin <= offset.getBegin() && offset.getEnd() <= aWindowEnd;
-                }).map(group -> (SuggestionGroup<SpanSuggestion>) (SuggestionGroup) group)
+                }) //
                 .collect(toList());
 
         // Get all the skipped/rejected entries for the current layer
@@ -1542,7 +1534,7 @@ public class RecommendationServiceImpl
             // use a multi-valued map here because there may be multiple annotations at a
             // given position.
             MultiValuedMap<Offset, AnnotationFS> annotations = new ArrayListValuedHashMap<>();
-            annotationsInWindow.stream()
+            annotationsInWindow
                     .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
             // We need to constructed a sorted list of the keys for the OverlapIterator below
             List<Offset> sortedAnnotationKeys = new ArrayList<>(annotations.keySet());
@@ -1644,11 +1636,118 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void calculateVisibilityForRelations(CAS aCas, String aUser, AnnotationLayer aLayer,
-        Collection<SuggestionGroup<RelationSuggestion>> aRecommendations,
-        int aWindowBegin, int aWindowEnd)
+    public void calculateRelationSuggestionVisibility(CAS aCas, String aUser,
+            AnnotationLayer aLayer,
+            Collection<SuggestionGroup<RelationSuggestion>> aRecommendations, int aWindowBegin,
+            int aWindowEnd)
     {
-        
+        Type type = getAnnotationType(aCas, aLayer);
+
+        if (type == null) {
+            return;
+        }
+
+        Feature dependentFeature = type.getFeatureByBaseName("Dependent");
+        Feature governorFeature = type.getFeatureByBaseName("Governor");
+
+        if (dependentFeature == null || governorFeature == null) {
+            log.warn("Missing Dependent or Governor feature on [{}]", aLayer.getName());
+            return;
+        }
+
+        List<AnnotationFS> annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin,
+                aWindowEnd);
+
+        if (annotationsInWindow.isEmpty()) {
+            return;
+        }
+
+        // Group annotations by relation position, that is (source, target) address
+        MultiValuedMap<Position, AnnotationFS> groupedAnnotations = new ArrayListValuedHashMap<>();
+        for (AnnotationFS annotationFS : annotationsInWindow) {
+            AnnotationFS governor = (AnnotationFS) annotationFS.getFeatureValue(governorFeature);
+            AnnotationFS dependent = (AnnotationFS) annotationFS.getFeatureValue(dependentFeature);
+
+            RelationPosition relationPosition = new RelationPosition(getAddr(governor),
+                    getAddr(dependent));
+
+            groupedAnnotations.put(relationPosition, annotationFS);
+        }
+
+        // Collect all suggestions of the given layer
+        List<SuggestionGroup<RelationSuggestion>> groupedSuggestions = aRecommendations.stream()
+                .filter(group -> group.getLayerId() == aLayer.getId()) //
+                .collect(toList());
+
+        for (AnnotationFeature feature : annoService.listSupportedFeatures(aLayer)) {
+            Feature feat = type.getFeatureByBaseName(feature.getName());
+
+            if (feat == null) {
+                // The feature does not exist in the type system of the CAS. Probably it has not
+                // been upgraded to the latest version of the type system yet. If this is the case,
+                // we'll just skip.
+                return;
+            }
+
+            for (SuggestionGroup<RelationSuggestion> group : groupedSuggestions) {
+                if (!feature.getName().equals(group.getFeature())) {
+                    continue;
+                }
+
+                // No annotation at this position, so no reason to hide
+                Position position = group.getPosition();
+                if (!groupedAnnotations.containsKey(position)) {
+                    continue;
+                }
+
+                // If any annotation at this position has a non-null label for this feature,
+                // then we hide the suggestion group
+                for (AnnotationFS annotationFS : groupedAnnotations.get(position)) {
+                    if (annotationFS.getFeatureValueAsString(feat) != null) {
+                        for (RelationSuggestion suggestion : group) {
+                            suggestion.hide(FLAG_OVERLAP);
+                        }
+                    }
+                }
+            }
+
+        }
+
+        // Hide suggestions on the same layer for the same feature if there is already an existing
+        // annotation
+        for (AnnotationFS ao : annotationsInWindow) {
+            System.out.println(ao);
+        }
+    }
+
+    @Nullable
+    private Type getAnnotationType(CAS aCas, AnnotationLayer aLayer)
+    {
+        // NOTE: In order to avoid having to upgrade the "original CAS" in computePredictions,this
+        // method is implemented in such a way that it gracefully handles cases where the CAS and
+        // the project type system are not in sync - specifically the CAS where the project defines
+        // layers or features which do not exist in the CAS.
+
+        try {
+            return CasUtil.getType(aCas, aLayer.getName());
+        }
+        catch (IllegalArgumentException e) {
+            // Type does not exist in the type system of the CAS. Probably it has not been upgraded
+            // to the latest version of the type system yet. If this is the case, we'll just skip.
+            return null;
+        }
+    }
+
+    private List<AnnotationFS> getAnnotationsInWindow(CAS aCas, Type type, int aWindowBegin,
+            int aWindowEnd)
+    {
+        if (type == null) {
+            return List.of();
+        }
+
+        return select(aCas, type).stream()
+                .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
+                .collect(toList());
     }
 
     private void hideSuggestionsRejectedOrSkipped(SpanSuggestion aSuggestion,
@@ -1743,7 +1842,9 @@ public class RecommendationServiceImpl
                 triggerTrainingAndClassification(committedKey.getUser(), project,
                         "Committed dirty CAS at end of request", currentDocument);
             }
-        };
+        }
+
+        ;
     }
 
     @Override

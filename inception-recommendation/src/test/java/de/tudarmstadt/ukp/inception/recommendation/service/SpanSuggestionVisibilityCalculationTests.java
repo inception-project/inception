@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 
-public class VisibilityCalculationTests
+public class SpanSuggestionVisibilityCalculationTests
 {
     private @Mock LearningRecordService recordService;
     private @Mock AnnotationSchemaService annoService;
@@ -104,12 +104,12 @@ public class VisibilityCalculationTests
         when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<AnnotationSuggestion> suggestions = getSuggestionGroup(
+        SuggestionDocumentGroup<SpanSuggestion> suggestions = getSuggestionGroup(
                 new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
-        sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
+        sut.calculateSpanSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
 
-        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
-        List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
+        List<SpanSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
+        List<SpanSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(invisibleSuggestions).isNotEmpty();
@@ -129,12 +129,12 @@ public class VisibilityCalculationTests
         when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<>());
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<AnnotationSuggestion> suggestions = getSuggestionGroup(
+        SuggestionDocumentGroup<SpanSuggestion> suggestions = getSuggestionGroup(
                 new int[][] { { 1, 5, 10 } });
-        sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
+        sut.calculateSpanSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
 
-        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
-        List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
+        List<SpanSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
+        List<SpanSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(visibleSuggestions).isNotEmpty();
@@ -153,12 +153,12 @@ public class VisibilityCalculationTests
         when(recordService.listRecords(user, layer)).thenReturn(records);
 
         CAS cas = getTestCas();
-        SuggestionDocumentGroup<AnnotationSuggestion> suggestions = getSuggestionGroup(
+        SuggestionDocumentGroup<SpanSuggestion> suggestions = getSuggestionGroup(
                 new int[][] { { 1, 5, 10 } });
-        sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
+        sut.calculateSpanSuggestionVisibility(cas, user, layer, suggestions, 0, 25);
 
-        List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
-        List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
+        List<SpanSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
+        List<SpanSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
 
         // check the invisible suggestions' states
         assertThat(visibleSuggestions).isEmpty();
@@ -167,24 +167,24 @@ public class VisibilityCalculationTests
                 .containsExactly("rejected");
     }
 
-    private List<AnnotationSuggestion> getInvisibleSuggestions(
-            Collection<SuggestionGroup<AnnotationSuggestion>> aSuggestions)
+    private List<SpanSuggestion> getInvisibleSuggestions(
+            Collection<SuggestionGroup<SpanSuggestion>> aSuggestions)
     {
         return aSuggestions.stream().flatMap(SuggestionGroup::stream).filter(s -> !s.isVisible())
                 .collect(Collectors.toList());
     }
 
-    private List<AnnotationSuggestion> getVisibleSuggestions(
-            Collection<SuggestionGroup<AnnotationSuggestion>> aSuggestions)
+    private List<SpanSuggestion> getVisibleSuggestions(
+            Collection<SuggestionGroup<SpanSuggestion>> aSuggestions)
     {
         return aSuggestions.stream().flatMap(SuggestionGroup::stream).filter(s -> s.isVisible())
                 .collect(Collectors.toList());
     }
 
-    private SuggestionDocumentGroup<AnnotationSuggestion> getSuggestionGroup(int[][] vals)
+    private SuggestionDocumentGroup<SpanSuggestion> getSuggestionGroup(int[][] vals)
     {
 
-        List<AnnotationSuggestion> suggestions = new ArrayList<>();
+        List<SpanSuggestion> suggestions = new ArrayList<>();
         for (int[] val : vals) {
             suggestions.add(new SpanSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME, layerId,
                     FEATURE, DOC_NAME, val[1], val[2], COVERED_TEXT, null, UI_LABEL, CONFIDENCE,

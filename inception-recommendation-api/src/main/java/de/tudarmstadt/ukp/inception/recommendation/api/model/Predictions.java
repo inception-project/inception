@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.newSetFromMap;
-import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
@@ -87,32 +86,21 @@ public class Predictions
      * tokens and the inner list is a list of predictions for a token. The method filters all tokens
      * which already have an annotation and don't need further recommendation.
      */
-    public Map<String, SuggestionDocumentGroup<SpanSuggestion>> getSpanPredictionsForWholeProject(
-            AnnotationLayer aLayer, DocumentService aDocumentService)
+    public <T extends AnnotationSuggestion> Map<String, SuggestionDocumentGroup<T>> getPredictionsForWholeProject(
+            Class<T> type, AnnotationLayer aLayer, DocumentService aDocumentService)
     {
-        Map<String, SuggestionDocumentGroup<SpanSuggestion>> result = new HashMap<>();
+        Map<String, SuggestionDocumentGroup<T>> result = new HashMap<>();
 
         List<AnnotationDocument> docs = aDocumentService.listAnnotationDocuments(project, user);
 
         for (AnnotationDocument doc : docs) {
             // TODO #176 use the document Id once it it available in the CAS
-            SuggestionDocumentGroup<SpanSuggestion> p = getSpanPredictions(doc.getName(), aLayer,
+            SuggestionDocumentGroup<T> p = getGroupedPredictions(type, doc.getName(), aLayer,
                     -1, -1);
             result.put(doc.getName(), p);
         }
 
         return result;
-    }
-
-    public List<RelationSuggestion> getRelationPredictionsForLayer(String aDocumentName,
-            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
-    {
-        return predictions.entrySet().stream()
-                .filter(f -> f.getValue() instanceof RelationSuggestion)
-                .map(f -> (Entry<ExtendedId, RelationSuggestion>) (Entry) f)
-                .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
-                .filter(f -> f.getKey().getLayerId() == aLayer.getId()).map(Map.Entry::getValue)
-                .collect(Collectors.toList());
     }
 
     /**
@@ -121,11 +109,12 @@ public class Predictions
      * Get the predictions of a given window, where the outer list is a list of tokens and the inner
      * list is a list of predictions for a token
      */
-    public SuggestionDocumentGroup<SpanSuggestion> getSpanPredictions(String aDocumentName,
-            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+    public <T extends AnnotationSuggestion> SuggestionDocumentGroup<T> getGroupedPredictions(
+            Class<T> type, String aDocumentName,
+        AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
         return new SuggestionDocumentGroup(
-                getFlattenedSpanPredictions(aDocumentName, aLayer, aWindowBegin, aWindowEnd));
+                getFlattenedPredictions(type, aDocumentName, aLayer, aWindowBegin, aWindowEnd));
     }
 
     /**
@@ -135,16 +124,17 @@ public class Predictions
      * {@code aWindowBegin} and {@code aWindowEnd} are {@code -1}, then they are ignored
      * respectively. This is useful when all suggestions should be fetched.
      */
-    private List<SpanSuggestion> getFlattenedSpanPredictions(String aDocumentName,
-            AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
+    private <T extends AnnotationSuggestion> List<T> getFlattenedPredictions(Class<T> type,
+                                                                             String aDocumentName,
+                                                                             AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        return predictions.entrySet().stream().filter(f -> f.getValue() instanceof SpanSuggestion)
-                .map(f -> (Entry<ExtendedId, SpanSuggestion>) (Entry) f)
+        return predictions.entrySet().stream().filter(f -> type.isInstance(f.getValue()) )
+                .map(f -> (Entry<ExtendedId, T>) (Entry) f)
                 .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
                 .filter(f -> f.getKey().getLayerId() == aLayer.getId())
-                .filter(f -> aWindowBegin == -1 || (f.getValue().getBegin() >= aWindowBegin))
-                .filter(f -> aWindowEnd == -1 || (f.getValue().getEnd() <= aWindowEnd))
-                .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
+                .filter(f -> aWindowBegin == -1 || (f.getValue().getWindowBegin() >= aWindowBegin))
+                .filter(f -> aWindowEnd == -1 || (f.getValue().getWindowEnd() <= aWindowEnd))
+                .sorted(Comparator.comparingInt(e2 -> e2.getValue().getWindowBegin()))
                 .map(Map.Entry::getValue).collect(toList());
     }
 
@@ -157,19 +147,6 @@ public class Predictions
         return predictions.values().stream()
                 .filter(f -> f.getDocumentName().equals(aDocument.getName()))
                 .filter(f -> f.getVID().toString().equals(aVID.toString())).findFirst();
-    }
-
-    /**
-     * Returns the prediction used to generate the VID
-     */
-    public Optional<SpanSuggestion> getPrediction(SourceDocument aDocument, int aBegin, int aEnd,
-            String aLabel)
-    {
-        return predictions.values().stream().filter(f -> f instanceof SpanSuggestion)
-                .map(f -> (SpanSuggestion) f)
-                .filter(f -> f.getDocumentName().equals(aDocument.getName()))
-                .filter(f -> f.getBegin() == aBegin && f.getEnd() == aEnd)
-                .filter(f -> f.getLabel().equals(aLabel)).max(comparingInt(SpanSuggestion::getId));
     }
 
     /**
@@ -194,7 +171,7 @@ public class Predictions
         return !predictions.isEmpty();
     }
 
-    public Map<ExtendedId, AnnotationSuggestion> getSpanPredictions()
+    public Map<ExtendedId, AnnotationSuggestion> getGroupedPredictions()
     {
         return predictions;
     }

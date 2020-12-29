@@ -32,6 +32,12 @@ public class RelationSuggestion
 
     private final RelationPosition position;
 
+    // The begin of the window is min(source.begin, target.begin)
+    // The end of the window is max(source.end, target.end)
+    // This is mostly used to optimize the viewport when rendering
+    private final int windowBegin;
+    private final int windowEnd;
+
     public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
             String aFeature, String aDocumentName, AnnotationFS aSource, AnnotationFS aTarget,
             String aLabel, String aUiLabel, double aConfidence, String aConfidenceExplanation)
@@ -40,6 +46,8 @@ public class RelationSuggestion
                 aUiLabel, aConfidence, aConfidenceExplanation);
 
         position = new RelationPosition(getAddr(aSource), getAddr(aTarget));
+        windowBegin = Math.min(aSource.getBegin(), aTarget.getBegin());
+        windowEnd = Math.max(aSource.getEnd(), aTarget.getEnd());
     }
 
     /**
@@ -53,6 +61,8 @@ public class RelationSuggestion
         super(aObject);
 
         position = new RelationPosition(aObject.position);
+        windowBegin = aObject.windowBegin;
+        windowEnd = aObject.windowEnd;
     }
 
     // Getter and setter
@@ -64,12 +74,25 @@ public class RelationSuggestion
     }
 
     @Override
+    public int getWindowBegin()
+    {
+        return windowBegin;
+    }
+
+    @Override
+    public int getWindowEnd()
+    {
+        return windowEnd;
+    }
+
+    @Override
     public String toString()
     {
         return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
                 .append("recommenderName", recommenderName).append("layerId", layerId)
                 .append("feature", feature).append("documentName", documentName)
-                .append("position", position).append("label", label).append("uiLabel", uiLabel)
+                .append("position", position).append("windowBegin", windowBegin).append("windowEnd", windowEnd)
+                .append("label", label).append("uiLabel", uiLabel)
                 .append("confidence", confidence)
                 .append("confindenceExplanation", confidenceExplanation)
                 .append("visible", isVisible()).append("reasonForHiding", getReasonForHiding())

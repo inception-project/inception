@@ -151,7 +151,7 @@ public class RecommenderInfoPanel
                 .orElse(getDocumentTitle(cas));
 
         // Extract all predictions for the current document / recommender
-        List<SpanSuggestion> suggestions = predictions.getSpanPredictions().entrySet().stream()
+        List<SpanSuggestion> suggestions = predictions.getGroupedPredictions().entrySet().stream()
                 .filter(f -> f.getKey().getDocumentName().equals(sourceDocumentName))
                 .filter(f -> f.getKey().getRecommenderId() == aRecommender.getId().longValue())
                 .map(Map.Entry::getValue).filter(f -> f instanceof SpanSuggestion)

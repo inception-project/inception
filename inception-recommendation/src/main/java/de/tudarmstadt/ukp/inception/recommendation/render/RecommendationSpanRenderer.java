@@ -99,19 +99,20 @@ public class RecommendationSpanRenderer
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
-        SuggestionDocumentGroup<SpanSuggestion> groups = predictions.getSpanPredictions(
-                sourceDocumentName, aLayer, aWindowBeginOffset, aWindowEndOffset);
+        SuggestionDocumentGroup<SpanSuggestion> groups = predictions.getGroupedPredictions(
+                SpanSuggestion.class, sourceDocumentName, aLayer, aWindowBeginOffset,
+                aWindowEndOffset);
 
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
             return;
         }
 
-        String color = "#cccccc";
         String bratTypeName = typeAdapter.getEncodedTypeName();
 
-        aRecommendationService.calculateVisibility(aCas, aState.getUser().getUsername(), aLayer,
-                (SuggestionDocumentGroup) groups, aWindowBeginOffset, aWindowEndOffset);
+        aRecommendationService.calculateSpanSuggestionVisibility(aCas,
+                aState.getUser().getUsername(), aLayer, groups, aWindowBeginOffset,
+                aWindowEndOffset);
 
         Preferences pref = aRecommendationService.getPreferences(aState.getUser(),
                 aLayer.getProject());
@@ -203,7 +204,7 @@ public class RecommendationSpanRenderer
                 VSpan v = new VSpan(aLayer, vid, bratTypeName,
                         new VRange(ao.getBegin() - aWindowBeginOffset,
                                 ao.getEnd() - aWindowBeginOffset),
-                        featureAnnotation, Collections.emptyMap(), color);
+                        featureAnnotation, Collections.emptyMap(), COLOR);
                 v.addLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
                 v.addLazyDetail(new VLazyDetailQuery(feature.getName(), ao.getLabel()));
                 vdoc.add(v);

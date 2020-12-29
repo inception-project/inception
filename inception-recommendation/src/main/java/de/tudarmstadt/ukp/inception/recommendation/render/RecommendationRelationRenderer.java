@@ -18,9 +18,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 
 import java.util.Collections;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -33,14 +33,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 
 /**
  * Render spans.
@@ -79,6 +81,7 @@ public class RecommendationRelationRenderer
 
         Predictions predictions = aRecommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
+
         // No recommendations available at all
         if (predictions == null) {
             return;
@@ -86,29 +89,43 @@ public class RecommendationRelationRenderer
 
         // TODO #176 use the document Id once it it available in the CAS
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
-                .orElse(getDocumentTitle(aCas));
-        // TODO: Group suggestions by same source and target
-        // TODO: Use window begin and end
-        List<RelationSuggestion> suggestions = predictions
-                .getRelationPredictionsForLayer(sourceDocumentName, aLayer, -1, -1);
+                .orElseGet(() -> getDocumentTitle(aCas));
+        SuggestionDocumentGroup<RelationSuggestion> groupedPredictions = predictions
+                .getGroupedPredictions(RelationSuggestion.class, sourceDocumentName, aLayer,
+                        aWindowBeginOffset, aWindowEndOffset);
 
         // No recommendations to render for this layer
-        if (suggestions.isEmpty()) {
+        if (groupedPredictions.isEmpty()) {
             return;
         }
 
+        aRecommendationService.calculateRelationSuggestionVisibility(aCas,
+                aState.getUser().getUsername(), aLayer, groupedPredictions, aWindowBeginOffset,
+                aWindowEndOffset);
+
+        Preferences pref = aRecommendationService.getPreferences(aState.getUser(),
+                aLayer.getProject());
+
         String bratTypeName = typeAdapter.getEncodedTypeName();
 
-        // TODO: Sort by confidence
-        for (RelationSuggestion suggestion : suggestions) {
-            RelationPosition position = suggestion.getPosition();
-            AnnotationFS source = WebAnnoCasUtil.selectAnnotationByAddr(aCas, position.getSource());
-            AnnotationFS target = WebAnnoCasUtil.selectAnnotationByAddr(aCas, position.getTarget());
+        for (SuggestionGroup<RelationSuggestion> group : groupedPredictions) {
+            // TODO: Sort by confidence
+            for (RelationSuggestion suggestion : group) {
 
-            VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
-                    new VID(target), suggestion.getUiLabel(), Collections.emptyMap(), "#cccccc");
+                // Skip rendering AnnotationObjects that should not be rendered
+                if (!pref.isShowAllPredictions() && !suggestion.isVisible()) {
+                    continue;
+                }
 
-            vdoc.add(arc);
+                RelationPosition position = suggestion.getPosition();
+                AnnotationFS source = selectAnnotationByAddr(aCas, position.getSource());
+                AnnotationFS target = selectAnnotationByAddr(aCas, position.getTarget());
+
+                VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
+                        new VID(target), suggestion.getUiLabel(), Collections.emptyMap(), COLOR);
+
+                vdoc.add(arc);
+            }
         }
     }
 }
