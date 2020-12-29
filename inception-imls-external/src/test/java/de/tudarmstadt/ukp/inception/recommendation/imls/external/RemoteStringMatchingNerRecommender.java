@@ -73,8 +73,8 @@ public class RemoteStringMatchingNerRecommender
         featureName = aRecommender.getFeature().getName();
     }
 
-    public void train(String aTrainingRequestJson) throws UIMAException, SAXException,
-        IOException, RecommendationException
+    public void train(String aTrainingRequestJson)
+        throws UIMAException, SAXException, IOException, RecommendationException
     {
         TrainingRequest request = deserializeTrainingRequest(aTrainingRequestJson);
 
@@ -92,13 +92,14 @@ public class RemoteStringMatchingNerRecommender
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(aRequestJson, TrainingRequest.class);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public String predict(String aPredictionRequestJson) throws IOException, UIMAException,
-        SAXException, RecommendationException
+    public String predict(String aPredictionRequestJson)
+        throws IOException, UIMAException, SAXException, RecommendationException
     {
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
         CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());

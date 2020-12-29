@@ -36,7 +36,7 @@ public class WhitespaceNormalizingSanitizer
 
         return result;
     }
-    
+
     public static KeySanitizerFactory factory()
     {
         return () -> new WhitespaceNormalizingSanitizer();

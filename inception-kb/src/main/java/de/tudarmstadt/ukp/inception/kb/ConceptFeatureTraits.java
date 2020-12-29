@@ -41,7 +41,7 @@ public class ConceptFeatureTraits
     {
         // Nothing to do
     }
-    
+
     public String getRepositoryId()
     {
         return repositoryId;
@@ -67,7 +67,8 @@ public class ConceptFeatureTraits
         return allowedValueType != null ? allowedValueType : ConceptFeatureValueType.INSTANCE;
     }
 
-    public void setAllowedValueType(ConceptFeatureValueType aAllowedType) {
+    public void setAllowedValueType(ConceptFeatureValueType aAllowedType)
+    {
         allowedValueType = aAllowedType;
     }
 
@@ -88,4 +89,3 @@ public class ConceptFeatureTraits
         }
     }
 }
-

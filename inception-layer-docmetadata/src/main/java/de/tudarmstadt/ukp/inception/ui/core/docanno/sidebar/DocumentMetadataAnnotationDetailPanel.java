@@ -70,7 +70,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
-public class DocumentMetadataAnnotationDetailPanel extends Panel
+public class DocumentMetadataAnnotationDetailPanel
+    extends Panel
 {
     private static final long serialVersionUID = 2713520228348549734L;
 
@@ -81,10 +82,10 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     private static final String CID_FEATURE_VALUES = "featureValues";
 
     public static final String ID_PREFIX = "metaFeatureEditorHead";
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    
+
     private final AnnotationPage annotationPage;
     private final CasProvider jcasProvider;
     private final IModel<Project> project;
@@ -94,7 +95,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     private final DocumentMetadataAnnotationSelectionPanel selectionPanel;
     private final AnnotationActionHandler actionHandler;
     private final AnnotatorState state;
-    
+
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
             IModel<SourceDocument> aDocument, IModel<String> aUsername, CasProvider aCasProvider,
             IModel<Project> aProject, AnnotationPage aAnnotationPage,
@@ -104,7 +105,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         super(aId, aModel);
 
         setOutputMarkupPlaceholderTag(true);
-        
+
         sourceDocument = aDocument;
         username = aUsername;
         annotationPage = aAnnotationPage;
@@ -113,12 +114,12 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         selectionPanel = aSelectionPanel;
         actionHandler = aActionHandler;
         state = aState;
-        
+
         add(featureList = createFeaturesList());
-        
+
         add(LambdaBehavior.visibleWhen(this::isVisible));
     }
-    
+
     public VID getModelObject()
     {
         return (VID) getDefaultModelObject();
@@ -140,13 +141,13 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
 
                 final FeatureState featureState = item.getModelObject();
                 final FeatureEditor editor;
-                
+
                 // Look up a suitable editor and instantiate it
                 FeatureSupport featureSupport = featureSupportRegistry
                         .getFeatureSupport(featureState.feature);
                 editor = featureSupport.createEditor(CID_EDITOR,
                         DocumentMetadataAnnotationDetailPanel.this, actionHandler,
-                         annotationPage.getModel(), item.getModel());
+                        annotationPage.getModel(), item.getModel());
 
                 if (!featureState.feature.getLayer().isReadonly()) {
                     // Whenever it is updating an annotation, it updates automatically when a
@@ -155,7 +156,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                     // the ability to add slots. Adding a slot is NOT an annotation action.
                     AnnotationFeature feature = featureState.feature;
                     if (!(feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
-                        && feature.getLinkMode().equals(LinkMode.WITH_ROLE))) {
+                            && feature.getLinkMode().equals(LinkMode.WITH_ROLE))) {
                         addAnnotateActionBehavior(editor);
                     }
 
@@ -171,7 +172,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                     Component labelComponent = editor.getLabelComponent();
                     labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
                     labelComponent.add(new DescriptionTooltipBehavior(tooltipTitle.toString(),
-                        featureState.feature.getDescription()));
+                            featureState.feature.getDescription()));
                 }
                 else {
                     editor.getFocusComponent().setEnabled(false);
@@ -182,28 +183,28 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                 // Check addAnnotateActionBehavior.
                 editor.setOutputMarkupId(true);
                 editor.setOutputMarkupPlaceholderTag(true);
-                
+
                 // Ensure that markup IDs of feature editor focus components remain constant
                 // across refreshes of the feature editor panel. This is required to restore the
                 // focus.
                 editor.getFocusComponent().setOutputMarkupId(true);
-                editor.getFocusComponent().setMarkupId(
-                        ID_PREFIX + editor.getModelObject().feature.getId());
-                
+                editor.getFocusComponent()
+                        .setMarkupId(ID_PREFIX + editor.getModelObject().feature.getId());
+
                 item.add(editor);
             }
         };
     }
-    
+
     private List<FeatureState> listFeatures()
     {
         VID vid = getModelObject();
         Project proj = project.getObject();
-        
+
         if (proj == null || vid == null || vid.isNotSet()) {
             return emptyList();
         }
-        
+
         CAS cas;
         try {
             cas = jcasProvider.get();
@@ -212,7 +213,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             LOG.error("Unable to load CAS", e);
             return emptyList();
         }
-        
+
         FeatureStructure fs;
         try {
             fs = selectFsByAddr(cas, vid.getId());
@@ -223,7 +224,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         }
         AnnotationLayer layer = annotationService.findLayer(proj, fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
-        
+
         // Populate from feature structure
         List<FeatureState> featureStates = new ArrayList<>();
         for (AnnotationFeature feature : annotationService.listSupportedFeatures(layer)) {
@@ -238,24 +239,25 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
 
             FeatureState featureState = new FeatureState(vid, feature, value);
             featureStates.add(featureState);
-            featureState.tagset = annotationService.listTags(featureState.feature.getTagset());
+            featureState.tagset = annotationService
+                    .listTagsReorderable(featureState.feature.getTagset());
         }
 
         return featureStates;
     }
-    
+
     private void addAnnotateActionBehavior(final FeatureEditor aFrag)
     {
         aFrag.addFeatureUpdateBehavior();
     }
-    
+
     private void actionAnnotate(AjaxRequestTarget aTarget)
     {
         try {
             // When updating an annotation in the sidebar, we must not force a
             // re-focus after rendering
             getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
-            
+
             // Load the boiler-plate
             CAS cas = jcasProvider.get();
             FeatureStructure fs = selectFsByAddr(cas, getModelObject().getId());
@@ -265,7 +267,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             // Update the features of the selected annotation from the values presently in
             // the feature editors
             writeFeatureEditorModelsToCas(adapter, cas);
-            
+
             // persist changes
             annotationPage.writeEditorCas(cas);
         }
@@ -273,9 +275,8 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             handleException(DocumentMetadataAnnotationDetailPanel.this, aTarget, e);
         }
     }
-    
-    private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, CAS aCas)
-            throws IOException
+
+    private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, CAS aCas) throws IOException
     {
         List<FeatureState> featureStates = featureList.getModelObject();
 
@@ -283,11 +284,11 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         List<AnnotationFeature> features = new ArrayList<>();
         for (FeatureState featureState : featureStates) {
             features.add(featureState.feature);
-            
+
             // For string features with extensible tagsets, extend the tagset
             if (CAS.TYPE_NAME_STRING.equals(featureState.feature.getType())) {
                 String value = (String) featureState.value;
-               
+
                 if (value != null && featureState.feature.getTagset() != null
                         && featureState.feature.getTagset().isCreateTag()
                         && !annotationService.existsTag(value, featureState.feature.getTagset())) {
@@ -297,21 +298,21 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                     annotationService.createTag(selectedTag);
                 }
             }
-            
+
             LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName() + " = "
                     + featureState.value);
             aAdapter.setFeatureValue(sourceDocument.getObject(), username.getObject(), aCas,
                     getModelObject().getId(), featureState.feature, featureState.value);
         }
     }
-    
+
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
             Exception aException)
     {
         if (aTarget != null) {
             aTarget.addChildren(aComponent.getPage(), IFeedback.class);
         }
-        
+
         try {
             throw aException;
         }
@@ -328,7 +329,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             LOG.error("Error: " + e.getMessage(), e);
         }
     }
-    
+
     private static final class IsSidebarAction
         extends MetaDataKey<Boolean>
     {
@@ -336,21 +337,20 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
 
         public final static IsSidebarAction INSTANCE = new IsSidebarAction();
     }
-    
+
     public void toggleVisibility()
     {
         state.clearArmedSlot();
         setVisible(!isVisible());
     }
-    
+
     @OnEvent(stop = true)
     public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
     {
         AjaxRequestTarget target = aEvent.getTarget();
         try {
             CAS cas = jcasProvider.get();
-            AnnotationFS fs =
-                selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
+            AnnotationFS fs = selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
             state.getSelection().selectSpan(fs);
             if (state.getSelection().getAnnotation().isSet()) {
                 actionHandler.actionDelete(target);
@@ -360,7 +360,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             handleException(this, target, e);
         }
     }
-    
+
     @OnEvent(stop = true)
     public void onFeatureUpdatedEvent(FeatureEditorValueChangedEvent aEvent)
     {

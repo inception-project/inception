@@ -39,54 +39,54 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 public class ConceptFeatureSupportTest
 {
     private @Mock KnowledgeBaseService kbService;
-    
+
     @Before
     public void setUp()
     {
         initMocks(this);
     }
-    
+
     @Test
     public void testAccepts()
     {
         ConceptFeatureSupport sut = new ConceptFeatureSupport(kbService);
-        
+
         AnnotationFeature feat1 = new AnnotationFeature("Dummy feature",
                 ConceptFeatureSupport.PREFIX + "someConcept");
-        
+
         AnnotationFeature feat2 = new AnnotationFeature("Dummy feature", "someConcept");
-        
+
         assertThat(sut.accepts(feat1)).isTrue();
         assertThat(sut.accepts(feat2)).isFalse();
     }
-    
+
     @Test
     public void testWrapUnwrap() throws Exception
     {
         ConceptFeatureSupport sut = new ConceptFeatureSupport(kbService);
-        
+
         AnnotationFeature feat1 = new AnnotationFeature("Dummy feature",
                 ConceptFeatureSupport.PREFIX + "someConcept");
-        
+
         KBHandle referenceHandle = new KBHandle("id", "name");
-        
+
         when(kbService.readItem((Project) any(), anyString()))
                 .thenReturn(Optional.of(new KBInstance("id", "name")));
-        
+
         when(kbService.readItem((Project) any(), anyString()))
                 .thenReturn(Optional.of(new KBInstance("id", "name")));
-        
-        
+
         assertThat(sut.wrapFeatureValue(feat1, null, "id"))
                 .isEqualToComparingFieldByField(referenceHandle);
         assertThat(sut.wrapFeatureValue(feat1, null, referenceHandle)).isSameAs(referenceHandle);
         assertThat(sut.wrapFeatureValue(feat1, null, null)).isNull();
         assertThatThrownBy(() -> sut.wrapFeatureValue(feat1, null, new Object()))
                 .isInstanceOf(IllegalArgumentException.class);
-        
+
         assertThat(sut.unwrapFeatureValue(feat1, null, referenceHandle)).isEqualTo("id");
         assertThat(sut.unwrapFeatureValue(feat1, null, "id")).isEqualTo("id");
-        assertThat(sut.unwrapFeatureValue(feat1, null, null)).isNull();;
+        assertThat(sut.unwrapFeatureValue(feat1, null, null)).isNull();
+        ;
         assertThatThrownBy(() -> sut.unwrapFeatureValue(feat1, null, new Object()))
                 .isInstanceOf(IllegalArgumentException.class);
     }

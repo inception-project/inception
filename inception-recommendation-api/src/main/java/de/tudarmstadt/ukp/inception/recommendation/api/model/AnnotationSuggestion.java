@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public abstract class AnnotationSuggestion
 {
     public static final String EXTENSION_ID = "rec";
-    
+
     /**
      * Suggestion is overlapping with an existing annotation
      */
@@ -56,8 +56,8 @@ public abstract class AnnotationSuggestion
     public static final int FLAG_TRANSIENT_REJECTED = 1 << 4;
 
     /**
-     * User has corrected the suggestion and prediction has not re-run yet (which would
-     * reinitialize the visibility state)
+     * User has corrected the suggestion and prediction has not re-run yet (which would reinitialize
+     * the visibility state)
      */
     public static final int FLAG_TRANSIENT_CORRECTED = 1 << 5;
 
@@ -91,7 +91,7 @@ public abstract class AnnotationSuggestion
         recommenderId = aRecommenderId;
         documentName = aDocumentName;
     }
-    
+
     public AnnotationSuggestion(AnnotationSuggestion aObject)
     {
         label = aObject.label;
@@ -202,8 +202,7 @@ public abstract class AnnotationSuggestion
     public VID getVID()
     {
         String payload = new VID(layerId, (int) recommenderId, id).toString();
-        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id,
-                payload);
+        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, payload);
     }
 
     @Override
@@ -239,6 +238,6 @@ public abstract class AnnotationSuggestion
     {
         return (aLabel == null && label == null) || (label != null && label.equals(aLabel));
     }
-    
+
     public abstract Position getPosition();
 }

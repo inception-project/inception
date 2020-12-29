@@ -45,7 +45,7 @@ public class SearchResult
     {
         // Nothing to do here
     }
-    
+
     public int getTokenStart()
     {
         return tokenStart;
@@ -145,10 +145,12 @@ public class SearchResult
     {
         isSelectedForAnnotation = selectedForAnnotation;
     }
-    
+
     /**
      * Indicates whether the document to which this result applies cannot be modified by the user
      * who issued the query.
+     * 
+     * @return whether the document is read-only
      */
     public boolean isReadOnly()
     {
@@ -206,6 +208,5 @@ public class SearchResult
                 .append("leftContext", leftContext).append("text", text)
                 .append("rightContext", rightContext).toString();
     }
-    
-    
+
 }

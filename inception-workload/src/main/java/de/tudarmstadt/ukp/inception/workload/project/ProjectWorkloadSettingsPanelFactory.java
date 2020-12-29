@@ -15,33 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.workload.settings;
+package de.tudarmstadt.ukp.inception.workload.project;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtensionPoint;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link WorkloadManagementAutoConfiguration#projectWorkloadSettingsPanelFactory}.
- * </p>
- */
-@Order(340)
+@Order(300)
+@Component
 public class ProjectWorkloadSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
-    private final WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
-    
+    private final WorkloadManagerExtensionPoint<Project> workloadManagerExtensionPoint;
+
     @Autowired
     public ProjectWorkloadSettingsPanelFactory(
-            WorkloadManagerExtensionPoint aWorkloadManagerExtensionPoint)
+            WorkloadManagerExtensionPoint<Project> aWorkloadManagerExtensionPoint)
     {
         workloadManagerExtensionPoint = aWorkloadManagerExtensionPoint;
     }
@@ -63,7 +58,7 @@ public class ProjectWorkloadSettingsPanelFactory
     {
         return workloadManagerExtensionPoint.getExtensions().size() > 1;
     }
-    
+
     @Override
     public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
     {

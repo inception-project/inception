@@ -14,7 +14,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package de.tudarmstadt.ukp.inception.search;
+ */
+package de.tudarmstadt.ukp.inception.search;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static org.apache.uima.cas.SerialFormat.SERIALIZED_TSI;
@@ -35,7 +36,7 @@ public class SearchCasUtils
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
         synchronized (((CASImpl) realCas).getBaseCAS()) {
             try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-                //XmiCasSerializer.serialize(aCas, null, bos, true, null);
+                // XmiCasSerializer.serialize(aCas, null, bos, true, null);
                 CasIOUtils.save(realCas, bos, SERIALIZED_TSI);
                 return bos.toByteArray();
             }

@@ -34,9 +34,19 @@ public interface SearchService
         throws IOException, ExecutionException;
 
     /**
-     * Receive the search results un-grouped as a list. See
-     * {@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, 
-     * long, long)}
+     * Receive the search results un-grouped as a list.
+     * See{@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, long, long)}
+     * 
+     * @param aUser
+     *            the current user
+     * @param aProject
+     *            the project to search in
+     * @param aQuery
+     *            the search query
+     * @param aDocument
+     *            limit search to this document or search in the whole project if null
+     * @throws IOException
+     * @throws ExecutionException
      */
     List<SearchResult> query(User aUser, Project aProject, String aQuery, SourceDocument aDocument)
         throws IOException, ExecutionException;
@@ -50,6 +60,8 @@ public interface SearchService
      *            the current user
      * @param aProject
      *            the project to search in
+     * @param aQuery
+     *            the search query
      * @param aDocument
      *            limit search to this document or search in the whole project if null
      * @param aAnnotationLayer
@@ -75,7 +87,11 @@ public interface SearchService
 
     /**
      * This method is only for testing. It allows waiting until the indexing process has completed
-     * before issueing a query.
+     * before issuing a query.
+     * 
+     * @param aProject
+     *            the project
+     * @return whether the index is flagged as valid
      */
     boolean isIndexValid(Project aProject);
 

@@ -47,7 +47,7 @@ public class ValueType
     {
         return uiName;
     }
-    
+
     public String getValueTypeSupportId()
     {
         return valueTypeSupportId;

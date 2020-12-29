@@ -33,13 +33,11 @@ public class DL4JSequenceRecommenderTraits
     private int maxTagsetSize = 70;
     private int maxSentenceLength = 150;
     private int nEpochs = 1;
-    
+
     // Network parameters
-    private OptimizationAlgorithm optimizationAlgorithm = 
-            OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT;
+    private OptimizationAlgorithm optimizationAlgorithm = OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT;
     private WeightInit weightInit = WeightInit.RELU;
-    private GradientNormalization gradientNormalization = 
-            GradientNormalization.ClipElementWiseAbsoluteValue;
+    private GradientNormalization gradientNormalization = GradientNormalization.ClipElementWiseAbsoluteValue;
     private double gradientNormalizationThreshold = 1.0;
     private Updater updater = Updater.RMSPROP;
     private double l2 = 1e-5;
@@ -56,7 +54,7 @@ public class DL4JSequenceRecommenderTraits
     {
         trainingSetSizeLimit = aLimit;
     }
-    
+
     public int getPredictionLimit()
     {
         return predictionLimit;

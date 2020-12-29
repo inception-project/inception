@@ -79,9 +79,8 @@ public class OpenNlpPosRecommenderTest
 
         sut.train(context, casList);
 
-        assertThat(context.get(OpenNlpPosRecommender.KEY_MODEL))
-            .as("Model has been set")
-            .isPresent();
+        assertThat(context.get(OpenNlpPosRecommender.KEY_MODEL)).as("Model has been set")
+                .isPresent();
     }
 
     @Test
@@ -89,7 +88,7 @@ public class OpenNlpPosRecommenderTest
     {
         OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
-        
+
         CAS cas = casList.get(0);
         try (CasStorageSession session = CasStorageSession.open()) {
             session.add("testCas", EXCLUSIVE_WRITE_ACCESS, cas);
@@ -102,8 +101,7 @@ public class OpenNlpPosRecommenderTest
 
         List<POS> predictions = RecommenderTestHelper.getPredictions(cas, POS.class);
 
-        assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
+        assertThat(predictions).as("Predictions have been written to CAS").isNotEmpty();
     }
 
     @Test
@@ -124,7 +122,7 @@ public class OpenNlpPosRecommenderTest
         System.out.printf("Accuracy: %f%n", accuracy);
         System.out.printf("Precision: %f%n", precision);
         System.out.printf("Recall: %f%n", recall);
-        
+
         assertThat(fscore).isStrictlyBetween(0.0, 1.0);
         assertThat(precision).isStrictlyBetween(0.0, 1.0);
         assertThat(recall).isStrictlyBetween(0.0, 1.0);
@@ -141,11 +139,11 @@ public class OpenNlpPosRecommenderTest
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
-            
+
             double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             assertThat(score).isStrictlyBetween(0.0, 1.0);
-            
+
             i++;
         }
     }
@@ -162,11 +160,12 @@ public class OpenNlpPosRecommenderTest
         return loadData(ds, ds.getSplit(0.2).getTrainingFiles());
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset ds, File... files) throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(Conll2006Reader.class,
-            Conll2006Reader.PARAM_PATTERNS, files,
-            Conll2006Reader.PARAM_LANGUAGE, ds.getLanguage());
+        CollectionReader reader = createReader( //
+                Conll2006Reader.class, //
+                Conll2006Reader.PARAM_PATTERNS, files, //
+                Conll2006Reader.PARAM_LANGUAGE, ds.getLanguage());
 
         List<CAS> casList = new ArrayList<>();
         while (reader.hasNext()) {
@@ -184,7 +183,7 @@ public class OpenNlpPosRecommenderTest
 
         AnnotationFeature feature = new AnnotationFeature();
         feature.setName("PosValue");
-        
+
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
         recommender.setFeature(feature);

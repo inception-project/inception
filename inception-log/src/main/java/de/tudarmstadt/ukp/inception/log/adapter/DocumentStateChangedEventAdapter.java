@@ -33,19 +33,19 @@ public class DocumentStateChangedEventAdapter
     implements EventLoggingAdapter<DocumentStateChangedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof DocumentStateChangedEvent;
     }
-    
+
     @Override
     public long getDocument(DocumentStateChangedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(DocumentStateChangedEvent aEvent)
     {

@@ -77,7 +77,7 @@ public class TaskConsumer
             }
         }
         catch (InterruptedException ie) {
-            log.info("Thread interrupted: ", ie);
+            log.trace("Thread interrupted: ", ie);
         }
     }
 

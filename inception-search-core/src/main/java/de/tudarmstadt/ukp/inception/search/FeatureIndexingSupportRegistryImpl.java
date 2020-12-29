@@ -48,9 +48,9 @@ public class FeatureIndexingSupportRegistryImpl
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final List<FeatureIndexingSupport> indexingSupportsProxy;
-    
+
     private List<FeatureIndexingSupport> indexingSupports;
-    
+
     private final Map<Long, FeatureIndexingSupport> supportCache = new HashMap<>();
 
     public FeatureIndexingSupportRegistryImpl(
@@ -58,13 +58,13 @@ public class FeatureIndexingSupportRegistryImpl
     {
         indexingSupportsProxy = aIndexingSupports;
     }
-    
+
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
     }
-    
+
     public void init()
     {
         List<FeatureIndexingSupport> fsp = new ArrayList<>();
@@ -72,31 +72,31 @@ public class FeatureIndexingSupportRegistryImpl
         if (indexingSupportsProxy != null) {
             fsp.addAll(indexingSupportsProxy);
             AnnotationAwareOrderComparator.sort(fsp);
-        
+
             for (FeatureIndexingSupport fs : fsp) {
                 log.info("Found indexing support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
-        
+
         indexingSupports = Collections.unmodifiableList(fsp);
     }
-    
+
     @Override
     public List<FeatureIndexingSupport> getFeatureSupports()
     {
         return indexingSupports;
     }
-    
+
     @Override
     public Optional<FeatureIndexingSupport> getIndexingSupport(AnnotationFeature aFeature)
     {
         FeatureIndexingSupport support = null;
-        
+
         if (aFeature.getId() != null) {
             support = supportCache.get(aFeature.getId());
         }
-        
+
         if (support == null) {
             for (FeatureIndexingSupport s : getFeatureSupports()) {
                 if (s.accepts(aFeature)) {
@@ -110,7 +110,7 @@ public class FeatureIndexingSupportRegistryImpl
                 }
             }
         }
-        
+
         return Optional.ofNullable(support);
     }
 }

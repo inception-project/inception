@@ -46,16 +46,15 @@ public class StringMatchingRecommenderFactory
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID =
-        "StringMatchingRecommender";
+    public static final String ID = "StringMatchingRecommender";
 
     private final GazeteerService gazeteerService;
-    
+
     public StringMatchingRecommenderFactory(GazeteerService aGazeteerService)
     {
         gazeteerService = aGazeteerService;
     }
-    
+
     @Override
     public String getId()
     {
@@ -85,10 +84,10 @@ public class StringMatchingRecommenderFactory
         // We exclude sentence level for the moment for no better reason than that would probably
         // generate quite large dictionaries...
         return (asList(CHARACTERS, SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-            && SPAN_TYPE.equals(aLayer.getType())
-            && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+                && SPAN_TYPE.equals(aLayer.getType())
+                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
-    
+
     @Override
     public StringMatchingRecommenderTraitsEditor createTraitsEditor(String aId,
             IModel<Recommender> aModel)

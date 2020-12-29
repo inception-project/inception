@@ -24,7 +24,7 @@
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
-  <version>0.17.0-SNAPSHOT</version>
+  <version>0.18.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
   <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
@@ -55,20 +55,20 @@
   </distributionManagement>
   <properties>
     <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.target>8</maven.compiler.target>
-    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>11</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>nl.ru.test.category.SlowTests</excludedTestCategories>
 
-    <mockito.version>3.3.3</mockito.version>
-    <assertj.version>3.15.0</assertj.version>
-    <spring.version>5.2.6.RELEASE</spring.version>
-    <spring.boot.version>2.3.0.RELEASE</spring.boot.version>
-    <spring.security.version>5.3.3.RELEASE</spring.security.version>
-    <wicket.version>8.8.0</wicket.version>
-    <wicketstuff.version>8.8.0</wicketstuff.version>
-    <wicket-jquery-ui.version>8.8.0</wicket-jquery-ui.version>
+    <mockito.version>3.6.0</mockito.version>
+    <assertj.version>3.18.1</assertj.version>
+    <spring.version>5.3.1</spring.version>
+    <spring.boot.version>2.4.0</spring.boot.version>
+    <spring.security.version>5.4.1</spring.security.version>
+    <wicket.version>9.2.0</wicket.version>
+    <wicketstuff.version>9.2.0</wicketstuff.version>
+    <wicket-jquery-ui.version>9.1.0</wicket-jquery-ui.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
     <log4j.version>2.13.2</log4j.version>
@@ -78,6 +78,7 @@
     <servlet-api.version>4.0.1</servlet-api.version>
     <lucene.version>7.3.1</lucene.version>
     <elasticsearch.version>6.3.0</elasticsearch.version>
+    <solr.version>8.5.1</solr.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
     <okhttp.version>3.14.2</okhttp.version>
@@ -97,7 +98,6 @@
     <module>inception-testing</module>
     <module>inception-ui-core</module>
     <module>inception-app-webapp</module>
-
     <!-- Internal search -->
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
@@ -105,6 +105,7 @@
     <!-- External search -->
     <module>inception-external-search-core</module>
     <module>inception-external-search-elastic</module>
+    <module>inception-external-search-solr</module>
     <module>inception-external-search-pubannotation</module>
     <module>inception-ui-external-search</module>
     <!-- Knowledge base -->
@@ -136,6 +137,8 @@
     <module>inception-workload</module>
     <module>inception-workload-matrix</module>
     <module>inception-workload-dynamic</module>
+    <!-- Packaging -->
+    <module>inception-docker</module>
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -276,167 +279,172 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-doc</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-search</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload-matrix</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload-dynamic</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-core</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-pubannotation</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-elastic</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-external-search-solr</artifactId>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-external-search</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-kb</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-html-editor</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-pdf-editor</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation-api</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-active-learning</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-kb</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-concept-linking</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-opennlp</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-dl4j</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-external</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-lapps</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-weblicht</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-example-imls-data-majority</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-log</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-testing</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-layer-docmetadata</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-image</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-scheduling</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-core</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mtas</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Testing -->
@@ -444,7 +452,7 @@
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
-        <version>4.12</version>
+        <version>4.13.1</version>
       </dependency>
       <dependency>
         <groupId>nl.ru</groupId>
@@ -1187,7 +1195,7 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-curation</artifactId>
-        <version>0.17.0-SNAPSHOT</version>
+        <version>0.18.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>org.webjars.bowergithub.xbsoftware</groupId>
@@ -1421,7 +1429,7 @@
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.22.1</version>
+          <version>0.34.1</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>

@@ -35,13 +35,13 @@ public class OpenNlpDoccatRecommenderTraitsEditor
     private static final String MID_FORM = "form";
 
     private @SpringBean RecommendationEngineFactory<OpenNlpDoccatRecommenderTraits> toolFactory;
-    
+
     private final OpenNlpDoccatRecommenderTraits traits;
 
     public OpenNlpDoccatRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
-        
+
         traits = toolFactory.readTraits(aRecommender.getObject());
 
         Form<OpenNlpDoccatRecommenderTraits> form = new Form<OpenNlpDoccatRecommenderTraits>(
@@ -66,7 +66,7 @@ public class OpenNlpDoccatRecommenderTraitsEditor
         cutoff.setMinimum(1);
         cutoff.setMaximum(100_000);
         form.add(cutoff);
-        
+
         add(form);
     }
 }

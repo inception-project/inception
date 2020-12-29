@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.apache.wicket.util.SlowTests;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -30,6 +29,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
+import nl.ru.test.category.SlowTests;
 
 @Category(SlowTests.class)
 public class PubAnnotationProviderTest
@@ -37,14 +37,14 @@ public class PubAnnotationProviderTest
     private PubAnnotationProvider sut;
     private DocumentRepository repo;
     private PubAnnotationProviderTraits traits;
-    
+
     @Before
     public void setup()
     {
         sut = new PubAnnotationProvider();
-        
+
         repo = new DocumentRepository("dummy", null);
-        
+
         traits = new PubAnnotationProviderTraits();
     }
 
@@ -52,9 +52,9 @@ public class PubAnnotationProviderTest
     public void thatQueryWorks() throws Exception
     {
         List<PubAnnotationDocumentHandle> results = sut.query(traits, "binding");
-        
-//        System.out.println(results);
-        
+
+        // System.out.println(results);
+
         assertThat(results).isNotEmpty();
     }
 
@@ -62,19 +62,19 @@ public class PubAnnotationProviderTest
     public void thatExecuteQueryWorks() throws Exception
     {
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, "binding");
-        
-//        System.out.println(results);
-        
+
+        // System.out.println(results);
+
         assertThat(results).isNotEmpty();
     }
-    
+
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
         String text = sut.getDocumentText(repo, traits, "PMC", "1064873");
-        
-//        System.out.println(text);
-        
+
+        // System.out.println(text);
+
         assertThat(text).isNotEmpty();
     }
 }

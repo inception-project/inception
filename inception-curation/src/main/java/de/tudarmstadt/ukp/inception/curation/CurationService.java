@@ -37,37 +37,36 @@ public interface CurationService
      * List users that were selected to be shown for curation by the given user
      */
     public Optional<List<User>> listUsersSelectedForCuration(String aCurrentUser, long aProjectId);
-    
+
     /**
      * Retrieves CAS associated with curation doc for the given user
      */
     public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId, SourceDocument aDoc)
         throws IOException;
-    
+
     /**
      * Write to CAS associated with curation doc for the given user and update timestamp
      */
     public void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId);
-    
+
     /**
      * Store the users that were selected to be shown for curation by the given user
      */
-    public void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId, 
+    public void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId,
             Collection<User> aUsers);
-    
+
     /**
      * Store which name the curated document should be associated with
      */
-    public void updateCurationName(String aCurrentUser, long aProjectId, 
-            String aCurationName);
-    
+    public void updateCurationName(String aCurrentUser, long aProjectId, String aCurationName);
+
     /**
      * Remove stored curation information on given user
      */
     public void removeCurrentUserInformation(String aCurrentUser, long aProjectId);
 
     /**
-     * Remove information on users that were selected to be shown for curation by the given user 
+     * Remove information on users that were selected to be shown for curation by the given user
      */
     public void clearUsersSelectedForCuration(String aUsername, Long aId);
 
@@ -84,8 +83,7 @@ public interface CurationService
     /**
      * Returns the merge strategy that the user previously selected or the manual one as default
      */
-    public MergeStrategy retrieveMergeStrategy(String aUsername,
-            long aProjectId);
+    public MergeStrategy retrieveMergeStrategy(String aUsername, long aProjectId);
 
     /**
      * Store the selected merge-strategy for the given user and project
@@ -98,7 +96,7 @@ public interface CurationService
     public User retrieveCurationUser(String aUser, long aProjectId);
 
     /**
-     * List users that were selected to be shown for curation by the given user and have finished 
+     * List users that were selected to be shown for curation by the given user and have finished
      * the given document.
      */
     public List<User> listUsersReadyForCuration(String aUsername, Project aProject,
@@ -108,4 +106,14 @@ public interface CurationService
      * List users that have finished the given document
      */
     public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument);
+
+    /**
+     * Check if user in given annotator state is curating and has finished it
+     * 
+     * @param state
+     *            the annotator state
+     * @param currentUsername
+     *            the currently logged in user
+     */
+    public boolean isCurationFinished(AnnotatorState state, String currentUsername);
 }

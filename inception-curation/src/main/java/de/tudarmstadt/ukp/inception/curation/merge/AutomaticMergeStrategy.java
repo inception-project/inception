@@ -41,17 +41,16 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
 
-
 @Component(AutomaticMergeStrategy.BEAN_NAME)
 public class AutomaticMergeStrategy
     implements MergeStrategy
 {
     public static final String BEAN_NAME = "automaticStrategy";
-    
+
     private String uiName = "Automatic";
-    
+
     private Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private @Autowired CurationService curationService;
     private @Autowired AnnotationSchemaService annotationService;
 
@@ -73,8 +72,8 @@ public class AutomaticMergeStrategy
 
     @Override
     /**
-     * Merges annotations that the given users (excluding the current one) agree on 
-     * into the current user's (might be CURATION_USER) CAS
+     * Merges annotations that the given users (excluding the current one) agree on into the current
+     * user's (might be CURATION_USER) CAS
      */
     public void merge(AnnotatorState aState, CAS aTargetCas, Map<String, CAS> aUserCasses,
             boolean aMergeIncomplete)
@@ -111,6 +110,5 @@ public class AutomaticMergeStrategy
     {
         uiName = aUiName;
     }
-    
-    
+
 }

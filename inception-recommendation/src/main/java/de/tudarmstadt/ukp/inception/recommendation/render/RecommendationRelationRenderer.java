@@ -88,10 +88,9 @@ public class RecommendationRelationRenderer
         String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
                 .orElse(getDocumentTitle(aCas));
         // TODO: Group suggestions by same source and target
+        // TODO: Use window begin and end
         List<RelationSuggestion> suggestions = predictions
-                .getRelationPredictionsForLayer(sourceDocumentName, aLayer, aWindowBeginOffset, aWindowEndOffset);
-
-
+                .getRelationPredictionsForLayer(sourceDocumentName, aLayer, -1, -1);
 
         // No recommendations to render for this layer
         if (suggestions.isEmpty()) {
@@ -100,21 +99,14 @@ public class RecommendationRelationRenderer
 
         String bratTypeName = typeAdapter.getEncodedTypeName();
 
-        //aRecommendationService.calculateVisibility(aCas, aState.getUser().getUsername(), aLayer,
-        //        groupedSuggestions, aWindowBeginOffset, aWindowEndOffset);
-
         // TODO: Sort by confidence
         for (RelationSuggestion suggestion : suggestions) {
             RelationPosition position = suggestion.getPosition();
             AnnotationFS source = WebAnnoCasUtil.selectAnnotationByAddr(aCas, position.getSource());
             AnnotationFS target = WebAnnoCasUtil.selectAnnotationByAddr(aCas, position.getTarget());
 
-            // TODO: Check whether there already exists a relation between the same start and end with the same label
-            // TODO: Render threshold
-
-            VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName,
-                    new VID(source), new VID(target),
-                   suggestion.getUiLabel(), Collections.emptyMap(), "#cccccc");
+            VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
+                    new VID(target), suggestion.getUiLabel(), Collections.emptyMap(), "#cccccc");
 
             vdoc.add(arc);
         }

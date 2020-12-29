@@ -48,7 +48,7 @@ public class WikidataIdRankFeatureGenerator
     {
         kbService = aKbService;
     }
-    
+
     @Override
     public void apply(CandidateEntity aCandidate)
     {

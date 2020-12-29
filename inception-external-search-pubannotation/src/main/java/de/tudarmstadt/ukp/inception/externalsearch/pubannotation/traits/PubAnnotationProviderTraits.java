@@ -23,7 +23,7 @@ public class PubAnnotationProviderTraits
     implements Serializable
 {
     private static final long serialVersionUID = -9198473282184073984L;
-    
+
     private String url = "http://pubannotation.org";
 
     public String getUrl()

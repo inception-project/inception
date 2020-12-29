@@ -32,23 +32,24 @@ public class BooleanLiteralValueEditor
     extends ValueEditor
 {
     private static final long serialVersionUID = 160076747725321107L;
-    
+
     private CheckBox value;
-    
+
     public BooleanLiteralValueEditor(String aId, IModel<KBStatement> aModel)
     {
         super(aId, CompoundPropertyModel.of(aModel));
-        
+
         BootstrapCheckBoxPickerConfig config = new BootstrapCheckBoxPickerConfig();
         config.withReverse(true);
-        value = new BootstrapCheckBoxPicker("value", config) {
+        value = new BootstrapCheckBoxPicker("value", config)
+        {
             private static final long serialVersionUID = -3413189824637877732L;
 
             @Override
             protected void onComponentTag(ComponentTag aTag)
             {
                 super.onComponentTag(aTag);
-                
+
                 aTag.put("data-group-cls", "btn-group-justified");
             }
         };

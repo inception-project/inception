@@ -29,14 +29,14 @@ public class AnnotationSuggestionTest
     @Test
     public void thatEqualsAndHashCodeAndCompareToWorkCorrectly()
     {
-        SpanSuggestion rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1",
-                0, 1, "a", "A", "#A", 0.1, "E1");
-        SpanSuggestion rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1",
-                0, 1, "b", "B", "#B", 0.2, "E2");
-        SpanSuggestion rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1",
-                0, 1, "c", "C", "#C", 0.1, "E1");
-        SpanSuggestion rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1",
-                0, 1, "d", "D", "#D", 0.3, "E3");
+        SpanSuggestion rec1Sug1 = new SpanSuggestion(1, 1, "rec1", 1, "value", "doc1", 0, 1, "a",
+                "A", "#A", 0.1, "E1");
+        SpanSuggestion rec1Sug2 = new SpanSuggestion(2, 1, "rec1", 1, "value", "doc1", 0, 1, "b",
+                "B", "#B", 0.2, "E2");
+        SpanSuggestion rec2Sug1 = new SpanSuggestion(3, 2, "rec2", 1, "value", "doc1", 0, 1, "c",
+                "C", "#C", 0.1, "E1");
+        SpanSuggestion rec2Sug2 = new SpanSuggestion(4, 2, "rec2", 1, "value", "doc1", 0, 1, "d",
+                "D", "#D", 0.3, "E3");
 
         List<SpanSuggestion> all = asList(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
         for (SpanSuggestion x : all) {

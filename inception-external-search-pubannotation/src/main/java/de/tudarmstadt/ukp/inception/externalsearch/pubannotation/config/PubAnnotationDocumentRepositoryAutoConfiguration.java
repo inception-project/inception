@@ -33,8 +33,8 @@ import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnot
  */
 @Configuration
 @AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "external-search.pub-annotation", name = "enabled", 
-        havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "external-search.pub-annotation", //
+        name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(ExternalSearchService.class)
 public class PubAnnotationDocumentRepositoryAutoConfiguration
 {
@@ -43,7 +43,7 @@ public class PubAnnotationDocumentRepositoryAutoConfiguration
     {
         return new PubAnnotationProviderFactory();
     }
-    
+
     @Bean
     public PubAnnotationSectionsFormatSupport pubAnnotationSectionsFormatSupport()
     {

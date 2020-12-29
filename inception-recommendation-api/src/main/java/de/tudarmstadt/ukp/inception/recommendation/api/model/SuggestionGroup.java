@@ -64,7 +64,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
     implements Serializable
 {
     private static final long serialVersionUID = 8729617486073480240L;
-    
+
     private final List<T> suggestions;
     private boolean sorted = true;
     private Position position;
@@ -76,7 +76,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
     {
         suggestions = new ArrayList<>();
     }
-    
+
     public SuggestionGroup(T... aItems)
     {
         suggestions = new ArrayList<>(asList(aItems));
@@ -103,17 +103,17 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
     {
         return documentName;
     }
-    
+
     public Position getPosition()
     {
         return position;
     }
-    
+
     public T get(int aIndex)
     {
         return suggestions.get(aIndex);
     }
-    
+
     private void ensureSortedState()
     {
         // To the outside, the group should appear to be sorted.
@@ -122,20 +122,20 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
             sorted = true;
         }
     }
-    
+
     @Override
     public Stream<T> stream()
     {
         ensureSortedState();
         return suggestions.stream();
     }
-    
+
     /**
      * Get the deltas of all candidates. The deltas are calculated separately for each recommender
      * if the group contains recommendations from multiple recommenders. That is necessary because
      * the confidence scores of different recommenders are not necessarily on the same scale.
-     * Additionally, only suggestions that are {@link SpanSuggestion#isVisible() visible} are
-     * taken into consideration.
+     * Additionally, only suggestions that are {@link SpanSuggestion#isVisible() visible} are taken
+     * into consideration.
      */
     public Map<Long, List<Delta<T>>> getAllDeltas()
     {
@@ -156,10 +156,10 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
             for (Entry<Long, List<T>> e : suggestionsByRecommenders.entrySet()) {
                 long recommenderId = e.getKey();
                 // We consider only candidates that are visible
-                List<T> candidates = e.getValue().stream()
-                        .filter(AnnotationSuggestion::isVisible).collect(toList());
+                List<T> candidates = e.getValue().stream().filter(AnnotationSuggestion::isVisible)
+                        .collect(toList());
                 List<Delta<T>> deltas = new ArrayList<>();
-                
+
                 Iterator<T> i = candidates.iterator();
                 T first = i.next();
                 while (i.hasNext()) {
@@ -168,10 +168,10 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
                     first = second;
                 }
                 deltas.add(new Delta<T>(first));
-                
+
                 result.put(recommenderId, unmodifiableList(deltas));
             }
-            
+
             return unmodifiableMap(result);
         }
     }
@@ -180,8 +180,8 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
      * Get the top delta per recommender. The deltas are calculated separately for each recommender
      * if the group contains recommendations from multiple recommenders. That is necessary because
      * the confidence scores of different recommenders are not necessarily on the same scale.
-     * Additionally, only suggestions that are {@link SpanSuggestion#isVisible() visible} are
-     * taken into consideration.
+     * Additionally, only suggestions that are {@link SpanSuggestion#isVisible() visible} are taken
+     * into consideration.
      */
     public Map<Long, Delta<T>> getTopDeltas()
     {
@@ -211,9 +211,8 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
                 // We consider only candidates that are visible - note that the filtered list is
                 // still sorted
                 List<T> visibleSuggestions = e.getValue().stream()
-                        .filter(AnnotationSuggestion::isVisible)
-                        .collect(toList());
-                
+                        .filter(AnnotationSuggestion::isVisible).collect(toList());
+
                 if (visibleSuggestions.isEmpty()) {
                     // If a recommender has no visible suggestions, we skip it - nothing to do here
                 }
@@ -228,7 +227,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
                             new Delta(visibleSuggestions.get(0), visibleSuggestions.get(1)));
                 }
             }
-            
+
             return unmodifiableMap(result);
         }
     }
@@ -237,18 +236,17 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
     public boolean add(T aSuggestion)
     {
         boolean empty = isEmpty();
-        
+
         // When we add the second element to the group, then it is probably no longer sorted
         if (!empty) {
             sorted = false;
         }
-        
+
         // All suggestions in a group must come from the same document (because they must be
         // on the same position) and layer/feature
         if (!empty) {
             T representative = get(0);
-            Validate.isTrue(
-                    Objects.equals(representative.getPosition(), aSuggestion.getPosition()),
+            Validate.isTrue(Objects.equals(representative.getPosition(), aSuggestion.getPosition()),
                     "All suggestions in a group must be at the same position: expected [%s] but got [%s]",
                     representative.getPosition(), aSuggestion.getPosition());
             Validate.isTrue(representative.getDocumentName().equals(aSuggestion.getDocumentName()),
@@ -261,7 +259,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
                     "All suggestions in a group must be for the same feature: expected [%s] but got [%s]",
                     representative.getFeature(), aSuggestion.getFeature());
         }
-        
+
         // Cache information that must be consistent in the group when the first item is added
         if (empty) {
             position = aSuggestion.getPosition();
@@ -269,7 +267,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
             layerId = aSuggestion.getLayerId();
             documentName = aSuggestion.getDocumentName();
         }
-        
+
         return suggestions.add(aSuggestion);
     }
 
@@ -280,7 +278,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
         // Avoid changes to the group via the iterator since that might interfere with our sorting
         return unmodifiableIterator(suggestions.iterator());
     }
-    
+
     @Override
     public boolean isEmpty()
     {
@@ -297,14 +295,12 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
     {
         return new SuggestionGroupCollector<T>();
     }
-    
+
     public static <T extends AnnotationSuggestion> Collection<SuggestionGroup<T>> group(
             Collection<T> aSuggestions)
     {
         SortedMap<GroupKey, SuggestionGroup<T>> grouped = aSuggestions.stream()
-                .collect(groupingBy(GroupKey::new, 
-                        TreeMap::new, 
-                        SuggestionGroup.<T>collector()));
+                .collect(groupingBy(GroupKey::new, TreeMap::new, SuggestionGroup.<T> collector()));
         return grouped.values();
     }
 
@@ -345,19 +341,16 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
         @Override
         public int compareTo(final GroupKey other)
         {
-            return new CompareToBuilder()
-                    .append(layerId, other.layerId)
-                    .append(feature, other.feature)
-                    .append(position, other.position)
-                    .toComparison();
+            return new CompareToBuilder().append(layerId, other.layerId)
+                    .append(feature, other.feature).append(position, other.position).toComparison();
         }
     }
-    
+
     public static class Delta<T extends AnnotationSuggestion>
         implements Serializable
     {
         private static final long serialVersionUID = -4892325166786170047L;
-        
+
         private final double delta;
         private final T first;
         private final T second;
@@ -397,7 +390,7 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
             return delta;
         }
     }
-    
+
     public static class SuggestionGroupCollector<T extends AnnotationSuggestion>
         implements Collector<T, SuggestionGroup<T>, SuggestionGroup<T>>
     {

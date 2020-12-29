@@ -36,11 +36,11 @@ public class UncertaintySamplingStrategy
             List<SuggestionGroup<SpanSuggestion>> suggestions)
     {
         return suggestions.stream()
-            // Fetch the top deltas per recommender
-            .flatMap(group -> group.getTopDeltas().values().stream())
-            // ... sort them in ascending order (smallest delta first)
-            .sorted(Comparator.comparingDouble(Delta::getDelta))
-            // ... and return the smallest delta (if there is one)
-            .findFirst();
+                // Fetch the top deltas per recommender
+                .flatMap(group -> group.getTopDeltas().values().stream())
+                // ... sort them in ascending order (smallest delta first)
+                .sorted(Comparator.comparingDouble(Delta::getDelta))
+                // ... and return the smallest delta (if there is one)
+                .findFirst();
     }
 }

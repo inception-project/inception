@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.sass;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.sass.SassResourceReference;
+import de.agilecoders.wicket.sass.SassResourceReference;
 
-public class KnowledgeBasePageLRR extends SassResourceReference {
+public class KnowledgeBasePageLRR
+    extends SassResourceReference
+{
 
     private static final long serialVersionUID = -5906752913389722261L;
     private static final KnowledgeBasePageLRR INSTANCE = new KnowledgeBasePageLRR();
@@ -29,14 +31,16 @@ public class KnowledgeBasePageLRR extends SassResourceReference {
      *
      * @return the single instance of the resource reference
      */
-    public static KnowledgeBasePageLRR get() {
+    public static KnowledgeBasePageLRR get()
+    {
         return INSTANCE;
     }
 
     /**
      * Private constructor
      */
-    private KnowledgeBasePageLRR() {
+    private KnowledgeBasePageLRR()
+    {
         super(KnowledgeBasePageLRR.class, "inception-ui-kbp.scss");
     }
 }

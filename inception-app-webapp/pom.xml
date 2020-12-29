@@ -20,15 +20,12 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.17.0-SNAPSHOT</version>
+    <version>0.18.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
   <name>INCEpTION - Web-Application</name>
   <packaging>war</packaging>
-  <properties>
-    <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
-  </properties>
   <dependencies>
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
@@ -126,6 +123,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-external-search-elastic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-search-solr</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -727,6 +728,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-search-mtas</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-elastic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-solr</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
@@ -908,41 +910,46 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
             <version>${spring.boot.version}</version>
-            <configuration>
-              <executable>true</executable>
-            </configuration>
             <executions>
               <execution>
                 <goals>
                   <goal>repackage</goal>
                 </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <executions>
-              <execution>
-                <!--
-                  We want the original file to be the WAR and the repackaged all-inclusive runnable
-                  thing with the embedded Tomcat to be the JAR.
-                 -->
-                <id>copy-war-to-jar</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>run</goal>
-                </goals>
                 <configuration>
-                  <target>
-                    <move file="target/${project.artifactId}-${project.version}.war" tofile="target/inception-app-standalone-${project.version}.jar" />
-                    <move file="target/${project.artifactId}-${project.version}.war.original" tofile="target/${project.artifactId}-${project.version}.war" />
-                  </target>
+                  <executable>true</executable>
+                    <!--
+                      We want the original file to be the WAR and the repackaged all-inclusive runnable
+                      thing with the embedded Tomcat to be the JAR.
+                     -->
+                  <attach>false</attach>
+                  <classifier>standalone</classifier>
                 </configuration>
               </execution>
             </executions>
           </plugin>
-        </plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-artifacts</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+                <configuration>
+                  <artifacts>
+                    <artifact>
+                      <file>target/${project.artifactId}-${project.version}-standalone.war</file>
+                      <type>jar</type>
+                      <classifier>standalone</classifier>
+                    </artifact>
+                  </artifacts>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+              </plugins>
       </build>
     </profile>
     <profile>
@@ -1018,50 +1025,6 @@
             </plugin>
           </plugins>
         </pluginManagement>
-      </build>
-    </profile>
-    <profile>
-      <id>docker</id>
-      <activation>
-        <property>
-          <name>enable-docker</name>
-        </property>
-      </activation>
-      <properties>
-        <docker.jarfile>maven/inception-app-standalone-${project.version}.jar</docker.jarfile>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>io.fabric8</groupId>
-            <artifactId>docker-maven-plugin</artifactId>
-            <configuration>
-              <images>
-                <image>
-                  <name>${docker.image.name}</name>
-                  <build>
-                    <tags>
-                      <tag>latest</tag>
-                      <tag>${project.version}</tag>
-                    </tags>
-                    <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
-                    <filter>@</filter>
-                    <assembly>
-                      <descriptorRef>artifact</descriptorRef>
-                      <inline>
-                        <files>
-                          <file>
-                            <source>${project.build.directory}/inception-app-standalone-${project.version}.jar</source>
-                          </file>
-                        </files>
-                      </inline>
-                    </assembly>
-                  </build>
-                </image>
-              </images>
-            </configuration>
-          </plugin>
-        </plugins>
       </build>
     </profile>
     <profile>

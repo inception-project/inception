@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.apache.commons.lang3.StringUtils;
@@ -41,16 +42,16 @@ public final class MtasUtils
                 widths[i] = Math.max(widths[i], String.valueOf(dump[n][i]).length());
             }
         }
-        
+
         for (int n = 0; n < dump.length; n++) {
             for (int i = 0; i < dump[n].length; i++) {
                 System.out.print(StringUtils.rightPad(String.valueOf(dump[n][i]), widths[i]));
                 System.out.print(" | ");
             }
             System.out.println();
-        }        
+        }
     }
-    
+
     public static BytesRef encodeFSAddress(int aFeatureStructureAddress)
     {
         return new BytesRef(ByteBuffer.allocate(4).putInt(aFeatureStructureAddress).array());
@@ -60,10 +61,12 @@ public final class MtasUtils
     {
         ByteBuffer buffer = ByteBuffer.allocate(4).put(aBytesRef.bytes, aBytesRef.offset,
                 aBytesRef.length);
-        buffer.flip();
+        // Cast to buffer to permit code to run on Java 8.
+        // See: https://github.com/inception-project/inception/issues/1828#issuecomment-717047584
+        ((Buffer) buffer).flip();
         return buffer.getInt();
     }
-    
+
     public static char[] bytesToChars(byte[] aBytes)
     {
         // Reserve sufficient space of the length and the char-encoded byte array
@@ -72,7 +75,7 @@ public final class MtasUtils
         // Encode the length of the byte array
         chars[0] = (char) ((aBytes.length & 0xFFFF0000) >> 16);
         chars[1] = (char) (aBytes.length & 0x0000FFFF);
-        
+
         // Encode the byte array into the char array
         for (int i = 0; i < aBytes.length; i++) {
             if (i % 2 == 0) {
@@ -82,15 +85,15 @@ public final class MtasUtils
                 chars[2 + (i / 2)] |= (char) (aBytes[i] & 0x00FF);
             }
         }
-        
+
         return chars;
     }
-    
+
     public static byte[] charsToBytes(char[] aChars)
     {
         int len = ((int) aChars[0] << 16) | aChars[1];
         byte[] bytes = new byte[len];
-        
+
         for (int i = 0; i < len; i++) {
             if (i % 2 == 0) {
                 bytes[i] = (byte) (aChars[2 + (i / 2)] >>> 8);
@@ -99,7 +102,7 @@ public final class MtasUtils
                 bytes[i] = (byte) (aChars[2 + (i / 2)] & 0x00FF);
             }
         }
-        
+
         return bytes;
     }
 }

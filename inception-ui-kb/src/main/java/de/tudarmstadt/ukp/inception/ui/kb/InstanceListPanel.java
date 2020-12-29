@@ -47,7 +47,9 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewInstanceEvent;
 
-public class InstanceListPanel extends Panel {
+public class InstanceListPanel
+    extends Panel
+{
     private static final long serialVersionUID = -2431507947235476294L;
     private static final Logger LOG = LoggerFactory.getLogger(InstanceListPanel.class);
 
@@ -58,7 +60,8 @@ public class InstanceListPanel extends Panel {
     private IModel<Boolean> showAll;
 
     public InstanceListPanel(String aId, IModel<KnowledgeBase> aKbModel, IModel<KBObject> aConcept,
-            IModel<KBObject> aInstance) {
+            IModel<KBObject> aInstance)
+    {
         super(aId, aInstance);
 
         setOutputMarkupId(true);
@@ -66,38 +69,39 @@ public class InstanceListPanel extends Panel {
         kbModel = aKbModel;
         conceptModel = aConcept;
         showAll = Model.of(Boolean.FALSE);
-        
+
         IModel<List<KBHandle>> instancesModel = LoadableDetachableModel.of(this::getInstances);
 
-        OverviewListChoice<KBObject> overviewList = new OverviewListChoice<KBObject>("instances") {
+        OverviewListChoice<KBObject> overviewList = new OverviewListChoice<KBObject>("instances")
+        {
             private static final long serialVersionUID = -122960232588575731L;
 
             @Override
             protected void onConfigure()
             {
                 super.onConfigure();
-                
+
                 setVisible(!instancesModel.getObject().isEmpty());
             }
         };
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
         overviewList.setModel(aInstance);
         overviewList.setChoices(instancesModel);
-        overviewList
-                .add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                    target -> send(getPage(), Broadcast.BREADTH,
-                                new AjaxInstanceSelectionEvent(target, aInstance.getObject()))));
+        overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                target -> send(getPage(), Broadcast.BREADTH,
+                        new AjaxInstanceSelectionEvent(target, aInstance.getObject()))));
         add(overviewList);
 
         add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
 
         LambdaAjaxLink addLink = new LambdaAjaxLink("add",
-            target -> send(getPage(), Broadcast.BREADTH, new AjaxNewInstanceEvent(target)));
+                target -> send(getPage(), Broadcast.BREADTH, new AjaxNewInstanceEvent(target)));
         addLink.add(new Label("label", new ResourceModel("instance.add")));
         addLink.add(new WriteProtectionBehavior(kbModel));
         add(addLink);
 
-        add(new Label("noInstancesNotice", new ResourceModel("instance.nonedefined")) {
+        add(new Label("noInstancesNotice", new ResourceModel("instance.nonedefined"))
+        {
             private static final long serialVersionUID = 2252854898212441711L;
 
             @Override
@@ -114,17 +118,18 @@ public class InstanceListPanel extends Panel {
                 .add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(this)));
         add(showAllCheckBox);
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
-        
-        setVisible(conceptModel.getObject() != null && 
-                isNotEmpty(conceptModel.getObject().getIdentifier()));
+
+        setVisible(conceptModel.getObject() != null
+                && isNotEmpty(conceptModel.getObject().getIdentifier()));
     }
 
-    private List<KBHandle> getInstances() {
+    private List<KBHandle> getInstances()
+    {
         if (conceptModel.getObject() != null) {
             try {
                 return kbService.listInstances(kbModel.getObject(),
@@ -132,10 +137,11 @@ public class InstanceListPanel extends Panel {
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list instances: " + e.getLocalizedMessage());
-                LOG.error("Unable to list instances.",e);
+                LOG.error("Unable to list instances.", e);
                 return Collections.emptyList();
             }
-        } else {
+        }
+        else {
             return Collections.emptyList();
         }
     }

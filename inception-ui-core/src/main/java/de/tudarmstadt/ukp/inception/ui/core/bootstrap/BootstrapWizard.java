@@ -28,31 +28,36 @@ import org.apache.wicket.extensions.wizard.WizardStep;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
 
-public class BootstrapWizard extends Wizard {
+public class BootstrapWizard
+    extends Wizard
+{
 
     private static final long serialVersionUID = 4855036643803029655L;
 
-    public BootstrapWizard(String id) {
+    public BootstrapWizard(String id)
+    {
         super(id);
     }
 
-    public BootstrapWizard(String id, IWizardModel wizardModel) {
+    public BootstrapWizard(String id, IWizardModel wizardModel)
+    {
         super(id, wizardModel);
     }
-    
+
     @Override
     public void onActiveStepChanged(final IWizardStep newStep)
     {
         super.onActiveStepChanged(newStep);
-        
+
         if (newStep instanceof WizardStep) {
             WizardStep step = (WizardStep) newStep;
             getForm().get(HEADER_ID).add(visibleWhen(() -> isNotBlank(step.getTitle())));
         }
     }
-    
+
     @Override
-    protected Component newFeedbackPanel(String id) {
+    protected Component newFeedbackPanel(String id)
+    {
         BootstrapFeedbackPanel panel = new BootstrapFeedbackPanel(id);
         panel.setOutputMarkupId(true);
         return panel;

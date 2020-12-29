@@ -82,8 +82,8 @@ public class LappsGridRecommenderFactory
         boolean isNer = NER_LAYER.equals(layer) && NER_FEATURE.equals(feature);
         boolean isPos = POS_LAYER.equals(layer) && POS_FEATURE.equals(feature);
 
-        return (isNer && anchoring == AnchoringMode.TOKENS) ||
-               (isPos && anchoring == AnchoringMode.SINGLE_TOKEN);
+        return (isNer && anchoring == AnchoringMode.TOKENS)
+                || (isPos && anchoring == AnchoringMode.SINGLE_TOKEN);
     }
 
     @Override

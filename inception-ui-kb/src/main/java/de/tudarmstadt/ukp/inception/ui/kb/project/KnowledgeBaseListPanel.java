@@ -37,24 +37,25 @@ public class KnowledgeBaseListPanel
     extends ListPanel_ImplBase
 {
     private static final long serialVersionUID = 8414963964131106164L;
-    
+
     private @SpringBean KnowledgeBaseService kbService;
-    
+
     private IModel<Project> projectModel;
     private IModel<KnowledgeBase> kbModel;
     private OverviewListChoice<KnowledgeBase> overviewList;
-    
+
     private ModalWindow modal;
 
     public KnowledgeBaseListPanel(String id, IModel<Project> aProjectModel,
-            IModel<KnowledgeBase> aKbModel) {
+            IModel<KnowledgeBase> aKbModel)
+    {
         super(id, aProjectModel);
-        
+
         setOutputMarkupId(true);
-        
-        kbModel = aKbModel;        
-        
-        projectModel = aProjectModel;        
+
+        kbModel = aKbModel;
+
+        projectModel = aProjectModel;
         overviewList = new OverviewListChoice<>("knowledgebases");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         overviewList.setChoices(
@@ -62,14 +63,15 @@ public class KnowledgeBaseListPanel
         overviewList.setModel(kbModel);
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
-        
+
         modal = new KnowledgeBaseCreationDialog("modal", projectModel);
         add(modal);
         add(new LambdaAjaxLink("new", this::actionCreate));
     }
-    
+
     @Override
-    protected void actionCreate(AjaxRequestTarget aTarget) throws Exception {
+    protected void actionCreate(AjaxRequestTarget aTarget) throws Exception
+    {
         modal.show(aTarget);
     }
 }

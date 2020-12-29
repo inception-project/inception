@@ -42,10 +42,10 @@ public class PubAnnotationSectionsReader
 
         try (InputStream is = new BufferedInputStream(
                 CompressionUtils.getInputStream(res.getLocation(), res.getInputStream()))) {
-            
+
             List<PubAnnotationDocumentSection> sections = JSONUtil.getObjectMapper().readValue(is,
                     PubAnnotationDocumentSection.JACKSON_LIST_TYPE_REF);
-            
+
             StringBuilder sb = new StringBuilder();
             for (PubAnnotationDocumentSection section : sections) {
                 if (sb.length() != 0) {
@@ -54,13 +54,13 @@ public class PubAnnotationSectionsReader
                 int begin = sb.length();
                 sb.append(section.getText());
                 int end = sb.length();
-                
+
                 Div div = new Div(aCAS, begin, end);
                 div.setId(String.valueOf(section.getDivId()));
                 div.setDivType(section.getSection());
                 div.addToIndexes();
             }
-            
+
             aCAS.setDocumentText(sb.toString());
         }
     }

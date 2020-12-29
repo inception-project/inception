@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_Impl
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -102,16 +103,16 @@ public class DocumentMetadataLayerAdapter
         throws AnnotationException
     {
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        
+
         AnnotationBaseFS newAnnotation = aCas.createFS(type);
         aCas.addFsToIndexes(newAnnotation);
-        
+
         publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(),
                 newAnnotation));
-        
+
         return newAnnotation;
     }
-    
+
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
@@ -120,17 +121,22 @@ public class DocumentMetadataLayerAdapter
 
         publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
-    
+
     @Override
     public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         // There are no behaviors for document metadata annotations yet
         /*
-        for (SpanLayerBehavior behavior : behaviors) {
-            messages.addAll(behavior.onValidate(this, aJCas));
-        }
-        */
+         * for (SpanLayerBehavior behavior : behaviors) { messages.addAll(behavior.onValidate(this,
+         * aJCas)); }
+         */
         return messages;
+    }
+
+    @Override
+    public void select(AnnotatorState aState, AnnotationFS aAnno)
+    {
+        aState.getSelection().selectSpan(aAnno);
     }
 }

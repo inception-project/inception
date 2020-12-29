@@ -45,14 +45,14 @@ public class SearchQueryRequest
     }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
-        SourceDocument aLimitedToDocument)
+            SourceDocument aLimitedToDocument)
     {
         this(aProject, aUser, aQuery, aLimitedToDocument, null, null, 0, Integer.MAX_VALUE);
     }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
-        SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
+            SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
     {
         super();
         project = aProject;

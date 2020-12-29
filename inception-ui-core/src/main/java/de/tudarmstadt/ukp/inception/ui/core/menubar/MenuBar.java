@@ -41,22 +41,22 @@ public class MenuBar
     public MenuBar(String aId)
     {
         super(aId);
-        
+
         add(new BookmarkablePageLink<>("homeLink", getApplication().getHomePage()));
 
         add(new BookmarkablePageLink<>("dashboardLink", ProjectDashboardPage.class)
-                .add(visibleWhen(() ->  Session.get().getMetaData(CURRENT_PROJECT) != null)));
+                .add(visibleWhen(() -> Session.get().getMetaData(CURRENT_PROJECT) != null)));
 
         add(new BookmarkablePageLink<>("projectsLink", ProjectsOverviewPage.class)
                 .add(visibleWhen(() -> userRepository.getCurrentUser() != null)));
 
         add(new BookmarkablePageLink<>("adminLink", AdminDashboardPage.class)
-                .add(visibleWhen(this::adminAreaAccessRequired))); 
+                .add(visibleWhen(this::adminAreaAccessRequired)));
     }
-    
+
     private boolean adminAreaAccessRequired()
     {
-        return userRepository.getCurrentUser() != null && AdminDashboardPage
-                .adminAreaAccessRequired(userRepository, projectService);
+        return userRepository.getCurrentUser() != null
+                && AdminDashboardPage.adminAreaAccessRequired(userRepository, projectService);
     }
 }

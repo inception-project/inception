@@ -20,10 +20,13 @@ package de.tudarmstadt.ukp.inception.ui.kb.event;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-public class AjaxNewConceptEvent extends AbstractAjaxAwareEvent {
+public class AjaxNewConceptEvent
+    extends AbstractAjaxAwareEvent
+{
 
-    public AjaxNewConceptEvent(AjaxRequestTarget target) {
+    public AjaxNewConceptEvent(AjaxRequestTarget target)
+    {
         super(target);
-    }   
+    }
 
 }

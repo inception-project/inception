@@ -60,7 +60,7 @@ public class ActiveLearningServiceImpl
     implements ActiveLearningService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
     private final UserDao userService;
@@ -78,8 +78,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser,
-            AnnotationLayer aLayer)
+    public List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer)
     {
         Predictions predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
 
@@ -90,11 +89,10 @@ public class ActiveLearningServiceImpl
         Map<String, SuggestionDocumentGroup<SpanSuggestion>> recommendationsMap = predictions
                 .getSpanPredictionsForWholeProject(aLayer, documentService);
 
-        return recommendationsMap.values().stream()
-                .flatMap(docMap -> docMap.stream())
+        return recommendationsMap.values().stream().flatMap(docMap -> docMap.stream())
                 .collect(toList());
     }
-    
+
     @Override
     public boolean isSuggestionVisible(LearningRecord aRecord)
     {
@@ -114,21 +112,20 @@ public class ActiveLearningServiceImpl
         }
         return false;
     }
-    
+
     @Override
     public boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer)
     {
         return learningHistoryService.hasSkippedSuggestions(aUser, aLayer);
     }
-    
+
     @Override
-    public void hideRejectedOrSkippedAnnotations(User aUser,
-            AnnotationLayer aLayer, boolean filterSkippedRecommendation,
+    public void hideRejectedOrSkippedAnnotations(User aUser, AnnotationLayer aLayer,
+            boolean filterSkippedRecommendation,
             List<SuggestionGroup<SpanSuggestion>> aSuggestionGroups)
     {
-        List<LearningRecord> records = learningHistoryService
-                .listRecords(aUser.getUsername(),
-                        aLayer);
+        List<LearningRecord> records = learningHistoryService.listRecords(aUser.getUsername(),
+                aLayer);
 
         for (SuggestionGroup<SpanSuggestion> group : aSuggestionGroups) {
             for (SpanSuggestion s : group) {
@@ -156,7 +153,7 @@ public class ActiveLearningServiceImpl
             }
         }
     }
-    
+
     @Override
     public Optional<Delta<SpanSuggestion>> generateNextSuggestion(User aUser,
             ActiveLearningUserState alState)
@@ -169,8 +166,8 @@ public class ActiveLearningServiceImpl
                 (getRecommendationsFromRecommendationService - startTimer));
 
         // remove duplicate recommendations
-        suggestions = suggestions.stream()
-                .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
+        suggestions = suggestions.stream().map(it -> removeDuplicateRecommendations(it))
+                .collect(Collectors.toList());
         long removeDuplicateRecommendation = System.currentTimeMillis();
         log.trace("Removing duplicate recommendations costs {} ms.",
                 (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
@@ -182,7 +179,7 @@ public class ActiveLearningServiceImpl
                 (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
         return alState.getStrategy().generateNextSuggestion(suggestions);
     }
-    
+
     private static SuggestionGroup<SpanSuggestion> removeDuplicateRecommendations(
             SuggestionGroup<SpanSuggestion> unmodifiedRecommendationList)
     {
@@ -196,7 +193,7 @@ public class ActiveLearningServiceImpl
 
         return cleanRecommendationList;
     }
-    
+
     private static boolean isAlreadyInCleanList(
             SuggestionGroup<SpanSuggestion> cleanRecommendationList,
             AnnotationSuggestion recommendationItem)
@@ -204,22 +201,22 @@ public class ActiveLearningServiceImpl
         String source = recommendationItem.getRecommenderName();
         String annotation = recommendationItem.getLabel();
         String documentName = recommendationItem.getDocumentName();
-            
-        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList)
-        {
+
+        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) {
             boolean areLabelsEqual = existingRecommendation.labelEquals(annotation);
             if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual
-                && existingRecommendation.getDocumentName().equals(documentName)) {
+                    && existingRecommendation.getDocumentName().equals(documentName)) {
                 return true;
             }
         }
         return false;
     }
-    
-    public static class ActiveLearningUserState implements Serializable
+
+    public static class ActiveLearningUserState
+        implements Serializable
     {
         private static final long serialVersionUID = -167705997822964808L;
-        
+
         private boolean sessionActive = false;
         private boolean doExistRecommenders = true;
         private AnnotationLayer layer;
@@ -317,7 +314,8 @@ public class ActiveLearningServiceImpl
         }
     }
 
-    public static class ActiveLearningUserStateKey implements Serializable
+    public static class ActiveLearningUserStateKey
+        implements Serializable
     {
         private static final long serialVersionUID = -2134294656221484540L;
         private String userName;

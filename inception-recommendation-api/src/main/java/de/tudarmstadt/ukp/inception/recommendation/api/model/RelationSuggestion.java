@@ -32,14 +32,13 @@ public class RelationSuggestion
 
     private final RelationPosition position;
 
-    public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
-            long aLayerId, String aFeature, String aDocumentName, AnnotationFS aSource,
-            AnnotationFS aTarget, String aLabel, String aUiLabel,
-            double aConfidence, String aConfidenceExplanation)
+    public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
+            String aFeature, String aDocumentName, AnnotationFS aSource, AnnotationFS aTarget,
+            String aLabel, String aUiLabel, double aConfidence, String aConfidenceExplanation)
     {
         super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
                 aUiLabel, aConfidence, aConfidenceExplanation);
-        
+
         position = new RelationPosition(getAddr(aSource), getAddr(aTarget));
     }
 
@@ -52,7 +51,7 @@ public class RelationSuggestion
     public RelationSuggestion(RelationSuggestion aObject)
     {
         super(aObject);
-        
+
         position = new RelationPosition(aObject.position);
     }
 
@@ -63,15 +62,15 @@ public class RelationSuggestion
     {
         return position;
     }
-    
+
     @Override
     public String toString()
     {
         return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
                 .append("recommenderName", recommenderName).append("layerId", layerId)
                 .append("feature", feature).append("documentName", documentName)
-                .append("position", position)
-                .append("label", label).append("uiLabel", uiLabel).append("confidence", confidence)
+                .append("position", position).append("label", label).append("uiLabel", uiLabel)
+                .append("confidence", confidence)
                 .append("confindenceExplanation", confidenceExplanation)
                 .append("visible", isVisible()).append("reasonForHiding", getReasonForHiding())
                 .toString();

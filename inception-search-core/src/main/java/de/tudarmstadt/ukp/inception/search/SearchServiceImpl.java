@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -151,11 +150,11 @@ public class SearchServiceImpl
         // Get the index factory
         PhysicalIndexFactory indexFactory = physicalIndexRegistry
                 .getIndexFactory(DEFAULT_PHSYICAL_INDEX_FACTORY);
-        
+
         if (indexFactory == null) {
             return null;
         }
-        
+
         // Acquire the low-level index object and attach it to the index state (transient)
         index.setPhysicalIndex(indexFactory.getPhysicalIndex(aProject));
 
@@ -167,6 +166,7 @@ public class SearchServiceImpl
      * 
      * @param aEvent
      *            The BeforeProjectRemovedEvent event
+     * @throws IOException
      */
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
@@ -288,7 +288,7 @@ public class SearchServiceImpl
                 project.getId());
 
         Index index = indexByProject.get(project.getId());
-        
+
         // If the index is null, then indexing is not supported.
         if (index == null) {
             return;
@@ -311,7 +311,6 @@ public class SearchServiceImpl
             // threads to update the index concurrently. The underlying index code should hopefully
             // be thread-safe...
             try {
-                index.getPhysicalIndex().deindexDocument(aSourceDocument);
                 index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
             }
             catch (IOException e) {
@@ -332,12 +331,12 @@ public class SearchServiceImpl
                 project.getId());
 
         Index index = indexByProject.get(project.getId());
-        
+
         // If the index is null, then indexing is not supported.
         if (index == null) {
             return;
         }
-        
+
         synchronized (index) {
             // Index already initialized? If not, schedule full re-indexing job. This will also
             // index the given document, so we can stop here after scheduling the re-indexing.
@@ -355,34 +354,12 @@ public class SearchServiceImpl
             // threads to update the index concurrently. The underlying index code should hopefully
             // be thread-safe...
             try {
-                // NOTE: Deleting and then re-indexing the annotation document could lead to
-                // no results for this annotation document being returned while the
-                // re-indexing is still in process. Therefore, we check if there is already
-                // a version of the annotation document index, we obtain the timestamp of this
-                // version, then we add the new version, and finally we remove the old version
-                // as identified by the timestamp.
-
-                // Retrieve the timestamp for the current indexed annotation document
-                Optional<String> oldVersionTimestamp = index.getPhysicalIndex()
-                        .getTimestamp(aAnnotationDocument);
-
                 // Add annotation document to the index again
                 log.trace(
                         "Indexing new version of annotation document [{}]({}) in project [{}]({})",
                         aAnnotationDocument.getName(), aAnnotationDocument.getId(),
                         project.getName(), project.getId());
                 index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
-
-                // If there was a previous timestamped indexed annotation document, remove it from
-                // index
-                if (oldVersionTimestamp.isPresent()) {
-                    log.trace(
-                            "Removing old version of annotation document [{}]({}) in project [{}]({}) with timestamp [{}]",
-                            aAnnotationDocument.getName(), aAnnotationDocument.getId(),
-                            project.getName(), project.getId(), oldVersionTimestamp.get());
-                    index.getPhysicalIndex().deindexDocument(aAnnotationDocument,
-                            oldVersionTimestamp.get());
-                }
             }
             catch (IOException e) {
                 log.error("Error indexing annotation document [{}]({}) in project [{}]({})",
@@ -455,10 +432,10 @@ public class SearchServiceImpl
 
         synchronized (index) {
             index.setInvalid(true);
-            
+
             // Clear the index
             index.getPhysicalIndex().clear();
-            
+
             // Index all the annotation documents
             for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
                 List<AnnotationDocument> annotationDocumentsForUser = documentService
@@ -487,8 +464,8 @@ public class SearchServiceImpl
                     casAsByteArray = casToByteArray(documentService.createOrReadInitialCas(doc));
                 }
                 indexDocument(doc, casAsByteArray);
-            }            
-            
+            }
+
             // After re-indexing, reset the invalid flag
             index.setInvalid(false);
             entityManager.merge(index);
@@ -523,7 +500,7 @@ public class SearchServiceImpl
         if (index == null) {
             return 0;
         }
-        
+
         ensureIndexIsCreatedAndValid(aProject, index);
 
         // Index is valid, try to execute the query

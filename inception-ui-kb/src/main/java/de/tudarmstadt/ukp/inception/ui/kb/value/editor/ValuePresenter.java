@@ -31,7 +31,7 @@ public abstract class ValuePresenter
     {
         super(aId, aModel);
     }
-    
+
     public KBStatement getModelObject()
     {
         return (KBStatement) getDefaultModelObject();

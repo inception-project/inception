@@ -72,10 +72,10 @@ public class ExternalSearchServiceImpl
         throws IOException
     {
         log.debug("Running query: {}", aQuery);
-        
+
         ExternalSearchProviderFactory factory = externalSearchProviderRegistry
                 .getExternalSearchProviderFactory(aRepository.getType());
-        
+
         ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
 
         Object traits = factory.readTraits(aRepository);
@@ -105,7 +105,7 @@ public class ExternalSearchServiceImpl
         }
         else {
             entityManager.merge(aDocumentRepository);
-        }        
+        }
     }
 
     @Override
@@ -120,7 +120,7 @@ public class ExternalSearchServiceImpl
 
         entityManager.remove(settings);
     }
-    
+
     @Override
     @Transactional
     public DocumentRepository getRepository(long aId)
@@ -142,7 +142,7 @@ public class ExternalSearchServiceImpl
 
         return provider.getDocumentResult(aRepository, traits, aCollectionId, aDocumentId);
     }
-    
+
     @Override
     public String getDocumentText(DocumentRepository aRepository, String aCollectionId,
             String aDocumentId)
