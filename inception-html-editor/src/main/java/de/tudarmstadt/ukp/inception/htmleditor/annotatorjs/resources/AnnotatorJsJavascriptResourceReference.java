@@ -24,8 +24,7 @@ public class AnnotatorJsJavascriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final AnnotatorJsJavascriptResourceReference INSTANCE = 
-            new AnnotatorJsJavascriptResourceReference();
+    private static final AnnotatorJsJavascriptResourceReference INSTANCE = new AnnotatorJsJavascriptResourceReference();
 
     /**
      * Gets the instance of the resource reference

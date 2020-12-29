@@ -35,37 +35,37 @@ public class ElasticSearchProviderTest
     private ElasticSearchProvider sut;
     private DocumentRepository repo;
     private ElasticSearchProviderTraits traits;
-    
+
     @Before
     public void setup()
     {
         sut = new ElasticSearchProvider();
-        
+
         repo = new DocumentRepository("dummy", null);
-        
+
         traits = new ElasticSearchProviderTraits();
         traits.setRemoteUrl("http://10.167.1.6:9200");
         traits.setIndexName("common-crawl-en");
         traits.setSearchPath("_search");
         traits.setObjectType("texts");
     }
-    
+
     @Test
     public void thatQueryWorks() throws Exception
     {
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, "shiny");
-        
+
         System.out.println(results);
-        
+
         assertThat(results).isNotEmpty();
     }
-    
+
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
-        String documentText = sut.getDocumentText(repo, traits,
-                "common-crawl-en", "TcBhiGABg9im2MD5uAjq");
+        String documentText = sut.getDocumentText(repo, traits, "common-crawl-en",
+                "TcBhiGABg9im2MD5uAjq");
         assertThat(documentText).isNotNull();
-        
+
     }
 }

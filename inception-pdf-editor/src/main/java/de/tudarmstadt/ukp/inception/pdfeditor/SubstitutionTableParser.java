@@ -26,7 +26,8 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * Parse substitutionTable.xml and create a map
  */
-public class SubstitutionTableParser extends DefaultHandler
+public class SubstitutionTableParser
+    extends DefaultHandler
 {
 
     private Map<String, String> substitutionTable = new HashMap<>();
@@ -38,7 +39,8 @@ public class SubstitutionTableParser extends DefaultHandler
     {
         if (qName.equals("substitutionTable")) {
             inTable = true;
-        } else if (inTable && qName.equals("substitution")) {
+        }
+        else if (inTable && qName.equals("substitution")) {
             String orig = attributes.getValue("orig");
             String subst = attributes.getValue("subst");
             substitutionTable.put(orig, subst);
@@ -53,7 +55,8 @@ public class SubstitutionTableParser extends DefaultHandler
         }
     }
 
-    public Map<String, String> getSubstitutionTable() {
+    public Map<String, String> getSubstitutionTable()
+    {
         return substitutionTable;
     }
 }

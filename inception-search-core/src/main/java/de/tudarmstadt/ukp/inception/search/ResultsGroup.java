@@ -24,7 +24,7 @@ public class ResultsGroup
     implements Serializable
 {
     private static final long serialVersionUID = -4448435773623997560L;
-    
+
     private final String groupKey;
     private final List<SearchResult> results;
 

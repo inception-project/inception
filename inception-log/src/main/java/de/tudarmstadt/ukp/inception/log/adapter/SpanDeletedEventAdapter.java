@@ -32,31 +32,31 @@ public class SpanDeletedEventAdapter
     implements EventLoggingAdapter<SpanDeletedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof SpanDeletedEvent;
     }
-    
+
     @Override
     public long getDocument(SpanDeletedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(SpanDeletedEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(SpanDeletedEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
+
     @Override
     public String getDetails(SpanDeletedEvent aEvent)
     {

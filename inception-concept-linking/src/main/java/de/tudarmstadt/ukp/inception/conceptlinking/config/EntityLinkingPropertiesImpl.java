@@ -91,4 +91,3 @@ public class EntityLinkingPropertiesImpl
         this.signatureQueryLimit = signatureQueryLimit;
     }
 }
-

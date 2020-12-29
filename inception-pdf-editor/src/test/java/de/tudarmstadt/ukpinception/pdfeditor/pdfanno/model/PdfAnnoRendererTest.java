@@ -94,7 +94,7 @@ public class PdfAnnoRendererTest
         project = new Project();
 
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-            SINGLE_TOKEN, NO_OVERLAP);
+                SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
 
         tokenPosFeature = new AnnotationFeature();
@@ -108,7 +108,7 @@ public class PdfAnnoRendererTest
         tokenPosFeature.setVisible(true);
 
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-            SINGLE_TOKEN, NO_OVERLAP);
+                SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
@@ -140,13 +140,13 @@ public class PdfAnnoRendererTest
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
         when(schemaService.listSupportedLayers(any())).thenReturn(asList(posLayer));
         when(schemaService.listAnnotationFeature(any(Project.class)))
-            .thenReturn(asList(posFeature));
+                .thenReturn(asList(posFeature));
         when(schemaService.listSupportedFeatures(any(Project.class)))
-            .thenReturn(asList(posFeature));
+                .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(layer).createAdapter(layer, 
-                () -> schemaService.listAnnotationFeature(layer));
+            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
+                    () -> schemaService.listAnnotationFeature(layer));
         });
 
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
@@ -159,15 +159,16 @@ public class PdfAnnoRendererTest
     public void testRender() throws Exception
     {
         String file = "src/test/resources/tcf04-karin-wl.xml";
-        String pdftxt = new Scanner(
-            new File("src/test/resources/rendererTestPdfExtract.txt")).useDelimiter("\\Z").next();
+        String pdftxt = new Scanner(new File("src/test/resources/rendererTestPdfExtract.txt"))
+                .useDelimiter("\\Z").next();
 
         CAS cas = JCasFactory.createJCas().getCas();
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
-            TcfReader.PARAM_SOURCE_LOCATION, file);
+                TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setAllAnnotationLayers(schemaService.listAnnotationLayer(project));
         state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setProject(project);
@@ -182,9 +183,8 @@ public class PdfAnnoRendererTest
         PdfAnnoModel annoFile = renderer.render(state, vdoc, cas.getDocumentText(), pdfExtractFile,
                 0);
 
-        assertThat(annoFile.getAnnoFileContent())
-            .isEqualToNormalizingNewlines(contentOf(
-                    new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
+        assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
+                contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
     }
 
     /**
@@ -194,13 +194,13 @@ public class PdfAnnoRendererTest
     public void testConvertToDocumentOffset() throws Exception
     {
         String file = "src/test/resources/tcf04-karin-wl.xml";
-        String pdftxt = new Scanner(
-            new File("src/test/resources/rendererTestPdfExtract.txt")).useDelimiter("\\Z").next();
+        String pdftxt = new Scanner(new File("src/test/resources/rendererTestPdfExtract.txt"))
+                .useDelimiter("\\Z").next();
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
 
         CAS cas = JCasFactory.createJCas().getCas();
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
-            TcfReader.PARAM_SOURCE_LOCATION, file);
+                TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
@@ -227,8 +227,8 @@ public class PdfAnnoRendererTest
         offsets.add(new Offset(28, 30));
         offsets.add(new Offset(35, 38));
         // convert to offests for document in INCEpTION
-        List<Offset> docOffsets =
-            PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
+        List<Offset> docOffsets = PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel,
+                pdfExtractFile);
         List<Offset> expectedOffsets = new ArrayList<>();
         expectedOffsets.add(new Offset(0, 0));
         expectedOffsets.add(new Offset(0, 1));

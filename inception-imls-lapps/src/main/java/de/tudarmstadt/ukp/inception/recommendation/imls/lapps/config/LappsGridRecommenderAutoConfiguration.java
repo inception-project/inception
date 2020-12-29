@@ -27,8 +27,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsGridRecommend
  * Provides support for calling out to LAPPS Grid for recommendations.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "recommender.lappsgrid", name = "enabled", 
-        havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "recommender.lappsgrid", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class LappsGridRecommenderAutoConfiguration
 {
     @Bean

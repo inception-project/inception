@@ -21,7 +21,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TrainingRequest {
+public class TrainingRequest
+{
 
     @JsonProperty("typeSystem")
     private String typeSystem;
@@ -57,7 +58,8 @@ public class TrainingRequest {
         return metadata;
     }
 
-    public void setMetadata(Metadata aMetadata) {
+    public void setMetadata(Metadata aMetadata)
+    {
         metadata = aMetadata;
     }
 }

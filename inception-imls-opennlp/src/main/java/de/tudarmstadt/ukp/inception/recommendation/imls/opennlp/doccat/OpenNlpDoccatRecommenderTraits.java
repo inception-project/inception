@@ -53,7 +53,7 @@ public class OpenNlpDoccatRecommenderTraits
     {
         cutoff = aCutoff;
     }
-    
+
     public int getNumThreads()
     {
         return numThreads;

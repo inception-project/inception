@@ -26,11 +26,11 @@ public class WeblichtRecommenderTraits
     private static final long serialVersionUID = -8510745169922718787L;
 
     private String url;
-    
+
     private String apiKey;
-    
+
     private Date lastKeyUpdate;
-    
+
     private WeblichtFormat chainInputFormat;
 
     private String chainInputLanguage;

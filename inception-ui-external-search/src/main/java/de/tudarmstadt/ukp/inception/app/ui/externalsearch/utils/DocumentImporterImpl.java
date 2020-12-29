@@ -42,7 +42,7 @@ public class DocumentImporterImpl
     implements DocumentImporter
 {
     private static final String PLAIN_TEXT = "text";
-    
+
     private final DocumentService documentService;
     private final ExternalSearchService externalSearchService;
 
@@ -56,8 +56,7 @@ public class DocumentImporterImpl
 
     @Override
     public boolean importDocumentFromDocumentRepository(User aUser, Project aProject,
-            String aCollectionId, 
-            String aDocumentId, DocumentRepository aRepository)
+            String aCollectionId, String aDocumentId, DocumentRepository aRepository)
         throws IOException
     {
         if (documentService.existsSourceDocument(aProject, aDocumentId)) {
@@ -67,8 +66,8 @@ public class DocumentImporterImpl
         SourceDocument document = new SourceDocument();
         document.setName(aDocumentId);
         document.setProject(aProject);
-        document.setFormat(externalSearchService.getDocumentFormat(aRepository, aCollectionId,
-                aDocumentId));
+        document.setFormat(
+                externalSearchService.getDocumentFormat(aRepository, aCollectionId, aDocumentId));
 
         try (InputStream is = externalSearchService.getDocumentAsStream(aRepository, aCollectionId,
                 aDocumentId)) {
@@ -77,7 +76,7 @@ public class DocumentImporterImpl
         catch (IOException | UIMAException e) {
             throw new IOException("Unable to retrieve document [" + aDocumentId + "]", e);
         }
-        
+
         return true;
     }
 }

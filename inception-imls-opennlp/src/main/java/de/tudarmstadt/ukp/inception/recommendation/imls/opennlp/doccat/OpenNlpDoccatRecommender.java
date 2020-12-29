@@ -61,7 +61,7 @@ public class OpenNlpDoccatRecommender
     extends RecommendationEngine
 {
     public static final Key<DoccatModel> KEY_MODEL = new Key<>("model");
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpDoccatRecommender.class);
 
     private static final String NO_CATEGORY = "<NO_CATEGORY>";
@@ -81,18 +81,17 @@ public class OpenNlpDoccatRecommender
     {
         return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
-    
+
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
-        throws RecommendationException
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
         List<DocumentSample> docSamples = extractSamples(aCasses);
-        
+
         if (docSamples.size() < 2) {
             LOG.info("Not enough training data: [{}] items", docSamples.size());
             return;
         }
-        
+
         // The beam size controls how many results are returned at most. But even if the user
         // requests only few results, we always use at least the default bean size recommended by
         // OpenNLP
@@ -100,14 +99,14 @@ public class OpenNlpDoccatRecommender
 
         TrainingParameters params = traits.getParameters();
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
-        
+
         DoccatModel model = train(docSamples, params);
-        
+
         aContext.put(KEY_MODEL, model);
     }
-    
+
     @Override
-    public RecommendationEngineCapability getTrainingCapability() 
+    public RecommendationEngineCapability getTrainingCapability()
     {
         return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
@@ -115,9 +114,9 @@ public class OpenNlpDoccatRecommender
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        DoccatModel model = aContext.get(KEY_MODEL).orElseThrow(() -> 
-                new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
-        
+        DoccatModel model = aContext.get(KEY_MODEL).orElseThrow(
+                () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
+
         DocumentCategorizerME finder = new DocumentCategorizerME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
@@ -133,15 +132,14 @@ public class OpenNlpDoccatRecommender
                 break;
             }
             predictionCount++;
-            
+
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
-            String[] tokens = tokenAnnotations.stream()
-                .map(AnnotationFS::getCoveredText)
-                .toArray(String[]::new);
+            String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
+                    .toArray(String[]::new);
 
             double[] outcome = finder.categorize(tokens);
             String label = finder.getBestCategory(outcome);
-            
+
             AnnotationFS annotation = aCas.createAnnotation(predictedType, sentence.getBegin(),
                     sentence.getEnd());
             annotation.setStringValue(predictedFeature, label);
@@ -170,22 +168,22 @@ public class OpenNlpDoccatRecommender
             default:
                 // Do nothing
                 break;
-            }            
+            }
         }
 
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
         double overallTrainingSize = data.size() - testSetSize;
         double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
-        
+
         if (trainingSetSize < 2 || testSetSize < 2) {
             String info = String.format(
                     "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s].",
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
-            
-            EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize, trainRatio);
+
+            EvaluationResult result = new EvaluationResult(trainingSetSize, testSetSize,
+                    trainRatio);
             result.setEvaluationSkipped(true);
             result.setErrorMsg(info);
             return result;
@@ -215,23 +213,22 @@ public class OpenNlpDoccatRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(
-                    cas, sentenceType, tokenType);
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
+                    tokenType);
             for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
-                String[] tokenTexts = tokens.stream()
-                    .map(AnnotationFS::getCoveredText)
-                    .toArray(String[]::new);
-                
+                String[] tokenTexts = tokens.stream().map(AnnotationFS::getCoveredText)
+                        .toArray(String[]::new);
+
                 Type annotationType = getType(cas, layerName);
                 Feature feature = annotationType.getFeatureByBaseName(featureName);
-                
+
                 for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
                     if (samples.size() >= traits.getTrainingSetSizeLimit()) {
                         break casses;
                     }
-                    
+
                     String label = annotation.getFeatureValueAsString(feature);
                     DocumentSample nameSample = new DocumentSample(
                             label != null ? label : NO_CATEGORY, tokenTexts);
@@ -241,7 +238,7 @@ public class OpenNlpDoccatRecommender
                 }
             }
         }
-        
+
         return samples;
     }
 

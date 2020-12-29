@@ -109,6 +109,8 @@ import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.SearchServiceImpl;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
+import de.tudarmstadt.ukp.inception.search.config.SearchServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
@@ -117,10 +119,8 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
-@EntityScan({ 
-        "de.tudarmstadt.ukp.clarin.webanno.model",
-        "de.tudarmstadt.ukp.inception.search.model",
-        "de.tudarmstadt.ukp.inception.kb.model",
+@EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
+        "de.tudarmstadt.ukp.inception.search.model", "de.tudarmstadt.ukp.inception.kb.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @TestPropertySource(locations = "classpath:MtasDocumentIndexTest.properties")
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -129,12 +129,12 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexSchedulerImpl;
 public class MtasDocumentIndexTest
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
     private @Autowired SearchService searchService;
-    
+
     @Rule
     public TestWatcher watcher = new TestWatcher()
     {
@@ -145,7 +145,7 @@ public class MtasDocumentIndexTest
             System.out.printf("\n=== " + methodName + " =====================\n");
         };
     };
-    
+
     @Before
     public void setUp()
     {
@@ -153,7 +153,7 @@ public class MtasDocumentIndexTest
             userRepository.create(new User("admin", Role.ROLE_ADMIN));
         }
     }
-    
+
     private void createProject(Project aProject) throws Exception
     {
         projectService.createProject(aProject);
@@ -161,27 +161,25 @@ public class MtasDocumentIndexTest
     }
 
     @SafeVarargs
-    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments)
-        throws Exception
+    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments) throws Exception
     {
         Project project = null;
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
             for (Pair<SourceDocument, String> doc : aDocuments) {
                 log.info("Uploading document via documentService.uploadSourceDocument: {}", doc);
                 project = doc.getLeft().getProject();
-                
+
                 try (InputStream fileStream = new ByteArrayInputStream(
                         doc.getRight().getBytes(UTF_8))) {
                     documentService.uploadSourceDocument(fileStream, doc.getLeft());
                 }
             }
         }
-        
+
         // Avoid the compiler complaining about project not being an effectively final variable
         log.info("Waiting for uploaded documents to be indexed...");
         Project p = project;
-        await("Waiting for indexing process to complete")
-                .atMost(60, SECONDS)
+        await("Waiting for indexing process to complete").atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
                 .until(() -> searchService.isIndexValid(p) && !searchService.isIndexInProgress(p));
         log.info("Indexing complete!");
@@ -191,10 +189,10 @@ public class MtasDocumentIndexTest
         throws Exception
     {
         log.info("Preparing annotated document....");
-        
+
         // Manually build annotated CAS
         JCas jCas = JCasFactory.createJCas();
-        
+
         JCasBuilder builder = new JCasBuilder(jCas);
 
         builder.add("The", Token.class);
@@ -203,14 +201,14 @@ public class MtasDocumentIndexTest
         builder.add(" ");
         builder.add("of", Token.class);
         builder.add(" ");
-        
+
         int begin = builder.getPosition();
         builder.add("Galicia", Token.class);
-        
+
         NamedEntity ne = new NamedEntity(jCas, begin, builder.getPosition());
         ne.setValue("LOC");
         ne.addToIndexes();
-        
+
         builder.add(" ");
         builder.add("is", Token.class);
         builder.add(" ");
@@ -221,7 +219,7 @@ public class MtasDocumentIndexTest
         builder.add("Compostela", Token.class);
         builder.add(" ");
         builder.add(".", Token.class);
-        
+
         // Create annotation document
         AnnotationDocument annotationDocument = documentService
                 .createOrGetAnnotationDocument(aSourceDocument, aUser);
@@ -233,10 +231,8 @@ public class MtasDocumentIndexTest
         }
 
         log.info("Writing for annotated document to be indexed");
-        await("Waiting for indexing process to complete")
-                .atMost(60, SECONDS)
-                .pollInterval(5, SECONDS)
-                .until(() -> searchService.isIndexValid(aProject)
+        await("Waiting for indexing process to complete").atMost(60, SECONDS)
+                .pollInterval(5, SECONDS).until(() -> searchService.isIndexValid(aProject)
                         && !searchService.isIndexInProgress(aProject));
         log.info("Indexing complete!");
     }
@@ -279,9 +275,7 @@ public class MtasDocumentIndexTest
         expectedResult.setTokenStart(3);
         expectedResult.setTokenLength(1);
 
-        assertThat(results)
-                .usingFieldByFieldElementComparator()
-                .containsExactly(expectedResult);
+        assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
 
     @Test
@@ -322,10 +316,9 @@ public class MtasDocumentIndexTest
         expectedResult.setTokenStart(8);
         expectedResult.setTokenLength(1);
 
-        assertThat(results)
-                .usingFieldByFieldElementComparator()
-                .containsExactly(expectedResult);
+        assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
+
     @Test
     public void testLimitQueryToDocument() throws Exception
     {
@@ -346,9 +339,8 @@ public class MtasDocumentIndexTest
         sourceDocument2.setProject(project);
         sourceDocument2.setFormat("text");
         String fileContent2 = "The capital of Portugal is Lissabon.";
-        
-        uploadDocument(
-                Pair.of(sourceDocument1, fileContent1),
+
+        uploadDocument(Pair.of(sourceDocument1, fileContent1),
                 Pair.of(sourceDocument2, fileContent2));
 
         User user = userRepository.get("admin");
@@ -385,12 +377,10 @@ public class MtasDocumentIndexTest
         expectedResult2.setTokenStart(1);
         expectedResult2.setTokenLength(1);
 
-        assertThat(resultsLimited)
-                .usingFieldByFieldElementComparator()
+        assertThat(resultsLimited).usingFieldByFieldElementComparator()
                 .containsExactly(expectedResult1);
-        
-        assertThat(resultsNotLimited)
-                .usingFieldByFieldElementComparator()
+
+        assertThat(resultsNotLimited).usingFieldByFieldElementComparator()
                 .containsExactlyInAnyOrder(expectedResult1, expectedResult2);
     }
 
@@ -432,11 +422,9 @@ public class MtasDocumentIndexTest
         expectedResult.setTokenStart(3);
         expectedResult.setTokenLength(1);
 
-        assertThat(results)
-                .usingFieldByFieldElementComparator()
-                .containsExactly(expectedResult);
+        assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
-    
+
     @Test
     public void testAnnotationQuery() throws Exception
     {
@@ -477,9 +465,7 @@ public class MtasDocumentIndexTest
         expectedResult.setTokenStart(3);
         expectedResult.setTokenLength(1);
 
-        assertThat(results)
-                .usingFieldByFieldElementComparator()
-                .containsExactly(expectedResult);
+        assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
     }
 
     @Configuration
@@ -488,8 +474,9 @@ public class MtasDocumentIndexTest
         private @Autowired ApplicationEventPublisher applicationEventPublisher;
         private @Autowired EntityManager entityManager;
 
-        @Rule TemporaryFolder folder;
-        
+        @Rule
+        TemporaryFolder folder;
+
         @Bean
         public ProjectService projectService(
                 @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
@@ -500,8 +487,7 @@ public class MtasDocumentIndexTest
 
         @Bean
         public PhysicalIndexFactory mtasDocumentIndexFactory(DocumentService aDocumentService,
-                AnnotationSchemaService aSchemaService,
-                RepositoryProperties aRepositoryProperties,
+                AnnotationSchemaService aSchemaService, RepositoryProperties aRepositoryProperties,
                 FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
                 FeatureSupportRegistry aFeatureSupportRegistry)
         {
@@ -513,10 +499,8 @@ public class MtasDocumentIndexTest
         @Bean
         public FeatureSupportRegistry featureSupportRegistry()
         {
-            return new FeatureSupportRegistryImpl(asList(
-                    new NumberFeatureSupport(),
-                    new BooleanFeatureSupport(), 
-                    new StringFeatureSupport()));
+            return new FeatureSupportRegistryImpl(asList(new NumberFeatureSupport(),
+                    new BooleanFeatureSupport(), new StringFeatureSupport()));
         }
 
         @Bean
@@ -566,9 +550,20 @@ public class MtasDocumentIndexTest
         }
 
         @Bean
-        public SearchService searchService()
+        public SearchService searchService(DocumentService aDocumentService,
+                ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
+                IndexScheduler aIndexScheduler, SearchServiceProperties aProperties)
         {
-            return new SearchServiceImpl();
+            return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
+                    aIndexScheduler, aProperties);
+        }
+
+        @Bean
+        public SearchServiceProperties searchServiceProperties()
+        {
+            SearchServicePropertiesImpl properties = new SearchServicePropertiesImpl();
+            properties.setEnabled(true);
+            return properties;
         }
 
         @Bean
@@ -593,8 +588,8 @@ public class MtasDocumentIndexTest
         public DocumentService documentService(
                 @Lazy @Autowired(required = false) List<ProjectInitializer> aInitializerProxy)
         {
-            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
-                    casStorageService(), importExportService(), projectService(aInitializerProxy),
+            return new DocumentServiceImpl(repositoryProperties(), casStorageService(),
+                    importExportService(), projectService(aInitializerProxy),
                     applicationEventPublisher, entityManager);
         }
 
@@ -649,14 +644,13 @@ public class MtasDocumentIndexTest
         {
             return new ApplicationContextProvider();
         }
-        
+
         @Bean
         public LayerSupportRegistry layerSupportRegistry()
         {
             FeatureSupportRegistry fsr = featureSupportRegistry();
-            
-            return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(fsr, null, null),
+
+            return new LayerSupportRegistryImpl(asList(new SpanLayerSupport(fsr, null, null),
                     new RelationLayerSupport(fsr, null, null),
                     new ChainLayerSupport(fsr, null, null)));
         }

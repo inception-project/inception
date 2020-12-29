@@ -45,7 +45,7 @@ public class KnowledgeBasePageMenuItem
     private final UserDao userRepo;
     private final ProjectService projectService;
     private final KnowledgeBaseService kbService;
-    
+
     @Autowired
     public KnowledgeBasePageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
             KnowledgeBaseService aKbService)
@@ -54,25 +54,25 @@ public class KnowledgeBasePageMenuItem
         projectService = aProjectService;
         kbService = aKbService;
     }
-    
+
     @Override
     public String getPath()
     {
         return "/knowledge-base";
     }
-    
+
     @Override
     public String getIcon()
     {
         return "images/books.png";
     }
-    
+
     @Override
     public String getLabel()
     {
         return "Knowledge Base";
     }
-    
+
     @Override
     public boolean applies()
     {
@@ -80,7 +80,7 @@ public class KnowledgeBasePageMenuItem
         if (sessionProject == null) {
             return false;
         }
-        
+
         // The project object stored in the session is detached from the persistence context and
         // cannot be used immediately in DB interactions. Fetch a fresh copy from the DB.
         Project project = projectService.getProject(sessionProject.getId());
@@ -91,11 +91,11 @@ public class KnowledgeBasePageMenuItem
                 && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode()))) {
             return false;
         }
-        
+
         // not visible if the current project does not have knowledge bases
         return !kbService.getKnowledgeBases(project).isEmpty();
     }
-    
+
     @Override
     public Class<? extends Page> getPageClass()
     {

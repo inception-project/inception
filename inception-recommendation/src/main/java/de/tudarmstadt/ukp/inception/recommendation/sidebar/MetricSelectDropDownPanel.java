@@ -41,7 +41,7 @@ public class MetricSelectDropDownPanel
 
     private static final List<RecommenderEvaluationScoreMetricEnum> METRICS = Arrays
             .asList(RecommenderEvaluationScoreMetricEnum.values());
-    
+
     private static final String MID_METRIC_SELECT = "select";
     private static final String MID_METRIC_LINK = "link";
 
@@ -52,10 +52,10 @@ public class MetricSelectDropDownPanel
     {
         super(aId);
 
-        final DropDownChoice<RecommenderEvaluationScoreMetricEnum> dropdown = new 
-                DropDownChoice<RecommenderEvaluationScoreMetricEnum>(
-                MID_METRIC_SELECT, new Model<RecommenderEvaluationScoreMetricEnum>(METRICS.get(0)),
-                new ListModel<RecommenderEvaluationScoreMetricEnum>(METRICS));
+        final DropDownChoice<RecommenderEvaluationScoreMetricEnum> dropdown = //
+                new DropDownChoice<RecommenderEvaluationScoreMetricEnum>(MID_METRIC_SELECT,
+                        new Model<RecommenderEvaluationScoreMetricEnum>(METRICS.get(0)),
+                        new ListModel<RecommenderEvaluationScoreMetricEnum>(METRICS));
         dropdown.setRequired(true);
         dropdown.setOutputMarkupId(true);
 
@@ -63,14 +63,15 @@ public class MetricSelectDropDownPanel
         {
             private static final long serialVersionUID = -6744838136235652577L;
 
+            @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
                 DropDownEvent dropDownEvent = new DropDownEvent();
                 dropDownEvent.setSelectedValue(dropdown.getModelObject());
                 dropDownEvent.setTarget(target);
 
-                send(getPage(), Broadcast.BREADTH, dropDownEvent); 
-                
+                send(getPage(), Broadcast.BREADTH, dropDownEvent);
+
                 Effects.hide(target, dropdown);
                 Effects.show(target, dropdown);
                 target.appendJavaScript("document.getElementById('" + link.getMarkupId()
@@ -83,10 +84,9 @@ public class MetricSelectDropDownPanel
         add(dropdown);
 
         link = new AjaxLink<Void>(MID_METRIC_LINK)
-        {            
+        {
             private static final long serialVersionUID = 1L;
 
-            
             @Override
             public void onClick(AjaxRequestTarget target)
             {

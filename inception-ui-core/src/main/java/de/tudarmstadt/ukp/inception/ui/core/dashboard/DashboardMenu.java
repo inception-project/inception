@@ -63,7 +63,7 @@ public class DashboardMenu
             {
                 MenuItem item = aItem.getModelObject();
                 final Class<? extends Page> pageClass = item.getPageClass();
-                
+
                 Link<Void> menulink;
                 if (isSendProjectIdToPage()) {
                     menulink = new StatelessLink<Void>("item")
@@ -86,29 +86,29 @@ public class DashboardMenu
                 else {
                     menulink = new BookmarkablePageLink<>("item", pageClass);
                 }
-                
+
                 UrlResourceReference imageRef = new UrlResourceReference(Url.parse(item.getIcon()));
                 imageRef.setContextRelative(true);
                 menulink.add(new Image("icon", imageRef));
                 menulink.add(new Label("label", item.getLabel()));
 
-//                Project project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
-//
-//                boolean isAdminItem = asList("ProjectPage", "ManageUsersPage")
-//                        .contains(item.getPageClass().getSimpleName());
+                // Project project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
+                //
+                // boolean isAdminItem = asList("ProjectPage", "ManageUsersPage")
+                // .contains(item.getPageClass().getSimpleName());
 
                 aItem.add(menulink);
-                aItem.setVisible(item.applies() /*&& (project != null || isAdminItem)*/);
+                aItem.setVisible(item.applies() /* && (project != null || isAdminItem) */);
             }
 
         });
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        
+
         aResponse.render(CssHeaderItem
                 .forReference(new WebjarsCssResourceReference("hover/current/css/hover.css")));
     }

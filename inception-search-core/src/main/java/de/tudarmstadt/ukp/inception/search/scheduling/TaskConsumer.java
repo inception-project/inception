@@ -77,7 +77,8 @@ public class TaskConsumer
             }
         }
         catch (InterruptedException ie) {
-            log.info("Thread interrupted: ", ie);
+            // We can (probably) safely ignore this. This happens e.g. when we wait for an
+            // active task and the system shuts down.
         }
     }
 

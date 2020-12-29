@@ -35,12 +35,12 @@ public class RecommenderContext
      * Empty context which starts out being closed.
      */
     public static final RecommenderContext EMPTY_CONTEXT;
-    
+
     static {
-        EMPTY_CONTEXT = new  RecommenderContext();
+        EMPTY_CONTEXT = new RecommenderContext();
         EMPTY_CONTEXT.close();
     }
-    
+
     private final Map<String, Object> store;
     private List<LogMessage> messages;
     private Optional<User> user;
@@ -64,16 +64,16 @@ public class RecommenderContext
         if (closed) {
             throw new IllegalStateException("Adding data to a closed context is not permitted.");
         }
-        
+
         store.put(aKey.name, aValue);
     }
-    
+
     synchronized public void info(String aFormat, Object... aValues)
     {
         if (closed) {
             throw new IllegalStateException("Adding data to a closed context is not permitted.");
         }
-        
+
         messages.add(LogMessage.info(this, aFormat, aValues));
     }
 
@@ -82,7 +82,7 @@ public class RecommenderContext
         if (closed) {
             throw new IllegalStateException("Adding data to a closed context is not permitted.");
         }
-        
+
         messages.add(LogMessage.warn(this, aFormat, aValues));
     }
 
@@ -91,10 +91,10 @@ public class RecommenderContext
         if (closed) {
             throw new IllegalStateException("Adding data to a closed context is not permitted.");
         }
-        
+
         messages.add(LogMessage.error(this, aFormat, aValues));
     }
-    
+
     public List<LogMessage> getMessages()
     {
         return messages;
@@ -110,7 +110,7 @@ public class RecommenderContext
             messages = Collections.unmodifiableList(messages);
         }
     }
-    
+
     /**
      * @return whether the context is closed.
      */
@@ -118,7 +118,7 @@ public class RecommenderContext
     {
         return closed;
     }
-    
+
     public static class Key<T>
     {
         private final String name;
@@ -128,12 +128,14 @@ public class RecommenderContext
             name = aName;
         }
     }
-    
-    public Optional<User> getUser() {
+
+    public Optional<User> getUser()
+    {
         return user;
     }
-    
-    public void setUser(User aUser) {
+
+    public void setUser(User aUser)
+    {
         user = Optional.ofNullable(aUser);
     }
 }

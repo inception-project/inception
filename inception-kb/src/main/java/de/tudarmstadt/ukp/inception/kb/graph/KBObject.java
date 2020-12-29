@@ -37,13 +37,12 @@ public interface KBObject
     /**
      * Returns the knowledge base of this element.
      * 
-     * @return the {@link KnowledgeBase} for the object 
+     * @return the {@link KnowledgeBase} for the object
      */
     KnowledgeBase getKB();
 
     void setKB(KnowledgeBase kb);
 
-    
     /**
      * Returns the unique identifier of this element.
      * 
@@ -60,12 +59,14 @@ public interface KBObject
 
     /**
      * Sets the label of this element.
-     * @param label the label of this element
+     * 
+     * @param label
+     *            the label of this element
      */
     void setName(String label);
-    
+
     String getDescription();
-    
+
     void setDescription(String label);
 
     /**
@@ -85,7 +86,8 @@ public interface KBObject
      * 
      * @return a UI-friendly representation of this {@code KBObject}.
      */
-    default String getUiLabel() {
+    default String getUiLabel()
+    {
         String name = getName();
         if (name != null) {
             return name;
@@ -100,16 +102,18 @@ public interface KBObject
             else {
                 return getIdentifier();
             }
-        } else {
+        }
+        else {
             return getIdentifier();
         }
     }
-    
+
     /**
      * 
      * @return a {@code KBHandle} from {@code KBObject}
      */
-    default KBHandle toKBHandle() {
+    default KBHandle toKBHandle()
+    {
         KBHandle handle = new KBHandle();
         handle.setIdentifier(getIdentifier());
         handle.setName(getName());

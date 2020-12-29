@@ -86,9 +86,7 @@ public class DocumentRepositoryEditorPanel
         add(form);
 
         form.add(new TextField<String>("name")
-                .add(new LambdaAjaxFormSubmittingBehavior("change", t -> 
-                    t.add(form)
-                )));
+                .add(new LambdaAjaxFormSubmittingBehavior("change", t -> t.add(form))));
 
         IModel<Pair<String, String>> typeModel = LambdaModelAdapter.of(() -> {
             return listTypes().stream()
@@ -141,7 +139,7 @@ public class DocumentRepositoryEditorPanel
             {
                 actionSave(aTarget);
             };
-            
+
             @Override
             protected void onError(AjaxRequestTarget aTarget)
             {
@@ -190,7 +188,7 @@ public class DocumentRepositoryEditorPanel
         externalSearchService.createOrUpdateDocumentRepository(documentRepository);
 
         success("Document repository settings saved");
-        
+
         // causes deselection after saving
         repositoryModel.setObject(null);
 

@@ -37,14 +37,14 @@ public class PubAnnotationProviderTest
     private PubAnnotationProvider sut;
     private DocumentRepository repo;
     private PubAnnotationProviderTraits traits;
-    
+
     @Before
     public void setup()
     {
         sut = new PubAnnotationProvider();
-        
+
         repo = new DocumentRepository("dummy", null);
-        
+
         traits = new PubAnnotationProviderTraits();
     }
 
@@ -52,9 +52,9 @@ public class PubAnnotationProviderTest
     public void thatQueryWorks() throws Exception
     {
         List<PubAnnotationDocumentHandle> results = sut.query(traits, "binding");
-        
-//        System.out.println(results);
-        
+
+        // System.out.println(results);
+
         assertThat(results).isNotEmpty();
     }
 
@@ -62,19 +62,19 @@ public class PubAnnotationProviderTest
     public void thatExecuteQueryWorks() throws Exception
     {
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, "binding");
-        
-//        System.out.println(results);
-        
+
+        // System.out.println(results);
+
         assertThat(results).isNotEmpty();
     }
-    
+
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
         String text = sut.getDocumentText(repo, traits, "PMC", "1064873");
-        
-//        System.out.println(text);
-        
+
+        // System.out.println(text);
+
         assertThat(text).isNotEmpty();
     }
 }

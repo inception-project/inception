@@ -17,7 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.search.config;
 
+import java.time.Duration;
+
 public interface SearchServiceProperties
 {
     boolean isEnabled();
+
+    /**
+     * Time to keep an index open after it has last been used.
+     */
+    Duration getIndexKeepOpenTime();
 }

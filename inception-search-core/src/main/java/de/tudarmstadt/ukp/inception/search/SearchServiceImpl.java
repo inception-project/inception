@@ -18,13 +18,19 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -36,10 +42,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
-
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.github.benmanes.caffeine.cache.RemovalCause;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -56,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
@@ -75,42 +78,113 @@ public class SearchServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
 
-    private @Autowired DocumentService documentService;
-    private @Autowired ProjectService projectService;
-    private @Autowired PhysicalIndexRegistry physicalIndexRegistry;
-    private @Autowired IndexScheduler indexScheduler;
+    private final DocumentService documentService;
+    private final ProjectService projectService;
+    private final PhysicalIndexRegistry physicalIndexRegistry;
+    private final IndexScheduler indexScheduler;
+    private final SearchServiceProperties properties;
+    private final ScheduledExecutorService schedulerService;
 
     // In fact - the only factory we have at the moment...
     private final String DEFAULT_PHSYICAL_INDEX_FACTORY = "mtasDocumentIndexFactory";
 
-    // The indexes for each project
-    private LoadingCache<Long, Index> indexByProject;
+    private boolean shutdown = false;
 
     @Autowired
-    public SearchServiceImpl()
+    public SearchServiceImpl(DocumentService aDocumentService, ProjectService aProjectService,
+            PhysicalIndexRegistry aPhysicalIndexRegistry, IndexScheduler aIndexScheduler,
+            SearchServiceProperties aProperties)
     {
-        indexByProject = Caffeine.newBuilder().expireAfterAccess(10, MINUTES).maximumSize(1_000)
-                .removalListener(this::unloadIndex).build(key -> loadIndex(key));
+        documentService = aDocumentService;
+        projectService = aProjectService;
+        physicalIndexRegistry = aPhysicalIndexRegistry;
+        indexScheduler = aIndexScheduler;
+
+        properties = aProperties;
+        log.info("Index keep-open time: {}", properties.getIndexKeepOpenTime());
+
+        schedulerService = new ScheduledThreadPoolExecutor(0);
+        schedulerService.scheduleWithFixedDelay(this::closeIdleIndexes, 10, 10, SECONDS);
+    }
+
+    private void closeIdleIndexes()
+    {
+        long now = System.currentTimeMillis();
+        long idleAllowed = properties.getIndexKeepOpenTime().toMillis();
+
+        List<PooledIndex> pooledIndexesSnapshot;
+        synchronized (indexes) {
+            pooledIndexesSnapshot = new ArrayList<>(indexes.values());
+
+            for (PooledIndex pooledIndex : pooledIndexesSnapshot) {
+                if (pooledIndex.isIdle() && (now - pooledIndex.getLastAccess() > idleAllowed)
+                        || pooledIndex.isForceRecycle()) {
+                    unloadIndex(pooledIndex);
+                }
+            }
+        }
     }
 
     @Override
     public void destroy()
     {
-        // Invalidate all the cached/open indexes so they get closed
-        if (indexByProject != null) {
-            indexByProject.invalidateAll();
+        log.info("Shutting down search service!");
+
+        shutdown = true;
+
+        schedulerService.shutdown();
+
+        // We'll just wait a bit for any running indexing tasks to finish up before we close
+        // all the indexes
+        long t0 = currentTimeMillis();
+        while (indexScheduler.isBusy() && currentTimeMillis() - t0 < 10_000) {
+            try {
+                Thread.sleep(500);
+            }
+            catch (InterruptedException e) {
+                // Ignore
+            }
+        }
+
+        while (!indexes.isEmpty()) {
+            synchronized (indexes) {
+                List<PooledIndex> pooledIndexesSnapshot = new ArrayList<>(indexes.values());
+
+                for (PooledIndex pooledIndex : pooledIndexesSnapshot) {
+                    unloadIndex(pooledIndex);
+                }
+            }
         }
     }
 
     /**
      * Unloads the index state and deactivates/closes the underlying physical index.
      */
-    private void unloadIndex(Long aProjectId, Index aIndex, RemovalCause aCause)
+    private synchronized void unloadIndex(PooledIndex aIndex)
     {
-        if (aIndex.getPhysicalIndex() != null && aIndex.getPhysicalIndex().isOpen()) {
-            log.trace("Unloading index for project [{}]({})", aIndex.getProject().getName(),
-                    aIndex.getProject().getId());
-            aIndex.getPhysicalIndex().close();
+        if (aIndex.isDead()) {
+            return;
+        }
+
+        aIndex.dead();
+
+        Index index = aIndex.get();
+
+        log.trace("Unloading index for project [{}]({})", index.getProject().getName(),
+                index.getProject().getId());
+
+        synchronized (indexes) {
+            try {
+                indexes.remove(index.getProject().getId());
+
+                if (index.getPhysicalIndex() != null) {
+                    index.getPhysicalIndex().close();
+                }
+            }
+            catch (Throwable e) {
+                log.error("Exception while tying to unload index for project [{}]({})",
+                        index.getProject().getName(), index.getProject().getId(), e);
+            }
         }
     }
 
@@ -122,7 +196,7 @@ public class SearchServiceImpl
      *            the project ID
      * @return the index or {@code null} if there is no suitable index factory.
      */
-    private Index loadIndex(long aProjectId)
+    private synchronized Index loadIndex(long aProjectId)
     {
         Project aProject = projectService.getProject(aProjectId);
 
@@ -150,11 +224,11 @@ public class SearchServiceImpl
         // Get the index factory
         PhysicalIndexFactory indexFactory = physicalIndexRegistry
                 .getIndexFactory(DEFAULT_PHSYICAL_INDEX_FACTORY);
-        
+
         if (indexFactory == null) {
             return null;
         }
-        
+
         // Acquire the low-level index object and attach it to the index state (transient)
         index.setPhysicalIndex(indexFactory.getPhysicalIndex(aProject));
 
@@ -162,11 +236,12 @@ public class SearchServiceImpl
     }
 
     /**
-     * beforeProjectRemove event. Triggered before a project is removed
+     * Triggered before a project is removed.
      * 
      * @param aEvent
-     *            The BeforeProjectRemovedEvent event
+     *            the event
      * @throws IOException
+     *             if the index cannot be removed.
      */
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent) throws IOException
@@ -176,16 +251,12 @@ public class SearchServiceImpl
         log.trace("Removing index for project [{}]({}) because project is being removed",
                 project.getName(), project.getId());
 
-        // Retrieve index entry for the project
-        Index index = indexByProject.get(project.getId());
+        try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
+            // Remove the index entry from the memory map
+            unloadIndex(pooledIndex);
 
-        // If the index is null, then indexing is not supported.
-        if (index == null) {
-            return;
-        }
-
-        synchronized (index) {
             // Physical index exists, drop it
+            Index index = pooledIndex.get();
             if (index.getPhysicalIndex().isCreated()) {
                 index.getPhysicalIndex().delete();
             }
@@ -193,9 +264,44 @@ public class SearchServiceImpl
             // Delete the index entry from the DB
             entityManager
                     .remove(entityManager.contains(index) ? index : entityManager.merge(index));
+        }
+    }
 
-            // Remove the index entry from the memory map
-            indexByProject.invalidate(project.getId());
+    private final Map<Long, PooledIndex> indexes = new HashMap<>();
+
+    private PooledIndex acquireIndex(long aId)
+    {
+        synchronized (indexes) {
+            PooledIndex pooledIndex = indexes.get(aId);
+
+            // If the index needs to be recycled, we need to wait for exclusive access and then
+            // recycle it
+            if (pooledIndex != null) {
+                if (pooledIndex.isForceRecycle() || pooledIndex.isDead()) {
+                    while (!pooledIndex.isIdle() && !pooledIndex.isDead()) {
+                        try {
+                            log.trace("Index recycle is forced but index is not idle - waiting...");
+                            Thread.sleep(1000);
+                        }
+                        catch (InterruptedException e) {
+                            // Ignore
+                        }
+                    }
+
+                    unloadIndex(pooledIndex);
+                    pooledIndex = null; // Reload below
+                }
+            }
+
+            if (pooledIndex == null) {
+                Index index = loadIndex(aId);
+                pooledIndex = new PooledIndex(index);
+                indexes.put(aId, pooledIndex);
+            }
+
+            pooledIndex.borrow();
+
+            return pooledIndex;
         }
     }
 
@@ -209,14 +315,8 @@ public class SearchServiceImpl
                 "Removing document [{}]({}) from index for project [{}]({}) because document is being removed",
                 document.getName(), document.getId(), project.getName(), project.getId());
 
-        Index index = indexByProject.get(project.getId());
-
-        // If the index is null, then indexing is not supported.
-        if (index == null) {
-            return;
-        }
-
-        synchronized (index) {
+        try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
+            Index index = pooledIndex.get();
             // If the index has not been created yet, there is nothing to do
             if (!index.getPhysicalIndex().isCreated()) {
                 return;
@@ -241,7 +341,6 @@ public class SearchServiceImpl
 
         // Schedule new document index process
         indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getCas());
-
     }
 
     @TransactionalEventListener(fallbackExecution = true)
@@ -262,14 +361,9 @@ public class SearchServiceImpl
 
         Project project = aEvent.getProject();
 
-        Index index = indexByProject.get(project.getId());
-
-        // If the index is null, then indexing is not supported.
-        if (index == null) {
-            return;
-        }
-
-        synchronized (index) {
+        try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
+            pooledIndex.forceRecycle();
+            Index index = pooledIndex.get();
             index.setInvalid(true);
             entityManager.merge(index);
         }
@@ -281,43 +375,43 @@ public class SearchServiceImpl
     @Override
     public void indexDocument(SourceDocument aSourceDocument, byte[] aBinaryCas)
     {
+        try (PooledIndex pooledIndex = acquireIndex(aSourceDocument.getProject().getId())) {
+            indexDocument(pooledIndex, aSourceDocument, aBinaryCas);
+        }
+    }
+
+    private void indexDocument(PooledIndex aPooledIndex, SourceDocument aSourceDocument,
+            byte[] aBinaryCas)
+    {
         Project project = aSourceDocument.getProject();
 
         log.debug("Request to index source document [{}]({}) in project [{}]({})",
                 aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
                 project.getId());
 
-        Index index = indexByProject.get(project.getId());
-        
-        // If the index is null, then indexing is not supported.
-        if (index == null) {
+        Index index = aPooledIndex.get();
+        // Index already initialized? If not, schedule full re-indexing job. This will also
+        // index the given document, so we can stop here after scheduling the re-indexing.
+        if (!index.getPhysicalIndex().isCreated()) {
+            log.trace(
+                    "Index in project [{}]({}) has not yet been initialized. Scheduling an asynchronous re-indexing.",
+                    project.getName(), project.getId());
+            index.setInvalid(true);
+            entityManager.merge(index);
+            indexScheduler.enqueueReindexTask(project);
             return;
         }
 
-        synchronized (index) {
-            // Index already initialized? If not, schedule full re-indexing job. This will also
-            // index the given document, so we can stop here after scheduling the re-indexing.
-            if (!index.getPhysicalIndex().isCreated()) {
-                log.trace(
-                        "Index in project [{}]({}) has not yet been initialized. Scheduling an asynchronous re-indexing.",
-                        project.getName(), project.getId());
-                index.setInvalid(true);
-                entityManager.merge(index);
-                indexScheduler.enqueueReindexTask(project);
-                return;
-            }
-
-            // FIXME: This can probably be pulled out of the synchronized block to allow multiple
-            // threads to update the index concurrently. The underlying index code should hopefully
-            // be thread-safe...
-            try {
-                index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
-            }
-            catch (IOException e) {
-                log.error("Error indexing source document [{}]({}) in project [{}]({})",
-                        aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
-                        project.getId(), e);
-            }
+        // FIXME: This can probably be pulled out of the synchronized block to allow multiple
+        // threads to update the index concurrently. The underlying index code should hopefully
+        // be thread-safe...
+        try {
+            index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
+        }
+        catch (IOException e) {
+            log.error("Error indexing source document [{}]({}) in project [{}]({})",
+                    aSourceDocument.getName(), aSourceDocument.getId(), project.getName(),
+                    project.getId(), e);
         }
     }
 
@@ -326,46 +420,60 @@ public class SearchServiceImpl
     {
         Project project = aAnnotationDocument.getProject();
 
+        try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
+            indexDocument(pooledIndex, aAnnotationDocument, aBinaryCas);
+        }
+    }
+
+    private boolean isPerformNoMoreActions(PooledIndex aPooledIndex)
+    {
+        // If the index is dead or marked to force-recycle, we shouldn't waste time
+        // rebuilding the index on it. Either we shut down or there is another
+        // re-indexing scheduled that will cover for us.
+        return aPooledIndex.isDead() || aPooledIndex.isForceRecycle() || shutdown;
+    }
+
+    private void indexDocument(PooledIndex aPooledIndex, AnnotationDocument aAnnotationDocument,
+            byte[] aBinaryCas)
+    {
+        Project project = aAnnotationDocument.getProject();
+
         log.debug("Request to index annotation document [{}]({}) in project [{}]({})",
                 aAnnotationDocument.getName(), aAnnotationDocument.getId(), project.getName(),
                 project.getId());
 
-        Index index = indexByProject.get(project.getId());
-        
-        // If the index is null, then indexing is not supported.
-        if (index == null) {
+        if (isPerformNoMoreActions(aPooledIndex)) {
             return;
         }
-        
-        synchronized (index) {
-            // Index already initialized? If not, schedule full re-indexing job. This will also
-            // index the given document, so we can stop here after scheduling the re-indexing.
-            if (!index.getPhysicalIndex().isCreated()) {
-                log.trace(
-                        "Index in project [{}]({}) has not yet been initialized. Scheduling an asynchronous re-indexing.",
-                        project.getName(), project.getId());
-                index.setInvalid(true);
-                entityManager.merge(index);
-                indexScheduler.enqueueReindexTask(project);
-                return;
-            }
 
-            // FIXME: This can probably be pulled out of the synchronized block to allow multiple
-            // threads to update the index concurrently. The underlying index code should hopefully
-            // be thread-safe...
-            try {
-                // Add annotation document to the index again
-                log.trace(
-                        "Indexing new version of annotation document [{}]({}) in project [{}]({})",
-                        aAnnotationDocument.getName(), aAnnotationDocument.getId(),
-                        project.getName(), project.getId());
-                index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
-            }
-            catch (IOException e) {
-                log.error("Error indexing annotation document [{}]({}) in project [{}]({})",
-                        aAnnotationDocument.getName(), aAnnotationDocument.getId(),
-                        project.getName(), project.getId(), e);
-            }
+        Index index = aPooledIndex.get();
+        // Index already initialized? If not, schedule full re-indexing job. This will also
+        // index the given document, so we can stop here after scheduling the re-indexing.
+        if (!index.getPhysicalIndex().isCreated()) {
+            log.trace(
+                    "Index in project [{}]({}) has not yet been initialized. Scheduling an asynchronous re-indexing.",
+                    project.getName(), project.getId());
+            index.setInvalid(true);
+            entityManager.merge(index);
+            indexScheduler.enqueueReindexTask(project);
+            return;
+        }
+
+        if (isPerformNoMoreActions(aPooledIndex)) {
+            return;
+        }
+
+        try {
+            // Add annotation document to the index again
+            log.trace("Indexing new version of annotation document [{}]({}) in project [{}]({})",
+                    aAnnotationDocument.getName(), aAnnotationDocument.getId(), project.getName(),
+                    project.getId());
+            index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
+        }
+        catch (IOException e) {
+            log.error("Error indexing annotation document [{}]({}) in project [{}]({})",
+                    aAnnotationDocument.getName(), aAnnotationDocument.getId(), project.getName(),
+                    project.getId(), e);
         }
     }
 
@@ -401,17 +509,14 @@ public class SearchServiceImpl
         log.trace("Query [{}] for user [{}] in project [{}]({})", aQuery, aUser.getUsername(),
                 aProject.getName(), aProject.getId());
 
-        Index index = indexByProject.get(aProject.getId());
+        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+            Index index = pooledIndex.get();
 
-        // If the index is null, then indexing is not supported.
-        if (index == null) {
-            return Collections.emptyMap();
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser,
+                    aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
         }
-
-        ensureIndexIsCreatedAndValid(aProject, index);
-
-        return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser, aQuery,
-                aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
     }
 
     /**
@@ -423,24 +528,26 @@ public class SearchServiceImpl
     {
         log.info("Re-indexing project [{}]({}) ", aProject.getName(), aProject.getId());
 
-        Index index = indexByProject.get(aProject.getId());
+        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+            if (isPerformNoMoreActions(pooledIndex)) {
+                return;
+            }
 
-        // If the index is null, then indexing is not supported.
-        if (index == null) {
-            return;
-        }
-
-        synchronized (index) {
+            Index index = pooledIndex.get();
             index.setInvalid(true);
-            
+
             // Clear the index
             index.getPhysicalIndex().clear();
-            
+
             // Index all the annotation documents
             for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
                 List<AnnotationDocument> annotationDocumentsForUser = documentService
                         .listAnnotationDocuments(aProject, user);
                 for (AnnotationDocument doc : annotationDocumentsForUser) {
+                    if (isPerformNoMoreActions(pooledIndex)) {
+                        return;
+                    }
+
                     // Because serialization is a process which modifies internal data structures of
                     // the CAS, we need exclusive access the CAS for the time being.
                     // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
@@ -449,12 +556,16 @@ public class SearchServiceImpl
                     try (CasStorageSession session = CasStorageSession.openNested()) {
                         casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
                     }
-                    indexDocument(doc, casAsByteArray);
+                    indexDocument(pooledIndex, doc, casAsByteArray);
                 }
             }
 
             // Index all the source documents
             for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
+                if (isPerformNoMoreActions(pooledIndex)) {
+                    return;
+                }
+
                 // Because serialization is a process which modifies internal data structures of
                 // the CAS, we need exclusive access the CAS for the time being.
                 // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
@@ -463,20 +574,31 @@ public class SearchServiceImpl
                 try (CasStorageSession session = CasStorageSession.openNested()) {
                     casAsByteArray = casToByteArray(documentService.createOrReadInitialCas(doc));
                 }
-                indexDocument(doc, casAsByteArray);
-            }            
-            
+
+                indexDocument(pooledIndex, doc, casAsByteArray);
+            }
+
             // After re-indexing, reset the invalid flag
             index.setInvalid(false);
             entityManager.merge(index);
         }
     }
 
+    /**
+     * For testing only...
+     */
     @Override
     public boolean isIndexValid(Project aProject)
     {
-        Index index = indexByProject.getIfPresent(aProject.getId());
-        return index != null ? !index.getInvalid() : false;
+        synchronized (indexes) {
+            PooledIndex pooledIndex = indexes.get(aProject.getId());
+
+            if (pooledIndex == null) {
+                return false;
+            }
+
+            return !pooledIndex.get().getInvalid();
+        }
     }
 
     @Override
@@ -494,18 +616,15 @@ public class SearchServiceImpl
         log.trace("Count results for query [{}] for user [{}] in project [{}]({})", aQuery,
                 aUser.getUsername(), aProject.getName(), aProject.getId());
 
-        Index index = indexByProject.get(aProject.getId());
+        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+            Index index = pooledIndex.get();
 
-        // If the index is null, then indexing is not supported.
-        if (index == null) {
-            return 0;
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            // Index is valid, try to execute the query
+            return index.getPhysicalIndex().numberOfQueryResults(new SearchQueryRequest(aProject,
+                    aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
         }
-        
-        ensureIndexIsCreatedAndValid(aProject, index);
-
-        // Index is valid, try to execute the query
-        return index.getPhysicalIndex().numberOfQueryResults(new SearchQueryRequest(aProject, aUser,
-                aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
     }
 
     /**
@@ -537,6 +656,73 @@ public class SearchServiceImpl
 
             // Throw execution exception so that the user knows the query was not run
             throw (new ExecutionException("Index still building. Try again later."));
+        }
+    }
+
+    private class PooledIndex
+        implements AutoCloseable
+    {
+        private final Index delegate;
+        private final AtomicInteger refCount;
+        private final AtomicLong lastAccess;
+
+        private AtomicBoolean forceRecycle;
+        private AtomicBoolean dead;
+
+        public PooledIndex(Index aDelegate)
+        {
+            delegate = aDelegate;
+            refCount = new AtomicInteger(0);
+            lastAccess = new AtomicLong(currentTimeMillis());
+            forceRecycle = new AtomicBoolean(false);
+            dead = new AtomicBoolean(false);
+        }
+
+        public Index get()
+        {
+            return delegate;
+        }
+
+        public void borrow()
+        {
+            refCount.incrementAndGet();
+        }
+
+        @Override
+        public void close()
+        {
+            refCount.decrementAndGet();
+            lastAccess.set(currentTimeMillis());
+        }
+
+        public void forceRecycle()
+        {
+            forceRecycle.set(true);
+        }
+
+        public boolean isForceRecycle()
+        {
+            return forceRecycle.get();
+        }
+
+        public long getLastAccess()
+        {
+            return lastAccess.get();
+        }
+
+        public boolean isIdle()
+        {
+            return refCount.get() == 0;
+        }
+
+        public void dead()
+        {
+            dead.set(true);
+        }
+
+        public boolean isDead()
+        {
+            return dead.get();
         }
     }
 }

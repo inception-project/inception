@@ -23,8 +23,8 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
- * Component for editing the traits of image features in the feature detail editor
- * of the project settings.
+ * Component for editing the traits of image features in the feature detail editor of the project
+ * settings.
  */
 public class ImageFeatureTraitsEditor
     extends Panel

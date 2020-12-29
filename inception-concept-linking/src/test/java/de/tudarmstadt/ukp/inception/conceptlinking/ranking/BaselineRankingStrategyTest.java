@@ -36,22 +36,22 @@ public class BaselineRankingStrategyTest
     public void thatiriExactlyMatchingQueryIsRankedFirst()
     {
         String query = "cand2";
-        
-        CandidateEntity cand1 = new CandidateEntity(new KBHandle("cand1"))
-                .with(KEY_QUERY, query)
-                .with(KEY_LEVENSHTEIN_QUERY, 0)
+
+        CandidateEntity cand1 = new CandidateEntity(new KBHandle("cand1")) //
+                .with(KEY_QUERY, query) //
+                .with(KEY_LEVENSHTEIN_QUERY, 0) //
                 .with(KEY_LEVENSHTEIN_MENTION, 0);
-        CandidateEntity cand2 = new CandidateEntity(new KBHandle("cand2"))
-                .with(KEY_QUERY, query)
-                .with(KEY_LEVENSHTEIN_QUERY, 5)
+        CandidateEntity cand2 = new CandidateEntity(new KBHandle("cand2")) //
+                .with(KEY_QUERY, query) //
+                .with(KEY_LEVENSHTEIN_QUERY, 5) //
                 .with(KEY_LEVENSHTEIN_MENTION, 8);
 
         List<CandidateEntity> candidates = new ArrayList<>();
         candidates.add(cand1);
         candidates.add(cand2);
-        
+
         candidates.sort(BaselineRankingStrategy.getInstance());
-        
+
         assertThat(candidates)
                 .as("Candidate where IRI exactly matches query comes before exact label match")
                 .containsExactly(cand2, cand1);

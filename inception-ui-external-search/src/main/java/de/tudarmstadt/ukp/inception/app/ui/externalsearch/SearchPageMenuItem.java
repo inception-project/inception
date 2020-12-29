@@ -42,7 +42,7 @@ public class SearchPageMenuItem
 {
     private @Autowired ExternalSearchService externalSearchService;
     private @Autowired ProjectService projectService;
-    
+
     @Override
     public String getPath()
     {

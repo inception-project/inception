@@ -68,64 +68,66 @@ import nl.ru.test.category.SlowTests;
 public class SPARQLQueryBuilderGenericTest
 {
     private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago", "zbw-gnd");
-    
+
     @Parameterized.Parameters(name = "KB = {0}")
     public static List<Object[]> data() throws Exception
     {
-        Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
-        
+        Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile
+                .readKnowledgeBaseProfiles();
+
         List<Object[]> dataList = new ArrayList<>();
         for (Entry<String, KnowledgeBaseProfile> entry : profiles.entrySet()) {
             if (SKIPPED_PROFILES.contains(entry.getKey())) {
                 continue;
             }
-            
+
             dataList.add(new Object[] { entry.getKey(), entry.getValue() });
         }
         return dataList;
     }
-    
+
     private final String profileName;
     private final KnowledgeBaseProfile profile;
-    
+
     private KnowledgeBase kb;
     private Repository repo;
-    
-    public SPARQLQueryBuilderGenericTest(String aProfileName, KnowledgeBaseProfile aProfile) throws Exception
+
+    public SPARQLQueryBuilderGenericTest(String aProfileName, KnowledgeBaseProfile aProfile)
+        throws Exception
     {
         profileName = aProfileName;
         profile = aProfile;
     }
-    
+
     @Before
     public void setup() throws Exception
     {
         // Force POST request instead of GET request
         // System.setProperty(SPARQLProtocolSession.MAXIMUM_URL_LENGTH_PARAM, "100");
-        
+
         ValueFactory vf = SimpleValueFactory.getInstance();
-        
+
         kb = new KnowledgeBase();
         kb.setDefaultLanguage(profile.getDefaultLanguage());
         kb.setType(profile.getType());
-        
+
         kb.setClassIri(profile.getMapping().getClassIri());
         kb.setSubclassIri(profile.getMapping().getSubclassIri());
         kb.setTypeIri(profile.getMapping().getTypeIri());
         kb.setLabelIri(profile.getMapping().getLabelIri());
         kb.setDescriptionIri(profile.getMapping().getDescriptionIri());
-        
+
         kb.setSubPropertyIri(profile.getMapping().getSubPropertyIri());
         kb.setPropertyTypeIri(profile.getMapping().getPropertyTypeIri());
         kb.setPropertyLabelIri(profile.getMapping().getPropertyLabelIri());
         kb.setPropertyDescriptionIri(profile.getMapping().getPropertyDescriptionIri());
-        
+
         kb.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-        
+
         kb.setDefaultDatasetIri(profile.getDefaultDataset());
 
         kb.setRootConcepts(profile.getRootConcepts().stream().map(vf::createIRI).collect(toList()));
-        
+
         kb.setMaxResults(1000);
 
         switch (kb.getType()) {
@@ -143,7 +145,7 @@ public class SPARQLQueryBuilderGenericTest
                     "Remote repository at [" + profile.getAccess().getAccessUrl()
                             + "] is not reachable",
                     isReachable(profile.getAccess().getAccessUrl()));
-            
+
             repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
             repo.init();
             break;
@@ -157,64 +159,54 @@ public class SPARQLQueryBuilderGenericTest
     public void thatRootConceptsCanBeRetrieved()
     {
         List<KBHandle> roots = asHandles(repo, SPARQLQueryBuilder.forClasses(kb).roots());
-        
+
         assertThat(roots).isNotEmpty();
     }
 
     @Test
     public void thatChildrenOfRootConceptHaveRootConceptAsParent()
     {
-        List<KBHandle> roots = asHandles(repo, SPARQLQueryBuilder
-                .forClasses(kb)
-                .roots()
-                .limit(3));
+        List<KBHandle> roots = asHandles(repo, SPARQLQueryBuilder.forClasses(kb).roots().limit(3));
         Set<String> rootIdentifiers = roots.stream().map(KBHandle::getIdentifier).collect(toSet());
-        
+
         assertThat(roots).extracting(KBHandle::getIdentifier).allMatch(_root -> {
             try (RepositoryConnection conn = repo.getConnection()) {
-                System.out.printf("R: %s%n", _root); 
-                List<KBHandle> children = SPARQLQueryBuilder
-                        .forClasses(kb)
-                        .childrenOf(_root)
+                System.out.printf("R: %s%n", _root);
+                List<KBHandle> children = SPARQLQueryBuilder.forClasses(kb).childrenOf(_root)
                         .asHandles(conn, true);
-                
-                return children.stream().map(KBHandle::getIdentifier).allMatch(_child -> 
-                        SPARQLQueryBuilder
-                                .forClasses(kb)
-                                .parentsOf(_child)
-                                .limit(5)
-                                .asHandles(conn, true)
-                                .stream()
+
+                return children.stream().map(KBHandle::getIdentifier)
+                        .allMatch(_child -> SPARQLQueryBuilder.forClasses(kb).parentsOf(_child)
+                                .limit(5).asHandles(conn, true).stream()
                                 .map(KBHandle::getIdentifier)
-//                                .map(v -> { 
-//                                    System.out.printf("C: %s%n", v); 
-//                                    return v;
-//                                })
+                                // .map(v -> {
+                                // System.out.printf("C: %s%n", v);
+                                // return v;
+                                // })
                                 .anyMatch(iri -> rootIdentifiers.contains(iri)));
             }
         });
     }
-    
+
     @Test
     public void thatRegexMetaCharactersAreSafe()
     {
         try (RepositoryConnection conn = repo.getConnection()) {
-            SPARQLQueryOptionalElements builder = SPARQLQueryBuilder
-                    .forItems(kb)
-                    .withLabelMatchingExactlyAnyOf(".[]*+{}()lala")
-                    .limit(3);
-            
+            SPARQLQueryOptionalElements builder = SPARQLQueryBuilder.forItems(kb)
+                    .withLabelMatchingExactlyAnyOf(".[]*+{}()lala").limit(3);
+
             System.out.printf("Query   : %n");
             Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
                     .forEachOrdered(l -> System.out.printf("          %s%n", l));
-            
+
             builder.asHandles(conn, true);
-            
-            // We don't need an assertion here since we do not expect any results - it is only important
+
+            // We don't need an assertion here since we do not expect any results - it is only
+            // important
             // that the query does not crash
         }
     }
-    
+
     @SuppressWarnings("resource")
     private void importData(Repository aRepo, String aUrl) throws IOException
     {
@@ -227,10 +219,10 @@ public class SPARQLQueryBuilderGenericTest
             catch (CompressorException e) {
                 // Probably not compressed then or unknown format - just try as is.
             }
-    
+
             // Detect the file format
             RDFFormat format = Rio.getParserFormatForFileName(aUrl).orElse(RDFFormat.RDFXML);
-            
+
             try (RepositoryConnection conn = aRepo.getConnection()) {
                 // If the RDF file contains relative URLs, then they probably start with a hash.
                 // To avoid having two hashes here, we drop the hash from the base prefix configured
@@ -240,7 +232,7 @@ public class SPARQLQueryBuilderGenericTest
             }
         }
     }
-    
+
     private InputStream openAsStream(String aUrl) throws MalformedURLException, IOException
     {
         if (aUrl.startsWith("classpath")) {

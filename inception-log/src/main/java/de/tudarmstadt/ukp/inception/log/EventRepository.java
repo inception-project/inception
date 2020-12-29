@@ -30,8 +30,8 @@ public interface EventRepository
     void create(LoggedEvent... aEvents);
 
     /**
-     * Get the aMaxSize amount of logged events of the given type, user name, project
-     * and recommender id from the db.
+     * Get the aMaxSize amount of logged events of the given type, user name, project and
+     * recommender id from the db.
      */
     List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
             String aEventType, int aMaxSize, long aRecommenderId);
@@ -39,15 +39,15 @@ public interface EventRepository
     void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer);
 
     /**
-     * Get the aMaxSize amount of logged events of the given types, user name and project
-     * for every document from the db.
+     * Get the aMaxSize amount of logged events of the given types, user name and project for every
+     * document from the db.
      */
     List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String[] aEventType, int aMaxSize);
 
     /**
-     * Get the aMaxSize amount of logged events of the given type, user name, project and 
-     * detail string from the db.
+     * Get the aMaxSize amount of logged events of the given type, user name, project and detail
+     * string from the db.
      */
     List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
             String aEventType, int aMaxSize, String aDetail);

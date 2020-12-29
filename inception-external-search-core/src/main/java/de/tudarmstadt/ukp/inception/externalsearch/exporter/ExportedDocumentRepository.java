@@ -23,48 +23,57 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonPropertyOrder(alphabetic = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ExportedDocumentRepository {
+public class ExportedDocumentRepository
+{
     @JsonProperty("id")
     private Long id;
-    
+
     @JsonProperty("name")
     private String name;
-    
+
     @JsonProperty("properties")
     private String properties;
-    
+
     @JsonProperty("type")
     private String type;
-    
-    public Long getId() {
+
+    public Long getId()
+    {
         return id;
     }
-    
-    public void setId(Long id) {
+
+    public void setId(Long id)
+    {
         this.id = id;
     }
-    
-    public String getName() {
+
+    public String getName()
+    {
         return name;
     }
-    
-    public void setName(String name) {
+
+    public void setName(String name)
+    {
         this.name = name;
     }
-    
-    public String getProperties() {
+
+    public String getProperties()
+    {
         return properties;
     }
-    
-    public void setProperties(String properties) {
+
+    public void setProperties(String properties)
+    {
         this.properties = properties;
     }
-    
-    public String getType() {
+
+    public String getType()
+    {
         return type;
     }
-    
-    public void setType(String type) {
+
+    public void setType(String type)
+    {
         this.type = type;
     }
 }

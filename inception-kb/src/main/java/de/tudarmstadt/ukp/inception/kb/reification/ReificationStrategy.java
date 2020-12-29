@@ -50,9 +50,9 @@ public interface ReificationStrategy
      * Deletes the specified statement from the knowledge base. This includes any qualifiers that
      * might be associated with it.
      * <p>
-     * Certain statements may not be deletable. E.g. the last <i>instance-of</i> statement cannot
-     * be deleted unless the deletion of the whole concept/instance is requested. This is meant
-     * to avoid dangling triples accumulating in the knowledge base. In these cases, a
+     * Certain statements may not be deletable. E.g. the last <i>instance-of</i> statement cannot be
+     * deleted unless the deletion of the whole concept/instance is requested. This is meant to
+     * avoid dangling triples accumulating in the knowledge base. In these cases, a
      * {@link IllegalArgumentException} is thrown.
      */
     void deleteStatement(RepositoryConnection aConnection, KnowledgeBase kb,
@@ -90,9 +90,8 @@ public interface ReificationStrategy
             KBStatement aStatement);
 
     /**
-     * Delete the specified instance by removing all statements/qualifiers describing it. Also,
-     * and statements in other concepts/instances which refer to the given instance will be
-     * deleted.
+     * Delete the specified instance by removing all statements/qualifiers describing it. Also, and
+     * statements in other concepts/instances which refer to the given instance will be deleted.
      */
     void deleteInstance(RepositoryConnection aConnection, KnowledgeBase kb, KBInstance aInstance);
 
@@ -108,17 +107,16 @@ public interface ReificationStrategy
 
     /**
      * Deletes the specified concept. Any statements or qualifiers referencing the concept are
-     * deleted as well. This includes all instances of the given concept (except if they are 
-     * also instances of another concept) and all statements referring to the concept.
+     * deleted as well. This includes all instances of the given concept (except if they are also
+     * instances of another concept) and all statements referring to the concept.
      */
     void deleteConcept(RepositoryConnection aConnection, KnowledgeBase kb, KBConcept aConcept);
 
     /**
      * Checks if the given statement exists. Qualifiers are not considered by this check.
      */
-    boolean exists(RepositoryConnection aConnection, KnowledgeBase akb,
-            KBStatement aStatement);
-    
+    boolean exists(RepositoryConnection aConnection, KnowledgeBase akb, KBStatement aStatement);
+
     default void upsert(RepositoryConnection aConnection, Collection<Statement> aOriginalTriples,
             Collection<Statement> aNewTriples)
     {
@@ -127,7 +125,7 @@ public interface ReificationStrategy
         aOriginalTriples.forEach(triplesToDelete::add);
         triplesToDelete.removeAll(aNewTriples);
         aConnection.remove(triplesToDelete);
-        
+
         // Store the new triples
         aConnection.add(aNewTriples);
     }

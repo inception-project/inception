@@ -50,7 +50,7 @@ public class ExternalSearchResult
         documentId = aDocumentId;
         highlights = emptyList();
     }
-    
+
     public DocumentRepository getRepository()
     {
         return repository;
@@ -172,12 +172,8 @@ public class ExternalSearchResult
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this)
-                .append("collectionId", collectionId)
-                .append("documentId", documentId)
-                .append("originalSource", source)
-                .append("originalUri", uri)
-                .append("documentTitle", documentTitle)
-                .toString();
+        return new ToStringBuilder(this).append("collectionId", collectionId)
+                .append("documentId", documentId).append("originalSource", source)
+                .append("originalUri", uri).append("documentTitle", documentTitle).toString();
     }
 }

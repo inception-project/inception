@@ -24,7 +24,8 @@ import org.jsoup.safety.Whitelist;
 
 public class Utilities
 {
-    public static String cleanHighlight(String aHighlight) {
+    public static String cleanHighlight(String aHighlight)
+    {
         Whitelist wl = new Whitelist();
         wl.addTags("em");
         Document dirty = Jsoup.parseBodyFragment(aHighlight, "");

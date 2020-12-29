@@ -31,7 +31,8 @@ import org.apache.wicket.util.resource.StringResourceStream;
 import de.tudarmstadt.ukp.inception.websocket.WebSocketTest.TestEnv;
 
 public class WebSocketTestPage
-    extends WebPage implements IMarkupResourceStreamProvider
+    extends WebPage
+    implements IMarkupResourceStreamProvider
 {
 
     private static final long serialVersionUID = 7883353311808962940L;

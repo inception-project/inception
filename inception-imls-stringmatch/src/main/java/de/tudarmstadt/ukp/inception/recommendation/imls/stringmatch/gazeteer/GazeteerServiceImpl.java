@@ -57,11 +57,11 @@ public class GazeteerServiceImpl
     implements GazeteerService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final EntityManager entityManager;
-    
+
     private final RepositoryProperties repositoryProperties;
-    
+
     @Autowired
     public GazeteerServiceImpl(RepositoryProperties aRepositoryProperties,
             EntityManager aEntityManager)
@@ -69,20 +69,18 @@ public class GazeteerServiceImpl
         repositoryProperties = aRepositoryProperties;
         entityManager = aEntityManager;
     }
-    
+
     @Override
     @Transactional
     public List<Gazeteer> listGazeteers(Recommender aRecommender)
     {
-        String query = String.join("\n", 
-                "FROM Gazeteer",
-                "WHERE recommender = :recommender ",
+        String query = String.join("\n", //
+                "FROM Gazeteer", //
+                "WHERE recommender = :recommender ", //
                 "ORDER BY name ASC");
-        
-        return entityManager
-                .createQuery(query, Gazeteer.class)
-                .setParameter("recommender", aRecommender)
-                .getResultList();
+
+        return entityManager.createQuery(query, Gazeteer.class)
+                .setParameter("recommender", aRecommender).getResultList();
     }
 
     @Override
@@ -91,7 +89,7 @@ public class GazeteerServiceImpl
     {
         if (aGazeteer.getId() == null) {
             entityManager.persist(aGazeteer);
-            
+
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
                 log.info("Created gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
@@ -103,7 +101,7 @@ public class GazeteerServiceImpl
         }
         else {
             entityManager.merge(aGazeteer);
-            
+
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
                 log.info("Updated gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
@@ -120,11 +118,11 @@ public class GazeteerServiceImpl
     public void importGazeteerFile(Gazeteer aGazeteer, InputStream aStream) throws IOException
     {
         File gazFile = getGazeteerFile(aGazeteer);
-        
+
         if (!gazFile.getParentFile().exists()) {
             gazFile.getParentFile().mkdirs();
         }
-        
+
         try (OutputStream os = new FileOutputStream(gazFile)) {
             IOUtils.copyLarge(aStream, os);
         }
@@ -133,12 +131,9 @@ public class GazeteerServiceImpl
     @Override
     public File getGazeteerFile(Gazeteer aGazeteer) throws IOException
     {
-        return repositoryProperties.getPath().toPath()
-                .resolve("project")
+        return repositoryProperties.getPath().toPath().resolve("project")
                 .resolve(String.valueOf(aGazeteer.getRecommender().getProject().getId()))
-                .resolve("gazeteer")
-                .resolve(aGazeteer.getId() + ".txt")
-                .toFile();
+                .resolve("gazeteer").resolve(aGazeteer.getId() + ".txt").toFile();
     }
 
     @Override
@@ -147,12 +142,12 @@ public class GazeteerServiceImpl
     {
         entityManager.remove(
                 entityManager.contains(aGazeteer) ? aGazeteer : entityManager.merge(aGazeteer));
-        
+
         File gaz = getGazeteerFile(aGazeteer);
         if (gaz.exists()) {
             gaz.delete();
         }
-        
+
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aGazeteer.getRecommender().getProject().getId()))) {
             log.info("Removed gazeteer [{}] from recommender [{}]({}) in project [{}]({})",
@@ -162,22 +157,21 @@ public class GazeteerServiceImpl
                     aGazeteer.getRecommender().getProject().getId());
         }
     }
-    
+
     @Override
-    public List<GazeteerEntry> readGazeteerFile(Gazeteer aGaz)
-        throws IOException
+    public List<GazeteerEntry> readGazeteerFile(Gazeteer aGaz) throws IOException
     {
         File file = getGazeteerFile(aGaz);
-        
+
         List<GazeteerEntry> data = new ArrayList<>();
-        
+
         try (InputStream is = new FileInputStream(file)) {
             parseGazeteer(aGaz, is, data);
         }
-        
+
         return data;
     }
-    
+
     public void parseGazeteer(Gazeteer aGaz, InputStream aStream, List<GazeteerEntry> aTarget)
         throws IOException
     {
@@ -186,12 +180,12 @@ public class GazeteerServiceImpl
         while (i.hasNext()) {
             lineNumber++;
             String line = i.nextLine().trim();
-            
+
             if (line.isEmpty() || line.startsWith("#")) {
                 // Ignore comment lines and empty lines
                 continue;
             }
-            
+
             String[] fields = line.split("\t");
             if (fields.length == 2) {
                 String text = trimToNull(fields[0]);
@@ -206,23 +200,21 @@ public class GazeteerServiceImpl
             }
         }
     }
-    
+
     @Override
     @Transactional
     public boolean existsGazeteer(Recommender aRecommender, String aName)
     {
         Validate.notNull(aRecommender, "Recommender must be specified");
         Validate.notNull(aName, "Gazeteer name must be specified");
-        
-        String query = 
-                "SELECT COUNT(*) " +
-                "FROM Gazeteer " + 
+
+        String query = "SELECT COUNT(*) " + //
+                "FROM Gazeteer " + //
                 "WHERE recommender = :recommender AND name = :name";
-        
+
         long count = entityManager.createQuery(query, Long.class)
-            .setParameter("recommender", aRecommender)
-            .setParameter("name", aName)
-            .getSingleResult();
+                .setParameter("recommender", aRecommender).setParameter("name", aName)
+                .getSingleResult();
 
         return count > 0;
     }

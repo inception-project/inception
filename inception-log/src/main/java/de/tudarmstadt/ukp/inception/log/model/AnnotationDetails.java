@@ -38,7 +38,7 @@ public class AnnotationDetails
     {
         // Nothing to do
     }
-    
+
     public AnnotationDetails(FeatureStructure aFS)
     {
         addr = WebAnnoCasUtil.getAddr(aFS);
@@ -55,7 +55,7 @@ public class AnnotationDetails
             text = null;
         }
     }
-    
+
     public int getAddr()
     {
         return addr;

@@ -31,16 +31,16 @@ public class InceptionBanner
     implements Banner
 {
     private static final String[] BANNER = { "",
-        "  _____    __  ___   __     __________  ___    __ ",
-        "  \\_   \\/\\ \\ \\/ __\\ /__\\ __/__   \\_   \\/___\\/\\ \\ \\",
-        "   / /\\/  \\/ / /   /_\\| '_ \\ / /\\// /\\//  //  \\/ /",
-        "/\\/ /_/ /\\  / /___//__| |_) / //\\/ /_/ \\_// /\\  / ",
-        "\\____/\\_\\ \\/\\____/\\__/| .__/\\/ \\____/\\___/\\_\\ \\/  ",
-        "                      |_|                         " };
+            "  _____    __  ___   __     __________  ___    __ ",
+            "  \\_   \\/\\ \\ \\/ __\\ /__\\ __/__   \\_   \\/___\\/\\ \\ \\",
+            "   / /\\/  \\/ / /   /_\\| '_ \\ / /\\// /\\//  //  \\/ /",
+            "/\\/ /_/ /\\  / /___//__| |_) / //\\/ /_/ \\_// /\\  / ",
+            "\\____/\\_\\ \\/\\____/\\__/| .__/\\/ \\____/\\___/\\_\\ \\/  ",
+            "                      |_|                         " };
 
     @Override
-    public void printBanner(Environment environment, Class<?> sourceClass,
-            PrintStream printStream) {
+    public void printBanner(Environment environment, Class<?> sourceClass, PrintStream printStream)
+    {
         for (String line : BANNER) {
             printStream.println(line);
         }

@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
+import static javax.servlet.DispatcherType.REQUEST;
+
 import java.util.EnumSet;
 
-import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -41,15 +42,14 @@ public class InceptionWebInitializer
         // 2) Make username accessible to logging framework
         FilterRegistration loggingFilter = aServletContext.addFilter("logging",
                 LoggingFilter.class);
-        loggingFilter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
+        loggingFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST), false, "/*");
 
         // 5) Make sure we have one JPA session/transaction per request. Closes session at the
         // end, without this, changed data may not be automatically saved to the DB.
         FilterRegistration openSessionInViewFilter = aServletContext.addFilter("opensessioninview",
                 OpenEntityManagerInViewFilter.class);
-        openSessionInViewFilter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false,
-                "/*");
-        
+        openSessionInViewFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST), false, "/*");
+
         aServletContext.addListener(HttpSessionEventPublisher.class);
     }
 }
