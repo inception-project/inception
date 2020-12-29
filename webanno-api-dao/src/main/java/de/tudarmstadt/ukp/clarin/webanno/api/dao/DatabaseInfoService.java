@@ -17,6 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.reflect.FieldUtils.readField;
+
+import java.sql.DatabaseMetaData;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.hibernate.Session;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -41,12 +53,49 @@ public class DatabaseInfoService
     @Value(value = "${spring.datasource.username:#{null}}")
     private String databaseUsername;
 
+    private @PersistenceContext EntityManager entityManager;
+
     @Override
-    public void afterPropertiesSet()
+    public void afterPropertiesSet() throws Exception
     {
-        log.info("Database dialect: " + databaseDialect);
-        log.info("Database driver: " + databaseDriver);
-        log.info("Database URL: " + databaseUrl);
-        log.info("Database username: " + databaseUsername);
+        Session session = entityManager.unwrap(Session.class);
+        SessionFactoryImplementor sessionFactory = ((SessionFactoryImplementor) session
+                .getSessionFactory());
+        Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+
+        log.info("Database URL            : [{}]", databaseUrl);
+        log.info("Database username       : [{}]", databaseUsername);
+
+        if (isBlank(databaseDriver)) {
+            session.doWork(connection -> {
+                DatabaseMetaData metadata = connection.getMetaData();
+                log.info("Database driver         : [{} {}] (auto-detected)",
+                        metadata.getDriverName(), metadata.getDriverVersion());
+            });
+        }
+        else {
+            log.info("Database driver         : [{}] (explicitly set)", databaseDriver);
+        }
+
+        if (isBlank(databaseDialect)) {
+            log.info("Database dialect        : [{}] (auto-detected)", dialect);
+        }
+        else if (dialect.getClass().getName().equals(databaseDialect)) {
+            log.info("Database dialect        : [{}] (explicitly set)", dialect);
+        }
+        else {
+            log.warn("Database dialect        : [{}] (not matching requested: {})", dialect,
+                    databaseDialect);
+        }
+
+        if (dialect instanceof MySQLDialect) {
+            try {
+                log.info("Database storage engine : [{}]",
+                        readField(dialect, "storageEngine", true).getClass().getName());
+            }
+            catch (Exception e) {
+                // Ignore
+            }
+        }
     }
 }
