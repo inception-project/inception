@@ -193,7 +193,7 @@ public class RecommendationServiceImpl
      * annotations have been added above).
      */
     @SuppressWarnings("serial")
-    private static final MetaDataKey<Set<RecommendationStateKey>> COMMITTED = new MetaDataKey<Set<RecommendationStateKey>>()
+    private static final MetaDataKey<Set<RecommendationStateKey>> COMMITTED = new MetaDataKey<>()
     {
     };
 

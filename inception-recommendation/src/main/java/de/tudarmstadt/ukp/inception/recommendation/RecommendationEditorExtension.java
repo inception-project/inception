@@ -25,7 +25,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
@@ -399,7 +398,7 @@ public class RecommendationEditorExtension
         VID vid = VID.parse(aVid.getExtensionPayload());
         Optional<AnnotationSuggestion> representative = predictions.getPredictionByVID(aDocument,
                 vid);
-        if (!representative.isPresent()) {
+        if (representative.isEmpty()) {
             return emptyList();
         }
 
@@ -408,14 +407,12 @@ public class RecommendationEditorExtension
         if (representative.get() instanceof SpanSuggestion) {
             SpanSuggestion sao = (SpanSuggestion) representative.get();
             group = predictions
-                    .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(), aFeature.getLayer(), sao.getBegin(),
-                            sao.getEnd())
-                    .stream().filter(g -> g.contains(representative.get()))
-                    .map(g -> (SuggestionGroup<AnnotationSuggestion>) (SuggestionGroup<? extends AnnotationSuggestion>) g)
-                    .findFirst();
+                    .getGroupedPredictions(AnnotationSuggestion.class, aDocument.getName(),
+                            aFeature.getLayer(), sao.getBegin(), sao.getEnd())
+                    .stream().filter(g -> g.contains(representative.get())).findFirst();
         }
 
-        if (!group.isPresent()) {
+        if (group.isEmpty()) {
             return emptyList();
         }
 
@@ -437,7 +434,7 @@ public class RecommendationEditorExtension
                 items.add("Hidden: " + ao.getReasonForHiding());
             }
             details.add(new VLazyDetailResult(ao.getRecommenderName(),
-                    "\n" + items.stream().collect(joining("\n"))));
+                    "\n" + String.join("\n", items)));
         }
 
         return details;
