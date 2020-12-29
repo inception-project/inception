@@ -40,4 +40,6 @@ public interface IndexScheduler
     void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, CAS aCas);
 
     boolean isIndexInProgress(Project aProject);
+
+    boolean isBusy();
 }

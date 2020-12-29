@@ -33,11 +33,11 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.ReindexTask;
@@ -45,8 +45,11 @@ import de.tudarmstadt.ukp.inception.search.scheduling.tasks.Task;
 
 /**
  * Indexer scheduler. Does the project re-indexing in an asynchronous way.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link SearchServiceAutoConfiguration#indexScheduler}.
+ * </p>
  */
-@Component
 public class IndexSchedulerImpl
     implements InitializingBean, DisposableBean, IndexScheduler
 {
@@ -71,6 +74,7 @@ public class IndexSchedulerImpl
     @Override
     public void destroy()
     {
+        queue.clear();
         consumerThread.interrupt();
     }
 
@@ -87,8 +91,8 @@ public class IndexSchedulerImpl
             enqueue(new IndexSourceDocumentTask(aSourceDocument, casToByteArray(aCas)));
         }
         catch (IOException e) {
-            log.error("Unable to enqueue document [{}]({}) for indexing",
-                    aSourceDocument.getName(), aSourceDocument.getId(), e);
+            log.error("Unable to enqueue document [{}]({}) for indexing", aSourceDocument.getName(),
+                    aSourceDocument.getId(), e);
         }
     }
 
@@ -103,21 +107,22 @@ public class IndexSchedulerImpl
                     aAnnotationDocument.getName(), aAnnotationDocument.getId(), e);
         }
     }
-    
+
     /**
-     * Put a new indexing task in the queue.
-     * Indexing tasks can be of three types:
-     *  - Indexing of a whole project
-     *  - Indexing of a source document
-     *  - Indexing of an annotation document for a given user
-     *  
+     * Put a new indexing task in the queue. Indexing tasks can be of three types:
+     * <ul>
+     * <li>Indexing of a whole project</li>
+     * <li>Indexing of a source document</li>
+     * <li>Indexing of an annotation document for a given user</li>
+     * </ul>
+     * 
      * @param aRunnable
-     *          The indexing task
+     *            The indexing task
      */
     public synchronized void enqueue(Task aRunnable)
     {
         Optional<Task> alreadyScheduledTask = findAlreadyScheduled(aRunnable);
-        
+
         // Project indexing task
         if (aRunnable instanceof ReindexTask) {
             if (alreadyScheduledTask.isPresent()) {
@@ -143,7 +148,7 @@ public class IndexSchedulerImpl
         }
         // Annotation document indexing task
         else if (aRunnable instanceof IndexAnnotationDocumentTask) {
-            // Try to update the document CAS in the task currently enqueued for the same 
+            // Try to update the document CAS in the task currently enqueued for the same
             // annotation document/user (if there is an enqueued task).
             // This must be done so that the task will take into account the
             // latest changes to the annotation document.
@@ -160,7 +165,7 @@ public class IndexSchedulerImpl
         }
     }
 
-    public synchronized void stopAllTasksForUser(String username)
+    public synchronized void cancelAllTasksForUser(String username)
     {
         Iterator<Task> taskIterator = queue.iterator();
         while (taskIterator.hasNext()) {
@@ -175,13 +180,19 @@ public class IndexSchedulerImpl
     public boolean isIndexInProgress(Project aProject)
     {
         Validate.notNull(aProject, "Project cannot be null");
-        
-        return queue.stream().anyMatch(task -> aProject.equals(task.getProject())) ||
-                consumer.getActiveTask().map(t -> aProject.equals(t.getProject())).orElse(false);
+
+        return queue.stream().anyMatch(task -> aProject.equals(task.getProject()))
+                || consumer.getActiveTask().map(t -> aProject.equals(t.getProject())).orElse(false);
     }
-    
+
     private Optional<Task> findAlreadyScheduled(Task aTask)
     {
         return queue.stream().filter(aTask::matches).findAny();
+    }
+
+    @Override
+    public boolean isBusy()
+    {
+        return !queue.isEmpty() || consumer.getActiveTask().isPresent();
     }
 }
