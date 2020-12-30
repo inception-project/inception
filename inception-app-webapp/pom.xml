@@ -924,6 +924,24 @@
             </executions>
           </plugin>
           <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-war-to-jar</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <move file="target/${project.artifactId}-${project.version}-standalone.war" tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
             <executions>
@@ -936,7 +954,7 @@
                 <configuration>
                   <artifacts>
                     <artifact>
-                      <file>target/${project.artifactId}-${project.version}-standalone.war</file>
+                      <file>target/${project.artifactId}-${project.version}-standalone.jar</file>
                       <type>jar</type>
                       <classifier>standalone</classifier>
                     </artifact>
