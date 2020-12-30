@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.DirectoryStream;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -620,7 +621,7 @@ public class ProjectServiceImpl
         try {
             FastIOUtils.delete(new File(path));
         }
-        catch (FileNotFoundException e) {
+        catch (FileNotFoundException | NoSuchFileException e) {
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aProject.getId()))) {
                 log.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
