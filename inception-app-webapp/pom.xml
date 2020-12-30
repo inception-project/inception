@@ -15,8 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -76,11 +77,11 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation</artifactId>
     </dependency>
-    <!--  
-    <dependency>
+    <!--
+      <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-dl4j</artifactId>
-    </dependency>
+      </dependency>
     -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -457,11 +458,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
     </dependency>
-    <!--  
-    <dependency>
+    <!--
+      <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-loader</artifactId>
-    </dependency>
+      </dependency>
     -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -487,12 +488,12 @@
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
       <artifactId>wicket-spring-boot-starter</artifactId>
     </dependency>
-    <!--  
-    <dependency>
+    <!--
+      <dependency>
       <groupId>net.bull.javamelody</groupId>
       <artifactId>javamelody-spring-boot-starter</artifactId>
       <version>${javamelody.version}</version>
-    </dependency>
+      </dependency>
     -->
     <dependency>
       <groupId>org.apache.wicket</groupId>
@@ -529,21 +530,21 @@
   </dependencies>
   <build>
     <plugins>
-      <!-- 
+      <!--
         This module has a slight complex setup to allow making it work in a command line build
-         as well as in an m2e build.
-        
+        as well as in an m2e build.
+
         The general procedure is:
         1) generate asciidoc HTML (also PDF when on the command line)
         2) sync generated HTML + images to a proper package under src/main/resources
-           This is the reason why src/main/resources is excluded from version control
-        3) let Maven pick up the stuff from src/main/resources and make it available to m2e 
-           workspace builds or package it into a JAR
-           
+        This is the reason why src/main/resources is excluded from version control
+        3) let Maven pick up the stuff from src/main/resources and make it available to m2e
+        workspace builds or package it into a JAR
+
         When running in m2e, building of PDFs is skipped.
         Mind that rebuilding of HTML from asciidoc works in Eclipse only on an explicit project clean.
         There is no incremental build!
-       -->
+      -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
@@ -631,7 +632,7 @@
             <configuration>
               <tasks>
                 <delete includeemptydirs="true" failonerror="false">
-                  <fileset dir="src/main/resources/public/doc" includes="**/*"/>
+                  <fileset dir="src/main/resources/public/doc" includes="**/*" />
                 </delete>
               </tasks>
             </configuration>
@@ -644,31 +645,33 @@
             </goals>
             <configuration>
               <tasks>
-                <mkdir dir="src/main/resources/public/doc"/>
+                <mkdir dir="src/main/resources/public/doc" />
 
-                <!-- 
-                It is important that we SYNC here instead of delete/copy, otherwise we may run into
-                an endless build loop in Eclipse.
-                 -->
+                <!--
+                  It is important that we SYNC here instead of delete/copy, otherwise we may run into
+                  an endless build loop in Eclipse.
+                -->
                 <sync todir="src/main/resources/public/doc">
                   <fileset dir="target/generated-docs">
-                    <include name="**/*.html"/>
-                    <include name="**/*.png"/>
-                    <include name="**/*.jpg"/>
+                    <include name="**/*.html" />
+                    <include name="**/*.png" />
+                    <include name="**/*.jpg" />
                   </fileset>
                 </sync>
 
                 <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
-                  <include name="**/*.html"/>
+                  <include name="**/*.html" />
                   <replacefilter token="https://code.jquery.com/jquery-3.0.0.js"
-                                 value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js"/>
-                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js"
-                                 value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js"/>
-                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
-                                 value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js"/>
+                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
                   <replacefilter
-                      token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"
-                      value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js"/>
+                    token="https://code.jquery.com/jquery-migrate-3.1.0.js"
+                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
+                  <replacefilter
+                    token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
+                  <replacefilter
+                    token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"
+                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
                 </replace>
 
               </tasks>
@@ -684,8 +687,7 @@
           <artifactId>asciidoctor-maven-plugin</artifactId>
           <version>${asciidoctor.plugin.version}</version>
           <configuration>
-            <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc
-            </sourceDirectory>
+            <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
             <attributes>
               <doctype>book</doctype>
               <toclevels>8</toclevels>
@@ -719,8 +721,7 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <ignoredUsedUndeclaredDependencies>
-              <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core
-              </ignoredUsedUndeclaredDependency>
+              <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
             </ignoredUsedUndeclaredDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
@@ -758,13 +759,13 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-conll</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-text</usedDependency>
               <!-- WebAnno UI Modules - they auto-register via reflection -->
-              <!-- Detected because we explicitly exclude their menu items  
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
+              <!-- Detected because we explicitly exclude their menu items
+                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
               -->
               <!-- Detected because we include a special access menu item to the project settings
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
               -->
               <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
@@ -796,7 +797,7 @@
               <usedDependency>org.mozilla:rhino-runtime</usedDependency>
               <!-- JavaMelody - used via web.xml -->
               <!--
-              <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>
+                <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>
               -->
               <!-- Spring configuration -->
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
@@ -854,7 +855,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute/>
+                        <execute />
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -867,7 +868,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute/>
+                        <execute />
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -880,7 +881,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute/>
+                        <execute />
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -893,7 +894,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute/>
+                        <execute />
                       </action>
                     </pluginExecution>
                   </pluginExecutions>
@@ -914,7 +915,7 @@
       <build>
         <plugins>
           <plugin>
-            <!-- 
+            <!--
               This plugin must be declared before the ant-run plugin because during the package
               phase, it creates a the files which the "copy-war-to-jar" execution of the ant-run
               plugin running also in the package phase requires.
@@ -941,7 +942,7 @@
                 <!--
                   We want the original file to be the WAR and the repackaged all-inclusive runnable
                   thing with the embedded Tomcat to be the JAR.
-                 -->
+                -->
                 <id>copy-war-to-jar</id>
                 <phase>package</phase>
                 <goals>
@@ -950,9 +951,9 @@
                 <configuration>
                   <target>
                     <move file="target/${project.artifactId}-${project.version}.war"
-                          tofile="target/inception-app-standalone-${project.version}.jar"/>
+                      tofile="target/inception-app-standalone-${project.version}.jar" />
                     <move file="target/${project.artifactId}-${project.version}.war.original"
-                          tofile="target/${project.artifactId}-${project.version}.war"/>
+                      tofile="target/${project.artifactId}-${project.version}.war" />
                   </target>
                 </configuration>
               </execution>
@@ -967,10 +968,10 @@
         <property>
           <name>!m2e.version</name>
         </property>
-        <!-- 
-         - Build PDFs currently does not work with Java 10 because of a problem parsing the
-         - version string: https://github.com/jruby/jruby-openssl/issues/157
-         -->
+        <!--
+          - Build PDFs currently does not work with Java 10 because of a problem parsing the
+          - version string: https://github.com/jruby/jruby-openssl/issues/157
+        -->
         <jdk>[,10)</jdk>
       </activation>
       <build>
