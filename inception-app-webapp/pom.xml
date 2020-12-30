@@ -15,7 +15,8 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -69,7 +70,7 @@
         </exclusion>
       </exclusions>
     </dependency>
-    
+
     <!-- INCEPTION - ANNOTATION RECOMMENDATION FUNCTIONALITY -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -323,7 +324,7 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
-    
+
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
@@ -387,6 +388,10 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-layout-template-json</artifactId>
+    </dependency>
 
     <!-- LOGGING DEPENDENCIES - Avoid Commons Logging -->
     <dependency>
@@ -428,7 +433,7 @@
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
-    
+
     <!-- JAXB DEPENDENCIES -->
     <dependency>
       <groupId>javax.xml.bind</groupId>
@@ -446,7 +451,7 @@
       <groupId>javax.activation</groupId>
       <artifactId>javax.activation-api</artifactId>
     </dependency>
-        
+
     <!-- Spring Boot dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -494,8 +499,8 @@
       <artifactId>wicket-native-websocket-javax</artifactId>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-curation</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-curation</artifactId>
     </dependency>
     <dependency>
       <groupId>org.webjars.bowergithub.xbsoftware</groupId>
@@ -626,7 +631,7 @@
             <configuration>
               <tasks>
                 <delete includeemptydirs="true" failonerror="false">
-                  <fileset dir="src/main/resources/public/doc" includes="**/*" />
+                  <fileset dir="src/main/resources/public/doc" includes="**/*"/>
                 </delete>
               </tasks>
             </configuration>
@@ -639,7 +644,7 @@
             </goals>
             <configuration>
               <tasks>
-                <mkdir dir="src/main/resources/public/doc" />
+                <mkdir dir="src/main/resources/public/doc"/>
 
                 <!-- 
                 It is important that we SYNC here instead of delete/copy, otherwise we may run into
@@ -647,18 +652,23 @@
                  -->
                 <sync todir="src/main/resources/public/doc">
                   <fileset dir="target/generated-docs">
-                    <include name="**/*.html" />
-                    <include name="**/*.png" />
-                    <include name="**/*.jpg" />
+                    <include name="**/*.html"/>
+                    <include name="**/*.png"/>
+                    <include name="**/*.jpg"/>
                   </fileset>
                 </sync>
 
                 <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
-                  <include name="**/*.html" />
-                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
-                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
-                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
-                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
+                  <include name="**/*.html"/>
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js"
+                                 value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js"/>
+                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js"
+                                 value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js"/>
+                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+                                 value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js"/>
+                  <replacefilter
+                      token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"
+                      value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js"/>
                 </replace>
 
               </tasks>
@@ -674,7 +684,8 @@
           <artifactId>asciidoctor-maven-plugin</artifactId>
           <version>${asciidoctor.plugin.version}</version>
           <configuration>
-            <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
+            <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc
+            </sourceDirectory>
             <attributes>
               <doctype>book</doctype>
               <toclevels>8</toclevels>
@@ -708,7 +719,8 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <ignoredUsedUndeclaredDependencies>
-              <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
+              <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core
+              </ignoredUsedUndeclaredDependency>
             </ignoredUsedUndeclaredDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
@@ -773,6 +785,8 @@
               <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
+
               <usedDependency>commons-logging:commons-logging</usedDependency>
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
@@ -791,7 +805,7 @@
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <!-- Spring AOP
                 <usedDependency>org.springframework:spring-aop</usedDependency>
                 <usedDependency>org.springframework:spring-aspects</usedDependency>
@@ -840,7 +854,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute />
+                        <execute/>
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -853,7 +867,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute />
+                        <execute/>
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -866,7 +880,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute />
+                        <execute/>
                       </action>
                     </pluginExecution>
                     <pluginExecution>
@@ -879,7 +893,7 @@
                         </goals>
                       </pluginExecutionFilter>
                       <action>
-                        <execute />
+                        <execute/>
                       </action>
                     </pluginExecution>
                   </pluginExecutions>
@@ -935,8 +949,10 @@
                 </goals>
                 <configuration>
                   <target>
-                    <move file="target/${project.artifactId}-${project.version}.war" tofile="target/inception-app-standalone-${project.version}.jar" />
-                    <move file="target/${project.artifactId}-${project.version}.war.original" tofile="target/${project.artifactId}-${project.version}.war" />
+                    <move file="target/${project.artifactId}-${project.version}.war"
+                          tofile="target/inception-app-standalone-${project.version}.jar"/>
+                    <move file="target/${project.artifactId}-${project.version}.war.original"
+                          tofile="target/${project.artifactId}-${project.version}.war"/>
                   </target>
                 </configuration>
               </execution>
