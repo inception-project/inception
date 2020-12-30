@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -73,10 +75,10 @@
       <artifactId>inception-recommendation</artifactId>
     </dependency>
     <!--
-    <dependency>
+      <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-dl4j</artifactId>
-    </dependency>
+      </dependency>
     -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -328,7 +330,7 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
-    
+
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
@@ -391,6 +393,10 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j-impl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-layout-template-json</artifactId>
     </dependency>
 
     <!-- LOGGING DEPENDENCIES - Avoid Commons Logging -->
@@ -457,11 +463,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
     </dependency>
-    <!--  
-    <dependency>
+    <!--
+      <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-loader</artifactId>
-    </dependency>
+      </dependency>
     -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -488,19 +494,19 @@
       <artifactId>wicket-spring-boot-starter</artifactId>
     </dependency>
     <!--
-    <dependency>
+      <dependency>
       <groupId>net.bull.javamelody</groupId>
       <artifactId>javamelody-spring-boot-starter</artifactId>
       <version>${javamelody.version}</version>
-    </dependency>
+      </dependency>
     -->
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-native-websocket-javax</artifactId>
     </dependency>
     <dependency>
-    	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-curation</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-curation</artifactId>
     </dependency>
     <dependency>
       <groupId>org.webjars.bowergithub.xbsoftware</groupId>
@@ -531,19 +537,19 @@
     <plugins>
       <!--
         This module has a slight complex setup to allow making it work in a command line build
-         as well as in an m2e build.
+        as well as in an m2e build.
 
         The general procedure is:
         1) generate asciidoc HTML (also PDF when on the command line)
         2) sync generated HTML + images to a proper package under src/main/resources
-           This is the reason why src/main/resources is excluded from version control
+        This is the reason why src/main/resources is excluded from version control
         3) let Maven pick up the stuff from src/main/resources and make it available to m2e
-           workspace builds or package it into a JAR
+        workspace builds or package it into a JAR
 
         When running in m2e, building of PDFs is skipped.
         Mind that rebuilding of HTML from asciidoc works in Eclipse only on an explicit project clean.
         There is no incremental build!
-       -->
+      -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
@@ -646,10 +652,10 @@
               <tasks>
                 <mkdir dir="src/main/resources/public/doc" />
 
-                <!-- 
-                It is important that we SYNC here instead of delete/copy, otherwise we may run into
-                an endless build loop in Eclipse.
-                 -->
+                <!--
+                  It is important that we SYNC here instead of delete/copy, otherwise we may run into
+                  an endless build loop in Eclipse.
+                -->
                 <sync todir="src/main/resources/public/doc">
                   <fileset dir="target/generated-docs">
                     <include name="**/*.html" />
@@ -660,10 +666,17 @@
 
                 <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
                   <include name="**/*.html" />
-                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
-                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
-                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
-                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js"
+                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
+                  <replacefilter
+                    token="https://code.jquery.com/jquery-migrate-3.1.0.js"
+                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
+                  <replacefilter
+                    token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
+                  <replacefilter
+                    token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"
+                    value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
                 </replace>
 
               </tasks>
@@ -754,12 +767,12 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-text</usedDependency>
               <!-- WebAnno UI Modules - they auto-register via reflection -->
               <!-- Detected because we explicitly exclude their menu items
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
               -->
               <!-- Detected because we include a special access menu item to the project settings
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
+                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
               -->
               <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
@@ -780,6 +793,8 @@
               <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
               <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
+              <usedDependency>org.apache.logging.log4j:log4j-layout-template-json</usedDependency>
+
               <usedDependency>commons-logging:commons-logging</usedDependency>
               <!-- Themes -->
               <usedDependency>com.googlecode.wicket-jquery-ui:wicket-kendo-ui-theme-bootstrap</usedDependency>
@@ -789,7 +804,7 @@
               <usedDependency>org.mozilla:rhino-runtime</usedDependency>
               <!-- JavaMelody - used via web.xml -->
               <!--
-              <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>
+                <usedDependency>net.bull.javamelody:javamelody-core</usedDependency>
               -->
               <!-- Spring configuration -->
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
@@ -798,7 +813,7 @@
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <!-- Spring AOP
                 <usedDependency>org.springframework:spring-aop</usedDependency>
                 <usedDependency>org.springframework:spring-aspects</usedDependency>
@@ -922,12 +937,31 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                    <!--
-                      We want the original file to be the WAR and the repackaged all-inclusive runnable
-                      thing with the embedded Tomcat to be the JAR.
-                     -->
+                  <!--
+                    We want the original file to be the WAR and the repackaged all-inclusive runnable
+                    thing with the embedded Tomcat to be the JAR.
+                  -->
                   <attach>false</attach>
                   <classifier>standalone</classifier>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-war-to-jar</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <move file="target/${project.artifactId}-${project.version}-standalone.war"
+                      tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
+                  </target>
                 </configuration>
               </execution>
             </executions>
@@ -945,7 +979,7 @@
                 <configuration>
                   <artifacts>
                     <artifact>
-                      <file>target/${project.artifactId}-${project.version}-standalone.war</file>
+                      <file>target/${project.artifactId}-${project.version}-standalone.jar</file>
                       <type>jar</type>
                       <classifier>standalone</classifier>
                     </artifact>
@@ -954,7 +988,7 @@
               </execution>
             </executions>
           </plugin>
-              </plugins>
+        </plugins>
       </build>
     </profile>
     <profile>
@@ -964,9 +998,9 @@
           <name>!m2e.version</name>
         </property>
         <!--
-         - Build PDFs currently does not work with Java 10 because of a problem parsing the
-         - version string: https://github.com/jruby/jruby-openssl/issues/157
-         -->
+          - Build PDFs currently does not work with Java 10 because of a problem parsing the
+          - version string: https://github.com/jruby/jruby-openssl/issues/157
+        -->
         <jdk>[,10)</jdk>
       </activation>
       <build>

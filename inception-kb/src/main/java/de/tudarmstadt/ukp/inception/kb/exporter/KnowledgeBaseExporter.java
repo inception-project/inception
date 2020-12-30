@@ -162,12 +162,10 @@ public class KnowledgeBaseExporter
      */
     private void exportKnowledgeBaseFiles(File aFile, KnowledgeBase kb) throws IOException
     {
-        File sourceKnowledgeBaseDir = new File(aFile + KB_FOLDER);
-        FileUtils.forceMkdir(sourceKnowledgeBaseDir);
-
         // create file with name "<knowledgebaseName>.<fileExtension>" in folder
         // KB_FOLDER
         File kbData = new File(aFile + getSourceFileName(kb));
+        FileUtils.forceMkdir(kbData.getParentFile());
         kbData.createNewFile();
         try (OutputStream os = new FileOutputStream(kbData)) {
             kbService.exportData(kb, knowledgeBaseFileExportFormat, os);
