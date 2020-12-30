@@ -29,7 +29,9 @@
   <version>0.18.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
-  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
+  <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge
+    Bases
+  </description>
   <url>https://inception-project.github.io</url>
   <inceptionYear>2018</inceptionYear>
   <licenses>
@@ -73,7 +75,7 @@
     <wicket-jquery-ui.version>9.1.0</wicket-jquery-ui.version>
     <dkpro.version>2.1.0</dkpro.version>
     <uima.version>3.1.1</uima.version>
-    <log4j.version>2.13.2</log4j.version>
+    <log4j.version>2.14.0</log4j.version>
     <groovy.version>3.0.3</groovy.version>
 
     <webanno.version>4.0.0-SNAPSHOT</webanno.version>
@@ -209,6 +211,11 @@
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
       <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <!-- Add json logger for Logstash -->
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-layout-template-json</artifactId>
     </dependency>
     <dependency>
       <!-- Avoid Commons Logging -->
@@ -630,6 +637,11 @@
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-slf4j-impl</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-layout-template-json</artifactId>
         <version>${log4j.version}</version>
       </dependency>
 
@@ -1370,7 +1382,9 @@
             <dependency>org.apache.logging.log4j:log4j-core</dependency>
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
             <dependency>org.slf4j:jcl-over-slf4j</dependency>
+            <dependency>org.apache.logging.log4j:log4j-layout-template-json</dependency>
             <dependency>commons-logging:commons-logging</dependency>
+
             <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->
