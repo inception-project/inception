@@ -34,7 +34,7 @@ $ apt-get install mariadb-server
 [[character-set-config]]
 * When first setting up your database make sure your MariaDB server is configured for 4 Byte UTF-8 (`utf8mb4`, `utf8mb4_bin`) to ensure that all unicode characters can be represented (e.g. emojis).
 +
-NOTE: *Upgrading an existing database installation to 4 Byte UTF-8:* Changing the character-set and collation later can lead to serious trouble, so make sure you have a backup of your database. In that case, you might also need to perform some additional migration steps. We do not provide a database migration guide here, but if you search e.g. for `mariadb convert utf8 to utf8mb4`, you should find several.
+NOTE: *Upgrading an existing database installation to 4 Byte UTF-8:* Changing the character-set and collation later can lead to serious trouble, so make sure you have a backup of your database. In that case, you might also need to perform some additional migration steps. We do not provide a database migration guide here, but if you search e.g. for `mariadb convert utf8 to utf8mb4` (or `mysql` for that matter), you should find several.
 +
 NOTE: *`utf8mb4_bin` vs. `utf8mb4_unicode_ci`:* If you search for UTF-8 support in MariaDB, you will generally find the recommendation to use `utf8mb4_unicode_ci` as the collation. This, however, is a *case-insensitive* collation. {product-name} is usually *case-sensitive*. If you used a case-insensitive collation in the database, you could not create two projects, one being called `MY PROEJCT` and the other being called `my project`, but instead of a nice error from INCEpTION, you would get an ugly error from the database. That is why we recommend using the case-sensitive `utf8mb4_bin` for the database.
 +

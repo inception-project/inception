@@ -94,17 +94,18 @@ use the instructions above (Storing data on the host) to mount a folder from the
 the instructions above, the settings file would go to `/srv/inception/settings.properties` on the host
 system.
 
-== Connecting to a MySQL database
+== Connecting to a dedicated database
 
 By default, {product-name} uses an embedded SQL database to store its metadata (not the texts,
 annotations and knowledge bases, these are stored in files on disk). For production use, it is highly
-recommended to use a separate MySQL database instead of the embedded SQL database.
+recommended to use a dedicated database server (i.e. MariaDB or compatible) instead of the embedded
+SQL database.
 
 == Docker Compose
 
 Using Docker Compose, you can manage multiple related containers. This section illustrates how to use
 Docker Compose to jointly set up a {product-name} container as well as a database container (i.e. 
-link:https://hub.docker.com/_/mysql/[this one]).
+link:https://hub.docker.com/_/mariadb/[this one]).
 
 The following Compose script sets these containers up.
 
@@ -163,8 +164,8 @@ file. You can also choose to override the default location for the database data
 
 [source,shell,subs="+attributes"]
 ----
-$ export INCEPTION_HOME=/srv/inception/server-data 
-$ export INCEPTION_DB_HOME=/srv/inception/mysql-data
+$ export INCEPTION_HOME=/srv/inception/app-data 
+$ export INCEPTION_DB_HOME=/srv/inception/db-data
 $ docker-compose -f docker-compose.yml -p inception up
 ----
 
