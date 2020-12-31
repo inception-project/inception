@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception;
 
+import static com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED;
+import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
 import java.util.HashMap;
@@ -27,7 +29,6 @@ import javax.swing.JWindow;
 import javax.validation.Validator;
 
 import org.apache.catalina.connector.Connector;
-import org.apache.uima.cas.impl.CASImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -49,8 +50,6 @@ import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
-
-import com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration;
 
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
@@ -173,9 +172,7 @@ public class INCEpTION
         SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
         builder.properties("running.from.commandline=false");
         // add this property in the case of .war deployment
-        builder.properties(
-                WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED
-                        + "=false");
+        builder.properties(REGISTER_SERVER_ENDPOINT_ENABLED + "=false");
         init(builder);
         return builder;
     }
@@ -183,7 +180,7 @@ public class INCEpTION
     private static void init(SpringApplicationBuilder aBuilder)
     {
         // WebAnno relies on FS IDs being stable, so we need to enable this
-        System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
+        System.setProperty(ALWAYS_HOLD_ONTO_FSS, "true");
 
         aBuilder.banner(new InceptionBanner());
         aBuilder.initializers(new InceptionApplicationContextInitializer());
