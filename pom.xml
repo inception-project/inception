@@ -95,6 +95,7 @@
   <modules>
     <!-- Build infrastructure modules -->
     <module>inception-build</module>
+    <module>inception-boot-loader</module>
     <!-- Core application modules -->
     <module>inception-plugin-parent</module>
     <module>inception-log</module>
