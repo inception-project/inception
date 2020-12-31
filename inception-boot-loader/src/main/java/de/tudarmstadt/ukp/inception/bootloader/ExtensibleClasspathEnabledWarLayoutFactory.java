@@ -28,7 +28,7 @@ import org.springframework.boot.loader.tools.Layouts.War;
 import org.springframework.boot.loader.tools.LibraryScope;
 import org.springframework.boot.loader.tools.LoaderClassesWriter;
 
-public class PluginEnabledWarLayoutFactory
+public class ExtensibleClasspathEnabledWarLayoutFactory
     implements LayoutFactory
 {
     @Override
@@ -38,19 +38,20 @@ public class PluginEnabledWarLayoutFactory
             throw new IllegalArgumentException("Only WAR archives are supported for this layout");
         }
 
-        return new PluginEnabledWar();
+        return new ExtensibleClasspathEnabledWar();
     }
 
-    public static class PluginEnabledWar
+    public static class ExtensibleClasspathEnabledWar
         extends War
         implements CustomLoaderLayout
     {
         @Override
         public String getLauncherClassName()
         {
-            return "de.tudarmstadt.ukp.inception.bootloader.PluginEnabledWarLauncher";
+            return "de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLauncher";
         }
         
+        @Deprecated
         @Override
         public String getLibraryDestination(String aLibraryName, LibraryScope aScope)
         {
@@ -63,13 +64,24 @@ public class PluginEnabledWarLayoutFactory
         }
 
         @Override
+        public String getLibraryLocation(String aLibraryName, LibraryScope aScope)
+        {
+            if (aLibraryName.startsWith("inception-boot-loader-")) {
+                // Boot loader classes go to the root of the JAR
+                return "";
+            }
+            
+            return super.getLibraryLocation(aLibraryName, aScope);
+        }
+
+        @Override
         public void writeLoadedClasses(LoaderClassesWriter aWriter) throws IOException
         {
             // Package the default Spring Boot loader classes
             aWriter.writeLoaderClasses();
             
             // Package our own custom launcher class
-            String classResourceName = "de/tudarmstadt/ukp/inception/bootloader/PluginEnabledWarLauncher.class";
+            String classResourceName = "de/tudarmstadt/ukp/inception/bootloader/ExtensibleClasspathEnabledWarLauncher.class";
             try (InputStream is = getClass().getResourceAsStream("/" + classResourceName)) {
                 aWriter.writeEntry(classResourceName, is);
             }

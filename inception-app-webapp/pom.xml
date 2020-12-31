@@ -928,7 +928,7 @@
                 </goals>
                 <configuration>
                   <executable>true</executable>
-                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.PluginEnabledWarLayoutFactory"/>
+                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLayoutFactory"/>
                     <!--
                       We want the original file to be the WAR and the repackaged all-inclusive runnable
                       thing with the embedded Tomcat to be the JAR.

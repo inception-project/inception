@@ -21,13 +21,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.boot.loader.PropertiesLauncher;
 import org.springframework.boot.loader.archive.Archive;
 import org.springframework.boot.loader.archive.JarFileArchive;
 
-public class PluginEnabledWarLauncher
+public class ExtensibleClasspathEnabledWarLauncher
     extends PropertiesLauncher
 {
     private static final String DEBUG = "loader.debug";
@@ -40,9 +41,11 @@ public class PluginEnabledWarLauncher
 
     private static final String WEB_INF_LIB_PROVIDED = WEB_INF + "lib-provided/";
 
+    private static final String EXTRA_LIB = "/lib";
+
     private final Archive archive;
 
-    public PluginEnabledWarLauncher()
+    public ExtensibleClasspathEnabledWarLauncher()
     {
         try {
             archive = createArchive();
@@ -51,22 +54,32 @@ public class PluginEnabledWarLauncher
             throw new IllegalStateException(ex);
         }
     }
+    
+    @Override
+    protected Iterator<Archive> getClassPathArchivesIterator() throws Exception {
+        return getClassPathArchives().iterator();
+    }
 
+    @Deprecated
     @Override
     protected List<Archive> getClassPathArchives() throws Exception
     {
-        List<Archive> archives = new ArrayList<>(archive.getNestedArchives(this::isNestedArchive));
+        List<Archive> archives = new ArrayList<>();
+        archive.getNestedArchives(this::isNestedArchive, candidateArchive -> true)
+                .forEachRemaining(archives::add);
         
-        Path pluginPath = Paths.get(getApplicationHome() + "/plugins");
+        Path extraLibPath = Paths.get(getApplicationHome() + EXTRA_LIB);
         
-        
-        if (Files.exists(pluginPath)) {
-            debug("Scanning for plugins in [" + pluginPath + "]");
+        if (Files.exists(extraLibPath)) {
+            debug("Scanning for additional JARs in [" + extraLibPath + "]");
             
-            for (Path jar : Files.newDirectoryStream(pluginPath, "*.jar")) {
-                debug("Adding plugin JAR: [" + jar + "]");
+            for (Path jar : Files.newDirectoryStream(extraLibPath, "*.jar")) {
+                debug("Registering JAR: [" + jar + "]");
                 archives.add(new JarFileArchive(jar.toFile()));
             }
+        }
+        else {
+            debug("Not scanning for additional JARs in [" + extraLibPath + "] - path does not exist");
         }
         
         return archives;
@@ -110,6 +123,6 @@ public class PluginEnabledWarLauncher
     
     public static void main(String[] args) throws Exception
     {
-        new PluginEnabledWarLauncher().launch(args);
+        new ExtensibleClasspathEnabledWarLauncher().launch(args);
     }
 }
