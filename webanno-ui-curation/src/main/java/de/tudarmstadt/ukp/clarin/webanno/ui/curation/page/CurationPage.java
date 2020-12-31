@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
@@ -96,6 +97,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -219,7 +221,7 @@ public class CurationPage
                         (c, e) -> e.getRequestHandler().add(c))));
 
         // Ensure that a user is set
-        getModelObject().setUser(userRepository.getCurrentUser());
+        getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
 
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
@@ -535,11 +537,11 @@ public class CurationPage
      */
     protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
-        LOG.info("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
+        LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
 
         AnnotatorState state = getModelObject();
 
-        state.setUser(userRepository.getCurrentUser());
+        state.setUser(new User(CURATION_USER, Role.ROLE_USER));
 
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not
@@ -592,7 +594,7 @@ public class CurationPage
             handleException(aTarget, e);
         }
 
-        LOG.info("END LOAD_DOCUMENT_ACTION");
+        LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 
     public CAS readOrCreateMergeCas(boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
@@ -709,7 +711,8 @@ public class CurationPage
         }
 
         // Check access to project
-        if (project != null && !projectService.isCurator(project, getModelObject().getUser())) {
+        if (project != null
+                && !projectService.isCurator(project, userRepository.getCurrentUser())) {
             error("You have no permission to access project [" + project.getId() + "]");
             return;
         }
