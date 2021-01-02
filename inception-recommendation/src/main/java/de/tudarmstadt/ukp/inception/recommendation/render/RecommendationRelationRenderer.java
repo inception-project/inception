@@ -18,12 +18,14 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.util.Collections;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -108,6 +110,9 @@ public class RecommendationRelationRenderer
 
         String bratTypeName = typeAdapter.getEncodedTypeName();
 
+        Type type = CasUtil.getType(aCas, aLayer.getName());
+        Type attachType = CasUtil.getType(aCas, aLayer.getAttachType().getName());
+
         for (SuggestionGroup<RelationSuggestion> group : groupedPredictions) {
             // TODO: Sort by confidence
             for (RelationSuggestion suggestion : group) {
@@ -118,8 +123,19 @@ public class RecommendationRelationRenderer
                 }
 
                 RelationPosition position = suggestion.getPosition();
-                AnnotationFS source = selectAnnotationByAddr(aCas, position.getSource());
-                AnnotationFS target = selectAnnotationByAddr(aCas, position.getTarget());
+                int sourceBegin = position.getSourceBegin();
+                int sourceEnd = position.getSourceEnd();
+                int targetBegin = position.getTargetBegin();
+                int targetEnd = position.getTargetEnd();
+
+                // FIXME: We get the first match for the (begin, end) span. With stacking, there can
+                // be more than one and we need to get the right one then which does not need to be
+                // the first.
+                AnnotationFS source = selectAt(aCas, attachType, sourceBegin, sourceEnd).stream()
+                        .findFirst().orElse(null);
+
+                AnnotationFS target = selectAt(aCas, attachType, targetBegin, targetEnd).stream()
+                        .findFirst().orElse(null);
 
                 VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
                         new VID(target), suggestion.getUiLabel(), Collections.emptyMap(), COLOR);

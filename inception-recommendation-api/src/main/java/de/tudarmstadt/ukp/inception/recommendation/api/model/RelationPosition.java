@@ -18,45 +18,62 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class RelationPosition
-    implements Comparable<RelationPosition>, Serializable, Position
+    implements Serializable, Position, Comparable<RelationPosition>
 {
     private static final long serialVersionUID = -3084534351646334021L;
 
-    private final int source;
-    private final int target;
+    private final int sourceBegin;
+    private final int sourceEnd;
+    private final int targetBegin;
+    private final int targetEnd;
 
-    public RelationPosition(int aSource, int aTarget)
+    public RelationPosition(int aSourceBegin, int aSourceEnd, int aTargetBegin, int aTargetEnd)
     {
-        source = aSource;
-        target = aTarget;
+        sourceBegin = aSourceBegin;
+        sourceEnd = aSourceEnd;
+        targetBegin = aTargetBegin;
+        targetEnd = aTargetEnd;
     }
 
-    public RelationPosition(RelationPosition aPosition)
+    public RelationPosition(RelationPosition aOther)
     {
-        source = aPosition.source;
-        target = aPosition.target;
+        sourceBegin = aOther.sourceBegin;
+        sourceEnd = aOther.sourceEnd;
+        targetBegin = aOther.targetBegin;
+        targetEnd = aOther.targetEnd;
     }
 
     @Override
     public String toString()
     {
-        return "[" + source + "->" + target + "]";
+
+        return String.format("RelationPosition{(%d, %d) -> (%d, %d)}", sourceBegin, sourceEnd,
+                targetBegin, targetEnd);
     }
 
-    public int getSource()
+    public int getSourceBegin()
     {
-        return source;
+        return sourceBegin;
     }
 
-    public int getTarget()
+    public int getSourceEnd()
     {
-        return target;
+        return sourceEnd;
+    }
+
+    public int getTargetBegin()
+    {
+        return targetBegin;
+    }
+
+    public int getTargetEnd()
+    {
+        return targetEnd;
     }
 
     public boolean overlaps(final RelationPosition i)
@@ -78,26 +95,30 @@ public class RelationPosition
     }
 
     @Override
-    public boolean equals(final Object other)
+    public boolean equals(Object o)
     {
-        if (!(other instanceof RelationPosition)) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
             return false;
-        }
-        RelationPosition castOther = (RelationPosition) other;
-        return new EqualsBuilder().append(source, castOther.source).append(target, castOther.target)
-                .isEquals();
+        RelationPosition that = (RelationPosition) o;
+        return sourceBegin == that.sourceBegin && sourceEnd == that.sourceEnd
+                && targetBegin == that.targetBegin && targetEnd == that.targetEnd;
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(source).append(target).toHashCode();
+        return Objects.hash(sourceBegin, sourceEnd, targetBegin, targetEnd);
     }
 
     @Override
-    public int compareTo(final RelationPosition other)
+    public int compareTo(RelationPosition o)
     {
-        return new CompareToBuilder().append(source, other.source).append(target, other.target)
-                .toComparison();
+        return new CompareToBuilder() //
+                .append(getSourceBegin(), o.getSourceBegin()) //
+                .append(getSourceEnd(), o.getSourceEnd()) //
+                .append(getTargetBegin(), o.getTargetBegin()) //
+                .append(getTargetEnd(), o.getTargetEnd()).toComparison();
     }
 }

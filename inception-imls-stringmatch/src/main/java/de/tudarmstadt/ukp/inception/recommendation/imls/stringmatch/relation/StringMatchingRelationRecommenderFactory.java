@@ -18,9 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
-import static java.util.Arrays.asList;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
@@ -76,8 +73,7 @@ public class StringMatchingRelationRecommenderFactory
             return false;
         }
 
-        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-                && RELATION_TYPE.equals(aLayer.getType())
+        return RELATION_TYPE.equals(aLayer.getType()) && !aLayer.isAllowStacking()
                 && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
 

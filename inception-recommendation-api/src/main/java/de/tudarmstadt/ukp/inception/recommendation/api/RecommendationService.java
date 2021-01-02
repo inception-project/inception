@@ -134,7 +134,7 @@ public interface RecommendationService
 
     int upsertRelationFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
             String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
-            String aValue, int aSourceAddr, int aTargetAddr)
+            RelationSuggestion aSuggestion)
         throws AnnotationException;
 
     /**

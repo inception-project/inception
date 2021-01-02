@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -72,8 +74,8 @@ public class StringMatchingRelationRecommender
 
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);
-            Feature dependentFeature = predictedType.getFeatureByBaseName("Dependent");
-            Feature governorFeature = predictedType.getFeatureByBaseName("Governor");
+            Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
+            Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
             Feature predictedFeature = getPredictedFeature(cas);
             Feature attachFeature = getAttachFeature(cas);
 
@@ -106,8 +108,8 @@ public class StringMatchingRelationRecommender
         Type sentenceType = getType(aCas, Sentence.class);
 
         Type predictedType = getPredictedType(aCas);
-        Feature dependentFeature = predictedType.getFeatureByBaseName("Dependent");
-        Feature governorFeature = predictedType.getFeatureByBaseName("Governor");
+        Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
+        Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Type attachType = getAttachType(aCas);

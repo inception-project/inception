@@ -17,12 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-
 import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.uima.cas.text.AnnotationFS;
 
 public class RelationSuggestion
     extends AnnotationSuggestion
@@ -32,22 +29,15 @@ public class RelationSuggestion
 
     private final RelationPosition position;
 
-    // The begin of the window is min(source.begin, target.begin)
-    // The end of the window is max(source.end, target.end)
-    // This is mostly used to optimize the viewport when rendering
-    private final int windowBegin;
-    private final int windowEnd;
-
     public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
-            String aFeature, String aDocumentName, AnnotationFS aSource, AnnotationFS aTarget,
-            String aLabel, String aUiLabel, double aConfidence, String aConfidenceExplanation)
+            String aFeature, String aDocumentName, int aSourceBegin, int aSourceEnd,
+            int aTargetBegin, int aTargetEnd, String aLabel, String aUiLabel, double aConfidence,
+            String aConfidenceExplanation)
     {
         super(aId, aRecommenderId, aRecommenderName, aLayerId, aFeature, aDocumentName, aLabel,
                 aUiLabel, aConfidence, aConfidenceExplanation);
 
-        position = new RelationPosition(getAddr(aSource), getAddr(aTarget));
-        windowBegin = Math.min(aSource.getBegin(), aTarget.getBegin());
-        windowEnd = Math.max(aSource.getEnd(), aTarget.getEnd());
+        position = new RelationPosition(aSourceBegin, aSourceEnd, aTargetBegin, aTargetEnd);
     }
 
     /**
@@ -61,8 +51,6 @@ public class RelationSuggestion
         super(aObject);
 
         position = new RelationPosition(aObject.position);
-        windowBegin = aObject.windowBegin;
-        windowEnd = aObject.windowEnd;
     }
 
     // Getter and setter
@@ -73,16 +61,20 @@ public class RelationSuggestion
         return position;
     }
 
+    // The begin of the window is min(source.begin, target.begin)
+    // The end of the window is max(source.end, target.end)
+    // This is mostly used to optimize the viewport when rendering
+
     @Override
     public int getWindowBegin()
     {
-        return windowBegin;
+        return Math.min(position.getSourceBegin(), position.getTargetBegin());
     }
 
     @Override
     public int getWindowEnd()
     {
-        return windowEnd;
+        return Math.max(position.getSourceEnd(), position.getTargetEnd());
     }
 
     @Override
@@ -91,9 +83,9 @@ public class RelationSuggestion
         return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
                 .append("recommenderName", recommenderName).append("layerId", layerId)
                 .append("feature", feature).append("documentName", documentName)
-                .append("position", position).append("windowBegin", windowBegin).append("windowEnd", windowEnd)
-                .append("label", label).append("uiLabel", uiLabel)
-                .append("confidence", confidence)
+                .append("position", position) //
+                .append("windowBegin", getWindowBegin()).append("windowEnd", getWindowEnd()) //
+                .append("label", label).append("uiLabel", uiLabel).append("confidence", confidence)
                 .append("confindenceExplanation", confidenceExplanation)
                 .append("visible", isVisible()).append("reasonForHiding", getReasonForHiding())
                 .toString();

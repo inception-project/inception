@@ -339,8 +339,7 @@ public class ActiveLearningSidebar
     {
         LOG.trace("Active learning sidebar set highlight history record: {}", aRecord);
         highlightVID = null;
-        highlightSpan = new Offset(aRecord.getOffsetCharacterBegin(),
-                aRecord.getOffsetCharacterEnd());
+        highlightSpan = new Offset(aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
         highlightDocumentName = aRecord.getSourceDocument().getName();
         // This is a bit of hack. Consider the following case:
         // - use removes an ACCEPT history item
@@ -875,8 +874,8 @@ public class ActiveLearningSidebar
     private void actionSelectHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException
     {
-        actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
-                aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
+        actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(), aRecord.getOffsetBegin(),
+                aRecord.getOffsetEnd());
 
         // Since we have switched documents above (if it was necessary), the editor CAS should
         // now point to the correct one
@@ -901,10 +900,9 @@ public class ActiveLearningSidebar
     {
         Type type = CasUtil.getType(aCas, alStateModel.getObject().getLayer().getName());
         Feature feature = type.getFeatureByBaseName(aRecord.getAnnotationFeature().getName());
-        return selectAt(aCas, type, aRecord.getOffsetCharacterBegin(),
-                aRecord.getOffsetCharacterEnd()).stream().filter(
-                        fs -> aRecord.getAnnotation().equals(fs.getFeatureValueAsString(feature)))
-                        .findFirst();
+        return selectAt(aCas, type, aRecord.getOffsetBegin(), aRecord.getOffsetEnd()).stream()
+                .filter(fs -> aRecord.getAnnotation().equals(fs.getFeatureValueAsString(feature)))
+                .findFirst();
     }
 
     private List<SpanSuggestion> getMatchingSuggestion(
@@ -912,8 +910,7 @@ public class ActiveLearningSidebar
     {
         return getMatchingSuggestion(aSuggestions, aRecord.getSourceDocument().getName(),
                 aRecord.getLayer().getId(), aRecord.getAnnotationFeature().getName(),
-                aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd(),
-                aRecord.getAnnotation());
+                aRecord.getOffsetBegin(), aRecord.getOffsetEnd(), aRecord.getAnnotation());
     }
 
     private List<SpanSuggestion> getMatchingSuggestion(
@@ -974,7 +971,7 @@ public class ActiveLearningSidebar
                     aRecord.getUser());
             if (getMatchingAnnotation(cas, aRecord).isPresent()) {
                 actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
-                        aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
+                        aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
                 confirmationDialog.setTitleModel(new StringResourceModel(
                         "alSidebar.history.delete.confirmation.title", this));
                 confirmationDialog.setContentModel(new StringResourceModel(
@@ -1001,8 +998,8 @@ public class ActiveLearningSidebar
         CAS cas = this.getCasProvider().get();
         Optional<AnnotationFS> anno = getMatchingAnnotation(cas, aRecord);
         if (anno.isPresent()) {
-            state.getSelection().selectSpan(new VID(anno.get()), cas,
-                    aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
+            state.getSelection().selectSpan(new VID(anno.get()), cas, aRecord.getOffsetBegin(),
+                    aRecord.getOffsetEnd());
             getActionHandler().actionDelete(aTarget);
         }
     }

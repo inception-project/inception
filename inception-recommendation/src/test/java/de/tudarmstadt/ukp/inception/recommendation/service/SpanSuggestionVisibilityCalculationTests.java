@@ -147,8 +147,8 @@ public class SpanSuggestionVisibilityCalculationTests
         List<LearningRecord> records = new ArrayList<>();
         LearningRecord rejectedRecord = new LearningRecord();
         rejectedRecord.setUserAction(LearningRecordType.REJECTED);
-        rejectedRecord.setOffsetCharacterBegin(5);
-        rejectedRecord.setOffsetCharacterEnd(10);
+        rejectedRecord.setOffsetBegin(5);
+        rejectedRecord.setOffsetEnd(10);
         records.add(rejectedRecord);
         when(recordService.listRecords(user, layer)).thenReturn(records);
 

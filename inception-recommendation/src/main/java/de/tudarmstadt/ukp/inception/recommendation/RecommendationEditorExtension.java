@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
@@ -34,7 +36,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -225,7 +230,7 @@ public class RecommendationEditorExtension
         Optional<RelationSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
                 .filter(f -> f instanceof RelationSuggestion).map(f -> (RelationSuggestion) f);
 
-        if (!prediction.isPresent()) {
+        if (prediction.isEmpty()) {
             log.error("Could not find relation in [{}] with id [{}]", document, aVID);
             aTarget.getPage().error("Could not find relation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
@@ -236,16 +241,21 @@ public class RecommendationEditorExtension
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
 
-        int sourceAddr = suggestion.getPosition().getSource();
-        int targetAddr = suggestion.getPosition().getTarget();
         int address = recommendationService.upsertRelationFeature(annotationService, document,
-                aState.getUser().getUsername(), aCas, layer, feature, suggestion.getLabel(),
-                sourceAddr, targetAddr);
+                aState.getUser().getUsername(), aCas, layer, feature, suggestion);
+
+        AnnotationFS relation = WebAnnoCasUtil.selectAnnotationByAddr(aCas, address);
+
+        Type type = CasUtil.getType(aCas, layer.getName());
+
+        Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
+        Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
+
+        AnnotationFS source = (AnnotationFS) relation.getFeatureValue(sourceFeature);
+        AnnotationFS target = (AnnotationFS) relation.getFeatureValue(targetFeature);
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         // panel
-        AnnotationFS source = WebAnnoCasUtil.selectAnnotationByAddr(aCas, sourceAddr);
-        AnnotationFS target = WebAnnoCasUtil.selectAnnotationByAddr(aCas, targetAddr);
         aState.getSelection().selectArc(new VID(address), source, target);
 
         aActionHandler.actionSelect(aTarget);

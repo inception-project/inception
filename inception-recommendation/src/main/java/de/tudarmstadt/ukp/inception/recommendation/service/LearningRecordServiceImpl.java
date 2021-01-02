@@ -104,10 +104,8 @@ public class LearningRecordServiceImpl
         record.setUser(aUsername);
         record.setSourceDocument(aDocument);
         record.setUserAction(aUserAction);
-        record.setOffsetCharacterBegin(aSuggestion.getBegin());
-        record.setOffsetCharacterEnd(aSuggestion.getEnd());
-        record.setOffsetTokenBegin(-1);
-        record.setOffsetTokenEnd(-1);
+        record.setOffsetBegin(aSuggestion.getBegin());
+        record.setOffsetEnd(aSuggestion.getEnd());
         record.setTokenText(aSuggestion.getCoveredText());
         record.setAnnotation(aAlternativeLabel);
         record.setLayer(aLayer);

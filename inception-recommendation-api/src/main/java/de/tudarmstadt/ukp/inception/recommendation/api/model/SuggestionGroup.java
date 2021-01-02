@@ -326,23 +326,31 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
                 return false;
             }
             GroupKey castOther = (GroupKey) other;
-            return new EqualsBuilder().append(position, castOther.position)
-                    .append(feature, castOther.feature).append(layerId, castOther.layerId)
+            return new EqualsBuilder() //
+                    .append(position, castOther.position) //
+                    .append(feature, castOther.feature) //
+                    .append(layerId, castOther.layerId) //
                     .isEquals();
         }
 
         @Override
         public int hashCode()
         {
-            return new HashCodeBuilder().append(position).append(position).append(feature)
+            return new HashCodeBuilder() //
+                    .append(position) //
+                    .append(position)//
+                    .append(feature) //
                     .append(layerId).toHashCode();
         }
 
         @Override
         public int compareTo(final GroupKey other)
         {
-            return new CompareToBuilder().append(layerId, other.layerId)
-                    .append(feature, other.feature).append(position, other.position).toComparison();
+            return new CompareToBuilder() //
+                    .append(layerId, other.layerId) //
+                    .append(feature, other.feature) //
+                    .append(position, other.position) //
+                    .toComparison();
         }
     }
 
