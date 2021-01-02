@@ -20,13 +20,13 @@
 The {product-name} home folder is the place where {product-name}'s configuration file `settings.properties`
 resides and where {product-name} stores its data. The `settings.properties` file is not automatically created by the application 
 and needs to be created manually in the case that settings need to be configured.
-Mind that if you are using a MySQL database server
-(recommended), then {product-name} also stores some data in the MySQL database. This is important when
+Mind that if you are using a dedicated database server
+(recommended), then {product-name} also stores some data in the dedicated database. This is important when
 you plan to perform a backup, as both the home folder and the database content need to be
 included in the backup.
 
 Now, let's go through the steps of setting up a home folder for {product-name} and creating a
-configuration file instructing {product-name} to access the previously prepared MySQL database.
+configuration file instructing {product-name} to access a dedicated <<sect_database,database>>.
 
 * Create {product-name} home folder. This is the directory where {product-name} settings files and projects (documents, annotations, etc.) are stored
 +
@@ -42,9 +42,7 @@ $ mkdir /srv/inception
 +
 [source,text]
 ----
-database.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
-database.driver=com.mysql.jdbc.Driver
-database.url=jdbc:mysql://localhost:3306/inception?useSSL=false&serverTimezone=UTC
+database.url=jdbc:mariadb://localhost:3306/inception?useSSL=false&serverTimezone=UTC&useUnicode=yes&characterEncoding=UTF-8
 database.username=inception
 database.password=t0t4llYSecreT
 
@@ -61,7 +59,7 @@ backup.keep.number=10
 +
 [source,bash]
 ----
-$ chown -R www-data /srv/inception
+$ chown -R www-data:www-data /srv/inception
 ----
 
 
