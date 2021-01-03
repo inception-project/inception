@@ -39,7 +39,6 @@ installPrefs inception-log
 installPrefs inception-pdf-editor
 installPrefs inception-recommendation
 installPrefs inception-recommendation-api
-installPrefs inception-recommendation-api
 installPrefs inception-review-editor
 installPrefs inception-search-core
 installPrefs inception-search-mtas
