@@ -104,25 +104,6 @@ public abstract class AnnotationPageBase
     }
 
     /**
-     * Show the previous document, if exist
-     */
-    @Deprecated
-    protected void actionShowPreviousDocument(AjaxRequestTarget aTarget)
-    {
-        getModelObject().moveToPreviousDocument(getListOfDocs());
-        actionLoadDocument(aTarget);
-    }
-
-    /**
-     * Show the next document if exist
-     */
-    protected void actionShowNextDocument(AjaxRequestTarget aTarget)
-    {
-        getModelObject().moveToNextDocument(getListOfDocs());
-        actionLoadDocument(aTarget);
-    }
-
-    /**
      * Show the specified document.
      * 
      * @return whether the document had to be switched or not.

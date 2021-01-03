@@ -24,6 +24,7 @@ import static wicket.contrib.input.events.key.KeyType.Page_up;
 import static wicket.contrib.input.events.key.KeyType.Shift;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -75,7 +76,13 @@ public class DocumentNavigator
      */
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
-        page.getModelObject().moveToPreviousDocument(page.getListOfDocs());
+        boolean documentChanged = page.getModelObject()
+                .moveToPreviousDocument(page.getListOfDocs());
+        if (!documentChanged) {
+            info("There is no previous document");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
         page.actionLoadDocument(aTarget);
     }
 
@@ -84,7 +91,12 @@ public class DocumentNavigator
      */
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
-        page.getModelObject().moveToNextDocument(page.getListOfDocs());
+        boolean documentChanged = page.getModelObject().moveToNextDocument(page.getListOfDocs());
+        if (!documentChanged) {
+            info("There is no next document");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
         page.actionLoadDocument(aTarget);
     }
 
