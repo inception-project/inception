@@ -22,14 +22,14 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 
 public class RefreshEvent
 {
-    
+
     private AjaxRequestTarget target;
-    
+
     public RefreshEvent(AjaxRequestTarget target)
     {
         this.target = target;
     }
-    
+
     public AjaxRequestTarget getTarget()
     {
         return target;

@@ -24,7 +24,7 @@ public class AnnotationListItem
     private final int addr;
     private final String label;
     private final AnnotationLayer layer;
-    
+
     public AnnotationListItem(int aAddr, String aLabel, AnnotationLayer aLayer)
     {
         super();
@@ -32,17 +32,17 @@ public class AnnotationListItem
         label = aLabel;
         layer = aLayer;
     }
-    
+
     public int getAddr()
     {
         return addr;
     }
-    
+
     public String getLabel()
     {
         return label;
     }
-    
+
     public AnnotationLayer getLayer()
     {
         return layer;

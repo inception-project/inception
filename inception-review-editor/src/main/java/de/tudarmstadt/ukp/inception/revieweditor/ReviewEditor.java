@@ -39,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.inception.revieweditor.event.RefreshEvent;
 import de.tudarmstadt.ukp.inception.revieweditor.event.SelectAnnotationEvent;
 
-
 public class ReviewEditor
     extends AnnotationEditorBase
 {
@@ -50,7 +49,7 @@ public class ReviewEditor
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-    
+
         add(new StructuredReviewDraftPanel("vis", aModel, aCasProvider));
     }
 
@@ -64,10 +63,9 @@ public class ReviewEditor
     public void render(AjaxRequestTarget aTarget)
     {
         // TODO: maybe not the best method, however this fixes jumping in the editor on
-        //  selecting annotations or updating values in the right sidebar which occurs on
-        //  using aTarget.add(this);
-        send(getPage(), Broadcast.BREADTH,
-            new RefreshEvent(aTarget));
+        // selecting annotations or updating values in the right sidebar which occurs on
+        // using aTarget.add(this);
+        send(getPage(), Broadcast.BREADTH, new RefreshEvent(aTarget));
     }
 
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
@@ -81,24 +79,25 @@ public class ReviewEditor
         error(aMessage);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
-    
+
     @OnEvent(stop = true)
     public void onSelectAnnotationEvent(SelectAnnotationEvent aEvent)
     {
         // TODO: there was a problem with passing this object down to the SpanAnnotationPanel
-        //  to call the actionSelection there, hence used events
+        // to call the actionSelection there, hence used events
         try {
             AjaxRequestTarget target = aEvent.getTarget();
             VID vid = aEvent.getVid();
             int begin = aEvent.getBegin();
             int end = aEvent.getEnd();
             CAS cas = getCasProvider().get();
-            
+
             getModelObject().getSelection().selectSpan(vid, cas, begin, end);
-            
+
             if (getModelObject().isSlotArmed()) {
                 getActionHandler().actionFillSlot(target, cas, begin, end, vid);
-            } else {
+            }
+            else {
                 getActionHandler().actionSelect(target);
             }
         }

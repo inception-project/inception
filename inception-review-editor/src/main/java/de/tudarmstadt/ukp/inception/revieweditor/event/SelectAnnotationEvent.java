@@ -23,15 +23,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class SelectAnnotationEvent
 {
- 
+
     private final VID vid;
-    
+
     private final AjaxRequestTarget target;
-    
+
     private final int begin;
-    
+
     private final int end;
-    
+
     public SelectAnnotationEvent(VID aVid, int aBegin, int aEnd, AjaxRequestTarget aTarget)
     {
         vid = aVid;
@@ -39,22 +39,22 @@ public class SelectAnnotationEvent
         end = aEnd;
         target = aTarget;
     }
-    
+
     public VID getVid()
     {
         return vid;
     }
-    
+
     public int getBegin()
     {
         return begin;
     }
-    
+
     public int getEnd()
     {
         return end;
     }
-    
+
     public AjaxRequestTarget getTarget()
     {
         return target;

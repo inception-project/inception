@@ -37,13 +37,13 @@ public class NoPagingStrategy
     implements PagingStrategy
 {
     private static final long serialVersionUID = 1589886937787735472L;
-    
+
     @Override
     public List<Unit> units(CAS aCas, int aFirstIndex, int aLastIndex)
     {
         return asList(new Unit(0, 0, aCas.getDocumentText().length()));
     }
-    
+
     @Override
     public Component createPositionLabel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -52,7 +52,7 @@ public class NoPagingStrategy
         emptyPanel.setOutputMarkupId(true);
         return emptyPanel;
     }
-    
+
     @Override
     public DefaultPagingNavigator createPageNavigator(String aId, AnnotationPageBase aPage)
     {

@@ -29,8 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.revieweditor.config.NoPagingStrategy;
 
 @Component("reviewEditor")
-@ConditionalOnProperty(prefix = "ui.review", name = "enabled", havingValue = "true",
-        matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ui.review", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class ReviewEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
@@ -46,7 +45,7 @@ public class ReviewEditorFactory
     {
         return new ReviewEditor(aId, aModel, aActionHandler, aCasProvider);
     }
-    
+
     @Override
     public void initState(AnnotatorState aModelObject)
     {

@@ -58,43 +58,43 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerS
 public abstract class AnnotationPanel
     extends Panel
 {
-    
+
     private static final long serialVersionUID = -5658080533124524441L;
-    
+
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private CasProvider casProvider;
     private IModel<AnnotatorState> model;
-    
+
     public AnnotationPanel(String aId, IModel<AnnotatorState> aModel, CasProvider aCasProvider)
     {
         super(aId, aModel);
         model = aModel;
         casProvider = aCasProvider;
     }
-    
+
     public List<AnnotationListItem> listDocumentAnnotations()
     {
         return listAnnotations().stream()
-            .filter(a -> DocumentMetadataLayerSupport.TYPE.equals(a.getLayer().getType()))
-            .collect(Collectors.toList());
+                .filter(a -> DocumentMetadataLayerSupport.TYPE.equals(a.getLayer().getType()))
+                .collect(Collectors.toList());
     }
-    
+
     public List<AnnotationListItem> listUnlinkedAnnotations()
     {
         List<AnnotationListItem> items = listAnnotations();
         List<AnnotationListItem> unlinkedItems = new ArrayList<>();
         Set<Integer> linkedAddr = new HashSet<>();
-        
+
         for (AnnotationListItem item : items) {
             if (DocumentMetadataLayerSupport.TYPE.equals(item.getLayer().getType())) {
                 VID vid = new VID(item.getAddr());
                 linkedAddr.addAll(listLinkedFeatureAddresses(vid));
             }
         }
-        
+
         for (AnnotationListItem item : items) {
             if (!DocumentMetadataLayerSupport.TYPE.equals(item.getLayer().getType())) {
                 if (!linkedAddr.contains(item.getAddr())) {
@@ -102,31 +102,31 @@ public abstract class AnnotationPanel
                 }
             }
         }
-        
+
         return unlinkedItems;
     }
-    
+
     public List<AnnotationListItem> listAnnotations()
     {
         CAS cas = getCas();
         List<AnnotationListItem> items = new ArrayList<>();
-        List<AnnotationLayer> metadataLayers =
-            annotationService.listAnnotationLayer(model.getObject().getProject());
-        
+        List<AnnotationLayer> metadataLayers = annotationService
+                .listAnnotationLayer(model.getObject().getProject());
+
         for (AnnotationLayer layer : metadataLayers) {
             if (layer.getUiName().equals("Token")) {
                 // TODO: exception later when calling renderer.getFeatures "lemma"
                 continue;
             }
-            
+
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
                     () -> annotationService.listAnnotationFeature(layer));
-            
+
             for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
-                Map<String, String> renderedFeatures = renderer
-                    .renderLabelFeatureValues(adapter, fs, features);
+                Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
+                        fs, features);
                 String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
                 if (labelText.isEmpty()) {
                     labelText = "(" + layer.getUiName() + ")";
@@ -134,17 +134,17 @@ public abstract class AnnotationPanel
                 items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText, layer));
             }
         }
-        
+
         return items;
     }
-    
+
     public Set<Integer> listLinkedFeatureAddresses(VID aVid)
     {
         Project project = getModel().getObject().getProject();
         if (project == null || aVid == null || aVid.isNotSet()) {
             return emptySet();
         }
-        
+
         FeatureStructure fs;
         try {
             fs = selectFsByAddr(getCas(), aVid.getId());
@@ -155,33 +155,34 @@ public abstract class AnnotationPanel
         }
         AnnotationLayer layer = annotationService.findLayer(project, fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
-        
+
         // Populate from feature structure
         Set<Integer> linkedAddr = new HashSet<>();
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
             if (!feature.isEnabled() || !(feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
-                && feature.getLinkMode().equals(LinkMode.WITH_ROLE))) {
+                    && feature.getLinkMode().equals(LinkMode.WITH_ROLE))) {
                 continue;
             }
-            
+
             Serializable value = null;
             if (fs != null) {
                 value = adapter.getFeatureValue(feature, fs);
             }
-            
+
             linkedAddr.addAll(((List<LinkWithRoleModel>) value).stream()
-                .map(model -> model.targetAddr).collect(Collectors.toList()));
+                    .map(model -> model.targetAddr).collect(Collectors.toList()));
         }
-        
+
         return linkedAddr;
     }
-    
+
     public CasProvider getCasProvider()
     {
         return casProvider;
     }
-    
-    protected CAS getCas() {
+
+    protected CAS getCas()
+    {
         try {
             return casProvider.get();
         }
@@ -190,7 +191,7 @@ public abstract class AnnotationPanel
         }
         return null;
     }
-    
+
     public IModel<AnnotatorState> getModel()
     {
         return model;

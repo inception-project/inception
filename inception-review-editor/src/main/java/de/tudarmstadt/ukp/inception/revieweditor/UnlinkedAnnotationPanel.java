@@ -37,23 +37,23 @@ public class UnlinkedAnnotationPanel
     extends AnnotationPanel
 {
     private static final long serialVersionUID = -6975253945462000226L;
-    
+
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    
+
     private static final String CID_ANNOTATIONS_CONTAINER = "annotationsContainer";
     private static final String CID_ANNOTATIONS = "annotations";
     private static final String CID_ANNOTATION_DETAILS = "annotationDetails";
-    
+
     private final WebMarkupContainer annotationsContainer;
     private final IModel<AnnotatorState> model;
-    
+
     public UnlinkedAnnotationPanel(String aId, IModel<AnnotatorState> aModel,
-        CasProvider aCasProvider)
+            CasProvider aCasProvider)
     {
         super(aId, aModel, aCasProvider);
-    
+
         model = aModel;
-    
+
         // Allow AJAX updates.
         setOutputMarkupId(true);
 
@@ -62,32 +62,31 @@ public class UnlinkedAnnotationPanel
         annotationsContainer.add(createAnnotationList());
         add(annotationsContainer);
     }
-    
+
     private ListView<AnnotationListItem> createAnnotationList()
     {
         return new ListView<AnnotationListItem>(CID_ANNOTATIONS,
-            LoadableDetachableModel.of(() -> listUnlinkedAnnotations()))
+                LoadableDetachableModel.of(() -> listUnlinkedAnnotations()))
         {
             private static final long serialVersionUID = 6885792032557021315L;
-            
+
             @Override
             protected void populateItem(ListItem<AnnotationListItem> aItem)
             {
                 aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
-                
+
                 VID vid = new VID(aItem.getModelObject().getAddr());
-                
-                SpanAnnotationPanel panel =
-                    new SpanAnnotationPanel(CID_ANNOTATION_DETAILS, Model.of(vid),
-                        getCas(), model.getObject());
+
+                SpanAnnotationPanel panel = new SpanAnnotationPanel(CID_ANNOTATION_DETAILS,
+                        Model.of(vid), getCas(), model.getObject());
                 panel.setOutputMarkupId(true);
                 aItem.add(panel);
-                
+
                 aItem.setOutputMarkupId(true);
             }
         };
     }
-    
+
     @OnEvent
     public void onRefreshEvent(RefreshEvent event)
     {

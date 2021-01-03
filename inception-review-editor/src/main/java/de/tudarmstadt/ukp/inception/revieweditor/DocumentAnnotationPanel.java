@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.inception.revieweditor.event.RefreshEvent;
 
-public class DocumentAnnotationPanel 
+public class DocumentAnnotationPanel
     extends Panel
 {
 
@@ -68,7 +68,7 @@ public class DocumentAnnotationPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    
+
     private static final String CID_ANNOTATION_TITLE = "annotationTitle";
     private static final String CID_FEATURES_CONTAINER = "featuresContainer";
     private static final String CID_FEATURES = "features";
@@ -87,8 +87,8 @@ public class DocumentAnnotationPanel
     private final AnnotatorState state;
     private final CasProvider casProvider;
 
-    public DocumentAnnotationPanel(String id, IModel<VID> aModel,
-        CasProvider aCasprovider, AnnotatorState aState, String aTitle)
+    public DocumentAnnotationPanel(String id, IModel<VID> aModel, CasProvider aCasprovider,
+            AnnotatorState aState, String aTitle)
     {
         super(id, aModel);
 
@@ -98,44 +98,46 @@ public class DocumentAnnotationPanel
 
         // Allow AJAX updates.
         setOutputMarkupId(true);
-        
+
         featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
         featuresContainer.setOutputMarkupId(true);
         featuresContainer.add(createFeaturesList());
         add(featuresContainer);
-    
+
         linkFeaturesContainer = new WebMarkupContainer(CID_LINK_FEATURES_CONTAINER);
         linkFeaturesContainer.setOutputMarkupId(true);
         linkFeaturesContainer.add(createLinkFeaturesList());
         add(linkFeaturesContainer);
-        
+
         add(new Label(CID_ANNOTATION_TITLE, aTitle));
     }
-    
-    private List<FeatureState> listLinkFeatures() {
-        List<FeatureState> states = listFeatures(); 
-        return states.stream().filter(fs -> 
-                fs.feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
-                && fs.feature.getLinkMode().equals(LinkMode.WITH_ROLE))
-            .collect(Collectors.toList());
-    }
-    
-    private List<FeatureState> listNonLinkFeatures() {
+
+    private List<FeatureState> listLinkFeatures()
+    {
         List<FeatureState> states = listFeatures();
-        return states.stream().filter(fs ->
-            !(fs.feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
-                && fs.feature.getLinkMode().equals(LinkMode.WITH_ROLE)))
-            .collect(Collectors.toList());
+        return states.stream()
+                .filter(fs -> fs.feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
+                        && fs.feature.getLinkMode().equals(LinkMode.WITH_ROLE))
+                .collect(Collectors.toList());
     }
-    
+
+    private List<FeatureState> listNonLinkFeatures()
+    {
+        List<FeatureState> states = listFeatures();
+        return states.stream()
+                .filter(fs -> !(fs.feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
+                        && fs.feature.getLinkMode().equals(LinkMode.WITH_ROLE)))
+                .collect(Collectors.toList());
+    }
+
     private List<FeatureState> listFeatures()
     {
         VID vid = model.getObject();
-        
+
         if (state.getProject() == null || vid == null || vid.isNotSet()) {
             return emptyList();
         }
-        
+
         FeatureStructure fs;
         try {
             fs = selectFsByAddr(getCas(), vid.getId());
@@ -146,32 +148,32 @@ public class DocumentAnnotationPanel
         }
         AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
-        
+
         // Populate from feature structure
         List<FeatureState> featureStates = new ArrayList<>();
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
             if (!feature.isEnabled()) {
                 continue;
             }
-            
+
             Serializable value = null;
             if (fs != null) {
                 value = adapter.getFeatureValue(feature, fs);
             }
-            
+
             FeatureState featureState = new FeatureState(vid, feature, value);
             featureStates.add(featureState);
             featureState.tagset = annotationService
                     .listTagsReorderable(featureState.feature.getTagset());
         }
-        
+
         return featureStates;
     }
 
     private ListView<FeatureState> createFeaturesList()
     {
         return new ListView<FeatureState>(CID_FEATURES,
-            LoadableDetachableModel.of(this::listNonLinkFeatures))
+                LoadableDetachableModel.of(this::listNonLinkFeatures))
         {
             private static final long serialVersionUID = -7259968895739818558L;
 
@@ -181,43 +183,40 @@ public class DocumentAnnotationPanel
                 // Feature editors that allow multiple values may want to update themselves,
                 // e.g. to add another slot.
                 item.setOutputMarkupId(true);
-    
-    
+
                 final FeatureState featureState = item.getModelObject();
-    
+
                 Label label = new Label(CID_LABEL, featureState.feature.getUiName());
                 Label value = new Label(CID_VALUE, featureState.value);
-    
+
                 item.add(label);
                 item.add(value);
             }
         };
     }
-    
+
     private ListView<FeatureState> createLinkFeaturesList()
     {
         return new ListView<FeatureState>(CID_LINK_FEATURES,
-            LoadableDetachableModel.of(this::listLinkFeatures))
+                LoadableDetachableModel.of(this::listLinkFeatures))
         {
             private static final long serialVersionUID = 2226005003861152513L;
 
-            @Override protected void populateItem(ListItem<FeatureState> item)
+            @Override
+            protected void populateItem(ListItem<FeatureState> item)
             {
                 // Feature editors that allow multiple values may want to update themselves,
                 // e.g. to add another slot.
                 item.setOutputMarkupId(true);
-    
+
                 final FeatureState featureState = item.getModelObject();
-    
-                List<LinkWithRoleModel> annotations =
-                    (List<LinkWithRoleModel>) featureState.value;
-                
-                Label label =
-                    new Label(CID_LINK_FEATURE_TITLE, featureState.feature.getUiName());
+
+                List<LinkWithRoleModel> annotations = (List<LinkWithRoleModel>) featureState.value;
+
+                Label label = new Label(CID_LINK_FEATURE_TITLE, featureState.feature.getUiName());
                 item.add(label);
-                
-                WebMarkupContainer spansContainer =
-                    new WebMarkupContainer(CID_SPANS_CONTAINER);
+
+                WebMarkupContainer spansContainer = new WebMarkupContainer(CID_SPANS_CONTAINER);
                 spansContainer.setOutputMarkupId(true);
                 spansContainer.add(createSpansList(annotations));
                 item.add(spansContainer);
@@ -225,28 +224,29 @@ public class DocumentAnnotationPanel
             }
         };
     }
-    
+
     private ListView<LinkWithRoleModel> createSpansList(List<LinkWithRoleModel> annotations)
     {
         return new ListView<LinkWithRoleModel>(CID_SPANS, annotations)
         {
             private static final long serialVersionUID = -2402736599496484623L;
-    
-            @Override protected void populateItem(ListItem<LinkWithRoleModel> item)
+
+            @Override
+            protected void populateItem(ListItem<LinkWithRoleModel> item)
             {
                 SpanAnnotationPanel panel = new SpanAnnotationPanel(CID_SPAN,
-                    Model.of(new VID(item.getModelObject().targetAddr)), getCas(), state);
+                        Model.of(new VID(item.getModelObject().targetAddr)), getCas(), state);
                 item.add(panel);
             }
         };
     }
-    
+
     @OnEvent
     public void onRefreshEvent(RefreshEvent event)
     {
         event.getTarget().add(this);
     }
-    
+
     private CAS getCas()
     {
         try {

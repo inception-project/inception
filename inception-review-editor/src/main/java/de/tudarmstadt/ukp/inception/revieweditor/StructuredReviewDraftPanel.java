@@ -51,10 +51,10 @@ public class StructuredReviewDraftPanel
     private final IModel<AnnotatorState> model;
 
     public StructuredReviewDraftPanel(String aId, IModel<AnnotatorState> aModel,
-                                      CasProvider aCasProvider)
+            CasProvider aCasProvider)
     {
         super(aId, aModel, aCasProvider);
-        
+
         model = aModel;
         Project project = aModel.getObject().getProject();
 
@@ -65,9 +65,9 @@ public class StructuredReviewDraftPanel
         linkedAnnotationsContainer.setOutputMarkupId(true);
         linkedAnnotationsContainer.add(createLinkedAnnotationList());
         add(linkedAnnotationsContainer);
-    
+
         unlinkedAnnotationsContainer = new UnlinkedAnnotationPanel(
-            CID_UNLINKED_ANNOTATIONS_CONTAINER, model, aCasProvider);
+                CID_UNLINKED_ANNOTATIONS_CONTAINER, model, aCasProvider);
         unlinkedAnnotationsContainer.setOutputMarkupId(true);
         unlinkedAnnotationsContainer.add(visibleWhen(() -> listUnlinkedAnnotations().size() > 0));
 
@@ -77,7 +77,7 @@ public class StructuredReviewDraftPanel
     private ListView<AnnotationListItem> createLinkedAnnotationList()
     {
         return new ListView<AnnotationListItem>(CID_ANNOTATIONS,
-            LoadableDetachableModel.of(() -> listDocumentAnnotations()))
+                LoadableDetachableModel.of(() -> listDocumentAnnotations()))
         {
             private static final long serialVersionUID = 6885792032557021315L;
 
@@ -88,9 +88,8 @@ public class StructuredReviewDraftPanel
                 String title = aItem.getModelObject().getLayer().getUiName();
                 VID vid = new VID(aItem.getModelObject().getAddr());
 
-                DocumentAnnotationPanel panel = 
-                    new DocumentAnnotationPanel(CID_ANNOTATION_DETAILS, Model.of(vid),
-                        getCasProvider(), model.getObject(), title);
+                DocumentAnnotationPanel panel = new DocumentAnnotationPanel(CID_ANNOTATION_DETAILS,
+                        Model.of(vid), getCasProvider(), model.getObject(), title);
                 aItem.add(panel);
 
                 aItem.setOutputMarkupId(true);

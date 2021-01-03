@@ -52,16 +52,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.revieweditor.event.SelectAnnotationEvent;
 
-public class SpanAnnotationPanel 
+public class SpanAnnotationPanel
     extends Panel
 {
     private static final long serialVersionUID = 7375798934091777439L;
-    
+
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-    
+
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    
+
     private static final String CID_TEXT = "text";
     private static final String CID_FEATURES_CONTAINER = "featuresContainer";
     private static final String CID_TEXT_FEATURES = "textFeatures";
@@ -72,45 +72,43 @@ public class SpanAnnotationPanel
     private static final String CID_VALUE = "value";
     private static final String CID_PRE_CONTEXT = "preContext";
     private static final String CID_POST_CONTEXT = "postContext";
-    
+
     private final AnnotatorState state;
     private WebMarkupContainer featuresContainer;
-    
-    public SpanAnnotationPanel(String aId, IModel<VID> aModel,
-        CAS aCas, AnnotatorState aState)
+
+    public SpanAnnotationPanel(String aId, IModel<VID> aModel, CAS aCas, AnnotatorState aState)
     {
         super(aId, aModel);
         state = aState;
-    
+
         VID vid = aModel.getObject();
-    
+
         FeatureStructure fs = selectFsByAddr(aCas, vid.getId());
         AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
         AnnotationFS aFS = selectAnnotationByAddr(aCas, vid.getId());
         int begin = aFS.getBegin();
         int end = aFS.getEnd();
-            
+
         List<FeatureState> features = listFeatures(fs, layer, vid);
         List<FeatureState> textFeatures = features.stream()
-            .filter(featureState -> featureState.feature.getType().equals(CAS.TYPE_NAME_STRING) 
-                && featureState.feature.getTagset() == null)
-            .collect(Collectors.toList());
+                .filter(featureState -> featureState.feature.getType().equals(CAS.TYPE_NAME_STRING)
+                        && featureState.feature.getTagset() == null)
+                .collect(Collectors.toList());
         features.removeAll(textFeatures);
-    
+
         LambdaAjaxLink selectButton = new LambdaAjaxLink(CID_SELECT, _target -> {
             send(this, Broadcast.BUBBLE, new SelectAnnotationEvent(vid, begin, end, _target));
             _target.add(this);
         });
-    
+
         String text = aCas.getDocumentText();
         int windowSize = 50;
-        int contextBegin = aFS.getBegin() < windowSize
-            ? 0 : aFS.getBegin() - windowSize;
-        int contextEnd = aFS.getEnd() + windowSize > text.length()
-            ? text.length() : aFS.getEnd() + windowSize;
+        int contextBegin = aFS.getBegin() < windowSize ? 0 : aFS.getBegin() - windowSize;
+        int contextEnd = aFS.getEnd() + windowSize > text.length() ? text.length()
+                : aFS.getEnd() + windowSize;
         String preContext = text.substring(contextBegin, aFS.getBegin());
         String postContext = text.substring(aFS.getEnd(), contextEnd);
-    
+
         featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
         featuresContainer.setOutputMarkupId(true);
         featuresContainer.add(createTextFeaturesList(textFeatures));
@@ -119,7 +117,7 @@ public class SpanAnnotationPanel
         featuresContainer.add(new Label(CID_TEXT, aFS.getCoveredText()));
         featuresContainer.add(new Label(CID_POST_CONTEXT, postContext));
         featuresContainer.add(selectButton);
-        
+
         add(new ClassAttributeModifier()
         {
             private static final long serialVersionUID = -5391276660500827257L;
@@ -138,43 +136,42 @@ public class SpanAnnotationPanel
                 return aClasses;
             }
         });
-            
+
         add(featuresContainer);
     }
-    
-    private List<FeatureState> listFeatures(FeatureStructure aFs,
-        AnnotationLayer aLayer, VID aVid)
+
+    private List<FeatureState> listFeatures(FeatureStructure aFs, AnnotationLayer aLayer, VID aVid)
     {
-        
+
         TypeAdapter adapter = annotationService.getAdapter(aLayer);
-    
+
         // Populate from feature structure
         List<FeatureState> featureStates = new ArrayList<>();
         for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
             if (!feature.isEnabled()) {
                 continue;
             }
-        
+
             Serializable value = null;
             if (aFs != null) {
                 value = adapter.getFeatureValue(feature, aFs);
             }
-        
+
             FeatureState featureState = new FeatureState(aVid, feature, value);
             featureStates.add(featureState);
             featureState.tagset = annotationService
                     .listTagsReorderable(featureState.feature.getTagset());
         }
-    
+
         return featureStates;
     }
-    
+
     private ListView<FeatureState> createTextFeaturesList(List<FeatureState> features)
     {
         return new ListView<FeatureState>(CID_TEXT_FEATURES, features)
         {
             private static final long serialVersionUID = 2518085396361327922L;
-            
+
             @Override
             protected void populateItem(ListItem<FeatureState> item)
             {
@@ -182,13 +179,13 @@ public class SpanAnnotationPanel
             }
         };
     }
-    
+
     private ListView<FeatureState> createFeaturesList(List<FeatureState> features)
     {
         return new ListView<FeatureState>(CID_FEATURES, features)
         {
             private static final long serialVersionUID = 16641722427333232L;
-            
+
             @Override
             protected void populateItem(ListItem<FeatureState> item)
             {
@@ -196,17 +193,18 @@ public class SpanAnnotationPanel
             }
         };
     }
-    
-    private void populateFeatureItem(ListItem<FeatureState> item) {
+
+    private void populateFeatureItem(ListItem<FeatureState> item)
+    {
         // Feature editors that allow multiple values may want to update themselves,
         // e.g. to add another slot.
         item.setOutputMarkupId(true);
-    
+
         final FeatureState featureState = item.getModelObject();
-    
+
         Label label = new Label(CID_LABEL, featureState.feature.getUiName() + ": ");
         Label value = new Label(CID_VALUE, featureState.value);
-    
+
         item.add(label);
         item.add(value);
     }
