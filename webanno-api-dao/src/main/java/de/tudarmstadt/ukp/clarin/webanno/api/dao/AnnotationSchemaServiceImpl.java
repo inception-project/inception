@@ -34,6 +34,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -689,6 +690,10 @@ public class AnnotationSchemaServiceImpl
     @Override
     public List<ImmutableTag> listTagsImmutable(TagSet aTagSet)
     {
+        if (aTagSet == null) {
+            return Collections.emptyList();
+        }
+
         return immutableTagsCache.get(aTagSet);
     }
 
