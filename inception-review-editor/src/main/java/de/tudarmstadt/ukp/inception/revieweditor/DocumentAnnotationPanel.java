@@ -185,7 +185,7 @@ public class DocumentAnnotationPanel
     
                 final FeatureState featureState = item.getModelObject();
     
-                Label label = new Label(CID_LABEL, featureState.feature.getUiName() + ": ");
+                Label label = new Label(CID_LABEL, featureState.feature.getUiName());
                 Label value = new Label(CID_VALUE, featureState.value);
     
                 item.add(label);

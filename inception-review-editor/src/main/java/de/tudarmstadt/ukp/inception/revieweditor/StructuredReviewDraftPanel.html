@@ -20,14 +20,14 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-      <div class="scrolling flex-content flex-v-container">
-          <ul wicket:id="linkedAnnotationsContainer" class="list-group">
-              <li wicket:id="annotations" class="list-group-item">
-                  <div wicket:id="annotationDetails"></div>
-              </li>
-              <li wicket:id="unlinkedAnnotationsContainer" class="list-group-item"></li>
-          </ul>
+    <div class="scrolling flex-content flex-v-container">
+      <div wicket:id="linkedAnnotationsContainer" class="m-2">
+        <div wicket:id="annotations" class="mb-2">
+          <div wicket:id="annotationDetails"/>
+        </div>
+        <div wicket:id="unlinkedAnnotationsContainer"/>
       </div>
+    </div>
   </wicket:panel>
 </body>
 </html>

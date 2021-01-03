@@ -17,21 +17,21 @@
  - limitations under the License.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
-<wicket:panel>
-            <div class="panel panel-danger panel-flex flex-content">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Unlinked Annotations</h3>
-                </div>
-                <div class="panel-body flex-v-container">
-                    <div wicket:id="annotationsContainer">
-                        <div wicket:id="annotations">
-                            <div wicket:id="annotationDetails"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-</wicket:panel>
+  <wicket:panel>
+    <div class="card">
+      <div class="card-header">
+        Unlinked Annotations
+      </div>
+      <div class="card-body flex-v-container">
+        <div wicket:id="annotationsContainer" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+          <div wicket:id="annotations">
+            <div wicket:id="annotationDetails"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </wicket:panel>
 </body>
 </html>

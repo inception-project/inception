@@ -17,40 +17,42 @@
  - limitations under the License.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-    <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-        <div class="panel panel-primary panel-flex flex-content">
-            <div class="panel-heading">
-                <h3 wicket:id="annotationTitle" class="panel-title"></h3>
+  <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+    <div class="card flex-content">
+      <div class="card-header">
+        <span wicket:id="annotationTitle" class="card-title" />
+      </div>
+      <div class="card-body flex-v-container">
+        <div wicket:id="featuresContainer">
+          <div wicket:id="features" class="form-row form-group">
+            <label class="feature-editor-label col-form-label"> <span wicket:id="label" />
+            </label>
+            <div class="feature-editor-value">
+              <span class="scrolling form-control" readonly
+                style="flex: 0 0 100%; max-height: 4.5rem; cursor: pointer;"> <span
+                wicket:id="value"></span>
+              </span>
             </div>
-            <div class="panel-body flex-v-container">
-                <div wicket:id="featuresContainer">
-                    <div wicket:id="features" class="row">
-                        <label wicket:id="label" class="col-sm-3 col-md-2"></label>
-                        <div class="col-sm-9 col-md-10">
-                            <span wicket:id="value"></span>
-                        </div>
-                    </div>
-                </div>
-                <div wicket:id="linkFeaturesContainer">
-                    <div wicket:id="linkFeatures">
-                        <div class="panel panel-info panel-flex flex-content">
-                            <div class="panel-heading">
-                                <h3 wicket:id="linkFeatureTitle" class="panel-title"></h3>
-                            </div>
-                            <div class="panel-body flex-v-container">
-                                <div wicket:id="spansContainer">
-                                    <div wicket:id="spans">
-                                        <div wicket:id="span" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+        <div wicket:id="linkFeaturesContainer">
+          <div wicket:id="linkFeatures" class="form-row form-group">
+            <label class="feature-editor-label col-form-label"> <span
+              wicket:id="linkFeatureTitle" />
+            </label>
+            <div class="feature-editor-value">
+              <div wicket:id="spansContainer" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+                <div wicket:id="spans">
+                  <div wicket:id="span"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </wicket:panel>
 </html>

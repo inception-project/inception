@@ -18,41 +18,47 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-    <div></div>
-    <div wicket:id="featuresContainer" class="panel panel-default">
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="row">
-                        <div wicket:id="features" class="col-sm-3 col-md-2">
-                            <label wicket:id="label"></label>
-                            <span wicket:id="value"></span>
-                        </div>
-                        <div class="col-sm-3 col-md-2 text-center pull-right" wicket:enclosure="select">
-                            <button wicket:id="select" class="btn btn-sm btn-primary">Select <i class="fa fa-crosshairs"></i></button>
-                        </div>
-                        <!-- TODO: this requires another solution like modifying css in wicket or JS -->
-                        <div class="col-sm-3 col-md-2 text-center pull-right" wicket:enclosure="selected">
-                            <button wicket:id="selected" class="btn btn-sm btn-success">Selected <i class="fa fa-crosshairs"></i></button>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <label class="col-sm-3 col-md-2">Text:</label>
-                        <div class="col-sm-9 col-md-10">
-                            <span style="word-wrap: break-word;">
-                                <span wicket:id="preContext"></span><mark wicket:id="text"></mark><span wicket:id="postContext"></span>
-                            </span>
-                        </div>
-                    </div>
-                    <div wicket:id="textFeatures" class="row" style="margin-top: 5px;">
-                        <label wicket:id="label" class="col-sm-3 col-md-2"></label>
-                        <div class="col-sm-9 col-md-10">
-                            <span wicket:id="value" style="word-wrap: break-word;"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <div wicket:id="featuresContainer" class="card">
+    <div class="card-body">
+      <div class="feature-editors-sidebar">
+        <div class="form-row form-group">
+          <label class="feature-editor-label col-form-label">
+            Text
+            <a wicket:id="select" class="float-right"><i class="fas fa-crosshairs"></i></a>
+          </label>
+          <div class="feature-editor-value">
+            <span class="scrolling form-control" readonly
+              style="flex: 0 0 100%; max-height: 4.5rem; cursor: pointer;"> <span
+              style="word-wrap: break-word;"> <span wicket:id="preContext"></span> <mark
+                  wicket:id="text"></mark><span wicket:id="postContext"></span>
+            </span>
+            </span>
+          </div>
         </div>
+      </div>
+
+      <div wicket:id="features" class="feature-editors-sidebar">
+        <div class="form-row form-group">
+          <label class="feature-editor-label col-form-label"> <span wicket:id="label" />
+          </label>
+          <div class="feature-editor-value">
+            <span wicket:id="value" class="scrolling form-control" readonly
+              style="flex: 0 0 100%; max-height: 4.5rem; cursor: pointer;"></span>
+          </div>
+        </div>
+      </div>
+
+      <div wicket:id="textFeatures" class="feature-editors-sidebar">
+        <div class="form-row form-group">
+          <label class="feature-editor-label col-form-label"> <span wicket:id="label" />
+          </label>
+          <div class="feature-editor-value">
+            <span wicket:id="value" class="scrolling form-control" readonly
+              style="flex: 0 0 100%; max-height: 4.5rem; cursor: pointer;"></span>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </wicket:panel>
 </html>

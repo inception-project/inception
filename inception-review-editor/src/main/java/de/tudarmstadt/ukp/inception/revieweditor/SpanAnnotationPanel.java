@@ -19,16 +19,17 @@ package de.tudarmstadt.ukp.inception.revieweditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -91,22 +92,15 @@ public class SpanAnnotationPanel
             
         List<FeatureState> features = listFeatures(fs, layer, vid);
         List<FeatureState> textFeatures = features.stream()
-            .filter(state -> state.feature.getType().equals("uima.cas.String") 
-                && state.feature.getTagset() == null)
+            .filter(featureState -> featureState.feature.getType().equals(CAS.TYPE_NAME_STRING) 
+                && featureState.feature.getTagset() == null)
             .collect(Collectors.toList());
         features.removeAll(textFeatures);
     
         LambdaAjaxLink selectButton = new LambdaAjaxLink(CID_SELECT, _target -> {
             send(this, Broadcast.BUBBLE, new SelectAnnotationEvent(vid, begin, end, _target));
+            _target.add(this);
         });
-        selectButton.add(visibleWhen(() 
-            -> !state.getSelection().getAnnotation().equals(vid)));
-    
-        LambdaAjaxLink selectedButton = new LambdaAjaxLink(CID_SELECTED, _target -> {
-            send(this, Broadcast.BUBBLE, new SelectAnnotationEvent(vid, begin, end, _target));
-        });
-        selectedButton.add(visibleWhen(()
-            -> state.getSelection().getAnnotation().equals(vid)));
     
         String text = aCas.getDocumentText();
         int windowSize = 50;
@@ -125,7 +119,25 @@ public class SpanAnnotationPanel
         featuresContainer.add(new Label(CID_TEXT, aFS.getCoveredText()));
         featuresContainer.add(new Label(CID_POST_CONTEXT, postContext));
         featuresContainer.add(selectButton);
-        featuresContainer.add(selectedButton);
+        
+        add(new ClassAttributeModifier()
+        {
+            private static final long serialVersionUID = -5391276660500827257L;
+
+            @Override
+            protected Set<String> update(Set<String> aClasses)
+            {
+                if (state.getSelection().getAnnotation().equals(vid)) {
+                    aClasses.add("border");
+                    aClasses.add("border-primary");
+                }
+                else {
+                    aClasses.remove("border");
+                    aClasses.remove("border-primary");
+                }
+                return aClasses;
+            }
+        });
             
         add(featuresContainer);
     }
