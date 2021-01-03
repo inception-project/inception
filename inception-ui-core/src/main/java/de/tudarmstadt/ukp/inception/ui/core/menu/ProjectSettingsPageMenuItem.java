@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.menu;
+package de.tudarmstadt.ukp.inception.ui.core.menu;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.Session;
