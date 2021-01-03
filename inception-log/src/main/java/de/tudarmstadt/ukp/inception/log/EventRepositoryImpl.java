@@ -17,8 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import static java.lang.String.join;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -26,6 +33,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -129,6 +137,45 @@ public class EventRepositoryImpl
                 .setParameter("project", aProject.getId()) //
                 .setParameter("eventTypes", Arrays.asList(aEventTypes)); //
         return typedQuery.setMaxResults(aMaxSize).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<LoggedEvent> listRecentActivity(Project aProject, String aUsername,
+            Collection<String> aEventTypes, int aMaxSize)
+    {
+        String query = join("\n", //
+                "FROM  LoggedEvent", //
+                "WHERE user = :user", //
+                "  AND project = :project", //
+                "  AND event in (:eventTypes)", //
+                "ORDER BY created DESC");
+
+        List<LoggedEvent> result = entityManager.createQuery(query, LoggedEvent.class) //
+                .setParameter("user", aUsername) //
+                .setParameter("project", aProject.getId()) //
+                .setParameter("eventTypes", aEventTypes) //
+                .setMaxResults(3500) //
+                .getResultList();
+
+        List<LoggedEvent> reducedResults = new ArrayList<>();
+        Set<Pair<Long, String>> documentsSeen = new HashSet<>();
+
+        Iterator<LoggedEvent> i = result.iterator();
+        while (i.hasNext() && reducedResults.size() < aMaxSize) {
+            LoggedEvent event = i.next();
+
+            // Check if we already have the latest event of this doc/annotator combination
+            Pair<Long, String> doc = Pair.of(event.getDocument(), event.getAnnotator());
+            if (documentsSeen.contains(doc)) {
+                continue;
+            }
+
+            reducedResults.add(event);
+            documentsSeen.add(doc);
+        }
+
+        return reducedResults;
     }
 
     @Override

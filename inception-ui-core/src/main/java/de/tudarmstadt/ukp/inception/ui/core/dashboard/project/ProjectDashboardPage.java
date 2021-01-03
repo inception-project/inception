@@ -73,8 +73,9 @@ public class ProjectDashboardPage
         User currentUser = userRepository.getCurrentUser();
 
         // Check if use can access the project
-        Project project = projectService.listAccessibleProjects(currentUser).stream().filter(
-                p -> p.getId().equals(aPageParameters.get(PAGE_PARAM_PROJECT_ID).toOptionalLong()))
+        Project project = projectService.listAccessibleProjects(currentUser).stream() //
+                .filter(p -> p.getId()
+                        .equals(aPageParameters.get(PAGE_PARAM_PROJECT_ID).toOptionalLong()))
                 .findFirst().orElse(null);
 
         // If the user has no access, send the user back to the overview page

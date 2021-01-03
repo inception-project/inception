@@ -148,7 +148,7 @@ public class RecommenderEditorPanel
         }));
         form.add(autoGenerateNameCheckBox);
 
-        form.add(new CheckBox(MID_ENABLED));
+        form.add(new CheckBox(MID_ENABLED).setOutputMarkupId(true));
 
         layerChoice = new BootstrapSelect<>(MID_LAYER, this::listLayers);
         layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
