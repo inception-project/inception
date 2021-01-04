@@ -1501,7 +1501,7 @@ public abstract class AnnotationDetailEditorPanel
         // if no possible values, means didn't satisfy conditions
         if (aPossibleValues.isEmpty()) {
             aRulesIndicator.didntMatchAnyRule();
-            return returnList;
+            return aTags;
         }
 
         Map<String, ReorderableTag> tagIndex = new LinkedHashMap<>();
