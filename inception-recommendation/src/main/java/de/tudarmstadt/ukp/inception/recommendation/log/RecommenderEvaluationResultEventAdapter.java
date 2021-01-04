@@ -66,36 +66,29 @@ public class RecommenderEvaluationResultEventAdapter
     }
 
     @Override
-    public String getDetails(RecommenderEvaluationResultEvent aEvent)
+    public String getDetails(RecommenderEvaluationResultEvent aEvent) throws IOException
     {
-        try {
-            Details details = new Details();
+        Details details = new Details();
 
-            details.recommenderId = aEvent.getRecommender().getId();
-            
-            EvaluationResult result = aEvent.getResult();
-            details.accuracy = result.computeAccuracyScore();
-            details.f1 = result.computeF1Score();
-            details.precision = result.computePrecisionScore();
-            details.recall = result.computeRecallScore();
-            
-            
-            details.trainSetSize = result.getTrainingSetSize();
-            details.testSetSize = result.getTestSetSize();
+        details.recommenderId = aEvent.getRecommender().getId();
 
-            details.active = aEvent.isActive();
-            details.duration = aEvent.getDuration();
-            details.threshold = aEvent.getRecommender().getThreshold();
-            details.layer = aEvent.getRecommender().getLayer().getName();
-            details.feature = aEvent.getRecommender().getFeature().getName();
-            details.tool = aEvent.getRecommender().getTool();
+        EvaluationResult result = aEvent.getResult();
+        details.accuracy = result.computeAccuracyScore();
+        details.f1 = result.computeF1Score();
+        details.precision = result.computePrecisionScore();
+        details.recall = result.computeRecallScore();
 
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        details.trainSetSize = result.getTrainingSetSize();
+        details.testSetSize = result.getTestSetSize();
+
+        details.active = aEvent.isActive();
+        details.duration = aEvent.getDuration();
+        details.threshold = aEvent.getRecommender().getThreshold();
+        details.layer = aEvent.getRecommender().getLayer().getName();
+        details.feature = aEvent.getRecommender().getFeature().getName();
+        details.tool = aEvent.getRecommender().getTool();
+
+        return JSONUtil.toJsonString(details);
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -117,7 +110,7 @@ public class RecommenderEvaluationResultEventAdapter
         public double f1;
         public double precision;
         public double recall;
-        
+
         // Used data
         public int trainSetSize;
         public int testSetSize;

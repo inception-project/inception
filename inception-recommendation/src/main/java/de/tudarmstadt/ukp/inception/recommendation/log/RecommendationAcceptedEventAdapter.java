@@ -39,46 +39,40 @@ public class RecommendationAcceptedEventAdapter
     implements EventLoggingAdapter<RecommendationAcceptedEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
         return aEvent instanceof RecommendationAcceptedEvent;
     }
-    
+
     @Override
     public long getDocument(RecommendationAcceptedEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
-    
+
     @Override
     public long getProject(RecommendationAcceptedEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
-    
+
     @Override
     public String getAnnotator(RecommendationAcceptedEvent aEvent)
     {
         return aEvent.getUser();
     }
-    
-    @Override
-    public String getDetails(RecommendationAcceptedEvent aEvent)
-    {
-        try {
-            AnnotationDetails annotation = new AnnotationDetails(aEvent.getFS());
-            
-            FeatureChangeDetails details = new FeatureChangeDetails();
-            details.setAnnotation(annotation);
-            details.setValue(aEvent.getRecommendedValue());
 
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+    @Override
+    public String getDetails(RecommendationAcceptedEvent aEvent) throws IOException
+    {
+        AnnotationDetails annotation = new AnnotationDetails(aEvent.getFS());
+
+        FeatureChangeDetails details = new FeatureChangeDetails();
+        details.setAnnotation(annotation);
+        details.setValue(aEvent.getRecommendedValue());
+
+        return JSONUtil.toJsonString(details);
     }
 }

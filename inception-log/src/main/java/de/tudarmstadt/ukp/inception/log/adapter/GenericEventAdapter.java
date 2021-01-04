@@ -30,17 +30,17 @@ public class GenericEventAdapter
     implements EventLoggingAdapter<ApplicationEvent>
 {
     public static final GenericEventAdapter INSTANCE = new GenericEventAdapter();
-    
+
     @Override
     public boolean accepts(Object aEvent)
     {
-        return aEvent instanceof ApplicationEvent && !(
-                aEvent instanceof ApplicationContextEvent || 
-                aEvent instanceof ServletRequestHandledEvent ||
-                aEvent instanceof SessionCreationEvent ||
-                aEvent instanceof SessionDestroyedEvent ||
-                aEvent instanceof AbstractAuthorizationEvent ||
-                aEvent instanceof AbstractAuthenticationEvent ||
-                aEvent instanceof WebServerInitializedEvent);
+        return aEvent instanceof ApplicationEvent && //
+                !(aEvent instanceof ApplicationContextEvent //
+                        || aEvent instanceof ServletRequestHandledEvent //
+                        || aEvent instanceof SessionCreationEvent //
+                        || aEvent instanceof SessionDestroyedEvent //
+                        || aEvent instanceof AbstractAuthorizationEvent //
+                        || aEvent instanceof AbstractAuthenticationEvent //
+                        || aEvent instanceof WebServerInitializedEvent);
     }
 }

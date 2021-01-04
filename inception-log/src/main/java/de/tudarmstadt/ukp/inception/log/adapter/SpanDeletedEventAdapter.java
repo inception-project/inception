@@ -58,15 +58,9 @@ public class SpanDeletedEventAdapter
     }
     
     @Override
-    public String getDetails(SpanDeletedEvent aEvent)
+    public String getDetails(SpanDeletedEvent aEvent) throws IOException
     {
-        try {
-            AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
+        return JSONUtil.toJsonString(details);
     }
 }

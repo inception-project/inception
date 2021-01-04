@@ -59,17 +59,11 @@ public class AnnotationStateChangedEventAdapter
     }
 
     @Override
-    public String getDetails(AnnotationStateChangeEvent aEvent)
+    public String getDetails(AnnotationStateChangeEvent aEvent) throws IOException
     {
-        try {
-            StateChangeDetails details = new StateChangeDetails();
-            details.setState(Objects.toString(aEvent.getNewState(), null));
-            details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        StateChangeDetails details = new StateChangeDetails();
+        details.setState(Objects.toString(aEvent.getNewState(), null));
+        details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
+        return JSONUtil.toJsonString(details);
     }
 }
