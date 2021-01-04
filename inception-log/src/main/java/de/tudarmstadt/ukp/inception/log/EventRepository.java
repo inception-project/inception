@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -51,4 +52,7 @@ public interface EventRepository
      */
     List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
             String aEventType, int aMaxSize, String aDetail);
+
+    List<LoggedEvent> listRecentActivity(Project aProject, String aUsername,
+            Collection<String> aEventTypes, int aMaxSize);
 }

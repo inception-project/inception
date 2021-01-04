@@ -39,6 +39,14 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
     <dependency>
@@ -54,6 +62,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
+    </dependency>
+    
 
     <dependency>
       <groupId>org.apache.wicket</groupId>
@@ -143,10 +156,6 @@
       <groupId>org.webjars.bower</groupId>
       <artifactId>hover</artifactId>
       <version>2.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.persistence</groupId>
-      <artifactId>javax.persistence-api</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
