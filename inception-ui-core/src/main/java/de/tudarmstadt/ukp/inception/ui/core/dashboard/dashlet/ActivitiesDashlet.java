@@ -27,22 +27,25 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.SetUtils.unmodifiableSet;
 
+import java.awt.Label;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.logging.Logger;
+
+import javax.swing.text.html.ListView;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -110,6 +113,8 @@ public class ActivitiesDashlet
                 new StringResourceModel("activitiesHeading", this));
         activitiesList.setOutputMarkupPlaceholderTag(true);
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss");
+
         ListView<Pair<LoggedEvent, SourceDocument>> listView = new ListView<Pair<LoggedEvent, SourceDocument>>(
                 "activity", LoadableDetachableModel.of(this::listActivities))
         {
@@ -130,7 +135,8 @@ public class ActivitiesDashlet
                         () -> !CURATION_USER.equals(event.getAnnotator()) && !userRepository
                                 .getCurrentUsername().equals(event.getAnnotator()))));
 
-                aItem.add(new Label("timestamp", formatDateStr(event)));
+                aItem.add(new Label("timestamp", formatDateStr(event)).add(
+                        AttributeModifier.replace("title", dateFormat.format(event.getCreated()))));
             }
         };
 
@@ -160,13 +166,6 @@ public class ActivitiesDashlet
         }
 
         return format("%d days ago", timeDifference / (24 * 60 * 60 * 1000));
-
-        // String eventDate = event.getCreated().toString();
-        // String[] times = eventDate.split(":");
-        // if (times.length >= 2) {
-        // eventDate = join(":", times[0], times[1]);
-        // }
-        // return eventDate;
     }
 
     private ExternalLink createLastActivityLink(String aId, LoggedEvent aEvent,
@@ -176,12 +175,17 @@ public class ActivitiesDashlet
         Long docId = aDocument.getId();
         String documentName = aDocument.getName();
 
+        ExternalLink link;
         if (CURATION_USER.equals(aEvent.getAnnotator())) {
-            return createDocumentPageLink(project, docId, aId, documentName, CurationPage.class);
+            link = createDocumentPageLink(project, docId, aId, documentName, CurationPage.class);
         }
         else {
-            return createDocumentPageLink(project, docId, aId, documentName, AnnotationPage.class);
+            link = createDocumentPageLink(project, docId, aId, documentName, AnnotationPage.class);
         }
+
+        link.add(AttributeModifier.replace("title", documentName));
+
+        return link;
     }
 
     private List<Pair<LoggedEvent, SourceDocument>> listActivities()

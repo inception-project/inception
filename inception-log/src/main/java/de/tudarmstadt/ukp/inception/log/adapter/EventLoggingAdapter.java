@@ -27,7 +27,7 @@ public interface EventLoggingAdapter<T>
 {
     boolean accepts(Object aEvent);
 
-    default String getDetails(T aEvent)
+    default String getDetails(T aEvent) throws Exception
     {
         return null;
     }

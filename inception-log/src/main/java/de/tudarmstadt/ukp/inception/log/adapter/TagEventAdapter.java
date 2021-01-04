@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2021
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -18,40 +18,43 @@
 package de.tudarmstadt.ukp.inception.log.adapter;
 
 import java.io.IOException;
-import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.TagEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.inception.log.model.StateChangeDetails;
+import de.tudarmstadt.ukp.inception.log.model.TagDetails;
 
 @Component
-public class ProjectStateChangedEventAdapter
-    implements EventLoggingAdapter<ProjectStateChangedEvent>
+public class TagEventAdapter
+    implements EventLoggingAdapter<TagEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public boolean accepts(Object aEvent)
     {
-        return aEvent instanceof ProjectStateChangedEvent;
+        return aEvent instanceof TagEvent;
     }
 
     @Override
-    public long getProject(ProjectStateChangedEvent aEvent)
+    public long getProject(TagEvent aEvent)
     {
-        return aEvent.getProject().getId();
+        return aEvent.getTag().getTagSet().getProject().getId();
     }
 
     @Override
-    public String getDetails(ProjectStateChangedEvent aEvent) throws IOException
+    public String getDetails(TagEvent aEvent)
     {
-        StateChangeDetails details = new StateChangeDetails();
-        details.setState(Objects.toString(aEvent.getNewState(), null));
-        details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
-        return JSONUtil.toJsonString(details);
+        try {
+            TagDetails details = new TagDetails(aEvent.getTag());
+            return JSONUtil.toJsonString(details);
+        }
+        catch (IOException e) {
+            log.error("Unable to log event [{}]", aEvent, e);
+            return "<ERROR>";
+        }
     }
 }

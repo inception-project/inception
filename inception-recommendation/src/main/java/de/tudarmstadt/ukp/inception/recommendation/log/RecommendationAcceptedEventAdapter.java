@@ -65,20 +65,14 @@ public class RecommendationAcceptedEventAdapter
     }
 
     @Override
-    public String getDetails(RecommendationAcceptedEvent aEvent)
+    public String getDetails(RecommendationAcceptedEvent aEvent) throws IOException
     {
-        try {
-            AnnotationDetails annotation = new AnnotationDetails(aEvent.getFS());
+        AnnotationDetails annotation = new AnnotationDetails(aEvent.getFS());
 
-            FeatureChangeDetails details = new FeatureChangeDetails();
-            details.setAnnotation(annotation);
-            details.setValue(aEvent.getRecommendedValue());
+        FeatureChangeDetails details = new FeatureChangeDetails();
+        details.setAnnotation(annotation);
+        details.setValue(aEvent.getRecommendedValue());
 
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        return JSONUtil.toJsonString(details);
     }
 }

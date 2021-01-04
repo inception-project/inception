@@ -36,25 +36,27 @@ import javax.persistence.TypedQuery;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link EventLoggingAutoConfiguration#eventRepository}.
+ * </p>
+ */
 public class EventRepositoryImpl
     implements EventRepository
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private @PersistenceContext EntityManager entityManager;
 
-    public EventRepositoryImpl()
-    {
-    }
-
+    @Autowired
     public EventRepositoryImpl(EntityManager aEntityManager)
     {
         entityManager = aEntityManager;
