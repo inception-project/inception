@@ -222,7 +222,6 @@ public class KnowledgeBaseExporter
                     ? vf.createIRI(exportedKB.getFullTextSearchIri())
                     : null);
 
-            kb.setReadOnly(exportedKB.isReadOnly());
             kb.setEnabled(exportedKB.isEnabled());
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
             kb.setBasePrefix(exportedKB.getBasePrefix());
@@ -264,6 +263,10 @@ public class KnowledgeBaseExporter
                 RepositoryImplConfig cfg = kbService.getRemoteConfig(exportedKB.getRemoteURL());
                 kbService.registerKnowledgeBase(kb, cfg);
             }
+
+            // Set read-only flag only at the end to ensure that we do not run into a "read only"
+            // error during import
+            kb.setReadOnly(exportedKB.isReadOnly());
 
             // Early versions of INCEpTION did not set the ID.
             if (exportedKB.getId() == null) {
