@@ -39,13 +39,19 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingProperties;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link EventLoggingAutoConfiguration#eventLoggingListener}.
+ * </p>
+ */
 public class EventLoggingListener
     implements DisposableBean
 {
@@ -62,14 +68,18 @@ public class EventLoggingListener
 
     private final Deque<LoggedEvent> queue;
 
+    private final EventLoggingProperties properties;
+
     private volatile boolean flushing = false;
 
     public EventLoggingListener(@Autowired EventRepository aRepo,
-            @Lazy @Autowired(required = false) List<EventLoggingAdapter<?>> aAdapters)
+            @Lazy @Autowired(required = false) List<EventLoggingAdapter<?>> aAdapters,
+            EventLoggingProperties aProperties)
     {
         repo = aRepo;
         adapterProxy = aAdapters;
         adapterCache = new HashedMap<>();
+        properties = aProperties;
 
         queue = new ConcurrentLinkedDeque<>();
 
@@ -132,6 +142,10 @@ public class EventLoggingListener
 
         if (adapter.isPresent()) {
             EventLoggingAdapter<ApplicationEvent> a = adapter.get();
+
+            if (properties.getExcludeEvents().contains(a.getEvent(aEvent))) {
+                return;
+            }
 
             LoggedEvent e = new LoggedEvent();
             e.setCreated(a.getCreated(aEvent));
