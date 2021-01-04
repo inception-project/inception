@@ -19,13 +19,30 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <div wicket:id="activities" class="flex-tile" style="flex: 0.5;">
-      <h3><wicket:message key="activitiesHeading"/></h3>
-      <ul class="scrolling flex-content flex-v-container flex-gutter">
-        <li wicket:id="activity">
-          <a wicket:id="eventLink"></a>
-        </li>
-      </ul>
+    <div wicket:id="activities" class="flex-tile" style="flex: 0.5; padding: 0px; min-width: 20rem;">
+      <div class="flex-v-container">
+        <div class="card-header">
+          <wicket:message key="activitiesHeading"/>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li wicket:id="activity" class="list-group-item" >
+            <span wicket:id="type" class="badge badge-secondary float-right"/>
+            <a wicket:id="eventLink" style="display: block" class="text-truncate"></a>
+            <div class="flex-h-container">
+              <small class="text-muted flex-content">
+                <span wicket:enclosure="user">
+                  <i class="far fa-user"></i>
+                  <span wicket:id="user"/>
+                </span>
+              </small>
+              <small class="text-muted">
+                <i class="far fa-clock"></i>
+                <span wicket:id="timestamp"/>
+              </small>
+            </div>
+          </li>
+        </ul>
+      </div>
     </div>
   </wicket:panel>
 </body>
