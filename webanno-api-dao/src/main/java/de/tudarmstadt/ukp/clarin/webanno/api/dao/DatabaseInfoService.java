@@ -18,13 +18,18 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.rightPad;
 import static org.apache.commons.lang3.reflect.FieldUtils.readField;
 
 import java.sql.DatabaseMetaData;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -32,7 +37,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -55,47 +62,120 @@ public class DatabaseInfoService
 
     private @PersistenceContext EntityManager entityManager;
 
+    private @Autowired ConfigurableApplicationContext appContext;
+
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        Session session = entityManager.unwrap(Session.class);
-        SessionFactoryImplementor sessionFactory = ((SessionFactoryImplementor) session
-                .getSessionFactory());
-        Dialect dialect = sessionFactory.getJdbcServices().getDialect();
+        List<Setting> settings = new ArrayList<>();
+        settings.add(new Setting("Database URL", databaseUrl, databaseUrl));
+        settings.add(new Setting("Database username", databaseUsername, databaseUsername));
 
-        log.info("Database URL            : [{}]", databaseUrl);
-        log.info("Database username       : [{}]", databaseUsername);
-
-        if (isBlank(databaseDriver)) {
+        Session session = null;
+        try {
+            session = entityManager.unwrap(Session.class);
             session.doWork(connection -> {
                 DatabaseMetaData metadata = connection.getMetaData();
-                log.info("Database driver         : [{} {}] (auto-detected)",
-                        metadata.getDriverName(), metadata.getDriverVersion());
+                settings.add(new Setting("Database driver",
+                        metadata.getDriverName() + "  " + metadata.getDriverVersion(),
+                        databaseDriver));
             });
         }
-        else {
-            log.info("Database driver         : [{}] (explicitly set)", databaseDriver);
+        catch (Exception e) {
+            settings.add(new Setting("Database driver", e, databaseDriver,
+                    "Please check that the required database driver is available on the classpath"));
         }
 
-        if (isBlank(databaseDialect)) {
-            log.info("Database dialect        : [{}] (auto-detected)", dialect);
-        }
-        else if (dialect.getClass().getName().equals(databaseDialect)) {
-            log.info("Database dialect        : [{}] (explicitly set)", dialect);
-        }
-        else {
-            log.warn("Database dialect        : [{}] (not matching requested: {})", dialect,
-                    databaseDialect);
-        }
-
-        if (dialect instanceof MySQLDialect) {
+        if (session != null) {
+            Dialect dialect = null;
             try {
-                log.info("Database storage engine : [{}]",
-                        readField(dialect, "storageEngine", true).getClass().getName());
+                SessionFactoryImplementor sessionFactory = ((SessionFactoryImplementor) session
+                        .getSessionFactory());
+                dialect = sessionFactory.getJdbcServices().getDialect();
+                settings.add(new Setting("Database dialect", dialect.getClass().getName(),
+                        databaseDialect));
             }
             catch (Exception e) {
-                // Ignore
+                settings.add(new Setting("Database dialect", e, databaseDialect,
+                        "Please check that the required database dialect available is on the classpath"));
             }
+
+            if (dialect instanceof MySQLDialect) {
+                try {
+                    settings.add(new Setting("Database storage engine",
+                            readField(dialect, "storageEngine", true).getClass().getName()));
+                }
+                catch (Exception e) {
+                    // Ignore
+                }
+            }
+        }
+
+        int maxSettingNameLength = settings.stream().mapToInt(s -> s.name.length()).max().orElse(0);
+        for (Setting setting : settings) {
+            if (setting.exception != null) {
+                log.error("{}: {} {}", rightPad(setting.name, maxSettingNameLength),
+                        setting.exception.getMessage(), setting.status());
+                if (setting.hint != null) {
+                    log.error("{} {}", StringUtils.repeat(" ", maxSettingNameLength + 1),
+                            setting.hint);
+                }
+            }
+            else {
+                log.info("{}: [{}] {}", rightPad(setting.name, maxSettingNameLength), setting.value,
+                        setting.status());
+            }
+        }
+
+        if (settings.stream().anyMatch(s -> s.exception != null)) {
+            log.error("Could not establish access to the database. Shutting down.");
+            appContext.close();
+        }
+    }
+
+    private static class Setting
+    {
+        final String name;
+        final String value;
+        final String requested;
+        final Exception exception;
+        final String hint;
+
+        public Setting(String aName, Exception aException, String aRequested, String aHint)
+        {
+            name = aName;
+            value = null;
+            exception = aException;
+            requested = aRequested;
+            hint = aHint;
+        }
+
+        public Setting(String aName, String aValue)
+        {
+            this(aName, aValue, null);
+        }
+
+        public Setting(String aName, String aValue, String aRequested)
+        {
+            super();
+            name = aName;
+            value = aValue;
+            requested = aRequested;
+            exception = null;
+            hint = null;
+        }
+
+        String status()
+        {
+            if (isBlank(requested)) {
+                return "(auto-detected)";
+            }
+
+            if (Objects.equals(value, requested)) {
+                return "";
+            }
+
+            return "(not matching requested: [" + requested + "])";
         }
     }
 }
