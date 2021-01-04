@@ -62,29 +62,23 @@ public class ActiveLearningSuggestionOfferedAdapter
     }
 
     @Override
-    public String getDetails(ActiveLearningSuggestionOfferedEvent aEvent)
+    public String getDetails(ActiveLearningSuggestionOfferedEvent aEvent) throws IOException
     {
-        try {
-            Details details = new Details();
-            details.ann = new AnnotationDetails();
-            details.ann.setBegin(aEvent.getCurrentRecommendation().getBegin());
-            details.ann.setEnd(aEvent.getCurrentRecommendation().getEnd());
-            details.ann.setText(aEvent.getCurrentRecommendation().getCoveredText());
-            details.ann.setType(aEvent.getLayer().getName());
-            details.annotationFeature = aEvent.getAnnotationFeature();
-            details.currentLabel = aEvent.getCurrentRecommendation().getLabel();
-            details.confidence = aEvent.getCurrentRecommendation().getConfidence();
-            details.recommenderId = aEvent.getCurrentRecommendation().getRecommenderId();
+        Details details = new Details();
+        details.ann = new AnnotationDetails();
+        details.ann.setBegin(aEvent.getCurrentRecommendation().getBegin());
+        details.ann.setEnd(aEvent.getCurrentRecommendation().getEnd());
+        details.ann.setText(aEvent.getCurrentRecommendation().getCoveredText());
+        details.ann.setType(aEvent.getLayer().getName());
+        details.annotationFeature = aEvent.getAnnotationFeature();
+        details.currentLabel = aEvent.getCurrentRecommendation().getLabel();
+        details.confidence = aEvent.getCurrentRecommendation().getConfidence();
+        details.recommenderId = aEvent.getCurrentRecommendation().getRecommenderId();
 
-            List<String> allLabelList = aEvent.getAllRecommendations().stream()
-                    .map(ao -> ao.getLabel()).collect(Collectors.toList());
-            details.allLabels = String.join(", ", allLabelList);
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        List<String> allLabelList = aEvent.getAllRecommendations().stream().map(ao -> ao.getLabel())
+                .collect(Collectors.toList());
+        details.allLabels = String.join(", ", allLabelList);
+        return JSONUtil.toJsonString(details);
     }
 
     public static class Details

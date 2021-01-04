@@ -65,24 +65,18 @@ public class RecommendationRejectedEventAdapter
     }
 
     @Override
-    public String getDetails(RecommendationRejectedEvent aEvent)
+    public String getDetails(RecommendationRejectedEvent aEvent) throws IOException
     {
-        try {
-            AnnotationDetails annotation = new AnnotationDetails();
-            annotation.setBegin(aEvent.getBegin());
-            annotation.setEnd(aEvent.getEnd());
-            annotation.setText(aEvent.getText());
-            annotation.setType(aEvent.getFeature().getLayer().getName());
+        AnnotationDetails annotation = new AnnotationDetails();
+        annotation.setBegin(aEvent.getBegin());
+        annotation.setEnd(aEvent.getEnd());
+        annotation.setText(aEvent.getText());
+        annotation.setType(aEvent.getFeature().getLayer().getName());
 
-            FeatureChangeDetails details = new FeatureChangeDetails();
-            details.setAnnotation(annotation);
-            details.setValue(aEvent.getRecommendedValue());
+        FeatureChangeDetails details = new FeatureChangeDetails();
+        details.setAnnotation(annotation);
+        details.setValue(aEvent.getRecommendedValue());
 
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        return JSONUtil.toJsonString(details);
     }
 }

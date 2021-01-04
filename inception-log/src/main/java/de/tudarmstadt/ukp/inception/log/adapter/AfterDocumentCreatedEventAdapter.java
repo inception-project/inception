@@ -17,9 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import java.io.IOException;
+
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component
 public class AfterDocumentCreatedEventAdapter
@@ -41,5 +45,22 @@ public class AfterDocumentCreatedEventAdapter
     public long getProject(AfterDocumentCreatedEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
+    }
+
+    @Override
+    public String getDetails(AfterDocumentCreatedEvent aEvent) throws IOException
+    {
+        Details details = new Details();
+        details.documentName = aEvent.getDocument().getName();
+        details.format = aEvent.getDocument().getFormat();
+        details.state = aEvent.getDocument().getState();
+        return JSONUtil.toJsonString(details);
+    }
+
+    public static class Details
+    {
+        public String documentName;
+        public String format;
+        public SourceDocumentState state;
     }
 }

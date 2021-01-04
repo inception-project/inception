@@ -58,17 +58,11 @@ public class FeatureValueUpdatedEventAdapter
     }
 
     @Override
-    public String getDetails(FeatureValueUpdatedEvent aEvent)
+    public String getDetails(FeatureValueUpdatedEvent aEvent) throws IOException
     {
-        try {
-            // FIXME This may fail for slot features... let's see.
-            FeatureChangeDetails details = new FeatureChangeDetails(aEvent.getFS(),
-                    aEvent.getNewValue(), aEvent.getOldValue());
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        // FIXME This may fail for slot features... let's see.
+        FeatureChangeDetails details = new FeatureChangeDetails(aEvent.getFS(),
+                aEvent.getNewValue(), aEvent.getOldValue());
+        return JSONUtil.toJsonString(details);
     }
 }

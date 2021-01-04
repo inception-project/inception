@@ -47,17 +47,11 @@ public class ProjectStateChangedEventAdapter
     }
 
     @Override
-    public String getDetails(ProjectStateChangedEvent aEvent)
+    public String getDetails(ProjectStateChangedEvent aEvent) throws IOException
     {
-        try {
-            StateChangeDetails details = new StateChangeDetails();
-            details.setState(Objects.toString(aEvent.getNewState(), null));
-            details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        StateChangeDetails details = new StateChangeDetails();
+        details.setState(Objects.toString(aEvent.getNewState(), null));
+        details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
+        return JSONUtil.toJsonString(details);
     }
 }
