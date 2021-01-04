@@ -134,13 +134,21 @@ public class EventLoggingListener
             EventLoggingAdapter<ApplicationEvent> a = adapter.get();
 
             LoggedEvent e = new LoggedEvent();
-            e.setCreated(a.getCreated(aEvent));
-            e.setEvent(a.getEvent(aEvent));
-            e.setUser(a.getUser(aEvent));
-            e.setProject(a.getProject(aEvent));
-            e.setDocument(a.getDocument(aEvent));
-            e.setAnnotator(a.getAnnotator(aEvent));
-            e.setDetails(a.getDetails(aEvent));
+
+            try {
+                e.setCreated(a.getCreated(aEvent));
+                e.setEvent(a.getEvent(aEvent));
+                e.setUser(a.getUser(aEvent));
+                e.setProject(a.getProject(aEvent));
+                e.setDocument(a.getDocument(aEvent));
+                e.setAnnotator(a.getAnnotator(aEvent));
+                e.setDetails(a.getDetails(aEvent));
+            }
+            catch (Exception ex) {
+                log.error("Unable to log event [{}]", aEvent, ex);
+                return;
+            }
+
             // Add to the writing queue which gets flushed regularly by a timer
             queue.add(e);
 

@@ -66,35 +66,29 @@ public class RecommenderEvaluationResultEventAdapter
     }
 
     @Override
-    public String getDetails(RecommenderEvaluationResultEvent aEvent)
+    public String getDetails(RecommenderEvaluationResultEvent aEvent) throws IOException
     {
-        try {
-            Details details = new Details();
+        Details details = new Details();
 
-            details.recommenderId = aEvent.getRecommender().getId();
+        details.recommenderId = aEvent.getRecommender().getId();
 
-            EvaluationResult result = aEvent.getResult();
-            details.accuracy = result.computeAccuracyScore();
-            details.f1 = result.computeF1Score();
-            details.precision = result.computePrecisionScore();
-            details.recall = result.computeRecallScore();
+        EvaluationResult result = aEvent.getResult();
+        details.accuracy = result.computeAccuracyScore();
+        details.f1 = result.computeF1Score();
+        details.precision = result.computePrecisionScore();
+        details.recall = result.computeRecallScore();
 
-            details.trainSetSize = result.getTrainingSetSize();
-            details.testSetSize = result.getTestSetSize();
+        details.trainSetSize = result.getTrainingSetSize();
+        details.testSetSize = result.getTestSetSize();
 
-            details.active = aEvent.isActive();
-            details.duration = aEvent.getDuration();
-            details.threshold = aEvent.getRecommender().getThreshold();
-            details.layer = aEvent.getRecommender().getLayer().getName();
-            details.feature = aEvent.getRecommender().getFeature().getName();
-            details.tool = aEvent.getRecommender().getTool();
+        details.active = aEvent.isActive();
+        details.duration = aEvent.getDuration();
+        details.threshold = aEvent.getRecommender().getThreshold();
+        details.layer = aEvent.getRecommender().getLayer().getName();
+        details.feature = aEvent.getRecommender().getFeature().getName();
+        details.tool = aEvent.getRecommender().getTool();
 
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        return JSONUtil.toJsonString(details);
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

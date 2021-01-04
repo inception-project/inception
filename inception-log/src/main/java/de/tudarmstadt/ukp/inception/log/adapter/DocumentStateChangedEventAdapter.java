@@ -53,17 +53,11 @@ public class DocumentStateChangedEventAdapter
     }
 
     @Override
-    public String getDetails(DocumentStateChangedEvent aEvent)
+    public String getDetails(DocumentStateChangedEvent aEvent) throws IOException
     {
-        try {
-            StateChangeDetails details = new StateChangeDetails();
-            details.setState(Objects.toString(aEvent.getNewState(), null));
-            details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        StateChangeDetails details = new StateChangeDetails();
+        details.setState(Objects.toString(aEvent.getNewState(), null));
+        details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
+        return JSONUtil.toJsonString(details);
     }
 }
