@@ -657,14 +657,16 @@ public class BratRenderer
             // rendering glitches in the client-side brat rendering code
             case '\n':
             case '\r':
-                // Some browsers (e.g. Firefox) do not count invisible chars in some functions
-                // (e.g. SVGText.getNumberOfChars()) and this causes trouble. See:
-                //
-                // - https://github.com/webanno/webanno/issues/307
-                // - https://github.com/inception-project/inception/issues/1849
-                //
-                // To avoid this, we replace the chars with a visible whitespace character before
-                // sending the data to the browser. Hopefully this makes sense.
+                chars[i] = ' ';
+                break;
+            // Some browsers (e.g. Firefox) do not count invisible chars in some functions
+            // (e.g. SVGText.getNumberOfChars()) and this causes trouble. See:
+            //
+            // - https://github.com/webanno/webanno/issues/307
+            // - https://github.com/inception-project/inception/issues/1849
+            //
+            // To avoid this, we replace the chars with a visible whitespace character before
+            // sending the data to the browser. Hopefully this makes sense.
             case '\u2000': // EN QUAD
             case '\u2001': // EM QUAD
             case '\u2002': // EN SPACE
