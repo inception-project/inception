@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -210,7 +211,14 @@ public class RelationAdapter
     @Override
     public void select(AnnotatorState aState, AnnotationFS aAnno)
     {
-        aState.getSelection().selectArc(new VID(aAnno), getSourceAnnotation(aAnno),
-                getTargetAnnotation(aAnno));
+        AnnotationFS src = getSourceAnnotation(aAnno);
+        AnnotationFS tgt = getTargetAnnotation(aAnno);
+
+        if (getLayer().getAttachFeature() != null) {
+            src = getFeature(src, getLayer().getAttachFeature().getName(), AnnotationFS.class);
+            tgt = getFeature(tgt, getLayer().getAttachFeature().getName(), AnnotationFS.class);
+        }
+
+        aState.getSelection().selectArc(new VID(aAnno), src, tgt);
     }
 }

@@ -30,6 +30,7 @@ public class LambdaAjaxLink
     private AjaxCallback action;
     private AjaxExceptionHandler exceptionHandler;
     private SerializableMethodDelegate<LambdaAjaxLink> onConfigureAction;
+    private boolean alwaysEnabled;
 
     public LambdaAjaxLink(String aId, AjaxCallback aAction)
     {
@@ -75,5 +76,17 @@ public class LambdaAjaxLink
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
+    }
+
+    public LambdaAjaxLink setAlwaysEnabled(boolean aAlwaysEnabled)
+    {
+        alwaysEnabled = aAlwaysEnabled;
+        return this;
+    }
+
+    @Override
+    public boolean isEnabledInHierarchy()
+    {
+        return alwaysEnabled || super.isEnabledInHierarchy();
     }
 }

@@ -268,11 +268,14 @@ public class AttachedAnnotationListPanel
             aItem.add(new Label("endpoint", info.endpointText));
 
             aItem.add(new LambdaAjaxLink("jumpToEndpoint",
-                    _target -> actionHandler.actionSelectAndJump(_target, info.endPointVid)));
+                    _target -> actionHandler.actionSelectAndJump(_target, info.endPointVid))
+                            .setAlwaysEnabled(true) // avoid disabling in read-only mode
+            );
 
             LambdaAjaxLink selectRelation = new LambdaAjaxLink("selectRelation",
                     _target -> actionHandler.actionSelect(_target, info.relationVid));
-            selectRelation.setEnabled(info.relationVid != null);
+            // avoid disabling in read-only mode
+            selectRelation.setAlwaysEnabled(info.relationVid != null);
             aItem.add(selectRelation);
 
             selectRelation.add(new WebMarkupContainer("direction")

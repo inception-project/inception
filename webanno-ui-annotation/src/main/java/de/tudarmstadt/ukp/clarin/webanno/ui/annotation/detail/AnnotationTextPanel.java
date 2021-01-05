@@ -17,14 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -34,7 +30,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -59,16 +54,19 @@ public class AnnotationTextPanel
 
         add(new Label("selectedText", PropertyModel.of(getModelObject(), "selection.text"))
                 .add(visibleWhen(() -> !isRelationSelected())));
-        add(new LambdaAjaxLink("jumpToAnnotation", this::actionJumpToAnnotation)
+        add(new LambdaAjaxLink("jumpToAnnotation", this::actionJumpToAnnotation) //
+                .setAlwaysEnabled(true) // avoid disabling in read-only mode
                 .add(visibleWhen(() -> !isRelationSelected())));
 
         add(new Label("originText", PropertyModel.of(getModelObject(), "selection.originText"))
                 .add(visibleWhen(() -> isRelationSelected())));
         add(new Label("targetText", PropertyModel.of(getModelObject(), "selection.targetText"))
                 .add(visibleWhen(() -> isRelationSelected())));
-        add(new LambdaAjaxLink("jumpToOrigin", this::actionJumpToOrigin)
+        add(new LambdaAjaxLink("jumpToOrigin", this::actionJumpToOrigin) //
+                .setAlwaysEnabled(true) // avoid disabling in read-only mode
                 .add(visibleWhen(() -> isRelationSelected())));
-        add(new LambdaAjaxLink("jumpToTarget", this::actionJumpToTarget)
+        add(new LambdaAjaxLink("jumpToTarget", this::actionJumpToTarget) //
+                .setAlwaysEnabled(true) // avoid disabling in read-only mode
                 .add(visibleWhen(() -> isRelationSelected())));
     }
 
@@ -96,36 +94,14 @@ public class AnnotationTextPanel
     private void actionJumpToOrigin(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        RelationAdapter typeAdapter = (RelationAdapter) annotationService
-                .getAdapter(getModelObject().getSelectedAnnotationLayer());
-
-        if (typeAdapter.getAttachFeatureName() == null) {
-            actionHandler.actionSelectAndJump(aTarget,
-                    new VID(getModelObject().getSelection().getOrigin()));
-            return;
-        }
-
-        CAS cas = getEditorPage().getEditorCas();
-        AnnotationFS fs = selectAnnotationByAddr(cas, getModelObject().getSelection().getOrigin());
-        fs = FSUtil.getFeature(fs, typeAdapter.getAttachFeatureName(), AnnotationFS.class);
-        actionHandler.actionSelectAndJump(aTarget, new VID(fs));
+        actionHandler.actionSelectAndJump(aTarget,
+                new VID(getModelObject().getSelection().getOrigin()));
     }
 
     private void actionJumpToTarget(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        RelationAdapter typeAdapter = (RelationAdapter) annotationService
-                .getAdapter(getModelObject().getSelectedAnnotationLayer());
-
-        if (typeAdapter.getAttachFeatureName() == null) {
-            actionHandler.actionSelectAndJump(aTarget,
-                    new VID(getModelObject().getSelection().getTarget()));
-            return;
-        }
-
-        CAS cas = getEditorPage().getEditorCas();
-        AnnotationFS fs = selectAnnotationByAddr(cas, getModelObject().getSelection().getTarget());
-        fs = FSUtil.getFeature(fs, typeAdapter.getAttachFeatureName(), AnnotationFS.class);
-        actionHandler.actionSelectAndJump(aTarget, new VID(fs));
+        actionHandler.actionSelectAndJump(aTarget,
+                new VID(getModelObject().getSelection().getTarget()));
     }
 }

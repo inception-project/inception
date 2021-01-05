@@ -215,7 +215,8 @@ public class LinkFeatureEditor
 
                 aItem.add(new LambdaAjaxLink("jumpToAnnotation",
                         _target -> actionHandler.actionSelectAndJump(_target,
-                                new VID(aItem.getModelObject().targetAddr)))
+                                new VID(aItem.getModelObject().targetAddr))) //
+                                        .setAlwaysEnabled(true) //
                                         .add(visibleWhen(
                                                 () -> aItem.getModelObject().targetAddr != -1)));
 
