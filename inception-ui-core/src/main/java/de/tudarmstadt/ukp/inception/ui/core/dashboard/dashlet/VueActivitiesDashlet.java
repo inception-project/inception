@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
+import static de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference.DayJsPlugin.LOCALIZED_FORMAT;
+import static de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference.DayJsPlugin.RELATIVE_TIME;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forScript;
 
 import java.util.Map;
 
@@ -29,9 +30,10 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.vue.VueBehavior;
+import de.tudarmstadt.ukp.inception.support.axios.AxiosResourceReference;
+import de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference;
+import de.tudarmstadt.ukp.inception.support.vue.VueBehavior;
 
 public class VueActivitiesDashlet
     extends WebMarkupContainer
@@ -58,17 +60,7 @@ public class VueActivitiesDashlet
     {
         super.renderHead(aResponse);
 
-        aResponse.render(
-                forReference(new WebjarsJavaScriptResourceReference("dayjs/current/dayjs.min.js")));
-        aResponse.render(forReference(
-                new WebjarsJavaScriptResourceReference("dayjs/current/plugin/relativeTime.js")));
-        aResponse.render(forScript("dayjs.extend(window.dayjs_plugin_relativeTime)",
-                "dayjs_plugin_relativeTime"));
-        aResponse.render(forReference(
-                new WebjarsJavaScriptResourceReference("dayjs/current/plugin/localizedFormat.js")));
-        aResponse.render(forScript("dayjs.extend(window.dayjs_plugin_localizedFormat)",
-                "dayjs_plugin_localizedFormat"));
-        aResponse.render(forReference(
-                new WebjarsJavaScriptResourceReference("axios/current/dist/axios.js")));
+        aResponse.render(forReference(new DayJsResourceReference(RELATIVE_TIME, LOCALIZED_FORMAT)));
+        aResponse.render(forReference(AxiosResourceReference.get()));
     }
 }

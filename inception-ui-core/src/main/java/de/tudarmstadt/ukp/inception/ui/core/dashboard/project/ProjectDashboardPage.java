@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ActivitiesDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.VueActivitiesDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
@@ -127,8 +126,8 @@ public class ProjectDashboardPage
 
         Model<Project> currentProject = Model.of(getProject());
         add(new CurrentProjectDashlet("currentProjectDashlet", currentProject));
-        add(new ActivitiesDashlet("activitiesDashlet", currentProject));
-        add(new VueActivitiesDashlet("vueDashlet", currentProject).setVisible(true));
+        // add(new ActivitiesDashlet("activitiesDashlet", currentProject));
+        add(new VueActivitiesDashlet("activitiesDashlet", currentProject));
     }
 
     /**

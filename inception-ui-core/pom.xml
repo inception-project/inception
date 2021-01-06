@@ -162,11 +162,6 @@
     </dependency>
     <dependency>
       <groupId>org.webjars.npm</groupId>
-      <artifactId>vue</artifactId>
-      <version>3.0.5</version>
-    </dependency>
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
       <artifactId>axios</artifactId>
       <version>0.21.1</version>
     </dependency>
