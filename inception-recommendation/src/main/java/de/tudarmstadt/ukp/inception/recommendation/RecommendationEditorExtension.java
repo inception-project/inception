@@ -233,7 +233,7 @@ public class RecommendationEditorExtension
                 .filter(f -> f instanceof RelationSuggestion).map(f -> (RelationSuggestion) f);
 
         if (prediction.isEmpty()) {
-            log.error("Could not find relation in [{}] with id [{}]", document, aVID);
+            log.error("Could not find relation in [{}] with id [{}]", document, recommendationVid);
             aTarget.getPage().error("Could not find relation");
             aTarget.addChildren(aTarget.getPage(), IFeedback.class);
             return;

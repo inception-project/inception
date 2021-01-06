@@ -145,7 +145,8 @@ public class Predictions
     {
         return predictions.values().stream()
                 .filter(f -> f.getDocumentName().equals(aDocument.getName()))
-                .filter(f -> f.getVID().toString().equals(aVID.toString())).findFirst();
+                .filter(f -> f.getId() == aVID.getSubId())
+                .filter(f -> f.getRecommenderId() == aVID.getId()).findFirst();
     }
 
     /**
