@@ -227,7 +227,9 @@ public class RecommendationEditorExtension
         // TODO: Find out why we do not unpack the aVID here like we do for span recommendations
         Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<RelationSuggestion> prediction = predictions.getPredictionByVID(document, aVID)
+        VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+        Optional<RelationSuggestion> prediction = predictions
+                .getPredictionByVID(document, recommendationVid)
                 .filter(f -> f instanceof RelationSuggestion).map(f -> (RelationSuggestion) f);
 
         if (prediction.isEmpty()) {

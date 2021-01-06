@@ -131,11 +131,11 @@ public class RecommendationRelationRenderer
                 // FIXME: We get the first match for the (begin, end) span. With stacking, there can
                 // be more than one and we need to get the right one then which does not need to be
                 // the first.
-                AnnotationFS source = selectAt(aCas, attachType, sourceBegin, sourceEnd).stream()
-                        .findFirst().orElse(null);
+                AnnotationFS source = selectAt(aCas, attachType, sourceBegin, sourceEnd) //
+                        .stream().findFirst().orElse(null);
 
-                AnnotationFS target = selectAt(aCas, attachType, targetBegin, targetEnd).stream()
-                        .findFirst().orElse(null);
+                AnnotationFS target = selectAt(aCas, attachType, targetBegin, targetEnd) //
+                        .stream().findFirst().orElse(null);
 
                 VArc arc = new VArc(aLayer, suggestion.getVID(), bratTypeName, new VID(source),
                         new VID(target), suggestion.getUiLabel(), Collections.emptyMap(), COLOR);

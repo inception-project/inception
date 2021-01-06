@@ -104,8 +104,8 @@ public class ActiveLearningServiceImpl
                     .equals(aRecord.getSourceDocument().getName())
                     && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
                     && suggestion.labelEquals(aRecord.getAnnotation())
-                    && suggestion.getBegin() == aRecord.getOffsetCharacterBegin()
-                    && suggestion.getEnd() == aRecord.getOffsetCharacterEnd()
+                    && suggestion.getBegin() == aRecord.getOffsetBegin()
+                    && suggestion.getEnd() == aRecord.getOffsetEnd() //
                     && suggestion.isVisible())) {
                 return true;
             }
@@ -137,8 +137,8 @@ public class ActiveLearningServiceImpl
                 if (s.isVisible()) {
                     records.stream()
                             .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
-                                    && r.getOffsetCharacterBegin() == s.getBegin()
-                                    && r.getOffsetCharacterEnd() == s.getEnd()
+                                    && r.getOffsetBegin() == s.getBegin()
+                                    && r.getOffsetEnd() == s.getEnd()
                                     && s.labelEquals(r.getAnnotation()))
                             .forEach(record -> {
                                 if (REJECTED.equals(record.getUserAction())) {
