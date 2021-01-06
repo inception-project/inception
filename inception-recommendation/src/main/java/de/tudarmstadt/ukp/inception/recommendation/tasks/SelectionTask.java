@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -235,7 +236,9 @@ public class SelectionTask
         List<CAS> casses = new ArrayList<>();
         for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
             try {
-                CAS cas = documentService.readAnnotationCas(document, aUserName, AUTO_CAS_UPGRADE);
+                // We should not have to modify the CASes... right? Fingers crossed.
+                CAS cas = documentService.readAnnotationCas(document, aUserName, AUTO_CAS_UPGRADE,
+                        SHARED_READ_ONLY_ACCESS);
                 casses.add(cas);
             }
             catch (IOException e) {

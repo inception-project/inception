@@ -40,16 +40,10 @@ public class RelationEventAdapter
     }
 
     @Override
-    public String getDetails(RelationEvent aEvent)
+    public String getDetails(RelationEvent aEvent) throws IOException
     {
-        try {
-            AnnotationDetails details = new AnnotationDetails(aEvent.getTargetAnnotation());
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        AnnotationDetails details = new AnnotationDetails(aEvent.getTargetAnnotation());
+        return JSONUtil.toJsonString(details);
     }
 
     @Override

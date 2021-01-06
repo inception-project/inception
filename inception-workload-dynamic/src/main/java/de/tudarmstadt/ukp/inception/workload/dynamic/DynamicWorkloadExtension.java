@@ -17,29 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic;
 
-import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link DynamicWorkloadManagerAutoConfiguration#dynamicWorkloadExtension()}
- * </p>
- */
-public class DynamicWorkloadExtension
-    implements WorkloadManagerExtension
+public interface DynamicWorkloadExtension
+    extends WorkloadManagerExtension<DynamicWorkloadTraits>
 {
     public static final String DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID = "dynamic";
-
-    @Override
-    public String getId()
-    {
-        return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
-    }
-
-    @Override
-    public String getLabel()
-    {
-        return "Dynamic assignment";
-    }
 }

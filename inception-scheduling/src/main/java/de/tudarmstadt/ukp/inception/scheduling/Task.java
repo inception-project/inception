@@ -102,5 +102,4 @@ public abstract class Task
     {
         return Objects.hash(user, project);
     }
-
 }
