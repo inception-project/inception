@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security.model;
 
 import java.io.Serializable;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -29,6 +30,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
 /**
  * The persistence object for authority the user have. Authorities can be either {@code ROLE_ADMIN}
  * or {@code ROLE_USER}
@@ -37,6 +41,8 @@ import javax.persistence.UniqueConstraint;
 @Entity
 @Table(name = "authorities", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "authority", "username" }) })
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Authority
     implements Serializable
 {

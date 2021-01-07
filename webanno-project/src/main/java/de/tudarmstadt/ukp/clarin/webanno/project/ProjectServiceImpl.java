@@ -27,6 +27,7 @@ import static java.util.Comparator.comparingInt;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
+import static org.hibernate.annotations.QueryHints.CACHEABLE;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -400,10 +401,15 @@ public class ProjectServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<ProjectPermission> listProjectPermissionLevel(User aUser, Project aProject)
     {
-        String query = "FROM ProjectPermission " + "WHERE user =:user AND project =:project "
-                + "ORDER BY level";
-        return entityManager.createQuery(query, ProjectPermission.class)
-                .setParameter("user", aUser.getUsername()).setParameter("project", aProject)
+        String query = String.join("\n", //
+                "FROM ProjectPermission ", //
+                "WHERE user =:user AND project =:project ", //
+                "ORDER BY level");
+
+        return entityManager.createQuery(query, ProjectPermission.class) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("project", aProject) //
+                .setHint(CACHEABLE, true) //
                 .getResultList();
     }
 
@@ -411,11 +417,15 @@ public class ProjectServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject)
     {
-        String query = "SELECT level " + "FROM ProjectPermission " + "WHERE user = :user AND "
-                + "project = :project";
+        String query = String.join("\n", //
+                "FROM ProjectPermission ", //
+                "WHERE user =:user AND project =:project ", //
+                "ORDER BY level");
+
         try {
-            return entityManager.createQuery(query, PermissionLevel.class)
-                    .setParameter("user", aUser.getUsername()).setParameter("project", aProject)
+            return entityManager.createQuery(query, PermissionLevel.class) //
+                    .setParameter("user", aUser.getUsername()) //
+                    .setParameter("project", aProject) //
                     .getResultList();
         }
         catch (NoResultException e) {

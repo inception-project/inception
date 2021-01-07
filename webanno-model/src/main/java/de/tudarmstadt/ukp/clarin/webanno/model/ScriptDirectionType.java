@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class ScriptDirectionType
     extends PersistentEnumUserType<ScriptDirection>
 {
+    private static final long serialVersionUID = -4973597161808931804L;
+
     @Override
     public Class<ScriptDirection> returnedClass()
     {

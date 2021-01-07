@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class ValidationModeType
     extends PersistentEnumUserType<ValidationMode>
 {
+    private static final long serialVersionUID = -6339353815327972826L;
+
     @Override
     public Class<ValidationMode> returnedClass()
     {

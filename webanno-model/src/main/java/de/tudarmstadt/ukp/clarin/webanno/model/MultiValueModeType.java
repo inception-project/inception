@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class MultiValueModeType
     extends PersistentEnumUserType<MultiValueMode>
 {
+    private static final long serialVersionUID = 3543018252444628257L;
+
     @Override
     public Class<MultiValueMode> returnedClass()
     {

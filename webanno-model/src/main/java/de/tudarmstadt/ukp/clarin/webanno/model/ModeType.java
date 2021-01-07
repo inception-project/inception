@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class ModeType
     extends PersistentEnumUserType<Mode>
 {
+    private static final long serialVersionUID = 2462639346802950473L;
 
     @Override
     public Class<Mode> returnedClass()

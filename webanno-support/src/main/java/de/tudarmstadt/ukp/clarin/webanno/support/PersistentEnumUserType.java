@@ -32,8 +32,9 @@ import org.hibernate.usertype.UserType;
  *
  */
 public abstract class PersistentEnumUserType<T extends PersistentEnum>
-    implements UserType
+    implements UserType, Serializable
 {
+    private static final long serialVersionUID = -3080625439869047088L;
 
     @Override
     public Object assemble(Serializable cached, Object owner) throws HibernateException
