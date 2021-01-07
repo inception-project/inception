@@ -21,25 +21,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties("ui.brat")
+@ConfigurationProperties("annotation.default-preferences")
 public class AnnotationEditorPropertiesImpl
     implements AnnotationEditorProperties
 {
-    private boolean singleClickSelection = false;
     private int pageSize = 5;
     private boolean autoScroll = true;
     private boolean rememberLayer = false;
-
-    @Override
-    public boolean isSingleClickSelection()
-    {
-        return singleClickSelection;
-    }
-
-    public void setSingleClickSelection(boolean aSingleClickSelection)
-    {
-        singleClickSelection = aSingleClickSelection;
-    }
 
     @Override
     public int getPageSize()
