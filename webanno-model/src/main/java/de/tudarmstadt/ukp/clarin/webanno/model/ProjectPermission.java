@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import java.io.Serializable;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -28,6 +29,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 
 /**
@@ -38,6 +41,8 @@ import org.hibernate.annotations.Type;
 @Entity
 @Table(name = "project_permissions", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "user", "level", "project" }) })
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class ProjectPermission
     implements Serializable
 {

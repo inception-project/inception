@@ -97,17 +97,7 @@ public class UserDaoImpl
     {
         Validate.notBlank(aUsername, "User must be specified");
 
-        String query = "FROM " + User.class.getName() + " o WHERE o.username = :username";
-
-        List<User> users = entityManager.createQuery(query, User.class)
-                .setParameter("username", aUsername).setMaxResults(1).getResultList();
-
-        if (users.isEmpty()) {
-            return null;
-        }
-        else {
-            return users.get(0);
-        }
+        return entityManager.find(User.class, aUsername);
     }
 
     @Override
@@ -154,7 +144,8 @@ public class UserDaoImpl
     public List<Authority> listAuthorities(User aUser)
     {
         String query = "FROM Authority " + "WHERE username = :username";
-        return entityManager.createQuery(query, Authority.class).setParameter("username", aUser)
+        return entityManager.createQuery(query, Authority.class) //
+                .setParameter("username", aUser) //
                 .getResultList();
     }
 

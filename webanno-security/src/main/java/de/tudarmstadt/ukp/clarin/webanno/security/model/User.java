@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -40,6 +41,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -56,6 +59,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
  */
 @Entity
 @Table(name = "users")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class User
     implements Serializable
 {
