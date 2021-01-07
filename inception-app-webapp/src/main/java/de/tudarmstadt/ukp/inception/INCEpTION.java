@@ -38,6 +38,7 @@ import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -71,6 +72,7 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  */
 // @formatter:off
 @SpringBootApplication
+@EnableCaching
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @ComponentScan(
     basePackages = { 
@@ -190,7 +192,7 @@ public class INCEpTION
 
         // Traditionally, the INCEpTION configuration file is called settings.properties and is
         // either located in inception.home or under the user's home directory. Make sure we pick
-        // it up from there in addition to reading the built-in application.properties file.
+        // it up from there in addition to reading the built-in application.yml file.
         aBuilder.properties("spring.config.additional-location="
                 + "optional:${inception.home:${user.home}/.inception}/settings.properties");
     }

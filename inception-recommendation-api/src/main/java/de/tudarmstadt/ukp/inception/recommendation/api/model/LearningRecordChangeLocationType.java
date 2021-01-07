@@ -22,6 +22,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class LearningRecordChangeLocationType
     extends PersistentEnumUserType<LearningRecordChangeLocation>
 {
+    private static final long serialVersionUID = 9190844972769795921L;
 
     @Override
     public Class<LearningRecordChangeLocation> returnedClass()
