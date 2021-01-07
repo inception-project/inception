@@ -23,22 +23,17 @@
 | Default
 | Example
 
-| ui.brat.autoScroll
+| annotation.default-preferences.auto-scroll
 | Whether to scroll the annotation being edited into the center of the page
 | true
 | 
 
-| ui.brat.pageSize
+| annotation.default-preferences.page-size
 | The number of sentences to display per page
 | 5
 | 
 
-| ui.brat.singleClickSelection
-| Whether to select annotations with a single click
-| false
-| 
-
-| ui.brat.rememberLayer
+| annotation.default-preferences.remember-layer
 | Whether "remember layer" is activated by default
 | false
 | 
@@ -52,5 +47,10 @@
 | When an auto-complete field is used, this determines the maximum number of items shown in the dropdown menu.
 | 100
 | 1000
+
+| ui.brat.singleClickSelection
+| Whether to select annotations with a single click
+| false
+|
 |===
 
