@@ -67,8 +67,12 @@
 
     <mockito.version>3.6.0</mockito.version>
     <assertj.version>3.18.1</assertj.version>
+    <!-- 
+      - Need to wait for Spring 5.3.3
+      - See: https://github.com/spring-projects/spring-framework/issues/26261
+      -->
     <spring.version>5.3.1</spring.version>
-    <spring.boot.version>2.4.0</spring.boot.version>
+    <spring.boot.version>2.4.1</spring.boot.version>
     <spring.security.version>5.4.1</spring.security.version>
     <wicket.version>9.2.0</wicket.version>
     <wicketstuff.version>9.2.0</wicketstuff.version>
@@ -95,6 +99,7 @@
   <modules>
     <!-- Build infrastructure modules -->
     <module>inception-build</module>
+    <module>inception-boot-loader</module>
     <!-- Core application modules -->
     <module>inception-plugin-parent</module>
     <module>inception-log</module>

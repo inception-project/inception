@@ -58,20 +58,14 @@ public class SearchQueryEventAdapter
     }
 
     @Override
-    public String getDetails(SearchQueryEvent aEvent)
+    public String getDetails(SearchQueryEvent aEvent) throws IOException
     {
-        try {
-            Details details = new Details();
+        Details details = new Details();
 
-            details.query = aEvent.getQuery();
-            details.documentId = aEvent.getSourceDocument().map(SourceDocument::getId).orElse(null);
+        details.query = aEvent.getQuery();
+        details.documentId = aEvent.getSourceDocument().map(SourceDocument::getId).orElse(null);
 
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        return JSONUtil.toJsonString(details);
     }
 
     public static class Details

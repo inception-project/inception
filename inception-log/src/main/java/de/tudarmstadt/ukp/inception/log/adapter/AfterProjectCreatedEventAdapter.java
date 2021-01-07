@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import java.io.IOException;
+
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component
 public class AfterProjectCreatedEventAdapter
@@ -35,5 +38,18 @@ public class AfterProjectCreatedEventAdapter
     public long getProject(AfterProjectCreatedEvent aEvent)
     {
         return aEvent.getProject().getId();
+    }
+
+    @Override
+    public String getDetails(AfterProjectCreatedEvent aEvent) throws IOException
+    {
+        Details details = new Details();
+        details.projectName = aEvent.getProject().getName();
+        return JSONUtil.toJsonString(details);
+    }
+
+    public static class Details
+    {
+        public String projectName;
     }
 }

@@ -59,19 +59,11 @@ public class ExternalSearchQueryEventAdapter
     }
 
     @Override
-    public String getDetails(ExternalSearchQueryEvent aEvent)
+    public String getDetails(ExternalSearchQueryEvent aEvent) throws IOException
     {
-        try {
-            Details details = new Details();
-
-            details.query = aEvent.getQuery();
-
-            return JSONUtil.toJsonString(details);
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
+        Details details = new Details();
+        details.query = aEvent.getQuery();
+        return JSONUtil.toJsonString(details);
     }
 
     public static class Details

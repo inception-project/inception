@@ -170,3 +170,15 @@ NOTE: The `secret` option is supported e.g. in https://httpd.apache.org/docs/tru
        If you are using a reverse proxy which does not	
        support passing along a secret, you may set `server.ajp.secret-required=false` in the 
        `settings.properties` file.
+
+== Loading extra Java libraries
+
+When running an application from a fat JAR (i.e. using `java -jar ...`), there is no way that you can
+specify extra libraries for the application to load (e.g. a database driver). Therefore,
+{product-name} offers a special approach that works around this limitation.
+
+In order to have the application load additional JAR files during startup, create a folder `lib` in
+the application home folder. Place any JARs that you want to load into that folder.
+
+To check if the loading works as expected, you can add the parameter `-Dloader.debug=true` when starting
+up {product-name}.
