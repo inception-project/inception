@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.metrics;
 
+import static org.springframework.jmx.support.MetricType.COUNTER;
+
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.jmx.support.MetricType;
 import org.springframework.stereotype.Component;
 
 @ManagedResource
@@ -45,61 +46,67 @@ public class BratMetricsImpl
     private long maxRenderTime = 0;
     private long lastRenderTime = 0;
 
-    @ManagedMetric(metricType = MetricType.COUNTER)
+    @ManagedMetric(metricType = COUNTER)
     public long getFullRenderCount()
     {
         return fullRenderCount;
     }
 
-    @ManagedMetric(metricType = MetricType.COUNTER, unit = "chars")
+    @ManagedMetric(metricType = COUNTER, unit = "chars")
     public long getFullRenderedSize()
     {
         return fullRenderedSize;
     }
 
-    @ManagedMetric(metricType = MetricType.COUNTER)
+    @ManagedMetric(metricType = COUNTER)
     public long getDiffRenderAttempts()
     {
         return diffRenderAttempts;
     }
 
-    @ManagedMetric(metricType = MetricType.COUNTER)
+    @ManagedMetric(metricType = COUNTER)
     public long getDiffRenderCount()
     {
         return diffRenderCount;
     }
 
-    @ManagedMetric(metricType = MetricType.COUNTER, unit = "chars")
+    @ManagedMetric(metricType = COUNTER, unit = "chars")
     public long getDiffRenderedSize()
     {
         return diffRenderedSize;
     }
 
-    @ManagedMetric(metricType = MetricType.COUNTER, unit = "chars")
+    @ManagedMetric(metricType = COUNTER)
+    public long getSkipRenderCount()
+    {
+        return skipRenderCount;
+    }
+
+    @ManagedMetric(metricType = COUNTER, unit = "chars")
     public long getSavedRenderedSize()
     {
         return savedRenderedSize;
     }
 
-    @ManagedMetric(metricType = MetricType.COUNTER, unit = "ms")
+    @ManagedMetric(metricType = COUNTER, unit = "ms")
     public long getRenderTime()
     {
         return renderTime;
     }
 
-    @ManagedMetric(metricType = MetricType.COUNTER, unit = "ms")
+    @ManagedMetric(metricType = COUNTER, unit = "ms")
     public long getMaxRenderTime()
     {
         return maxRenderTime;
     }
 
-    @ManagedMetric(metricType = MetricType.COUNTER, unit = "ms")
+    @ManagedMetric(metricType = COUNTER, unit = "ms")
     public long getLastRenderTime()
     {
         return lastRenderTime;
     }
 
-    @ManagedMetric(metricType = MetricType.COUNTER, unit = "chars")
+    @ManagedMetric(metricType = COUNTER, unit = "chars")
     public long getSentRenderedSize()
     {
         return sentRenderedSize;

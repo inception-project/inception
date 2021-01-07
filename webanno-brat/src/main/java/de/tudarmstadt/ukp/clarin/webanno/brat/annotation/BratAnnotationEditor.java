@@ -76,9 +76,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -133,22 +133,6 @@ public class BratAnnotationEditor
 
     private static final String ACTION_CONTEXT_MENU = "contextMenu";
 
-    // Controls whether rendering should happen within the AJAX request or after the AJAX
-    // request. Doing it within the request has the benefit of the browser only having to
-    // recalculate the layout once at the end of the AJAX request (at least theoretically)
-    // while deferring the rendering causes the AJAX request to complete faster, but then
-    // the browser needs to recalculate its layout twice - once of any Wicket components
-    // being re-rendered and once for the brat view to re-render.
-    private static final boolean DEFERRED_RENDERING = false;
-
-    // Whether the profiling built into the the brat visualization JS should be enabled. If
-    // this is enabled, profiling data is collected and a report is printed to the browser's
-    // JS console after every rendering action
-    private static final boolean ENABLE_IN_BROWSER_PROFILING = false;
-
-    // Log messages in the browser as part of JS commands
-    private static final boolean ENABLE_IN_BROWSER_TRACE = false;
-
     private final ContextMenu contextMenu;
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -156,7 +140,7 @@ public class BratAnnotationEditor
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
-    private @SpringBean AnnotationEditorProperties bratProperties;
+    private @SpringBean BratAnnotationEditorProperties bratProperties;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -774,7 +758,7 @@ public class BratAnnotationEditor
         StringBuilder js = new StringBuilder();
 
         js.append("(function() {");
-        if (ENABLE_IN_BROWSER_TRACE) {
+        if (bratProperties.isClientSideTraceLog()) {
             js.append("  console.log('Initializing (" + vis.getMarkupId() + ")...');");
         }
         js.append("  var dispatcher = new Dispatcher();");
@@ -806,7 +790,7 @@ public class BratAnnotationEditor
         String json = toJson(response);
 
         StringBuilder js = new StringBuilder();
-        if (ENABLE_IN_BROWSER_TRACE) {
+        if (bratProperties.isClientSideTraceLog()) {
             js.append("console.log('Loading collection (" + vis.getMarkupId() + ")...');");
         }
         js.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', ["
@@ -870,27 +854,27 @@ public class BratAnnotationEditor
             bratRenderCommand(getCasProvider().get()).ifPresent(cmd -> {
                 StringBuilder js = new StringBuilder();
 
-                if (DEFERRED_RENDERING) {
+                if (bratProperties.isDeferredRendering()) {
                     js.append("setTimeout(function() {");
                 }
 
-                if (ENABLE_IN_BROWSER_PROFILING) {
+                if (bratProperties.isClientSideProfiling()) {
                     js.append("Util.profileEnable(true);");
                     js.append("Util.profileClear();");
                 }
 
-                if (ENABLE_IN_BROWSER_TRACE) {
+                if (bratProperties.isClientSideTraceLog()) {
                     js.append("console.log('Rendering (" + vis.getMarkupId() + ")...');");
                 }
 
                 js.append(cmd);
 
-                if (ENABLE_IN_BROWSER_PROFILING) {
+                if (bratProperties.isClientSideProfiling()) {
                     js.append("Util.profileReport();");
                 }
 
-                if (DEFERRED_RENDERING) {
-                    js.append("}, 0);");
+                if (bratProperties.isDeferredRendering()) {
+                    js.append("}, 1);");
                 }
 
                 aTarget.appendJavaScript(js);
