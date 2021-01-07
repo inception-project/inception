@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class AnnotationDocumentStateType
     extends PersistentEnumUserType<AnnotationDocumentState>
 {
+    private static final long serialVersionUID = 5172655016006052815L;
+
     @Override
     public Class<AnnotationDocumentState> returnedClass()
     {

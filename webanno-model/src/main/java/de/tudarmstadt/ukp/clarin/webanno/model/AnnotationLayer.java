@@ -22,6 +22,7 @@ import static javax.persistence.ConstraintMode.NO_CONSTRAINT;
 
 import java.io.Serializable;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -34,6 +35,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 
 /**
@@ -48,6 +51,8 @@ import org.hibernate.annotations.Type;
 @Entity
 @Table(name = "annotation_type", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "name", "project" }) })
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class AnnotationLayer
     implements Serializable
 {

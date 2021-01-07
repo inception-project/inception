@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class SourceDocumentStateType
     extends PersistentEnumUserType<SourceDocumentState>
 {
+    private static final long serialVersionUID = -6242228869566194260L;
 
     @Override
     public Class<SourceDocumentState> returnedClass()

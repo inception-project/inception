@@ -34,6 +34,7 @@ import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeWithCompression;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
+import static org.hibernate.annotations.QueryHints.CACHEABLE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -280,14 +281,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public Optional<Tag> getTag(long aId)
     {
-        try {
-            final String query = "FROM Tag WHERE id = :id";
-            return Optional.of(entityManager.createQuery(query, Tag.class).setParameter("id", aId)
-                    .getSingleResult());
-        }
-        catch (NoResultException e) {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(entityManager.find(Tag.class, aId));
     }
 
     @Override
@@ -382,17 +376,17 @@ public class AnnotationSchemaServiceImpl
     @Override
     public boolean existsFeature(String aName, AnnotationLayer aLayer)
     {
-
         try {
             entityManager
                     .createQuery("FROM AnnotationFeature WHERE name = :name AND layer = :layer",
                             AnnotationFeature.class)
-                    .setParameter("name", aName).setParameter("layer", aLayer).getSingleResult();
+                    .setParameter("name", aName) //
+                    .setParameter("layer", aLayer) //
+                    .getSingleResult();
             return true;
         }
         catch (NoResultException e) {
             return false;
-
         }
     }
 
@@ -402,36 +396,37 @@ public class AnnotationSchemaServiceImpl
     {
         return entityManager
                 .createQuery("FROM TagSet WHERE name = :name AND project =:project", TagSet.class)
-                .setParameter("name", aName).setParameter("project", aProject).getSingleResult();
+                .setParameter("name", aName) //
+                .setParameter("project", aProject) //
+                .getSingleResult();
     }
 
     @Override
     @Transactional
     public TagSet getTagSet(long aId)
     {
-        return entityManager.createQuery("FROM TagSet WHERE id = :id", TagSet.class)
-                .setParameter("id", aId).getSingleResult();
+        return entityManager.find(TagSet.class, aId);
     }
 
     @Override
     @Transactional
     public AnnotationLayer getLayer(long aId)
     {
-        String query = String.join("\n", "FROM AnnotationLayer", "WHERE id = :id");
-
-        return entityManager.createQuery(query, AnnotationLayer.class).setParameter("id", aId)
-                .getSingleResult();
+        return entityManager.find(AnnotationLayer.class, aId);
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public Optional<AnnotationLayer> getLayer(Project aProject, long aLayerId)
     {
-        String query = String.join("\n", "FROM AnnotationLayer", "WHERE id = :id",
-                "AND project = :project");
+        AnnotationLayer layer = getLayer(aLayerId);
 
-        return entityManager.createQuery(query, AnnotationLayer.class).setParameter("id", aLayerId)
-                .setParameter("project", aProject).getResultStream().findFirst();
+        // Check that the layer actually belongs to the project
+        if (layer != null && !Objects.equals(layer.getProject().getId(), aProject.getId())) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(layer);
     }
 
     @Override
@@ -495,11 +490,16 @@ public class AnnotationSchemaServiceImpl
 
     private Optional<AnnotationLayer> getLayerInternal(String aName, Project aProject)
     {
-        String query = String.join("\n", "FROM AnnotationLayer ",
+        String query = String.join("\n", //
+                "FROM AnnotationLayer ", //
                 "WHERE name = :name AND project = :project");
 
-        return entityManager.createQuery(query, AnnotationLayer.class).setParameter("name", aName)
-                .setParameter("project", aProject).getResultStream().findFirst();
+        return entityManager.createQuery(query, AnnotationLayer.class) //
+                .setParameter("name", aName) //
+                .setParameter("project", aProject) //
+                .setHint(CACHEABLE, true) //
+                .getResultStream() //
+                .findFirst();
     }
 
     @Override
@@ -608,7 +608,9 @@ public class AnnotationSchemaServiceImpl
         return entityManager
                 .createQuery("FROM AnnotationLayer WHERE project =:project ORDER BY uiName",
                         AnnotationLayer.class)
-                .setParameter("project", aProject).getResultList();
+                .setParameter("project", aProject) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -623,7 +625,9 @@ public class AnnotationSchemaServiceImpl
                 .setParameter("type", RELATION_TYPE).setParameter("attachType", aLayer)
                 .setParameter("attachTypeName", aLayer.getName())
                 // Checking for project is necessary because type match is string-based
-                .setParameter("project", aLayer.getProject()).getResultList();
+                .setParameter("project", aLayer.getProject()) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -637,7 +641,9 @@ public class AnnotationSchemaServiceImpl
                 .setParameter("modes", asList(LinkMode.SIMPLE, LinkMode.WITH_ROLE))
                 .setParameter("attachType", asList(aLayer.getName(), CAS.TYPE_NAME_ANNOTATION))
                 // Checking for project is necessary because type match is string-based
-                .setParameter("project", aLayer.getProject()).getResultList();
+                .setParameter("project", aLayer.getProject()) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -648,11 +654,15 @@ public class AnnotationSchemaServiceImpl
             return new ArrayList<>();
         }
 
-        String query = String.join("\n", "FROM AnnotationFeature", "WHERE layer = :layer",
+        String query = String.join("\n", //
+                "FROM AnnotationFeature", //
+                "WHERE layer = :layer", //
                 "ORDER BY uiName");
 
         return entityManager.createQuery(query, AnnotationFeature.class)
-                .setParameter("layer", aLayer).getResultList();
+                .setParameter("layer", aLayer) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -663,11 +673,16 @@ public class AnnotationSchemaServiceImpl
             return new ArrayList<>();
         }
 
-        String query = String.join("\n", "FROM AnnotationFeature", "WHERE layer = :layer",
-                "AND enabled = true", "ORDER BY uiName");
+        String query = String.join("\n", //
+                "FROM AnnotationFeature", //
+                "WHERE layer = :layer", //
+                "AND enabled = true", //
+                "ORDER BY uiName"); //
 
         return entityManager.createQuery(query, AnnotationFeature.class)
-                .setParameter("layer", aLayer).getResultList();
+                .setParameter("layer", aLayer) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -676,7 +691,10 @@ public class AnnotationSchemaServiceImpl
     {
         return entityManager.createQuery(
                 "FROM AnnotationFeature f WHERE project =:project ORDER BY f.layer.uiName, f.uiName",
-                AnnotationFeature.class).setParameter("project", aProject).getResultList();
+                AnnotationFeature.class) //
+                .setParameter("project", aProject) //
+                .setHint(CACHEABLE, true) //
+                .getResultList();
     }
 
     @Override
@@ -685,7 +703,8 @@ public class AnnotationSchemaServiceImpl
     {
         return entityManager
                 .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY name ASC", Tag.class)
-                .setParameter("tagSet", aTagSet).getResultList();
+                .setParameter("tagSet", aTagSet) //
+                .getResultList();
     }
 
     private List<ImmutableTag> loadImmutableTags(TagSet aTagSet)
@@ -818,7 +837,7 @@ public class AnnotationSchemaServiceImpl
 
         for (AnnotationFeature f : listAnnotationFeature(aProject)) {
             try {
-                featureSupportRegistry.getFeatureSupport(f);
+                featureSupportRegistry.findExtension(f);
             }
             catch (IllegalArgumentException e) {
                 // Skip unsupported features
@@ -840,7 +859,7 @@ public class AnnotationSchemaServiceImpl
 
         for (AnnotationFeature f : listAnnotationFeature(aLayer)) {
             try {
-                featureSupportRegistry.getFeatureSupport(f);
+                featureSupportRegistry.findExtension(f);
             }
             catch (IllegalArgumentException e) {
                 // Skip unsupported features

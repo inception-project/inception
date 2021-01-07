@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class PermissionLevelType
     extends PersistentEnumUserType<PermissionLevel>
 {
+    private static final long serialVersionUID = -4692315811112704698L;
+
     @Override
     public Class<PermissionLevel> returnedClass()
     {

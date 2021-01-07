@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class OverlapModeType
     extends PersistentEnumUserType<OverlapMode>
 {
+    private static final long serialVersionUID = 9096679826871489183L;
+
     @Override
     public Class<OverlapMode> returnedClass()
     {

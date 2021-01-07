@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class LinkModeType
     extends PersistentEnumUserType<LinkMode>
 {
+    private static final long serialVersionUID = -1393490512275148578L;
+
     @Override
     public Class<LinkMode> returnedClass()
     {

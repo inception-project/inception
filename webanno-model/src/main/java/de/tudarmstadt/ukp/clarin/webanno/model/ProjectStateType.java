@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class ProjectStateType
     extends PersistentEnumUserType<ProjectState>
 {
+    private static final long serialVersionUID = 578008765207088439L;
 
     @Override
     public Class<ProjectState> returnedClass()

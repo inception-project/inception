@@ -21,16 +21,15 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 
 /**
  * Implementation of {@link PersistentEnumUserType}
- *
  */
 public class TrainDocumentStateType
     extends PersistentEnumUserType<TrainDocumentState>
 {
+    private static final long serialVersionUID = -122915445684300662L;
 
     @Override
     public Class<TrainDocumentState> returnedClass()
     {
         return TrainDocumentState.class;
     }
-
 }

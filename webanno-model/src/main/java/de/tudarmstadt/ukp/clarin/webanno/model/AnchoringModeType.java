@@ -25,6 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class AnchoringModeType
     extends PersistentEnumUserType<AnchoringMode>
 {
+    private static final long serialVersionUID = -821696180093407379L;
+
     @Override
     public Class<AnchoringMode> returnedClass()
     {
