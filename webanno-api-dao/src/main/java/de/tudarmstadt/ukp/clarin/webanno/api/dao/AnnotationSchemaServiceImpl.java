@@ -421,7 +421,8 @@ public class AnnotationSchemaServiceImpl
     {
         AnnotationLayer layer = getLayer(aLayerId);
 
-        if (layer != null && Objects.equals(layer.getProject().getId(), aProject.getId())) {
+        // Check that the layer actually belongs to the project
+        if (layer != null && !Objects.equals(layer.getProject().getId(), aProject.getId())) {
             return Optional.empty();
         }
 
