@@ -730,6 +730,13 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
+            <ignoredDependencies>
+              <!-- 
+                - Detection of this dependency is flickering. We need it for a menu-item. So
+                - for the moment, completely ignore it in the dependency checking.
+                -->
+              <ignoredDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</ignoredDependency>
+            </ignoredDependencies>
             <ignoredUsedUndeclaredDependencies>
               <ignoredUsedUndeclaredDependency>org.apache.tomcat.embed:tomcat-embed-core</ignoredUsedUndeclaredDependency>
             </ignoredUsedUndeclaredDependencies>
@@ -774,9 +781,6 @@
                 <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
                 <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
                 <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
-              -->
-              <!-- Detected because we include a special access menu item to the project settings
-                <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
               -->
               <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>

@@ -60,6 +60,22 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-ui-project</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-curation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-log</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -70,7 +86,6 @@
       <artifactId>commons-collections4</artifactId>
     </dependency>
     
-
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
@@ -98,11 +113,11 @@
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicket-datetime</artifactId>
-      <version>${wicketstuff.version}</version>
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotation</artifactId>
+      <version>${wicketstuff.version}</version>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
@@ -123,6 +138,14 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
 
@@ -130,6 +153,11 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-core</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>  
 
     <dependency>
       <groupId>com.github.rjeschke</groupId>
@@ -142,20 +170,6 @@
     </dependency>
 
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-log</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-annotation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-ui-curation</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.webjars.bower</groupId>
       <artifactId>hover</artifactId>
       <version>2.0.2</version>
@@ -165,15 +179,7 @@
       <artifactId>axios</artifactId>
       <version>0.21.1</version>
     </dependency>
-    <dependency>
-      <groupId>org.webjars.npm</groupId>
-      <artifactId>dayjs</artifactId>
-      <version>1.9.6</version>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-support</artifactId>
-    </dependency>
+
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
@@ -194,6 +200,7 @@
                 - no actual code dependency
               -->
               <usedDependency>org.webjars.bower:hover</usedDependency>
+              <usedDependency>org.webjars.npm:axios</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
