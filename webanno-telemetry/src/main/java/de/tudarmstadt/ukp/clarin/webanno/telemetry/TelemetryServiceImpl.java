@@ -17,9 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry;
 
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.DESKTOP;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_JAR;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_JAR_DOCKER;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR;
+import static de.tudarmstadt.ukp.clarin.webanno.telemetry.DeploymentMode.SERVER_WAR_DOCKER;
+import static java.nio.file.Files.exists;
+import static java.nio.file.Files.isReadable;
+import static java.nio.file.Files.readString;
 import static java.util.Objects.isNull;
 
 import java.awt.GraphicsEnvironment;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -117,18 +126,52 @@ public class TelemetryServiceImpl
                 !GraphicsEnvironment.isHeadless();
     }
 
+    /**
+     * The embedded server was used (i.e. not running as a WAR) and running in Docker.
+     */
+    public boolean isDockerized()
+    {
+        final String cgroupPath = "/proc/1/cgroup";
+
+        try {
+            Path cgroup = Path.of(cgroupPath);
+            if (exists(cgroup) && isReadable(cgroup)) {
+                String content = readString(cgroup);
+                if (content.contains("docker")) {
+                    return true;
+                }
+            }
+        }
+        catch (Exception e) {
+            log.debug("Unable to check [{}]", cgroupPath, e);
+        }
+
+        return false;
+    }
+
     @Override
     public DeploymentMode getDeploymentMode()
     {
+        boolean dockerized = isDockerized();
+
         if (isDesktopInstance()) {
-            return DeploymentMode.DESKTOP;
+            return DESKTOP;
         }
-        else if (isEmbeddedServerDeployment()) {
-            return DeploymentMode.SERVER_JAR;
+
+        boolean embeddedServerDeployment = isEmbeddedServerDeployment();
+        if (dockerized && embeddedServerDeployment) {
+            return SERVER_JAR_DOCKER;
         }
-        else {
-            return DeploymentMode.SERVER_WAR;
+
+        if (embeddedServerDeployment) {
+            return SERVER_JAR;
         }
+
+        if (dockerized) {
+            return SERVER_WAR_DOCKER;
+        }
+
+        return SERVER_WAR;
     }
 
     @Override

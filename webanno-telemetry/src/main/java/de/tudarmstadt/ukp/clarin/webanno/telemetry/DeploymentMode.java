@@ -20,9 +20,21 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry;
 public enum DeploymentMode
 {
     /**
+     * Probably running as a service based on the standalone JAR using the embedded server in
+     * Docker.
+     */
+    SERVER_JAR_DOCKER,
+
+    /**
      * Probably running as a service based on the standalone JAR using the embedded server.
      */
     SERVER_JAR,
+
+    /**
+     * Probably running as a service based on the WAR file using an external application server in
+     * Docker.
+     */
+    SERVER_WAR_DOCKER,
 
     /**
      * Probably running as a service based on the WAR file using an external application server.
