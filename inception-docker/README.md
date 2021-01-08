@@ -8,7 +8,7 @@ INCEpTION (`inception-app-webapp`) artifact.
 ## SNAPSHOT builds
 To create a SNAPSHOT build:
 
-    mvn -Pdocker docker:build
+    mvn -Pdocker clean docker:build
     mvn -Pdocker docker:push   (only if the build should be published)
 
 To run the latest SNAPSHOT build, use: 
@@ -23,7 +23,7 @@ To run the latest SNAPSHOT build with Docker Compose, use:
    
 For a release build:
 
-    mvn -Pdocker docker:build -Ddocker.image.name="inceptionproject/inception"
+    mvn -Pdocker clean docker:build -Ddocker.image.name="inceptionproject/inception"
     mvn -Pdocker docker:push -Ddocker.image.name="inceptionproject/inception"
         
     docker run -p8080:8080 -v inception-data:/export -it inceptionproject/inception
