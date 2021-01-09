@@ -50,6 +50,11 @@ public class ChallengeResponseDialog
 
     private ContentPanel contentPanel;
 
+    public ChallengeResponseDialog(String aId)
+    {
+        this(aId, null, null, null);
+    }
+
     public ChallengeResponseDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge,
             IModel<String> aExpectedResponse)
     {
@@ -97,6 +102,36 @@ public class ChallengeResponseDialog
     public State getModelObject()
     {
         return (State) getDefaultModelObject();
+    }
+
+    public IModel<String> getTitleModel()
+    {
+        return titleModel;
+    }
+
+    public void setTitleModel(IModel<String> aTitleModel)
+    {
+        titleModel = aTitleModel;
+    }
+
+    public IModel<String> getChallengeModel()
+    {
+        return challengeModel;
+    }
+
+    public void setChallengeModel(IModel<String> aChallengeModel)
+    {
+        challengeModel = aChallengeModel;
+    }
+
+    public IModel<String> getResponseModel()
+    {
+        return expectedResponseModel;
+    }
+
+    public void setResponseModel(IModel<String> aExpectedResponseModel)
+    {
+        expectedResponseModel = aExpectedResponseModel;
     }
 
     @Override

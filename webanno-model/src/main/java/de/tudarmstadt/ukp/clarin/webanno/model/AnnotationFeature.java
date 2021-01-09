@@ -67,15 +67,18 @@ public class AnnotationFeature
 
     @ManyToOne
     @JoinColumn(name = "annotation_type", foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private AnnotationLayer layer;
 
     @ManyToOne
     @JoinColumn(name = "project")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Project project;
 
     @ManyToOne
     @JoinColumn(name = "tag_set", foreignKey = @ForeignKey(name = "none", value = ConstraintMode.NO_CONSTRAINT))
     @NotFound(action = NotFoundAction.IGNORE)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private TagSet tagset;
 
     @Column(nullable = false)

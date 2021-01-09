@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -47,9 +48,21 @@ public class TokenLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Tokenization";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsLayer(Token.class.getName(), aProject);
     }
 
     @Override

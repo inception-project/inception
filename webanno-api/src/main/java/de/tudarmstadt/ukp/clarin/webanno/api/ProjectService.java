@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -478,4 +479,10 @@ public interface ProjectService
      *             if an I/O error occurs.
      */
     void initializeProject(Project aProject) throws IOException;
+
+    void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+        throws IOException;
+
+    List<ProjectInitializer> listProjectInitializers();
+
 }

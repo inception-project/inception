@@ -91,15 +91,18 @@ public class AnnotationLayer
     // @ForeignKey(ConstraintMode.NO_CONSTRAINT)
     @JoinColumn(name = "annotation_type", //
             foreignKey = @ForeignKey(name = "none", value = NO_CONSTRAINT))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private AnnotationLayer attachType;
 
     @ManyToOne
     @JoinColumn(name = "annotation_feature", //
             foreignKey = @ForeignKey(name = "none", value = NO_CONSTRAINT))
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private AnnotationFeature attachFeature;
 
     @ManyToOne
     @JoinColumn(name = "project")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Project project;
 
     @Column(name = "crossSentence")

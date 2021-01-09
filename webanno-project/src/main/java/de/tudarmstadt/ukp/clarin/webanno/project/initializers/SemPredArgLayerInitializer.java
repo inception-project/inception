@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -52,10 +53,23 @@ public class SemPredArgLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Predicate argument structure";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
         // Because locks to token boundaries
         return asList(TokenLayerInitializer.class);
+    }
+
+    @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsLayer(SemPred.class.getName(), aProject)
+                || annotationSchemaService.existsLayer(SemArg.class.getName(), aProject);
     }
 
     @Override

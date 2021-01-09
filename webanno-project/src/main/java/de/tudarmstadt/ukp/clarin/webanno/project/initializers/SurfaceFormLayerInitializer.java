@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -48,10 +49,22 @@ public class SurfaceFormLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Text normalization";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
         // Because locks to token boundaries
         return asList(TokenLayerInitializer.class);
+    }
+
+    @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsLayer(SurfaceForm.class.getName(), aProject);
     }
 
     @Override

@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -49,10 +50,25 @@ public class OrthographyLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Spelling correction";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        // Because locks to token boundaries
-        return asList(TokenLayerInitializer.class);
+        return asList(
+                // Because locks to token boundaries
+                TokenLayerInitializer.class,
+                // Tagsets
+                SofaChangeOperationTagSetInitializer.class);
+    }
+
+    @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsLayer(SofaChangeAnnotation.class.getName(), aProject);
     }
 
     @Override
@@ -72,11 +88,8 @@ public class OrthographyLayerInitializer
         correction.setLayer(orthography);
         annotationSchemaService.createFeature(correction);
 
-        TagSet operationTagset = annotationSchemaService.createTagSet(
-                "operation to be done with specified in tokenIDs token/tokens in order to correct",
-                "Operation", "en",
-                new String[] { "replace", "insert_before", "insert_after", "delete" },
-                new String[] { "replace", "insert before", "insert after", "delete" }, aProject);
+        TagSet operationTagset = annotationSchemaService
+                .getTagSet(SofaChangeOperationTagSetInitializer.TAG_SET_NAME, aProject);
 
         AnnotationFeature operation = new AnnotationFeature();
         operation.setDescription("An operation taken to change this token.");
