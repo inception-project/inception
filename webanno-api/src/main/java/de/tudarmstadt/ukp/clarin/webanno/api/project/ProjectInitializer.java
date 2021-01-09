@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
+package de.tudarmstadt.ukp.clarin.webanno.api.project;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,6 +24,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface ProjectInitializer
 {
+    String getName();
+
+    boolean alreadyApplied(Project aProject);
+
     List<Class<? extends ProjectInitializer>> getDependencies();
 
     void configure(Project aProject) throws IOException;

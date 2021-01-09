@@ -25,11 +25,10 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -43,6 +42,8 @@ public class CoreferenceLayerInitializer
 {
     private final AnnotationSchemaService annotationSchemaService;
 
+    private final String COREFERENCE_LAYER_NAME = "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference";
+
     @Autowired
     public CoreferenceLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
@@ -50,24 +51,36 @@ public class CoreferenceLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Co-reference annotation";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        // Because locks to token boundaries
-        return asList(TokenLayerInitializer.class);
+        return asList(
+                // Because locks to token boundaries
+                TokenLayerInitializer.class,
+                // Tagsets
+                CoreferenceTypeTagSetInitializer.class, CoreferenceRelationTagSetInitializer.class);
+    }
+
+    @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsLayer(COREFERENCE_LAYER_NAME, aProject);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        TagSet corefTypeTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-coref-type-bart.json").getInputStream(),
-                annotationSchemaService);
-        TagSet corefRelTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-coref-rel-tuebadz.json").getInputStream(),
-                annotationSchemaService);
+        TagSet corefTypeTagSet = annotationSchemaService
+                .getTagSet(CoreferenceTypeTagSetInitializer.TAG_SET_NAME, aProject);
+        TagSet corefRelTagSet = annotationSchemaService
+                .getTagSet(CoreferenceRelationTagSetInitializer.TAG_SET_NAME, aProject);
 
-        AnnotationLayer base = new AnnotationLayer(
-                "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference",
+        AnnotationLayer base = new AnnotationLayer(COREFERENCE_LAYER_NAME, "Coreference",
                 CHAIN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         base.setCrossSentence(true);
         annotationSchemaService.createLayer(base);

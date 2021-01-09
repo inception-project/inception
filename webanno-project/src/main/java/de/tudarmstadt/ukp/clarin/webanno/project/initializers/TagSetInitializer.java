@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+
 public interface TagSetInitializer
     extends ProjectInitializer
 {

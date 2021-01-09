@@ -87,6 +87,7 @@ public class User
             @JoinColumn(name = "username", referencedColumnName = "username") })
     @Column(nullable = true, name = "authority")
     @Enumerated(EnumType.STRING)
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private Set<Role> roles = new HashSet<>();
 
     @Temporal(TemporalType.TIMESTAMP)

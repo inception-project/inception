@@ -58,6 +58,7 @@ public class Authority
 
     @ManyToOne
     @JoinColumn(name = "username")
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     private User username;
 
     public Long getId()

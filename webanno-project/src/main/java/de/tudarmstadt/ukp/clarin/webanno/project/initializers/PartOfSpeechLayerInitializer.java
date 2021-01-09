@@ -27,11 +27,10 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -52,18 +51,32 @@ public class PartOfSpeechLayerInitializer
     }
 
     @Override
+    public String getName()
+    {
+        return "Part-of-speech tagging";
+    }
+
+    @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        // Because locks to token boundaries
-        return asList(TokenLayerInitializer.class);
+        return asList(
+                // Because locks to token boundaries
+                TokenLayerInitializer.class,
+                // Tagsets
+                PartOfSpeechTagSetInitializer.class);
+    }
+
+    @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsLayer(POS.class.getName(), aProject);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        TagSet posTagSet = JsonImportUtil.importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/mul-pos-ud2.json").getInputStream(),
-                annotationSchemaService);
+        TagSet posTagSet = annotationSchemaService
+                .getTagSet(PartOfSpeechTagSetInitializer.TAG_SET_NAME, aProject);
 
         AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
                 Token.class.getName());

@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
@@ -46,6 +47,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -84,13 +86,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -930,43 +932,96 @@ public class ProjectServiceImpl
     }
 
     @Override
+    public List<ProjectInitializer> listProjectInitializers()
+    {
+        return initializers;
+    }
+
+    @Override
     @Transactional
     public void initializeProject(Project aProject) throws IOException
     {
-        Deque<ProjectInitializer> deque = new LinkedList<>(initializers);
-        Set<Class<? extends ProjectInitializer>> initsSeen = new HashSet<>();
-        Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
+        initializeProject(aProject, initializers);
+    }
 
-        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
+    private ProjectInitializer findProjectInitializer(Class<? extends ProjectInitializer> aType)
+    {
+        return initializers.stream().filter(i -> aType.isAssignableFrom(i.getClass())) //
+                .findFirst() //
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No initializer of type [" + aType + "] exists!"));
+    }
 
-        for (ProjectInitializer initializer : deque) {
-            allInits.add(initializer.getClass());
+    private Set<ProjectInitializer> collectDependencies(List<ProjectInitializer> aInitializers)
+    {
+        Set<ProjectInitializer> seen = new LinkedHashSet<>();
+
+        Deque<ProjectInitializer> deque = new LinkedList<>(aInitializers);
+        while (!deque.isEmpty()) {
+            ProjectInitializer initializer = deque.poll();
+
+            if (seen.contains(initializer)) {
+                continue;
+            }
+
+            seen.add(initializer);
+
+            for (Class<? extends ProjectInitializer> depClass : initializer.getDependencies()) {
+                deque.add(findProjectInitializer(depClass));
+            }
         }
 
-        while (!deque.isEmpty()) {
-            ProjectInitializer initializer = deque.pop();
+        return seen;
+    }
+
+    @Override
+    @Transactional
+    public void initializeProject(Project aProject, List<ProjectInitializer> aInitializers)
+        throws IOException
+    {
+        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
+        Set<Class<? extends ProjectInitializer>> applied = new HashSet<>();
+        for (ProjectInitializer initializer : initializers) {
+            allInits.add(initializer.getClass());
+            if (initializer.alreadyApplied(aProject)) {
+                applied.add(initializer.getClass());
+            }
+        }
+
+        Deque<ProjectInitializer> toApply = new LinkedList<>(collectDependencies(aInitializers));
+        Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
+        while (!toApply.isEmpty()) {
+            ProjectInitializer initializer = toApply.pop();
+            String initializerName = initializer.getName();
+
+            if (applied.contains(initializer.getClass())) {
+                log.debug("Skipping project initializer that was already applied: [{}]",
+                        initializerName);
+                continue;
+            }
 
             if (!allInits.containsAll(initializer.getDependencies())) {
-                throw new IllegalStateException(
-                        "Missing dependencies of " + initializer + " initializer from " + deque);
+                throw new IllegalStateException("Missing dependencies of [" + initializerName
+                        + "] initializer from "
+                        + toApply.stream().map(ProjectInitializer::getName).collect(toList()));
             }
 
             if (initsDeferred.contains(initializer)) {
                 throw new IllegalStateException("Circular initializer dependencies in "
-                        + initsDeferred + " via " + initializer);
+                        + initsDeferred.stream().map(ProjectInitializer::getName).collect(toList())
+                        + " via [" + initializerName + "]");
             }
 
-            if (initsSeen.containsAll(initializer.getDependencies())) {
-                log.debug("Applying project initializer: {}", initializer);
+            if (applied.containsAll(initializer.getDependencies())) {
+                log.debug("Applying project initializer: [{}]", initializerName);
                 initializer.configure(aProject);
-                initsSeen.add(initializer.getClass());
+                applied.add(initializer.getClass());
                 initsDeferred.clear();
             }
             else {
-                log.debug(
-                        "Deferring project initializer as dependencies are not yet fulfilled: [{}]",
+                log.debug("Deferring project initializer as dependencies are not yet fulfilled: {}",
                         initializer);
-                deque.add(initializer);
+                toApply.add(initializer);
                 initsDeferred.add(initializer);
             }
         }

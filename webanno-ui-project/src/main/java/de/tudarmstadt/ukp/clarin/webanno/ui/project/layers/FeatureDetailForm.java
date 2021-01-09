@@ -18,16 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_DETAIL_FORM;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_SELECTION_FORM;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
-
-import java.io.FileNotFoundException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -46,6 +44,7 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -58,11 +57,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaButton;
@@ -88,7 +85,7 @@ public class FeatureDetailForm
     private final DropDownChoice<FeatureType> featureType;
     private final CheckBox required;
     private final WebMarkupContainer traitsContainer;
-    private final ConfirmationDialog confirmationDialog;
+    private final ChallengeResponseDialog confirmationDialog;
     private final TextField<String> uiName;
 
     public FeatureDetailForm(String id, IModel<AnnotationFeature> aFeature)
@@ -186,12 +183,12 @@ public class FeatureDetailForm
         // we clear the currently selected feature.
         add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
         add(new LambdaAjaxButton<>("delete", this::actionDelete)
-                .add(visibleWhen(() -> !isNull(getModelObject().getId())
+                .add(enabledWhen(() -> !isNull(getModelObject().getId())
                         && !getModelObject().getLayer().isBuiltIn())));
         // Set default form processing to false to avoid saving data
         add(new LambdaButton("cancel", this::actionCancel).setDefaultFormProcessing(false));
 
-        confirmationDialog = new ConfirmationDialog("confirmationDialog");
+        confirmationDialog = new ChallengeResponseDialog("confirmationDialog");
         confirmationDialog
                 .setTitleModel(new StringResourceModel("DeleteFeatureDialog.title", this));
         add(confirmationDialog);
@@ -227,41 +224,20 @@ public class FeatureDetailForm
 
     private void actionDelete(AjaxRequestTarget aTarget, Form aForm)
     {
-        confirmationDialog.setContentModel(new StringResourceModel("DeleteFeatureDialog.text", this)
-                .setParameters(escapeMarkup(getModelObject().getName())));
+        confirmationDialog
+                .setChallengeModel(new StringResourceModel("DeleteFeatureDialog.text", this)
+                        .setParameters(escapeMarkup(getModelObject().getName())));
+        confirmationDialog.setResponseModel(Model.of(getModelObject().getName()));
         confirmationDialog.show(aTarget);
 
         confirmationDialog.setConfirmAction((_target) -> {
-            annotationService.removeAnnotationFeature(getModelObject());
+            annotationService.removeFeature(getModelObject());
 
             Project project = getModelObject().getProject();
 
             setModelObject(null);
 
-            // Perform a forced upgrade on all CASes in the project. This action affects all users
-            // currently logged in and working on the project. E.g. an annotator working on a
-            // document will be unable to make changes to the document anymore until the user
-            // re-opens the document because the force upgrade invalidates the VIDs used in the
-            // annotation editor. How exactly (if at all) the user gets information of this is
-            // currently undefined.
-            for (SourceDocument doc : documentService.listSourceDocuments(project)) {
-                for (AnnotationDocument ann : documentService.listAllAnnotationDocuments(doc)) {
-                    try {
-                        casStorageService.upgradeCas(doc, ann.getUser());
-                    }
-                    catch (FileNotFoundException e) {
-                        // If there is no CAS file, we do not have to upgrade it. Ignoring.
-                    }
-                }
-
-                // Also upgrade the curation CAS if it exists
-                try {
-                    casStorageService.upgradeCas(doc, CURATION_USER);
-                }
-                catch (FileNotFoundException e) {
-                    // If there is no CAS file, we do not have to upgrade it. Ignoring.
-                }
-            }
+            documentService.upgradeAllAnnotationDocuments(project);
 
             // Trigger LayerConfigurationChangedEvent
             applicationEventPublisherHolder.get()

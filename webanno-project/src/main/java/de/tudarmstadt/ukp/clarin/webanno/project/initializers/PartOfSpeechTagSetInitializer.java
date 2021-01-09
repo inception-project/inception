@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2021
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,26 +17,39 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil.importTagSetFromJson;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-public class DefaultTagSetsInitializer
+public class PartOfSpeechTagSetInitializer
     implements TagSetInitializer
 {
+    // Name must match the name in the tag set file loaded by this initializer!
+    public static final String TAG_SET_NAME = "UD Universal POS tags (v2)";
+
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
-    public DefaultTagSetsInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public PartOfSpeechTagSetInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
+    }
+
+    @Override
+    public String getName()
+    {
+        return TAG_SET_NAME;
     }
 
     @Override
@@ -46,22 +59,16 @@ public class DefaultTagSetsInitializer
     }
 
     @Override
+    public boolean alreadyApplied(Project aProject)
+    {
+        return annotationSchemaService.existsTagSet(getName(), aProject);
+    }
+
+    @Override
     public void configure(Project aProject) throws IOException
     {
-        // JsonImportUtil.importTagSetFromJson(aProject,
-        // new ClassPathResource("/tagsets/de-pos-stts.json").getInputStream(),
-        // annotationSchemaService);
-        // JsonImportUtil.importTagSetFromJson(aProject,
-        // new ClassPathResource("/tagsets/de-dep-tiger.json").getInputStream(),
-        // annotationSchemaService);
-        // JsonImportUtil.importTagSetFromJson(aProject,
-        // new ClassPathResource("/tagsets/en-dep-sd.json").getInputStream(),
-        // annotationSchemaService);
-        // JsonImportUtil.importTagSetFromJson(aProject,
-        // new ClassPathResource("/tagsets/en-pos-ptb-tt.json").getInputStream(),
-        // annotationSchemaService);
-        // JsonImportUtil.importTagSetFromJson(aProject,
-        // new ClassPathResource("/tagsets/mul-pos-upos.json").getInputStream(),
-        // annotationSchemaService);
+        importTagSetFromJson(aProject,
+                new ClassPathResource("/tagsets/mul-pos-ud2.json").getInputStream(),
+                annotationSchemaService);
     }
 }

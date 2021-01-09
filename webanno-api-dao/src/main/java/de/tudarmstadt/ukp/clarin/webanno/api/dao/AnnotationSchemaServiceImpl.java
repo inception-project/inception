@@ -275,6 +275,13 @@ public class AnnotationSchemaServiceImpl
         else {
             entityManager.merge(aFeature);
         }
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aFeature.getProject().getId()))) {
+            Project project = aFeature.getProject();
+            log.info("Created feature [{}]({}) in project [{}]({})", aFeature.getName(),
+                    aFeature.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
@@ -605,9 +612,12 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listAnnotationLayer(Project aProject)
     {
-        return entityManager
-                .createQuery("FROM AnnotationLayer WHERE project =:project ORDER BY uiName",
-                        AnnotationLayer.class)
+        String query = String.join("\n", //
+                "FROM AnnotationLayer", //
+                "WHERE project = :project ", //
+                "ORDER BY uiName");
+
+        return entityManager.createQuery(query, AnnotationLayer.class)
                 .setParameter("project", aProject) //
                 .setHint(CACHEABLE, true) //
                 .getResultList();
@@ -617,12 +627,16 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationLayer> listAttachedRelationLayers(AnnotationLayer aLayer)
     {
-        return entityManager
-                .createQuery("SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f "
-                        + "WHERE l.type = :type AND l.project = :project AND "
-                        + "(l.attachType = :attachType OR f.type = :attachTypeName) "
-                        + "ORDER BY l.uiName", AnnotationLayer.class)
-                .setParameter("type", RELATION_TYPE).setParameter("attachType", aLayer)
+        String query = String.join("\n",
+                "SELECT l FROM AnnotationLayer l LEFT JOIN l.attachFeature f ", //
+                "WHERE l.type        = :type AND ", //
+                "      l.project     = :project AND ", //
+                "      (l.attachType = :attachType OR f.type = :attachTypeName) ", //
+                "ORDER BY l.uiName");
+
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("type", RELATION_TYPE) //
+                .setParameter("attachType", aLayer) //
                 .setParameter("attachTypeName", aLayer.getName())
                 // Checking for project is necessary because type match is string-based
                 .setParameter("project", aLayer.getProject()) //
@@ -630,14 +644,36 @@ public class AnnotationSchemaServiceImpl
                 .getResultList();
     }
 
+    @Transactional
+    public List<AnnotationFeature> listAttachingFeatures(AnnotationLayer aLayer)
+    {
+        String query = String.join("\n", //
+                "FROM AnnotationFeature ", //
+                "WHERE type    = :type AND", //
+                "      project = :project", //
+                "ORDER BY uiName");
+
+        // This should not be cached because we do not have a proper foreign key relation to
+        // the type.
+        return entityManager.createQuery(query, AnnotationFeature.class)
+                .setParameter("type", aLayer.getName()) //
+                // Checking for project is necessary because type match is string-based
+                .setParameter("project", aLayer.getProject()) //
+                .getResultList();
+    }
+
     @Override
     @Transactional
     public List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer aLayer)
     {
-        return entityManager.createQuery(
-                "FROM AnnotationFeature WHERE linkMode in (:modes) AND project = :project AND "
-                        + "type in (:attachType) ORDER BY uiName",
-                AnnotationFeature.class)
+        String query = String.join("\n", //
+                "FROM AnnotationFeature", //
+                "WHERE linkMode in (:modes) AND ", //
+                "      project = :project AND ", //
+                "      type in (:attachType) ", //
+                "ORDER BY uiName");
+
+        return entityManager.createQuery(query, AnnotationFeature.class)
                 .setParameter("modes", asList(LinkMode.SIMPLE, LinkMode.WITH_ROLE))
                 .setParameter("attachType", asList(aLayer.getName(), CAS.TYPE_NAME_ANNOTATION))
                 // Checking for project is necessary because type match is string-based
@@ -782,17 +818,35 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public void removeAnnotationFeature(AnnotationFeature aFeature)
+    public void removeFeature(AnnotationFeature aFeature)
     {
         entityManager.remove(
                 entityManager.contains(aFeature) ? aFeature : entityManager.merge(aFeature));
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aFeature.getProject().getId()))) {
+            Project project = aFeature.getProject();
+            log.info("Removed feature [{}]({}) from project [{}]({})", aFeature.getName(),
+                    aFeature.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
     @Transactional
-    public void removeAnnotationLayer(AnnotationLayer aLayer)
+    public void removeLayer(AnnotationLayer aLayer)
     {
-        entityManager.remove(aLayer);
+        for (AnnotationFeature f : listAttachingFeatures(aLayer)) {
+            removeFeature(f);
+        }
+
+        entityManager.remove(entityManager.contains(aLayer) ? aLayer : entityManager.merge(aLayer));
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aLayer.getProject().getId()))) {
+            Project project = aLayer.getProject();
+            log.info("Removed layer [{}]({}) from project [{}]({})", aLayer.getName(),
+                    aLayer.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override

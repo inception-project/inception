@@ -435,7 +435,7 @@ public interface AnnotationSchemaService
      * @param feature
      *            the feature.
      */
-    void removeAnnotationFeature(AnnotationFeature feature);
+    void removeFeature(AnnotationFeature feature);
 
     /**
      * Should be called with care. Only when a project hosting this layer is removed
@@ -443,7 +443,7 @@ public interface AnnotationSchemaService
      * @param type
      *            the type.
      */
-    void removeAnnotationLayer(AnnotationLayer type);
+    void removeLayer(AnnotationLayer type);
 
     TagSet createTagSet(String aDescription, String aLanguage, String aTagSetName, String[] aTags,
             String[] aTagDescription, Project aProject)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2021
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,34 +17,31 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static java.util.Arrays.asList;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil.importTagSetFromJson;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 
 @Component
-public class NamedEntityLayerInitializer
-    implements LayerInitializer
+public class NamedEntityTagSetInitializer
+    implements TagSetInitializer
 {
+    // Name must match the name in the tag set file loaded by this initializer!
+    public static final String TAG_SET_NAME = "Named Entity tags";
+
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
-    public NamedEntityLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public NamedEntityTagSetInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
@@ -52,36 +49,26 @@ public class NamedEntityLayerInitializer
     @Override
     public String getName()
     {
-        return "Named entity tagging";
+        return TAG_SET_NAME;
     }
 
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return asList(
-                // Because locks to token boundaries
-                TokenLayerInitializer.class,
-                // Tagsets
-                NamedEntityTagSetInitializer.class);
+        return Collections.emptyList();
     }
 
     @Override
     public boolean alreadyApplied(Project aProject)
     {
-        return annotationSchemaService.existsLayer(NamedEntity.class.getName(), aProject);
+        return annotationSchemaService.existsTagSet(getName(), aProject);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        TagSet nerTagSet = annotationSchemaService
-                .getTagSet(NamedEntityTagSetInitializer.TAG_SET_NAME, aProject);
-
-        AnnotationLayer neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named entity",
-                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.NO_OVERLAP);
-        annotationSchemaService.createLayer(neLayer);
-
-        annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "value",
-                "value", CAS.TYPE_NAME_STRING, "Named entity type", nerTagSet));
+        importTagSetFromJson(aProject,
+                new ClassPathResource("/tagsets/de-ne-webanno.json").getInputStream(),
+                annotationSchemaService);
     }
 }

@@ -665,4 +665,6 @@ public interface DocumentService
      * Retrieve overall number of annotation documents
      */
     long countAnnotationDocuments();
+
+    void upgradeAllAnnotationDocuments(Project aProject) throws IOException;
 }

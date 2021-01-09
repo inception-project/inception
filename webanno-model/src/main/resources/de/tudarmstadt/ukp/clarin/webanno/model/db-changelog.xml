@@ -1224,5 +1224,15 @@
         <constraints nullable="true" />
       </column>
     </addColumn>
-  </changeSet>  
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="20210109-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="WebAnno Team" id="1512223050574-2"/>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="annotation_type" baseTableName="annotation_feature"
+      constraintName="FK_annotation_feature_owner_type" deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id" 
+      referencedTableName="annotation_type" />
+  </changeSet>
 </databaseChangeLog>
