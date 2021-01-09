@@ -39,12 +39,12 @@ public class AnnotationSchemaServiceEventAdapter
         Project project = aEvent.getProject();
 
         for (AnnotationFeature feature : service.listAnnotationFeature(project)) {
-            service.removeAnnotationFeature(feature);
+            service.removeFeature(feature);
         }
 
         // remove the layers too
         for (AnnotationLayer layer : service.listAnnotationLayer(project)) {
-            service.removeAnnotationLayer(layer);
+            service.removeLayer(layer);
         }
 
         for (TagSet tagSet : service.listTagSets(project)) {

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_DETAIL_FORM;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.MID_FEATURE_SELECTION_FORM;
@@ -182,7 +183,7 @@ public class FeatureDetailForm
         // we clear the currently selected feature.
         add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
         add(new LambdaAjaxButton<>("delete", this::actionDelete)
-                .add(visibleWhen(() -> !isNull(getModelObject().getId())
+                .add(enabledWhen(() -> !isNull(getModelObject().getId())
                         && !getModelObject().getLayer().isBuiltIn())));
         // Set default form processing to false to avoid saving data
         add(new LambdaButton("cancel", this::actionCancel).setDefaultFormProcessing(false));
@@ -230,7 +231,7 @@ public class FeatureDetailForm
         confirmationDialog.show(aTarget);
 
         confirmationDialog.setConfirmAction((_target) -> {
-            annotationService.removeAnnotationFeature(getModelObject());
+            annotationService.removeFeature(getModelObject());
 
             Project project = getModelObject().getProject();
 

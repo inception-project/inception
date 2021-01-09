@@ -52,7 +52,7 @@ public class LemmaLayerInitializer
     @Override
     public String getName()
     {
-        return "Lemmtization";
+        return "Lemmatization";
     }
 
     @Override

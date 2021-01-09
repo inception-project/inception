@@ -818,21 +818,35 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public void removeAnnotationFeature(AnnotationFeature aFeature)
+    public void removeFeature(AnnotationFeature aFeature)
     {
         entityManager.remove(
                 entityManager.contains(aFeature) ? aFeature : entityManager.merge(aFeature));
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aFeature.getProject().getId()))) {
+            Project project = aFeature.getProject();
+            log.info("Removed feature [{}]({}) from project [{}]({})", aFeature.getName(),
+                    aFeature.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override
     @Transactional
-    public void removeAnnotationLayer(AnnotationLayer aLayer)
+    public void removeLayer(AnnotationLayer aLayer)
     {
         for (AnnotationFeature f : listAttachingFeatures(aLayer)) {
-            removeAnnotationFeature(f);
+            removeFeature(f);
         }
 
         entityManager.remove(entityManager.contains(aLayer) ? aLayer : entityManager.merge(aLayer));
+
+        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
+                String.valueOf(aLayer.getProject().getId()))) {
+            Project project = aLayer.getProject();
+            log.info("Removed layer [{}]({}) from project [{}]({})", aLayer.getName(),
+                    aLayer.getId(), project.getName(), project.getId());
+        }
     }
 
     @Override

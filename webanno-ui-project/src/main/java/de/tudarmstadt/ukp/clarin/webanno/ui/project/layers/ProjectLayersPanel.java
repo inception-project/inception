@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
@@ -229,9 +230,14 @@ public class ProjectLayersPanel
                 }
             };
 
+            WebMarkupContainer noInitializersInfo = new WebMarkupContainer("noInitializersInfo");
+            noInitializersInfo.setOutputMarkupPlaceholderTag(true);
+            noInitializersInfo.add(visibleWhen(() -> initializers.getModelObject().isEmpty()));
+
             initializersContainer = new WebMarkupContainer("initializersContainer");
             initializersContainer.setOutputMarkupId(true);
             initializersContainer.add(initializers);
+            initializersContainer.add(noInitializersInfo);
             add(initializersContainer);
 
             add(layerSelection.add(layers));

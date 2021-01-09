@@ -67,11 +67,15 @@
                   </button>
                   <button class="btn btn-primary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
                   <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
+                    <div class="dropdown-header">Select a task below to set up appropriate layers.</div>
                     <div wicket:id="initializersContainer">
                       <div wicket:id="initializers" class="flex-content flex-v-container">
                         <button wicket:id="applyInitializer" class="dropdown-item">
                           <wicket:container wicket:id="name"/>
                         </button>
+                      </div>
+                      <div wicket:id="noInitializersInfo" class="flex-content flex-h-container no-data-notice p-0 m-0">
+                        <small>All pre-configured layers have already been set up.</small>
                       </div>
                     </div>
                   </div>

@@ -324,7 +324,7 @@ public class LayerDetailForm
         confirmationDialog.show(aTarget);
 
         confirmationDialog.setConfirmAction((_target) -> {
-            annotationService.removeAnnotationLayer(getModelObject());
+            annotationService.removeLayer(getModelObject());
 
             Project project = getModelObject().getProject();
 
