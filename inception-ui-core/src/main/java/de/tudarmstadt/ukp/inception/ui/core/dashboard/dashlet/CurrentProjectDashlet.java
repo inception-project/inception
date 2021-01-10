@@ -18,45 +18,69 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.AjaxEditableLabel;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.github.rjeschke.txtmark.Processor;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 public class CurrentProjectDashlet
     extends Dashlet_ImplBase
 {
     private static final long serialVersionUID = 7732921923832675326L;
 
-    private final IModel<Project> projectModel;
+    private @SpringBean UserDao userRepository;
+    private @SpringBean ProjectService projectService;
 
     public CurrentProjectDashlet(String aId, IModel<Project> aCurrentProject)
     {
-        super(aId);
-        projectModel = aCurrentProject;
-        add(new Label("name", LoadableDetachableModel.of(this::getProjectName)));
+        super(aId, aCurrentProject);
+
+        AjaxEditableLabel<String> name = new AjaxEditableLabel<String>("name",
+                PropertyModel.of(aCurrentProject, "name"))
+        {
+            private static final long serialVersionUID = -2867104998844713915L;
+
+            @Override
+            protected void onSubmit(AjaxRequestTarget aTarget)
+            {
+                projectService.updateProject(aCurrentProject.getObject());
+                success("Project name was updated");
+                aTarget.addChildren(getPage(), IFeedback.class);
+                // Put the component back into label mode
+                onCancel(aTarget);
+            }
+        };
+        name.setEnabled(
+                projectService.isManager(getModelObject(), userRepository.getCurrentUser()));
+        add(name);
 
         add(new Label("description", LoadableDetachableModel.of(this::getProjectDescription))
                 .setEscapeModelStrings(false));
     }
 
-    private String getProjectName()
+    public Project getModelObject()
     {
-        Project project = projectModel.getObject();
-        if (project != null) {
-            return project.getName();
-        }
-        else {
-            return "No project selected";
-        }
+        return getModel().orElse(null).getObject();
+    }
+
+    public IModel<Project> getModel()
+    {
+        return (IModel<Project>) getDefaultModel();
     }
 
     private String getProjectDescription()
     {
-        Project project = projectModel.getObject();
+        Project project = getModelObject();
         if (project != null) {
             if (StringUtils.isBlank(project.getDescription())) {
                 return "Project has no description.";
