@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.app;
 
 import org.apache.wicket.Page;
+import org.apache.wicket.markup.html.IPackageResourceGuard;
+import org.apache.wicket.markup.html.SecurePackageResourceGuard;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -33,6 +35,8 @@ public class WicketApplication
     protected void initOnce()
     {
         super.initOnce();
+
+        initAccessToVueComponents();
 
         setMetaData(ApplicationPageBase.MENUBAR_CLASS, MenuBar.class);
     }
@@ -67,6 +71,25 @@ public class WicketApplication
                 component.add(InceptionResourcesBehavior.get());
             }
         });
+    }
+
+    private void initAccessToVueComponents()
+    {
+        IPackageResourceGuard resourceGuard = getResourceSettings().getPackageResourceGuard();
+        if (resourceGuard instanceof SecurePackageResourceGuard) {
+            SecurePackageResourceGuard securePackageResourceGuard = (SecurePackageResourceGuard) resourceGuard;
+            securePackageResourceGuard.addPattern("+*.vue");
+        }
+    }
+
+    @Override
+    public String getMimeType(String aFileName)
+    {
+        if (aFileName.endsWith(".vue")) {
+            return "text/javascript";
+        }
+
+        return super.getMimeType(aFileName);
     }
 
     @Override

@@ -43,21 +43,29 @@ public class LinkProvider
         return createDocumentPageLink(aProject, docId, aId, aLinkLabel, aPageClass);
     }
 
-    public static ExternalLink createDocumentPageLink(Project aProject, long aDocId, String aId,
+    public static String createDocumentPageLinkUrl(long aProjectId, long aDocId, String aId,
             String aLinkLabel, Class<? extends WebPage> aPageClass)
     {
         String url = "";
         if (aDocId >= 0) {
             url = String.format("%s#!p=%d&d=%d",
-                    RequestCycle.get().urlFor(aPageClass, new PageParameters()), aProject.getId(),
+                    RequestCycle.get().urlFor(aPageClass, new PageParameters()), aProjectId,
                     aDocId);
         }
+        return url;
+    }
+
+    public static ExternalLink createDocumentPageLink(Project aProject, long aDocId, String aId,
+            String aLinkLabel, Class<? extends WebPage> aPageClass)
+    {
+        String url = createDocumentPageLinkUrl(aProject.getId(), aDocId, aId, aLinkLabel,
+                aPageClass);
+
         if (aLinkLabel == null) {
             new ExternalLink(aId, url);
         }
 
         return new ExternalLink(aId, url, aLinkLabel);
-
     }
 
     public static ExternalLink createDocumentPageLink(DocumentService aDocService, Project aProject,
