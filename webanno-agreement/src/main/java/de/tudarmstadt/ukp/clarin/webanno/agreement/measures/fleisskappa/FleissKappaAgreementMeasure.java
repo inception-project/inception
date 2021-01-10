@@ -30,7 +30,7 @@ import org.dkpro.statistics.agreement.IAgreementMeasure;
 import org.dkpro.statistics.agreement.coding.FleissKappaAgreement;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAggreementMeasure_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementMeasure_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class FleissKappaAgreementMeasure
-    extends CodingAggreementMeasure_ImplBase<DefaultAgreementTraits>
+    extends CodingAgreementMeasure_ImplBase<DefaultAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
 

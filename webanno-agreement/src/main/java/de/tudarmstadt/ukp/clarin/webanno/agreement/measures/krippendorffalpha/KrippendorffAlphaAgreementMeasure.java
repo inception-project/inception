@@ -32,7 +32,7 @@ import org.dkpro.statistics.agreement.InsufficientDataException;
 import org.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
 import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAggreementMeasure_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementMeasure_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class KrippendorffAlphaAgreementMeasure
-    extends CodingAggreementMeasure_ImplBase<KrippendorffAlphaAgreementTraits>
+    extends CodingAgreementMeasure_ImplBase<KrippendorffAlphaAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
 
