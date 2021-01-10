@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AggreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
@@ -46,7 +46,7 @@ public class FleissKappaAgreementMeasureSupport
     }
 
     @Override
-    public AggreementMeasure<PairwiseAnnotationResult<CodingAgreementResult>> createMeasure(
+    public AgreementMeasure<PairwiseAnnotationResult<CodingAgreementResult>> createMeasure(
             AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
         return new FleissKappaAgreementMeasure(aFeature, aTraits, annotationService);

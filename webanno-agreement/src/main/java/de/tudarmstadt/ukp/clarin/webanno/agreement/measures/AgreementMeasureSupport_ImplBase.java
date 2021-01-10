@@ -29,7 +29,7 @@ public abstract class AgreementMeasureSupport_ImplBase<//
         T extends DefaultAgreementTraits, //
         R extends Serializable, //
         S extends IAnnotationStudy>
-    implements AggreementMeasureSupport<T, R, S>
+    implements AgreementMeasureSupport<T, R, S>
 {
     private String id;
 

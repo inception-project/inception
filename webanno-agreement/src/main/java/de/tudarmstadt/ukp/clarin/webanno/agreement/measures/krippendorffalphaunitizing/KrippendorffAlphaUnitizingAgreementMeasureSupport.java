@@ -30,7 +30,7 @@ import org.dkpro.statistics.agreement.unitizing.IUnitizingAnnotationStudy;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AggreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUnitizingAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.UnitizingAgreementResult;
@@ -73,7 +73,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     }
 
     @Override
-    public AggreementMeasure<PairwiseAnnotationResult<UnitizingAgreementResult>> createMeasure(
+    public AgreementMeasure<PairwiseAnnotationResult<UnitizingAgreementResult>> createMeasure(
             AnnotationFeature aFeature, KrippendorffAlphaUnitizingAgreementTraits aTraits)
     {
         return new KrippendorffAlphaUnitizingAgreementMeasure(aFeature, aTraits, annotationService);

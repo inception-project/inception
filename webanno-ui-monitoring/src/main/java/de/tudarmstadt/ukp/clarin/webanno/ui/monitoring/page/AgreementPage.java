@@ -64,9 +64,9 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AggreementMeasure;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AggreementMeasureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AggreementMeasureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -102,7 +102,7 @@ public class AgreementPage
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean AggreementMeasureSupportRegistry agreementRegistry;
+    private @SpringBean AgreementMeasureSupportRegistry agreementRegistry;
 
     private ProjectSelectionForm projectSelectionForm;
     private AgreementForm agreementForm;
@@ -209,7 +209,7 @@ public class AgreementPage
                     // editor
                     Component newTraits;
                     if (getModelObject() != null) {
-                        AggreementMeasureSupport ams = agreementRegistry
+                        AgreementMeasureSupport ams = agreementRegistry
                                 .getAgreementMeasureSupport(getModelObject().getKey());
                         newTraits = ams.createTraitsEditor(MID_TRAITS, featureList.getModel(),
                                 Model.of(ams.createTraits()));
@@ -255,10 +255,10 @@ public class AgreementPage
                 return;
             }
 
-            AggreementMeasureSupport ams = agreementRegistry
+            AgreementMeasureSupport ams = agreementRegistry
                     .getAgreementMeasureSupport(measureDropDown.getModelObject().getKey());
 
-            AggreementMeasure measure = ams.createMeasure(feature,
+            AgreementMeasure measure = ams.createMeasure(feature,
                     (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS)
                             .getDefaultModelObject());
 

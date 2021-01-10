@@ -26,7 +26,7 @@ import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
 /**
  * @deprecated No longer to be used and going to be removed soon. This is replaced by the pluggable
- *             mechanism provided by {@link AggreementMeasureSupport}.
+ *             mechanism provided by {@link AgreementMeasureSupport}.
  */
 @Deprecated
 public enum ConcreteAgreementMeasure

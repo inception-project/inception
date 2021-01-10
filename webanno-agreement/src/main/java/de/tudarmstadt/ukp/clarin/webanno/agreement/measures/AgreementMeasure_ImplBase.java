@@ -21,13 +21,13 @@ import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public abstract class AggreementMeasure_ImplBase<R extends Serializable, T extends DefaultAgreementTraits>
-    implements AggreementMeasure<R>
+public abstract class AgreementMeasure_ImplBase<R extends Serializable, T extends DefaultAgreementTraits>
+    implements AgreementMeasure<R>
 {
     private final AnnotationFeature feature;
     private final T traits;
 
-    public AggreementMeasure_ImplBase(AnnotationFeature aFeature, T aTraits)
+    public AgreementMeasure_ImplBase(AnnotationFeature aFeature, T aTraits)
     {
         feature = aFeature;
         traits = aTraits;

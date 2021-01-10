@@ -36,17 +36,17 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 @Component
-public class AggreementMeasureSupportRegistryImpl
-    implements AggreementMeasureSupportRegistry
+public class AgreementMeasureSupportRegistryImpl
+    implements AgreementMeasureSupportRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<AggreementMeasureSupport> agreementMeasuresProxy;
+    private final List<AgreementMeasureSupport> agreementMeasuresProxy;
 
-    private List<AggreementMeasureSupport> agreementMeasures;
+    private List<AgreementMeasureSupport> agreementMeasures;
 
-    public AggreementMeasureSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<AggreementMeasureSupport> aFeatureSupports)
+    public AgreementMeasureSupportRegistryImpl(
+            @Lazy @Autowired(required = false) List<AgreementMeasureSupport> aFeatureSupports)
     {
         agreementMeasuresProxy = aFeatureSupports;
     }
@@ -59,13 +59,13 @@ public class AggreementMeasureSupportRegistryImpl
 
     public void init()
     {
-        List<AggreementMeasureSupport> fsp = new ArrayList<>();
+        List<AgreementMeasureSupport> fsp = new ArrayList<>();
 
         if (agreementMeasuresProxy != null) {
             fsp.addAll(agreementMeasuresProxy);
             AnnotationAwareOrderComparator.sort(fsp);
 
-            for (AggreementMeasureSupport fs : fsp) {
+            for (AgreementMeasureSupport fs : fsp) {
                 log.info("Found agreement measure support: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
@@ -75,23 +75,23 @@ public class AggreementMeasureSupportRegistryImpl
     }
 
     @Override
-    public List<AggreementMeasureSupport> getAgreementMeasureSupports()
+    public List<AgreementMeasureSupport> getAgreementMeasureSupports()
     {
         return agreementMeasures;
     }
 
     @Override
-    public AggreementMeasureSupport getAgreementMeasureSupport(String aId)
+    public AgreementMeasureSupport getAgreementMeasureSupport(String aId)
     {
         return getAgreementMeasureSupports().stream().filter(fs -> fs.getId().equals(aId))
                 .findFirst().orElse(null);
     }
 
     @Override
-    public List<AggreementMeasureSupport> getAgreementMeasureSupports(AnnotationFeature aFeature)
+    public List<AgreementMeasureSupport> getAgreementMeasureSupports(AnnotationFeature aFeature)
     {
         return agreementMeasures.stream().filter(factory -> factory.accepts(aFeature))
-                .sorted(Comparator.comparing(AggreementMeasureSupport::getName))
+                .sorted(Comparator.comparing(AgreementMeasureSupport::getName))
                 .collect(Collectors.toList());
     }
 }

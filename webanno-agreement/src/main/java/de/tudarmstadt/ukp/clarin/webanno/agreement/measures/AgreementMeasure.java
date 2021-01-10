@@ -25,7 +25,7 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public interface AggreementMeasure<R extends Serializable>
+public interface AgreementMeasure<R extends Serializable>
 {
     R getAgreement(Map<String, List<CAS>> aCasMap);
 

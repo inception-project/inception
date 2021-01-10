@@ -31,7 +31,7 @@ import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public interface AggreementMeasureSupport<//
+public interface AgreementMeasureSupport<//
         T extends DefaultAgreementTraits, //
         R extends Serializable, //
         S extends IAnnotationStudy>
@@ -65,7 +65,7 @@ public interface AggreementMeasureSupport<//
         return new EmptyPanel(aId);
     }
 
-    AggreementMeasure<R> createMeasure(AnnotationFeature aFeature, T aTraits);
+    AgreementMeasure<R> createMeasure(AnnotationFeature aFeature, T aTraits);
 
     T createTraits();
 

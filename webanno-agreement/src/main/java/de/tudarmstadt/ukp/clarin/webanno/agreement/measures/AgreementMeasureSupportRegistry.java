@@ -21,13 +21,13 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public interface AggreementMeasureSupportRegistry
+public interface AgreementMeasureSupportRegistry
 {
 
-    List<AggreementMeasureSupport> getAgreementMeasureSupports();
+    List<AgreementMeasureSupport> getAgreementMeasureSupports();
 
-    AggreementMeasureSupport getAgreementMeasureSupport(String aId);
+    AgreementMeasureSupport getAgreementMeasureSupport(String aId);
 
-    List<AggreementMeasureSupport> getAgreementMeasureSupports(AnnotationFeature aFeature);
+    List<AgreementMeasureSupport> getAgreementMeasureSupports(AnnotationFeature aFeature);
 
 }

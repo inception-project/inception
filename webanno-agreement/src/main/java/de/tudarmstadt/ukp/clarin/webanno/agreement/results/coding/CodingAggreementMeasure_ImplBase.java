@@ -26,12 +26,12 @@ import java.util.Map.Entry;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AggreementMeasure_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public abstract class CodingAggreementMeasure_ImplBase<T extends DefaultAgreementTraits>
-    extends AggreementMeasure_ImplBase<PairwiseAnnotationResult<CodingAgreementResult>, T>
+    extends AgreementMeasure_ImplBase<PairwiseAnnotationResult<CodingAgreementResult>, T>
 {
     public CodingAggreementMeasure_ImplBase(AnnotationFeature aFeature, T aTraits)
     {
